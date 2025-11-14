@@ -25,19 +25,18 @@ struct EditableChip: View {
 
             TextField("", text: $name)
                 .textFieldStyle(.plain)
-                .font(.system(size: 13, weight: .medium))
+                .font(.body)
                 .foregroundStyle(.primary)
                 .textSelection(.disabled)
                 .focused(focus, equals: .newChip)
                 .onSubmit { onCommit() }
-                .frame(minWidth: 54)
 
         }
-        .padding(6)
+        .padding(EdgeInsets(top: 6, leading: 10, bottom: 6, trailing: 10))
         .background(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .fill(Color.secondary.opacity(0.08))
         )
-        .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .cornerRadius(Const.radius)
     }
 }

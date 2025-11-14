@@ -8,7 +8,31 @@
 import SwiftUI
 import WebKit
 
-struct EarlierWebView: NSViewRepresentable {
+struct EarlierWebView: View {
+    let url: URL
+    @State private var isLoading = true
+
+    var body: some View {
+        VStack(alignment: .center) {
+            if isLoading {
+                ProgressView()
+            } else {
+                WebViewRepresentable(url: url)
+            }
+        }
+        .frame(
+            width: Const.maxPreviewSize - 36,
+            height: Const.maxPreviewHeight
+        )
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                isLoading = false
+            }
+        }
+    }
+}
+
+private struct WebViewRepresentable: NSViewRepresentable {
     let url: URL
 
     func makeNSView(context: Context) -> WKWebView {
@@ -17,11 +41,11 @@ struct EarlierWebView: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: WKWebView, context: Context) {
-        DispatchQueue.main.async {
+        if nsView.url != url {
             let request = URLRequest(
                 url: url,
                 cachePolicy: .returnCacheDataElseLoad,
-                timeoutInterval: 3
+                timeoutInterval: 5
             )
             nsView.load(request)
         }
@@ -29,10 +53,10 @@ struct EarlierWebView: NSViewRepresentable {
 }
 
 #Preview {
-    let url = "https://baidu.com"
+    let url = "https://www.apple.com.cn"
         .asCompleteURL()
     EarlierWebView(
         url: url!
     )
-    .frame(width: 750, height: 480)
+    .frame(width: Const.maxPreviewSize, height: Const.maxPreviewHeight)
 }

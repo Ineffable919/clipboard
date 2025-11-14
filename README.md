@@ -55,7 +55,5 @@
 ### Tips
 1. 只适用于苹果 M 系列芯片，不适用于 Intel 系列芯片
 2. 有问题请随时 [提交 issue](https://github.com/Clipboard-Team/Clipboard/issues)
-3. 欢迎 [提交 pull request](https://github.com/Clipboard-Team/Clipboard/pulls)
-4. 欢迎 [Star](https://github.com/Clipboard-Team/Clipboard/stargazers) 本项目
-5. 欢迎大家提供宝贵的意见和建议，帮助我们不断优化和改进 Clipboard。
-6. 欢迎大佬们指导和优化本项目，也可做Swiftui练手项目。
+3. 欢迎 [提交 pull request](https://github.com/Clipboard-Team/Clipboard/pulls) [Star](https://github.com/Clipboard-Team/Clipboard/stargazers)
+4. 欢迎大家提供宝贵的意见和建议，帮助我们不断优化和改进 Clipboard。 同时欢迎大佬指导和优化本项目

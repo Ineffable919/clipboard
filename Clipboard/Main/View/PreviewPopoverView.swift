@@ -116,11 +116,11 @@ struct PreviewPopoverView: View {
         switch model.type {
         case .string:
             if model.url != nil {
-                EarlierWebView(url: model.url!)
-                    .frame(
-                        width: Const.maxPreviewSize - 48,
-                        height: Const.maxPreviewHeight
-                    )
+                if #available(macOS 26.0, *) {
+                    WebContentView(url: model.url!)
+                } else {
+                    EarlierWebView(url: model.url!)
+                }
             } else {
                 textPreview
             }
@@ -286,14 +286,14 @@ struct PreviewPopoverView: View {
 // MARK: - Preview
 
 #Preview {
-    let data = "/Applications/software/apache-maven-3.9.8/conf/settings.xml"
+    let data = "https://www.apple.com.cn"
         .data(
             using: .utf8
         )!
 
     PreviewPopoverView(
         model: PasteboardModel(
-            pasteboardType: .fileURL,
+            pasteboardType: .string,
             data: data,
             showData: data,
             timestamp: Int64(Date().timeIntervalSince1970),
