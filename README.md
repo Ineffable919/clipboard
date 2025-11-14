@@ -1,6 +1,12 @@
+<div align="center">
+
 # Clipboard
 
+[English](README_EN.md) | 简体中文
+
 <img src="Clipboard/Resource/Assets.xcassets/AppIcon.appiconset/icon-256.png" width="96">
+
+</div>
 
 <img src="Clipboard/Resource/temp.png">
 
