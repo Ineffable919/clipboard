@@ -32,7 +32,7 @@ struct EditableChip: View {
                 .onSubmit { onCommit() }
 
         }
-        .padding(EdgeInsets(top: 6, leading: 10, bottom: 6, trailing: 10))
+        .padding(EdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8))
         .background(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .fill(Color.secondary.opacity(0.08))

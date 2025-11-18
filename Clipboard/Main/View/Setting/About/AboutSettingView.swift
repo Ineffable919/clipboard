@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Sparkle
 
 struct AboutSettingView: View {
     @Environment(\.colorScheme) var colorScheme
@@ -152,14 +153,7 @@ struct AboutSettingView: View {
 
     // 检查更新
     private func checkForUpdates() {
-        // TODO: 实现检查更新逻辑
-        // 可以集成 Sparkle 或其他更新框架
-        let alert = NSAlert()
-        alert.messageText = "检查更新"
-        alert.informativeText = "当前版本：\(appVersion)\n已经是最新版本！"
-        alert.alertStyle = .informational
-        alert.addButton(withTitle: "确定")
-        alert.runModal()
+        AppDelegate.shared?.updaterController.checkForUpdates(nil)
     }
 }
 

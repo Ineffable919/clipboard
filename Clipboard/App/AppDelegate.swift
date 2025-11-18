@@ -8,9 +8,17 @@
 import AppKit
 import KeyboardShortcuts
 import QuartzCore
+import Sparkle
 
 class AppDelegate: NSObject {
     static var shared: AppDelegate?
+
+    // Sparkle
+    let updaterController: SPUStandardUpdaterController = SPUStandardUpdaterController(
+        startingUpdater: true,
+        updaterDelegate: nil,
+        userDriverDelegate: nil
+    )
 
     private let menuBarItem = NSStatusBar.system.statusItem(
         withLength: NSStatusItem.squareLength
@@ -63,9 +71,10 @@ extension AppDelegate: NSApplicationDelegate {
     }
 
     private func applyAppearanceSettings() {
-        let appearanceMode = AppearanceMode(
-            rawValue: PasteUserDefaults.appearance
-        ) ?? .system
+        let appearanceMode =
+            AppearanceMode(
+                rawValue: PasteUserDefaults.appearance
+            ) ?? .system
 
         DispatchQueue.main.async {
             switch appearanceMode {
@@ -118,12 +127,12 @@ extension AppDelegate {
                 systemSymbolName: "heart.text.clipboard.fill",
                 accessibilityDescription: ""
             )?
-                .withSymbolConfiguration(config)
+            .withSymbolConfiguration(config)
         } else {
             menuBarItem.button?.image = NSImage(
                 named: "heart.text.clipboard.fill"
             )?
-                .withSymbolConfiguration(config)
+            .withSymbolConfiguration(config)
         }
         menuBarItem.button?.target = self
         menuBarItem.button?.action = #selector(statusBarClick)
@@ -176,8 +185,8 @@ extension AppDelegate {
             [weak self] event in
             // Cmd+, 打开设置
             if event.modifierFlags.contains(.command),
-               event.charactersIgnoringModifiers == ","
-               || event.charactersIgnoringModifiers == "，"
+                event.charactersIgnoringModifiers == ","
+                    || event.charactersIgnoringModifiers == "，"
             {
                 self?.settingWinController.toggleWindow()
                 return nil

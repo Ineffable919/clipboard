@@ -12,10 +12,20 @@
 			<key>UTTypeDescription</key>
 			<string>Clipboard Item</string>
 			<key>UTTypeIdentifier</key>
-			<string>com.Clipboard.item</string>
+			<string>com.clipboard.item</string>
 			<key>UTTypeTagSpecification</key>
 			<dict/>
 		</dict>
 	</array>
+	<key>SUFeedURL</key>
+	<string>https://ineffable919.github.io/clipboard/appcast.xml</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUScheduledCheckInterval</key>
+	<integer>86400</integer>
+	<key>SUAllowsAutomaticUpdates</key>
+	<true/>
+    <key>SUPublicEDKey</key>
+    <string>blW5K9TjhxvURPS+S9fxAyDcIp+QZYaxw2NqTagdiYU=</string>
 </dict>
 </plist>

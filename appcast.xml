@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+    <channel>
+        <title>Clipboard 更新</title>
+        <description>Clipboard 应用更新源</description>
+        <language>zh-CN</language>
+        <item>
+            <title>Version 0.2.1</title>
+            <description>
+            <![CDATA[
+                <h2>更新内容</h2>
+                <ul>
+                    <li>新功能和改进</li>
+                    <li>修复了一些问题</li>
+                </ul>
+            ]]>
+        </description>
+            <pubDate>Mon, 17 Nov 2025 19:29:09 +0800</pubDate>
+            <sparkle:version>5</sparkle:version>
+            <sparkle:shortVersionString>0.2.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://github.com/Ineffable919/clipboard/releases/download/v0.2.1/Clipboard-0.2.1.zip"
+                sparkle:edSignature="M1wqEV3WCMspVfa4oNi8Wa1Dq+WYuXa0ASiLoKJAgQ1ohCs7r83QmQffvoHVmr+8hZzfQrxlaHwvzlgrw5amDg=="
+                length="7151405"
+                type="application/octet-stream" />
+        </item>
+    </channel>
+</rss>

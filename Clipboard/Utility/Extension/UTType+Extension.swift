@@ -8,5 +8,5 @@
 import UniformTypeIdentifiers
 
 extension UTType {
-    static let clipType = UTType(exportedAs: "com.Clipboard.item")
+    static let clipType = UTType(exportedAs: "com.clipboard.item")
 }

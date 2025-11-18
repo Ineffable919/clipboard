@@ -59,7 +59,7 @@ class AppLogger {
     static let shared = AppLogger()
 
     private let osLogger: os.Logger
-    private let logQueue = DispatchQueue(label: "com.crown.Clip.logger", qos: .utility)
+    private let logQueue = DispatchQueue(label: "com.crown.clipboard.logger", qos: .utility)
     private nonisolated(unsafe) var logFileURL: URL?
 
     #if DEBUG
@@ -69,7 +69,7 @@ class AppLogger {
     #endif
 
     private init() {
-        osLogger = os.Logger(subsystem: "com.crown.Clip", category: "AppLogger")
+        osLogger = os.Logger(subsystem: "com.crown.clipboard", category: "AppLogger")
         setupLogFile()
     }
 
@@ -117,9 +117,7 @@ class AppLogger {
 
     private func setupLogFile() {
         #if !DEBUG
-            logQueue.async { [weak self] in
-                self?.createLogFileURL()
-            }
+            createLogFileURL()
         #endif
     }
 
@@ -132,7 +130,7 @@ class AppLogger {
             return
         }
 
-        let appDir = appSupport.appendingPathComponent("com.crown.Clip")
+        let appDir = appSupport.appendingPathComponent("com.crown.clipboard")
         let logsDir = appDir.appendingPathComponent("logs")
 
         do {
