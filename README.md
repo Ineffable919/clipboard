@@ -8,7 +8,7 @@
 
 </div>
 
-<img src="Clipboard/Resource/temp.png">
+<img src="temp.png">
 
 一款 macOS 剪贴板管理工具，帮助您更高效地管理和使用剪贴板历史记录。
 
