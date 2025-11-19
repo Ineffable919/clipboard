@@ -10,8 +10,8 @@
             <![CDATA[
                 <h2>✨ 新增功能</h2>
                 <ul>
-                    <li><strong>自动更新支持</strong>: 支持应用内自动更新检查和安装</li>
-                    <li><strong>macOS 26 兼容性</strong>: 新增 WebContentView 以增强对 macOS 26 的兼容性</li>
+                    <li>: 支持应用内自动更新检查和安装</li>
+                    <li>: 新增 WebContentView 以增强对 macOS 26 的兼容性</li>
                 </ul>
                 <h2>🎨 界面优化</h2>
                 <ul>
@@ -27,8 +27,8 @@
             <sparkle:shortVersionString>0.2.1</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
             <enclosure
-                url="https://github.com/Ineffable919/clipboard/releases/download/v0.2.1/Clipboard-0.2.1.zip"
-                sparkle:edSignature="bvPP6FexJFX/7EeS/Cpwhghg5CcDRjBIdW31j/xUr6+8dYwHPtNAi0kdWCSttKqsOBcomnVGjQwmwfAyFFU5Dw=="
+                url="https://github.com/Ineffable919/clipboard/releases/download/0.2.1/Clipboard-0.2.1.zip"
+                sparkle:edSignature="UdpDdoLque1Q+4XemattzmJUWmfBYVWLsk1qd2EUa/bxO1FHVl4g+eQ2gGsT6zvH60GaSeDxsGIcy/TvI1B7CQ=="
                 length="2841583"
                 type="application/octet-stream" />
         </item>
