@@ -5,26 +5,33 @@
         <description>Clipboard 应用更新源</description>
         <language>zh-CN</language>
         <item>
-            <title>Version 0.2.1</title>
+            <title>Version 0.2.2</title>
             <description>
             <![CDATA[
                 <h4>✨ Feature</h4>
-                <ul>
-                    <li>改进关于设置界面的布局和显示</li>
-                    <li>统一新增分类 UI 的样式，提升一致性</li>
-                    <li>优化预览视图的整体用户体验</li>
-                    <li>支持应用内自动更新检查和安装，兼容 macOS 26</li>
-                </ul>
+                    <ul>
+                        <li>状态栏新增“检查更新”菜单项，允许用户手动检查更新。</li>
+                        <li>增加显示更新设置，确保用户能够方便地管理更新选项。</li>
+                    </ul>
+                <h4>🔧 Updates</h4>
+                    <ul>
+                        <li>禁用了自动更新</li>
+                        <li>调整UI元素的间距和样式，提升整体视觉一致性</li>
+                    </ul>
+                <h4>🐛 Bug Fixes</h4>
+                    <ul>
+                        <li>修复在某些情况下粘贴内容后选中状态丢失的问题。</li>
+                    </ul>
             ]]>
         </description>
-            <pubDate>Wed, 19 Nov 2025 17:48:32 +0800</pubDate>
-            <sparkle:version>13</sparkle:version>
-            <sparkle:shortVersionString>0.2.1</sparkle:shortVersionString>
+            <pubDate>Thu, 20 Nov 2025 18:33:00 +0800</pubDate>
+            <sparkle:version>19</sparkle:version>
+            <sparkle:shortVersionString>0.2.2</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
             <enclosure
-                url="https://github.com/Ineffable919/clipboard/releases/download/0.2.1/Clipboard-0.2.1.zip"
-                sparkle:edSignature="UdpDdoLque1Q+4XemattzmJUWmfBYVWLsk1qd2EUa/bxO1FHVl4g+eQ2gGsT6zvH60GaSeDxsGIcy/TvI1B7CQ=="
-                length="2841583"
+                url="https://github.com/Ineffable919/clipboard/releases/download/v0.2.2/Clipboard-0.2.2.zip"
+                sparkle:edSignature="FhUK285KPvcvkvxqo3lOFvf95TnnThwIVTxozLZ8Hqc5O2C2GPz5tp67nYIsmp5bxYPQDZgtKhDpaOFUOndhBA=="
+                length="2847364"
                 type="application/octet-stream" />
         </item>
     </channel>

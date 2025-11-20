@@ -104,7 +104,7 @@ struct HistoryAreaView: View {
                     isHistoryFocused: vm.focusView == .history,
                     quickPasteIndex: isQuickPasteModifierPressed && index < 9
                         ? index + 1 : nil,
-                    onRequestDelete: { requestDel(id: item.id) }
+                    onRequestDelete: { requestDel(id: item.id) },
                 )
                 .id(item.id)
                 .onTapGesture { handleOptimisticTap(on: item) }
@@ -124,7 +124,7 @@ struct HistoryAreaView: View {
         if selectionState.selectedId != item.id {
             selectionState.selectedId = item.id
         }
-        item.pasteAction(true)
+        vm.pasteAction(item: item)
     }
 
     private func handleOptimisticTap(on item: PasteboardModel) {
@@ -172,7 +172,7 @@ struct HistoryAreaView: View {
         }
 
         log.debug(
-            "触发滚动加载下一页 (index: \(index ?? -1), dataCount: \(pd.dataList.count))"
+            "触发滚动加载下一页 (index: \(index ?? -1), dataCount: \(pd.dataList.count))",
         )
         pd.loadNextPage()
     }
@@ -192,7 +192,7 @@ struct HistoryAreaView: View {
     > {
         Binding(
             get: { showPreviewId == itemId },
-            set: { showPreviewId = $0 ? itemId : nil }
+            set: { showPreviewId = $0 ? itemId : nil },
         )
     }
 
@@ -205,13 +205,13 @@ struct HistoryAreaView: View {
 
         defer {
             DispatchQueue.main.asyncAfter(
-                deadline: .now() + Constants.deleteAnimationDelay
+                deadline: .now() + Constants.deleteAnimationDelay,
             ) {
                 self.isDel = false
             }
         }
         let item = pd.dataList[index]
-        item.deleteAction()
+        vm.deleteAction(item: item)
 
         withAnimation(.easeOut(duration: 0.2)) {
             pd.dataList.remove(at: index)
@@ -269,7 +269,7 @@ struct HistoryAreaView: View {
         let newId = pd.dataList[newIndex].id
         selectionState.selectedId = newId
 
-        if offset > 0 && shouldLoadNextPage(at: newIndex) {
+        if offset > 0, shouldLoadNextPage(at: newIndex) {
             loadNextPageIfNeeded(at: newIndex)
         }
     }
@@ -277,12 +277,12 @@ struct HistoryAreaView: View {
     private func appear() {
         monitor = NSEvent.addLocalMonitorForEvents(
             matching: .keyDown,
-            handler: keyDownEvent(_:)
+            handler: keyDownEvent(_:),
         )
 
         flagsMonitor = NSEvent.addLocalMonitorForEvents(
             matching: .flagsChanged,
-            handler: flagsChangedEvent(_:)
+            handler: flagsChangedEvent(_:),
         )
 
         if selectionState.selectedId == nil {
@@ -291,11 +291,11 @@ struct HistoryAreaView: View {
     }
 
     private func cleanup() {
-        if let monitor = monitor {
+        if let monitor {
             NSEvent.removeMonitor(monitor)
             self.monitor = nil
         }
-        if let flagsMonitor = flagsMonitor {
+        if let flagsMonitor {
             NSEvent.removeMonitor(flagsMonitor)
             self.flagsMonitor = nil
         }
@@ -364,7 +364,7 @@ struct HistoryAreaView: View {
         guard
             KeyHelper.hasModifier(
                 event,
-                modifierIndex: PasteUserDefaults.quickPasteModifier
+                modifierIndex: PasteUserDefaults.quickPasteModifier,
             )
         else {
             return nil
@@ -372,7 +372,7 @@ struct HistoryAreaView: View {
 
         // 检查是否同时按下了其他修饰键（除了快速粘贴修饰键之外）
         let quickPasteModifier = KeyHelper.modifierFlags(
-            from: PasteUserDefaults.quickPasteModifier
+            from: PasteUserDefaults.quickPasteModifier,
         )
         let otherModifiers = event.modifierFlags.subtracting(quickPasteModifier)
             .intersection([.command, .option, .control])
@@ -405,13 +405,13 @@ struct HistoryAreaView: View {
 
         let item = pd.dataList[index]
         selectionState.selectedId = item.id
-        item.pasteAction(true)
+        vm.pasteAction(item: item)
     }
 
     private func hasPlainTextModifier(_ event: NSEvent) -> Bool {
         KeyHelper.hasModifier(
             event,
-            modifierIndex: PasteUserDefaults.plainTextModifier
+            modifierIndex: PasteUserDefaults.plainTextModifier,
         )
     }
 
@@ -439,7 +439,7 @@ struct HistoryAreaView: View {
             NSSound.beep()
             return
         }
-        item.copyAction()
+        vm.copyAction(item: item)
     }
 
     private func handleEscapeKeyEvent() {
@@ -488,7 +488,7 @@ struct HistoryAreaView: View {
         else {
             return event
         }
-        item.pasteAction(!hasPlainTextModifier(event))
+        vm.pasteAction(item: item, isAttribute: !hasPlainTextModifier(event))
         return nil
     }
 
@@ -528,7 +528,7 @@ struct HistoryAreaView: View {
         // 1️⃣ 内部拖拽
         provider.registerDataRepresentation(
             forTypeIdentifier: UTType.clipType.identifier,
-            visibility: .all
+            visibility: .all,
         ) { completion in
             let idData = withUnsafeBytes(of: modeId) { Data($0) }
             completion(idData, nil)
@@ -539,7 +539,7 @@ struct HistoryAreaView: View {
         if model.pasteboardType.isText() {
             provider.registerDataRepresentation(
                 forTypeIdentifier: model.pasteboardType.rawValue,
-                visibility: .all
+                visibility: .all,
             ) { completion in
                 completion(model.data, nil)
                 return nil
@@ -551,7 +551,7 @@ struct HistoryAreaView: View {
         if model.type == .image {
             provider.registerDataRepresentation(
                 forTypeIdentifier: model.pasteboardType.rawValue,
-                visibility: .all
+                visibility: .all,
             ) { completion in
                 completion(model.data, nil)
                 return nil
@@ -567,7 +567,7 @@ struct HistoryAreaView: View {
                     .split(separator: "\n")
                     .map {
                         String($0).trimmingCharacters(
-                            in: .whitespacesAndNewlines
+                            in: .whitespacesAndNewlines,
                         )
                     }
                     .filter { !$0.isEmpty }
@@ -576,39 +576,39 @@ struct HistoryAreaView: View {
                     let fileURL = URL(fileURLWithPath: path)
                     if FileManager.default.fileExists(atPath: path) {
                         let promisedType: String = promisedTypeIdentifier(
-                            for: fileURL
+                            for: fileURL,
                         )
                         provider.registerFileRepresentation(
                             forTypeIdentifier: promisedType,
                             fileOptions: [],
-                            visibility: .all
+                            visibility: .all,
                         ) { completion in
                             DispatchQueue.global(qos: .userInitiated).async {
                                 do {
                                     // Copy to a temp location we can read, so Finder can pull without sandbox extensions.
                                     let tmpDir = URL(
                                         fileURLWithPath: NSTemporaryDirectory(),
-                                        isDirectory: true
+                                        isDirectory: true,
                                     )
                                     let dst = tmpDir.appendingPathComponent(
                                         fileURL.lastPathComponent,
-                                        isDirectory: false
+                                        isDirectory: false,
                                     )
                                     if FileManager.default.fileExists(
-                                        atPath: dst.path
+                                        atPath: dst.path,
                                     ) {
                                         try? FileManager.default.removeItem(
-                                            at: dst
+                                            at: dst,
                                         )
                                     }
                                     try FileManager.default.copyItem(
                                         at: fileURL,
-                                        to: dst
+                                        to: dst,
                                     )
                                     completion(
                                         dst, /* isInPlace: */
                                         false,
-                                        nil
+                                        nil,
                                     )
                                 } catch {
                                     completion(nil, false, error)
@@ -660,12 +660,12 @@ struct HistoryAreaView: View {
                 }
 
                 guard response == .alertFirstButtonReturn,
-                    let id = self.selectionState.pendingDeleteId
+                    let id = selectionState.pendingDeleteId
                 else {
                     return
                 }
 
-                self.deleteItem(for: id)
+                deleteItem(for: id)
             }
         }
     }

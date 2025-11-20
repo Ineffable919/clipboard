@@ -154,7 +154,7 @@ cat << EOF
         <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>
         <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
         <enclosure 
-            url="https://github.com/Ineffable919/clipboard/releases/download/v$VERSION/$ZIP_NAME" 
+            url="https://github.com/Ineffable919/clipboard/releases/download/$VERSION/$ZIP_NAME" 
             sparkle:edSignature="$ED_SIGNATURE"
             length="$SIGNATURE_LENGTH"
             type="application/octet-stream" />

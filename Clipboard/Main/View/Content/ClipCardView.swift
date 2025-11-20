@@ -152,9 +152,11 @@ struct ClipCardView: View {
 
     // MARK: - Context Menu Actions
 
-    private func pasteToCode() { model.pasteAction() }
-    private func pasteAsPlainText() { model.pasteAction(false) }
-    private func copyToClipboard() { model.copyAction() }
+    private func pasteToCode() { vm.pasteAction(item: model) }
+    private func pasteAsPlainText() {
+        vm.pasteAction(item: model, isAttribute: false)
+    }
+    private func copyToClipboard() { vm.copyAction(item: model) }
     private func deleteItem() { onRequestDelete?() }
     private func togglePreview() { showPreview = !showPreview }
 }

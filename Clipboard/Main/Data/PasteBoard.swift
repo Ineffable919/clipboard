@@ -174,7 +174,10 @@ final class PasteBoard {
     func pasteData(_ data: PasteboardModel, _ isAttribute: Bool = true) {
         data.updateDate()
         pasteModel = data
-        PasteDataStore.main.insertModel(data)
+        if let itemId = data.id {
+            PasteDataStore.main.updateDbItem(id: itemId, item: data)
+        }
+        PasteDataStore.main.moveItemToFirst(data)
         NSPasteboard.general.clearContents()
 
         let shouldPasteAsPlainText =

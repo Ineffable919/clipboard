@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import KeyboardShortcuts
 import Observation
 import SwiftUI
 
@@ -256,6 +257,35 @@ final class ClipboardViewModel {
         }
         return nextIndex
     }
+}
+
+extension ClipboardViewModel {
+
+    func pasteAction(item: PasteboardModel, isAttribute: Bool = true) {
+        let temp = isSearching
+        if temp {
+            isSearching = false
+        }
+        defer {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                self.isSearching = temp
+            }
+        }
+        PasteBoard.main.pasteData(item, isAttribute)
+        guard PasteUserDefaults.pasteDirect else { return }
+        ClipMainWindowController.shared.toggleWindow {
+            KeyboardShortcuts.postCmdVEvent()
+        }
+    }
+
+    func copyAction(item: PasteboardModel, isAttribute: Bool = true) {
+        PasteBoard.main.pasteData(item, isAttribute)
+    }
+
+    func deleteAction(item: PasteboardModel) {
+        PasteDataStore.main.deleteItems(item)
+    }
+
 }
 
 enum FocusField: Hashable {

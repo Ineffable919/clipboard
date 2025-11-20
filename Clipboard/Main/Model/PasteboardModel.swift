@@ -296,33 +296,6 @@ extension PasteboardModel {
         cachedAttributed = a
         return a
     }
-
-    func pasteAction(_ isAttribute: Bool = true) {
-        let temp = vm.isSearching
-        if temp {
-            vm.isSearching = false
-        }
-        defer {
-            DispatchQueue.main.asyncAfter(
-                deadline: .now() + 0.2
-            ) {
-                self.vm.isSearching = temp
-            }
-        }
-        PasteBoard.main.pasteData(self, isAttribute)
-        guard PasteUserDefaults.pasteDirect else { return }
-        ClipMainWindowController.shared.toggleWindow {
-            KeyboardShortcuts.postCmdVEvent()
-        }
-    }
-
-    func copyAction(_ isAttribute: Bool = true) {
-        PasteBoard.main.pasteData(self, isAttribute)
-    }
-
-    func deleteAction() {
-        PasteDataStore.main.deleteItems(self)
-    }
 }
 
 enum PasteModelType {

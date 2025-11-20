@@ -257,6 +257,21 @@ extension PasteDataStore {
         }
     }
 
+    /// 将指定的卡片移到列表第一位(用于粘贴操作)
+    /// - Parameter model: PasteboardModel
+    func moveItemToFirst(_ model: PasteboardModel) {
+        guard let index = dataList.firstIndex(where: { $0.id == model.id }) else {
+            return
+        }
+        
+        guard index != 0 else { return }
+        
+        var list = dataList
+        list.remove(at: index)
+        list.insert(model, at: 0)
+        updateData(with: list, changeType: .reset)
+    }
+
     /// 删除单条数据
     /// - Parameter item: PasteboardModel
     func deleteItems(_ items: PasteboardModel...) {
