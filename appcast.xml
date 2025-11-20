@@ -30,8 +30,8 @@
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
             <enclosure
                 url="https://github.com/Ineffable919/clipboard/releases/download/0.2.2/Clipboard-0.2.2.zip"
-                sparkle:edSignature="FhUK285KPvcvkvxqo3lOFvf95TnnThwIVTxozLZ8Hqc5O2C2GPz5tp67nYIsmp5bxYPQDZgtKhDpaOFUOndhBA=="
-                length="2847364"
+                sparkle:edSignature="5XDXDOFV4YvM1LKorATXnS42/p3fzCJWGunG576R4H2OlzuGhZGkpf2Jfh05/PosrLyzQ4nMCFffJKtV4fYmCg=="
+                length="2847368"
                 type="application/octet-stream" />
         </item>
     </channel>
