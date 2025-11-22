@@ -12,10 +12,8 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# 获取脚本所在目录
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-# 切换到项目根目录(脚本在 Sh/ 子目录中)
-PROJECT_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$PROJECT_ROOT"
 
 echo -e "${BLUE}📂 项目根目录: $PROJECT_ROOT${NC}"
@@ -33,23 +31,54 @@ echo ""
 
 if [ $# -lt 1 ]; then
     echo -e "${YELLOW}使用方法:${NC}"
-    echo "  $0 <版本号> [构建号]"
+    echo "  $0 <版本号> [构建号] [架构]"
+    echo ""
+    echo -e "${YELLOW}参数说明:${NC}"
+    echo "  架构: arm64 | x86_64 | universal (默认: universal)"
     echo ""
     echo -e "${YELLOW}示例:${NC}"
-    echo "  $0 0.2.1 5"
-    echo "  $0 0.3.0"
+    echo "  $0 0.2.1 5 universal    # 构建通用版本"
+    echo "  $0 0.2.1 5 arm64        # 只构建 Apple Silicon 版本"
+    echo "  $0 0.2.1 5 x86_64       # 只构建 Intel 版本"
+    echo "  $0 0.3.0                # 使用默认构建号和通用架构"
     echo ""
     exit 1
 fi
 
 VERSION=$1
 BUILD=${2:-$(date +%s)}
+ARCH=${3:-universal}
+
+if [[ "$ARCH" != "arm64" && "$ARCH" != "x86_64" && "$ARCH" != "universal" ]]; then
+    echo -e "${RED}❌ 错误: 不支持的架构 '$ARCH'${NC}"
+    echo "支持的架构: arm64, x86_64, universal"
+    exit 1
+fi
+
+case "$ARCH" in
+"arm64")
+    BUILD_ARCHS="arm64"
+    DESTINATION="platform=macOS,arch=arm64"
+    ARCH_DESC="Apple Silicon (arm64)"
+    ;;
+"x86_64")
+    BUILD_ARCHS="x86_64"
+    DESTINATION="platform=macOS,arch=x86_64"
+    ARCH_DESC="Intel (x86_64)"
+    ;;
+"universal")
+    BUILD_ARCHS="arm64 x86_64"
+    DESTINATION="platform=macOS,name=Any Mac"
+    ARCH_DESC="Universal (arm64 + x86_64)"
+    ;;
+esac
 
 echo -e "${GREEN}📦 构建配置${NC}"
 echo "----------------------------------------"
 echo "应用名称: $APP_NAME"
 echo "版本号:   $VERSION"
 echo "构建号:   $BUILD"
+echo "架构:     $ARCH_DESC"
 echo "配置:     $CONFIGURATION"
 echo ""
 
@@ -61,7 +90,7 @@ fi
 XCODE_PATH=$(xcode-select -p 2>/dev/null || echo "")
 if [[ "$XCODE_PATH" == *"CommandLineTools"* ]] || [ -z "$XCODE_PATH" ]; then
     echo -e "${YELLOW}⚠️  检测到使用命令行工具,尝试切换到 Xcode.app...${NC}"
-    
+
     if [ -d "/Applications/Xcode.app" ]; then
         echo "找到 Xcode.app,正在切换..."
         sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
@@ -75,19 +104,21 @@ if [[ "$XCODE_PATH" == *"CommandLineTools"* ]] || [ -z "$XCODE_PATH" ]; then
 fi
 
 echo -e "${BLUE}🧹 步骤 1/5: 清理构建目录...${NC}"
-xcodebuild clean -scheme "$SCHEME" -configuration "$CONFIGURATION" > /dev/null 2>&1 || true
+xcodebuild clean -scheme "$SCHEME" -configuration "$CONFIGURATION" >/dev/null 2>&1 || true
 echo -e "${GREEN}✅ 清理完成${NC}"
 echo ""
 
-echo -e "${BLUE}🔨 步骤 2/5: 构建应用...${NC}"
+echo -e "${BLUE}🔨 步骤 2/5: 构建应用 ($ARCH_DESC)...${NC}"
 echo "这可能需要几分钟..."
 
 xcodebuild \
     -scheme "$SCHEME" \
-    -destination 'platform=macOS,arch=arm64' \
     -configuration "$CONFIGURATION" \
+    -destination "$DESTINATION" \
     MARKETING_VERSION="$VERSION" \
     CURRENT_PROJECT_VERSION="$BUILD" \
+    ARCHS="$BUILD_ARCHS" \
+    ONLY_ACTIVE_ARCH=NO \
     clean build | grep -E '^(Build|=|❌|⚠️)' || true
 
 if [ ${PIPESTATUS[0]} -ne 0 ]; then
@@ -101,7 +132,7 @@ echo ""
 # 步骤 3: 查找构建产物
 echo -e "${BLUE}🔍 步骤 3/5: 查找构建产物...${NC}"
 
-DERIVED_DATA=$(xcodebuild -scheme "$SCHEME" -destination 'platform=macOS,arch=arm64' -configuration "$CONFIGURATION" -showBuildSettings | grep " BUILT_PRODUCTS_DIR" | sed 's/.*= //')
+DERIVED_DATA=$(xcodebuild -scheme "$SCHEME" -configuration "$CONFIGURATION" -destination "$DESTINATION" -showBuildSettings | grep " BUILT_PRODUCTS_DIR" | sed 's/.*= //')
 
 if [ -z "$DERIVED_DATA" ]; then
     echo -e "${RED}❌ 错误: 未找到构建目录${NC}"
@@ -116,6 +147,12 @@ if [ ! -d "$APP_PATH" ]; then
 fi
 
 echo -e "${GREEN}✅ 找到应用: $APP_PATH${NC}"
+
+# 验证构建的架构
+if [ -f "$APP_PATH/Contents/MacOS/$APP_NAME" ]; then
+    BUILT_ARCHS=$(lipo -archs "$APP_PATH/Contents/MacOS/$APP_NAME" 2>/dev/null || echo "未知")
+    echo "实际构建架构: $BUILT_ARCHS"
+fi
 echo ""
 
 echo -e "${BLUE}🔐 步骤 4/5: 重新签名应用...${NC}"
@@ -152,31 +189,50 @@ else
 fi
 echo ""
 
-# 步骤 5: 创建 DMG 安装包
 echo -e "${BLUE}💿 步骤 5/5: 创建 DMG 安装包...${NC}"
 
-DMG_NAME="$APP_NAME-$VERSION.dmg"
+if [ "$ARCH" = "universal" ]; then
+    DMG_NAME="$APP_NAME-$VERSION.dmg"
+else
+    DMG_NAME="$APP_NAME-$VERSION-$ARCH.dmg"
+fi
 DMG_PATH="./$DMG_NAME"
-DMG_TEMP_DIR="./dmg_temp"
 
-# 删除旧文件
 rm -f "$DMG_PATH"
-rm -rf "$DMG_TEMP_DIR"
 
-mkdir -p "$DMG_TEMP_DIR"
-
-cp -R "$APP_PATH" "$DMG_TEMP_DIR/"
-
-ln -s /Applications "$DMG_TEMP_DIR/Applications"
-
-hdiutil create \
-    -volname "$APP_NAME $VERSION" \
-    -srcfolder "$DMG_TEMP_DIR" \
-    -ov \
-    -format UDZO \
-    "$DMG_PATH"
-
-rm -rf "$DMG_TEMP_DIR"
+if command -v create-dmg &> /dev/null; then
+    echo "使用 create-dmg 创建..."
+    
+    DMG_DIR=$(dirname "$DMG_PATH")
+    mkdir -p "$DMG_DIR"
+    
+    # create-dmg 格式: create-dmg [options] <app> [destination]
+    create-dmg --overwrite --skip-jenkins --dmg-title="$APP_NAME $VERSION" "$APP_PATH" . 2>&1 | grep -v "Code signing failed" || true
+    
+    GENERATED_DMG=$(ls -t ${APP_NAME}*.dmg 2>/dev/null | head -n 1)
+    if [ -n "$GENERATED_DMG" ] && [ "$GENERATED_DMG" != "$DMG_NAME" ]; then
+        mv "$GENERATED_DMG" "$DMG_PATH"
+    elif [ -n "$GENERATED_DMG" ]; then
+        DMG_PATH="$GENERATED_DMG"
+    fi
+else
+    echo "未找到 create-dmg，使用 hdiutil..."
+    DMG_TEMP_DIR="./dmg_temp"
+    rm -rf "$DMG_TEMP_DIR"
+    mkdir -p "$DMG_TEMP_DIR"
+    
+    cp -R "$APP_PATH" "$DMG_TEMP_DIR/"
+    ln -s /Applications "$DMG_TEMP_DIR/Applications"
+    
+    hdiutil create \
+        -volname "$APP_NAME $VERSION" \
+        -srcfolder "$DMG_TEMP_DIR" \
+        -ov \
+        -format UDZO \
+        "$DMG_PATH"
+    
+    rm -rf "$DMG_TEMP_DIR"
+fi
 
 DMG_SIZE=$(ls -l "$DMG_PATH" | awk '{print $5}')
 
@@ -189,5 +245,6 @@ echo ""
 echo -e "${BLUE}📦 生成的文件:${NC}"
 echo "   文件名: $DMG_NAME"
 echo "   路径:   $DMG_PATH"
+echo "   架构:   $ARCH_DESC"
 echo "   大小:   $DMG_SIZE 字节 ($(numfmt --to=iec-i --suffix=B $DMG_SIZE 2>/dev/null || echo 'N/A'))"
 echo ""

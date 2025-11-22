@@ -37,7 +37,7 @@ struct HistoryAreaView: View {
     @State private var flagsMonitor: Any?
     @State private var isDel: Bool = false
     @State private var isQuickPasteModifierPressed: Bool = false
-    @State private var lastLoadTriggerIndex: Int = -1  // 记录上次触发加载的索引，防止重复
+    @State private var lastLoadTriggerIndex: Int = -1 // 记录上次触发加载的索引，防止重复
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -94,9 +94,7 @@ struct HistoryAreaView: View {
 
     private func contentView(proxy _: ScrollViewProxy) -> some View {
         LazyHStack(alignment: .top, spacing: Const.cardSpace) {
-            ForEach(Array(pd.dataList.enumerated()), id: \.element.id) {
-                index,
-                item in
+            ForEach(Array(pd.dataList.enumerated()), id: \.element.id) { index, item in
                 ClipCardView(
                     model: item,
                     isSelected: selectionState.selectedId == item.id,
@@ -139,8 +137,8 @@ struct HistoryAreaView: View {
         let now = ProcessInfo.processInfo.systemUptime
 
         if let lastId = selectionState.lastTapId,
-            lastId == item.id,
-            now - selectionState.lastTapTime <= Constants.doubleTapInterval
+           lastId == item.id,
+           now - selectionState.lastTapTime <= Constants.doubleTapInterval
         {
             handleDoubleTap(on: item)
             resetTapState()
@@ -231,7 +229,7 @@ struct HistoryAreaView: View {
     private func scrollToSelectedId(proxy: ScrollViewProxy) {
         guard let id = selectionState.selectedId else { return }
         guard let first = pd.dataList.first?.id,
-            let last = pd.dataList.last?.id
+              let last = pd.dataList.last?.id
         else {
             return
         }
@@ -327,7 +325,7 @@ struct HistoryAreaView: View {
         }
 
         if KeyHelper.shouldTriggerSearch(for: event),
-            vm.focusView != .search
+           vm.focusView != .search
         {
             vm.focusView = .search
             return nil
@@ -434,7 +432,7 @@ struct HistoryAreaView: View {
 
     private func handleCopyCommand() {
         guard let id = selectionState.selectedId,
-            let item = pd.dataList.first(where: { $0.id == id })
+              let item = pd.dataList.first(where: { $0.id == id })
         else {
             NSSound.beep()
             return
@@ -484,7 +482,7 @@ struct HistoryAreaView: View {
     private func handleReturnKey(_ event: NSEvent) -> NSEvent? {
         guard vm.focusView == .history else { return event }
         guard let id = selectionState.selectedId,
-            let item = pd.dataList.first(where: { $0.id == id })
+              let item = pd.dataList.first(where: { $0.id == id })
         else {
             return event
         }
@@ -564,13 +562,13 @@ struct HistoryAreaView: View {
             if let filePaths = String(data: model.data, encoding: .utf8) {
                 let paths =
                     filePaths
-                    .split(separator: "\n")
-                    .map {
-                        String($0).trimmingCharacters(
-                            in: .whitespacesAndNewlines,
-                        )
-                    }
-                    .filter { !$0.isEmpty }
+                        .split(separator: "\n")
+                        .map {
+                            String($0).trimmingCharacters(
+                                in: .whitespacesAndNewlines,
+                            )
+                        }
+                        .filter { !$0.isEmpty }
 
                 for path in paths {
                     let fileURL = URL(fileURLWithPath: path)
@@ -634,7 +632,7 @@ struct HistoryAreaView: View {
     private func promisedTypeIdentifier(for fileURL: URL) -> String {
         do {
             let values = try fileURL.resourceValues(forKeys: [
-                .contentTypeKey
+                .contentTypeKey,
             ])
             if let type = values.contentType {
                 return type.identifier
@@ -660,7 +658,7 @@ struct HistoryAreaView: View {
                 }
 
                 guard response == .alertFirstButtonReturn,
-                    let id = selectionState.pendingDeleteId
+                      let id = selectionState.pendingDeleteId
                 else {
                     return
                 }
