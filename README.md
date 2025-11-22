@@ -32,6 +32,7 @@
 ## 系统要求
 
 - macOS 14.0 或更高版本 （已适配macOS 26）
+- 支持 Apple Silicon (arm64) 和 Intel (x86_64) 架构
 
 ## 使用方法
 
@@ -59,7 +60,7 @@
 本项目采用 Creative Commons Attribution-NonCommercial 4.0 International Public License 许可证。详情请见 [LICENSE](LICENSE) 文件。
 
 ### Tips
-1. 只适用于苹果 M 系列芯片，不适用于 Intel 系列芯片
+1. 支持 Apple Silicon 和 Intel 芯片的 Mac
 2. 有问题请随时 [提交 issue](https://github.com/Clipboard-Team/Clipboard/issues)
 3. 欢迎 [提交 pull request](https://github.com/Clipboard-Team/Clipboard/pulls) [Star](https://github.com/Clipboard-Team/Clipboard/stargazers)
 4. 欢迎大家提供宝贵的意见和建议，帮助我们不断优化和改进 Clipboard。 同时欢迎大佬指导和优化本项目

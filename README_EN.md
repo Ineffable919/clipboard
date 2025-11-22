@@ -32,6 +32,7 @@ A macOS clipboard manager that helps you manage and use your clipboard history m
 ## System Requirements
 
 - macOS 14.0 or later (Compatible with macOS 26)
+- Supports Apple Silicon (arm64) and Intel (x86_64) architectures
 
 ## How to Use
 
@@ -59,7 +60,7 @@ A macOS clipboard manager that helps you manage and use your clipboard history m
 This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International Public License. See the [LICENSE](LICENSE) file for details.
 
 ### Tips
-1. Only compatible with Apple M-series chips, not compatible with Intel chips
+1. Compatible with Apple Silicon (M1/M2/M3/M4) and Intel chip Macs
 2. For any issues, please [submit an issue](https://github.com/Clipboard-Team/Clipboard/issues)
 3. Welcome to [submit pull requests](https://github.com/Clipboard-Team/Clipboard/pulls) and [Star](https://github.com/Clipboard-Team/Clipboard/stargazers)
 4. We welcome valuable feedback and suggestions to help us continuously optimize and improve Clipboard. Contributions and guidance from developers are always appreciated
