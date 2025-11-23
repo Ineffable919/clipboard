@@ -15,14 +15,14 @@ class AppDelegate: NSObject {
 
     // Sparkle
     let updaterController: SPUStandardUpdaterController =
-        SPUStandardUpdaterController(
+        .init(
             startingUpdater: true,
             updaterDelegate: nil,
-            userDriverDelegate: nil
+            userDriverDelegate: nil,
         )
 
     private let menuBarItem = NSStatusBar.system.statusItem(
-        withLength: NSStatusItem.squareLength
+        withLength: NSStatusItem.squareLength,
     )
 
     private lazy var rMenu: NSMenu = {
@@ -31,22 +31,22 @@ class AppDelegate: NSObject {
         let item1 = NSMenuItem(
             title: "偏好设置",
             action: #selector(settingsAction),
-            keyEquivalent: ","
+            keyEquivalent: ",",
         )
         item1.image = NSImage(
             systemSymbolName: "gearshape",
-            accessibilityDescription: nil
+            accessibilityDescription: nil,
         )
         menu.addItem(item1)
 
         let item3 = NSMenuItem(
             title: "检查更新",
             action: #selector(checkUpdate),
-            keyEquivalent: ""
+            keyEquivalent: "",
         )
         item3.image = NSImage(
             systemSymbolName: "arrow.clockwise",
-            accessibilityDescription: nil
+            accessibilityDescription: nil,
         )
         menu.addItem(item3)
 
@@ -55,7 +55,7 @@ class AppDelegate: NSObject {
         let item2 = NSMenuItem(
             title: "退出",
             action: #selector(NSApplication.shared.terminate),
-            keyEquivalent: "q"
+            keyEquivalent: "q",
         )
         menu.addItem(item2)
 
@@ -75,17 +75,19 @@ extension AppDelegate: NSApplicationDelegate {
     }
 
     func applicationSupportsSecureRestorableState(_: NSApplication) -> Bool {
-        return true
+        true
     }
 
     func applicationWillTerminate(_: Notification) {
+        EventMonitorManager.shared.removeAllMonitors()
+
         FileAccessHelper.shared.stopAccessingSecurityScopedResources()
     }
 
     private func applyAppearanceSettings() {
         let appearanceMode =
             AppearanceMode(
-                rawValue: PasteUserDefaults.appearance
+                rawValue: PasteUserDefaults.appearance,
             ) ?? .system
 
         DispatchQueue.main.async {
@@ -132,19 +134,19 @@ extension AppDelegate {
         let config = NSImage.SymbolConfiguration(
             pointSize: 12,
             weight: .medium,
-            scale: .large
+            scale: .large,
         )
         if #available(macOS 15.0, *) {
             menuBarItem.button?.image = NSImage(
                 systemSymbolName: "heart.text.clipboard.fill",
-                accessibilityDescription: ""
+                accessibilityDescription: "",
             )?
-            .withSymbolConfiguration(config)
+                .withSymbolConfiguration(config)
         } else {
             menuBarItem.button?.image = NSImage(
-                named: "heart.text.clipboard.fill"
+                named: "heart.text.clipboard.fill",
             )?
-            .withSymbolConfiguration(config)
+                .withSymbolConfiguration(config)
         }
         menuBarItem.button?.target = self
         menuBarItem.button?.action = #selector(statusBarClick)
@@ -198,17 +200,19 @@ extension AppDelegate {
     }
 
     private func setupLocalKeyboardShortcuts() {
-        NSEvent.addLocalMonitorForEvents(matching: .keyDown) {
-            [weak self] event in
+        EventMonitorManager.shared.addLocalMonitor(
+            type: .globalSettings,
+            matching: .keyDown,
+        ) { [weak self] event in
             // Cmd+, 打开设置
             if event.modifierFlags.contains(.command),
-                event.charactersIgnoringModifiers == ","
-                    || event.charactersIgnoringModifiers == "，"
+               event.charactersIgnoringModifiers == ","
+               || event.charactersIgnoringModifiers == "，"
             {
                 self?.settingWinController.toggleWindow()
-                return nil
+                return nil // 拦截事件
             }
-            return event
+            return event // 传播事件
         }
     }
 }

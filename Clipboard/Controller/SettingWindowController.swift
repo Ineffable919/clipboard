@@ -10,6 +10,7 @@ import SwiftUI
 
 class SettingWindowController: NSWindowController {
     static let shared = SettingWindowController()
+    private static var settingView = SettingView()
 
     private init() {
         let window = NSWindow(
@@ -17,38 +18,38 @@ class SettingWindowController: NSWindowController {
                 x: 0,
                 y: 0,
                 width: Const.settingWidth,
-                height: Const.settingHeight
+                height: Const.settingHeight,
             ),
             styleMask: [
                 .titled, .closable, .miniaturizable, .fullSizeContentView,
             ],
             backing: .buffered,
-            defer: false
+            defer: false,
         )
 
         window.level = .normal
         window.center()
-        window.isReleasedWhenClosed = true
+        window.isReleasedWhenClosed = false
         window.titlebarSeparatorStyle = .none
 
         window.titlebarAppearsTransparent = true
         window.backgroundColor = NSColor.windowBackgroundColor
 
-        let settingView = SettingView()
-        window.contentView = NSHostingView(rootView: settingView)
+        window.contentView = NSHostingView(rootView: Self.settingView)
 
         super.init(window: window)
 
-        // 设置键盘快捷键
         setupKeyboardShortcuts()
     }
 
     private func setupKeyboardShortcuts() {
-        NSEvent.addLocalMonitorForEvents(matching: .keyDown) {
-            [weak self] event in
+        EventMonitorManager.shared.addLocalMonitor(
+            type: .settingWindow,
+            matching: .keyDown,
+        ) { [weak self] event in
             // Cmd+W 关闭窗口
-            if event.modifierFlags.contains(.command)
-                && event.charactersIgnoringModifiers == "w"
+            if event.modifierFlags.contains(.command),
+               event.charactersIgnoringModifiers == "w"
             {
                 if self?.window?.isKeyWindow == true {
                     self?.hideWindow()
@@ -56,8 +57,8 @@ class SettingWindowController: NSWindowController {
                 }
             }
             // Cmd + M 最小化窗口
-            if event.modifierFlags.contains(.command)
-                && event.charactersIgnoringModifiers == "m"
+            if event.modifierFlags.contains(.command),
+               event.charactersIgnoringModifiers == "m"
             {
                 if self?.window?.isKeyWindow == true {
                     self?.minWindow()
@@ -74,25 +75,14 @@ class SettingWindowController: NSWindowController {
     }
 
     func toggleWindow() {
-        guard let window = window else { return }
+        guard let window else { return }
 
         if window.isVisible {
             window.orderOut(nil)
         } else {
-            window.center()
             window.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
         }
-    }
-
-    func showWindow() {
-        guard let window = window else { return }
-
-        if !window.isVisible {
-            window.center()
-        }
-        window.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
     }
 
     func hideWindow() {
@@ -100,9 +90,9 @@ class SettingWindowController: NSWindowController {
     }
 
     func minWindow() {
-        guard let window = window else { return }
+        guard let window else { return }
 
-        if window.isVisible && !window.isMiniaturized {
+        if window.isVisible, !window.isMiniaturized {
             window.miniaturize(nil)
         }
     }

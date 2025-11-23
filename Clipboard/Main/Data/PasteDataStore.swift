@@ -26,8 +26,8 @@ final class PasteDataStore {
 
     enum DataChangeType {
         case loadMore
-        case searchFilter  // 搜索或筛选（首次）
-        case reset  // 重置/初始化
+        case searchFilter // 搜索或筛选（首次）
+        case reset // 重置/初始化
     }
 
     private(set) var lastDataChangeType: DataChangeType = .reset
@@ -53,7 +53,7 @@ final class PasteDataStore {
     @MainActor
     func updateData(
         with list: [PasteboardModel],
-        changeType: DataChangeType = .reset
+        changeType: DataChangeType = .reset,
     ) {
         dataList = list
         lastDataChangeType = changeType
@@ -75,10 +75,10 @@ extension PasteDataStore {
     }
 
     private func getItems(rows: [Row]) async -> [PasteboardModel] {
-        return rows.compactMap { row in
+        rows.compactMap { row in
             if let type = try? row.get(Col.type),
-                let data = try? row.get(Col.data),
-                let timestamp = try? row.get(Col.ts)
+               let data = try? row.get(Col.data),
+               let timestamp = try? row.get(Col.ts)
             {
                 let id = try? row.get(Col.id)
                 let appName = try? row.get(Col.appName)
@@ -98,7 +98,7 @@ extension PasteDataStore {
                     appName: appName ?? "",
                     searchText: searchText ?? "",
                     length: length ?? 0,
-                    group: group ?? -1
+                    group: group ?? -1,
                 )
                 pasteModel.id = id
                 return pasteModel
@@ -126,7 +126,7 @@ extension PasteDataStore {
             pageIndex = nextPage
 
             log.debug(
-                "loadNextPage \(pageIndex) (filterMode: \(isInFilterMode))"
+                "loadNextPage \(pageIndex) (filterMode: \(isInFilterMode))",
             )
 
             let newItems: [PasteboardModel]
@@ -134,13 +134,13 @@ extension PasteDataStore {
                 let rows = await sqlManager.search(
                     filter: filter,
                     limit: pageSize,
-                    offset: dataList.count
+                    offset: dataList.count,
                 )
                 newItems = await getItems(rows: rows)
             } else {
                 newItems = await getItems(
                     limit: pageSize,
-                    offset: dataList.count
+                    offset: dataList.count,
                 )
             }
 
@@ -181,7 +181,7 @@ extension PasteDataStore {
     func searchData(
         _ keyWord: String,
         _ typeFilter: [String]?,
-        _ group: Int
+        _ group: Int,
     ) {
         searchTask?.cancel()
         searchTask = Task {
@@ -190,12 +190,12 @@ extension PasteDataStore {
             if !keyWord.isEmpty {
                 filter =
                     Col.appName.like("%\(keyWord)%")
-                    || Col.searchText.like("%\(keyWord)%")
+                        || Col.searchText.like("%\(keyWord)%")
             }
 
             if let types = typeFilter, !types.isEmpty {
                 let typeCondition = types.map { Col.type == $0 }.reduce(
-                    Expression<Bool>(value: false)
+                    Expression<Bool>(value: false),
                 ) { result, condition in
                     result || condition
                 }
@@ -263,9 +263,9 @@ extension PasteDataStore {
         guard let index = dataList.firstIndex(where: { $0.id == model.id }) else {
             return
         }
-        
+
         guard index != 0 else { return }
-        
+
         var list = dataList
         list.remove(at: index)
         list.insert(model, at: 0)
@@ -311,13 +311,13 @@ extension PasteDataStore {
         var dateCom = DateComponents()
 
         switch timeUnit {
-        case .days(let n):
+        case let .days(n):
             // 1-6天
             dateCom = DateComponents(calendar: NSCalendar.current, day: -n)
-        case .weeks(let n):
+        case let .weeks(n):
             // 1-3周
             dateCom = DateComponents(calendar: NSCalendar.current, day: -n * 7)
-        case .months(let n):
+        case let .months(n):
             // 1-11月
             dateCom = DateComponents(calendar: NSCalendar.current, month: -n)
         case .year:
@@ -328,8 +328,7 @@ extension PasteDataStore {
             return
         }
 
-        if let deadDate = NSCalendar.current.date(byAdding: dateCom, to: Date())
-        {
+        if let deadDate = NSCalendar.current.date(byAdding: dateCom, to: Date()) {
             let deadTime = Int64(deadDate.timeIntervalSince1970)
             log.info("清理过期数据，截止时间戳：\(deadTime)")
             dataList = dataList.filter { $0.timestamp > deadTime }
@@ -341,9 +340,9 @@ extension PasteDataStore {
     func clearAllData() {
         let alert = NSAlert()
         alert.informativeText = """
-                    清空数据后无法恢复
-                    清空后会退出应用，请重新打开。
-            """
+                清空数据后无法恢复
+                清空后会退出应用，请重新打开。
+        """
         alert.addButton(withTitle: "确定")
         alert.addButton(withTitle: "取消")
         let response = alert.runModal()
@@ -366,11 +365,11 @@ extension PasteDataStore {
         if let model = dataList.first(where: { $0.id == itemId }) {
             model.updateGroup(val: groupId)
         }
-        
+
         Task {
             await sqlManager.updateItemGroup(
                 id: itemId,
-                groupId: groupId
+                groupId: groupId,
             )
         }
     }
@@ -414,18 +413,18 @@ extension PasteDataStore {
         let targetSize = CGSize(width: 32, height: 32)
 
         guard let resizedImage = resizeImage(image, to: targetSize),
-            let cgImage = resizedImage.cgImage(
-                forProposedRect: nil,
-                context: nil,
-                hints: nil
-            )
+              let cgImage = resizedImage.cgImage(
+                  forProposedRect: nil,
+                  context: nil,
+                  hints: nil,
+              )
         else {
             return nil
         }
 
         let colorSpace = CGColorSpaceCreateDeviceRGB()
         let bitmapInfo = CGBitmapInfo(
-            rawValue: CGImageAlphaInfo.premultipliedLast.rawValue
+            rawValue: CGImageAlphaInfo.premultipliedLast.rawValue,
         )
 
         guard
@@ -436,7 +435,7 @@ extension PasteDataStore {
                 bitsPerComponent: 8,
                 bytesPerRow: 0,
                 space: colorSpace,
-                bitmapInfo: bitmapInfo.rawValue
+                bitmapInfo: bitmapInfo.rawValue,
             )
         else { return nil }
 
@@ -445,15 +444,15 @@ extension PasteDataStore {
         guard let data = context.data else { return nil }
         let pixelData = data.bindMemory(
             to: UInt8.self,
-            capacity: Int(targetSize.width * targetSize.height * 4)
+            capacity: Int(targetSize.width * targetSize.height * 4),
         )
 
         var colorCounts: [UInt32: Float] = [:]
         let width = Int(targetSize.width)
         let height = Int(targetSize.height)
 
-        for y in 0..<height {
-            for x in 0..<width {
+        for y in 0 ..< height {
+            for x in 0 ..< width {
                 let pixelIndex = (y * width + x) * 4
                 let alpha = Int(pixelData[pixelIndex + 3])
 
@@ -469,14 +468,14 @@ extension PasteDataStore {
 
                         let colorKey =
                             (UInt32(quantizedR) << 16)
-                            | (UInt32(quantizedG) << 8) | UInt32(quantizedB)
+                                | (UInt32(quantizedG) << 8) | UInt32(quantizedB)
 
                         // 计算位置权重
                         let weight = calculateSimpleWeight(
                             x: x,
                             y: y,
                             width: width,
-                            height: height
+                            height: height,
                         )
                         colorCounts[colorKey, default: 0] += weight
                     }
@@ -520,9 +519,9 @@ extension PasteDataStore {
                 let group = getColorGroup(r: r, g: g, b: b)
                 switch group {
                 case .red:
-                    score *= 0.1  // 红色优先级最低
+                    score *= 0.1 // 红色优先级最低
                 case .yellow:
-                    score *= 1.2  // 黄色第二低
+                    score *= 1.2 // 黄色第二低
                 default:
                     break
                 }
@@ -555,11 +554,11 @@ extension PasteDataStore {
 
         if hue >= 330 || hue < 30 {
             return .red
-        } else if hue >= 30 && hue < 90 {
+        } else if hue >= 30, hue < 90 {
             return .yellow
-        } else if hue >= 90 && hue < 180 {
+        } else if hue >= 90, hue < 180 {
             return .green
-        } else if hue >= 180 && hue < 270 {
+        } else if hue >= 180, hue < 270 {
             return .blue
         }
         return .other
@@ -614,9 +613,9 @@ extension PasteDataStore {
         let minComponent = min(r, min(g, b))
         let saturation =
             maxComponent > 0
-            ? Float(maxComponent - minComponent) / Float(maxComponent) : 0
+                ? Float(maxComponent - minComponent) / Float(maxComponent) : 0
 
-        if brightness < 50 && saturation > 0.1 {
+        if brightness < 50, saturation > 0.1 {
             return true
         }
 
@@ -630,7 +629,7 @@ extension PasteDataStore {
         }
 
         // 排除过于鲜艳的荧光色
-        if saturation > 0.95 && brightness > 180 {
+        if saturation > 0.95, brightness > 180 {
             return false
         }
 
@@ -647,7 +646,7 @@ extension PasteDataStore {
 
         // 距离中心越近权重越高，但四个角落也有额外权重
         let distanceFromCenter = sqrt(
-            pow(fx - centerX, 2) + pow(fy - centerY, 2)
+            pow(fx - centerX, 2) + pow(fy - centerY, 2),
         )
         let maxDistance = sqrt(pow(centerX, 2) + pow(centerY, 2))
         var weight = 1.0 + (1.0 - distanceFromCenter / maxDistance) * 0.5
@@ -655,7 +654,7 @@ extension PasteDataStore {
         // 给四个角落额外权重
         let isNearCorner =
             (x < width / 4 || x >= width * 3 / 4)
-            && (y < height / 4 || y >= height * 3 / 4)
+                && (y < height / 4 || y >= height * 3 / 4)
         if isNearCorner {
             weight *= 1.3
         }
@@ -668,7 +667,7 @@ extension PasteDataStore {
         let minComponent = min(r, min(g, b))
         let saturation =
             maxComponent > 0
-            ? Float(maxComponent - minComponent) / Float(maxComponent) : 0
+                ? Float(maxComponent - minComponent) / Float(maxComponent) : 0
         let brightness = Float(r + g + b) / 3.0
 
         var score: Float = 1.0
@@ -697,7 +696,7 @@ extension PasteDataStore {
             in: NSRect(origin: .zero, size: size),
             from: NSRect(origin: .zero, size: image.size),
             operation: .copy,
-            fraction: 1.0
+            fraction: 1.0,
         )
         newImage.unlockFocus()
         return newImage

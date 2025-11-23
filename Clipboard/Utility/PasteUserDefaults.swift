@@ -8,8 +8,9 @@
 import Foundation
 
 // MARK: - 应用信息模型
+
 struct IgnoredAppInfo: Codable, Hashable, Identifiable {
-    let id: String  // 使用 bundleIdentifier 或 path 作为 id
+    let id: String // 使用 bundleIdentifier 或 path 作为 id
     let name: String
     let bundleIdentifier: String?
     let path: String
@@ -18,7 +19,7 @@ struct IgnoredAppInfo: Codable, Hashable, Identifiable {
         self.name = name
         self.bundleIdentifier = bundleIdentifier
         self.path = path
-        self.id = bundleIdentifier ?? path
+        id = bundleIdentifier ?? path
     }
 }
 
@@ -52,19 +53,19 @@ enum PasteUserDefaults {
         get {
             guard
                 let data = UserDefaults.standard.data(
-                    forKey: PrefKey.ignoredApps.rawValue
+                    forKey: PrefKey.ignoredApps.rawValue,
                 )
             else {
                 return [
                     IgnoredAppInfo(
                         name: "密码",
                         bundleIdentifier: "com.apple.Passwords",
-                        path: "/System/Applications/Passwords.app"
+                        path: "/System/Applications/Passwords.app",
                     ),
                     IgnoredAppInfo(
                         name: "钥匙串访问",
                         bundleIdentifier: "com.apple.keychainaccess",
-                        path: "/System/Applications/Utilities/Keychain Access.app"
+                        path: "/System/Applications/Utilities/Keychain Access.app",
                     ),
                 ]
             }
@@ -75,16 +76,17 @@ enum PasteUserDefaults {
             let data = try? JSONEncoder().encode(newValue)
             UserDefaults.standard.set(
                 data,
-                forKey: PrefKey.ignoredApps.rawValue
+                forKey: PrefKey.ignoredApps.rawValue,
             )
         }
     }
+
     /// 用户自定义分类
     static var userCategoryChip: [CategoryChip] {
         get {
             guard
                 let data = UserDefaults.standard.data(
-                    forKey: PrefKey.userCategoryChip.rawValue
+                    forKey: PrefKey.userCategoryChip.rawValue,
                 )
             else {
                 return []
@@ -96,10 +98,11 @@ enum PasteUserDefaults {
             let data = try? JSONEncoder().encode(newValue)
             UserDefaults.standard.set(
                 data,
-                forKey: PrefKey.userCategoryChip.rawValue
+                forKey: PrefKey.userCategoryChip.rawValue,
             )
         }
     }
+
     /// 删除确认
     @UserDefaultsWrapper(.delConfirm, defaultValue: false)
     static var delConfirm

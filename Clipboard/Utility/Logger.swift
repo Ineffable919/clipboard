@@ -31,27 +31,27 @@ enum LogLevel: String, CaseIterable, Comparable {
     var osLogType: OSLogType {
         switch self {
         case .debug:
-            return .debug
+            .debug
         case .info:
-            return .info
+            .info
         case .warning:
-            return .default
+            .default
         case .error:
-            return .error
+            .error
         }
     }
 
     var priority: Int {
         switch self {
-        case .debug: return 0
-        case .info: return 1
-        case .warning: return 2
-        case .error: return 3
+        case .debug: 0
+        case .info: 1
+        case .warning: 2
+        case .error: 3
         }
     }
 
     static func < (lhs: LogLevel, rhs: LogLevel) -> Bool {
-        return lhs.priority < rhs.priority
+        lhs.priority < rhs.priority
     }
 }
 
@@ -74,25 +74,25 @@ class AppLogger {
     }
 
     func debug(
-        _ message: String, file: String = #file, function: String = #function, line: Int = #line
+        _ message: String, file: String = #file, function: String = #function, line: Int = #line,
     ) {
         log(message, level: .debug, file: file, function: function, line: line)
     }
 
     func info(
-        _ message: String, file: String = #file, function: String = #function, line: Int = #line
+        _ message: String, file: String = #file, function: String = #function, line: Int = #line,
     ) {
         log(message, level: .info, file: file, function: function, line: line)
     }
 
     func warn(
-        _ message: String, file: String = #file, function: String = #function, line: Int = #line
+        _ message: String, file: String = #file, function: String = #function, line: Int = #line,
     ) {
         log(message, level: .warning, file: file, function: function, line: line)
     }
 
     func error(
-        _ message: String, file: String = #file, function: String = #function, line: Int = #line
+        _ message: String, file: String = #file, function: String = #function, line: Int = #line,
     ) {
         log(message, level: .error, file: file, function: function, line: line)
     }
@@ -124,7 +124,7 @@ class AppLogger {
     private func createLogFileURL() {
         guard
             let appSupport = FileManager.default.urls(
-                for: .applicationSupportDirectory, in: .userDomainMask
+                for: .applicationSupportDirectory, in: .userDomainMask,
             ).first
         else {
             return
@@ -135,7 +135,7 @@ class AppLogger {
 
         do {
             try FileManager.default.createDirectory(
-                at: logsDir, withIntermediateDirectories: true, attributes: nil
+                at: logsDir, withIntermediateDirectories: true, attributes: nil,
             )
         } catch {
             osLogger.error("Failed to create logs directory: \(error.localizedDescription)")
@@ -151,7 +151,7 @@ class AppLogger {
 
     private func writeToFile(_ message: String, level: LogLevel) {
         logQueue.async { [weak self] in
-            guard let self = self, let logURL = self.logFileURL else { return }
+            guard let self, let logURL = logFileURL else { return }
 
             let timestamp = ISO8601DateFormatter().string(from: Date())
             let logEntry = "[\(timestamp)] [\(level.rawValue)] \(message)\n"
@@ -165,14 +165,14 @@ class AppLogger {
                     fileHandle.seekToEndOfFile()
                     fileHandle.write(data)
                 } catch {
-                    self.osLogger.error(
+                    osLogger.error(
                         "Failed to write to log file: \(error.localizedDescription)")
                 }
             } else {
                 do {
                     try data.write(to: logURL)
                 } catch {
-                    self.osLogger.error("Failed to create log file: \(error.localizedDescription)")
+                    osLogger.error("Failed to create log file: \(error.localizedDescription)")
                 }
             }
         }
@@ -181,7 +181,7 @@ class AppLogger {
     private func cleanOldLogFiles(in directory: URL) {
         do {
             let files = try FileManager.default.contentsOfDirectory(
-                at: directory, includingPropertiesForKeys: [.creationDateKey], options: []
+                at: directory, includingPropertiesForKeys: [.creationDateKey], options: [],
             )
             let logFiles = files.filter { $0.pathExtension == "log" }
 
@@ -207,17 +207,17 @@ class AppLogger {
     }
 
     static func getMinimumLogLevel() -> LogLevel {
-        return shared.minimumLogLevel
+        shared.minimumLogLevel
     }
 
     static func getLogFileURL() -> URL? {
-        return shared.logFileURL
+        shared.logFileURL
     }
 
     static func getAllLogFiles() -> [URL] {
         guard
             let appSupport = FileManager.default.urls(
-                for: .applicationSupportDirectory, in: .userDomainMask
+                for: .applicationSupportDirectory, in: .userDomainMask,
             ).first
         else {
             return []
@@ -227,7 +227,7 @@ class AppLogger {
 
         do {
             let files = try FileManager.default.contentsOfDirectory(
-                at: logsDir, includingPropertiesForKeys: nil, options: []
+                at: logsDir, includingPropertiesForKeys: nil, options: [],
             )
             return files.filter { $0.pathExtension == "log" }.sorted {
                 $0.lastPathComponent > $1.lastPathComponent

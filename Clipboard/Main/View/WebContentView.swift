@@ -1,5 +1,5 @@
 //
-//  WebView.swift
+//  WebContentView.swift
 //  Clipboard
 //
 //  Created by 王晶 on 2025/11/14.
@@ -10,7 +10,6 @@ import WebKit
 
 @available(macOS 26.0, *)
 struct WebContentView: View {
-
     @State private var webPage = WebPage()
     let url: URL
 
@@ -23,12 +22,11 @@ struct WebContentView: View {
         }
         .frame(
             width: Const.maxPreviewSize - 32,
-            height: Const.maxPreviewHeight
+            height: Const.maxPreviewHeight,
         )
         .onAppear {
             webPage.load(url)
         }
-
     }
 }
 
@@ -39,5 +37,4 @@ struct WebContentView: View {
     } else {
         // Fallback on earlier versions
     }
-
 }

@@ -5,8 +5,8 @@
 //  Created by crown on 2025/9/24.
 //
 
-import SwiftUI
 import Sparkle
+import SwiftUI
 
 private struct IsFocusedKey: EnvironmentKey {
     static let defaultValue: Bool = true
@@ -20,6 +20,7 @@ extension EnvironmentValues {
 }
 
 // MARK: - Sparkle Updater Environment Key
+
 private struct UpdaterControllerKey: EnvironmentKey {
     static let defaultValue: SPUStandardUpdaterController? = nil
 }

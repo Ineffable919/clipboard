@@ -11,7 +11,6 @@ import UniformTypeIdentifiers
 import WebKit
 
 struct PreviewPopoverView: View {
-
     static let defaultWidth: CGFloat = 400.0
     static let defaultHeight: CGFloat = 220.0
 
@@ -20,7 +19,7 @@ struct PreviewPopoverView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                if let appIcon = appIcon {
+                if let appIcon {
                     Image(nsImage: appIcon)
                         .resizable()
                         .frame(width: 20, height: 20)
@@ -51,7 +50,7 @@ struct PreviewPopoverView: View {
                     .truncationMode(.head)
                     .frame(
                         maxWidth: 500,
-                        alignment: .bottomLeading
+                        alignment: .bottomLeading,
                     )
 
                 Spacer()
@@ -65,7 +64,7 @@ struct PreviewPopoverView: View {
                 }
 
                 if model.url != nil,
-                    let browserName = getDefaultBrowserName()
+                   let browserName = getDefaultBrowserName()
                 {
                     BorderedButton(title: "使用 \(browserName) 打开") {
                         withAnimation {
@@ -80,7 +79,7 @@ struct PreviewPopoverView: View {
             minWidth: 400,
             maxWidth: 800,
             minHeight: 300,
-            maxHeight: 600
+            maxHeight: 600,
         )
     }
 
@@ -88,18 +87,18 @@ struct PreviewPopoverView: View {
         if let filePath = String(data: model.data, encoding: .utf8) {
             NSWorkspace.shared.selectFile(
                 filePath,
-                inFileViewerRootedAtPath: ""
+                inFileViewerRootedAtPath: "",
             )
         }
     }
 
     func getDefaultBrowserName() -> String? {
         if let appURL = NSWorkspace.shared.urlForApplication(toOpen: .html),
-            let bundle = Bundle(url: appURL)
+           let bundle = Bundle(url: appURL)
         {
             return bundle.object(forInfoDictionaryKey: "CFBundleDisplayName")
                 as? String ?? bundle.object(
-                    forInfoDictionaryKey: "CFBundleName"
+                    forInfoDictionaryKey: "CFBundleName",
                 ) as? String
         }
         return nil
@@ -137,7 +136,7 @@ struct PreviewPopoverView: View {
                 .frame(
                     width: PreviewPopoverView.defaultWidth,
                     height: PreviewPopoverView.defaultHeight,
-                    alignment: .center
+                    alignment: .center,
                 )
         }
     }
@@ -151,7 +150,7 @@ struct PreviewPopoverView: View {
                 .frame(
                     width: PreviewPopoverView.defaultWidth,
                     height: PreviewPopoverView.defaultHeight,
-                    alignment: .center
+                    alignment: .center,
                 )
                 .background(.windowBackground)
         } else {
@@ -168,7 +167,7 @@ struct PreviewPopoverView: View {
             }
             .frame(
                 maxWidth: Const.maxPreviewSize,
-                alignment: .topLeading
+                alignment: .topLeading,
             )
         }
     }
@@ -182,7 +181,7 @@ struct PreviewPopoverView: View {
                 .frame(
                     width: PreviewPopoverView.defaultWidth,
                     height: PreviewPopoverView.defaultHeight,
-                    alignment: .center
+                    alignment: .center,
                 )
                 .background(.windowBackground)
         } else {
@@ -194,24 +193,24 @@ struct PreviewPopoverView: View {
                         if model.attributeString.attribute(
                             .backgroundColor,
                             at: 0,
-                            effectiveRange: nil
+                            effectiveRange: nil,
                         ) is NSColor {
                             Text(
                                 AttributedString(
                                     NSAttributedString(
                                         with: model.data,
-                                        type: model.pasteboardType
-                                    )!
-                                )
+                                        type: model.pasteboardType,
+                                    )!,
+                                ),
                             )
                             .textSelection(.enabled)
                         } else {
                             Text(
                                 NSAttributedString(
                                     with: model.data,
-                                    type: model.pasteboardType
+                                    type: model.pasteboardType,
                                 )!
-                                .string
+                                    .string,
                             )
                             .foregroundStyle(.primary)
                             .textSelection(.enabled)
@@ -224,7 +223,7 @@ struct PreviewPopoverView: View {
             }
             .frame(
                 maxWidth: Const.maxPreviewSize,
-                alignment: .topLeading
+                alignment: .topLeading,
             )
         }
     }
@@ -239,7 +238,7 @@ struct PreviewPopoverView: View {
                     .aspectRatio(contentMode: .fit)
                     .frame(
                         maxWidth: Const.maxPreviewSize,
-                        maxHeight: Const.maxPreviewSize
+                        maxHeight: Const.maxPreviewSize,
                     )
             }
         } else {
@@ -258,7 +257,7 @@ struct PreviewPopoverView: View {
                 let paths = filePaths.split(separator: "\n")
                     .map {
                         String($0).trimmingCharacters(
-                            in: .whitespacesAndNewlines
+                            in: .whitespacesAndNewlines,
                         )
                     }
                     .filter { !$0.isEmpty }
@@ -266,7 +265,7 @@ struct PreviewPopoverView: View {
                     QuickLookPreview(
                         url: URL(fileURLWithPath: paths.first!),
                         maxWidth: Const.maxPreviewSize - 32,
-                        maxHeight: Const.maxPreviewHeight
+                        maxHeight: Const.maxPreviewHeight,
                     )
                 } else {
                     Image(systemName: "doc.text")
@@ -278,7 +277,6 @@ struct PreviewPopoverView: View {
             }
         }
         .frame(width: Const.maxPreviewSize - 32, height: Const.maxPreviewHeight)
-
     }
 
     private var appIcon: NSImage? {
@@ -292,7 +290,7 @@ struct PreviewPopoverView: View {
 #Preview {
     let data = "https://www.apple.com.cn"
         .data(
-            using: .utf8
+            using: .utf8,
         )!
 
     PreviewPopoverView(
@@ -305,8 +303,8 @@ struct PreviewPopoverView: View {
             appName: "微信",
             searchText: "",
             length: 0,
-            group: -1
-        )
+            group: -1,
+        ),
     )
     .frame(width: 800, height: 600)
 }
@@ -331,11 +329,11 @@ struct BorderedButton: View {
         .padding(.vertical, 4)
         .background(
             RoundedRectangle(cornerRadius: Const.radius)
-                .fill(isHovered ? .gray.opacity(0.1) : Color.clear)
+                .fill(isHovered ? .gray.opacity(0.1) : Color.clear),
         )
         .overlay(
             RoundedRectangle(cornerRadius: Const.radius)
-                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                .stroke(Color.gray.opacity(0.2), lineWidth: 1),
         )
         .onHover { hovering in
             isHovered = hovering

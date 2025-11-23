@@ -17,7 +17,7 @@ struct CardContentView: View {
     var body: some View {
         switch model.type {
         case .string:
-            if model.url != nil && enableLinkPreview {
+            if model.url != nil, enableLinkPreview {
                 LinkPreviewCard(model: model)
             } else {
                 StringContentView(model: model)
@@ -49,7 +49,7 @@ struct LinkPreviewCard: View {
         if let url = model.url {
             VStack(spacing: 0) {
                 HStack(alignment: .center) {
-                    if let favicon = favicon {
+                    if let favicon {
                         Image(nsImage: favicon)
                             .resizable()
                             .aspectRatio(contentMode: .fill)
@@ -64,11 +64,11 @@ struct LinkPreviewCard: View {
                 }
                 .frame(
                     width: Const.cardSize,
-                    height: Const.cntSize - 48
+                    height: Const.cntSize - 48,
                 )
                 .background(
                     colorScheme == .light
-                        ? Const.lightBackground : Const.darkBackground
+                        ? Const.lightBackground : Const.darkBackground,
                 )
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -90,12 +90,12 @@ struct LinkPreviewCard: View {
                 .frame(
                     width: Const.cardSize,
                     height: 48,
-                    alignment: .leading
+                    alignment: .leading,
                 )
                 .background(.windowBackground)
             }
             .onAppear {
-                if !isLoading && favicon == nil && pageTitle.isEmpty {
+                if !isLoading, favicon == nil, pageTitle.isEmpty {
                     loadContent(from: url)
                 }
             }
@@ -148,7 +148,7 @@ struct LinkPreviewCard: View {
             ]
             for u in fallbacks {
                 if let img = await fetchImage(u, session: session) {
-                    await MainActor.run { self.favicon = img }
+                    await MainActor.run { favicon = img }
                     return
                 }
             }
@@ -158,15 +158,15 @@ struct LinkPreviewCard: View {
             var request = URLRequest(url: url)
             request.setValue(
                 "Mozilla/5.0 (Macintosh; Intel Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko)",
-                forHTTPHeaderField: "User-Agent"
+                forHTTPHeaderField: "User-Agent",
             )
             request.cachePolicy = .returnCacheDataElseLoad
             let (data, _) = try await session.data(for: request)
             if let html = String(data: data, encoding: .utf8),
-                let iconURL = parseFirstHTMLIconURL(html: html, baseURL: url),
-                let img = await fetchImage(iconURL, session: session)
+               let iconURL = parseFirstHTMLIconURL(html: html, baseURL: url),
+               let img = await fetchImage(iconURL, session: session)
             {
-                await MainActor.run { self.favicon = img }
+                await MainActor.run { favicon = img }
                 return
             }
         } catch {}
@@ -178,13 +178,13 @@ struct LinkPreviewCard: View {
         guard
             let regex = try? NSRegularExpression(
                 pattern: pattern,
-                options: [.caseInsensitive]
+                options: [.caseInsensitive],
             )
         else { return nil }
         let ns = html as NSString
         for m in regex.matches(
             in: html,
-            range: NSRange(location: 0, length: ns.length)
+            range: NSRange(location: 0, length: ns.length),
         ) {
             guard m.numberOfRanges >= 3 else { continue }
             let rel = ns.substring(with: m.range(at: 1)).lowercased()
@@ -205,7 +205,7 @@ struct LinkPreviewCard: View {
             if let dataRange = url.absoluteString.range(of: ",") {
                 let b64 = String(url.absoluteString[dataRange.upperBound...])
                 if let data = Data(base64Encoded: b64),
-                    let img = NSImage(data: data)
+                   let img = NSImage(data: data)
                 {
                     return img
                 }
@@ -216,11 +216,11 @@ struct LinkPreviewCard: View {
         var request = URLRequest(url: url)
         request.setValue(
             "image/avif,image/webp,image/apng,image/*;q=0.8,*/*;q=0.5",
-            forHTTPHeaderField: "Accept"
+            forHTTPHeaderField: "Accept",
         )
         request.setValue(
             "Mozilla/5.0 (Macintosh; Intel Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko)",
-            forHTTPHeaderField: "User-Agent"
+            forHTTPHeaderField: "User-Agent",
         )
         request.cachePolicy = .returnCacheDataElseLoad
         do {
@@ -242,21 +242,21 @@ struct LinkPreviewCard: View {
             if let html = String(data: data, encoding: .utf8) {
                 if let titleMatch = html.range(
                     of: "<title[^>]*>([^<]+)</title>",
-                    options: [.regularExpression, .caseInsensitive]
+                    options: [.regularExpression, .caseInsensitive],
                 ) {
                     let titleHTML = String(html[titleMatch])
                     let title =
                         titleHTML
-                        .replacingOccurrences(
-                            of: "<[^>]+>",
-                            with: "",
-                            options: .regularExpression
-                        )
-                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                            .replacingOccurrences(
+                                of: "<[^>]+>",
+                                with: "",
+                                options: .regularExpression,
+                            )
+                            .trimmingCharacters(in: .whitespacesAndNewlines)
 
-                    if !title.isEmpty && title != url.host {
+                    if !title.isEmpty, title != url.host {
                         await MainActor.run {
-                            self.pageTitle = title
+                            pageTitle = title
                         }
                     }
                 }
@@ -282,7 +282,7 @@ struct RichContentView: View {
         if model.attributeString.attribute(
             .backgroundColor,
             at: 0,
-            effectiveRange: nil
+            effectiveRange: nil,
         ) is NSColor {
             Text(model.attributed())
                 .lineLimit(12)
@@ -312,7 +312,7 @@ struct FileContentView: View {
                     .frame(
                         maxWidth: .infinity,
                         maxHeight: .infinity,
-                        alignment: .top
+                        alignment: .top,
                     )
             } else {
                 VStack(alignment: .center) {
@@ -325,7 +325,7 @@ struct FileContentView: View {
                 .frame(
                     maxWidth: .infinity,
                     maxHeight: .infinity,
-                    alignment: .center
+                    alignment: .center,
                 )
             }
         }
@@ -340,7 +340,7 @@ struct ImageContentView: View {
     var body: some View {
         ZStack {
             CheckerboardBackground()
-            if let thumbnail = thumbnail {
+            if let thumbnail {
                 Image(nsImage: thumbnail)
                     .resizable()
                     .interpolation(.high)
@@ -360,7 +360,7 @@ struct ImageContentView: View {
         .frame(
             maxWidth: Const.cardSize,
             maxHeight: Const.cntSize,
-            alignment: .center
+            alignment: .center,
         )
         .clipShape(Const.contentShape)
         .onAppear(perform: loadImage)
@@ -375,8 +375,8 @@ struct ImageContentView: View {
             }.value
 
             await MainActor.run {
-                self.thumbnail = loadedImage
-                self.isLoading = false
+                thumbnail = loadedImage
+                isLoading = false
             }
         }
     }
@@ -401,13 +401,13 @@ struct CheckerboardBackground: View {
             let rows = Int(ceil(size.height / squareSize))
             let cols = Int(ceil(size.width / squareSize))
 
-            for row in 0..<rows {
-                for col in 0..<cols {
+            for row in 0 ..< rows {
+                for col in 0 ..< cols {
                     let rect = CGRect(
                         x: CGFloat(col) * squareSize,
                         y: CGFloat(row) * squareSize,
                         width: squareSize,
-                        height: squareSize
+                        height: squareSize,
                     )
 
                     let isEven = (row + col) % 2 == 0
@@ -415,7 +415,7 @@ struct CheckerboardBackground: View {
 
                     context.fill(
                         Path(rect),
-                        with: .color(color)
+                        with: .color(color),
                     )
                 }
             }

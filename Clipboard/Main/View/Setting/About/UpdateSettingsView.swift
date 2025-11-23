@@ -1,5 +1,5 @@
 //
-//  UpdateSettingView.swift
+//  UpdateSettingsView.swift
 //  Clipboard
 //
 //  Created by crown on 2025/11/19.
@@ -16,9 +16,9 @@ struct UpdaterSettingsView: View {
 
     init(updater: SPUUpdater) {
         self.updater = updater
-        self.automaticallyChecksForUpdates =
+        automaticallyChecksForUpdates =
             updater.automaticallyChecksForUpdates
-        self.automaticallyDownloadsUpdates =
+        automaticallyDownloadsUpdates =
             updater.automaticallyDownloadsUpdates
     }
 
@@ -26,7 +26,7 @@ struct UpdaterSettingsView: View {
         HStack(spacing: 20) {
             Toggle(
                 "自动检查更新",
-                isOn: $automaticallyChecksForUpdates
+                isOn: $automaticallyChecksForUpdates,
             )
             .onChange(of: automaticallyChecksForUpdates) {
                 updater.automaticallyChecksForUpdates =
@@ -35,7 +35,7 @@ struct UpdaterSettingsView: View {
 
             Toggle(
                 "自动下载更新",
-                isOn: $automaticallyDownloadsUpdates
+                isOn: $automaticallyDownloadsUpdates,
             )
             .disabled(!automaticallyChecksForUpdates)
             .onChange(of: automaticallyDownloadsUpdates) {

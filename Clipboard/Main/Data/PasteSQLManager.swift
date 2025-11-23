@@ -39,18 +39,18 @@ final class PasteSQLManager: NSObject {
         let path = NSSearchPathForDirectoriesInDomains(
             .documentDirectory,
             .userDomainMask,
-            true
+            true,
         ).first!.appending("/Clip")
         var isDir = ObjCBool(false)
         let filExist = FileManager.default.fileExists(
             atPath: path,
-            isDirectory: &isDir
+            isDirectory: &isDir,
         )
         if !filExist || !isDir.boolValue {
             do {
                 try FileManager.default.createDirectory(
                     atPath: path,
-                    withIntermediateDirectories: true
+                    withIntermediateDirectories: true,
                 )
             } catch {
                 log.debug(error.localizedDescription)
@@ -63,7 +63,7 @@ final class PasteSQLManager: NSObject {
             Self.isInitialized = true
             return db
         } catch {
-            log.debug("Connection Error\(error)")
+            log.error("Connection Error\(error)")
         }
         return nil
     }()
@@ -87,7 +87,7 @@ final class PasteSQLManager: NSObject {
         do {
             try db?.run(stateMent)
         } catch {
-            log.debug("Create Table Error: \(error)")
+            log.error("Create Table Error: \(error)")
         }
         return tab
     }()
@@ -100,7 +100,7 @@ extension PasteSQLManager {
         do {
             return try db?.scalar(table.count) ?? 0
         } catch {
-            log.debug("获取总数失败：\(error)")
+            log.error("获取总数失败：\(error)")
             return 0
         }
     }
@@ -119,14 +119,14 @@ extension PasteSQLManager {
             Col.appName <- item.appName,
             Col.searchText <- item.searchText,
             Col.length <- item.length,
-            Col.group <- item.group
+            Col.group <- item.group,
         )
         do {
             let rowId = try db?.run(insert)
             log.debug("插入成功：\(String(describing: rowId))")
             return rowId!
         } catch {
-            log.debug("插入失败：\(error)")
+            log.error("插入失败：\(error)")
         }
         return -1
     }
@@ -138,7 +138,7 @@ extension PasteSQLManager {
             let count = try db?.run(query.delete())
             log.debug("删除的条数为：\(String(describing: count))")
         } catch {
-            log.debug("删除失败：\(error)")
+            log.error("删除失败：\(error)")
         }
     }
 
@@ -147,7 +147,7 @@ extension PasteSQLManager {
             let d = try db?.run(table.drop())
             log.debug("删除所有\(String(describing: d?.columnCount))")
         } catch {
-            log.debug("删除失败：\(error)")
+            log.error("删除失败：\(error)")
         }
     }
 
@@ -163,13 +163,13 @@ extension PasteSQLManager {
             Col.appName <- item.appName,
             Col.searchText <- item.searchText,
             Col.length <- item.length,
-            Col.group <- item.group
+            Col.group <- item.group,
         )
         do {
             let count = try db?.run(update)
             log.debug("修改成功，影响行数：\(String(describing: count))")
         } catch {
-            log.debug("修改失败：\(error)")
+            log.error("修改失败：\(error)")
         }
     }
 
@@ -181,7 +181,7 @@ extension PasteSQLManager {
             let count = try db?.run(update)
             log.debug("更新项目分组成功，影响行数：\(String(describing: count))")
         } catch {
-            log.debug("更新项目分组失败：\(error)")
+            log.error("更新项目分组失败：\(error)")
         }
     }
 
@@ -191,7 +191,7 @@ extension PasteSQLManager {
         select: [Expressible]? = nil,
         order: [Expressible]? = nil,
         limit: Int? = nil,
-        offset: Int? = nil
+        offset: Int? = nil,
     ) async -> [Row] {
         guard !Task.isCancelled else { return [] }
 
@@ -213,7 +213,7 @@ extension PasteSQLManager {
             if let result = try db?.prepare(query) { return Array(result) }
             return []
         } catch {
-            log.debug("查询失败：\(error)")
+            log.error("查询失败：\(error)")
             return []
         }
     }

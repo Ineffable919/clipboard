@@ -24,7 +24,7 @@ struct CardBottomView: View {
                 .cornerRadius(Const.radius)
                 .frame(maxHeight: Const.bottomSize, alignment: .bottom)
                 .padding(.bottom, 4)
-        } else if model.url != nil && enableLinkPreview {
+        } else if model.url != nil, enableLinkPreview {
             EmptyView()
         } else {
             CommonBottomView(model: model)
@@ -50,7 +50,7 @@ struct CommonBottomView: View {
         .padding(.bottom, intro.count > 36 ? 8 : 4)
         .frame(
             width: Const.cardSize,
-            height: intro.count > 36 ? Const.bottomSize : Const.bottomSize - 16
+            height: intro.count > 36 ? Const.bottomSize : Const.bottomSize - 16,
         )
         .background {
             if model.length > 135 {
@@ -63,7 +63,7 @@ struct CommonBottomView: View {
                         .init(color: .clear, location: 1.0),
                     ]),
                     startPoint: .bottom,
-                    endPoint: .top
+                    endPoint: .top,
                 )
                 .clipShape(RoundedRectangle(cornerRadius: Const.radius))
             }

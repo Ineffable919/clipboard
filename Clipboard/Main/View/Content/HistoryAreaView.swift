@@ -37,7 +37,7 @@ struct HistoryAreaView: View {
     @State private var flagsMonitor: Any?
     @State private var isDel: Bool = false
     @State private var isQuickPasteModifierPressed: Bool = false
-    @State private var lastLoadTriggerIndex: Int = -1 // 记录上次触发加载的索引，防止重复
+    @State private var lastLoadTriggerIndex: Int = -1
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -273,12 +273,14 @@ struct HistoryAreaView: View {
     }
 
     private func appear() {
-        monitor = NSEvent.addLocalMonitorForEvents(
+        monitor = EventMonitorManager.shared.addLocalMonitor(
+            type: .historyArea,
             matching: .keyDown,
             handler: keyDownEvent(_:),
         )
 
-        flagsMonitor = NSEvent.addLocalMonitorForEvents(
+        flagsMonitor = EventMonitorManager.shared.addLocalMonitor(
+            type: .historyFlags,
             matching: .flagsChanged,
             handler: flagsChangedEvent(_:),
         )
@@ -289,19 +291,20 @@ struct HistoryAreaView: View {
     }
 
     private func cleanup() {
-        if let monitor {
-            NSEvent.removeMonitor(monitor)
-            self.monitor = nil
-        }
-        if let flagsMonitor {
-            NSEvent.removeMonitor(flagsMonitor)
-            self.flagsMonitor = nil
-        }
+        EventMonitorManager.shared.removeMonitor(type: .historyArea)
+        EventMonitorManager.shared.removeMonitor(type: .historyFlags)
+
+        monitor = nil
+        flagsMonitor = nil
         isDel = false
         isQuickPasteModifierPressed = false
     }
 
     private func flagsChangedEvent(_ event: NSEvent) -> NSEvent? {
+        guard event.window === ClipMainWindowController.shared.window else {
+            return event
+        }
+
         let newState = KeyHelper.isQuickPasteModifierPressed()
         if newState != isQuickPasteModifierPressed {
             isQuickPasteModifierPressed = newState
@@ -310,6 +313,10 @@ struct HistoryAreaView: View {
     }
 
     private func keyDownEvent(_ event: NSEvent) -> NSEvent? {
+        guard event.window === ClipMainWindowController.shared.window else {
+            return event
+        }
+
         if event.keyCode == UInt16(kVK_Escape) {
             handleEscapeKeyEvent()
             return nil

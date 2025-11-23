@@ -76,7 +76,7 @@ enum KeyHelper {
 
     /// 检查键码是否为可打印字符
     static func isPrintableCharacter(_ keyCode: Int) -> Bool {
-        return numberCharacters.contains(keyCode)
+        numberCharacters.contains(keyCode)
     }
 
     /// 检查事件是否应该触发搜索
@@ -98,14 +98,13 @@ enum KeyHelper {
     /// 将用户设置的修饰键索引转换为 NSEvent.ModifierFlags
     /// - Parameter modifierIndex: 修饰键索引 (0: Command, 1: Option, 2: Control, 3: Shift)
     /// - Returns: 对应的 NSEvent.ModifierFlags
-    static func modifierFlags(from modifierIndex: Int) -> NSEvent.ModifierFlags
-    {
+    static func modifierFlags(from modifierIndex: Int) -> NSEvent.ModifierFlags {
         switch modifierIndex {
-        case 0: return .command
-        case 1: return .option
-        case 2: return .control
-        case 3: return .shift
-        default: return .shift
+        case 0: .command
+        case 1: .option
+        case 2: .control
+        case 3: .shift
+        default: .shift
         }
     }
 
@@ -116,11 +115,11 @@ enum KeyHelper {
         -> SwiftUI.EventModifiers
     {
         switch modifierIndex {
-        case 0: return .command
-        case 1: return .option
-        case 2: return .control
-        case 3: return .shift
-        default: return .shift
+        case 0: .command
+        case 1: .option
+        case 2: .control
+        case 3: .shift
+        default: .shift
         }
     }
 
@@ -145,6 +144,6 @@ enum KeyHelper {
     /// 检查当前是否按下了快速粘贴的修饰键
     /// - Returns: 是否按下了 quickPasteModifier 对应的修饰键
     static func isQuickPasteModifierPressed() -> Bool {
-        return isModifierPressed(modifierIndex: PasteUserDefaults.quickPasteModifier)
+        isModifierPressed(modifierIndex: PasteUserDefaults.quickPasteModifier)
     }
 }

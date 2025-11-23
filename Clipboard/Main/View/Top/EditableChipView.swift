@@ -30,12 +30,11 @@ struct EditableChip: View {
                 .textSelection(.disabled)
                 .focused(focus, equals: .newChip)
                 .onSubmit { onCommit() }
-
         }
         .padding(EdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8))
         .background(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(Color.secondary.opacity(0.08))
+                .fill(Color.secondary.opacity(0.08)),
         )
         .cornerRadius(Const.radius)
     }

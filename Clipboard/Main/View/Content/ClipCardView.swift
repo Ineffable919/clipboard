@@ -22,18 +22,48 @@ struct ClipCardView: View {
         PasteUserDefaults.enableLinkPreview
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            if isSelected {
-                RoundedRectangle(
-                    cornerRadius: Const.radius + 4,
-                    style: .continuous
-                )
-                .strokeBorder(
-                    isSelected ? selectionColor : Color.clear,
-                    lineWidth: isSelected ? 4 : 0
-                )
-                .padding(-4)
+        cardContent
+            .overlay(alignment: .bottomTrailing) {
+                if let index = quickPasteIndex {
+                    quickPasteIndexBadge(index: index)
+                }
             }
+            .overlay {
+                if isSelected {
+                    RoundedRectangle(
+                        cornerRadius: Const.radius + 4,
+                        style: .continuous,
+                    )
+                    .strokeBorder(selectionColor, lineWidth: 4)
+                    .padding(-4)
+                }
+            }
+            .frame(width: Const.cardSize, height: Const.cardSize)
+            .padding(4)
+            .background(
+                RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
+                    .fill(Color.clear)
+                    .shadow(
+                        color: .accentColor.opacity(0.08),
+                        radius: 2.0,
+                        x: 0,
+                        y: 1,
+                    ),
+            )
+            .clipShape(
+                RoundedRectangle(cornerRadius: Const.radius, style: .continuous),
+            )
+            .contextMenu(menuItems: {
+                contextMenuContent
+            })
+            .popover(isPresented: $showPreview) {
+                PreviewPopoverView(model: model)
+            }
+    }
+
+    @ViewBuilder
+    private var cardContent: some View {
+        ZStack(alignment: .bottom) {
             VStack(spacing: 0) {
                 CardHeadView(model: model)
 
@@ -42,7 +72,7 @@ struct ClipCardView: View {
                     .frame(
                         maxWidth: .infinity,
                         maxHeight: .infinity,
-                        alignment: textAlignment
+                        alignment: textAlignment,
                     )
                     .background {
                         if model.url == nil
@@ -55,23 +85,6 @@ struct ClipCardView: View {
             }
 
             CardBottomView(model: model)
-        }
-        .overlay(alignment: .bottomTrailing) {
-            if let index = quickPasteIndex {
-                quickPasteIndexBadge(index: index)
-            }
-        }
-        .frame(width: Const.cardSize, height: Const.cardSize)
-        .padding(4)
-        .clipShape(
-            RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
-        )
-        .shadow(color: .accentColor.opacity(0.08), radius: 2.0, x: 0, y: 1)
-        .contextMenu(menuItems: {
-            contextMenuContent
-        })
-        .popover(isPresented: $showPreview) {
-            PreviewPopoverView(model: model)
         }
     }
 
@@ -156,6 +169,7 @@ struct ClipCardView: View {
     private func pasteAsPlainText() {
         vm.pasteAction(item: model, isAttribute: false)
     }
+
     private func copyToClipboard() { vm.copyAction(item: model) }
     private func deleteItem() { onRequestDelete?() }
     private func togglePreview() { showPreview = !showPreview }
@@ -173,11 +187,11 @@ struct ClipCardView: View {
             appName: "微信",
             searchText: "",
             length: 9,
-            group: -1
+            group: -1,
         ),
         isSelected: false,
         showPreview: .constant(false),
         isHistoryFocused: false,
-        quickPasteIndex: 1
+        quickPasteIndex: 1,
     )
 }

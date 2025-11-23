@@ -13,7 +13,7 @@ import KeyboardShortcuts
 extension KeyboardShortcuts.Name {
     static let toggleClipKey = Self(
         "shortcurs",
-        default: Shortcut(.v, modifiers: [.command, .shift])
+        default: Shortcut(.v, modifiers: [.command, .shift]),
     )
 }
 
@@ -23,7 +23,7 @@ extension KeyboardShortcuts {
 
         if !hasPermission {
             log.debug(
-                "Accessibility permission not granted, cannot send keyboard events"
+                "Accessibility permission not granted, cannot send keyboard events",
             )
             DispatchQueue.main.async {
                 requestAccessibilityPermission()
@@ -35,7 +35,7 @@ extension KeyboardShortcuts {
         let cgEvent = CGEvent(
             keyboardEventSource: source,
             virtualKey: CGKeyCode(kVK_ANSI_V),
-            keyDown: true
+            keyDown: true,
         )
         cgEvent?.flags = .maskCommand
         cgEvent?.post(tap: .cghidEventTap)
@@ -45,9 +45,9 @@ extension KeyboardShortcuts {
         let alert = NSAlert()
         alert.messageText = "需要辅助功能权限"
         alert.informativeText = """
-            Clipboard 需要获取辅助功能权限
-            才能直接粘贴到其它应用
-            """
+        Clipboard 需要获取辅助功能权限
+        才能直接粘贴到其它应用
+        """
         alert.alertStyle = .warning
         alert.addButton(withTitle: "设置")
         alert.addButton(withTitle: "稍后设置，复制到剪切板")
@@ -56,7 +56,7 @@ extension KeyboardShortcuts {
         if response == .alertFirstButtonReturn {
             if let url = URL(
                 string:
-                    "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
+                "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
             ) {
                 NSWorkspace.shared.open(url)
             }

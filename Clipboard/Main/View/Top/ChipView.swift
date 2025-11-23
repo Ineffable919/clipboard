@@ -52,7 +52,7 @@ struct ChipView: View {
         }
         .onDrop(
             of: [UTType.clipType.identifier],
-            isTargeted: $isDropTargeted
+            isTargeted: $isDropTargeted,
         ) { providers in
             if chip.isSystem {
                 return false
@@ -104,7 +104,7 @@ struct ChipView: View {
         .padding(EdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8))
         .background(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(Color.secondary.opacity(0.08))
+                .fill(Color.secondary.opacity(0.08)),
         )
         .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         .onAppear {
@@ -126,11 +126,11 @@ struct ChipView: View {
         .onChange(of: vm.focusView) { _, newFocus in
             guard !syncingFocus else { return }
             syncingFocus = true
-            if newFocus == .editChip && !isTextFieldFocused {
+            if newFocus == .editChip, !isTextFieldFocused {
                 DispatchQueue.main.async {
                     isTextFieldFocused = true
                 }
-            } else if newFocus != .editChip && isTextFieldFocused {
+            } else if newFocus != .editChip, isTextFieldFocused {
                 isTextFieldFocused = false
             }
             syncingFocus = false
@@ -151,10 +151,10 @@ struct ChipView: View {
     private func handleDrop(providers: [NSItemProvider]) {
         for provider in providers {
             if provider.hasItemConformingToTypeIdentifier(
-                UTType.clipType.identifier
+                UTType.clipType.identifier,
             ) {
                 provider.loadDataRepresentation(
-                    forTypeIdentifier: UTType.clipType.identifier
+                    forTypeIdentifier: UTType.clipType.identifier,
                 ) { data, error in
                     if error != nil {
                         return
@@ -168,12 +168,12 @@ struct ChipView: View {
     }
 
     private func handleDropData(data: Data?) {
-        if let data = data {
+        if let data {
             let id = data.withUnsafeBytes { $0.load(as: Int.self) }
             do {
                 try PasteDataStore.main.updateItemGroup(
                     itemId: Int64(id),
-                    groupId: chip.id
+                    groupId: chip.id,
                 )
             } catch {
                 log.error("更新卡片 group 失败: \(error)")
@@ -185,7 +185,7 @@ struct ChipView: View {
 #Preview {
     ChipView(
         isSelected: true,
-        chip: CategoryChip(id: 11, name: "收藏", color: .green, isSystem: false)
+        chip: CategoryChip(id: 11, name: "收藏", color: .green, isSystem: false),
     )
     .frame(width: 128, height: 32)
 }

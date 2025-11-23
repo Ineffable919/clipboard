@@ -22,7 +22,7 @@ struct AsyncThumbnailView: View {
 
     var body: some View {
         Group {
-            if let thumbnail = thumbnail {
+            if let thumbnail {
                 Image(nsImage: thumbnail)
                     .resizable()
                     .scaledToFit()
@@ -56,9 +56,9 @@ struct AsyncThumbnailView: View {
             nsImage in
             Task { @MainActor in
                 withAnimation(.easeInOut(duration: 0.3)) {
-                    self.thumbnail = nsImage
-                    self.isLoading = false
-                    self.loadingFailed = nsImage == nil
+                    thumbnail = nsImage
+                    isLoading = false
+                    loadingFailed = nsImage == nil
                 }
             }
         }
@@ -103,17 +103,17 @@ struct MultipleFilesView: View {
                 LazyVGrid(
                     columns: Array(
                         repeating: GridItem(.flexible(), spacing: 4),
-                        count: min(2, fileURLs.count)
+                        count: min(2, fileURLs.count),
                     ),
-                    spacing: 4
+                    spacing: 4,
                 ) {
                     ForEach(
                         Array(fileURLs.prefix(4).enumerated()),
-                        id: \.offset
-                    ) { index, urlString in
+                        id: \.offset,
+                    ) { _, urlString in
                         FileThumbnailView(
                             fileURLString: urlString,
-                            maxSize: fileURLs.count == 1 ? maxSize : maxSize / 2
+                            maxSize: fileURLs.count == 1 ? maxSize : maxSize / 2,
                         )
                         .clipShape(RoundedRectangle(cornerRadius: 6))
                     }
@@ -123,16 +123,16 @@ struct MultipleFilesView: View {
                 ZStack {
                     ForEach(
                         Array(fileURLs.prefix(3).enumerated().reversed()),
-                        id: \.offset
+                        id: \.offset,
                     ) { index, urlString in
                         FileThumbnailView(
                             fileURLString: urlString,
-                            maxSize: maxSize * 0.7
+                            maxSize: maxSize * 0.7,
                         )
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                         .offset(
                             x: CGFloat(index * 20),
-                            y: CGFloat(-index * 10)
+                            y: CGFloat(-index * 10),
                         )
                         .scaleEffect(1.0 - CGFloat(index) * 0.05)
                         .opacity(1.0 - CGFloat(index) * 0.15)
@@ -146,19 +146,20 @@ struct MultipleFilesView: View {
 }
 
 // MARK: - Previews
+
 #if DEBUG
     struct AsyncThumbnailView_Previews: PreviewProvider {
         static var previews: some View {
             Group {
                 AsyncThumbnailView(
                     fileURL: URL(fileURLWithPath: "/Applications/Safari.app"),
-                    maxSize: 128
+                    maxSize: 128,
                 )
                 .previewDisplayName("Single File")
 
                 FileThumbnailView(
                     fileURLString: "/Users/Shared",
-                    maxSize: 128
+                    maxSize: 128,
                 )
                 .previewDisplayName("Folder")
 
@@ -169,7 +170,7 @@ struct MultipleFilesView: View {
                         "/Applications/企业微信.app",
                         "/Applications/Microsoft Word.app",
                     ],
-                    maxSize: 128
+                    maxSize: 128,
                 )
                 .previewDisplayName("Four Files")
 
@@ -181,7 +182,7 @@ struct MultipleFilesView: View {
                         "/Applications/Microsoft Word.app",
                         "/Applications/Microsoft Excel.app",
                     ],
-                    maxSize: 128
+                    maxSize: 128,
                 )
                 .previewDisplayName("Multiple Files")
             }

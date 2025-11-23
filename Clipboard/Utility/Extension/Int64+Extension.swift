@@ -1,5 +1,5 @@
 //
-//  Date+Extension.swift
+//  Int64+Extension.swift
 //  Clipboard
 //
 //  Created by crown on 2025/9/23.
@@ -16,12 +16,12 @@ extension Int64 {
         let diffDate = NSCalendar.current.dateComponents(
             [.month, .day, .hour, .minute],
             from: Date(timeIntervalSince1970: TimeInterval(self)),
-            to: currentDate
+            to: currentDate,
         )
         let seconds = currentDate.timeIntervalSince(
-            Date(timeIntervalSince1970: TimeInterval(self))
+            Date(timeIntervalSince1970: TimeInterval(self)),
         )
-        if seconds >= 30 && seconds < 60 {
+        if seconds >= 30, seconds < 60 {
             return "30秒前"
         }
         if let month = diffDate.month, month > 0 {

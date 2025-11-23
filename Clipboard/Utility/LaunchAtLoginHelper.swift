@@ -13,24 +13,20 @@ final class LaunchAtLoginHelper {
 
     private init() {}
 
-    /// 设置开机自启动
-    /// - Parameter enabled: true 启用，false 禁用
-    /// - Returns: 操作是否成功
     @discardableResult
     func setEnabled(_ enabled: Bool) -> Bool {
         if #available(macOS 13.0, *) {
-            return setEnabledModern(enabled)
+            setEnabledModern(enabled)
         } else {
-            return setEnabledLegacy(enabled)
+            setEnabledLegacy(enabled)
         }
     }
 
-    /// 检查是否已启用开机自启动
     var isEnabled: Bool {
         if #available(macOS 13.0, *) {
-            return isEnabledModern
+            isEnabledModern
         } else {
-            return isEnabledLegacy
+            isEnabledLegacy
         }
     }
 
@@ -53,23 +49,20 @@ final class LaunchAtLoginHelper {
 
     @available(macOS 13.0, *)
     private var isEnabledModern: Bool {
-        return SMAppService.mainApp.status == .enabled
+        SMAppService.mainApp.status == .enabled
     }
-
-    // MARK: - macOS 13.0 以下的实现
 
     @available(macOS, deprecated: 13.0)
     private func setEnabledLegacy(_ enabled: Bool) -> Bool {
-        let success: Bool
-        if enabled {
-            success = SMLoginItemSetEnabled(
+        let success: Bool = if enabled {
+            SMLoginItemSetEnabled(
                 "com.crown.clipboard" as CFString,
-                true
+                true,
             )
         } else {
-            success = SMLoginItemSetEnabled(
+            SMLoginItemSetEnabled(
                 "com.crown.clipboard" as CFString,
-                false
+                false,
             )
         }
 
@@ -84,6 +77,6 @@ final class LaunchAtLoginHelper {
 
     @available(macOS, deprecated: 13.0)
     private var isEnabledLegacy: Bool {
-        return PasteUserDefaults.onStart
+        PasteUserDefaults.onStart
     }
 }

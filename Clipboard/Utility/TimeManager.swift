@@ -9,7 +9,6 @@ import Foundation
 
 @Observable
 class TimeManager {
-
     var currentTime = Date()
     private var timer: Timer?
 

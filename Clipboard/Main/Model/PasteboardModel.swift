@@ -30,7 +30,7 @@ final class PasteboardModel: Identifiable {
     @ObservationIgnored
     private(set) lazy var writeItem = PasteboardWritingItem(
         data: data,
-        type: pasteboardType
+        type: pasteboardType,
     )
     @ObservationIgnored
     private(set) lazy var type = PasteModelType(with: pasteboardType)
@@ -72,7 +72,7 @@ final class PasteboardModel: Identifiable {
         attributeString =
             NSAttributedString(
                 with: showData,
-                type: pasteboardType
+                type: pasteboardType,
             ) ?? NSAttributedString()
     }
 
@@ -87,10 +87,10 @@ final class PasteboardModel: Identifiable {
             guard
                 let fileURLs = pasteboard.readObjects(
                     forClasses: [NSURL.self],
-                    options: nil
+                    options: nil,
                 ) as? [URL]
             else { return nil }
-            let filePaths = fileURLs.map { $0.path }
+            let filePaths = fileURLs.map(\.path)
             FileAccessHelper.shared.saveSecurityBookmarks(for: filePaths)
             let filePathsString = filePaths.joined(separator: "\n")
             content = filePathsString.data(using: .utf8) ?? Data()
@@ -106,7 +106,7 @@ final class PasteboardModel: Identifiable {
             att =
                 NSAttributedString(with: content, type: type)
                     ?? NSAttributedString()
-            guard !att.string.allSatisfy({ $0.isWhitespace }) else {
+            guard !att.string.allSatisfy(\.isWhitespace) else {
                 return nil
             }
             showAtt =
@@ -124,7 +124,7 @@ final class PasteboardModel: Identifiable {
             appName: app?.localizedName ?? "",
             searchText: att.string,
             length: att.length,
-            group: -1
+            group: -1,
         )
     }
 
@@ -142,7 +142,7 @@ final class PasteboardModel: Identifiable {
             guard let imgSize = imageSize() else { return "" }
             return "\(Int(imgSize.width)) × \(Int(imgSize.height)) "
         case .string, .rich:
-            if url != nil && PasteUserDefaults.enableLinkPreview {
+            if url != nil, PasteUserDefaults.enableLinkPreview {
                 return String(data: data, encoding: .utf8) ?? ""
             }
             return "\(formatter.string(from: NSNumber(value: length)) ?? "")个字符"
@@ -170,12 +170,12 @@ final class PasteboardModel: Identifiable {
         guard
             let source = CGImageSourceCreateWithData(
                 data as CFData,
-                options
+                options,
             ),
             let properties = CGImageSourceCopyPropertiesAtIndex(
                 source,
                 0,
-                options
+                options,
             ) as? [CFString: Any],
             let width = properties[kCGImagePropertyPixelWidth] as? CGFloat,
             let height = properties[kCGImagePropertyPixelHeight] as? CGFloat
@@ -196,7 +196,7 @@ final class PasteboardModel: Identifiable {
             let cgImage = CGImageSourceCreateThumbnailAtIndex(
                 source,
                 0,
-                options as CFDictionary
+                options as CFDictionary,
             )
         else {
             return nil
@@ -227,7 +227,7 @@ final class PasteboardModel: Identifiable {
 
 extension PasteboardModel: Equatable {
     static func == (lhs: PasteboardModel, rhs: PasteboardModel) -> Bool {
-        return lhs.uniqueId == rhs.uniqueId
+        lhs.uniqueId == rhs.uniqueId
     }
 }
 
@@ -235,21 +235,21 @@ extension PasteboardModel {
     var backgroundColor: Color {
         switch type {
         case .string:
-            return Color(nsColor: .controlBackgroundColor)
+            Color(nsColor: .controlBackgroundColor)
         case .rich:
             if let bgColor = attributeString.attribute(
                 .backgroundColor,
                 at: 0,
-                effectiveRange: nil
+                effectiveRange: nil,
             ) as? NSColor {
-                return Color(nsColor: bgColor)
+                Color(nsColor: bgColor)
             } else {
-                return Color(nsColor: .controlBackgroundColor)
+                Color(nsColor: .controlBackgroundColor)
             }
         case .image:
-            return .clear
+            .clear
         default:
-            return Color(nsColor: .controlBackgroundColor)
+            Color(nsColor: .controlBackgroundColor)
         }
     }
 
@@ -269,7 +269,7 @@ extension PasteboardModel {
            let bg = attributeString.attribute(
                .backgroundColor,
                at: 0,
-               effectiveRange: nil
+               effectiveRange: nil,
            ) as? NSColor
         {
             return (Color(bg), getRTFColor(baseNS: bg))
@@ -322,10 +322,10 @@ enum PasteModelType {
 
     var string: String {
         switch self {
-        case .image: return "图片"
-        case .string, .rich: return "文本"
-        case .file: return "文件"
-        default: return ""
+        case .image: "图片"
+        case .string, .rich: "文本"
+        case .file: "文件"
+        default: ""
         }
     }
 }

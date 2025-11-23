@@ -30,7 +30,7 @@ struct CategoryChip: Identifiable, Equatable, Codable {
 
     var color: Color {
         get {
-            guard colorIndex >= 0 && colorIndex < CategoryChip.palette.count
+            guard colorIndex >= 0, colorIndex < CategoryChip.palette.count
             else {
                 return .gray
             }

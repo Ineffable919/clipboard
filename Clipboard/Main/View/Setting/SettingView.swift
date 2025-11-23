@@ -9,7 +9,6 @@ import SwiftUI
 
 /// 设置页面导航选项
 enum SettingPage: String, CaseIterable, Identifiable {
-
     case general = "通用"
     case privacy = "隐私"
     case keyboard = "快捷键"
@@ -19,10 +18,10 @@ enum SettingPage: String, CaseIterable, Identifiable {
 
     var icon: String {
         switch self {
-        case .general: return "gear"
-        case .privacy: return "hand.raised"
-        case .keyboard: return "command"
-        case .about: return "info.circle"
+        case .general: "gear"
+        case .privacy: "hand.raised"
+        case .keyboard: "command"
+        case .about: "info.circle"
         }
     }
 }
@@ -81,6 +80,7 @@ struct SettingView: View {
 }
 
 // MARK: - 设置开关行
+
 struct SettingToggleRow: View {
     let title: String
     @Binding var isOn: Bool
@@ -100,12 +100,13 @@ struct SettingToggleRow: View {
 }
 
 // MARK: - 帮助中心按钮
+
 struct HelpCenterButton: View {
     var body: some View {
         Button(action: {
             if let url = URL(
                 string:
-                    "https://github.com/Ineffable919/clipboard"
+                "https://github.com/Ineffable919/clipboard",
             ) {
                 NSWorkspace.shared.open(url)
             }

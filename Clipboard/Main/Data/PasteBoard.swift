@@ -5,8 +5,8 @@
 //  Created by crown on 2025/9/13.
 //
 
-import AVFoundation
 import AppKit
+import AVFoundation
 import Foundation
 
 final class PasteBoard {
@@ -28,7 +28,7 @@ final class PasteBoard {
 
         timer = Timer.scheduledTimer(
             withTimeInterval: timerInterval,
-            repeats: true
+            repeats: true,
         ) { [weak self] _ in
             Task { @MainActor in
                 self?.checkForChangesInPasteboard()
@@ -76,7 +76,7 @@ final class PasteBoard {
             let ignoredApps = PasteUserDefaults.ignoredApps
             let shouldIgnore = ignoredApps.contains { app in
                 if let bundleId = app.bundleIdentifier,
-                    bundleId == sourceApp.bundleIdentifier
+                   bundleId == sourceApp.bundleIdentifier
                 {
                     return true
                 }
@@ -85,7 +85,7 @@ final class PasteBoard {
 
             if shouldIgnore {
                 log.debug(
-                    "来自忽略应用的内容，跳过记录: \(sourceApp.localizedName ?? "Unknown")"
+                    "来自忽略应用的内容，跳过记录: \(sourceApp.localizedName ?? "Unknown")",
                 )
                 changeCount = pasteboard.changeCount
                 return
@@ -93,7 +93,7 @@ final class PasteBoard {
         }
 
         guard let item = pasteboard.pasteboardItems?.first else { return }
-        let types = item.types.map { $0.rawValue }
+        let types = item.types.map(\.rawValue)
         log.debug("可用类型 \(types)")
 
         PasteDataStore.main.addNewItem(pasteboard)
@@ -148,14 +148,14 @@ final class PasteBoard {
     }
 
     private func getSourceApplication() -> NSRunningApplication? {
-        return NSWorkspace.shared.frontmostApplication
+        NSWorkspace.shared.frontmostApplication
     }
 
     private func playNotificationSound() {
         guard
             let url = Bundle.main.url(
                 forResource: "copy",
-                withExtension: "mp3"
+                withExtension: "mp3",
             )
         else {
             return
@@ -184,7 +184,7 @@ final class PasteBoard {
             !isAttribute || PasteUserDefaults.pasteOnlyText
 
         if (data.type == .string) || (data.type == .rich),
-            shouldPasteAsPlainText
+           shouldPasteAsPlainText
         {
             NSPasteboard.general.setString(data.searchText, forType: .string)
         } else if data.type == .file {
@@ -211,7 +211,7 @@ final class PasteBoard {
         } else {
             NSPasteboard.general.setData(
                 data.data,
-                forType: data.pasteboardType
+                forType: data.pasteboardType,
             )
         }
     }

@@ -16,7 +16,7 @@ final class ThumbnailView {
 
     init() {
         memoryCache.countLimit = 100
-        memoryCache.totalCostLimit = 20 * 1024 * 1024  // 20MB
+        memoryCache.totalCostLimit = 20 * 1024 * 1024 // 20MB
     }
 
     func clearCache() {
@@ -24,14 +24,14 @@ final class ThumbnailView {
     }
 
     var cacheInfo: (count: Int, costLimit: Int) {
-        return (memoryCache.countLimit, memoryCache.totalCostLimit)
+        (memoryCache.countLimit, memoryCache.totalCostLimit)
     }
 }
 
 extension ThumbnailView {
     func generateFinderStyleThumbnail(
         for fileURL: URL,
-        completion: @escaping @Sendable (NSImage?) -> Void
+        completion: @escaping @Sendable (NSImage?) -> Void,
     ) {
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
             DispatchQueue.main.async {
@@ -41,7 +41,7 @@ extension ThumbnailView {
         }
 
         if let cachedImage = memoryCache.object(
-            forKey: fileURL.absoluteString as NSString
+            forKey: fileURL.absoluteString as NSString,
         ) {
             completion(cachedImage)
             return
@@ -52,22 +52,22 @@ extension ThumbnailView {
             fileAt: fileURL,
             size: NSSize(width: maxThumbnailSize, height: maxThumbnailSize),
             scale: scale,
-            representationTypes: getRepresentationTypes(for: fileURL)
+            representationTypes: getRepresentationTypes(for: fileURL),
         )
         request.iconMode = true
 
         QLThumbnailGenerator.shared.generateBestRepresentation(for: request) {
-            [weak self] thumbnail, error in
-            guard let self = self else { return }
-            
+            [weak self] thumbnail, _ in
+            guard let self else { return }
+
             let nsImage = thumbnail?.nsImage
-            
+
             DispatchQueue.main.async {
-                if let nsImage = nsImage {
+                if let nsImage {
                     self.memoryCache.setObject(
                         nsImage,
                         forKey: fileURL.absoluteString as NSString,
-                        cost: Int(nsImage.size.width * nsImage.size.height * 4)  // 估算内存占用
+                        cost: Int(nsImage.size.width * nsImage.size.height * 4), // 估算内存占用
                     )
                     completion(nsImage)
                 } else {
@@ -79,7 +79,7 @@ extension ThumbnailView {
     }
 
     func generateFinderStyleThumbnail(for fileURL: URL) async -> NSImage? {
-        return await withCheckedContinuation { continuation in
+        await withCheckedContinuation { continuation in
             generateFinderStyleThumbnail(for: fileURL) { image in
                 continuation.resume(returning: image)
             }
@@ -91,7 +91,7 @@ extension ThumbnailView {
     {
         guard
             let contentType = try? fileURL.resourceValues(forKeys: [
-                .contentTypeKey
+                .contentTypeKey,
             ]).contentType
         else {
             return .thumbnail
@@ -122,7 +122,7 @@ extension ThumbnailView {
             || icon.size.height != maxThumbnailSize
         {
             let resizedIcon = NSImage(
-                size: NSSize(width: maxThumbnailSize, height: maxThumbnailSize)
+                size: NSSize(width: maxThumbnailSize, height: maxThumbnailSize),
             )
             resizedIcon.lockFocus()
             icon.draw(
@@ -130,8 +130,8 @@ extension ThumbnailView {
                     x: 0,
                     y: 0,
                     width: maxThumbnailSize,
-                    height: maxThumbnailSize
-                )
+                    height: maxThumbnailSize,
+                ),
             )
             resizedIcon.unlockFocus()
             return resizedIcon
@@ -147,10 +147,10 @@ extension ThumbnailView {
     }
 }
 
-extension NSImage {
-    fileprivate func pngData() -> Data? {
+private extension NSImage {
+    func pngData() -> Data? {
         guard let tiffData = tiffRepresentation,
-            let bitmap = NSBitmapImageRep(data: tiffData)
+              let bitmap = NSBitmapImageRep(data: tiffData)
         else { return nil }
         return bitmap.representation(using: .png, properties: [:])
     }

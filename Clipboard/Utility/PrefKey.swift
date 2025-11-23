@@ -48,51 +48,51 @@ enum PrefKey: String {
 
 /// 外观模式
 enum AppearanceMode: Int, CaseIterable {
-    case system = 0  // 跟随系统
-    case light = 1  // 浅色
-    case dark = 2  // 深色
+    case system = 0 // 跟随系统
+    case light = 1 // 浅色
+    case dark = 2 // 深色
 
     var title: String {
         switch self {
-        case .system: return "跟随系统"
-        case .light: return "浅色"
-        case .dark: return "深色"
+        case .system: "跟随系统"
+        case .light: "浅色"
+        case .dark: "深色"
         }
     }
 }
 
 /// 历史时间单位
 enum HistoryTimeUnit: Equatable {
-    case days(Int)  // 1-6 天
-    case weeks(Int)  // 1-3 周
-    case months(Int)  // 1-11 月
-    case year  // 1 年
-    case forever  // 永久
+    case days(Int) // 1-6 天
+    case weeks(Int) // 1-3 周
+    case months(Int) // 1-11 月
+    case year // 1 年
+    case forever // 永久
 
     /// 转换为原始值（用于存储）
     var rawValue: Int {
         switch self {
-        case .days(let n):
-            return n  // 1-6
-        case .weeks(let n):
-            return 6 + n  // 7-9
-        case .months(let n):
-            return 9 + n  // 10-20
+        case let .days(n):
+            n // 1-6
+        case let .weeks(n):
+            6 + n // 7-9
+        case let .months(n):
+            9 + n // 10-20
         case .year:
-            return 21
+            21
         case .forever:
-            return 22
+            22
         }
     }
 
     /// 从原始值创建
     init(rawValue: Int) {
         switch rawValue {
-        case 1...6:
+        case 1 ... 6:
             self = .days(rawValue)
-        case 7...9:
+        case 7 ... 9:
             self = .weeks(rawValue - 6)
-        case 10...20:
+        case 10 ... 20:
             self = .months(rawValue - 9)
         case 21:
             self = .year
@@ -104,16 +104,16 @@ enum HistoryTimeUnit: Equatable {
     /// 显示文本
     var displayText: String {
         switch self {
-        case .days(let n):
-            return "\(n)天"
-        case .weeks(let n):
-            return "\(n)周"
-        case .months(let n):
-            return "\(n)个月"
+        case let .days(n):
+            "\(n)天"
+        case let .weeks(n):
+            "\(n)周"
+        case let .months(n):
+            "\(n)个月"
         case .year:
-            return "1年"
+            "1年"
         case .forever:
-            return "永久"
+            "永久"
         }
     }
 }

@@ -18,11 +18,11 @@ final class PasteboardWritingItem: NSObject {
 }
 
 extension PasteboardWritingItem: NSPasteboardWriting {
-    func writableTypes(for pasteboard: NSPasteboard) -> [PasteboardType] {
+    func writableTypes(for _: NSPasteboard) -> [PasteboardType] {
         [type]
     }
 
-    func pasteboardPropertyList(forType type: PasteboardType) -> Any? {
+    func pasteboardPropertyList(forType _: PasteboardType) -> Any? {
         data
     }
 }

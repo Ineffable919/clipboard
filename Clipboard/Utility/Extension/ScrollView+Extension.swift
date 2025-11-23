@@ -10,7 +10,7 @@ import SwiftUI
 struct HorizontalWheelScrollView<Content: View>: NSViewRepresentable {
     @ViewBuilder var content: () -> Content
 
-    func makeNSView(context: Context) -> WheelScrollView {
+    func makeNSView(context _: Context) -> WheelScrollView {
         let scroll = WheelScrollView()
         scroll.drawsBackground = false
         scroll.hasHorizontalScroller = false
@@ -30,15 +30,15 @@ struct HorizontalWheelScrollView<Content: View>: NSViewRepresentable {
             origin: .zero,
             size: NSSize(
                 width: max(1, initialSize.width),
-                height: max(1, initialSize.height)
-            )
+                height: max(1, initialSize.height),
+            ),
         )
 
         scroll.documentView = hosting
         return scroll
     }
 
-    func updateNSView(_ scroll: WheelScrollView, context: Context) {
+    func updateNSView(_ scroll: WheelScrollView, context _: Context) {
         if let hosting = scroll.documentView as? NSHostingView<Content> {
             hosting.rootView = content()
 
@@ -46,8 +46,8 @@ struct HorizontalWheelScrollView<Content: View>: NSViewRepresentable {
             hosting.setFrameSize(
                 NSSize(
                     width: max(1, size.width),
-                    height: max(1, scroll.contentSize.height)
-                )
+                    height: max(1, scroll.contentSize.height),
+                ),
             )
         }
     }
@@ -72,7 +72,7 @@ final class WheelScrollView: NSScrollView {
 
         let clamped = min(max(0, x), maxX)
         contentView.scroll(
-            to: NSPoint(x: clamped, y: contentView.bounds.origin.y)
+            to: NSPoint(x: clamped, y: contentView.bounds.origin.y),
         )
         reflectScrolledClipView(contentView)
     }

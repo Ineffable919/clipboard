@@ -59,7 +59,7 @@ struct TopBarView: View {
                     syncingFocus = false
                 }
 
-                if vm.focusView != .editChip && vm.isEditingChip {
+                if vm.focusView != .editChip, vm.isEditingChip {
                     vm.commitEditingChip()
                 }
             }
@@ -74,7 +74,7 @@ struct TopBarView: View {
     }
 
     private var searchField: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: Const.space8) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: Const.iconHdSize, weight: .light))
                 .foregroundColor(.gray)
@@ -95,7 +95,7 @@ struct TopBarView: View {
                 .contentShape(Rectangle())
             }
         }
-        .padding(2)
+        .padding(4)
         .frame(width: Const.topBarWidth)
         .background(.clear)
         .contentShape(Rectangle())
@@ -105,9 +105,9 @@ struct TopBarView: View {
                     focus == .search
                         ? Color.accentColor.opacity(0.4)
                         : Color.gray.opacity(0.4),
-                    lineWidth: 3
+                    lineWidth: 3,
                 )
-                .padding(-1)
+                .padding(-1),
         )
         .onTapGesture {
             focus = .search
@@ -121,8 +121,8 @@ struct TopBarView: View {
             .background(
                 RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
                     .fill(
-                        isIconHovered ? Const.hoverColor : Color.clear
-                    )
+                        isIconHovered ? Const.hoverColor : Color.clear,
+                    ),
             )
             .contentShape(Rectangle())
             .onHover { hovering in
@@ -138,11 +138,11 @@ struct TopBarView: View {
 
     private var typeView: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
+            HStack(spacing: Const.space8) {
                 ForEach(vm.chips) { chip in
                     ChipView(
                         isSelected: vm.selectedChipId == chip.id,
-                        chip: chip
+                        chip: chip,
                     )
                     .onTapGesture {
                         vm.toggleChip(chip)
@@ -183,7 +183,7 @@ struct TopBarView: View {
                     nextIndex = 1
                 }
                 vm.newChipColorIndex = nextIndex
-            }
+            },
         )
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
@@ -206,8 +206,8 @@ struct TopBarView: View {
                 RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
                     .fill(
                         isPlusHovered
-                            ? Const.hoverColor : Color.clear
-                    )
+                            ? Const.hoverColor : Color.clear,
+                    ),
             )
             .onHover { hovering in
                 isPlusHovered = hovering

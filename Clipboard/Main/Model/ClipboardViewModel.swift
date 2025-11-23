@@ -15,28 +15,34 @@ final class ClipboardViewModel {
     static let shard = ClipboardViewModel()
 
     // MARK: - Search State
+
     var isSearching: Bool = false
     var query: String = ""
 
     // MARK: - UI State
+
     var isShowDel: Bool = false
     var focusView: FocusField = .history
 
     // MARK: - Chip Management
+
     var chips: [CategoryChip] = []
     var selectedChipId: Int = 1
 
     // MARK: - New Chip State
+
     var editingNewChip: Bool = false
     var newChipName: String = "未命名"
     var newChipColorIndex: Int = 1
 
     // MARK: - Edit Chip State
-    var editingChipId: Int? = nil
+
+    var editingChipId: Int?
     var editingChipName: String = ""
     var editingChipColorIndex: Int = 0
 
     // MARK: - Computed Properties
+
     var newChipColor: Color {
         get {
             CategoryChip.palette[newChipColorIndex % CategoryChip.palette.count]
@@ -51,7 +57,7 @@ final class ClipboardViewModel {
     var editingChipColor: Color {
         get {
             guard editingChipColorIndex >= 0,
-                editingChipColorIndex < CategoryChip.palette.count
+                  editingChipColorIndex < CategoryChip.palette.count
             else {
                 return .blue
             }
@@ -73,24 +79,27 @@ final class ClipboardViewModel {
     }
 
     // MARK: - Private Properties
+
     private let pd = PasteDataStore.main
     private var searchTask: Task<Void, Never>?
 
     private var lastQuery: String = ""
-    private var lastTypeFilter: [String]? = nil
+    private var lastTypeFilter: [String]?
     private var lastGroup: Int = -1
 
     // MARK: - Initialization
+
     init() {
         loadCategories()
     }
 
     // MARK: - Search Methods
+
     func onSearchParametersChanged() {
         searchTask?.cancel()
 
         searchTask = Task {
-            try? await Task.sleep(nanoseconds: 200_000_000)  // 200ms
+            try? await Task.sleep(nanoseconds: 200_000_000) // 200ms
 
             guard !Task.isCancelled else { return }
             await searchClipboards()
@@ -103,13 +112,13 @@ final class ClipboardViewModel {
         let group = getGroupFilterForCurrentChip()
 
         if trimmedQuery == lastQuery,
-            typeFilter == lastTypeFilter,
-            group == lastGroup
+           typeFilter == lastTypeFilter,
+           group == lastGroup
         {
             return
         }
 
-        if trimmedQuery.isEmpty && selectedChipId == 1 {
+        if trimmedQuery.isEmpty, selectedChipId == 1 {
             pd.resetDefaultList()
             isSearching = false
         } else {
@@ -134,6 +143,7 @@ final class ClipboardViewModel {
     }
 
     // MARK: - Category Management
+
     private func loadCategories() {
         chips = CategoryChip.systemChips + PasteUserDefaults.userCategoryChip
     }
@@ -152,7 +162,7 @@ final class ClipboardViewModel {
             id: newId,
             name: name,
             color: color,
-            isSystem: false
+            isSystem: false,
         )
         chips.append(new)
         saveUserCategories()
@@ -161,10 +171,10 @@ final class ClipboardViewModel {
     func updateChip(
         _ chip: CategoryChip,
         name: String? = nil,
-        color: Color? = nil
+        color: Color? = nil,
     ) {
         guard !chip.isSystem,
-            let index = chips.firstIndex(where: { $0.id == chip.id })
+              let index = chips.firstIndex(where: { $0.id == chip.id })
         else {
             return
         }
@@ -193,9 +203,10 @@ final class ClipboardViewModel {
     }
 
     // MARK: - New Chip Methods
+
     func commitNewChipOrCancel(commitIfNonEmpty: Bool) {
         let trimmed = newChipName.trimmingCharacters(
-            in: .whitespacesAndNewlines
+            in: .whitespacesAndNewlines,
         )
 
         if commitIfNonEmpty, !trimmed.isEmpty {
@@ -212,6 +223,7 @@ final class ClipboardViewModel {
     }
 
     // MARK: - Edit Chip Methods
+
     func startEditingChip(_ chip: CategoryChip) {
         guard !chip.isSystem else { return }
 
@@ -222,14 +234,14 @@ final class ClipboardViewModel {
 
     func commitEditingChip() {
         guard let chipId = editingChipId,
-            let chip = chips.first(where: { $0.id == chipId })
+              let chip = chips.first(where: { $0.id == chipId })
         else {
             cancelEditingChip()
             return
         }
 
         let trimmed = editingChipName.trimmingCharacters(
-            in: .whitespacesAndNewlines
+            in: .whitespacesAndNewlines,
         )
         if !trimmed.isEmpty {
             updateChip(chip, name: trimmed, color: editingChipColor)
@@ -249,6 +261,7 @@ final class ClipboardViewModel {
     }
 
     // MARK: - Helper Methods
+
     /// 循环颜色索引，跳过 gray（索引 0）
     private func cycleColorIndex(_ currentIndex: Int) -> Int {
         var nextIndex = (currentIndex + 1) % CategoryChip.palette.count
@@ -260,7 +273,6 @@ final class ClipboardViewModel {
 }
 
 extension ClipboardViewModel {
-
     func pasteAction(item: PasteboardModel, isAttribute: Bool = true) {
         let temp = isSearching
         if temp {
@@ -285,7 +297,6 @@ extension ClipboardViewModel {
     func deleteAction(item: PasteboardModel) {
         PasteDataStore.main.deleteItems(item)
     }
-
 }
 
 enum FocusField: Hashable {

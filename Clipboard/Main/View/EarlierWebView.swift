@@ -22,7 +22,7 @@ struct EarlierWebView: View {
         }
         .frame(
             width: Const.maxPreviewSize - 36,
-            height: Const.maxPreviewHeight
+            height: Const.maxPreviewHeight,
         )
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
@@ -35,17 +35,17 @@ struct EarlierWebView: View {
 private struct WebViewRepresentable: NSViewRepresentable {
     let url: URL
 
-    func makeNSView(context: Context) -> WKWebView {
+    func makeNSView(context _: Context) -> WKWebView {
         let webView = WKWebView()
         return webView
     }
 
-    func updateNSView(_ nsView: WKWebView, context: Context) {
+    func updateNSView(_ nsView: WKWebView, context _: Context) {
         if nsView.url != url {
             let request = URLRequest(
                 url: url,
                 cachePolicy: .returnCacheDataElseLoad,
-                timeoutInterval: 5
+                timeoutInterval: 5,
             )
             nsView.load(request)
         }
@@ -56,7 +56,7 @@ private struct WebViewRepresentable: NSViewRepresentable {
     let url = "https://www.apple.com.cn"
         .asCompleteURL()
     EarlierWebView(
-        url: url!
+        url: url!,
     )
     .frame(width: Const.maxPreviewSize, height: Const.maxPreviewHeight)
 }

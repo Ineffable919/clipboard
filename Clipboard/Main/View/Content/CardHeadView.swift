@@ -21,8 +21,8 @@ struct CardHeadView: View {
                         .foregroundStyle(.white)
                     Text(
                         model.timestamp.timeAgo(
-                            relativeTo: TimeManager.shared.currentTime
-                        )
+                            relativeTo: TimeManager.shared.currentTime,
+                        ),
                     )
                     .font(.caption2)
                     .foregroundStyle(.white.opacity(0.85))

@@ -28,7 +28,7 @@ struct GeneralSettingView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     SettingToggleRow(
                         title: "登录时打开",
-                        isOn: $launchAtLogin
+                        isOn: $launchAtLogin,
                     )
                     .onChange(of: launchAtLogin) { _, newValue in
                         PasteUserDefaults.onStart = newValue
@@ -39,7 +39,7 @@ struct GeneralSettingView: View {
 
                     SettingToggleRow(
                         title: "音效",
-                        isOn: $soundEnabled
+                        isOn: $soundEnabled,
                     )
                     .onChange(of: soundEnabled) { _, newValue in
                         PasteUserDefaults.soundEnabled = newValue
@@ -54,12 +54,12 @@ struct GeneralSettingView: View {
                     RoundedRectangle(cornerRadius: Const.radius)
                         .fill(
                             colorScheme == .light
-                                ? Const.lightBackground : Const.darkBackground
-                        )
+                                ? Const.lightBackground : Const.darkBackground,
+                        ),
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: Const.radius)
-                        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                        .stroke(Color.gray.opacity(0.2), lineWidth: 1),
                 )
 
                 Text("粘贴项目")
@@ -73,7 +73,7 @@ struct GeneralSettingView: View {
                             PasteTargetModeRow(
                                 mode: mode,
                                 isSelected: selectedPasteTarget == mode,
-                                onSelect: { selectedPasteTarget = mode }
+                                onSelect: { selectedPasteTarget = mode },
                             )
                         }
                     }
@@ -93,12 +93,12 @@ struct GeneralSettingView: View {
                     RoundedRectangle(cornerRadius: Const.radius)
                         .fill(
                             colorScheme == .light
-                                ? Const.lightBackground : Const.darkBackground
-                        )
+                                ? Const.lightBackground : Const.darkBackground,
+                        ),
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: Const.radius)
-                        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                        .stroke(Color.gray.opacity(0.2), lineWidth: 1),
                 )
 
                 HStack {
@@ -110,7 +110,7 @@ struct GeneralSettingView: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     HistoryTimeSlider(
-                        selectedTimeUnit: $selectedHistoryTimeUnit
+                        selectedTimeUnit: $selectedHistoryTimeUnit,
                     )
                     .onChange(of: selectedHistoryTimeUnit) { _, newValue in
                         PasteUserDefaults.historyTime = newValue.rawValue
@@ -129,12 +129,12 @@ struct GeneralSettingView: View {
                     RoundedRectangle(cornerRadius: Const.radius)
                         .fill(
                             colorScheme == .light
-                                ? Const.lightBackground : Const.darkBackground
-                        )
+                                ? Const.lightBackground : Const.darkBackground,
+                        ),
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: Const.radius)
-                        .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                        .stroke(Color.gray.opacity(0.2), lineWidth: 1),
                 )
 
                 Spacer(minLength: 20)
@@ -152,15 +152,15 @@ enum PasteTargetMode: Int, CaseIterable {
 
     var title: String {
         switch self {
-        case .toApp: return "到当前活动应用"
-        case .toClipboard: return "到剪贴板"
+        case .toApp: "到当前活动应用"
+        case .toClipboard: "到剪贴板"
         }
     }
 
     var description: String {
         switch self {
-        case .toApp: return "将选定的项目直接粘贴到您当前正在使用的应用程序中。"
-        case .toClipboard: return "将选定的项目复制到系统剪贴板，以便随后手动粘贴。"
+        case .toApp: "将选定的项目直接粘贴到您当前正在使用的应用程序中。"
+        case .toClipboard: "将选定的项目复制到系统剪贴板，以便随后手动粘贴。"
         }
     }
 }
@@ -234,7 +234,7 @@ struct PlainTextPasteRow: View {
 
 struct AppearanceSettingsRow: View {
     @State private var selectedAppearance: AppearanceMode = .init(
-        rawValue: PasteUserDefaults.appearance
+        rawValue: PasteUserDefaults.appearance,
     ) ?? .system
 
     private let options: [(mode: AppearanceMode, icon: String)] = [
@@ -272,13 +272,18 @@ struct AppearanceSettingsRow: View {
 
     private func applyAppearance(_ mode: AppearanceMode) {
         DispatchQueue.main.async {
+            let targetAppearance: NSAppearance?
             switch mode {
             case .system:
-                NSApp.appearance = nil
+                targetAppearance = nil
             case .light:
-                NSApp.appearance = NSAppearance(named: .aqua)
+                targetAppearance = NSAppearance(named: .aqua)
             case .dark:
-                NSApp.appearance = NSAppearance(named: .darkAqua)
+                targetAppearance = NSAppearance(named: .darkAqua)
+            }
+
+            if NSApp.appearance != targetAppearance {
+                NSApp.appearance = targetAppearance
             }
         }
     }
@@ -305,9 +310,8 @@ struct HistoryTimeSlider: View {
                         ZStack(alignment: .leading) {
                             ForEach(
                                 Array(milestones.enumerated()),
-                                id: \.offset
+                                id: \.offset,
                             ) { index, label in
-                                // 刻度标签
                                 Text(label)
                                     .font(.system(size: 11))
                                     .foregroundColor(.secondary)
@@ -315,9 +319,9 @@ struct HistoryTimeSlider: View {
                                     .offset(
                                         x: tickPosition(
                                             for: index,
-                                            in: geometry.size.width
+                                            in: geometry.size.width,
                                         )
-                                            - labelOffset(label: label)
+                                            - labelOffset(label: label),
                                     )
                             }
                         }
@@ -341,7 +345,6 @@ struct HistoryTimeSlider: View {
                         let tickValue = tickSliderValue(for: index)
                         let isSelected =
                             !isEditing && abs(sliderValue - tickValue) < 0.01
-                        // 主刻度线
                         if !isSelected {
                             Rectangle()
                                 .fill(Color.gray.opacity(0.4))
@@ -349,9 +352,9 @@ struct HistoryTimeSlider: View {
                                 .offset(
                                     x: tickPosition(
                                         for: index,
-                                        in: geometry.size.width
+                                        in: geometry.size.width,
                                     ),
-                                    y: 3
+                                    y: 3,
                                 )
                         }
                     }
@@ -363,9 +366,8 @@ struct HistoryTimeSlider: View {
                     value: Binding(
                         get: { sliderValue },
                         set: { newValue in
-                            // 根据区间设置不同的步长
                             sliderValue = snapToStep(newValue)
-                        }
+                        },
                     ),
                     in: 0 ... 4,
                     onEditingChanged: { editing in
@@ -375,7 +377,7 @@ struct HistoryTimeSlider: View {
                         if !editing {
                             saveCurrentValue()
                         }
-                    }
+                    },
                 )
                 .tint(.accentColor)
             }
@@ -395,11 +397,11 @@ struct HistoryTimeSlider: View {
 
     private func labelOffset(label: String) -> CGFloat {
         if label == "天" {
-            return 25.0
+            25.0
         } else if label == "永久" {
-            return 25.0
+            25.0
         } else {
-            return 15.0
+            15.0
         }
     }
 
@@ -420,9 +422,9 @@ struct HistoryTimeSlider: View {
     // 获取刻度线对应的滑块值
     private func tickSliderValue(for index: Int) -> Double {
         if index == 0 {
-            return internalValueToSliderValue(1) // 1天
+            internalValueToSliderValue(1) // 1天
         } else {
-            return Double(index) // 1, 2, 3, 4 对应周、月、年、永久
+            Double(index) // 1, 2, 3, 4 对应周、月、年、永久
         }
     }
 
@@ -431,21 +433,21 @@ struct HistoryTimeSlider: View {
         switch value {
         case 1 ... 6:
             // 天区间：1-6 映射到 0.0-1.0
-            return Double(value - 1) / 6.0
+            Double(value - 1) / 6.0
         case 7 ... 9:
             // 周区间：7-9 映射到 1.0-2.0
-            return 1.0 + Double(value - 7) / 3.0
+            1.0 + Double(value - 7) / 3.0
         case 10 ... 20:
             // 月区间：10-20 映射到 2.0-3.0
-            return 2.0 + Double(value - 10) / 11.0
+            2.0 + Double(value - 10) / 11.0
         case 21:
             // 年：21 映射到 3.0
-            return 3.0
+            3.0
         case 22:
             // 永久：22 映射到 4.0
-            return 4.0
+            4.0
         default:
-            return 0.0
+            0.0
         }
     }
 
@@ -493,11 +495,9 @@ struct HistoryTimeSlider: View {
             step = 1.0
         }
 
-        // 计算当前区间的起始位置
         let sectionStart = floor(value)
         let offsetInSection = value - sectionStart
 
-        // 吸附到最近的步长
         let snappedOffset = round(offsetInSection / step) * step
         return sectionStart + snappedOffset
     }

@@ -18,7 +18,7 @@ struct ContentView: View {
                 RoundedRectangle(cornerRadius: Const.radius)
                     .fill(Color.clear)
                     .glassEffect(
-                        in: RoundedRectangle(cornerRadius: Const.radius)
+                        in: RoundedRectangle(cornerRadius: Const.radius),
                     )
                 VStack {
                     Spacer()
@@ -66,7 +66,7 @@ struct VisualEffectView: NSViewRepresentable {
     var blending: NSVisualEffectView.BlendingMode = .behindWindow
     var state: NSVisualEffectView.State = .active
 
-    func makeNSView(context: Context) -> NSVisualEffectView {
+    func makeNSView(context _: Context) -> NSVisualEffectView {
         let v = NSVisualEffectView()
         v.material = material
         v.blendingMode = blending
@@ -75,7 +75,7 @@ struct VisualEffectView: NSViewRepresentable {
         return v
     }
 
-    func updateNSView(_ v: NSVisualEffectView, context: Context) {}
+    func updateNSView(_: NSVisualEffectView, context _: Context) {}
 }
 
 // MARK: - Preview
