@@ -12,7 +12,7 @@
 
 ## 下载
 
-Download the latest version from the [releases](https://github.com/Ineffable919/clipboard/releases/latest) page
+下载最新版本 [releases](https://github.com/Ineffable919/clipboard/releases/latest)
 
 ## 功能特性
 
