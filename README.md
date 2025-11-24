@@ -57,6 +57,16 @@
 - `⌘ + C`：复制选中的项目到剪贴板
 - `⌘ + Delete`：删除选中的项目
 
+## FAQ
+
+### 应用打不开?
+
+1. 检查系统设置 -> 隐私与安全性 -> 允许以下来源程序.
+2. 试试以下命令
+``` sh
+sudo xattr -r -d com.apple.quarantine /Applications/Clipboard.app 
+sudo codesign --force --deep --sign - /Applications/Clipboard.app
+```
 
 ## 许可证
 

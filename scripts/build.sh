@@ -129,7 +129,6 @@ fi
 echo -e "${GREEN}✅ 构建完成${NC}"
 echo ""
 
-# 步骤 3: 查找构建产物
 echo -e "${BLUE}🔍 步骤 3/5: 查找构建产物...${NC}"
 
 DERIVED_DATA=$(xcodebuild -scheme "$SCHEME" -configuration "$CONFIGURATION" -destination "$DESTINATION" -showBuildSettings | grep " BUILT_PRODUCTS_DIR" | sed 's/.*= //')

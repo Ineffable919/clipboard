@@ -58,6 +58,17 @@ Download the latest version from the [releases](https://github.com/Ineffable919/
 - `⌘ + C`: Copy selected item to clipboard
 - `⌘ + Delete`: Delete selected item
 
+## FAQ
+
+### App won't open?
+
+1. Check System Settings -> Privacy & Security -> Allow applications from the following sources.
+2. Try the following commands:
+``` sh
+sudo xattr -r -d com.apple.quarantine /Applications/Clipboard.app 
+sudo codesign --force --deep --sign - /Applications/Clipboard.app
+```
+
 ## License
 
 This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International Public License. See the [LICENSE](LICENSE) file for details.
