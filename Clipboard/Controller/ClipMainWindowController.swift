@@ -10,7 +10,7 @@ import Combine
 
 @Observable
 final class ClipMainWindowController: NSWindowController {
-    private let viewHeight: CGFloat = 335
+    private let viewHeight: CGFloat = 330.0
 
     static let shared = ClipMainWindowController()
     private var isVisible: Bool { window?.isVisible ?? false }
@@ -56,7 +56,6 @@ final class ClipMainWindowController: NSWindowController {
         configureWindowSharing()
     }
 
-    /// 配置窗口在屏幕共享中的可见性
     func configureWindowSharing() {
         guard let win = window else { return }
 

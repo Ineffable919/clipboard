@@ -82,5 +82,5 @@ struct VisualEffectView: NSViewRepresentable {
 
 #Preview {
     ContentView()
-        .frame(width: 1000, height: 335)
+        .frame(width: 1000, height: 330.0)
 }

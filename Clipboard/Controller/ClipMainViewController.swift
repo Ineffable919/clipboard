@@ -9,7 +9,7 @@ import AppKit
 import SwiftUI
 
 final class ClipMainViewController: NSViewController {
-    private let defaultHeight: CGFloat = 332
+    private let defaultHeight: CGFloat = 330.0
     private let showDuration: CFTimeInterval = 0.15
     private let hideDuration: CFTimeInterval = 0.24
     private(set) var isPresented: Bool = false
@@ -27,7 +27,7 @@ final class ClipMainViewController: NSViewController {
             v.material = .sidebar
             v.blendingMode = .behindWindow
             v.state = .active
-            v.isEmphasized = false
+            v.isEmphasized = true
             return v
         }
     }()
@@ -65,6 +65,7 @@ final class ClipMainViewController: NSViewController {
         DispatchQueue.main.async {
             self.view.layoutSubtreeIfNeeded()
             let h = max(self.view.bounds.height, self.defaultHeight)
+            print("\(self.view.bounds.height)--\(h)")
             self.slideContainer.layer?.transform = CATransform3DMakeTranslation(
                 0,
                 -h,
