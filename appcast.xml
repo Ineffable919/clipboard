@@ -19,18 +19,47 @@
                     </ul>
             ]]>
         </description>
-        <pubDate>Tue, 25 Nov 2025 22:46:59 +0800</pubDate>
-        <sparkle:version>29</sparkle:version>
-        <sparkle:shortVersionString>0.2.3</sparkle:shortVersionString>
-        <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-        <sparkle:tags>
-            <sparkle:criticalUpdate sparkle:osType="arm64" />
-        </sparkle:tags>
-        <enclosure 
-            url="https://github.com/Ineffable919/clipboard/releases/download/0.2.3/Clipboard-0.2.3-arm64.zip" 
-            sparkle:edSignature="EMmfPZ9t9kXe1MmYjVHQyGo6OKEqjgGSyRyTfRpYNQs2SQWLy8mWP6dSTZrNnB6EUnhl9hzWrdH9Cyh2m9viDw=="
-            length="2746579"
-            type="application/octet-stream" />
+            <pubDate>Tue, 25 Nov 2025 22:46:59 +0800</pubDate>
+            <sparkle:version>29</sparkle:version>
+            <sparkle:shortVersionString>0.2.3</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:tags>
+                <sparkle:osType>arm64</sparkle:osType>
+            </sparkle:tags>
+            <enclosure
+                url="https://github.com/Ineffable919/clipboard/releases/download/0.2.3/Clipboard-0.2.3-arm64.zip"
+                sparkle:edSignature="EMmfPZ9t9kXe1MmYjVHQyGo6OKEqjgGSyRyTfRpYNQs2SQWLy8mWP6dSTZrNnB6EUnhl9hzWrdH9Cyh2m9viDw=="
+                length="2746579"
+                type="application/octet-stream" />
+        </item>
+
+        <item>
+            <title>Version 0.2.3 (Intel (x86_64))</title>
+            <description>
+            <![CDATA[
+                <h4>🔧 Updates</h4>
+                    <ul>
+                        <li>移除了暂未生效的控制项目</li>
+                        <li>调整UI元素的间距和样式，提升整体视觉一致性</li>
+                    </ul>
+                <h4>🐛 Bug Fixes</h4>
+                    <ul>
+                        <li>修复某些情况下应用奔溃的问题。</li>
+                    </ul>
+            ]]>
+      </description>
+            <pubDate>Tue, 25 Nov 2025 22:52:54 +0800</pubDate>
+            <sparkle:version>29</sparkle:version>
+            <sparkle:shortVersionString>0.2.3</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:tags>
+                <sparkle:osType>x86_64</sparkle:osType>
+            </sparkle:tags>
+            <enclosure
+                url="https://github.com/Ineffable919/clipboard/releases/download/0.2.3/Clipboard-0.2.3-x86_64.zip"
+                sparkle:edSignature="CcqRr11kYMmara7XfQsvdJh4/5xf61i0pqkNFMiSDTbyvfvaqpQBMA4l7Y7NRk2a/roOj55P1fpHN7bpkgSWCg=="
+                length="2804215"
+                type="application/octet-stream" />
         </item>
     </channel>
 </rss>
