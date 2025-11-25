@@ -11,7 +11,6 @@ import SwiftUI
 
 struct ShortcutRecorder: View {
     private let hotKeyId: String
-    private let defaultValue: KeyboardShortcut
     private let onShortcutChanged: (() -> Void)?
 
     @State private var shortcut: KeyboardShortcut
@@ -23,25 +22,23 @@ struct ShortcutRecorder: View {
 
     init(
         _ key: String,
-        defaultValue: KeyboardShortcut = .empty,
         binding: Binding<KeyboardShortcut>? = nil,
         onShortcutChanged: (() -> Void)? = nil
     ) {
         hotKeyId = key
-        self.defaultValue = defaultValue
         self.onShortcutChanged = onShortcutChanged
 
         let saved =
-            HotKeyManager.shared.getHotKey(key: key)?.shortcut ?? defaultValue
+            HotKeyManager.shared.getHotKey(key: key)?.shortcut ?? .empty
 
         _shortcut = State(initialValue: saved)
         _displayText = State(initialValue: saved.displayString)
         _value =
             binding
-                ?? Binding(
-                    get: { saved },
-                    set: { _ in },
-                )
+            ?? Binding(
+                get: { saved },
+                set: { _ in },
+            )
     }
 
     var body: some View {
@@ -64,7 +61,7 @@ struct ShortcutRecorder: View {
             }
         }
         .padding(.horizontal, 4.0)
-        .padding(.vertical, 6.0)
+        .padding(.vertical, 4.0)
         .frame(maxWidth: 128.0, minHeight: Const.space24)
         .background(
             RoundedRectangle(cornerRadius: Const.space24)
@@ -140,8 +137,6 @@ struct ShortcutRecorder: View {
 
             handleKeyEvent(event)
 
-            // 关键：只有在成功录入时才拦截事件，避免影响其他监听器
-            // 如果用户按了 Esc 或其他取消操作，让事件继续传播
             return nil
         }
     }
@@ -166,8 +161,8 @@ struct ShortcutRecorder: View {
         ])
 
         let isFunctionKey =
-            (0x7A ... 0x7D).contains(keyCode)
-                || [0x63, 0x76, 0x60, 0x61, 0x62, 0x64, 0x65, 0x6D, 0x67, 0x6F]
+            (0x7A...0x7D).contains(keyCode)
+            || [0x63, 0x76, 0x60, 0x61, 0x62, 0x64, 0x65, 0x6D, 0x67, 0x6F]
                 .contains(keyCode)
 
         if modifiers.isEmpty, !isFunctionKey {
@@ -215,9 +210,8 @@ struct ShortcutRecorder: View {
                     shortcut: shortcut,
                 )
             }
+            onShortcutChanged?()
         }
-
-        onShortcutChanged?()
     }
 }
 
@@ -237,13 +231,7 @@ struct ShortcutRecorder: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             ShortcutRecorder(
-                "preview_default",
-                defaultValue: KeyboardShortcut(
-                    modifiersRawValue: NSEvent.ModifierFlags([.command, .shift])
-                        .rawValue,
-                    keyCode: KeyCode.v,
-                    displayKey: "V",
-                ),
+                "app_launch"
             )
         }
     }

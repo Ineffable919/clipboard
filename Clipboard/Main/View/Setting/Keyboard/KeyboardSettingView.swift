@@ -79,17 +79,7 @@ struct StartupShortcutsView: View {
             Text("启动 \(appName)")
                 .font(.body)
             Spacer()
-            ShortcutRecorder(
-                "app_launch",
-                defaultValue: KeyboardShortcut(
-                    modifiersRawValue: NSEvent.ModifierFlags([
-                        .command, .shift,
-                    ])
-                    .rawValue,
-                    keyCode: KeyCode.v,
-                    displayKey: "V",
-                ),
-            ) {
+            ShortcutRecorder("app_launch") {
                 ClipMainWindowController.shared.toggleWindow()
             }
         }

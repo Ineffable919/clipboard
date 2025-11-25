@@ -65,7 +65,6 @@ final class ClipMainViewController: NSViewController {
         DispatchQueue.main.async {
             self.view.layoutSubtreeIfNeeded()
             let h = max(self.view.bounds.height, self.defaultHeight)
-            print("\(self.view.bounds.height)--\(h)")
             self.slideContainer.layer?.transform = CATransform3DMakeTranslation(
                 0,
                 -h,
