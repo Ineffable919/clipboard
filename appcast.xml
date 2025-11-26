@@ -25,19 +25,9 @@
 
         <item>
             <title>Version 0.2.3 (Intel (x86_64))</title>
-            <description>
-            <![CDATA[
-                <h4>🔧 Updates</h4>
-                    <ul>
-                        <li>移除了暂未生效的控制项目</li>
-                        <li>调整UI元素的间距和样式，提升整体视觉一致性</li>
-                    </ul>
-                <h4>🐛 Bug Fixes</h4>
-                    <ul>
-                        <li>修复某些情况下应用奔溃的问题。</li>
-                    </ul>
-            ]]>
-      </description>
+            <sparkle:releaseNotesLink>
+                https://raw.githubusercontent.com/Ineffable919/clipboard/master/scripts/release-note.html
+            </sparkle:releaseNotesLink>
             <pubDate>Tue, 25 Nov 2025 22:52:54 +0800</pubDate>
             <sparkle:version>29</sparkle:version>
             <sparkle:shortVersionString>0.2.3</sparkle:shortVersionString>
