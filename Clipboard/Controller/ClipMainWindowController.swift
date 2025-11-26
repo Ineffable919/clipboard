@@ -101,7 +101,7 @@ final class ClipMainWindowController: NSWindowController {
             clipVC.setPresented(false, animated: animated) { [weak self] in
                 self?.window?.orderOut(nil)
                 completionHandler?()
-                Task {
+                Task { [weak self] in
                     self?.db.clearExpiredData()
                 }
             }

@@ -56,7 +56,7 @@ final class ClipboardViewModel {
     var editingChipColor: Color {
         get {
             guard editingChipColorIndex >= 0,
-                  editingChipColorIndex < CategoryChip.palette.count
+                editingChipColorIndex < CategoryChip.palette.count
             else {
                 return .blue
             }
@@ -98,7 +98,7 @@ final class ClipboardViewModel {
         searchTask?.cancel()
 
         searchTask = Task {
-            try? await Task.sleep(nanoseconds: 200_000_000) // 200ms
+            try? await Task.sleep(nanoseconds: 200_000_000)  // 200ms
 
             guard !Task.isCancelled else { return }
             await searchClipboards()
@@ -111,8 +111,8 @@ final class ClipboardViewModel {
         let group = getGroupFilterForCurrentChip()
 
         if trimmedQuery == lastQuery,
-           typeFilter == lastTypeFilter,
-           group == lastGroup
+            typeFilter == lastTypeFilter,
+            group == lastGroup
         {
             return
         }
@@ -173,7 +173,7 @@ final class ClipboardViewModel {
         color: Color? = nil,
     ) {
         guard !chip.isSystem,
-              let index = chips.firstIndex(where: { $0.id == chip.id })
+            let index = chips.firstIndex(where: { $0.id == chip.id })
         else {
             return
         }
@@ -233,7 +233,7 @@ final class ClipboardViewModel {
 
     func commitEditingChip() {
         guard let chipId = editingChipId,
-              let chip = chips.first(where: { $0.id == chipId })
+            let chip = chips.first(where: { $0.id == chipId })
         else {
             cancelEditingChip()
             return
@@ -261,7 +261,6 @@ final class ClipboardViewModel {
 
     // MARK: - Helper Methods
 
-    /// 循环颜色索引，跳过 gray（索引 0）
     private func cycleColorIndex(_ currentIndex: Int) -> Int {
         var nextIndex = (currentIndex + 1) % CategoryChip.palette.count
         if nextIndex == 0 {
@@ -283,7 +282,10 @@ extension ClipboardViewModel {
             }
         }
         PasteBoard.main.pasteData(item, isAttribute)
-        guard PasteUserDefaults.pasteDirect else { return }
+        guard PasteUserDefaults.pasteDirect else {
+            ClipMainWindowController.shared.toggleWindow()
+            return
+        }
         ClipMainWindowController.shared.toggleWindow {
             KeyboardShortcuts.postCmdVEvent()
         }
