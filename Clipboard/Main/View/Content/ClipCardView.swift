@@ -140,7 +140,7 @@ struct ClipCardView: View {
         Button(action: deleteItem) {
             Label("删除", systemImage: "trash")
         }
-        .keyboardShortcut(.delete, modifiers: [.command])
+        .keyboardShortcut(.delete, modifiers: [])
 
         Divider()
 

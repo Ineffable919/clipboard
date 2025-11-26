@@ -14,24 +14,27 @@ struct CardHeadView: View {
         ZStack(alignment: .trailing) {
             Const.headShape
                 .fill(Color(PasteDataStore.main.colorWith(model)))
+            let isSystem = model.group == -1
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(model.type.string)
-                        .font(.headline)
+                        .font(isSystem ? .headline : .title3)
                         .foregroundStyle(.white)
-                    Text(
-                        model.timestamp.timeAgo(
-                            relativeTo: TimeManager.shared.currentTime,
-                        ),
-                    )
-                    .font(.caption2)
-                    .foregroundStyle(.white.opacity(0.85))
+                    if isSystem {
+                        Text(
+                            model.timestamp.timeAgo(
+                                relativeTo: TimeManager.shared.currentTime,
+                            ),
+                        )
+                        .font(.caption2)
+                        .foregroundStyle(.white.opacity(0.85))
+                    }
                 }
                 Spacer()
             }
             .padding(.horizontal, 10)
 
-            if model.group == -1 {
+            if isSystem {
                 Image(nsImage: NSWorkspace.shared.icon(forFile: model.appPath))
                     .resizable()
                     .scaledToFill()

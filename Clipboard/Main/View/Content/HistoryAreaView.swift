@@ -357,6 +357,10 @@ struct HistoryAreaView: View {
         case UInt16(kVK_Return):
             return handleReturnKey(event)
 
+        case UInt16(kVK_Delete), UInt16(kVK_ForwardDelete):
+            deleteKeyDown()
+            return nil
+
         default:
             return event
         }
@@ -428,9 +432,6 @@ struct HistoryAreaView: View {
         switch event.keyCode {
         case UInt16(kVK_ANSI_C):
             handleCopyCommand()
-            return nil
-        case UInt16(kVK_Delete), UInt16(kVK_ForwardDelete):
-            deleteKeyDown()
             return nil
         default:
             return event
@@ -657,21 +658,29 @@ struct HistoryAreaView: View {
         alert.alertStyle = .warning
         alert.addButton(withTitle: "删除")
         alert.addButton(withTitle: "取消")
-        if let window = NSApp.keyWindow {
-            alert.beginSheetModal(for: window) { response in
-                defer {
-                    self.selectionState.pendingDeleteId = nil
-                    self.vm.isShowDel = false
-                }
 
-                guard response == .alertFirstButtonReturn,
-                      let id = selectionState.pendingDeleteId
-                else {
-                    return
-                }
-
-                deleteItem(for: id)
+        let handleResponse: (NSApplication.ModalResponse) -> Void = { [self] response in
+            defer {
+                self.selectionState.pendingDeleteId = nil
+                self.vm.isShowDel = false
             }
+
+            guard response == .alertFirstButtonReturn,
+                  let id = selectionState.pendingDeleteId
+            else {
+                return
+            }
+
+            deleteItem(for: id)
+        }
+
+        if #available(macOS 26.0, *) {
+            if let window = NSApp.keyWindow {
+                alert.beginSheetModal(for: window, completionHandler: handleResponse)
+            }
+        } else {
+            let response = alert.runModal()
+            handleResponse(response)
         }
     }
 }

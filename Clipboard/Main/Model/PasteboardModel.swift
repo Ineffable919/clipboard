@@ -36,8 +36,11 @@ final class PasteboardModel: Identifiable {
 
     private(set) var group: Int
     private var cachedAttributed: AttributedString?
-
-    private var vm = ClipboardViewModel.shard
+    private var cachedThumbnail: NSImage?
+    private var cachedImageSize: CGSize?
+    private var cachedBackgroundColor: Color?
+    private var cachedForegroundColor: Color?
+    private var cachedFilePaths: [String]?
 
     var url: URL? {
         if pasteboardType == .string {
@@ -73,6 +76,17 @@ final class PasteboardModel: Identifiable {
                 with: showData,
                 type: pasteboardType,
             ) ?? NSAttributedString()
+
+        let (bg, fg) = computeColors()
+        cachedBackgroundColor = bg
+        cachedForegroundColor = fg
+
+        if pasteboardType == .fileURL {
+            if let urlString = String(data: data, encoding: .utf8) {
+                cachedFilePaths = urlString.components(separatedBy: "\n").filter
+                { !$0.isEmpty }
+            }
+        }
     }
 
     convenience init?(with pasteboard: NSPasteboard) {
@@ -104,13 +118,13 @@ final class PasteboardModel: Identifiable {
         if type.isText() {
             att =
                 NSAttributedString(with: content, type: type)
-                    ?? NSAttributedString()
+                ?? NSAttributedString()
             guard !att.string.allSatisfy(\.isWhitespace) else {
                 return nil
             }
             showAtt =
                 att.length > 250
-                    ? att.attributedSubstring(from: NSMakeRange(0, 250)) : att
+                ? att.attributedSubstring(from: NSMakeRange(0, 250)) : att
             showData = showAtt?.toData(with: type)
         }
 
@@ -127,12 +141,6 @@ final class PasteboardModel: Identifiable {
         )
     }
 
-    private let formatter: NumberFormatter = {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        return formatter
-    }()
-
     func introString() -> String {
         switch type {
         case .none:
@@ -144,63 +152,68 @@ final class PasteboardModel: Identifiable {
             if url != nil, PasteUserDefaults.enableLinkPreview {
                 return String(data: data, encoding: .utf8) ?? ""
             }
-            return "\(formatter.string(from: NSNumber(value: length)) ?? "")个字符"
+            return
+                "\(PasteboardModel.formatter.string(from: NSNumber(value: length)) ?? "")个字符"
         case .file:
-            let url = String(data: data, encoding: .utf8)!
-            let fileUrls = url.components(separatedBy: "\n").filter {
-                !$0.isEmpty
-            }
-            return fileUrls.count > 1 ? "\(fileUrls.count) 个文件" : url
+            guard let filePaths = cachedFilePaths else { return "" }
+            return filePaths.count > 1
+                ? "\(filePaths.count) 个文件" : (filePaths.first ?? "")
         }
     }
 
     func fileSize() -> Int {
-        if let url = String(data: data, encoding: .utf8) {
-            let fileUrls = url.components(separatedBy: "\n").filter {
-                !$0.isEmpty
-            }
-            return fileUrls.count
-        }
-        return 0
+        return cachedFilePaths?.count ?? 0
     }
 
     func imageSize() -> CGSize? {
+        if let cachedImageSize { return cachedImageSize }
+
         let options = [kCGImageSourceShouldCache: false] as CFDictionary
         guard
-            let source = CGImageSourceCreateWithData(
-                data as CFData,
-                options,
-            ),
+            let source = CGImageSourceCreateWithData(data as CFData, options),
             let properties = CGImageSourceCopyPropertiesAtIndex(
                 source,
                 0,
-                options,
-            ) as? [CFString: Any],
-            let width = properties[kCGImagePropertyPixelWidth] as? CGFloat,
-            let height = properties[kCGImagePropertyPixelHeight] as? CGFloat
+                options
+            ) as? [CFString: Any]
         else {
             return nil
         }
-        return CGSize(width: width, height: height)
+
+        let width: CGFloat
+        let height: CGFloat
+
+        if let w = properties[kCGImagePropertyPixelWidth] as? Int {
+            width = CGFloat(w)
+        } else if let w = properties[kCGImagePropertyPixelWidth] as? CGFloat {
+            width = w
+        } else {
+            return nil
+        }
+
+        if let h = properties[kCGImagePropertyPixelHeight] as? Int {
+            height = CGFloat(h)
+        } else if let h = properties[kCGImagePropertyPixelHeight] as? CGFloat {
+            height = h
+        } else {
+            return nil
+        }
+
+        // 获取 DPI
+        let dpi = properties[kCGImagePropertyDPIWidth] as? CGFloat ?? 72.0
+        let scale = dpi / 72.0
+
+        let size = CGSize(width: width / scale, height: height / scale)
+        cachedImageSize = size
+        return size
     }
 
-    func thumbnail(maxPixel: CGFloat = 1024) -> NSImage? {
-        let options: [CFString: Any] = [
-            kCGImageSourceShouldCache: true,
-            kCGImageSourceCreateThumbnailFromImageAlways: true,
-            kCGImageSourceThumbnailMaxPixelSize: maxPixel,
-        ]
-        guard
-            let source = CGImageSourceCreateWithData(data as CFData, nil),
-            let cgImage = CGImageSourceCreateThumbnailAtIndex(
-                source,
-                0,
-                options as CFDictionary,
-            )
-        else {
-            return nil
-        }
-        return NSImage(cgImage: cgImage, size: .zero)
+    func thumbnail() -> NSImage? {
+        if let cachedThumbnail { return cachedThumbnail }
+
+        let image = NSImage(data: data)
+        cachedThumbnail = image
+        return image
     }
 
     func updateGroup(val: Int) {
@@ -226,37 +239,25 @@ final class PasteboardModel: Identifiable {
 
 extension PasteboardModel: Equatable {
     static func == (lhs: PasteboardModel, rhs: PasteboardModel) -> Bool {
-        lhs.uniqueId == rhs.uniqueId
+        lhs.uniqueId == rhs.uniqueId && lhs.id == rhs.id
     }
 }
 
 extension PasteboardModel {
     var backgroundColor: Color {
-        switch type {
-        case .string:
-            Color(nsColor: .controlBackgroundColor)
-        case .rich:
-            if let bgColor = attributeString.attribute(
-                .backgroundColor,
-                at: 0,
-                effectiveRange: nil,
-            ) as? NSColor {
-                Color(nsColor: bgColor)
-            } else {
-                Color(nsColor: .controlBackgroundColor)
-            }
-        case .image:
-            .clear
-        default:
-            Color(nsColor: .controlBackgroundColor)
-        }
+        return cachedBackgroundColor ?? .clear
     }
 
     // MARK: - 纯函数：根据模型给出背景与前景色
 
-    func colors() -> (
-        Color, Color
-    ) {
+    func colors() -> (Color, Color) {
+        return (
+            cachedBackgroundColor ?? Color(.controlBackgroundColor),
+            cachedForegroundColor ?? .secondary
+        )
+    }
+
+    private func computeColors() -> (Color, Color) {
         let fallbackBG = Color(.controlBackgroundColor)
         guard pasteboardType.isText() else {
             return (fallbackBG, .secondary)
@@ -265,11 +266,11 @@ extension PasteboardModel {
             return (fallbackBG, .secondary)
         }
         if attributeString.length > 0,
-           let bg = attributeString.attribute(
-               .backgroundColor,
-               at: 0,
-               effectiveRange: nil,
-           ) as? NSColor
+            let bg = attributeString.attribute(
+                .backgroundColor,
+                at: 0,
+                effectiveRange: nil,
+            ) as? NSColor
         {
             return (Color(bg), getRTFColor(baseNS: bg))
         }
@@ -295,6 +296,12 @@ extension PasteboardModel {
         cachedAttributed = a
         return a
     }
+
+    private static let formatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        return formatter
+    }()
 }
 
 enum PasteModelType {
