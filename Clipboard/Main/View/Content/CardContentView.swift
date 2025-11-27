@@ -92,7 +92,7 @@ struct LinkPreviewCard: View {
                     height: 48,
                     alignment: .leading,
                 )
-                .background(.windowBackground)
+                .background(Color(nsColor: .controlBackgroundColor))
             }
             .onAppear {
                 if !isLoading, favicon == nil, pageTitle.isEmpty {
