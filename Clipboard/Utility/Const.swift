@@ -12,15 +12,11 @@ class Const {
     static let cntSize: CGFloat = 185.0
     static let hdSize: CGFloat = 50.0
     static let iconSize: CGFloat = 80.0
-    static let emptySize: CGFloat = if #available(macOS 26.0, *) {
-        272.0
-    } else {
-        255.0
-    }
 
     static let cardSpace: CGFloat = 20.0
     static let bottomSize: CGFloat = 40.0
     static let space: CGFloat = 8.0
+    
     static let radius: CGFloat = if #available(macOS 26.0, *) {
         12.0
     } else {

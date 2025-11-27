@@ -12,7 +12,6 @@ struct ClipCardView: View {
     var model: PasteboardModel
     var isSelected: Bool
     @Binding var showPreview: Bool
-    var isHistoryFocused: Bool
     var quickPasteIndex: Int?
     var onRequestDelete: (() -> Void)?
 
@@ -106,7 +105,7 @@ struct ClipCardView: View {
     }
 
     private var selectionColor: Color {
-        isHistoryFocused ? Color.accentColor.opacity(0.8) : Color.gray
+        vm.focusView == .history ? Color.accentColor.opacity(0.8) : Color.gray
     }
 
     private var pasteButtonTitle: String {
@@ -180,9 +179,8 @@ struct ClipCardView: View {
             length: 9,
             group: -1,
         ),
-        isSelected: false,
+        isSelected: true,
         showPreview: .constant(false),
-        isHistoryFocused: false,
         quickPasteIndex: 1,
     )
 }

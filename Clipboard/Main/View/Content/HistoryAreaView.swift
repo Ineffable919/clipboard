@@ -106,7 +106,6 @@ struct HistoryAreaView: View {
                     model: item,
                     isSelected: selectionState.selectedId == item.id,
                     showPreview: makePreviewBinding(for: item.id),
-                    isHistoryFocused: vm.focusView == .history,
                     quickPasteIndex: isQuickPasteModifierPressed && index < 9
                         ? index + 1 : nil,
                     onRequestDelete: { requestDel(id: item.id) },

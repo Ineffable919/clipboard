@@ -12,8 +12,6 @@ struct CardHeadView: View {
 
     var body: some View {
         ZStack(alignment: .trailing) {
-            Const.headShape
-                .fill(Color(PasteDataStore.main.colorWith(model)))
             let isSystem = model.group == -1
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
@@ -43,6 +41,24 @@ struct CardHeadView: View {
             }
         }
         .frame(height: Const.hdSize)
+        .background(Color(nsColor: PasteDataStore.main.colorWith(model)))
         .clipShape(Const.headShape)
     }
+}
+
+#Preview {
+    let data = "Clipboard".data(using: .utf8)
+    CardHeadView(
+        model: PasteboardModel(
+            pasteboardType: PasteboardType.string,
+            data: data!,
+            showData: Data(),
+            timestamp: 1_728_878_384_000,
+            appPath: "/Applications/Xcode.app",
+            appName: "微信", 
+            searchText: "",
+            length: 9,
+            group: -1,
+        )
+    )
 }
