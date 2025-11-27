@@ -7,7 +7,7 @@
         <item>
             <title>Version 0.2.3 (Apple Silicon (arm64))</title>
             <sparkle:releaseNotesLink>
-                https://raw.githubusercontent.com/Ineffable919/clipboard/master/scripts/release-note.html
+                https://ineffable919.github.io/clipboard/scripts/release-note.html
             </sparkle:releaseNotesLink>
             <pubDate>Tue, 25 Nov 2025 22:46:59 +0800</pubDate>
             <sparkle:version>29</sparkle:version>
@@ -26,7 +26,7 @@
         <item>
             <title>Version 0.2.3 (Intel (x86_64))</title>
             <sparkle:releaseNotesLink>
-                https://raw.githubusercontent.com/Ineffable919/clipboard/master/scripts/release-note.html
+                https://ineffable919.github.io/clipboard/scripts/release-note.html
             </sparkle:releaseNotesLink>
             <pubDate>Tue, 25 Nov 2025 22:52:54 +0800</pubDate>
             <sparkle:version>29</sparkle:version>
