@@ -40,6 +40,10 @@ final class ClipboardViewModel {
     var editingChipName: String = ""
     var editingChipColorIndex: Int = 0
 
+    // MARK: - Drag State
+
+    var draggingItemId: Int64?
+
     // MARK: - Computed Properties
 
     var newChipColor: Color {
@@ -56,7 +60,7 @@ final class ClipboardViewModel {
     var editingChipColor: Color {
         get {
             guard editingChipColorIndex >= 0,
-                editingChipColorIndex < CategoryChip.palette.count
+                  editingChipColorIndex < CategoryChip.palette.count
             else {
                 return .blue
             }
@@ -98,7 +102,7 @@ final class ClipboardViewModel {
         searchTask?.cancel()
 
         searchTask = Task {
-            try? await Task.sleep(nanoseconds: 200_000_000)  // 200ms
+            try? await Task.sleep(nanoseconds: 200_000_000) // 200ms
 
             guard !Task.isCancelled else { return }
             await searchClipboards()
@@ -111,8 +115,8 @@ final class ClipboardViewModel {
         let group = getGroupFilterForCurrentChip()
 
         if trimmedQuery == lastQuery,
-            typeFilter == lastTypeFilter,
-            group == lastGroup
+           typeFilter == lastTypeFilter,
+           group == lastGroup
         {
             return
         }
@@ -173,7 +177,7 @@ final class ClipboardViewModel {
         color: Color? = nil,
     ) {
         guard !chip.isSystem,
-            let index = chips.firstIndex(where: { $0.id == chip.id })
+              let index = chips.firstIndex(where: { $0.id == chip.id })
         else {
             return
         }
@@ -233,7 +237,7 @@ final class ClipboardViewModel {
 
     func commitEditingChip() {
         guard let chipId = editingChipId,
-            let chip = chips.first(where: { $0.id == chipId })
+              let chip = chips.first(where: { $0.id == chipId })
         else {
             cancelEditingChip()
             return

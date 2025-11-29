@@ -42,7 +42,7 @@ struct ClipCardView: View {
                 color: isSelected ? .clear : .black.opacity(0.1),
                 radius: isSelected ? 0 : 4,
                 x: 0,
-                y: isSelected ? 0 : 2
+                y: isSelected ? 0 : 2,
             )
             .padding(4)
             .contextMenu(menuItems: {

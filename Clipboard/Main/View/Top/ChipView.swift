@@ -9,6 +9,16 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct ChipView: View {
+    private static let dropTypes: [UTType] = [
+        .text,
+        .rtf,
+        .rtfd,
+        .fileURL,
+        .png,
+        .tiff,
+        .data,
+    ]
+
     var isSelected: Bool
     var chip: CategoryChip
 
@@ -51,14 +61,19 @@ struct ChipView: View {
             }
         }
         .onDrop(
-            of: [UTType.clipType.identifier],
+            of: ChipView.dropTypes,
             isTargeted: $isDropTargeted,
         ) { providers in
             if chip.isSystem {
                 return false
             }
-            handleDrop(providers: providers)
-            return true
+            if vm.draggingItemId != nil {
+                DispatchQueue.main.async {
+                    handleDrop(providers: providers)
+                }
+                return true
+            }
+            return false
         }
     }
 
@@ -103,10 +118,12 @@ struct ChipView: View {
         }
         .padding(EdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8))
         .background(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
+            RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
                 .fill(Color.secondary.opacity(0.08)),
         )
-        .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .contentShape(
+            RoundedRectangle(cornerRadius: Const.radius, style: .continuous),
+        )
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
                 vm.focusView = .editChip
@@ -148,36 +165,22 @@ struct ChipView: View {
         }
     }
 
-    private func handleDrop(providers: [NSItemProvider]) {
-        for provider in providers {
-            if provider.hasItemConformingToTypeIdentifier(
-                UTType.clipType.identifier,
-            ) {
-                provider.loadDataRepresentation(
-                    forTypeIdentifier: UTType.clipType.identifier,
-                ) { data, error in
-                    if error != nil {
-                        return
-                    }
-                    Task { @MainActor in
-                        handleDropData(data: data)
-                    }
-                }
-            }
+    private func handleDrop(providers _: [NSItemProvider]) {
+        guard let draggingId = vm.draggingItemId else {
+            return
         }
-    }
 
-    private func handleDropData(data: Data?) {
-        if let data {
-            let id = data.withUnsafeBytes { $0.load(as: Int.self) }
-            do {
-                try PasteDataStore.main.updateItemGroup(
-                    itemId: Int64(id),
-                    groupId: chip.id,
-                )
-            } catch {
-                log.error("更新卡片 group 失败: \(error)")
-            }
+        defer {
+            vm.draggingItemId = nil
+        }
+
+        do {
+            try PasteDataStore.main.updateItemGroup(
+                itemId: draggingId,
+                groupId: chip.id,
+            )
+        } catch {
+            log.error("更新卡片 group 失败: \(error)")
         }
     }
 }

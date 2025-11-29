@@ -259,6 +259,7 @@ extension PasteDataStore {
 
     /// 将指定的卡片移到列表第一位(用于粘贴操作)
     /// - Parameter model: PasteboardModel
+    @MainActor
     func moveItemToFirst(_ model: PasteboardModel) {
         guard let index = dataList.firstIndex(where: { $0.id == model.id }) else {
             return
@@ -353,14 +354,12 @@ extension PasteDataStore {
         }
     }
 
-    /// 更新
     func updateDbItem(id: Int64, item: PasteboardModel) {
         Task {
             await sqlManager.update(id: id, item: item)
         }
     }
 
-    /// 更新项目分组
     func updateItemGroup(itemId: Int64, groupId: Int) throws {
         if let model = dataList.first(where: { $0.id == itemId }) {
             model.updateGroup(val: groupId)

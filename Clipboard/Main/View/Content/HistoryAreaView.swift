@@ -30,13 +30,13 @@ struct HistoryAreaView: View {
     // MARK: - Properties
 
     let vm = ClipboardViewModel.shard
-    let pd = PasteDataStore.main
+    var pd: PasteDataStore
     @State private var selectionState = SelectionState()
     @State private var showPreviewId: PasteboardModel.ID?
     @State private var monitor: Any?
     @State private var flagsMonitor: Any?
     @State private var isDel: Bool = false
-    @State private var isQuickPasteModifierPressed: Bool = false
+    @State private var isQuickPastePressed: Bool = false
     @State private var lastLoadTriggerIndex: Int = -1
 
     var body: some View {
@@ -94,27 +94,33 @@ struct HistoryAreaView: View {
             }
             .frame(
                 width: geo.size.width,
-                height: geo.size.height
+                height: geo.size.height,
             )
         }
     }
 
     private func contentView(proxy _: ScrollViewProxy) -> some View {
         LazyHStack(alignment: .top, spacing: Const.cardSpace) {
-            ForEach(Array(pd.dataList.enumerated()), id: \.element.id) { index, item in
-                ClipCardView(
-                    model: item,
-                    isSelected: selectionState.selectedId == item.id,
-                    showPreview: makePreviewBinding(for: item.id),
-                    quickPasteIndex: isQuickPasteModifierPressed && index < 9
-                        ? index + 1 : nil,
-                    onRequestDelete: { requestDel(id: item.id) },
-                )
-                .onTapGesture { handleOptimisticTap(on: item) }
-                .onDrag { itemProvider(for: item) }
-                .task(id: item.id) {
-                    if shouldLoadNextPage(at: index) {
-                        loadNextPageIfNeeded(at: index)
+            ForEach(pd.dataList, id: \.id) { item in
+                if let index = pd.dataList.firstIndex(where: {
+                    $0.id == item.id
+                }) {
+                    ClipCardView(
+                        model: item,
+                        isSelected: selectionState.selectedId == item.id,
+                        showPreview: makePreviewBinding(for: item.id),
+                        quickPasteIndex: isQuickPastePressed && index < 9
+                            ? index + 1 : nil,
+                        onRequestDelete: { requestDel(id: item.id) },
+                    )
+                    .onTapGesture { handleOptimisticTap(on: item) }
+                    .onDrag {
+                        itemProvider(for: item)
+                    }
+                    .task(id: item.id) {
+                        if shouldLoadNextPage(at: index) {
+                            loadNextPageIfNeeded(at: index)
+                        }
                     }
                 }
             }
@@ -154,14 +160,12 @@ struct HistoryAreaView: View {
 
     // MARK: - Pagination
 
-    /// 判断是否应该在当前索引触发加载
     private func shouldLoadNextPage(at index: Int) -> Bool {
         guard pd.dataList.count >= 50 else { return false }
         let triggerIndex = pd.dataList.count - 5
-        return index >= max(0, triggerIndex)
+        return index >= triggerIndex
     }
 
-    /// 加载下一页（如果需要）
     private func loadNextPageIfNeeded(at index: Int? = nil) {
         guard pd.dataList.count < pd.totalCount else { return }
         guard !pd.isLoadingPage else { return }
@@ -207,7 +211,9 @@ struct HistoryAreaView: View {
         isDel = true
 
         defer {
-            DispatchQueue.main.asyncAfter(deadline: .now() + Constants.deleteAnimationDelay) {
+            DispatchQueue.main.asyncAfter(
+                deadline: .now() + Constants.deleteAnimationDelay,
+            ) {
                 self.isDel = false
             }
         }
@@ -302,7 +308,7 @@ struct HistoryAreaView: View {
         monitor = nil
         flagsMonitor = nil
         isDel = false
-        isQuickPasteModifierPressed = false
+        isQuickPastePressed = false
     }
 
     private func flagsChangedEvent(_ event: NSEvent) -> NSEvent? {
@@ -311,8 +317,8 @@ struct HistoryAreaView: View {
         }
 
         let newState = KeyCode.isQuickPasteModifierPressed()
-        if newState != isQuickPasteModifierPressed {
-            isQuickPasteModifierPressed = newState
+        if newState != isQuickPastePressed {
+            isQuickPastePressed = newState
         }
         return event
     }
@@ -384,7 +390,6 @@ struct HistoryAreaView: View {
             return nil
         }
 
-        // 检查是否同时按下了其他修饰键（除了快速粘贴修饰键之外）
         let quickPasteModifier = KeyCode.modifierFlags(
             from: PasteUserDefaults.quickPasteModifier,
         )
@@ -410,7 +415,6 @@ struct HistoryAreaView: View {
         return numberKeyCodes[event.keyCode]
     }
 
-    /// - Parameter index: 剪贴板项索引（0-8）
     private func performQuickPaste(at index: Int) {
         guard index >= 0, index < pd.dataList.count else {
             NSSound.beep()
@@ -534,31 +538,25 @@ struct HistoryAreaView: View {
     }
 
     private func itemProvider(for model: PasteboardModel) -> NSItemProvider {
-        let provider = NSItemProvider()
-        let modeId = model.id
-        // 1️⃣ 内部拖拽
-        provider.registerDataRepresentation(
-            forTypeIdentifier: UTType.clipType.identifier,
-            visibility: .all,
-        ) { completion in
-            let idData = withUnsafeBytes(of: modeId) { Data($0) }
-            completion(idData, nil)
-            return nil
-        }
+        vm.draggingItemId = model.id
 
-        // 2️⃣ 处理文本
-        if model.pasteboardType.isText() {
-            provider.registerDataRepresentation(
-                forTypeIdentifier: model.pasteboardType.rawValue,
-                visibility: .all,
-            ) { completion in
-                completion(model.data, nil)
-                return nil
+        if model.type == .string {
+            if let str = String(data: model.data, encoding: .utf8) {
+                return NSItemProvider(object: str as NSString)
             }
-            provider.suggestedName = "文本"
         }
 
-        // 3️⃣ 处理图片
+        if model.type == .rich {
+            if let attr = NSAttributedString(
+                with: model.data,
+                type: model.pasteboardType,
+            ) {
+                return NSItemProvider(object: attr.string as NSString)
+            }
+        }
+
+        let provider = NSItemProvider()
+
         if model.type == .image {
             provider.registerDataRepresentation(
                 forTypeIdentifier: model.pasteboardType.rawValue,
@@ -567,10 +565,10 @@ struct HistoryAreaView: View {
                 completion(model.data, nil)
                 return nil
             }
-            provider.suggestedName = "图片"
+            let name = model.appName + "-" + model.timestamp.date()
+            provider.suggestedName = name
         }
 
-        // 4️⃣ 处理文件
         if model.type == .file {
             if let filePaths = String(data: model.data, encoding: .utf8) {
                 let paths =
@@ -684,7 +682,7 @@ struct HistoryAreaView: View {
             if let window = NSApp.keyWindow {
                 alert.beginSheetModal(
                     for: window,
-                    completionHandler: handleResponse
+                    completionHandler: handleResponse,
                 )
             }
         } else {

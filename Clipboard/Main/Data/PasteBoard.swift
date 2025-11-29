@@ -180,12 +180,9 @@ final class PasteBoard {
         PasteDataStore.main.moveItemToFirst(data)
         NSPasteboard.general.clearContents()
 
-        let shouldPasteAsPlainText =
-            !isAttribute || PasteUserDefaults.pasteOnlyText
+        let shouldPasteAsPlainText = !isAttribute || PasteUserDefaults.pasteOnlyText
 
-        if (data.type == .string) || (data.type == .rich),
-           shouldPasteAsPlainText
-        {
+        if (data.type == .string) || (data.type == .rich), shouldPasteAsPlainText {
             NSPasteboard.general.setString(data.searchText, forType: .string)
         } else if data.type == .file {
             if let filePaths = String(data: data.data, encoding: .utf8) {

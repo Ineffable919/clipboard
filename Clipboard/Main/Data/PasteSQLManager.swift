@@ -105,7 +105,6 @@ extension PasteSQLManager {
         }
     }
 
-    // 增
     func insert(item: PasteboardModel) async -> Int64 {
         let query = table
         await delete(filter: Col.uniqueId == item.uniqueId)
@@ -131,7 +130,6 @@ extension PasteSQLManager {
         return -1
     }
 
-    // 根据条件删除
     func delete(filter: Expression<Bool>) async {
         let query = table.filter(filter)
         do {
@@ -151,7 +149,6 @@ extension PasteSQLManager {
         }
     }
 
-    // 改
     func update(id: Int64, item: PasteboardModel) async {
         let query = table.filter(Col.id == id)
         let update = query.update(

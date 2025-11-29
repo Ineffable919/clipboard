@@ -2,21 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>UTExportedTypeDeclarations</key>
-	<array>
-		<dict>
-			<key>UTTypeConformsTo</key>
-			<array>
-				<string>public.data</string>
-			</array>
-			<key>UTTypeDescription</key>
-			<string>Clipboard Item</string>
-			<key>UTTypeIdentifier</key>
-			<string>com.clipboard.item</string>
-			<key>UTTypeTagSpecification</key>
-			<dict/>
-		</dict>
-	</array>
 	<key>SUFeedURL</key>
 	<string>https://raw.githubusercontent.com/Ineffable919/clipboard/master/appcast.xml</string>
 	<key>SUEnableAutomaticChecks</key>

@@ -55,10 +55,10 @@ struct CardHeadView: View {
             showData: Data(),
             timestamp: 1_728_878_384_000,
             appPath: "/Applications/Xcode.app",
-            appName: "微信", 
+            appName: "微信",
             searchText: "",
             length: 9,
             group: -1,
-        )
+        ),
     )
 }

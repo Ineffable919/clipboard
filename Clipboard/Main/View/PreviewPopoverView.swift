@@ -64,7 +64,7 @@ struct PreviewPopoverView: View {
                 }
 
                 if model.url != nil,
-                    let browserName = getDefaultBrowserName()
+                   let browserName = getDefaultBrowserName()
                 {
                     BorderedButton(title: "使用 \(browserName) 打开") {
                         withAnimation {
@@ -94,7 +94,7 @@ struct PreviewPopoverView: View {
 
     func getDefaultBrowserName() -> String? {
         if let appURL = NSWorkspace.shared.urlForApplication(toOpen: .html),
-            let bundle = Bundle(url: appURL)
+           let bundle = Bundle(url: appURL)
         {
             return bundle.object(forInfoDictionaryKey: "CFBundleDisplayName")
                 as? String ?? bundle.object(
@@ -152,11 +152,10 @@ struct PreviewPopoverView: View {
                     height: PreviewPopoverView.defaultHeight,
                     alignment: .center,
                 )
-                .background(.windowBackground)
+                .background(Color(nsColor: .controlBackgroundColor))
         } else {
             ZStack {
                 Color(nsColor: .controlBackgroundColor)
-
                 ScrollView(.vertical, showsIndicators: true) {
                     Text(String(data: model.data, encoding: .utf8) ?? "")
                         .textSelection(.enabled)
@@ -183,38 +182,21 @@ struct PreviewPopoverView: View {
                     height: PreviewPopoverView.defaultHeight,
                     alignment: .center,
                 )
-                .background(.windowBackground)
+                .background(Color(nsColor: .controlBackgroundColor))
         } else {
             ZStack {
                 model.backgroundColor
-
                 ScrollView(.vertical, showsIndicators: true) {
                     VStack(alignment: .leading) {
-                        if model.attributeString.attribute(
-                            .backgroundColor,
-                            at: 0,
-                            effectiveRange: nil,
-                        ) is NSColor {
-                            Text(
-                                AttributedString(
-                                    NSAttributedString(
-                                        with: model.data,
-                                        type: model.pasteboardType,
-                                    )!,
-                                ),
-                            )
-                            .textSelection(.enabled)
-                        } else {
-                            Text(
+                        Text(
+                            AttributedString(
                                 NSAttributedString(
                                     with: model.data,
                                     type: model.pasteboardType,
-                                )!
-                                .string,
-                            )
-                            .foregroundStyle(.primary)
-                            .textSelection(.enabled)
-                        }
+                                )!,
+                            ),
+                        )
+                        .textSelection(.enabled)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(Const.space)

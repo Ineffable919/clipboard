@@ -16,7 +16,7 @@ class Const {
     static let cardSpace: CGFloat = 20.0
     static let bottomSize: CGFloat = 40.0
     static let space: CGFloat = 8.0
-    
+
     static let radius: CGFloat = if #available(macOS 26.0, *) {
         12.0
     } else {

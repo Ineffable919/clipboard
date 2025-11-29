@@ -83,8 +83,8 @@ final class PasteboardModel: Identifiable {
 
         if pasteboardType == .fileURL {
             if let urlString = String(data: data, encoding: .utf8) {
-                cachedFilePaths = urlString.components(separatedBy: "\n").filter
-                { !$0.isEmpty }
+                cachedFilePaths = urlString.components(separatedBy: "\n")
+                    .filter { !$0.isEmpty }
             }
         }
     }
@@ -97,11 +97,10 @@ final class PasteboardModel: Identifiable {
         else { return nil }
         var content: Data?
         if type.isFile() {
-            guard
-                let fileURLs = pasteboard.readObjects(
-                    forClasses: [NSURL.self],
-                    options: nil,
-                ) as? [URL]
+            guard let fileURLs = pasteboard.readObjects(
+                forClasses: [NSURL.self],
+                options: nil,
+            ) as? [URL]
             else { return nil }
             let filePaths = fileURLs.map(\.path)
             FileAccessHelper.shared.saveSecurityBookmarks(for: filePaths)
@@ -116,14 +115,11 @@ final class PasteboardModel: Identifiable {
         var showAtt: NSAttributedString?
         var att = NSAttributedString()
         if type.isText() {
-            att =
-                NSAttributedString(with: content, type: type)
-                ?? NSAttributedString()
+            att = NSAttributedString(with: content, type: type) ?? NSAttributedString()
             guard !att.string.allSatisfy(\.isWhitespace) else {
                 return nil
             }
-            showAtt =
-                att.length > 250
+            showAtt = att.length > 250
                 ? att.attributedSubstring(from: NSMakeRange(0, 250)) : att
             showData = showAtt?.toData(with: type)
         }
@@ -162,7 +158,7 @@ final class PasteboardModel: Identifiable {
     }
 
     func fileSize() -> Int {
-        return cachedFilePaths?.count ?? 0
+        cachedFilePaths?.count ?? 0
     }
 
     func imageSize() -> CGSize? {
@@ -174,7 +170,7 @@ final class PasteboardModel: Identifiable {
             let properties = CGImageSourceCopyPropertiesAtIndex(
                 source,
                 0,
-                options
+                options,
             ) as? [CFString: Any]
         else {
             return nil
@@ -245,15 +241,15 @@ extension PasteboardModel: Equatable {
 
 extension PasteboardModel {
     var backgroundColor: Color {
-        return cachedBackgroundColor ?? .clear
+        cachedBackgroundColor ?? .clear
     }
 
     // MARK: - 纯函数：根据模型给出背景与前景色
 
     func colors() -> (Color, Color) {
-        return (
+        (
             cachedBackgroundColor ?? Color(.controlBackgroundColor),
-            cachedForegroundColor ?? .secondary
+            cachedForegroundColor ?? .secondary,
         )
     }
 
@@ -266,11 +262,11 @@ extension PasteboardModel {
             return (fallbackBG, .secondary)
         }
         if attributeString.length > 0,
-            let bg = attributeString.attribute(
-                .backgroundColor,
-                at: 0,
-                effectiveRange: nil,
-            ) as? NSColor
+           let bg = attributeString.attribute(
+               .backgroundColor,
+               at: 0,
+               effectiveRange: nil,
+           ) as? NSColor
         {
             return (Color(bg), getRTFColor(baseNS: bg))
         }

@@ -11,6 +11,7 @@ import SwiftUI
 
 struct ContentView: View {
     @FocusState private var historyFocused: Bool
+    @State private var pd = PasteDataStore.main
 
     var body: some View {
         if #available(macOS 26.0, *) {
@@ -23,7 +24,7 @@ struct ContentView: View {
                 VStack {
                     Spacer()
                     TopBarView()
-                    HistoryAreaView()
+                    HistoryAreaView(pd: pd)
                         .focusable()
                         .focusEffectDisabled()
                         .focused($historyFocused)
@@ -43,7 +44,7 @@ struct ContentView: View {
                 Spacer()
                 TopBarView()
                 Spacer()
-                HistoryAreaView()
+                HistoryAreaView(pd: pd)
                     .focusable()
                     .focusEffectDisabled()
                     .focused($historyFocused)
@@ -57,25 +58,6 @@ struct ContentView: View {
             }
         }
     }
-}
-
-// MARK: - NSVisualEffect 背景
-
-struct VisualEffectView: NSViewRepresentable {
-    var material: NSVisualEffectView.Material = .hudWindow
-    var blending: NSVisualEffectView.BlendingMode = .behindWindow
-    var state: NSVisualEffectView.State = .active
-
-    func makeNSView(context _: Context) -> NSVisualEffectView {
-        let v = NSVisualEffectView()
-        v.material = material
-        v.blendingMode = blending
-        v.state = state
-        v.isEmphasized = false
-        return v
-    }
-
-    func updateNSView(_: NSVisualEffectView, context _: Context) {}
 }
 
 // MARK: - Preview
