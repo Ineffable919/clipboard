@@ -172,15 +172,9 @@ echo ""
 cat <<EOF
     <item>
         <title>Version $VERSION ($ARCH_DESC)</title>
-        <description>
-            <![CDATA[
-                <h4>更新内容</h4>
-                <ul>
-                    <li>新功能和改进</li>
-                    <li>修复了一些问题</li>
-                </ul>
-            ]]>
-        </description>
+        <sparkle:releaseNotesLink>
+            https://ineffable919.github.io/clipboard/scripts/release-note.html
+        </sparkle:releaseNotesLink>
         <pubDate>$(date -R)</pubDate>
         <sparkle:version>$BUILD</sparkle:version>
         <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>
