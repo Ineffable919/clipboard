@@ -157,7 +157,7 @@ struct HistoryAreaView: View {
     // MARK: - Pagination
 
     private func shouldLoadNextPage(at index: Int) -> Bool {
-        guard pd.dataList.count >= 50 else { return false }
+        guard pd.hasMoreData else { return false }
         let triggerIndex = pd.dataList.count - 5
         return index >= triggerIndex
     }
@@ -206,19 +206,25 @@ struct HistoryAreaView: View {
 
         isDel = true
 
-        defer {
-            DispatchQueue.main.asyncAfter(
-                deadline: .now() + Constants.deleteAnimationDelay,
-            ) {
-                self.isDel = false
-            }
-        }
         let item = pd.dataList[index]
         vm.deleteAction(item: item)
 
         withAnimation(.easeOut(duration: Constants.deleteAnimationDelay)) {
             pd.dataList.remove(at: index)
             updateSelectionAfterDeletion(at: index)
+        }
+
+        DispatchQueue.main.asyncAfter(
+            deadline: .now() + Constants.deleteAnimationDelay,
+        ) {
+            self.isDel = false
+
+            if self.pd.dataList.count < 50,
+                self.pd.hasMoreData,
+                !self.pd.isLoadingPage
+            {
+                self.pd.loadNextPage()
+            }
         }
     }
 
@@ -317,9 +323,11 @@ struct HistoryAreaView: View {
     private func keyDownEvent(_ event: NSEvent) -> NSEvent? {
         if vm.focusView == .popover {
             if event.modifierFlags.contains(.command),
-               event.keyCode == UInt16(kVK_ANSI_C) {
+                event.keyCode == UInt16(kVK_ANSI_C)
+            {
                 if let window = event.window,
-                   let textView = window.firstResponder as? NSTextView {
+                    let textView = window.firstResponder as? NSTextView
+                {
                     let selectedRange = textView.selectedRange()
                     if selectedRange.length > 0 {
                         textView.copy(nil)
@@ -329,7 +337,7 @@ struct HistoryAreaView: View {
             }
             return event
         }
-        
+
         guard event.window == ClipMainWindowController.shared.window
         else {
             return event

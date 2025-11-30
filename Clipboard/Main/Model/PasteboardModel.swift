@@ -322,7 +322,13 @@ extension PasteboardModel {
                 forTypeIdentifier: pasteboardType.rawValue,
                 visibility: .all,
             ) { [weak self] completion in
-                completion(self?.data, nil)
+                guard let data = self?.data else {
+                    completion(nil, nil)
+                    return nil
+                }
+                DispatchQueue.global(qos: .userInitiated).async {
+                    completion(data, nil)
+                }
                 return nil
             }
         }
@@ -332,7 +338,13 @@ extension PasteboardModel {
                 forTypeIdentifier: pasteboardType.rawValue,
                 visibility: .all,
             ) { [weak self] completion in
-                completion(self?.data, nil)
+                guard let data = self?.data else {
+                    completion(nil, nil)
+                    return nil
+                }
+                DispatchQueue.global(qos: .userInitiated).async {
+                    completion(data, nil)
+                }
                 return nil
             }
             let name = appName + "-" + timestamp.date()
@@ -343,48 +355,27 @@ extension PasteboardModel {
             if let paths = cachedFilePaths {
                 for path in paths {
                     let fileURL = URL(fileURLWithPath: path)
-                    if FileManager.default.fileExists(atPath: path) {
-                        let promisedType: String = promisedTypeIdentifier(
-                            for: fileURL,
-                        )
-                        provider.registerFileRepresentation(
-                            forTypeIdentifier: promisedType,
-                            fileOptions: [],
-                            visibility: .all,
-                        ) { completion in
-                            DispatchQueue.global(qos: .userInitiated).async {
-                                do {
-                                    // Copy to a temp location we can read, so Finder can pull without sandbox extensions.
-                                    let tmpDir = URL(
-                                        fileURLWithPath: NSTemporaryDirectory(),
-                                        isDirectory: true,
-                                    )
-                                    let dst = tmpDir.appendingPathComponent(
-                                        fileURL.lastPathComponent,
-                                        isDirectory: false,
-                                    )
-                                    if FileManager.default.fileExists(
-                                        atPath: dst.path,
-                                    ) {
-                                        try? FileManager.default.removeItem(
-                                            at: dst,
-                                        )
-                                    }
-                                    try FileManager.default.copyItem(
-                                        at: fileURL,
-                                        to: dst,
-                                    )
-                                    completion(
-                                        dst, /* isInPlace: */
-                                        false,
-                                        nil,
-                                    )
-                                } catch {
-                                    completion(nil, false, error)
-                                }
+                    let promisedType: String = promisedTypeIdentifier(
+                        for: fileURL,
+                    )
+                    provider.registerFileRepresentation(
+                        forTypeIdentifier: promisedType,
+                        fileOptions: [],
+                        visibility: .all,
+                    ) { completion in
+                        DispatchQueue.global(qos: .userInitiated).async {
+                            if FileManager.default.fileExists(atPath: path) {
+                                completion(fileURL, true, nil)
+                            } else {
+                                let error = NSError(
+                                    domain: NSCocoaErrorDomain,
+                                    code: NSFileReadNoSuchFileError,
+                                    userInfo: [NSFilePathErrorKey: path]
+                                )
+                                completion(nil, false, error)
                             }
-                            return nil
                         }
+                        return nil
                     }
                 }
 

@@ -24,10 +24,12 @@ final class PasteDataStore {
     private(set) var isLoadingPage = false
     private var lastRequestedPage = 0
 
+    private(set) var hasMoreData = false
+
     enum DataChangeType {
         case loadMore
-        case searchFilter // 搜索或筛选（首次）
-        case reset // 重置/初始化
+        case searchFilter  // 搜索或筛选（首次）
+        case reset  // 重置/初始化
     }
 
     private(set) var lastDataChangeType: DataChangeType = .reset
@@ -77,8 +79,8 @@ extension PasteDataStore {
     private func getItems(rows: [Row]) async -> [PasteboardModel] {
         rows.compactMap { row in
             if let type = try? row.get(Col.type),
-               let data = try? row.get(Col.data),
-               let timestamp = try? row.get(Col.ts)
+                let data = try? row.get(Col.data),
+                let timestamp = try? row.get(Col.ts)
             {
                 let id = try? row.get(Col.id)
                 let appName = try? row.get(Col.appName)
@@ -146,6 +148,7 @@ extension PasteDataStore {
 
             guard !newItems.isEmpty else {
                 log.debug("No more items to load.")
+                hasMoreData = false
                 isLoadingPage = false
                 return
             }
@@ -154,6 +157,8 @@ extension PasteDataStore {
             list += newItems
 
             updateData(with: list, changeType: .loadMore)
+
+            hasMoreData = newItems.count == pageSize
 
             isLoadingPage = false
         }
@@ -171,6 +176,7 @@ extension PasteDataStore {
         isInFilterMode = false
         let list = await getItems(limit: pageSize, offset: pageSize * pageIndex)
         updateData(with: list)
+        hasMoreData = list.count == pageSize
     }
 
     /// 数据搜索
@@ -190,7 +196,7 @@ extension PasteDataStore {
             if !keyWord.isEmpty {
                 filter =
                     Col.appName.like("%\(keyWord)%")
-                        || Col.searchText.like("%\(keyWord)%")
+                    || Col.searchText.like("%\(keyWord)%")
             }
 
             if let types = typeFilter, !types.isEmpty {
@@ -226,6 +232,7 @@ extension PasteDataStore {
             let result = await getItems(rows: rows)
             try Task.checkCancellation()
             updateData(with: result, changeType: .searchFilter)
+            hasMoreData = result.count == pageSize
         }
     }
 
@@ -252,16 +259,16 @@ extension PasteDataStore {
             var list = dataList
             list.removeAll(where: { $0 == model })
             list.insert(model, at: 0)
+            hasMoreData = list.count >= pageSize
             list = Array(list.prefix(pageSize))
             updateData(with: list)
         }
     }
 
-    /// 将指定的卡片移到列表第一位(用于粘贴操作)
-    /// - Parameter model: PasteboardModel
     @MainActor
     func moveItemToFirst(_ model: PasteboardModel) {
-        guard let index = dataList.firstIndex(where: { $0.id == model.id }) else {
+        guard let index = dataList.firstIndex(where: { $0.id == model.id })
+        else {
             return
         }
 
@@ -273,14 +280,10 @@ extension PasteDataStore {
         updateData(with: list, changeType: .reset)
     }
 
-    /// 删除单条数据
-    /// - Parameter item: PasteboardModel
     func deleteItems(_ items: PasteboardModel...) {
         deleteItems(filter: items.map { $0.id! }.contains(Col.id))
     }
 
-    /// 按条件删除数据
-    /// - Parameter filter: Expression<Bool>
     func deleteItems(filter: Expression<Bool>) {
         Task {
             await sqlManager.delete(filter: filter)
@@ -288,13 +291,10 @@ extension PasteDataStore {
         }
     }
 
-    /// 删除指定分组的所有数据
-    /// - Parameter groupId: 分组 ID
     func deleteItemsByGroup(_ groupId: Int) {
         deleteItems(filter: Col.group == groupId)
     }
 
-    /// 删除过期数据
     func clearExpiredData() {
         let lastDate = PasteUserDefaults.lastClearDate
         let dateStr = Date().formatted(date: .numeric, time: .omitted)
@@ -306,19 +306,17 @@ extension PasteDataStore {
         clearData(for: timeUnit)
     }
 
-    /// 按时间单位删除数据
-    /// - Parameter timeUnit: HistoryTimeUnit
     func clearData(for timeUnit: HistoryTimeUnit) {
         var dateCom = DateComponents()
 
         switch timeUnit {
-        case let .days(n):
+        case .days(let n):
             // 1-6天
             dateCom = DateComponents(calendar: NSCalendar.current, day: -n)
-        case let .weeks(n):
+        case .weeks(let n):
             // 1-3周
             dateCom = DateComponents(calendar: NSCalendar.current, day: -n * 7)
-        case let .months(n):
+        case .months(let n):
             // 1-11月
             dateCom = DateComponents(calendar: NSCalendar.current, month: -n)
         case .year:
@@ -329,7 +327,8 @@ extension PasteDataStore {
             return
         }
 
-        if let deadDate = NSCalendar.current.date(byAdding: dateCom, to: Date()) {
+        if let deadDate = NSCalendar.current.date(byAdding: dateCom, to: Date())
+        {
             let deadTime = Int64(deadDate.timeIntervalSince1970)
             log.info("清理过期数据，截止时间戳：\(deadTime)")
             dataList = dataList.filter { $0.timestamp > deadTime }
@@ -337,13 +336,12 @@ extension PasteDataStore {
         }
     }
 
-    /// 删除所有数据
     func clearAllData() {
         let alert = NSAlert()
         alert.informativeText = """
-                清空数据后无法恢复
-                清空后会退出应用，请重新打开。
-        """
+                    清空数据后无法恢复
+                    清空后会退出应用，请重新打开。
+            """
         alert.addButton(withTitle: "确定")
         alert.addButton(withTitle: "取消")
         let response = alert.runModal()
@@ -412,11 +410,11 @@ extension PasteDataStore {
         let targetSize = CGSize(width: 32, height: 32)
 
         guard let resizedImage = resizeImage(image, to: targetSize),
-              let cgImage = resizedImage.cgImage(
-                  forProposedRect: nil,
-                  context: nil,
-                  hints: nil,
-              )
+            let cgImage = resizedImage.cgImage(
+                forProposedRect: nil,
+                context: nil,
+                hints: nil,
+            )
         else {
             return nil
         }
@@ -450,8 +448,8 @@ extension PasteDataStore {
         let width = Int(targetSize.width)
         let height = Int(targetSize.height)
 
-        for y in 0 ..< height {
-            for x in 0 ..< width {
+        for y in 0..<height {
+            for x in 0..<width {
                 let pixelIndex = (y * width + x) * 4
                 let alpha = Int(pixelData[pixelIndex + 3])
 
@@ -467,7 +465,7 @@ extension PasteDataStore {
 
                         let colorKey =
                             (UInt32(quantizedR) << 16)
-                                | (UInt32(quantizedG) << 8) | UInt32(quantizedB)
+                            | (UInt32(quantizedG) << 8) | UInt32(quantizedB)
 
                         // 计算位置权重
                         let weight = calculateSimpleWeight(
@@ -518,9 +516,9 @@ extension PasteDataStore {
                 let group = getColorGroup(r: r, g: g, b: b)
                 switch group {
                 case .red:
-                    score *= 0.1 // 红色优先级最低
+                    score *= 0.1  // 红色优先级最低
                 case .yellow:
-                    score *= 1.2 // 黄色第二低
+                    score *= 1.2  // 黄色第二低
                 default:
                     break
                 }
@@ -612,7 +610,7 @@ extension PasteDataStore {
         let minComponent = min(r, min(g, b))
         let saturation =
             maxComponent > 0
-                ? Float(maxComponent - minComponent) / Float(maxComponent) : 0
+            ? Float(maxComponent - minComponent) / Float(maxComponent) : 0
 
         if brightness < 50, saturation > 0.1 {
             return true
@@ -653,7 +651,7 @@ extension PasteDataStore {
         // 给四个角落额外权重
         let isNearCorner =
             (x < width / 4 || x >= width * 3 / 4)
-                && (y < height / 4 || y >= height * 3 / 4)
+            && (y < height / 4 || y >= height * 3 / 4)
         if isNearCorner {
             weight *= 1.3
         }
@@ -666,7 +664,7 @@ extension PasteDataStore {
         let minComponent = min(r, min(g, b))
         let saturation =
             maxComponent > 0
-                ? Float(maxComponent - minComponent) / Float(maxComponent) : 0
+            ? Float(maxComponent - minComponent) / Float(maxComponent) : 0
         let brightness = Float(r + g + b) / 3.0
 
         var score: Float = 1.0
