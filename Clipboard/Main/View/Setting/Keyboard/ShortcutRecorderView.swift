@@ -16,7 +16,6 @@ struct ShortcutRecorder: View {
     @State private var shortcut: KeyboardShortcut
     @State private var displayText: String
     @State private var isRecording: Bool = false
-    @State private var eventMonitor: Any?
 
     @Binding var value: KeyboardShortcut
 
@@ -35,10 +34,10 @@ struct ShortcutRecorder: View {
         _displayText = State(initialValue: saved.displayString)
         _value =
             binding
-                ?? Binding(
-                    get: { saved },
-                    set: { _ in },
-                )
+            ?? Binding(
+                get: { saved },
+                set: { _ in },
+            )
     }
 
     var body: some View {
@@ -60,8 +59,7 @@ struct ShortcutRecorder: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, 4.0)
-        .padding(.vertical, 4.0)
+        .padding(4.0)
         .frame(maxWidth: 128.0, minHeight: Const.space24)
         .background(
             RoundedRectangle(cornerRadius: Const.space24)
@@ -87,13 +85,6 @@ struct ShortcutRecorder: View {
         .onChange(of: shortcut) {
             value = shortcut
         }
-        .onChange(of: isRecording) {
-            if isRecording {
-                installEventMonitor()
-            } else {
-                removeEventMonitor()
-            }
-        }
     }
 
     private var textColor: Color {
@@ -115,6 +106,7 @@ struct ShortcutRecorder: View {
     private func startRecording() {
         isRecording = true
         displayText = "按下快捷键"
+        installEventHandle()
     }
 
     private func stopRecording() {
@@ -124,36 +116,35 @@ struct ShortcutRecorder: View {
         } else {
             displayText = shortcut.displayString
         }
+        uninstallEventHandle()
     }
 
-    // MARK: - 事件监听器管理
+    // MARK: - 注册EventHandle
 
-    private func installEventMonitor() {
-        removeEventMonitor()
-
-        eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) {
-            [self] event in
-            guard isRecording else { return event }
-
-            handleKeyEvent(event)
-
-            return nil
+    private func installEventHandle() {
+        EventDispatcher.shared.registerHandler(
+            matching: .keyDown,
+            key: "shortcutRecorder"
+        ) { [self] event in
+            return handleKeyEvent(event)
         }
     }
 
-    private func removeEventMonitor() {
-        if eventMonitor != nil {
-            EventMonitorManager.shared.removeMonitor(type: .shortcutRecorder)
-            eventMonitor = nil
-        }
+    private func uninstallEventHandle() {
+        EventDispatcher.shared.unregisterHandler("shortcutRecorder")
     }
 
-    private func handleKeyEvent(_ event: NSEvent) {
+    private func handleKeyEvent(_ event: NSEvent) -> NSEvent? {
+        guard event.window === SettingWindowController.shared.window else {
+            return event
+        }
+        guard isRecording else { return event }
+
         let keyCode = event.keyCode
 
         if keyCode == KeyCode.escape {
             stopRecording()
-            return
+            return nil
         }
 
         let modifiers = event.modifierFlags.intersection([
@@ -161,17 +152,17 @@ struct ShortcutRecorder: View {
         ])
 
         let isFunctionKey =
-            (0x7A ... 0x7D).contains(keyCode)
-                || [0x63, 0x76, 0x60, 0x61, 0x62, 0x64, 0x65, 0x6D, 0x67, 0x6F]
+            (0x7A...0x7D).contains(keyCode)
+            || [0x63, 0x76, 0x60, 0x61, 0x62, 0x64, 0x65, 0x6D, 0x67, 0x6F]
                 .contains(keyCode)
 
         if modifiers.isEmpty, !isFunctionKey {
-            return
+            return event
         }
 
         guard let chars = event.charactersIgnoringModifiers, !chars.isEmpty
         else {
-            return
+            return event
         }
 
         let specialMap: [UInt16: String] = [
@@ -192,6 +183,7 @@ struct ShortcutRecorder: View {
 
         stopRecording()
         save()
+        return nil
     }
 
     private func save() {

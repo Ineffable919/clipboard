@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import Combine
 import QuartzCore
 import Sparkle
 
@@ -76,8 +77,7 @@ extension AppDelegate: NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_: Notification) {
-        EventMonitorManager.shared.removeAllMonitors()
-
+        EventDispatcher.shared.stop()
         FileAccessHelper.shared.stopAccessingSecurityScopedResources()
     }
 
@@ -112,7 +112,7 @@ extension AppDelegate {
 
         FileAccessHelper.shared.restoreAllAccesses()
 
-        setupLocalKeyboardShortcuts()
+        initEvent()
     }
 
     private func syncLaunchAtLoginStatus() {
@@ -142,12 +142,12 @@ extension AppDelegate {
                 systemSymbolName: "heart.text.clipboard.fill",
                 accessibilityDescription: "",
             )?
-                .withSymbolConfiguration(config)
+            .withSymbolConfiguration(config)
         } else {
             menuBarItem.button?.image = NSImage(
                 named: "heart.text.clipboard.fill",
             )?
-                .withSymbolConfiguration(config)
+            .withSymbolConfiguration(config)
         }
         menuBarItem.button?.target = self
         menuBarItem.button?.action = #selector(statusBarClick)
@@ -200,15 +200,17 @@ extension AppDelegate {
         clipWinController.toggleWindow(completionHandler)
     }
 
-    private func setupLocalKeyboardShortcuts() {
-        EventMonitorManager.shared.addLocalMonitor(
-            type: .globalSettings,
+    private func initEvent() {
+        EventDispatcher.shared.start()
+
+        EventDispatcher.shared.registerHandler(
             matching: .keyDown,
+            key: "setting"
         ) { [weak self] event in
             // Cmd+, 打开设置
             if event.modifierFlags.contains(.command),
-               event.charactersIgnoringModifiers == ","
-               || event.charactersIgnoringModifiers == "，"
+                event.charactersIgnoringModifiers == ","
+                    || event.charactersIgnoringModifiers == "，"
             {
                 self?.settingWinController.toggleWindow()
                 return nil

@@ -10,8 +10,8 @@ import WebKit
 
 struct CardContentView: View {
     var model: PasteboardModel
-    @AppStorage(PrefKey.enableLinkPreview.rawValue) private var enableLinkPreview: Bool =
-        PasteUserDefaults.enableLinkPreview
+    @AppStorage(PrefKey.enableLinkPreview.rawValue)
+    private var enableLinkPreview: Bool = PasteUserDefaults.enableLinkPreview
 
     @ViewBuilder
     var body: some View {
@@ -163,8 +163,8 @@ struct LinkPreviewCard: View {
             request.cachePolicy = .returnCacheDataElseLoad
             let (data, _) = try await session.data(for: request)
             if let html = String(data: data, encoding: .utf8),
-               let iconURL = parseFirstHTMLIconURL(html: html, baseURL: url),
-               let img = await fetchImage(iconURL, session: session)
+                let iconURL = parseFirstHTMLIconURL(html: html, baseURL: url),
+                let img = await fetchImage(iconURL, session: session)
             {
                 await MainActor.run { favicon = img }
                 return
@@ -205,7 +205,7 @@ struct LinkPreviewCard: View {
             if let dataRange = url.absoluteString.range(of: ",") {
                 let b64 = String(url.absoluteString[dataRange.upperBound...])
                 if let data = Data(base64Encoded: b64),
-                   let img = NSImage(data: data)
+                    let img = NSImage(data: data)
                 {
                     return img
                 }
@@ -247,12 +247,12 @@ struct LinkPreviewCard: View {
                     let titleHTML = String(html[titleMatch])
                     let title =
                         titleHTML
-                            .replacingOccurrences(
-                                of: "<[^>]+>",
-                                with: "",
-                                options: .regularExpression,
-                            )
-                            .trimmingCharacters(in: .whitespacesAndNewlines)
+                        .replacingOccurrences(
+                            of: "<[^>]+>",
+                            with: "",
+                            options: .regularExpression,
+                        )
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
 
                     if !title.isEmpty, title != url.host {
                         await MainActor.run {
@@ -279,21 +279,10 @@ struct RichContentView: View {
     var model: PasteboardModel
 
     var body: some View {
-        if model.attributeString.attribute(
-            .backgroundColor,
-            at: 0,
-            effectiveRange: nil,
-        ) is NSColor {
-            Text(model.attributed())
-                .lineLimit(12)
-                .multilineTextAlignment(.leading)
-                .textSelection(.disabled)
-        } else {
-            Text(model.attributeString.string)
-                .foregroundStyle(.primary)
-                .lineLimit(12)
-                .multilineTextAlignment(.leading)
-        }
+        Text(model.attributed())
+            .lineLimit(12)
+            .multilineTextAlignment(.leading)
+            .textSelection(.disabled)
     }
 }
 
@@ -401,8 +390,8 @@ struct CheckerboardBackground: View {
             let rows = Int(ceil(size.height / squareSize))
             let cols = Int(ceil(size.width / squareSize))
 
-            for row in 0 ..< rows {
-                for col in 0 ..< cols {
+            for row in 0..<rows {
+                for col in 0..<cols {
                     let rect = CGRect(
                         x: CGFloat(col) * squareSize,
                         y: CGFloat(row) * squareSize,

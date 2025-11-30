@@ -43,13 +43,17 @@ class SettingWindowController: NSWindowController {
     }
 
     private func setupKeyboardShortcuts() {
-        EventMonitorManager.shared.addLocalMonitor(
-            type: .settingWindow,
+        EventDispatcher.shared.registerHandler(
             matching: .keyDown,
-        ) { [weak self] event in
+            key: "settingWindow"
+        ) {
+            [weak self] event in
+            guard event.window === SettingWindowController.shared.window else {
+                return event
+            }
             // Cmd+W 关闭窗口
             if event.modifierFlags.contains(.command),
-               event.charactersIgnoringModifiers == "w"
+                event.charactersIgnoringModifiers == "w"
             {
                 if self?.window?.isKeyWindow == true {
                     self?.hideWindow()
@@ -58,7 +62,7 @@ class SettingWindowController: NSWindowController {
             }
             // Cmd + M 最小化窗口
             if event.modifierFlags.contains(.command),
-               event.charactersIgnoringModifiers == "m"
+                event.charactersIgnoringModifiers == "m"
             {
                 if self?.window?.isKeyWindow == true {
                     self?.minWindow()

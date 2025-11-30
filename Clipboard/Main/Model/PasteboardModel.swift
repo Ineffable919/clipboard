@@ -8,6 +8,7 @@
 import AppKit
 import Observation
 import SwiftUI
+import UniformTypeIdentifiers
 
 @Observable
 final class PasteboardModel: Identifiable {
@@ -298,6 +299,115 @@ extension PasteboardModel {
         formatter.numberStyle = .decimal
         return formatter
     }()
+}
+
+extension PasteboardModel {
+    func itemProvider() -> NSItemProvider {
+        ClipboardViewModel.shard.draggingItemId = id
+
+        if type == .string {
+            if let str = String(data: data, encoding: .utf8) {
+                return NSItemProvider(object: str as NSString)
+            }
+        }
+
+        if type == .rich {
+            if let attr = NSAttributedString(
+                with: data,
+                type: pasteboardType,
+            ) {
+                return NSItemProvider(object: attr.string as NSString)
+            }
+        }
+
+        let provider = NSItemProvider()
+
+        if type == .image {
+            provider.registerDataRepresentation(
+                forTypeIdentifier: pasteboardType.rawValue,
+                visibility: .all,
+            ) { [weak self] completion in
+                completion(self?.data, nil)
+                return nil
+            }
+            let name = appName + "-" + timestamp.date()
+            provider.suggestedName = name
+        }
+
+        if type == .file {
+            if let paths = cachedFilePaths {
+                for path in paths {
+                    let fileURL = URL(fileURLWithPath: path)
+                    if FileManager.default.fileExists(atPath: path) {
+                        let promisedType: String = promisedTypeIdentifier(
+                            for: fileURL,
+                        )
+                        provider.registerFileRepresentation(
+                            forTypeIdentifier: promisedType,
+                            fileOptions: [],
+                            visibility: .all,
+                        ) { completion in
+                            DispatchQueue.global(qos: .userInitiated).async {
+                                do {
+                                    // Copy to a temp location we can read, so Finder can pull without sandbox extensions.
+                                    let tmpDir = URL(
+                                        fileURLWithPath: NSTemporaryDirectory(),
+                                        isDirectory: true,
+                                    )
+                                    let dst = tmpDir.appendingPathComponent(
+                                        fileURL.lastPathComponent,
+                                        isDirectory: false,
+                                    )
+                                    if FileManager.default.fileExists(
+                                        atPath: dst.path,
+                                    ) {
+                                        try? FileManager.default.removeItem(
+                                            at: dst,
+                                        )
+                                    }
+                                    try FileManager.default.copyItem(
+                                        at: fileURL,
+                                        to: dst,
+                                    )
+                                    completion(
+                                        dst, /* isInPlace: */
+                                        false,
+                                        nil,
+                                    )
+                                } catch {
+                                    completion(nil, false, error)
+                                }
+                            }
+                            return nil
+                        }
+                    }
+                }
+
+                if paths.count == 1 {
+                    provider.suggestedName =
+                        URL(fileURLWithPath: paths[0]).lastPathComponent
+                } else {
+                    provider.suggestedName = "\(paths.count)个文件"
+                }
+            }
+        }
+
+        return provider
+    }
+
+    private func promisedTypeIdentifier(for fileURL: URL) -> String {
+        do {
+            let values = try fileURL.resourceValues(forKeys: [
+                .contentTypeKey,
+            ])
+            if let type = values.contentType {
+                return type.identifier
+            }
+        } catch {
+            // ignore and fall through to fallback
+        }
+        return UTType.data.identifier
+    }
 }
 
 enum PasteModelType {

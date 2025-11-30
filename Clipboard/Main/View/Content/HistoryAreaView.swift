@@ -33,8 +33,6 @@ struct HistoryAreaView: View {
     var pd: PasteDataStore
     @State private var selectionState = SelectionState()
     @State private var showPreviewId: PasteboardModel.ID?
-    @State private var monitor: Any?
-    @State private var flagsMonitor: Any?
     @State private var isDel: Bool = false
     @State private var isQuickPastePressed: Bool = false
     @State private var lastLoadTriggerIndex: Int = -1
@@ -101,26 +99,24 @@ struct HistoryAreaView: View {
 
     private func contentView(proxy _: ScrollViewProxy) -> some View {
         LazyHStack(alignment: .top, spacing: Const.cardSpace) {
-            ForEach(pd.dataList, id: \.id) { item in
-                if let index = pd.dataList.firstIndex(where: {
-                    $0.id == item.id
-                }) {
-                    ClipCardView(
-                        model: item,
-                        isSelected: selectionState.selectedId == item.id,
-                        showPreview: makePreviewBinding(for: item.id),
-                        quickPasteIndex: isQuickPastePressed && index < 9
-                            ? index + 1 : nil,
-                        onRequestDelete: { requestDel(id: item.id) },
-                    )
-                    .onTapGesture { handleOptimisticTap(on: item) }
-                    .onDrag {
-                        itemProvider(for: item)
-                    }
-                    .task(id: item.id) {
-                        if shouldLoadNextPage(at: index) {
-                            loadNextPageIfNeeded(at: index)
-                        }
+            ForEach(Array(pd.dataList.enumerated()), id: \.element.id) {
+                index,
+                item in
+                ClipCardView(
+                    model: item,
+                    isSelected: selectionState.selectedId == item.id,
+                    showPreview: makePreviewBinding(for: item.id),
+                    quickPasteIndex: isQuickPastePressed && index < 9
+                        ? index + 1 : nil,
+                    onRequestDelete: { requestDel(id: item.id) },
+                )
+                .onTapGesture { handleOptimisticTap(on: item) }
+                .onDrag {
+                    item.itemProvider()
+                }
+                .task(id: item.id) {
+                    if shouldLoadNextPage(at: index) {
+                        loadNextPageIfNeeded(at: index)
                     }
                 }
             }
@@ -148,8 +144,8 @@ struct HistoryAreaView: View {
         let now = ProcessInfo.processInfo.systemUptime
 
         if let lastId = selectionState.lastTapId,
-           lastId == item.id,
-           now - selectionState.lastTapTime <= Constants.doubleTapInterval
+            lastId == item.id,
+            now - selectionState.lastTapTime <= Constants.doubleTapInterval
         {
             handleDoubleTap(on: item)
             resetTapState()
@@ -238,7 +234,7 @@ struct HistoryAreaView: View {
     private func scrollToSelectedId(proxy: ScrollViewProxy) {
         guard let id = selectionState.selectedId else { return }
         guard let first = pd.dataList.first?.id,
-              let last = pd.dataList.last?.id
+            let last = pd.dataList.last?.id
         else {
             return
         }
@@ -284,16 +280,17 @@ struct HistoryAreaView: View {
     }
 
     private func appear() {
-        monitor = EventMonitorManager.shared.addLocalMonitor(
-            type: .historyArea,
+        EventDispatcher.shared.registerHandler(
             matching: .keyDown,
+            key: "history",
+            priority: 100,
             handler: keyDownEvent(_:),
         )
 
-        flagsMonitor = EventMonitorManager.shared.addLocalMonitor(
-            type: .historyFlags,
+        EventDispatcher.shared.registerHandler(
             matching: .flagsChanged,
-            handler: flagsChangedEvent(_:),
+            key: "historyFlags",
+            handler: flagsChangedEvent(_:)
         )
 
         if selectionState.selectedId == nil {
@@ -302,11 +299,6 @@ struct HistoryAreaView: View {
     }
 
     private func cleanup() {
-        EventMonitorManager.shared.removeMonitor(type: .historyArea)
-        EventMonitorManager.shared.removeMonitor(type: .historyFlags)
-
-        monitor = nil
-        flagsMonitor = nil
         isDel = false
         isQuickPastePressed = false
     }
@@ -315,16 +307,15 @@ struct HistoryAreaView: View {
         guard event.window === ClipMainWindowController.shared.window else {
             return event
         }
-
-        let newState = KeyCode.isQuickPasteModifierPressed()
-        if newState != isQuickPastePressed {
-            isQuickPastePressed = newState
-        }
+        isQuickPastePressed = KeyCode.isQuickPasteModifierPressed()
         return event
     }
 
     private func keyDownEvent(_ event: NSEvent) -> NSEvent? {
-        guard event.window === ClipMainWindowController.shared.window else {
+        guard
+            event.window === ClipMainWindowController.shared.window
+                || vm.focusView == .popover
+        else {
             return event
         }
 
@@ -343,7 +334,7 @@ struct HistoryAreaView: View {
         }
 
         if KeyCode.shouldTriggerSearch(for: event),
-           vm.focusView != .search
+            vm.focusView != .search
         {
             vm.focusView = .search
             return nil
@@ -449,7 +440,7 @@ struct HistoryAreaView: View {
 
     private func handleCopyCommand() {
         guard let id = selectionState.selectedId,
-              let item = pd.dataList.first(where: { $0.id == id })
+            let item = pd.dataList.first(where: { $0.id == id })
         else {
             NSSound.beep()
             return
@@ -499,7 +490,7 @@ struct HistoryAreaView: View {
     private func handleReturnKey(_ event: NSEvent) -> NSEvent? {
         guard vm.focusView == .history else { return event }
         guard let id = selectionState.selectedId,
-              let item = pd.dataList.first(where: { $0.id == id })
+            let item = pd.dataList.first(where: { $0.id == id })
         else {
             return event
         }
@@ -537,123 +528,6 @@ struct HistoryAreaView: View {
         selectionState.selectedId = pd.dataList.first?.id
     }
 
-    private func itemProvider(for model: PasteboardModel) -> NSItemProvider {
-        vm.draggingItemId = model.id
-
-        if model.type == .string {
-            if let str = String(data: model.data, encoding: .utf8) {
-                return NSItemProvider(object: str as NSString)
-            }
-        }
-
-        if model.type == .rich {
-            if let attr = NSAttributedString(
-                with: model.data,
-                type: model.pasteboardType,
-            ) {
-                return NSItemProvider(object: attr.string as NSString)
-            }
-        }
-
-        let provider = NSItemProvider()
-
-        if model.type == .image {
-            provider.registerDataRepresentation(
-                forTypeIdentifier: model.pasteboardType.rawValue,
-                visibility: .all,
-            ) { completion in
-                completion(model.data, nil)
-                return nil
-            }
-            let name = model.appName + "-" + model.timestamp.date()
-            provider.suggestedName = name
-        }
-
-        if model.type == .file {
-            if let filePaths = String(data: model.data, encoding: .utf8) {
-                let paths =
-                    filePaths
-                        .split(separator: "\n")
-                        .map {
-                            String($0).trimmingCharacters(
-                                in: .whitespacesAndNewlines,
-                            )
-                        }
-                        .filter { !$0.isEmpty }
-
-                for path in paths {
-                    let fileURL = URL(fileURLWithPath: path)
-                    if FileManager.default.fileExists(atPath: path) {
-                        let promisedType: String = promisedTypeIdentifier(
-                            for: fileURL,
-                        )
-                        provider.registerFileRepresentation(
-                            forTypeIdentifier: promisedType,
-                            fileOptions: [],
-                            visibility: .all,
-                        ) { completion in
-                            DispatchQueue.global(qos: .userInitiated).async {
-                                do {
-                                    // Copy to a temp location we can read, so Finder can pull without sandbox extensions.
-                                    let tmpDir = URL(
-                                        fileURLWithPath: NSTemporaryDirectory(),
-                                        isDirectory: true,
-                                    )
-                                    let dst = tmpDir.appendingPathComponent(
-                                        fileURL.lastPathComponent,
-                                        isDirectory: false,
-                                    )
-                                    if FileManager.default.fileExists(
-                                        atPath: dst.path,
-                                    ) {
-                                        try? FileManager.default.removeItem(
-                                            at: dst,
-                                        )
-                                    }
-                                    try FileManager.default.copyItem(
-                                        at: fileURL,
-                                        to: dst,
-                                    )
-                                    completion(
-                                        dst, /* isInPlace: */
-                                        false,
-                                        nil,
-                                    )
-                                } catch {
-                                    completion(nil, false, error)
-                                }
-                            }
-                            return nil
-                        }
-                    }
-                }
-
-                if paths.count == 1 {
-                    provider.suggestedName =
-                        URL(fileURLWithPath: paths[0]).lastPathComponent
-                } else {
-                    provider.suggestedName = "\(paths.count)个文件"
-                }
-            }
-        }
-
-        return provider
-    }
-
-    private func promisedTypeIdentifier(for fileURL: URL) -> String {
-        do {
-            let values = try fileURL.resourceValues(forKeys: [
-                .contentTypeKey,
-            ])
-            if let type = values.contentType {
-                return type.identifier
-            }
-        } catch {
-            // ignore and fall through to fallback
-        }
-        return UTType.data.identifier
-    }
-
     private func showDeleteAlert() {
         let alert = NSAlert()
         alert.messageText = "确认删除吗？"
@@ -670,7 +544,7 @@ struct HistoryAreaView: View {
             }
 
             guard response == .alertFirstButtonReturn,
-                  let id = selectionState.pendingDeleteId
+                let id = selectionState.pendingDeleteId
             else {
                 return
             }

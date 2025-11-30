@@ -16,6 +16,8 @@ struct PreviewPopoverView: View {
 
     let model: PasteboardModel
 
+    private let vm = ClipboardViewModel.shard
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -81,6 +83,12 @@ struct PreviewPopoverView: View {
             minHeight: 300,
             maxHeight: 600,
         )
+        .onTapGesture {
+            vm.focusView = .popover
+        }
+        .onDisappear {
+            vm.focusView = .history
+        }
     }
 
     private func openInFinder() {
@@ -117,8 +125,14 @@ struct PreviewPopoverView: View {
             if model.url != nil {
                 if #available(macOS 26.0, *) {
                     WebContentView(url: model.url!)
+                        .onTapGesture {
+                            vm.focusView = .popover
+                        }
                 } else {
                     EarlierWebView(url: model.url!)
+                        .onTapGesture {
+                            vm.focusView = .popover
+                        }
                 }
             } else {
                 textPreview
@@ -168,6 +182,14 @@ struct PreviewPopoverView: View {
                 maxWidth: Const.maxPreviewSize,
                 alignment: .topLeading,
             )
+            .simultaneousGesture(TapGesture().onEnded {
+                vm.focusView = .popover
+            })
+            .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in
+                if vm.focusView != .popover {
+                    vm.focusView = .popover
+                }
+            })
         }
     }
 
@@ -207,6 +229,14 @@ struct PreviewPopoverView: View {
                 maxWidth: Const.maxPreviewSize,
                 alignment: .topLeading,
             )
+            .simultaneousGesture(TapGesture().onEnded {
+                vm.focusView = .popover
+            })
+            .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in
+                if vm.focusView != .popover {
+                    vm.focusView = .popover
+                }
+            })
         }
     }
 
