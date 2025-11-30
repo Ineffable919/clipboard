@@ -19,6 +19,17 @@ struct PreviewPopoverView: View {
     private let vm = ClipboardViewModel.shard
 
     var body: some View {
+        FocusableContainer(onInteraction: {
+            vm.focusView = .popover
+        }) {
+            contentView
+        }
+        .onDisappear {
+            vm.focusView = .history
+        }
+    }
+
+    private var contentView: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 if let appIcon {
@@ -66,7 +77,7 @@ struct PreviewPopoverView: View {
                 }
 
                 if model.url != nil,
-                   let browserName = getDefaultBrowserName()
+                    let browserName = getDefaultBrowserName()
                 {
                     BorderedButton(title: "使用 \(browserName) 打开") {
                         withAnimation {
@@ -83,12 +94,6 @@ struct PreviewPopoverView: View {
             minHeight: 300,
             maxHeight: 600,
         )
-        .onTapGesture {
-            vm.focusView = .popover
-        }
-        .onDisappear {
-            vm.focusView = .history
-        }
     }
 
     private func openInFinder() {
@@ -102,7 +107,7 @@ struct PreviewPopoverView: View {
 
     func getDefaultBrowserName() -> String? {
         if let appURL = NSWorkspace.shared.urlForApplication(toOpen: .html),
-           let bundle = Bundle(url: appURL)
+            let bundle = Bundle(url: appURL)
         {
             return bundle.object(forInfoDictionaryKey: "CFBundleDisplayName")
                 as? String ?? bundle.object(
@@ -125,14 +130,8 @@ struct PreviewPopoverView: View {
             if model.url != nil {
                 if #available(macOS 26.0, *) {
                     WebContentView(url: model.url!)
-                        .onTapGesture {
-                            vm.focusView = .popover
-                        }
                 } else {
                     EarlierWebView(url: model.url!)
-                        .onTapGesture {
-                            vm.focusView = .popover
-                        }
                 }
             } else {
                 textPreview
@@ -182,14 +181,6 @@ struct PreviewPopoverView: View {
                 maxWidth: Const.maxPreviewSize,
                 alignment: .topLeading,
             )
-            .simultaneousGesture(TapGesture().onEnded {
-                vm.focusView = .popover
-            })
-            .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in
-                if vm.focusView != .popover {
-                    vm.focusView = .popover
-                }
-            })
         }
     }
 
@@ -229,14 +220,6 @@ struct PreviewPopoverView: View {
                 maxWidth: Const.maxPreviewSize,
                 alignment: .topLeading,
             )
-            .simultaneousGesture(TapGesture().onEnded {
-                vm.focusView = .popover
-            })
-            .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in
-                if vm.focusView != .popover {
-                    vm.focusView = .popover
-                }
-            })
         }
     }
 
@@ -353,3 +336,57 @@ struct BorderedButton: View {
         }
     }
 }
+
+// MARK: - FocusableContainer
+
+/// 可捕获所有交互的容器，包括点击、拖拽等
+struct FocusableContainer<Content: View>: NSViewRepresentable {
+    let onInteraction: () -> Void
+    let content: Content
+
+    init(
+        onInteraction: @escaping () -> Void,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.onInteraction = onInteraction
+        self.content = content()
+    }
+
+    func makeNSView(context: Context) -> NSHostingView<Content> {
+        let hostingView = InterceptingHostingView(
+            rootView: content,
+            onInteraction: onInteraction
+        )
+        return hostingView
+    }
+
+    func updateNSView(_ nsView: NSHostingView<Content>, context: Context) {
+        nsView.rootView = content
+    }
+}
+
+class InterceptingHostingView<Content: View>: NSHostingView<Content> {
+    let onInteraction: () -> Void
+    
+    init(rootView: Content, onInteraction: @escaping () -> Void) {
+        self.onInteraction = onInteraction
+        super.init(rootView: rootView)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    required init(rootView: Content) {
+        fatalError("init(rootView:) has not been implemented")
+    }
+    
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        let hitView = super.hitTest(point)
+        if hitView != nil {
+            onInteraction()
+        }
+        return hitView
+    }
+}
+

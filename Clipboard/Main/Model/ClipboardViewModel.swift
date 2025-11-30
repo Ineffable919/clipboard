@@ -21,7 +21,11 @@ final class ClipboardViewModel {
     // MARK: - UI State
 
     var isShowDel: Bool = false
-    var focusView: FocusField = .history
+    var focusView: FocusField = .history {
+        didSet {
+            EventDispatcher.shared.bypassAllEvents = (focusView == .popover || focusView == .search)
+        }
+    }
 
     // MARK: - Chip Management
 

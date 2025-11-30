@@ -250,14 +250,14 @@ struct HistoryAreaView: View {
         }
     }
 
-    private func moveSelection(offset: Int) {
-        guard vm.focusView == .history else { return }
+    private func moveSelection(offset: Int, event: NSEvent) -> NSEvent? {
+        guard vm.focusView == .history else { return event }
         let count = pd.dataList.count
         guard count > 0 else {
             selectionState.selectedId = nil
             showPreviewId = nil
             NSSound.beep()
-            return
+            return nil
         }
 
         let currentIndex =
@@ -269,7 +269,7 @@ struct HistoryAreaView: View {
 
         guard newIndex != currentIndex else {
             NSSound.beep()
-            return
+            return nil
         }
         let newId = pd.dataList[newIndex].id
         selectionState.selectedId = newId
@@ -277,6 +277,7 @@ struct HistoryAreaView: View {
         if offset > 0, shouldLoadNextPage(at: newIndex) {
             loadNextPageIfNeeded(at: newIndex)
         }
+        return nil
     }
 
     private func appear() {
@@ -304,7 +305,9 @@ struct HistoryAreaView: View {
     }
 
     private func flagsChangedEvent(_ event: NSEvent) -> NSEvent? {
-        guard event.window === ClipMainWindowController.shared.window else {
+        guard event.window == ClipMainWindowController.shared.window,
+            vm.focusView == .history
+        else {
             return event
         }
         isQuickPastePressed = KeyCode.isQuickPasteModifierPressed()
@@ -312,9 +315,22 @@ struct HistoryAreaView: View {
     }
 
     private func keyDownEvent(_ event: NSEvent) -> NSEvent? {
-        guard
-            event.window === ClipMainWindowController.shared.window
-                || vm.focusView == .popover
+        if vm.focusView == .popover {
+            if event.modifierFlags.contains(.command),
+               event.keyCode == UInt16(kVK_ANSI_C) {
+                if let window = event.window,
+                   let textView = window.firstResponder as? NSTextView {
+                    let selectedRange = textView.selectedRange()
+                    if selectedRange.length > 0 {
+                        textView.copy(nil)
+                        return nil
+                    }
+                }
+            }
+            return event
+        }
+        
+        guard event.window == ClipMainWindowController.shared.window
         else {
             return event
         }
@@ -346,12 +362,10 @@ struct HistoryAreaView: View {
 
         switch event.keyCode {
         case UInt16(kVK_LeftArrow):
-            moveSelection(offset: -1)
-            return nil
+            return moveSelection(offset: -1, event: event)
 
         case UInt16(kVK_RightArrow):
-            moveSelection(offset: 1)
-            return nil
+            return moveSelection(offset: 1, event: event)
 
         case UInt16(kVK_Space):
             return handleSpace(event)
@@ -360,8 +374,7 @@ struct HistoryAreaView: View {
             return handleReturnKey(event)
 
         case UInt16(kVK_Delete), UInt16(kVK_ForwardDelete):
-            deleteKeyDown()
-            return nil
+            return deleteKeyDown(event)
 
         default:
             return event
@@ -498,13 +511,14 @@ struct HistoryAreaView: View {
         return nil
     }
 
-    private func deleteKeyDown() {
-        guard vm.focusView == .history else { return }
+    private func deleteKeyDown(_ event: NSEvent) -> NSEvent? {
+        guard vm.focusView == .history else { return event }
         guard let id = selectionState.selectedId else {
             NSSound.beep()
-            return
+            return nil
         }
         requestDel(id: id)
+        return nil
     }
 
     private func requestDel(id: PasteboardModel.ID) {

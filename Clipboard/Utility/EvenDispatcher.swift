@@ -15,6 +15,8 @@ final class EventDispatcher {
     private init() {}
 
     private var monitorToken: Any?
+    
+    var bypassAllEvents: Bool = false
 
     struct Handler {
         let key: String
@@ -85,6 +87,45 @@ final class EventDispatcher {
     /// Core dispatch: iterate handlers; first `nil` stops chain.
     /// Propagate modified event through chain; returning nil consumes.
     private func handle(event: NSEvent) -> NSEvent? {
+        // 全局开关：如果打开，所有事件都交给系统
+        if bypassAllEvents {
+            if event.type == .keyDown {
+                let keyChar = event.charactersIgnoringModifiers?.lowercased() ?? ""
+                let modifiers = event.modifierFlags.intersection([.command, .option, .control, .shift])
+                
+                if modifiers.contains(.command) && !modifiers.contains(.option) && !modifiers.contains(.control) {
+                    var handled = false
+                    
+                    switch keyChar {
+                    case "c":
+                        handled = NSApp.sendAction(#selector(NSText.copy(_:)), to: nil, from: nil)
+                        log.debug("Sent copy command: \(handled)")
+                    case "v":
+                        handled = NSApp.sendAction(#selector(NSText.paste(_:)), to: nil, from: nil)
+                        log.debug("Sent paste command: \(handled)")
+                    case "x":
+                        handled = NSApp.sendAction(#selector(NSText.cut(_:)), to: nil, from: nil)
+                        log.debug("Sent cut command: \(handled)")
+                    case "a":
+                        handled = NSApp.sendAction(#selector(NSResponder.selectAll(_:)), to: nil, from: nil)
+                        log.debug("Sent selectAll command: \(handled)")
+                    case "z":
+                        handled = NSApp.sendAction(Selector(("undo:")), to: nil, from: nil)
+                        log.debug("Sent undo command: \(handled)")
+                    default:
+                        break
+                    }
+                    
+                    if handled {
+                        return nil
+                    }
+                }
+                
+                log.debug("Bypass all: '\(keyChar)' - returning to system")
+            }
+            // return event
+        }
+        
         var currentEvent = event
         for h in handlers {
             let eventMask = NSEvent.EventTypeMask(
@@ -94,13 +135,9 @@ final class EventDispatcher {
             if let next = h.handler(currentEvent) {
                 currentEvent = next
             } else {
-                log.debug("Event consumed by handler \(h.key)")
                 return nil
             }
         }
-        log.debug(
-            "system will handle event type:\(currentEvent.type)"
-        )
         return currentEvent
     }
 }
