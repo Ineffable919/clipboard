@@ -110,9 +110,10 @@ extension AppDelegate {
 
         HotKeyManager.shared.initialize()
 
-        FileAccessHelper.shared.restoreAllAccesses()
-
-        initEvent()
+        DispatchQueue.main.async { [weak self] in
+            FileAccessHelper.shared.restoreAllAccesses()
+            self?.initEvent()
+        }
     }
 
     private func syncLaunchAtLoginStatus() {

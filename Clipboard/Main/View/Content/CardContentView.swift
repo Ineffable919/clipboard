@@ -269,9 +269,13 @@ struct StringContentView: View {
     var model: PasteboardModel
 
     var body: some View {
-        Text(String(data: model.data, encoding: .utf8) ?? "")
-            .lineLimit(12)
-            .multilineTextAlignment(.leading)
+        Text(String(data: model.showData ?? Data(), encoding: .utf8) ?? "")
+            .textSelection(.disabled)
+            .frame(
+                maxWidth: .infinity,
+                maxHeight: .infinity,
+                alignment: .topLeading,
+            )
     }
 }
 
@@ -280,9 +284,12 @@ struct RichContentView: View {
 
     var body: some View {
         Text(model.attributed())
-            .lineLimit(12)
-            .multilineTextAlignment(.leading)
             .textSelection(.disabled)
+            .frame(
+                maxWidth: .infinity,
+                maxHeight: .infinity,
+                alignment: .topLeading,
+            )
     }
 }
 

@@ -16,7 +16,11 @@ extension NSAttributedString {
         case .rtfd:
             self.init(rtfd: data, documentAttributes: nil)
         case .string:
-            try? self.init(data: data, options: [:], documentAttributes: nil)
+            if let string = String(data: data, encoding: .utf8) {
+                self.init(string: string)
+            } else {
+                return nil
+            }
         default:
             return nil
         }
@@ -29,7 +33,7 @@ extension NSAttributedString {
         case .rtfd:
             rtfd(from: NSMakeRange(0, length))
         case .string:
-            try? data(from: NSMakeRange(0, length))
+            string.data(using: .utf8)
         default:
             nil
         }

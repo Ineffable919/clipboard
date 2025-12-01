@@ -34,10 +34,10 @@ struct ShortcutRecorder: View {
         _displayText = State(initialValue: saved.displayString)
         _value =
             binding
-            ?? Binding(
-                get: { saved },
-                set: { _ in },
-            )
+                ?? Binding(
+                    get: { saved },
+                    set: { _ in },
+                )
     }
 
     var body: some View {
@@ -152,8 +152,8 @@ struct ShortcutRecorder: View {
         ])
 
         let isFunctionKey =
-            (0x7A...0x7D).contains(keyCode)
-            || [0x63, 0x76, 0x60, 0x61, 0x62, 0x64, 0x65, 0x6D, 0x67, 0x6F]
+            (0x7A ... 0x7D).contains(keyCode)
+                || [0x63, 0x76, 0x60, 0x61, 0x62, 0x64, 0x65, 0x6D, 0x67, 0x6F]
                 .contains(keyCode)
 
         if modifiers.isEmpty, !isFunctionKey {

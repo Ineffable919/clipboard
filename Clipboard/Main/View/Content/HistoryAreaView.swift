@@ -217,13 +217,13 @@ struct HistoryAreaView: View {
         DispatchQueue.main.asyncAfter(
             deadline: .now() + Constants.deleteAnimationDelay,
         ) {
-            self.isDel = false
+            isDel = false
 
-            if self.pd.dataList.count < 50,
-                self.pd.hasMoreData,
-                !self.pd.isLoadingPage
+            if pd.dataList.count < 50,
+                pd.hasMoreData,
+                !pd.isLoadingPage
             {
-                self.pd.loadNextPage()
+                pd.loadNextPage()
             }
         }
     }

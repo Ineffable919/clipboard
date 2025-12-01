@@ -98,11 +98,10 @@ final class PasteboardModel: Identifiable {
         else { return nil }
         var content: Data?
         if type.isFile() {
-            guard
-                let fileURLs = pasteboard.readObjects(
-                    forClasses: [NSURL.self],
-                    options: nil,
-                ) as? [URL]
+            guard let fileURLs = pasteboard.readObjects(
+                forClasses: [NSURL.self],
+                options: nil,
+            ) as? [URL]
             else { return nil }
             let filePaths = fileURLs.map(\.path)
             FileAccessHelper.shared.saveSecurityBookmarks(for: filePaths)
@@ -119,13 +118,13 @@ final class PasteboardModel: Identifiable {
         if type.isText() {
             att =
                 NSAttributedString(with: content, type: type)
-                ?? NSAttributedString()
+                    ?? NSAttributedString()
             guard !att.string.allSatisfy(\.isWhitespace) else {
                 return nil
             }
             showAtt =
                 att.length > 250
-                ? att.attributedSubstring(from: NSMakeRange(0, 250)) : att
+                    ? att.attributedSubstring(from: NSMakeRange(0, 250)) : att
             showData = showAtt?.toData(with: type)
         }
 
@@ -267,11 +266,11 @@ extension PasteboardModel {
             return (fallbackBG, .secondary)
         }
         if attributeString.length > 0,
-            let bg = attributeString.attribute(
-                .backgroundColor,
-                at: 0,
-                effectiveRange: nil,
-            ) as? NSColor
+           let bg = attributeString.attribute(
+               .backgroundColor,
+               at: 0,
+               effectiveRange: nil,
+           ) as? NSColor
         {
             return (Color(bg), getRTFColor(baseNS: bg))
         }
@@ -293,9 +292,9 @@ extension PasteboardModel {
 
     func attributed() -> AttributedString {
         if let cachedAttributed { return cachedAttributed }
-        let a = AttributedString(attributeString)
-        cachedAttributed = a
-        return a
+        let attr = AttributedString(attributeString)
+        cachedAttributed = attr
+        return attr
     }
 
     private static let formatter: NumberFormatter = {
@@ -394,7 +393,7 @@ extension PasteboardModel {
     private func promisedTypeIdentifier(for fileURL: URL) -> String {
         do {
             let values = try fileURL.resourceValues(forKeys: [
-                .contentTypeKey
+                .contentTypeKey,
             ])
             if let type = values.contentType {
                 return type.identifier

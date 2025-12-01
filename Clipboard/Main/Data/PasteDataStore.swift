@@ -28,8 +28,8 @@ final class PasteDataStore {
 
     enum DataChangeType {
         case loadMore
-        case searchFilter  // 搜索或筛选（首次）
-        case reset  // 重置/初始化
+        case searchFilter // 搜索或筛选（首次）
+        case reset // 重置/初始化
     }
 
     private(set) var lastDataChangeType: DataChangeType = .reset
@@ -79,17 +79,23 @@ extension PasteDataStore {
     private func getItems(rows: [Row]) async -> [PasteboardModel] {
         rows.compactMap { row in
             if let type = try? row.get(Col.type),
-                let data = try? row.get(Col.data),
-                let timestamp = try? row.get(Col.ts)
+               let data = try? row.get(Col.data),
+               let timestamp = try? row.get(Col.ts)
             {
                 let id = try? row.get(Col.id)
                 let appName = try? row.get(Col.appName)
                 let appPath = try? row.get(Col.appPath)
-                let showData = try? row.get(Col.showData) ?? data
+                var showData = try? row.get(Col.showData)
                 let searchText = try? row.get(Col.searchText)
                 let length = try? row.get(Col.length)
                 let group = try? row.get(Col.group)
                 let pType = PasteboardType(type)
+                // TODO: 兼容旧数据，后续版本删除
+                if pType.isText(), showData == nil {
+                    if let searchText {
+                        showData = String(searchText.prefix(250)).data(using: .utf8)
+                    }
+                }
 
                 let pasteModel = PasteboardModel(
                     pasteboardType: pType,
@@ -196,7 +202,7 @@ extension PasteDataStore {
             if !keyWord.isEmpty {
                 filter =
                     Col.appName.like("%\(keyWord)%")
-                    || Col.searchText.like("%\(keyWord)%")
+                        || Col.searchText.like("%\(keyWord)%")
             }
 
             if let types = typeFilter, !types.isEmpty {
@@ -310,13 +316,13 @@ extension PasteDataStore {
         var dateCom = DateComponents()
 
         switch timeUnit {
-        case .days(let n):
+        case let .days(n):
             // 1-6天
             dateCom = DateComponents(calendar: NSCalendar.current, day: -n)
-        case .weeks(let n):
+        case let .weeks(n):
             // 1-3周
             dateCom = DateComponents(calendar: NSCalendar.current, day: -n * 7)
-        case .months(let n):
+        case let .months(n):
             // 1-11月
             dateCom = DateComponents(calendar: NSCalendar.current, month: -n)
         case .year:
@@ -327,8 +333,7 @@ extension PasteDataStore {
             return
         }
 
-        if let deadDate = NSCalendar.current.date(byAdding: dateCom, to: Date())
-        {
+        if let deadDate = NSCalendar.current.date(byAdding: dateCom, to: Date()) {
             let deadTime = Int64(deadDate.timeIntervalSince1970)
             log.info("清理过期数据，截止时间戳：\(deadTime)")
             dataList = dataList.filter { $0.timestamp > deadTime }
@@ -339,9 +344,9 @@ extension PasteDataStore {
     func clearAllData() {
         let alert = NSAlert()
         alert.informativeText = """
-                    清空数据后无法恢复
-                    清空后会退出应用，请重新打开。
-            """
+                清空数据后无法恢复
+                清空后会退出应用，请重新打开。
+        """
         alert.addButton(withTitle: "确定")
         alert.addButton(withTitle: "取消")
         let response = alert.runModal()
@@ -410,11 +415,11 @@ extension PasteDataStore {
         let targetSize = CGSize(width: 32, height: 32)
 
         guard let resizedImage = resizeImage(image, to: targetSize),
-            let cgImage = resizedImage.cgImage(
-                forProposedRect: nil,
-                context: nil,
-                hints: nil,
-            )
+              let cgImage = resizedImage.cgImage(
+                  forProposedRect: nil,
+                  context: nil,
+                  hints: nil,
+              )
         else {
             return nil
         }
@@ -448,8 +453,8 @@ extension PasteDataStore {
         let width = Int(targetSize.width)
         let height = Int(targetSize.height)
 
-        for y in 0..<height {
-            for x in 0..<width {
+        for y in 0 ..< height {
+            for x in 0 ..< width {
                 let pixelIndex = (y * width + x) * 4
                 let alpha = Int(pixelData[pixelIndex + 3])
 
@@ -465,7 +470,7 @@ extension PasteDataStore {
 
                         let colorKey =
                             (UInt32(quantizedR) << 16)
-                            | (UInt32(quantizedG) << 8) | UInt32(quantizedB)
+                                | (UInt32(quantizedG) << 8) | UInt32(quantizedB)
 
                         // 计算位置权重
                         let weight = calculateSimpleWeight(
@@ -516,9 +521,9 @@ extension PasteDataStore {
                 let group = getColorGroup(r: r, g: g, b: b)
                 switch group {
                 case .red:
-                    score *= 0.1  // 红色优先级最低
+                    score *= 0.1 // 红色优先级最低
                 case .yellow:
-                    score *= 1.2  // 黄色第二低
+                    score *= 1.2 // 黄色第二低
                 default:
                     break
                 }
@@ -610,7 +615,7 @@ extension PasteDataStore {
         let minComponent = min(r, min(g, b))
         let saturation =
             maxComponent > 0
-            ? Float(maxComponent - minComponent) / Float(maxComponent) : 0
+                ? Float(maxComponent - minComponent) / Float(maxComponent) : 0
 
         if brightness < 50, saturation > 0.1 {
             return true
@@ -651,7 +656,7 @@ extension PasteDataStore {
         // 给四个角落额外权重
         let isNearCorner =
             (x < width / 4 || x >= width * 3 / 4)
-            && (y < height / 4 || y >= height * 3 / 4)
+                && (y < height / 4 || y >= height * 3 / 4)
         if isNearCorner {
             weight *= 1.3
         }
@@ -664,7 +669,7 @@ extension PasteDataStore {
         let minComponent = min(r, min(g, b))
         let saturation =
             maxComponent > 0
-            ? Float(maxComponent - minComponent) / Float(maxComponent) : 0
+                ? Float(maxComponent - minComponent) / Float(maxComponent) : 0
         let brightness = Float(r + g + b) / 3.0
 
         var score: Float = 1.0

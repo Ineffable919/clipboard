@@ -346,8 +346,8 @@ struct ThinSlider: View {
                                 )
                                 value =
                                     bounds.lowerBound
-                                    + (bounds.upperBound - bounds.lowerBound)
-                                    * newNormalized
+                                        + (bounds.upperBound - bounds.lowerBound)
+                                        * newNormalized
                             }
                             .onEnded { _ in
                                 isDragging = false
@@ -369,7 +369,7 @@ struct ThinSlider: View {
 
 struct HistoryTimeSlider: View {
     @Binding var selectedTimeUnit: HistoryTimeUnit
-    @State private var sliderValue: Double = 0.0  // 范围 0-4，对应4个区间
+    @State private var sliderValue: Double = 0.0 // 范围 0-4，对应4个区间
     @State private var isEditing: Bool = false
 
     // 4个等长区间：
@@ -417,7 +417,7 @@ struct HistoryTimeSlider: View {
 
             ZStack {
                 GeometryReader { geometry in
-                    ForEach(0..<5, id: \.self) { index in
+                    ForEach(0 ..< 5, id: \.self) { index in
                         let tickValue = tickSliderValue(for: index)
                         let isSelected =
                             !isEditing && abs(sliderValue - tickValue) < 0.01
@@ -446,7 +446,7 @@ struct HistoryTimeSlider: View {
                             sliderValue = snapToStep(newValue)
                         },
                     ),
-                    in: 0...4,
+                    in: 0 ... 4,
                     onEditingChanged: { editing in
                         withAnimation(.easeInOut(duration: 0.2)) {
                             isEditing = editing
@@ -518,22 +518,22 @@ struct HistoryTimeSlider: View {
     // 获取刻度线对应的滑块值
     private func tickSliderValue(for index: Int) -> Double {
         if index == 0 {
-            internalValueToSliderValue(1)  // 1天
+            internalValueToSliderValue(1) // 1天
         } else {
-            Double(index)  // 1, 2, 3, 4 对应周、月、年、永久
+            Double(index) // 1, 2, 3, 4 对应周、月、年、永久
         }
     }
 
     // 将内部值(1-22)转换为滑块值(0-4)
     private func internalValueToSliderValue(_ value: Int) -> Double {
         switch value {
-        case 1...6:
+        case 1 ... 6:
             // 天区间：1-6 映射到 0.0-1.0
             Double(value - 1) / 6.0
-        case 7...9:
+        case 7 ... 9:
             // 周区间：7-9 映射到 1.0-2.0
             1.0 + Double(value - 7) / 3.0
-        case 10...20:
+        case 10 ... 20:
             // 月区间：10-20 映射到 2.0-3.0
             2.0 + Double(value - 10) / 11.0
         case 21:
@@ -550,19 +550,19 @@ struct HistoryTimeSlider: View {
     // 将滑块值(0-4)转换为内部值(1-22)
     private func sliderValueToInternalValue(_ value: Double) -> Int {
         switch value {
-        case 0..<1.0:
+        case 0 ..< 1.0:
             // 天区间：6个档位，对应 1-6
             let index = Int((value * 6.0).rounded())
             return max(1, min(6, index + 1))
-        case 1.0..<2.0:
+        case 1.0 ..< 2.0:
             // 周区间：3个档位，对应 7-9
             let index = Int(((value - 1.0) * 3.0).rounded())
             return max(7, min(9, index + 7))
-        case 2.0..<3.0:
+        case 2.0 ..< 3.0:
             // 月区间：11个档位，对应 10-20
             let index = Int(((value - 2.0) * 11.0).rounded())
             return max(10, min(20, index + 10))
-        case 3.0..<3.5:
+        case 3.0 ..< 3.5:
             // 年
             return 21
         default:
@@ -575,16 +575,16 @@ struct HistoryTimeSlider: View {
     private func snapToStep(_ value: Double) -> Double {
         let step: Double
         switch value {
-        case 0..<1.0:
+        case 0 ..< 1.0:
             // 天区间：6个步长
             step = 1.0 / 6.0
-        case 1.0..<2.0:
+        case 1.0 ..< 2.0:
             // 周区间：3个步长
             step = 1.0 / 3.0
-        case 2.0..<3.0:
+        case 2.0 ..< 3.0:
             // 月区间：11个步长
             step = 1.0 / 11.0
-        case 3.0..<4.0:
+        case 3.0 ..< 4.0:
             // 年-永久区间：只有2个值，3.0是年，4.0是永久
             return value < 3.5 ? 3.0 : 4.0
         default:

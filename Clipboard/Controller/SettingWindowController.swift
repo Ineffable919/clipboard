@@ -53,7 +53,7 @@ class SettingWindowController: NSWindowController {
             }
             // Cmd+W 关闭窗口
             if event.modifierFlags.contains(.command),
-                event.charactersIgnoringModifiers == "w"
+               event.charactersIgnoringModifiers == "w"
             {
                 if self?.window?.isKeyWindow == true {
                     self?.hideWindow()
@@ -62,7 +62,7 @@ class SettingWindowController: NSWindowController {
             }
             // Cmd + M 最小化窗口
             if event.modifierFlags.contains(.command),
-                event.charactersIgnoringModifiers == "m"
+               event.charactersIgnoringModifiers == "m"
             {
                 if self?.window?.isKeyWindow == true {
                     self?.minWindow()

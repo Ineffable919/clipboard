@@ -55,7 +55,7 @@ struct AsyncThumbnailView: View {
         ThumbnailView.shared.generateFinderStyleThumbnail(for: fileURL) {
             nsImage in
             Task { @MainActor in
-                withAnimation(.easeInOut(duration: 0.3)) {
+                withAnimation(.easeInOut(duration: 0.2)) {
                     thumbnail = nsImage
                     isLoading = false
                     loadingFailed = nsImage == nil
@@ -98,50 +98,23 @@ struct MultipleFilesView: View {
     }
 
     var body: some View {
-        VStack(spacing: 6) {
-            if fileURLs.count <= 4 {
-                LazyVGrid(
-                    columns: Array(
-                        repeating: GridItem(.flexible(), spacing: 4),
-                        count: min(2, fileURLs.count),
-                    ),
-                    spacing: 4,
-                ) {
-                    ForEach(
-                        Array(fileURLs.prefix(4).enumerated()),
-                        id: \.offset,
-                    ) { _, urlString in
-                        FileThumbnailView(
-                            fileURLString: urlString,
-                            maxSize: fileURLs.count == 1 ? maxSize : maxSize / 2,
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
-                    }
-                }
-                .frame(maxWidth: maxSize, maxHeight: maxSize)
-            } else {
-                ZStack {
-                    ForEach(
-                        Array(fileURLs.prefix(3).enumerated().reversed()),
-                        id: \.offset,
-                    ) { index, urlString in
-                        FileThumbnailView(
-                            fileURLString: urlString,
-                            maxSize: maxSize * 0.7,
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                        .offset(
-                            x: CGFloat(index * 20),
-                            y: CGFloat(-index * 10),
-                        )
-                        .scaleEffect(1.0 - CGFloat(index) * 0.05)
-                        .opacity(1.0 - CGFloat(index) * 0.15)
-                    }
-                }
-                .frame(width: maxSize, height: maxSize)
+        ZStack {
+            ForEach(
+                Array(fileURLs.prefix(4).enumerated().reversed()),
+                id: \.offset,
+            ) { index, urlString in
+                FileThumbnailView(
+                    fileURLString: urlString,
+                    maxSize: maxSize * 0.5,
+                )
+                .clipShape(RoundedRectangle(cornerRadius: Const.radius))
+                .offset(
+                    x: CGFloat(index * 20),
+                    y: CGFloat(-index * 10),
+                )
             }
         }
-        .frame(maxWidth: maxSize)
+        .frame(width: maxSize, height: maxSize)
     }
 }
 
@@ -168,7 +141,7 @@ struct MultipleFilesView: View {
                         "/Applications/Google Chrome.app",
                         "/Applications/WeChat.app",
                         "/Applications/企业微信.app",
-                        "/Applications/Microsoft Word.app",
+                        "/Applications/Clipboard.app",
                     ],
                     maxSize: 128,
                 )
@@ -180,7 +153,7 @@ struct MultipleFilesView: View {
                         "/Applications/WeChat.app",
                         "/Applications/企业微信.app",
                         "/Applications/Microsoft Word.app",
-                        "/Applications/Microsoft Excel.app",
+                        "/Applications/Clipboard.app",
                     ],
                     maxSize: 128,
                 )

@@ -20,6 +20,8 @@ extension PasteboardType {
 
     func isText() -> Bool { !isImage() && !isFile() }
 
+    func isPlainText() -> Bool { self == .string }
+
     func isFile() -> Bool {
         self == .fileURL
     }

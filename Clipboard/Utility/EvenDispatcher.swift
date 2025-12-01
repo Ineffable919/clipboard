@@ -15,7 +15,7 @@ final class EventDispatcher {
     private init() {}
 
     private var monitorToken: Any?
-    
+
     var bypassAllEvents: Bool = false
 
     struct Handler {
@@ -39,8 +39,8 @@ final class EventDispatcher {
 
         monitorToken = NSEvent.addLocalMonitorForEvents(matching: mask) {
             [weak self] event in
-            guard let self = self else { return event }
-            return self.handle(event: event)
+            guard let self else { return event }
+            return handle(event: event)
         }
 
         log.debug("Global local monitor registered.")
@@ -92,10 +92,10 @@ final class EventDispatcher {
             if event.type == .keyDown {
                 let keyChar = event.charactersIgnoringModifiers?.lowercased() ?? ""
                 let modifiers = event.modifierFlags.intersection([.command, .option, .control, .shift])
-                
-                if modifiers.contains(.command) && !modifiers.contains(.option) && !modifiers.contains(.control) {
+
+                if modifiers.contains(.command), !modifiers.contains(.option), !modifiers.contains(.control) {
                     var handled = false
-                    
+
                     switch keyChar {
                     case "c":
                         handled = NSApp.sendAction(#selector(NSText.copy(_:)), to: nil, from: nil)
@@ -115,17 +115,17 @@ final class EventDispatcher {
                     default:
                         break
                     }
-                    
+
                     if handled {
                         return nil
                     }
                 }
-                
+
                 log.debug("Bypass all: '\(keyChar)' - returning to system")
             }
             // return event
         }
-        
+
         var currentEvent = event
         for h in handlers {
             let eventMask = NSEvent.EventTypeMask(

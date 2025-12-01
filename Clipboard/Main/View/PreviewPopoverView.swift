@@ -280,30 +280,6 @@ struct PreviewPopoverView: View {
     }
 }
 
-// MARK: - Preview
-
-#Preview {
-    let data = "https://www.apple.com.cn"
-        .data(
-            using: .utf8,
-        )!
-
-    PreviewPopoverView(
-        model: PasteboardModel(
-            pasteboardType: .string,
-            data: data,
-            showData: data,
-            timestamp: Int64(Date().timeIntervalSince1970),
-            appPath: "/Applications/WeChat.app",
-            appName: "微信",
-            searchText: "",
-            length: 0,
-            group: -1,
-        ),
-    )
-    .frame(width: 800, height: 600)
-}
-
 // MARK: - BorderedButton with Hover Effect
 
 struct BorderedButton: View {
@@ -339,7 +315,6 @@ struct BorderedButton: View {
 
 // MARK: - FocusableContainer
 
-/// 可捕获所有交互的容器，包括点击、拖拽等
 struct FocusableContainer<Content: View>: NSViewRepresentable {
     let onInteraction: () -> Void
     let content: Content
@@ -352,7 +327,7 @@ struct FocusableContainer<Content: View>: NSViewRepresentable {
         self.content = content()
     }
 
-    func makeNSView(context: Context) -> NSHostingView<Content> {
+    func makeNSView(context _: Context) -> NSHostingView<Content> {
         let hostingView = InterceptingHostingView(
             rootView: content,
             onInteraction: onInteraction
@@ -360,27 +335,28 @@ struct FocusableContainer<Content: View>: NSViewRepresentable {
         return hostingView
     }
 
-    func updateNSView(_ nsView: NSHostingView<Content>, context: Context) {
+    func updateNSView(_ nsView: NSHostingView<Content>, context _: Context) {
         nsView.rootView = content
     }
 }
 
 class InterceptingHostingView<Content: View>: NSHostingView<Content> {
     let onInteraction: () -> Void
-    
+
     init(rootView: Content, onInteraction: @escaping () -> Void) {
         self.onInteraction = onInteraction
         super.init(rootView: rootView)
     }
-    
-    required init?(coder: NSCoder) {
+
+    @available(*, unavailable)
+    required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
-    required init(rootView: Content) {
+
+    required init(rootView _: Content) {
         fatalError("init(rootView:) has not been implemented")
     }
-    
+
     override func hitTest(_ point: NSPoint) -> NSView? {
         let hitView = super.hitTest(point)
         if hitView != nil {
@@ -390,3 +366,26 @@ class InterceptingHostingView<Content: View>: NSHostingView<Content> {
     }
 }
 
+// MARK: - Preview
+
+#Preview {
+    let data = "https://www.apple.com.cn"
+        .data(
+            using: .utf8,
+        )!
+
+    PreviewPopoverView(
+        model: PasteboardModel(
+            pasteboardType: .string,
+            data: data,
+            showData: data,
+            timestamp: Int64(Date().timeIntervalSince1970),
+            appPath: "/Applications/WeChat.app",
+            appName: "微信",
+            searchText: "",
+            length: 0,
+            group: -1,
+        ),
+    )
+    .frame(width: 800, height: 600)
+}

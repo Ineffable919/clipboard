@@ -14,11 +14,16 @@ struct PrivacySettingView: View {
     @Environment(\.colorScheme) var colorScheme
 
     @State private var selectedApp: String? = nil
-    @State private var ignoredApps: [IgnoredAppInfo] = PasteUserDefaults.ignoredApps
-    @AppStorage(PrefKey.showDuringScreenShare.rawValue) private var showDuringScreenShare = true
-    @AppStorage(PrefKey.enableLinkPreview.rawValue) private var enableLinkPreview = true
-    // @AppStorage(PrefKey.ignoreSensitiveContent.rawValue) private var ignoreSensitiveContent = false
-    // @AppStorage(PrefKey.ignoreEphemeralContent.rawValue) private var ignoreEphemeralContent = false
+    @State private var ignoredApps: [IgnoredAppInfo] = PasteUserDefaults
+        .ignoredApps
+    @AppStorage(PrefKey.showDuringScreenShare.rawValue) private
+    var showDuringScreenShare = true
+    @AppStorage(PrefKey.enableLinkPreview.rawValue) private
+    var enableLinkPreview = true
+    @AppStorage(PrefKey.ignoreSensitiveContent.rawValue) private
+    var ignoreSensitiveContent = true
+    @AppStorage(PrefKey.ignoreEphemeralContent.rawValue) private
+    var ignoreEphemeralContent = true
     @AppStorage(PrefKey.delConfirm.rawValue) private var delConfirm = false
     @State private var hasAccessibilityPermission: Bool = AXIsProcessTrusted()
     @State private var permissionTimer: Timer?
@@ -41,18 +46,18 @@ struct PrivacySettingView: View {
                             isOn: $enableLinkPreview,
                         )
                         Divider()
-                        // PrivacyToggleRow(
-                        //     title: "忽略机密内容",
-                        //     subtitle: "检测到密码和敏感数据时不保存。",
-                        //     isOn: $ignoreSensitiveContent,
-                        // )
-                        // Divider()
-                        // PrivacyToggleRow(
-                        //     title: "忽略瞬时内容",
-                        //     subtitle: "不要保存其它应用程序生成的临时数据。",
-                        //     isOn: $ignoreEphemeralContent,
-                        // )
-                        // Divider()
+                        PrivacyToggleRow(
+                            title: "忽略机密内容",
+                            subtitle: "检测到密码和敏感数据时不保存。",
+                            isOn: $ignoreSensitiveContent,
+                        )
+                        Divider()
+                        PrivacyToggleRow(
+                            title: "忽略瞬时内容",
+                            subtitle: "不要保存其它应用程序生成的临时数据。",
+                            isOn: $ignoreEphemeralContent,
+                        )
+                        Divider()
                         PrivacyToggleRow(
                             title: "删除确认",
                             subtitle: "删除记录时是否弹窗确认。",
