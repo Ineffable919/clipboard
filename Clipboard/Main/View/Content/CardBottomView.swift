@@ -53,12 +53,12 @@ struct CommonBottomView: View {
             height: intro.count > 36 ? Const.bottomSize : Const.bottomSize - 16,
         )
         .background {
-            if model.length > 135 {
+            if model.length > 250 {
                 LinearGradient(
                     gradient: Gradient(stops: [
                         .init(color: baseColor, location: 0.0),
-                        .init(color: baseColor, location: 0.15),
-                        .init(color: baseColor.opacity(0.95), location: 0.35),
+                        .init(color: baseColor, location: 0.35),
+                        .init(color: baseColor.opacity(0.9), location: 0.65),
                         .init(color: baseColor.opacity(0.8), location: 0.85),
                         .init(color: .clear, location: 1.0),
                     ]),
