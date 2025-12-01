@@ -77,7 +77,7 @@ struct PreviewPopoverView: View {
                 }
 
                 if model.url != nil,
-                    let browserName = getDefaultBrowserName()
+                   let browserName = getDefaultBrowserName()
                 {
                     BorderedButton(title: "使用 \(browserName) 打开") {
                         withAnimation {
@@ -107,7 +107,7 @@ struct PreviewPopoverView: View {
 
     func getDefaultBrowserName() -> String? {
         if let appURL = NSWorkspace.shared.urlForApplication(toOpen: .html),
-            let bundle = Bundle(url: appURL)
+           let bundle = Bundle(url: appURL)
         {
             return bundle.object(forInfoDictionaryKey: "CFBundleDisplayName")
                 as? String ?? bundle.object(
@@ -201,15 +201,21 @@ struct PreviewPopoverView: View {
                 model.backgroundColor
                 ScrollView(.vertical, showsIndicators: true) {
                     VStack(alignment: .leading) {
-                        Text(
-                            AttributedString(
-                                NSAttributedString(
-                                    with: model.data,
-                                    type: model.pasteboardType,
-                                )!,
-                            ),
-                        )
-                        .textSelection(.enabled)
+                        if model.hasBgColor {
+                            Text(
+                                AttributedString(
+                                    NSAttributedString(
+                                        with: model.data,
+                                        type: model.pasteboardType,
+                                    )!,
+                                ),
+                            )
+                            .textSelection(.enabled)
+                        } else {
+                            Text(model.attributeString.string)
+                                .foregroundStyle(.primary)
+                                .textSelection(.enabled)
+                        }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(Const.space)

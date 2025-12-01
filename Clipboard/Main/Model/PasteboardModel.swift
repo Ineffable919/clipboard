@@ -42,6 +42,7 @@ final class PasteboardModel: Identifiable {
     private var cachedBackgroundColor: Color?
     private var cachedForegroundColor: Color?
     private var cachedFilePaths: [String]?
+    private var cachedHasBackgroundColor: Bool = false
 
     var url: URL? {
         if pasteboardType == .string {
@@ -78,9 +79,10 @@ final class PasteboardModel: Identifiable {
                 type: pasteboardType,
             ) ?? NSAttributedString()
 
-        let (bg, fg) = computeColors()
+        let (bg, fg, hasBg) = computeColors()
         cachedBackgroundColor = bg
         cachedForegroundColor = fg
+        cachedHasBackgroundColor = hasBg
 
         if pasteboardType == .fileURL {
             if let urlString = String(data: data, encoding: .utf8) {
@@ -248,6 +250,10 @@ extension PasteboardModel {
         cachedBackgroundColor ?? .clear
     }
 
+    var hasBgColor: Bool {
+        cachedHasBackgroundColor
+    }
+
     // MARK: - 纯函数：根据模型给出背景与前景色
 
     func colors() -> (Color, Color) {
@@ -257,13 +263,13 @@ extension PasteboardModel {
         )
     }
 
-    private func computeColors() -> (Color, Color) {
+    private func computeColors() -> (Color, Color, Bool) {
         let fallbackBG = Color(.controlBackgroundColor)
         guard pasteboardType.isText() else {
-            return (fallbackBG, .secondary)
+            return (fallbackBG, .secondary, false)
         }
         if pasteboardType == .string {
-            return (fallbackBG, .secondary)
+            return (fallbackBG, .secondary, false)
         }
         if attributeString.length > 0,
            let bg = attributeString.attribute(
@@ -272,9 +278,9 @@ extension PasteboardModel {
                effectiveRange: nil,
            ) as? NSColor
         {
-            return (Color(bg), getRTFColor(baseNS: bg))
+            return (Color(bg), getRTFColor(baseNS: bg), true)
         }
-        return (fallbackBG, .secondary)
+        return (fallbackBG, .secondary, false)
     }
 
     // 在 sRGB 空间基于亮度粗分

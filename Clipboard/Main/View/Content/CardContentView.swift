@@ -44,6 +44,7 @@ struct LinkPreviewCard: View {
     @State private var pageTitle: String = ""
     @State private var isLoading: Bool = false
     @State private var loadingTask: Task<Void, Never>?
+    @State private var displayTitle: String = ""
 
     var body: some View {
         if let url = model.url {
@@ -72,8 +73,8 @@ struct LinkPreviewCard: View {
                 )
 
                 VStack(alignment: .leading, spacing: 4) {
-                    if !pageTitle.isEmpty {
-                        Text(pageTitle)
+                    if !displayTitle.isEmpty {
+                        Text(displayTitle)
                             .font(.headline)
                             .foregroundColor(.primary)
                             .lineLimit(1)
@@ -95,7 +96,7 @@ struct LinkPreviewCard: View {
                 .background(Color(nsColor: .controlBackgroundColor))
             }
             .onAppear {
-                if !isLoading, favicon == nil, pageTitle.isEmpty {
+                if !isLoading, favicon == nil, displayTitle.isEmpty {
                     loadContent(from: url)
                 }
             }
@@ -115,6 +116,7 @@ struct LinkPreviewCard: View {
         loadingTask = Task {
             await loadPageMetadata(from: url)
 
+            guard !Task.isCancelled else { return }
             await MainActor.run {
                 isLoading = false
             }
@@ -122,22 +124,23 @@ struct LinkPreviewCard: View {
     }
 
     private func loadPageMetadata(from url: URL) async {
+        guard !Task.isCancelled else { return }
+
         await MainActor.run {
-            pageTitle = url.host ?? ""
+            displayTitle = url.host ?? ""
         }
 
-        let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = 5.0
-        config.timeoutIntervalForResource = 10.0
-        let session = URLSession(configuration: config)
+        let session = URLSession.shared
 
-        async let faviconTask: () = loadFavicon(from: url, session: session)
-        async let titleTask: () = loadPageTitle(from: url, session: session)
+        await loadFavicon(from: url, session: session)
+        guard !Task.isCancelled else { return }
 
-        let _ = await (faviconTask, titleTask)
+        await loadPageTitle(from: url, session: session)
     }
 
     private func loadFavicon(from url: URL, session: URLSession) async {
+        guard !Task.isCancelled else { return }
+
         if let host = url.host {
             let scheme = url.scheme ?? "https"
             let base = URL(string: "\(scheme)://\(host)")!
@@ -147,12 +150,15 @@ struct LinkPreviewCard: View {
                 base.appendingPathComponent("favicon.png"),
             ]
             for u in fallbacks {
+                guard !Task.isCancelled else { return }
                 if let img = await fetchImage(u, session: session) {
                     await MainActor.run { favicon = img }
                     return
                 }
             }
         }
+
+        guard !Task.isCancelled else { return }
 
         do {
             var request = URLRequest(url: url)
@@ -161,10 +167,14 @@ struct LinkPreviewCard: View {
                 forHTTPHeaderField: "User-Agent",
             )
             request.cachePolicy = .returnCacheDataElseLoad
+            request.timeoutInterval = 5.0
+
             let (data, _) = try await session.data(for: request)
+            guard !Task.isCancelled else { return }
+
             if let html = String(data: data, encoding: .utf8),
-                let iconURL = parseFirstHTMLIconURL(html: html, baseURL: url),
-                let img = await fetchImage(iconURL, session: session)
+               let iconURL = parseFirstHTMLIconURL(html: html, baseURL: url),
+               let img = await fetchImage(iconURL, session: session)
             {
                 await MainActor.run { favicon = img }
                 return
@@ -200,13 +210,16 @@ struct LinkPreviewCard: View {
     }
 
     private func fetchImage(_ url: URL, session: URLSession) async -> NSImage? {
+        guard !Task.isCancelled else { return nil }
+
         // data:image/*;base64, ...
         if url.scheme == "data" {
             if let dataRange = url.absoluteString.range(of: ",") {
                 let b64 = String(url.absoluteString[dataRange.upperBound...])
                 if let data = Data(base64Encoded: b64),
-                    let img = NSImage(data: data)
+                   let img = NSImage(data: data)
                 {
+                    img.cacheMode = .bySize
                     return img
                 }
             }
@@ -223,21 +236,39 @@ struct LinkPreviewCard: View {
             forHTTPHeaderField: "User-Agent",
         )
         request.cachePolicy = .returnCacheDataElseLoad
+        request.timeoutInterval = 5.0
+
         do {
             let (data, response) = try await session.data(for: request)
+            guard !Task.isCancelled else { return nil }
+
             if let http = response as? HTTPURLResponse, http.statusCode >= 400 {
                 return nil
             }
             // macOS 对 ICO、PNG、JPEG 普遍支持；SVG 不一定支持，忽略 SVG
             if url.pathExtension.lowercased() == "svg" { return nil }
-            if let image = NSImage(data: data), image.isValid { return image }
+            if let image = NSImage(data: data), image.isValid {
+                image.cacheMode = .bySize
+                return image
+            }
         } catch {}
         return nil
     }
 
     private func loadPageTitle(from url: URL, session: URLSession) async {
+        guard !Task.isCancelled else { return }
+
         do {
-            let (data, _) = try await session.data(from: url)
+            var request = URLRequest(url: url)
+            request.timeoutInterval = 5.0
+            request.setValue(
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko)",
+                forHTTPHeaderField: "User-Agent",
+            )
+            request.cachePolicy = .returnCacheDataElseLoad
+
+            let (data, _) = try await session.data(for: request)
+            guard !Task.isCancelled else { return }
 
             if let html = String(data: data, encoding: .utf8) {
                 if let titleMatch = html.range(
@@ -247,16 +278,17 @@ struct LinkPreviewCard: View {
                     let titleHTML = String(html[titleMatch])
                     let title =
                         titleHTML
-                        .replacingOccurrences(
-                            of: "<[^>]+>",
-                            with: "",
-                            options: .regularExpression,
-                        )
-                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                            .replacingOccurrences(
+                                of: "<[^>]+>",
+                                with: "",
+                                options: .regularExpression,
+                            )
+                            .trimmingCharacters(in: .whitespacesAndNewlines)
 
                     if !title.isEmpty, title != url.host {
+                        guard !Task.isCancelled else { return }
                         await MainActor.run {
-                            pageTitle = title
+                            displayTitle = title
                         }
                     }
                 }
@@ -283,13 +315,24 @@ struct RichContentView: View {
     var model: PasteboardModel
 
     var body: some View {
-        Text(model.attributed())
-            .textSelection(.disabled)
-            .frame(
-                maxWidth: .infinity,
-                maxHeight: .infinity,
-                alignment: .topLeading,
-            )
+        if model.hasBgColor {
+            Text(model.attributed())
+                .textSelection(.disabled)
+                .frame(
+                    maxWidth: .infinity,
+                    maxHeight: .infinity,
+                    alignment: .topLeading,
+                )
+        } else {
+            Text(model.attributeString.string)
+                .foregroundStyle(.primary)
+                .textSelection(.disabled)
+                .frame(
+                    maxWidth: .infinity,
+                    maxHeight: .infinity,
+                    alignment: .topLeading,
+                )
+        }
     }
 }
 
@@ -332,6 +375,7 @@ struct ImageContentView: View {
     var model: PasteboardModel
     @State private var thumbnail: NSImage?
     @State private var isLoading = false
+    @State private var loadingTask: Task<Void, Never>?
 
     var body: some View {
         ZStack {
@@ -346,7 +390,7 @@ struct ImageContentView: View {
                     ProgressView()
                         .controlSize(.small)
                 } else {
-                    Image(systemName: "photo")
+                    Image(systemName: "photo.badge.arrow.down")
                         .resizable()
                         .foregroundStyle(.secondary)
                         .frame(width: 48, height: 48, alignment: .center)
@@ -360,16 +404,25 @@ struct ImageContentView: View {
         )
         .clipShape(Const.contentShape)
         .onAppear(perform: loadImage)
+        .onDisappear {
+            loadingTask?.cancel()
+            loadingTask = nil
+        }
     }
 
     private func loadImage() {
         guard thumbnail == nil else { return }
         isLoading = true
-        Task {
+
+        loadingTask?.cancel()
+        loadingTask = Task {
+            guard !Task.isCancelled else { return }
+
             let loadedImage = await Task.detached {
                 await model.thumbnail()
             }.value
 
+            guard !Task.isCancelled else { return }
             await MainActor.run {
                 thumbnail = loadedImage
                 isLoading = false
@@ -397,8 +450,8 @@ struct CheckerboardBackground: View {
             let rows = Int(ceil(size.height / squareSize))
             let cols = Int(ceil(size.width / squareSize))
 
-            for row in 0..<rows {
-                for col in 0..<cols {
+            for row in 0 ..< rows {
+                for col in 0 ..< cols {
                     let rect = CGRect(
                         x: CGFloat(col) * squareSize,
                         y: CGFloat(row) * squareSize,
