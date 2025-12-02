@@ -1,5 +1,5 @@
 //
-//  EarlierWebView.swift
+//  UIWebView.swift
 //  Clipboard
 //
 //  Created by crown on 2025/10/21.
@@ -8,7 +8,7 @@
 import SwiftUI
 import WebKit
 
-struct EarlierWebView: View {
+struct UIWebView: View {
     let url: URL
     @State private var isLoading = true
 

@@ -131,7 +131,7 @@ struct PreviewPopoverView: View {
                 if #available(macOS 26.0, *) {
                     WebContentView(url: model.url!)
                 } else {
-                    EarlierWebView(url: model.url!)
+                    UIWebView(url: model.url!)
                 }
             } else {
                 textPreview
