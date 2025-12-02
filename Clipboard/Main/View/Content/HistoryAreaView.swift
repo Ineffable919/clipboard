@@ -53,7 +53,7 @@ struct HistoryAreaView: View {
                     lastLoadTriggerIndex = -1
                     let changeType = pd.lastDataChangeType
                     if changeType == .searchFilter || changeType == .reset {
-                        reset()
+                        reset(proxy: proxy)
                     }
                 }
             }
@@ -100,8 +100,7 @@ struct HistoryAreaView: View {
     private func contentView(proxy _: ScrollViewProxy) -> some View {
         LazyHStack(alignment: .top, spacing: Const.cardSpace) {
             ForEach(Array(pd.dataList.enumerated()), id: \.element.id) {
-                index,
-                item in
+                index, item in
                 ClipCardView(
                     model: item,
                     isSelected: selectionState.selectedId == item.id,
@@ -144,8 +143,8 @@ struct HistoryAreaView: View {
         let now = ProcessInfo.processInfo.systemUptime
 
         if let lastId = selectionState.lastTapId,
-            lastId == item.id,
-            now - selectionState.lastTapTime <= Constants.doubleTapInterval
+           lastId == item.id,
+           now - selectionState.lastTapTime <= Constants.doubleTapInterval
         {
             handleDoubleTap(on: item)
             resetTapState()
@@ -220,8 +219,8 @@ struct HistoryAreaView: View {
             isDel = false
 
             if pd.dataList.count < 50,
-                pd.hasMoreData,
-                !pd.isLoadingPage
+               pd.hasMoreData,
+               !pd.isLoadingPage
             {
                 pd.loadNextPage()
             }
@@ -240,7 +239,7 @@ struct HistoryAreaView: View {
     private func scrollToSelectedId(proxy: ScrollViewProxy) {
         guard let id = selectionState.selectedId else { return }
         guard let first = pd.dataList.first?.id,
-            let last = pd.dataList.last?.id
+              let last = pd.dataList.last?.id
         else {
             return
         }
@@ -312,7 +311,7 @@ struct HistoryAreaView: View {
 
     private func flagsChangedEvent(_ event: NSEvent) -> NSEvent? {
         guard event.window == ClipMainWindowController.shared.window,
-            vm.focusView == .history
+              vm.focusView == .history
         else {
             return event
         }
@@ -323,10 +322,10 @@ struct HistoryAreaView: View {
     private func keyDownEvent(_ event: NSEvent) -> NSEvent? {
         if vm.focusView == .popover {
             if event.modifierFlags.contains(.command),
-                event.keyCode == UInt16(kVK_ANSI_C)
+               event.keyCode == UInt16(kVK_ANSI_C)
             {
                 if let window = event.window,
-                    let textView = window.firstResponder as? NSTextView
+                   let textView = window.firstResponder as? NSTextView
                 {
                     let selectedRange = textView.selectedRange()
                     if selectedRange.length > 0 {
@@ -358,7 +357,7 @@ struct HistoryAreaView: View {
         }
 
         if KeyCode.shouldTriggerSearch(for: event),
-            vm.focusView != .search
+           vm.focusView != .search
         {
             vm.focusView = .search
             return nil
@@ -461,7 +460,7 @@ struct HistoryAreaView: View {
 
     private func handleCopyCommand() {
         guard let id = selectionState.selectedId,
-            let item = pd.dataList.first(where: { $0.id == id })
+              let item = pd.dataList.first(where: { $0.id == id })
         else {
             NSSound.beep()
             return
@@ -511,7 +510,7 @@ struct HistoryAreaView: View {
     private func handleReturnKey(_ event: NSEvent) -> NSEvent? {
         guard vm.focusView == .history else { return event }
         guard let id = selectionState.selectedId,
-            let item = pd.dataList.first(where: { $0.id == id })
+              let item = pd.dataList.first(where: { $0.id == id })
         else {
             return event
         }
@@ -541,13 +540,22 @@ struct HistoryAreaView: View {
         showDeleteAlert()
     }
 
-    private func reset() {
+    private func reset(proxy: ScrollViewProxy) {
         if pd.dataList.isEmpty {
             selectionState.selectedId = nil
             showPreviewId = nil
             return
         }
-        selectionState.selectedId = pd.dataList.first?.id
+        let firstId = pd.dataList.first?.id
+        let needsScrolling = selectionState.selectedId != firstId
+        selectionState.selectedId = firstId
+        showPreviewId = nil
+
+        if !needsScrolling {
+            DispatchQueue.main.async {
+                proxy.scrollTo(firstId, anchor: .trailing)
+            }
+        }
     }
 
     private func showDeleteAlert() {
@@ -566,7 +574,7 @@ struct HistoryAreaView: View {
             }
 
             guard response == .alertFirstButtonReturn,
-                let id = selectionState.pendingDeleteId
+                  let id = selectionState.pendingDeleteId
             else {
                 return
             }
