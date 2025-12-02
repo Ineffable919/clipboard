@@ -55,7 +55,7 @@ private struct WebViewRepresentable: NSViewRepresentable {
 #Preview {
     let url = "https://www.apple.com.cn"
         .asCompleteURL()
-    EarlierWebView(
+    UIWebView(
         url: url!,
     )
     .frame(width: Const.maxPreviewSize, height: Const.maxPreviewHeight)
