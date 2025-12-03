@@ -46,7 +46,7 @@ struct PreviewPopoverView: View {
 
                 Text(model.type.string)
                     .font(.body)
-                    .padding(.horizontal, Const.space)
+                    .padding(.horizontal, Const.space8)
                     .padding(.vertical, 2)
                     .background(Color.accentColor.opacity(0.2))
                     .cornerRadius(Const.radius)
@@ -173,7 +173,7 @@ struct PreviewPopoverView: View {
                     Text(String(data: model.data, encoding: .utf8) ?? "")
                         .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(Const.space)
+                        .padding(Const.space8)
                 }
                 .scrollContentBackground(.hidden)
             }
@@ -218,7 +218,7 @@ struct PreviewPopoverView: View {
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(Const.space)
+                    .padding(Const.space8)
                 }
                 .scrollContentBackground(.hidden)
             }
@@ -253,7 +253,7 @@ struct PreviewPopoverView: View {
 
     @ViewBuilder
     private var filePreview: some View {
-        VStack(alignment: .leading, spacing: Const.space) {
+        VStack(alignment: .leading, spacing: Const.space8) {
             if let filePaths = String(data: model.data, encoding: .utf8) {
                 let paths = filePaths.split(separator: "\n")
                     .map {

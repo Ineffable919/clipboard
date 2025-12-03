@@ -9,6 +9,7 @@ import Combine
 import SwiftUI
 
 struct ClipTopBarView: View {
+    @Environment(\.colorScheme) private var colorScheme
     @Bindable private var vm = ClipboardViewModel.shard
     @FocusState private var focus: FocusField?
     @State private var isIconHovered: Bool = false
@@ -76,7 +77,7 @@ struct ClipTopBarView: View {
     private var searchField: some View {
         HStack(spacing: Const.space8) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: Const.iconHdSize, weight: .light))
+                .font(.system(size: Const.iconHdSize, weight: .regular))
                 .foregroundColor(.gray)
 
             TextField("搜索...", text: $vm.query)
@@ -88,17 +89,16 @@ struct ClipTopBarView: View {
                     vm.query = ""
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 16, weight: .medium))
+                        .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.gray)
                 }
                 .buttonStyle(.plain)
                 .contentShape(Rectangle())
             }
         }
-        .padding(4)
+        .padding(6)
         .frame(width: Const.topBarWidth)
         .background(.clear)
-        .contentShape(Rectangle())
         .overlay(
             RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
                 .stroke(
@@ -109,6 +109,7 @@ struct ClipTopBarView: View {
                 )
                 .padding(-1),
         )
+        .contentShape(Rectangle())
         .onTapGesture {
             focus = .search
         }
@@ -116,12 +117,12 @@ struct ClipTopBarView: View {
 
     private var searchIcon: some View {
         Image(systemName: "magnifyingglass")
-            .font(.system(size: Const.iconHdSize, weight: .light))
+            .font(.system(size: Const.iconHdSize, weight: .regular))
             .padding(4)
             .background(
                 RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
                     .fill(
-                        isIconHovered ? Const.hoverColor : Color.clear,
+                        isIconHovered ? (colorScheme == .dark ? Const.hoverDarkColor : Const.hoverLightColor) : Color.clear,
                     ),
             )
             .contentShape(Rectangle())
@@ -206,7 +207,7 @@ struct ClipTopBarView: View {
                 RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
                     .fill(
                         isPlusHovered
-                            ? Const.hoverColor : Color.clear,
+                            ? (colorScheme == .dark ? Const.hoverDarkColor : Const.hoverLightColor) : Color.clear,
                     ),
             )
             .onHover { hovering in

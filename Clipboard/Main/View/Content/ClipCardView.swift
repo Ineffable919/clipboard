@@ -101,7 +101,7 @@ struct ClipCardView: View {
         {
             return 0.0
         }
-        return Const.space
+        return Const.space8
     }
 
     private var selectionColor: Color {

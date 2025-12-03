@@ -27,6 +27,7 @@ struct ChipView: View {
         self.chip = chip
     }
 
+    @Environment(\.colorScheme) private var colorScheme
     @State private var isTypeHovered: Bool = false
     @State private var isDropTargeted: Bool = false
     @State private var syncingFocus = false
@@ -157,9 +158,9 @@ struct ChipView: View {
     @ViewBuilder
     private func overlayColor() -> some View {
         if isSelected {
-            Const.chooseColor
+            colorScheme == .dark ? Const.chooseDarkColor : Const.chooseLightColor
         } else if isDropTargeted || isTypeHovered {
-            Const.hoverColor
+            colorScheme == .dark ? Const.chooseDarkColor : Const.chooseLightColor
         } else {
             Color.clear
         }
