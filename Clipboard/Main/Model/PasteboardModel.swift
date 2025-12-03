@@ -175,13 +175,13 @@ final class PasteboardModel: Identifiable, Codable, Hashable {
         if type.isText() {
             att =
                 NSAttributedString(with: content, type: type)
-                ?? NSAttributedString()
+                    ?? NSAttributedString()
             guard !att.string.allSatisfy(\.isWhitespace) else {
                 return nil
             }
             showAtt =
                 att.length > 250
-                ? att.attributedSubstring(from: NSMakeRange(0, 250)) : att
+                    ? att.attributedSubstring(from: NSMakeRange(0, 250)) : att
             showData = showAtt?.toData(with: type)
         }
 
@@ -302,6 +302,7 @@ extension PasteboardModel: Equatable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(uniqueId)
         hasher.combine(id)
+        hasher.combine(group)
     }
 }
 
@@ -332,11 +333,11 @@ extension PasteboardModel {
             return (fallbackBG, .secondary, false)
         }
         if attributeString.length > 0,
-            let bg = attributeString.attribute(
-                .backgroundColor,
-                at: 0,
-                effectiveRange: nil,
-            ) as? NSColor
+           let bg = attributeString.attribute(
+               .backgroundColor,
+               at: 0,
+               effectiveRange: nil,
+           ) as? NSColor
         {
             return (Color(bg), getRTFColor(baseNS: bg), true)
         }

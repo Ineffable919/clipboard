@@ -11,7 +11,7 @@ struct CardHeadView: View {
     var model: PasteboardModel
 
     var body: some View {
-        ZStack(alignment: .trailing) {
+        HStack(spacing: 0) {
             let isSystem = model.group == -1
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
@@ -41,7 +41,7 @@ struct CardHeadView: View {
             }
         }
         .frame(height: Const.hdSize)
-        .background(Color(nsColor: PasteDataStore.main.colorWith(model)))
+        .background(PasteDataStore.main.colorWith(model))
         .clipShape(Const.headShape)
     }
 }

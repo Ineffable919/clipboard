@@ -106,7 +106,7 @@ struct HelpCenterButton: View {
         Button(action: {
             if let url = URL(
                 string:
-                "https://github.com/Ineffable919/clipboard",
+                "https://github.com/Ineffable919/clipboard/blob/master/README.md",
             ) {
                 NSWorkspace.shared.open(url)
             }
@@ -117,7 +117,7 @@ struct HelpCenterButton: View {
                     .font(.body)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 8)
+            .padding(.horizontal, Const.space8)
             .padding(.vertical, 6)
         }
         .buttonStyle(.plain)

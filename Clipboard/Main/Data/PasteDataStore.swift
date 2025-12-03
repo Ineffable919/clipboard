@@ -389,15 +389,15 @@ extension PasteDataStore {
         }
     }
 
-    func colorWith(_ model: PasteboardModel) -> NSColor {
+    func colorWith(_ model: PasteboardModel) -> Color {
         if let chip = model.getGroupChip() {
-            return NSColor(chip.color)
+            return chip.color
         }
 
         if let colorStr = colorDict[model.appName] {
-            return NSColor(hex: colorStr)
+            return Color(nsColor: NSColor(hex: colorStr)).opacity(0.85)
         }
-        return NSColor(hex: "#1765D9")
+        return Color(nsColor: NSColor(hex: "#1765D9")).opacity(0.85)
     }
 
     private func getAppThemeColor(for _: String, appIcon: NSImage?) -> String {

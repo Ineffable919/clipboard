@@ -55,7 +55,8 @@ struct ChipView: View {
                 }
 
                 Button {
-                    vm.removeChip(chip)
+                    vm.isShowDel = true
+                    showDelAlert(chip)
                 } label: {
                     Label("删除", systemImage: "trash")
                 }
@@ -160,7 +161,7 @@ struct ChipView: View {
         if isSelected {
             colorScheme == .dark ? Const.chooseDarkColor : Const.chooseLightColor
         } else if isDropTargeted || isTypeHovered {
-            colorScheme == .dark ? Const.chooseDarkColor : Const.chooseLightColor
+            colorScheme == .dark ? Const.hoverDarkColor : Const.hoverLightColor
         } else {
             Color.clear
         }
@@ -182,6 +183,41 @@ struct ChipView: View {
             )
         } catch {
             log.error("更新卡片 group 失败: \(error)")
+        }
+    }
+
+    private func showDelAlert(_ chip: CategoryChip) {
+        let alert = NSAlert()
+        alert.messageText = "删除『\(chip.name)』？"
+        alert.informativeText = "删除『\(chip.name)』及其所属内容将无法恢复。"
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "确定")
+        alert.addButton(withTitle: "取消")
+
+        let handleResponse: (NSApplication.ModalResponse) -> Void = {
+            [self] response in
+            defer {
+                self.vm.isShowDel = false
+            }
+
+            guard response == .alertFirstButtonReturn
+            else {
+                return
+            }
+
+            vm.removeChip(chip)
+        }
+
+        if #available(macOS 26.0, *) {
+            if let window = NSApp.keyWindow {
+                alert.beginSheetModal(
+                    for: window,
+                    completionHandler: handleResponse,
+                )
+            }
+        } else {
+            let response = alert.runModal()
+            handleResponse(response)
         }
     }
 }

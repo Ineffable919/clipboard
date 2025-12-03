@@ -307,6 +307,7 @@ struct HistoryAreaView: View {
     private func cleanup() {
         isDel = false
         isQuickPastePressed = false
+        showPreviewId = nil
     }
 
     private func flagsChangedEvent(_ event: NSEvent) -> NSEvent? {

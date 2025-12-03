@@ -27,8 +27,8 @@ class Const {
     static let cardBottomPadding: CGFloat = 16.0
     static let iconHdSize: CGFloat = 15.0
 
-    static let hoverDarkColor: Color = .init(NSColor(hex: "#2e2e39")).opacity(0.6)
-    static let hoverLightColor: Color = .init(NSColor(hex: "#e8e8e8"))
+    static let hoverDarkColor: Color = .init(NSColor(hex: "#2e2e39"))
+    static let hoverLightColor: Color = .init(NSColor(hex: "#e8e8e8")).opacity(0.6)
 
     static let chooseDarkColor: Color = .init(NSColor(hex: "#2e2e39"))
     static let chooseLightColor: Color = .init(NSColor(hex: "#e8e8e8"))

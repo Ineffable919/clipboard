@@ -42,7 +42,7 @@ enum KeyboardShortcuts {
         """
         alert.alertStyle = .informational
         alert.addButton(withTitle: "设置")
-        alert.addButton(withTitle: "稍后设置，复制到剪切板")
+        alert.addButton(withTitle: "稍后设置，复制到剪贴板")
 
         let response = alert.runModal()
         if response == .alertFirstButtonReturn {
