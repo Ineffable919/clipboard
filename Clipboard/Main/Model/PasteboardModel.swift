@@ -472,6 +472,22 @@ extension PasteboardModel {
     }
 }
 
+struct ClipDragToken: Codable, Sendable, Identifiable, Transferable {
+    var id: Int64?
+
+    static var transferRepresentation: some TransferRepresentation {
+        DataRepresentation(
+            contentType: .data,
+            exporting: { item in
+                try JSONEncoder().encode(item)
+            },
+            importing: { data in
+                try JSONDecoder().decode(ClipDragToken.self, from: data)
+            }
+        )
+    }
+}
+
 enum PasteModelType {
     case none
     case image
