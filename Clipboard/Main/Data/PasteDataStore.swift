@@ -6,7 +6,6 @@
 //
 
 import AppKit
-import Observation
 import SQLite
 import SwiftUI
 

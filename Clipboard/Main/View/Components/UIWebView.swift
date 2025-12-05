@@ -21,7 +21,7 @@ struct UIWebView: View {
             }
         }
         .frame(
-            width: Const.maxPreviewSize - 36,
+            width: Const.maxPreviewWidth - 36,
             height: Const.maxPreviewHeight,
         )
         .onAppear {
@@ -58,5 +58,5 @@ private struct WebViewRepresentable: NSViewRepresentable {
     UIWebView(
         url: url!,
     )
-    .frame(width: Const.maxPreviewSize, height: Const.maxPreviewHeight)
+    .frame(width: Const.maxPreviewWidth, height: Const.maxPreviewHeight)
 }

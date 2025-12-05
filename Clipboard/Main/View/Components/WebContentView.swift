@@ -21,7 +21,7 @@ struct WebContentView: View {
                 .opacity(webPage.isLoading ? 1 : 0)
         }
         .frame(
-            width: Const.maxPreviewSize - 32,
+            width: Const.maxPreviewWidth - 32,
             height: Const.maxPreviewHeight,
         )
         .onAppear {

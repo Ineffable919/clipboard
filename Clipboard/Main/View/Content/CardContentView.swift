@@ -325,7 +325,6 @@ struct RichContentView: View {
                 )
         } else {
             Text(model.attributeString.string)
-                .foregroundStyle(.primary)
                 .textSelection(.disabled)
                 .frame(
                     maxWidth: .infinity,

@@ -30,7 +30,7 @@ struct PreviewPopoverView: View {
     }
 
     private var contentView: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: Const.space12) {
             HStack {
                 if let appIcon {
                     Image(nsImage: appIcon)
@@ -40,16 +40,11 @@ struct PreviewPopoverView: View {
 
                 Text(model.appName)
                     .font(.body)
-                    .foregroundColor(.primary)
 
                 Spacer()
 
                 Text(model.type.string)
                     .font(.body)
-                    .padding(.horizontal, Const.space8)
-                    .padding(.vertical, 2)
-                    .background(Color.accentColor.opacity(0.2))
-                    .cornerRadius(Const.radius)
             }
 
             previewContent
@@ -60,10 +55,13 @@ struct PreviewPopoverView: View {
                 Text(model.introString())
                     .font(.body)
                     .foregroundColor(.secondary)
+                    .lineLimit(2)
                     .truncationMode(.head)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.bottom,Const.space4)
                     .frame(
-                        maxWidth: 500,
-                        alignment: .bottomLeading,
+                        maxWidth: Const.maxPreviewWidth - 128,
+                        alignment: .topLeading
                     )
 
                 Spacer()
@@ -89,10 +87,10 @@ struct PreviewPopoverView: View {
         }
         .padding(12)
         .frame(
-            minWidth: 400,
-            maxWidth: 800,
-            minHeight: 300,
-            maxHeight: 600,
+            minWidth: Const.minPreviewWidth,
+            maxWidth: Const.maxPreviewWidth,
+            minHeight: Const.minPreviewHeight,
+            maxHeight: Const.maxPreviewHeight,
         )
     }
 
@@ -157,15 +155,11 @@ struct PreviewPopoverView: View {
     @ViewBuilder
     private var textPreview: some View {
         if model.length > Const.maxTextSize {
-            Text("文本超过最大展示限制\(Const.maxTextSize)字符")
-                .font(.callout)
-                .foregroundStyle(.secondary)
+            LargeTextView(model: model)
                 .frame(
-                    width: PreviewPopoverView.defaultWidth,
-                    height: PreviewPopoverView.defaultHeight,
-                    alignment: .center,
+                    width: Const.maxPreviewWidth - 32,
+                    height: Const.maxContentHeight,
                 )
-                .background(Color(nsColor: .controlBackgroundColor))
         } else {
             ZStack {
                 Color(nsColor: .controlBackgroundColor)
@@ -178,7 +172,7 @@ struct PreviewPopoverView: View {
                 .scrollContentBackground(.hidden)
             }
             .frame(
-                maxWidth: Const.maxPreviewSize,
+                maxWidth: Const.maxPreviewWidth,
                 alignment: .topLeading,
             )
         }
@@ -187,15 +181,11 @@ struct PreviewPopoverView: View {
     @ViewBuilder
     private var richTextPreview: some View {
         if model.length > Const.maxRichTextSize {
-            Text("文本超过最大展示限制\(Const.maxRichTextSize)字符")
-                .font(.callout)
-                .foregroundStyle(.secondary)
+            LargeTextView(model: model)
                 .frame(
-                    width: PreviewPopoverView.defaultWidth,
-                    height: PreviewPopoverView.defaultHeight,
-                    alignment: .center,
+                    width: Const.maxPreviewWidth - 32,
+                    height: Const.maxContentHeight,
                 )
-                .background(Color(nsColor: .controlBackgroundColor))
         } else {
             ZStack {
                 model.backgroundColor
@@ -223,7 +213,7 @@ struct PreviewPopoverView: View {
                 .scrollContentBackground(.hidden)
             }
             .frame(
-                maxWidth: Const.maxPreviewSize,
+                maxWidth: Const.maxPreviewWidth,
                 alignment: .topLeading,
             )
         }
@@ -238,8 +228,8 @@ struct PreviewPopoverView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(
-                        maxWidth: Const.maxPreviewSize,
-                        maxHeight: Const.maxPreviewSize,
+                        maxWidth: Const.maxPreviewWidth,
+                        maxHeight: Const.maxPreviewWidth,
                     )
             }
         } else {
@@ -265,8 +255,8 @@ struct PreviewPopoverView: View {
                 if paths.count == 1 {
                     QuickLookPreview(
                         url: URL(fileURLWithPath: paths.first!),
-                        maxWidth: Const.maxPreviewSize - 32,
-                        maxHeight: Const.maxPreviewHeight,
+                        maxWidth: Const.maxPreviewWidth - 32,
+                        maxHeight: Const.maxContentHeight,
                     )
                 } else {
                     Image(systemName: "doc.text")
@@ -277,7 +267,7 @@ struct PreviewPopoverView: View {
                 }
             }
         }
-        .frame(width: Const.maxPreviewSize - 32, height: Const.maxPreviewHeight)
+        .frame(width: Const.maxPreviewWidth - 32, height: Const.maxContentHeight)
     }
 
     private var appIcon: NSImage? {
@@ -366,7 +356,7 @@ class InterceptingHostingView<Content: View>: NSHostingView<Content> {
     override func hitTest(_ point: NSPoint) -> NSView? {
         let hitView = super.hitTest(point)
         if hitView != nil {
-            onInteraction()
+            //onInteraction()
         }
         return hitView
     }

@@ -122,7 +122,7 @@ struct HistoryAreaView: View {
             }
         }
         .padding(.horizontal, Const.cardSpace)
-        .padding(.vertical, 4)
+        .padding(.vertical, Const.space4)
     }
 
     private func handleDoubleTap(on item: PasteboardModel) {
@@ -322,23 +322,6 @@ struct HistoryAreaView: View {
     }
 
     private func keyDownEvent(_ event: NSEvent) -> NSEvent? {
-        if vm.focusView == .popover {
-            if event.modifierFlags.contains(.command),
-               event.keyCode == UInt16(kVK_ANSI_C)
-            {
-                if let window = event.window,
-                   let textView = window.firstResponder as? NSTextView
-                {
-                    let selectedRange = textView.selectedRange()
-                    if selectedRange.length > 0 {
-                        textView.copy(nil)
-                        return nil
-                    }
-                }
-            }
-            return event
-        }
-
         guard event.window == ClipMainWindowController.shared.window
         else {
             return event
