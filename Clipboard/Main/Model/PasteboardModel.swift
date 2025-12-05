@@ -470,6 +470,12 @@ extension PasteboardModel {
         }
         return UTType.data.identifier
     }
+    
+    func createToken() -> ClipDragToken {
+        
+        return ClipDragToken(id: id)
+    }
+    
 }
 
 struct ClipDragToken: Codable, Sendable, Identifiable, Transferable {

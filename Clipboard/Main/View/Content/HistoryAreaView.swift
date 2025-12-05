@@ -44,6 +44,7 @@ struct HistoryAreaView: View {
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: false) {
                     contentView(proxy: proxy)
+                        .scrollTargetLayout()
                 }
                 .onChange(of: selectionState.selectedId, initial: false) {
                     scrollToSelectedId(proxy: proxy)

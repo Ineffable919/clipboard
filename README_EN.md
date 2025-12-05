@@ -1,18 +1,16 @@
-<div align="center">
-
-English | [简体中文](README.md)
-
-<img src="Clipboard/Resource/Assets.xcassets/AppIcon.appiconset/icon-256.png" width="96">
-
+<p align="center">
+    <div align="center"><img src=Clipboard/Resource/Assets.xcassets/AppIcon.appiconset/icon-256.png width=135  /></div>
+    <h2 align="center">Clipboard</h2>
+    <div align="center">A macOS clipboard manager that helps you manage and use your clipboard history more efficiently.
 </div>
+    <div align="center"><strong>English</strong> | <a href="https://github.com/Ineffable919/clipboard/blob/master/README.md">中文</a></div>
+</p>
 
-<img src="Clipboard/Resource/temp.png">
+<img src="temp.png">
 
-A macOS clipboard manager that helps you manage and use your clipboard history more efficiently.
+## Download
 
-## Install
-
-Download the latest version from the [releases](https://github.com/Ineffable919/clipboard/releases/latest) page
+Download the latest version [releases](https://github.com/Ineffable919/clipboard/releases/latest)
 
 
 ## Features
@@ -56,7 +54,7 @@ Download the latest version from the [releases](https://github.com/Ineffable919/
 - `↩`: Paste selected item
 - `Shift + ⏎`: Paste as plain text
 - `⌘ + C`: Copy selected item to clipboard
-- `⌘ + Delete`: Delete selected item
+- `Delete`: Delete selected item
 
 ## FAQ
 

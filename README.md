@@ -1,14 +1,12 @@
-<div align="center">
-
-[English](README_EN.md) | 简体中文
-
-<img src="Clipboard/Resource/Assets.xcassets/AppIcon.appiconset/icon-256.png" width="96">
-
+<p align="center">
+    <div align="center"><img src=Clipboard/Resource/Assets.xcassets/AppIcon.appiconset/icon-256.png width=135  /></div>
+    <h2 align="center">Clipboard</h2>
+    <div align="center">一款 macOS 剪贴板管理工具，帮助您更高效地管理和使用剪贴板历史记录。
 </div>
+    <div align="center"><a href="https://github.com/Ineffable919/clipboard/blob/master/README_EN.md">English</a> | <strong>中文</strong></div>
+</p>
 
 <img src="temp.png">
-
-一款 macOS 剪贴板管理工具，帮助您更高效地管理和使用剪贴板历史记录。
 
 ## 下载
 
@@ -55,7 +53,7 @@
 - `↩`：粘贴选中的项目
 - `Shift + ⏎`：粘贴为纯文本
 - `⌘ + C`：复制选中的项目到剪贴板
-- `⌘ + Delete`：删除选中的项目
+- `Delete`：删除选中的项目
 
 ## FAQ
 
