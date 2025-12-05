@@ -16,11 +16,12 @@ class Const {
     static let cardSpace: CGFloat = 20.0
     static let bottomSize: CGFloat = 40.0
 
-    static let radius: CGFloat = if #available(macOS 26.0, *) {
-        14.0
-    } else {
-        8.0
-    }
+    static let radius: CGFloat =
+        if #available(macOS 26.0, *) {
+            14.0
+        } else {
+            8.0
+        }
 
     static let topBarHeight: CGFloat = 52.0
     static let topBarWidth: CGFloat = 280.0
@@ -28,10 +29,12 @@ class Const {
     static let iconHdSize: CGFloat = 15.0
 
     static let hoverDarkColor: Color = .init(NSColor(hex: "#2e2e39"))
-    static let hoverLightColor: Color = .init(NSColor(hex: "#e8e8e8")).opacity(0.6)
+    static let hoverLightColorLiquid: Color = .init(NSColor(hex: "#E1E4E7")).opacity(0.6)
+    static let hoverLightColorFrosted: Color = .white.opacity(0.6)
 
     static let chooseDarkColor: Color = .init(NSColor(hex: "#2e2e39"))
-    static let chooseLightColor: Color = .init(NSColor(hex: "#e8e8e8"))
+    static let chooseLightColorLiquid: Color = .init(NSColor(hex: "#E1E4E7"))
+    static let chooseLightColorFrosted: Color = .white.opacity(0.8)
 
     static let contentShape = UnevenRoundedRectangle(
         topLeadingRadius: 0,

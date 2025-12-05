@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 enum PrefKey: String {
     /// 开机自启
@@ -48,12 +49,16 @@ enum PrefKey: String {
     case globalHotKeys
     /// 粘贴时去掉末尾换行符
     case removeTailingNewline
+    /// 背景类型(仅macOS 26+)
+    case backgroundType
+    /// 玻璃材质强度
+    case glassMaterial
 }
 
 enum AppearanceMode: Int, CaseIterable {
-    case system = 0 // 跟随系统
-    case light = 1 // 浅色
-    case dark = 2 // 深色
+    case system = 0
+    case light = 1
+    case dark = 2
 
     var title: String {
         switch self {
@@ -114,6 +119,38 @@ enum HistoryTimeUnit: Equatable {
             "1年"
         case .forever:
             "永久"
+        }
+    }
+}
+
+/// 背景类型(仅macOS 26+)
+enum BackgroundType: Int, CaseIterable {
+    case liquid = 0
+    case frosted = 1
+
+    var title: String {
+        switch self {
+        case .liquid: "液态玻璃"
+        case .frosted: "毛玻璃"
+        }
+    }
+}
+
+/// 玻璃材质强度
+enum GlassMaterial: Int, CaseIterable {
+    case ultraThin = 0
+    case thin = 1
+    case regular = 2
+    case thick = 3
+    case ultraThick = 4
+
+    var material: Material {
+        switch self {
+        case .ultraThin: .ultraThinMaterial
+        case .thin: .thinMaterial
+        case .regular: .regularMaterial
+        case .thick: .thickMaterial
+        case .ultraThick: .ultraThickMaterial
         }
     }
 }

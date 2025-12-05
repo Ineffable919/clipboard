@@ -159,6 +159,7 @@ struct ClipCardView: View {
     private func pasteAsPlainText() {
         vm.pasteAction(item: model, isAttribute: false)
     }
+
     private func copyToClipboard() { vm.copyAction(item: model) }
     private func deleteItem() { onRequestDelete?() }
     private func togglePreview() { showPreview = !showPreview }
@@ -171,7 +172,7 @@ struct ClipCardView: View {
             pasteboardType: PasteboardType.string,
             data: data!,
             showData: Data(),
-            timestamp: 1728878384,
+            timestamp: 1_728_878_384,
             appPath: "/Applications/WeChat.app",
             appName: "微信",
             searchText: "",

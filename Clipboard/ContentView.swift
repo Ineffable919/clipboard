@@ -13,6 +13,19 @@ struct ContentView: View {
     @FocusState private var focused: Bool
     @State private var pd = PasteDataStore.main
 
+    @AppStorage(PrefKey.backgroundType.rawValue) private var backgroundTypeRaw:
+        Int = 0
+    @AppStorage(PrefKey.glassMaterial.rawValue) private var glassMaterialRaw:
+        Int = 2
+
+    private var backgroundType: BackgroundType {
+        .init(rawValue: backgroundTypeRaw) ?? .liquid
+    }
+
+    private var glassMaterial: GlassMaterial {
+        .init(rawValue: glassMaterialRaw) ?? .regular
+    }
+
     @ViewBuilder
     private func contentStack() -> some View {
         VStack {
@@ -29,11 +42,16 @@ struct ContentView: View {
         Group {
             if #available(macOS 26.0, *) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: Const.radius)
-                        .fill(Color.clear)
-                        .glassEffect(
-                            in: RoundedRectangle(cornerRadius: Const.radius)
-                        )
+                    if backgroundType == .liquid {
+                        RoundedRectangle(cornerRadius: Const.radius)
+                            .fill(Color.clear)
+                            .glassEffect(
+                                in: RoundedRectangle(cornerRadius: Const.radius)
+                            )
+                    } else {
+                        RoundedRectangle(cornerRadius: Const.radius)
+                            .fill(glassMaterial.material)
+                    }
                     contentStack()
                 }
             } else {

@@ -45,12 +45,8 @@ struct GeneralSettingView: View {
                         title: "音效",
                         isOn: $soundEnabled,
                     )
-
-                    Divider()
-
-                    AppearanceSettingsRow()
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, Const.space16)
                 .background(
                     RoundedRectangle(cornerRadius: Const.radius)
                         .fill(
@@ -90,7 +86,7 @@ struct GeneralSettingView: View {
                         title: "粘贴时去掉末尾的换行符"
                     )
                 }
-                .padding(8)
+                .padding(Const.space8)
                 .background(
                     RoundedRectangle(cornerRadius: Const.radius)
                         .fill(
@@ -110,7 +106,7 @@ struct GeneralSettingView: View {
                         .help("每天仅删除一次")
                 }
 
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: Const.space8) {
                     HistoryTimeSlider(
                         selectedTimeUnit: $selectedHistoryTimeUnit,
                     )
@@ -141,7 +137,7 @@ struct GeneralSettingView: View {
 
                 Spacer(minLength: 20)
             }
-            .padding(24)
+            .padding(Const.space24)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -178,7 +174,7 @@ struct PasteTargetModeRow: View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: isSelected ? "record.circle.fill" : "circle")
                 .foregroundColor(isSelected ? .accentColor : .secondary)
-                .font(.system(size: 16))
+                .font(.system(size: Const.space16))
                 .onTapGesture {
                     onSelect()
                 }
@@ -215,7 +211,7 @@ struct ToggleRow: View {
         HStack(alignment: .center, spacing: 12) {
             Image(systemName: isEnabled ? "checkmark.circle.fill" : "circle")
                 .foregroundColor(isEnabled ? .accentColor : .secondary)
-                .font(.system(size: 16))
+                .font(.system(size: Const.space16))
                 .onTapGesture {
                     isEnabled.toggle()
                 }
@@ -229,66 +225,6 @@ struct ToggleRow: View {
         .contentShape(Rectangle())
         .onTapGesture {
             isEnabled.toggle()
-        }
-    }
-}
-
-// MARK: - 外观设置行
-
-struct AppearanceSettingsRow: View {
-    @State private var selectedAppearance: AppearanceMode =
-        .init(
-            rawValue: PasteUserDefaults.appearance,
-        ) ?? .system
-
-    private let options: [(mode: AppearanceMode, icon: String)] = [
-        (.system, "circle.lefthalf.filled.righthalf.striped.horizontal"),
-        (.light, "sun.max"),
-        (.dark, "moon"),
-    ]
-
-    var body: some View {
-        HStack {
-            Text("外观")
-                .font(.body)
-            Spacer()
-            Picker("", selection: $selectedAppearance) {
-                ForEach(options, id: \.mode) { option in
-                    HStack {
-                        Image(systemName: option.icon)
-                        Text(option.mode.title)
-                    }
-                    .tag(option.mode)
-                }
-            }
-            .pickerStyle(.menu)
-            .buttonStyle(.borderless)
-            .onChange(of: selectedAppearance) { _, newValue in
-                PasteUserDefaults.appearance = newValue.rawValue
-                applyAppearance(newValue)
-            }
-        }
-        .padding(.vertical, 8)
-        .onAppear {
-            applyAppearance(selectedAppearance)
-        }
-    }
-
-    private func applyAppearance(_ mode: AppearanceMode) {
-        DispatchQueue.main.async {
-            let targetAppearance: NSAppearance? =
-                switch mode {
-                case .system:
-                    nil
-                case .light:
-                    NSAppearance(named: .aqua)
-                case .dark:
-                    NSAppearance(named: .darkAqua)
-                }
-
-            if NSApp.appearance != targetAppearance {
-                NSApp.appearance = targetAppearance
-            }
         }
     }
 }
@@ -321,7 +257,7 @@ struct ThinSlider: View {
 
                 Capsule()
                     .fill(Color.white)
-                    .frame(width: 8, height: 20)
+                    .frame(width: Const.space8, height: 20)
                     .shadow(
                         color: Color.black.opacity(0.2),
                         radius: 2,
@@ -355,9 +291,9 @@ struct ThinSlider: View {
                             },
                     )
             }
-            .frame(height: 24)
+            .frame(height: Const.space24)
         }
-        .frame(height: 24)
+        .frame(height: Const.space24)
     }
 
     private var normalizedValue: Double {
@@ -379,7 +315,7 @@ struct HistoryTimeSlider: View {
     // 区间3 (3.0-4.0): 1年-永久 (2个细分)
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: Const.space8) {
             ZStack {
                 if !isEditing {
                     GeometryReader { geometry in
@@ -412,7 +348,7 @@ struct HistoryTimeSlider: View {
                         .transition(.opacity)
                 }
             }
-            .frame(height: 16)
+            .frame(height: Const.space16)
             .animation(.easeInOut(duration: 0.2), value: isEditing)
 
             ZStack {
@@ -435,7 +371,7 @@ struct HistoryTimeSlider: View {
                         }
                     }
                 }
-                .frame(height: 24)
+                .frame(height: Const.space24)
                 .allowsHitTesting(false)
 
                 // if #available(macOS 26, *) {

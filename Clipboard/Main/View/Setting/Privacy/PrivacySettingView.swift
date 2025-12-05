@@ -31,7 +31,7 @@ struct PrivacySettingView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             ScrollView {
-                VStack(spacing: 16) {
+                VStack(spacing: Const.space16) {
                     VStack(spacing: 0) {
                         PrivacyToggleRow(
                             title: "允许在屏幕共享中显示",
@@ -70,7 +70,7 @@ struct PrivacySettingView: View {
                             onRefresh: refreshPermissionStatus,
                         )
                     }
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, Const.space16)
                     .background(
                         RoundedRectangle(cornerRadius: Const.radius)
                             .fill(
@@ -84,7 +84,7 @@ struct PrivacySettingView: View {
                             .stroke(Color.gray.opacity(0.2), lineWidth: 1),
                     )
 
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: Const.space4) {
                         Text("忽略应用程序")
                             .font(.body)
                         Text("不要保存从以下应用程序复制的内容。")
@@ -143,7 +143,7 @@ struct PrivacySettingView: View {
 
                             Spacer()
                         }
-                        .padding(4)
+                        .padding(Const.space4)
                         .background(
                             Const.contentShape
                                 .fill(
@@ -158,7 +158,7 @@ struct PrivacySettingView: View {
                         )
                         .clipShape(Const.contentShape)
                     }
-                    .padding(.horizontal, 4)
+                    .padding(.horizontal, Const.space4)
                 }
                 .padding(24)
             }
@@ -269,8 +269,8 @@ struct PrivacyToggleRow: View {
     @Binding var isOn: Bool
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
+        HStack(alignment: .top, spacing: Const.space12) {
+            VStack(alignment: .leading, spacing: Const.space4) {
                 Text(title)
                     .font(.callout)
                 Text(subtitle)
@@ -284,7 +284,7 @@ struct PrivacyToggleRow: View {
                 .controlSize(.mini)
                 .labelsHidden()
         }
-        .padding(.vertical, 12)
+        .padding(.vertical, Const.space12)
     }
 }
 
@@ -368,8 +368,8 @@ struct AccessibilityPermissionRow: View {
     let onRefresh: () -> Void
 
     var body: some View {
-        HStack(alignment: .center, spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
+        HStack(alignment: .center, spacing: Const.space12) {
+            VStack(alignment: .leading, spacing: Const.space4) {
                 Text("辅助功能权限")
                     .font(.callout)
                 Text(
@@ -397,7 +397,7 @@ struct AccessibilityPermissionRow: View {
                 }
             }
         }
-        .padding(.vertical, 12)
+        .padding(.vertical, Const.space12)
     }
 }
 

@@ -28,6 +28,8 @@ struct ChipView: View {
     }
 
     @Environment(\.colorScheme) private var colorScheme
+    @AppStorage(PrefKey.backgroundType.rawValue)
+    private var backgroundTypeRaw: Int = 0
     @State private var isTypeHovered: Bool = false
     @State private var isDropTargeted: Bool = false
     @State private var syncingFocus = false
@@ -158,10 +160,15 @@ struct ChipView: View {
 
     @ViewBuilder
     private func overlayColor() -> some View {
+        let backgroundType = BackgroundType(rawValue: backgroundTypeRaw) ?? .liquid
         if isSelected {
-            colorScheme == .dark ? Const.chooseDarkColor : Const.chooseLightColor
+            colorScheme == .dark
+                ? Const.chooseDarkColor
+                : (backgroundType == .liquid ? Const.chooseLightColorLiquid : Const.chooseLightColorFrosted)
         } else if isDropTargeted || isTypeHovered {
-            colorScheme == .dark ? Const.hoverDarkColor : Const.hoverLightColor
+            colorScheme == .dark
+                ? Const.hoverDarkColor
+                : (backgroundType == .liquid ? Const.hoverLightColorLiquid : Const.hoverLightColorFrosted)
         } else {
             Color.clear
         }

@@ -10,6 +10,7 @@ import SwiftUI
 /// 设置页面导航选项
 enum SettingPage: String, CaseIterable, Identifiable {
     case general = "通用"
+    case appearance = "外观"
     case privacy = "隐私"
     case keyboard = "快捷键"
     case about = "关于"
@@ -19,6 +20,7 @@ enum SettingPage: String, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .general: "gear"
+        case .appearance: "paintpalette"
         case .privacy: "hand.raised"
         case .keyboard: "command"
         case .about: "info.circle"
@@ -46,7 +48,7 @@ struct SettingView: View {
                 Spacer()
 
                 HelpCenterButton()
-                    .padding(.bottom, 12)
+                    .padding(.bottom, Const.space12)
                     .padding(.horizontal, 8)
             }
             .padding(.vertical, 8)
@@ -57,6 +59,8 @@ struct SettingView: View {
                     switch selectedPage {
                     case .general:
                         GeneralSettingView()
+                    case .appearance:
+                        AppearanceSettingsView()
                     case .privacy:
                         PrivacySettingView()
                     case .keyboard:

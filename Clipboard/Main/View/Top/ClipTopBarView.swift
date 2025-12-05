@@ -10,6 +10,8 @@ import SwiftUI
 
 struct ClipTopBarView: View {
     @Environment(\.colorScheme) private var colorScheme
+    @AppStorage(PrefKey.backgroundType.rawValue)
+    private var backgroundTypeRaw: Int = 0
     @Bindable private var vm = ClipboardViewModel.shard
     @FocusState private var focus: FocusField?
     @State private var isIconHovered: Bool = false
@@ -116,14 +118,17 @@ struct ClipTopBarView: View {
     }
 
     private var searchIcon: some View {
-        Image(systemName: "magnifyingglass")
+        let backgroundType = BackgroundType(rawValue: backgroundTypeRaw) ?? .liquid
+        let hoverColor = colorScheme == .dark
+            ? Const.hoverDarkColor
+            : (backgroundType == .liquid ? Const.hoverLightColorLiquid : Const.hoverLightColorFrosted)
+
+        return Image(systemName: "magnifyingglass")
             .font(.system(size: Const.iconHdSize, weight: .regular))
             .padding(4)
             .background(
                 RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
-                    .fill(
-                        isIconHovered ? (colorScheme == .dark ? Const.hoverDarkColor : Const.hoverLightColor) : Color.clear,
-                    ),
+                    .fill(isIconHovered ? hoverColor : Color.clear)
             )
             .contentShape(Rectangle())
             .onHover { hovering in
@@ -199,16 +204,18 @@ struct ClipTopBarView: View {
     }
 
     private var plusIcon: some View {
-        Image(systemName: "plus")
+        let backgroundType = BackgroundType(rawValue: backgroundTypeRaw) ?? .liquid
+        let hoverColor = colorScheme == .dark
+            ? Const.hoverDarkColor
+            : (backgroundType == .liquid ? Const.hoverLightColorLiquid : Const.hoverLightColorFrosted)
+
+        return Image(systemName: "plus")
             .font(.system(size: Const.iconHdSize, weight: .light))
             .symbolRenderingMode(.hierarchical)
             .padding(4)
             .background(
                 RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
-                    .fill(
-                        isPlusHovered
-                            ? (colorScheme == .dark ? Const.hoverDarkColor : Const.hoverLightColor) : Color.clear,
-                    ),
+                    .fill(isPlusHovered ? hoverColor : Color.clear)
             )
             .onHover { hovering in
                 isPlusHovered = hovering

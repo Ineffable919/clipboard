@@ -56,7 +56,7 @@ struct AboutSettingView: View {
             }
             .padding(.top, Const.space16)
 
-            VStack(spacing: 12) {
+            VStack(spacing: Const.space12) {
                 Text("优雅的剪贴板管理工具")
                     .font(.headline)
 
@@ -96,7 +96,7 @@ struct AboutSettingView: View {
 
             Spacer()
 
-            VStack(spacing: 12) {
+            VStack(spacing: Const.space12) {
                 if let updater = AppDelegate.shared?.updaterController.updater {
                     UpdaterSettingsView(updater: updater)
                 }
@@ -158,11 +158,11 @@ struct LinkButton: View {
         Button(action: action) {
             HStack(spacing: 6) {
                 Image(systemName: icon)
-                    .font(.system(size: 12))
+                    .font(.system(size: Const.space12))
                 Text(title)
                     .font(.system(size: 13))
             }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, Const.space12)
             .padding(.vertical, 6)
             .background(
                 RoundedRectangle(cornerRadius: Const.radius)

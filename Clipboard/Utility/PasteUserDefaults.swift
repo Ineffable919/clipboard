@@ -113,6 +113,12 @@ enum PasteUserDefaults {
     /// 粘贴时去掉末尾换行符
     @UserDefaultsWrapper(.removeTailingNewline, defaultValue: false)
     static var removeTailingNewline
+    /// 背景类型(仅macOS 26+, 0:液态玻璃 1:毛玻璃)
+    @UserDefaultsWrapper(.backgroundType, defaultValue: 0)
+    static var backgroundType
+    /// 玻璃材质强度(0-4, 默认为regular)
+    @UserDefaultsWrapper(.glassMaterial, defaultValue: 2)
+    static var glassMaterial
 }
 
 @propertyWrapper
