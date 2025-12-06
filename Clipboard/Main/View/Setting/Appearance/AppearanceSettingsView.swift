@@ -116,8 +116,7 @@ struct GlassMaterialSlider: View {
                     get: { glassMaterial },
                     set: { glassMaterial = $0 }
                 ),
-                in: range,
-                step: 1
+                in: range
             ) {} minimumValueLabel: {
                 Text("透明")
             } maximumValueLabel: {
