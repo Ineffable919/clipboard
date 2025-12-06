@@ -100,9 +100,9 @@ struct GlassMaterialSlider: View {
 
     private var range: ClosedRange<Double> {
         if #available(macOS 26.0, *) {
-            0 ... 4
+            0...4
         } else {
-            0 ... 3
+            0...3
         }
     }
 
@@ -115,15 +115,26 @@ struct GlassMaterialSlider: View {
                 Text("透明")
                     .font(.callout)
                     .foregroundStyle(.secondary)
-                Slider(
-                    value: Binding(
-                        get: { glassMaterial },
-                        set: { glassMaterial = $0 }
-                    ),
-                    in: range,
-                    step: 1
-                )
-                .tint(.accentColor)
+                if #available(macOS 26.0, *) {
+                    Slider(
+                        value: Binding(
+                            get: { glassMaterial },
+                            set: { glassMaterial = $0 }
+                        ),
+                        in: range,
+                        step: 1
+                    )
+                    .tint(.accentColor)
+                } else {
+                    Slider(
+                        value: Binding(
+                            get: { glassMaterial },
+                            set: { glassMaterial = $0 }
+                        ),
+                        in: range
+                    )
+                    .tint(.accentColor)
+                }
                 Text("模糊")
                     .font(.callout)
                     .foregroundStyle(.secondary)
