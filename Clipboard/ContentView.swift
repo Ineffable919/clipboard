@@ -38,25 +38,31 @@ struct ContentView: View {
         }
     }
 
+    @ViewBuilder
+    private func materialBackground() -> some View {
+        RoundedRectangle(cornerRadius: Const.radius)
+            .fill(glassMaterial.material)
+    }
+
     var body: some View {
         Group {
             if #available(macOS 26.0, *) {
-                ZStack {
-                    if backgroundType == .liquid {
+                if backgroundType == .liquid {
+                    ZStack {
                         RoundedRectangle(cornerRadius: Const.radius)
                             .fill(Color.clear)
                             .glassEffect(
                                 in: RoundedRectangle(cornerRadius: Const.radius)
                             )
-                    } else {
-                        RoundedRectangle(cornerRadius: Const.radius)
-                            .fill(glassMaterial.material)
+                        contentStack()
                     }
+                } else {
                     contentStack()
+                        .background(materialBackground())
                 }
             } else {
                 contentStack()
-                    .padding(.bottom, Const.cardBottomPadding)
+                    .background(materialBackground())
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
