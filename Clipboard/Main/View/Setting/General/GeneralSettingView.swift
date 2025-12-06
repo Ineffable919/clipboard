@@ -349,14 +349,13 @@ struct HistoryTimeSlider: View {
                                         for: index,
                                         in: geometry.size.width,
                                     ),
-                                    y: tickY(),
+                                    y: 0.0,
                                 )
                         }
                     }
                 }
                 .allowsHitTesting(false)
 
-                // if #available(macOS 26, *) {
                 Slider(
                     value: Binding(
                         get: { sliderValue },
@@ -372,26 +371,6 @@ struct HistoryTimeSlider: View {
                         }
                     },
                 )
-                // .tint(.accentColor)
-                // } else {
-                //     ThinSlider(
-                //         value: Binding(
-                //             get: { sliderValue },
-                //             set: { newValue in
-                //                 sliderValue = snapToStep(newValue)
-                //             }
-                //         ),
-                //         bounds: 0...4,
-                //         onEditingChanged: { editing in
-                //             withAnimation(.easeInOut(duration: 0.2)) {
-                //                 isEditing = editing
-                //             }
-                //             if !editing {
-                //                 saveCurrentValue()
-                //             }
-                //         }
-                //     )
-                // }
             }
         }
         .onAppear {
@@ -429,13 +408,6 @@ struct HistoryTimeSlider: View {
         } else {
             return CGFloat(index) * width / 4.0 - 2.0
         }
-    }
-
-    private func tickY() -> CGFloat {
-        if #available(macOS 26.0, *) {
-            return 3
-        }
-        return 0
     }
 
     // 获取刻度线对应的滑块值

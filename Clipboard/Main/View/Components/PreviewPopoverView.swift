@@ -67,7 +67,7 @@ struct PreviewPopoverView: View {
                 Spacer()
 
                 if model.type == .file, model.fileSize() == 1 {
-                    BorderedButton(title: "在 Finder 中显示") {
+                    BorderedButton(title: "在访达中显示") {
                         withAnimation {
                             openInFinder()
                         }

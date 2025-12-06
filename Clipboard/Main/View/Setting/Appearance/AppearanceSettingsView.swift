@@ -90,8 +90,8 @@ struct AppearanceSettingsView: View {
 // MARK: - 玻璃材质滑块
 
 struct GlassMaterialSlider: View {
-    @AppStorage(PrefKey.glassMaterial.rawValue) private var glassMaterialRaw:
-        Int = 2
+    @AppStorage(PrefKey.glassMaterial.rawValue)
+    private var glassMaterialRaw: Int = 2
 
     private var glassMaterial: Double {
         get { Double(glassMaterialRaw) }
@@ -111,19 +111,23 @@ struct GlassMaterialSlider: View {
             Text("玻璃材质")
                 .font(.body)
             Spacer()
-            Slider(
-                value: Binding(
-                    get: { glassMaterial },
-                    set: { glassMaterial = $0 }
-                ),
-                in: range
-            ) {} minimumValueLabel: {
+            HStack(spacing: Const.space8) {
                 Text("透明")
-            } maximumValueLabel: {
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                Slider(
+                    value: Binding(
+                        get: { glassMaterial },
+                        set: { glassMaterial = $0 }
+                    ),
+                    in: range,
+                    step: 1
+                )
+                .tint(.accentColor)
                 Text("模糊")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
             }
-            .tint(.accentColor)
-            .padding(.horizontal, Const.space8)
             .frame(width: 240.0)
         }
     }

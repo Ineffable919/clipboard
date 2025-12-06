@@ -22,7 +22,7 @@ struct ClipTopBarView: View {
         GeometryReader { geo in
             let leading = max(0, floor(geo.size.width / 2 - 200))
 
-            HStack(alignment: .center, spacing: 4) {
+            HStack(alignment: .center, spacing: Const.space4) {
                 Spacer().frame(width: leading)
                 if vm.focusView == .search || !vm.query.isEmpty {
                     searchField
@@ -120,7 +120,7 @@ struct ClipTopBarView: View {
     private var searchIcon: some View {
         Image(systemName: "magnifyingglass")
             .font(.system(size: Const.iconHdSize, weight: .regular))
-            .padding(4)
+            .padding(Const.space4)
             .background(
                 RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
                     .fill(isIconHovered ? hoverColor() : Color.clear)

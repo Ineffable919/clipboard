@@ -83,14 +83,27 @@ struct ChipView: View {
 
     private var normalView: some View {
         HStack(spacing: 6) {
-            Circle()
-                .fill(chip.color)
-                .frame(width: 12, height: 12)
+            if chip.id == 1 {
+                Image(
+                    systemName:
+                        "clock.arrow.trianglehead.counterclockwise.rotate.90"
+                )
+            } else {
+                Circle()
+                    .fill(chip.color)
+                    .frame(width: Const.space12, height: Const.space12)
+            }
             Text(chip.name)
                 .font(.body)
-                .foregroundStyle(.primary)
         }
-        .padding(EdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8))
+        .padding(
+            EdgeInsets(
+                top: Const.space4,
+                leading: Const.space10,
+                bottom: Const.space4,
+                trailing: Const.space10
+            )
+        )
         .background {
             overlayColor()
         }
@@ -101,27 +114,31 @@ struct ChipView: View {
     }
 
     private var editingView: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: Const.space8) {
             Circle()
                 .fill(vm.editingChipColor)
-                .frame(width: 12, height: 12)
+                .frame(width: Const.space12, height: Const.space12)
                 .onTapGesture {
                     vm.cycleEditingChipColor()
                 }
 
             TextField("", text: $vm.editingChipName)
                 .textFieldStyle(.plain)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(.primary)
-                .textSelection(.disabled)
+                .font(.body)
                 .focused($isTextFieldFocused)
                 .onSubmit {
                     vm.commitEditingChip()
                 }
                 .frame(minWidth: 54)
         }
-        .padding(EdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8))
-        .background(
+        .padding(
+            EdgeInsets(
+                top: Const.space4,
+                leading: Const.space10,
+                bottom: Const.space4,
+                trailing: Const.space10
+            )
+        ).background(
             RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
                 .fill(Color.secondary.opacity(0.08)),
         )
@@ -247,9 +264,10 @@ struct ChipView: View {
 }
 
 #Preview {
+    let vm = ClipboardViewModel.shard
     ChipView(
         isSelected: true,
-        chip: CategoryChip(id: 11, name: "收藏", color: .green, isSystem: false),
+        chip: vm.chips[0],
     )
     .frame(width: 128, height: 32)
 }
