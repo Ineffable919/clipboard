@@ -63,7 +63,7 @@ class Const {
     static let minPreviewHeight: CGFloat = 300.0
     static let minPreviewWidth: CGFloat = 400.0
     static let maxTextSize: Int = 20000
-    static let maxRichTextSize: Int = 5000
+    static let maxRichTextSize: Int = 2000
 
     /// 设置页面
     static let settingWidth: CGFloat = 640.0

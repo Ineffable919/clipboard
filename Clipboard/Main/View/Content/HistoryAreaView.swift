@@ -45,10 +45,11 @@ struct HistoryAreaView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     contentView()
                 }
-                .scrollPosition(
-                    id: $selectionState.selectedId,
-                    anchor: scrollAnchor()
-                )
+                .onChange(of: selectionState.selectedId) { _, newId in
+                    if let id = newId {
+                        proxy.scrollTo(id, anchor: scrollAnchor())
+                    }
+                }
                 .onChange(of: pd.dataList) {
                     guard !isDel else { return }
                     lastLoadTriggerIndex = -1
@@ -100,8 +101,8 @@ struct HistoryAreaView: View {
 
     private func contentView() -> some View {
         LazyHStack(alignment: .top, spacing: Const.cardSpace) {
-            ForEach(Array(pd.dataList.enumerated()), id: \.element.id) {
-                index, item in
+            ForEach(pd.dataList) { item in
+                let index = pd.dataList.firstIndex(of: item) ?? 0
                 ClipCardView(
                     model: item,
                     isSelected: selectionState.selectedId == item.id,
@@ -144,8 +145,8 @@ struct HistoryAreaView: View {
         let now = ProcessInfo.processInfo.systemUptime
 
         if let lastId = selectionState.lastTapId,
-            lastId == item.id,
-            now - selectionState.lastTapTime <= Constants.doubleTapInterval
+           lastId == item.id,
+           now - selectionState.lastTapTime <= Constants.doubleTapInterval
         {
             handleDoubleTap(on: item)
             resetTapState()
@@ -220,8 +221,8 @@ struct HistoryAreaView: View {
             isDel = false
 
             if pd.dataList.count < 50,
-                pd.hasMoreData,
-                !pd.isLoadingPage
+               pd.hasMoreData,
+               !pd.isLoadingPage
             {
                 pd.loadNextPage()
             }
@@ -239,8 +240,8 @@ struct HistoryAreaView: View {
 
     private func scrollAnchor() -> UnitPoint? {
         guard let first = pd.dataList.first?.id,
-            let last = pd.dataList.last?.id,
-            let id = selectionState.selectedId
+              let last = pd.dataList.last?.id,
+              let id = selectionState.selectedId
         else {
             return .none
         }
@@ -304,6 +305,8 @@ struct HistoryAreaView: View {
     }
 
     private func cleanup() {
+        EventDispatcher.shared.unregisterHandler("history")
+        EventDispatcher.shared.unregisterHandler("historyFlags")
         isDel = false
         isQuickPastePressed = false
         showPreviewId = nil
@@ -311,7 +314,7 @@ struct HistoryAreaView: View {
 
     private func flagsChangedEvent(_ event: NSEvent) -> NSEvent? {
         guard event.window == ClipMainWindowController.shared.window,
-            vm.focusView == .history
+              vm.focusView == .history
         else {
             return event
         }
@@ -340,7 +343,7 @@ struct HistoryAreaView: View {
         }
 
         if KeyCode.shouldTriggerSearch(for: event),
-            vm.focusView != .search
+           vm.focusView != .search
         {
             vm.focusView = .search
             return nil
@@ -443,7 +446,7 @@ struct HistoryAreaView: View {
 
     private func handleCopyCommand() {
         guard let id = selectionState.selectedId,
-            let item = pd.dataList.first(where: { $0.id == id })
+              let item = pd.dataList.first(where: { $0.id == id })
         else {
             NSSound.beep()
             return
@@ -523,7 +526,7 @@ struct HistoryAreaView: View {
         showDeleteAlert()
     }
 
-    private func reset(proxy: ScrollViewProxy) {
+    private func reset(proxy _: ScrollViewProxy) {
         if pd.dataList.isEmpty {
             selectionState.selectedId = nil
             showPreviewId = nil
