@@ -15,7 +15,7 @@ struct ClipCardView: View {
     var quickPasteIndex: Int?
     var onRequestDelete: (() -> Void)?
 
-    private let vm = ClipboardViewModel.shard
+    @Environment(AppEnvironment.self) private var env
     private let controller = ClipMainWindowController.shared
     @AppStorage(PrefKey.enableLinkPreview.rawValue)
     private var enableLinkPreview: Bool = PasteUserDefaults.enableLinkPreview
@@ -107,7 +107,7 @@ struct ClipCardView: View {
     }
 
     private var selectionColor: Color {
-        vm.focusView == .history ? Color.accentColor.opacity(0.8) : Color.gray
+        env.focusView == .history ? Color.accentColor.opacity(0.8) : Color.gray
     }
 
     private var pasteButtonTitle: String {
@@ -157,12 +157,24 @@ struct ClipCardView: View {
 
     // MARK: - Context Menu Actions
 
-    private func pasteToCode() { vm.pasteAction(item: model) }
-    private func pasteAsPlainText() {
-        vm.pasteAction(item: model, isAttribute: false)
+    private func pasteToCode() {
+        env.actions.paste(
+            model,
+            isSearchingProvider: { false },
+            setSearching: { _ in }
+        )
     }
 
-    private func copyToClipboard() { vm.copyAction(item: model) }
+    private func pasteAsPlainText() {
+        env.actions.paste(
+            model,
+            isAttribute: false,
+            isSearchingProvider: { false },
+            setSearching: { _ in }
+        )
+    }
+
+    private func copyToClipboard() { env.actions.copy(model) }
     private func deleteItem() { onRequestDelete?() }
     private func togglePreview() { showPreview = !showPreview }
 }
@@ -183,6 +195,6 @@ struct ClipCardView: View {
         ),
         isSelected: true,
         showPreview: .constant(false),
-        quickPasteIndex: 1,
+        quickPasteIndex: 1
     )
 }

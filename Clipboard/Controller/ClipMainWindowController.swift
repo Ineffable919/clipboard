@@ -18,7 +18,7 @@ final class ClipMainWindowController: NSWindowController {
     var preApp: NSRunningApplication?
 
     private let clipVC = ClipMainViewController()
-    private let vm = ClipboardViewModel.shard
+    @ObservationIgnored private lazy var env = clipVC.env
     private let db = PasteDataStore.main
 
     init() {
@@ -111,7 +111,7 @@ final class ClipMainWindowController: NSWindowController {
 
 extension ClipMainWindowController: NSWindowDelegate {
     func windowDidResignKey(_: Notification) {
-        if vm.isShowDel {
+        if env.isShowDel {
             return
         }
         setPresented(false, animated: true)

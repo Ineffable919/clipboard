@@ -100,9 +100,9 @@ struct GlassMaterialSlider: View {
 
     private var range: ClosedRange<Double> {
         if #available(macOS 26.0, *) {
-            0...4
+            0 ... 4
         } else {
-            0...3
+            0 ... 3
         }
     }
 

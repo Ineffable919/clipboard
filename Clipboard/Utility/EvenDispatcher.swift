@@ -62,6 +62,7 @@ final class EventDispatcher {
         priority: Int = 0,
         handler: @escaping (NSEvent) -> NSEvent?
     ) {
+        unregisterHandler(key)
         let h = Handler(
             key: key,
             mask: mask,

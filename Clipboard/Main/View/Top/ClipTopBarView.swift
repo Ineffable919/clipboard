@@ -10,9 +10,9 @@ import SwiftUI
 
 struct ClipTopBarView: View {
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(AppEnvironment.self) private var env
     @AppStorage(PrefKey.backgroundType.rawValue)
     private var backgroundTypeRaw: Int = 0
-    @Bindable private var vm = ClipboardViewModel.shard
     @FocusState private var focus: FocusField?
     @State private var isIconHovered: Bool = false
     @State private var isPlusHovered: Bool = false
@@ -24,7 +24,7 @@ struct ClipTopBarView: View {
 
             HStack(alignment: .center, spacing: Const.space4) {
                 Spacer().frame(width: leading)
-                if vm.focusView == .search || !vm.query.isEmpty {
+                if env.focusView == .search || !env.searchVM.query.isEmpty {
                     searchField
                 } else {
                     searchIcon
@@ -34,61 +34,50 @@ struct ClipTopBarView: View {
             }
             .contentShape(Rectangle())
             .onTapGesture {
-                guard vm.focusView != .history else { return }
-                vm.focusView = .history
+                guard env.focusView != .history else { return }
+                env.focusView = .history
             }
             .onChange(of: focus) {
                 guard !syncingFocus else { return }
                 syncingFocus = true
-                vm.focusView =
-                    (focus == .search
-                        ? .search
-                        : focus == .newChip
-                        ? .newChip
-                        : focus == .editChip ? .editChip : .history)
+                env.focusView = FocusField.fromOptional(focus)
                 syncingFocus = false
             }
-            .onChange(of: vm.focusView) {
+            .onChange(of: env.focusView) {
                 guard !syncingFocus else { return }
                 syncingFocus = true
-                let desired: FocusField? =
-                    (vm.focusView == .search
-                        ? .search
-                        : vm.focusView == .newChip
-                        ? .newChip
-                        : vm.focusView == .editChip ? .editChip : nil)
                 DispatchQueue.main.async {
-                    focus = desired
+                    focus = env.focusView.asOptional
                     syncingFocus = false
                 }
-
-                if vm.focusView != .editChip, vm.isEditingChip {
-                    vm.commitEditingChip()
+                if env.focusView != .editChip, env.chipVM.isEditingChip {
+                    env.chipVM.commitEditingChip()
                 }
             }
-            .onChange(of: vm.query) { _, _ in
-                vm.onSearchParametersChanged()
+            .onChange(of: env.searchVM.query) { _, _ in
+                triggerSearchUpdate()
             }
-            .onChange(of: vm.selectedChipId) { _, _ in
-                vm.onSearchParametersChanged()
+            .onChange(of: env.chipVM.selectedChipId) { _, _ in
+                triggerSearchUpdate()
             }
         }
         .frame(height: Const.topBarHeight)
     }
 
     private var searchField: some View {
-        HStack(spacing: Const.space8) {
+        @Bindable var searchVM = env.searchVM
+        return HStack(spacing: Const.space8) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: Const.iconHdSize, weight: .regular))
                 .foregroundColor(.gray)
 
-            TextField("搜索...", text: $vm.query)
+            TextField("搜索...", text: $searchVM.query)
                 .textFieldStyle(.plain)
                 .focused($focus, equals: .search)
 
-            if !vm.query.isEmpty {
+            if !env.searchVM.query.isEmpty {
                 Button {
-                    vm.query = ""
+                    env.searchVM.query = ""
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 14, weight: .medium))
@@ -98,7 +87,7 @@ struct ClipTopBarView: View {
                 .contentShape(Rectangle())
             }
         }
-        .padding(6)
+        .padding(Const.space6)
         .frame(width: Const.topBarWidth)
         .background(.clear)
         .overlay(
@@ -107,9 +96,9 @@ struct ClipTopBarView: View {
                     focus == .search
                         ? Color.accentColor.opacity(0.4)
                         : Color.gray.opacity(0.4),
-                    lineWidth: 3,
+                    lineWidth: 3
                 )
-                .padding(-1),
+                .padding(-1)
         )
         .contentShape(Rectangle())
         .onTapGesture {
@@ -130,7 +119,7 @@ struct ClipTopBarView: View {
                 isIconHovered = hovering
             }
             .onTapGesture {
-                vm.focusView = .search
+                env.focusView = .search
                 DispatchQueue.main.async {
                     focus = .search
                 }
@@ -140,19 +129,19 @@ struct ClipTopBarView: View {
     private var typeView: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: Const.space8) {
-                ForEach(vm.chips) { chip in
+                ForEach(env.chipVM.chips) { chip in
                     ChipView(
-                        isSelected: vm.selectedChipId == chip.id,
-                        chip: chip,
+                        isSelected: env.chipVM.selectedChipId == chip.id,
+                        chip: chip
                     )
                     .onTapGesture {
-                        vm.toggleChip(chip)
-                        guard vm.focusView != .history else { return }
-                        vm.focusView = .history
+                        env.chipVM.toggleChip(chip)
+                        guard env.focusView != .history else { return }
+                        env.focusView = .history
                     }
                 }
 
-                if vm.editingNewChip {
+                if env.chipVM.editingNewChip {
                     addChipView
                 }
                 plusIcon
@@ -162,38 +151,39 @@ struct ClipTopBarView: View {
         }
         .frame(height: Const.topBarHeight)
         .onTapGesture {
-            vm.focusView = .history
+            env.focusView = .history
         }
     }
 
     private var addChipView: some View {
-        EditableChip(
-            name: $vm.newChipName,
-            color: $vm.newChipColor,
+        @Bindable var chipVM = env.chipVM
+        return EditableChip(
+            name: $chipVM.newChipName,
+            color: $chipVM.newChipColor,
             focus: $focus,
             onCommit: {
-                vm.commitNewChipOrCancel(commitIfNonEmpty: true)
+                chipVM.commitNewChipOrCancel(commitIfNonEmpty: true)
             },
             onCancel: {
-                vm.commitNewChipOrCancel(commitIfNonEmpty: false)
+                chipVM.commitNewChipOrCancel(commitIfNonEmpty: false)
             },
             onCycleColor: {
                 var nextIndex =
-                    (vm.newChipColorIndex + 1) % CategoryChip.palette.count
+                    (chipVM.newChipColorIndex + 1) % CategoryChip.palette.count
                 if nextIndex == 0 {
                     nextIndex = 1
                 }
-                vm.newChipColorIndex = nextIndex
-            },
+                chipVM.newChipColorIndex = nextIndex
+            }
         )
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
                 focus = .newChip
             }
         }
-        .onChange(of: vm.focusView) {
-            if vm.focusView != .newChip {
-                vm.commitNewChipOrCancel(commitIfNonEmpty: true)
+        .onChange(of: env.focusView) {
+            if env.focusView != .newChip {
+                env.chipVM.commitNewChipOrCancel(commitIfNonEmpty: true)
             }
         }
     }
@@ -211,15 +201,23 @@ struct ClipTopBarView: View {
                 isPlusHovered = hovering
             }
             .onTapGesture {
-                if !vm.editingNewChip {
+                if !env.chipVM.editingNewChip {
                     withAnimation(.easeOut(duration: 0.12)) {
-                        vm.editingNewChip = true
+                        env.chipVM.editingNewChip = true
                     }
                     focus = .newChip
                 } else {
-                    vm.commitNewChipOrCancel(commitIfNonEmpty: true)
+                    env.chipVM.commitNewChipOrCancel(commitIfNonEmpty: true)
                 }
             }
+    }
+
+    private func triggerSearchUpdate() {
+        env.searchVM.onSearchParametersChanged(
+            typeFilter: env.chipVM.getTypeFilterForCurrentChip(),
+            group: env.chipVM.getGroupFilterForCurrentChip(),
+            selectedChipId: env.chipVM.selectedChipId
+        )
     }
 
     private func hoverColor() -> Color {

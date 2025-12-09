@@ -242,7 +242,8 @@ final class PasteboardModel: Identifiable {
 
     func getGroupChip() -> CategoryChip? {
         guard group != -1 else { return nil }
-        return ClipboardViewModel.shard.chips.first(where: { $0.id == group })
+        let allChips = CategoryChip.systemChips + PasteUserDefaults.userCategoryChip
+        return allChips.first(where: { $0.id == group })
     }
 
     func displayCategoryName() -> String {
@@ -326,8 +327,7 @@ extension PasteboardModel {
 
 extension PasteboardModel {
     func itemProvider() -> NSItemProvider {
-        ClipboardViewModel.shard.draggingItemId = id
-
+        // 拖拽状态由 DragDropViewModel 管理，不在此处设置
         if type == .string {
             if let str = String(data: data, encoding: .utf8) {
                 return NSItemProvider(object: str as NSString)

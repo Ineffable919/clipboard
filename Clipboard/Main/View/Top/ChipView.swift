@@ -22,11 +22,7 @@ struct ChipView: View {
     var isSelected: Bool
     var chip: CategoryChip
 
-    init(isSelected: Bool, chip: CategoryChip) {
-        self.isSelected = isSelected
-        self.chip = chip
-    }
-
+    @Environment(AppEnvironment.self) private var env
     @Environment(\.colorScheme) private var colorScheme
     @AppStorage(PrefKey.backgroundType.rawValue)
     private var backgroundTypeRaw: Int = 0
@@ -34,11 +30,11 @@ struct ChipView: View {
     @State private var isDropTargeted: Bool = false
     @State private var syncingFocus = false
     @FocusState private var isTextFieldFocused: Bool
-    @Bindable private var vm = ClipboardViewModel.shard
-    private var pd = PasteDataStore.main
+
+    private var pd: PasteDataStore { PasteDataStore.main }
 
     private var isEditing: Bool {
-        vm.editingChipId == chip.id
+        env.chipVM.editingChipId == chip.id
     }
 
     var body: some View {
@@ -52,13 +48,13 @@ struct ChipView: View {
         .contextMenu {
             if !chip.isSystem {
                 Button {
-                    vm.startEditingChip(chip)
+                    env.chipVM.startEditingChip(chip)
                 } label: {
                     Label("编辑", systemImage: "pencil")
                 }
 
                 Button {
-                    vm.isShowDel = true
+                    env.isShowDel = true
                     showDelAlert(chip)
                 } label: {
                     Label("删除", systemImage: "trash")
@@ -72,7 +68,7 @@ struct ChipView: View {
             if chip.isSystem {
                 return false
             }
-            if vm.draggingItemId != nil {
+            if env.draggingItemId != nil {
                 return handleDrop()
             }
             return false
@@ -116,20 +112,21 @@ struct ChipView: View {
     }
 
     private var editingView: some View {
-        HStack(spacing: Const.space8) {
+        @Bindable var chipVM = env.chipVM
+        return HStack(spacing: Const.space8) {
             Circle()
-                .fill(vm.editingChipColor)
+                .fill(chipVM.editingChipColor)
                 .frame(width: Const.space12, height: Const.space12)
                 .onTapGesture {
-                    vm.cycleEditingChipColor()
+                    chipVM.cycleEditingChipColor()
                 }
 
-            TextField("", text: $vm.editingChipName)
+            TextField("", text: $chipVM.editingChipName)
                 .textFieldStyle(.plain)
                 .font(.body)
                 .focused($isTextFieldFocused)
                 .onSubmit {
-                    vm.commitEditingChip()
+                    env.chipVM.commitEditingChip()
                 }
                 .frame(minWidth: 54)
         }
@@ -149,7 +146,7 @@ struct ChipView: View {
         )
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-                vm.focusView = .editChip
+                env.focusView = .editChip
                 isTextFieldFocused = true
             }
         }
@@ -157,13 +154,13 @@ struct ChipView: View {
             guard !syncingFocus else { return }
             syncingFocus = true
             if isFocused {
-                vm.focusView = .editChip
-            } else if vm.focusView == .editChip {
-                vm.focusView = .history
+                env.focusView = .editChip
+            } else if env.focusView == .editChip {
+                env.focusView = .history
             }
             syncingFocus = false
         }
-        .onChange(of: vm.focusView) { _, newFocus in
+        .onChange(of: env.focusView) { _, newFocus in
             guard !syncingFocus else { return }
             syncingFocus = true
             if newFocus == .editChip, !isTextFieldFocused {
@@ -211,7 +208,7 @@ struct ChipView: View {
     }
 
     private func handleDrop() -> Bool {
-        guard let draggingId = vm.draggingItemId else {
+        guard let draggingId = env.draggingItemId else {
             return false
         }
 
@@ -220,7 +217,7 @@ struct ChipView: View {
         }
 
         defer {
-            vm.draggingItemId = nil
+            env.draggingItemId = nil
         }
 
         do {
@@ -246,7 +243,7 @@ struct ChipView: View {
         let handleResponse: (NSApplication.ModalResponse) -> Void = {
             [self] response in
             defer {
-                self.vm.isShowDel = false
+                self.env.isShowDel = false
             }
 
             guard response == .alertFirstButtonReturn
@@ -254,7 +251,7 @@ struct ChipView: View {
                 return
             }
 
-            vm.removeChip(chip)
+            env.chipVM.removeChip(chip)
         }
 
         if #available(macOS 26.0, *) {
@@ -272,10 +269,10 @@ struct ChipView: View {
 }
 
 #Preview {
-    let vm = ClipboardViewModel.shard
+    let chipVM = ChipBarViewModel()
     ChipView(
         isSelected: true,
-        chip: vm.chips[0],
+        chip: chipVM.chips[0]
     )
     .frame(width: 128, height: 32)
 }

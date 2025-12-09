@@ -10,6 +10,7 @@ import SwiftUI
 // MARK: - ContentView
 
 struct ContentView: View {
+    @Environment(AppEnvironment.self) private var env
     @FocusState private var focused: Bool
     @State private var pd = PasteDataStore.main
 
@@ -31,7 +32,7 @@ struct ContentView: View {
         VStack {
             Spacer()
             ClipTopBarView()
-            HistoryAreaView(pd: pd)
+            HistoryView()
                 .focusable()
                 .focusEffectDisabled()
                 .focused($focused)
@@ -78,6 +79,8 @@ struct ContentView: View {
 // MARK: - Preview
 
 #Preview {
+    @Previewable @State var env = AppEnvironment()
     ContentView()
+        .environment(env)
         .frame(width: 1000, height: 330.0)
 }

@@ -32,8 +32,12 @@ final class ClipMainViewController: NSViewController {
         }
     }()
 
-    private let hostingView: NSHostingView<ContentView> = {
-        let v = NSHostingView(rootView: ContentView())
+    var env = AppEnvironment()
+
+    private lazy var hostingView: NSHostingView<some View> = {
+        let contentView = ContentView()
+            .environment(env)
+        let v = NSHostingView(rootView: contentView)
         v.translatesAutoresizingMaskIntoConstraints = false
         v.wantsLayer = true
         v.layer?.backgroundColor = NSColor.clear.cgColor
@@ -46,6 +50,7 @@ final class ClipMainViewController: NSViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
         view.wantsLayer = true
         view.layer?.backgroundColor = NSColor.clear.cgColor
         view.layer?.masksToBounds = true

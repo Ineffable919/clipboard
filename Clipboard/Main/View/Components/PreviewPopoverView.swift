@@ -16,19 +16,18 @@ struct PreviewPopoverView: View {
 
     let model: PasteboardModel
 
+    @Environment(AppEnvironment.self) private var env
     @AppStorage(PrefKey.enableLinkPreview.rawValue)
     private var enableLinkPreview: Bool = PasteUserDefaults.enableLinkPreview
 
-    private let vm = ClipboardViewModel.shard
-
     var body: some View {
         FocusableContainer(onInteraction: {
-            vm.focusView = .popover
+            env.focusView = .popover
         }) {
             contentView
         }
         .onDisappear {
-            vm.focusView = .history
+            env.focusView = .history
         }
     }
 

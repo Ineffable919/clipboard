@@ -227,7 +227,6 @@ extension PasteDataStore {
                 }
             }
 
-            // 保存筛选条件并重置分页状态
             currentFilter = filter
             isInFilterMode = (filter != nil)
             pageIndex = 0
@@ -258,7 +257,7 @@ extension PasteDataStore {
             await itemId = sqlManager.insert(item: model)
             model.id = itemId
             updateTotalCount()
-            if ClipboardViewModel.shard.isSearching {
+            if lastDataChangeType == .searchFilter {
                 return
             }
             var list = dataList
