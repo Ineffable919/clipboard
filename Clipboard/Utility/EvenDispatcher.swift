@@ -88,30 +88,55 @@ final class EventDispatcher {
     /// Core dispatch: iterate handlers; first `nil` stops chain.
     /// Propagate modified event through chain; returning nil consumes.
     private func handle(event: NSEvent) -> NSEvent? {
-        // 全局开关：如果打开，所有事件都交给系统
-        if bypassAllEvents {
+        // 全局开关：如果打开，所有事件都交给系统（ESC除外）
+        if bypassAllEvents, event.keyCode != KeyCode.escape {
             if event.type == .keyDown {
-                let keyChar = event.charactersIgnoringModifiers?.lowercased() ?? ""
-                let modifiers = event.modifierFlags.intersection([.command, .option, .control, .shift])
+                let keyChar =
+                    event.charactersIgnoringModifiers?.lowercased() ?? ""
+                let modifiers = event.modifierFlags.intersection([
+                    .command, .option, .control, .shift,
+                ])
 
-                if modifiers.contains(.command), !modifiers.contains(.option), !modifiers.contains(.control) {
+                if modifiers.contains(.command), !modifiers.contains(.option),
+                    !modifiers.contains(.control)
+                {
                     var handled = false
 
                     switch keyChar {
                     case "c":
-                        handled = NSApp.sendAction(#selector(NSText.copy(_:)), to: nil, from: nil)
+                        handled = NSApp.sendAction(
+                            #selector(NSText.copy(_:)),
+                            to: nil,
+                            from: nil
+                        )
                         log.debug("Sent copy command: \(handled)")
                     case "v":
-                        handled = NSApp.sendAction(#selector(NSText.paste(_:)), to: nil, from: nil)
+                        handled = NSApp.sendAction(
+                            #selector(NSText.paste(_:)),
+                            to: nil,
+                            from: nil
+                        )
                         log.debug("Sent paste command: \(handled)")
                     case "x":
-                        handled = NSApp.sendAction(#selector(NSText.cut(_:)), to: nil, from: nil)
+                        handled = NSApp.sendAction(
+                            #selector(NSText.cut(_:)),
+                            to: nil,
+                            from: nil
+                        )
                         log.debug("Sent cut command: \(handled)")
                     case "a":
-                        handled = NSApp.sendAction(#selector(NSResponder.selectAll(_:)), to: nil, from: nil)
+                        handled = NSApp.sendAction(
+                            #selector(NSResponder.selectAll(_:)),
+                            to: nil,
+                            from: nil
+                        )
                         log.debug("Sent selectAll command: \(handled)")
                     case "z":
-                        handled = NSApp.sendAction(Selector(("undo:")), to: nil, from: nil)
+                        handled = NSApp.sendAction(
+                            Selector(("undo:")),
+                            to: nil,
+                            from: nil
+                        )
                         log.debug("Sent undo command: \(handled)")
                     default:
                         break
@@ -124,7 +149,7 @@ final class EventDispatcher {
 
                 log.debug("Bypass all: '\(keyChar)' - returning to system")
             }
-            // return event
+            return event
         }
 
         var currentEvent = event
