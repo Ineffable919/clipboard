@@ -42,12 +42,14 @@ struct ClipTopBarView: View {
             }
             .onChange(of: focus) {
                 guard !syncingFocus else { return }
+                guard !isFilterPopoverPresented else { return }
                 syncingFocus = true
                 env.focusView = FocusField.fromOptional(focus)
                 syncingFocus = false
             }
             .onChange(of: env.focusView) {
                 guard !syncingFocus else { return }
+                guard env.focusView != .filter else { return }
                 syncingFocus = true
                 DispatchQueue.main.async {
                     focus = env.focusView.asOptional
@@ -87,6 +89,7 @@ struct ClipTopBarView: View {
             Button {
                 isFilterPopoverPresented.toggle()
                 if isFilterPopoverPresented {
+                    focus = nil
                     env.focusView = .filter
                 }
             } label: {
@@ -99,9 +102,6 @@ struct ClipTopBarView: View {
             .popover(isPresented: $isFilterPopoverPresented) {
                 FilterPopoverView(topBarVM: env.topBarVM)
                     .environment(env)
-                    .onDisappear {
-                        env.focusView = .search
-                    }
             }
         }
         .padding(Const.space6)
