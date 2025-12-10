@@ -25,6 +25,25 @@
         </item>
 
         <item>
+            <title>Version 0.2.5 (Intel (x86_64))</title>
+            <sparkle:releaseNotesLink>
+                https://ineffable919.github.io/clipboard/scripts/release-note.html
+            </sparkle:releaseNotesLink>
+            <pubDate>Wed, 10 Dec 2025 21:45:59 +0800</pubDate>
+            <sparkle:version>54</sparkle:version>
+            <sparkle:shortVersionString>0.2.5</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:tags>
+                <sparkle:criticalUpdate sparkle:osType="x86_64" />
+            </sparkle:tags>
+            <enclosure
+                url="https://github.com/Ineffable919/clipboard/releases/download/0.2.5/Clipboard-0.2.5-x86_64.zip"
+                sparkle:edSignature="ymuzrsvLahQJyXodIe1YgwajSrk89063C8wnW5JYfHmCx/EWbQPSN+550WO7SJwQ6H/WTZq6uyEYoamhEopRAA=="
+                length="2906890"
+                type="application/octet-stream" />
+        </item>
+
+        <item>
             <title>Version 0.2.4 (Apple Silicon (arm64))</title>
             <sparkle:releaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
