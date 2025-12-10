@@ -3,7 +3,27 @@
     <channel>
         <title>Clipboard 更新</title>
         <description>Clipboard 应用更新源</description>
-        <language>zh-CN</language>        
+        <language>zh-CN</language>
+
+        <item>
+            <title>Version 0.2.5 (Apple Silicon (arm64))</title>
+            <sparkle:releaseNotesLink>
+                https://ineffable919.github.io/clipboard/scripts/release-note.html
+            </sparkle:releaseNotesLink>
+            <pubDate>Wed, 10 Dec 2025 21:40:06 +0800</pubDate>
+            <sparkle:version>54</sparkle:version>
+            <sparkle:shortVersionString>0.2.5</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:tags>
+                <sparkle:criticalUpdate sparkle:osType="arm64" />
+            </sparkle:tags>
+            <enclosure
+                url="https://github.com/Ineffable919/clipboard/releases/download/0.2.5/Clipboard-0.2.5-arm64.zip"
+                sparkle:edSignature="A5YxRACpAfmnz4AuRPWSuXOjmD8xYUI8NiNdUuj4hiVnavWIfDCyDeruasnIRxOq2sBLqdmkO8HzSBnVsuWyAQ=="
+                length="2844923"
+                type="application/octet-stream" />
+        </item>
+
         <item>
             <title>Version 0.2.4 (Apple Silicon (arm64))</title>
             <sparkle:releaseNotesLink>
