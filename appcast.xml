@@ -3,43 +3,7 @@
     <channel>
         <title>Clipboard 更新</title>
         <description>Clipboard 应用更新源</description>
-        <language>zh-CN</language>
-        <item>
-            <title>Version 0.2.5 (Apple Silicon (arm64))</title>
-            <sparkle:releaseNotesLink>
-                https://ineffable919.github.io/clipboard/scripts/release-note.html
-            </sparkle:releaseNotesLink>
-            <pubDate>Wed, 10 Dec 2025 20:10:51 +0800</pubDate>
-            <sparkle:version>54</sparkle:version>
-            <sparkle:shortVersionString>0.2.5</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <sparkle:tags>
-                <sparkle:criticalUpdate sparkle:osType="arm64" />
-            </sparkle:tags>
-            <enclosure
-                url="https://github.com/Ineffable919/clipboard/releases/download/0.2.5/Clipboard-0.2.5-arm64.zip"
-                sparkle:edSignature="PhHHspl8nV6ygk5U9miH2Odzzz9eCkM5jJBgbmzoqisbBM8STSckZ5nQsG4KMyAA1Yy3sgoejrFHGmywbdOyDg=="
-                length="2906954"
-                type="application/octet-stream" />
-        </item>
-        <item>
-            <title>Version 0.2.5 (Intel (x86_64))</title>
-            <sparkle:releaseNotesLink>
-                https://ineffable919.github.io/clipboard/scripts/release-note.html
-            </sparkle:releaseNotesLink>
-            <pubDate>Wed, 10 Dec 2025 20:11:49 +0800</pubDate>
-            <sparkle:version>54</sparkle:version>
-            <sparkle:shortVersionString>0.2.5</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <sparkle:tags>
-                <sparkle:criticalUpdate sparkle:osType="x86_64" />
-            </sparkle:tags>
-            <enclosure
-                url="https://github.com/Ineffable919/clipboard/releases/download/0.2.5/Clipboard-0.2.5-x86_64.zip"
-                sparkle:edSignature="N/6DE5VtYI4q+Zvu6T/pNBGNKf9oy/Zq+GGqWtwH0HIH9raQsgVuf0WEk1UbY3xDeNXe/bw2JcNrZdaapznBBQ=="
-                length="2906954"
-                type="application/octet-stream" />
-        </item>
+        <language>zh-CN</language>        
         <item>
             <title>Version 0.2.4 (Apple Silicon (arm64))</title>
             <sparkle:releaseNotesLink>
