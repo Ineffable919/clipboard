@@ -141,7 +141,6 @@ final class PasteBoard {
 
             "de.petermaurer.TransientPasteboardType", // TextExpander/Butler
             "com.typeit4me.clipping", // TypeIt4Me
-            "Pasteboard generator type", // Typinator
 
             "com.apple.pasteboard.promised-file-content-type",
         ]
