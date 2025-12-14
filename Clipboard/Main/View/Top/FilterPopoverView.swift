@@ -2,7 +2,7 @@
 //  FilterPopoverView.swift
 //  Clipboard
 //
-//  Created by crown on 2025/1/27.
+//  Created by crown on 2025/12/12.
 //
 
 import SwiftUI
@@ -30,23 +30,24 @@ struct FilterButton: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: Const.space8) {
-                icon
-                    .frame(width: 20.0, height: 20.0)
+                icon.frame(width: 20.0, height: 20.0)
                 Text(label)
-                    .font(.system(size: 12.0))
+                    .foregroundStyle(isSelected ? .white : .secondary)
                     .lineLimit(1)
                     .truncationMode(.tail)
                 Spacer()
             }
-            .padding(.horizontal, Const.space16)
+            .padding(.horizontal, Const.space8)
             .padding(.vertical, Const.space6)
             .background(
                 RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
-                    .fill(isSelected
-                        ? Color.accentColor.opacity(0.2)
-                        : Color.secondary.opacity(0.1))
+                    .fill(
+                        isSelected
+                            ? Color.accentColor
+                            : Color.secondary.opacity(0.1)
+                    )
             )
-            .frame(width: 150.0, height: 30.0)
+            .frame(width: 140.0, height: 30.0)
         }
         .buttonStyle(.plain)
     }
@@ -93,14 +94,8 @@ struct FilterPopoverView: View {
             }
             .padding(Const.space16)
         }
-        .frame(width: 480.0, height: 335.0)
+        .frame(width: 480.0, height: 280.0)
         .focusEffectDisabled()
-        .onAppear {
-            env.focusView = .filter
-        }
-        .onDisappear {
-            env.focusView = .search
-        }
         .task {
             await loadAppInfo()
         }
@@ -114,11 +109,14 @@ struct FilterPopoverView: View {
                 .font(.headline)
                 .foregroundStyle(.secondary)
 
-            LazyVGrid(columns: [
-                GridItem(.flexible(), spacing: Const.space8),
-                GridItem(.flexible(), spacing: Const.space8),
-                GridItem(.flexible(), spacing: Const.space8),
-            ], spacing: Const.space8) {
+            LazyVGrid(
+                columns: [
+                    GridItem(.flexible(), spacing: Const.space8),
+                    GridItem(.flexible(), spacing: Const.space8),
+                    GridItem(.flexible(), spacing: Const.space8),
+                ],
+                spacing: Const.space8
+            ) {
                 typeButton(type: .color, icon: "paintpalette", label: "颜色")
                 typeButton(type: .file, icon: "folder", label: "文件")
                 typeButton(type: .image, icon: "photo.circle", label: "图片")
@@ -128,11 +126,16 @@ struct FilterPopoverView: View {
         }
     }
 
-    private func typeButton(type: PasteModelType, icon: String, label: String) -> some View {
+    private func typeButton(type: PasteModelType, icon: String, label: String)
+        -> some View
+    {
         FilterButton(
             icon: {
                 Image(systemName: icon)
-                    .font(.system(size: Const.space16))
+                    .foregroundStyle(
+                        topBarVM.selectedTypes.contains(type)
+                            ? .white : .secondary
+                    )
             },
             label: label,
             isSelected: topBarVM.selectedTypes.contains(type),
@@ -150,11 +153,14 @@ struct FilterPopoverView: View {
                 .font(.headline)
                 .foregroundStyle(.secondary)
 
-            LazyVGrid(columns: [
-                GridItem(.flexible(), spacing: Const.space8),
-                GridItem(.flexible(), spacing: Const.space8),
-                GridItem(.flexible(), spacing: Const.space8),
-            ], spacing: Const.space8) {
+            LazyVGrid(
+                columns: [
+                    GridItem(.flexible(), spacing: Const.space8),
+                    GridItem(.flexible(), spacing: Const.space8),
+                    GridItem(.flexible(), spacing: Const.space8),
+                ],
+                spacing: Const.space8
+            ) {
                 ForEach(displayedAppInfo, id: \.name) { appInfo in
                     appButton(name: appInfo.name, path: appInfo.path)
                 }
@@ -190,8 +196,11 @@ struct FilterPopoverView: View {
     private var moreButton: some View {
         FilterButton(
             icon: {
-                Image(systemName: showAllApps ? "chevron.up" : "chevron.down")
-                    .font(.system(size: Const.space16))
+                Image(
+                    systemName: showAllApps
+                        ? "chevron.up.circle" : "chevron.down.circle"
+                )
+                .font(.system(size: Const.space16))
             },
             label: showAllApps ? "收起" : "更多",
             isSelected: false,
@@ -210,18 +219,24 @@ struct FilterPopoverView: View {
                 .foregroundStyle(.secondary)
 
             HStack(spacing: Const.space8) {
-                ForEach(TopBarViewModel.DateFilterOption.allCases, id: \.self) { option in
+                ForEach(TopBarViewModel.DateFilterOption.allCases, id: \.self) {
+                    option in
                     dateButton(option: option)
                 }
             }
         }
     }
 
-    private func dateButton(option: TopBarViewModel.DateFilterOption) -> some View {
+    private func dateButton(option: TopBarViewModel.DateFilterOption)
+        -> some View
+    {
         FilterButton(
             icon: {
                 Image(systemName: "calendar")
-                    .font(.system(size: Const.space16))
+                    .foregroundStyle(
+                        topBarVM.selectedDateFilter == option
+                            ? .white : .secondary
+                    )
             },
             label: option.displayName,
             isSelected: topBarVM.selectedDateFilter == option,

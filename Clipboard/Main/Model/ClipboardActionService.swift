@@ -7,17 +7,15 @@ struct ClipboardActionService {
 
     func paste(
         _ item: PasteboardModel,
-        isAttribute: Bool = true,
-        isSearchingProvider: () -> Bool,
-        setSearching: @escaping (Bool) -> Void
+        isAttribute: Bool = true
     ) {
-        let temp = isSearchingProvider()
-        if temp {
-            setSearching(false)
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            setSearching(temp)
-        }
+        // let temp = isSearchingProvider()
+        // if temp {
+        //     setSearching(false)
+        // }
+        // DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+        //     setSearching(temp)
+        // }
 
         pasteBoard.pasteData(item, isAttribute)
         guard userDefaults.pasteDirect else {

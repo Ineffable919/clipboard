@@ -20,8 +20,6 @@ final class TopBarViewModel {
         }
     }
 
-    var isSearching: Bool = false
-
     // MARK: - Chip Properties
 
     var chips: [CategoryChip] = []
@@ -71,6 +69,16 @@ final class TopBarViewModel {
         }
     }
 
+    var hasInput: Bool {
+        !query.isEmpty || !selectedTypes.isEmpty || !selectedAppNames.isEmpty
+            || selectedDateFilter != nil
+    }
+
+    func clearInput() {
+        query = ""
+        clearAllFilters()
+    }
+
     // MARK: - Computed Properties
 
     var newChipColor: Color {
@@ -87,7 +95,7 @@ final class TopBarViewModel {
     var editingChipColor: Color {
         get {
             guard editingChipColorIndex >= 0,
-                  editingChipColorIndex < CategoryChip.palette.count
+                editingChipColorIndex < CategoryChip.palette.count
             else {
                 return .blue
             }
@@ -214,7 +222,7 @@ final class TopBarViewModel {
         color: Color? = nil
     ) {
         guard !chip.isSystem,
-              let index = chips.firstIndex(where: { $0.id == chip.id })
+            let index = chips.firstIndex(where: { $0.id == chip.id })
         else {
             return
         }
@@ -273,7 +281,7 @@ final class TopBarViewModel {
 
     func commitEditingChip() {
         guard let chipId = editingChipId,
-              let chip = chips.first(where: { $0.id == chipId })
+            let chip = chips.first(where: { $0.id == chipId })
         else {
             cancelEditingChip()
             return
@@ -440,8 +448,11 @@ final class TopBarViewModel {
         }
     }
 
-    private func makeSearchCriteria(from trimmedQuery: String) -> PasteDataStore.SearchCriteria {
-        let chipGroup = selectedCategoryIds.isEmpty ? getGroupFilterForCurrentChip() : -1
+    private func makeSearchCriteria(from trimmedQuery: String)
+        -> PasteDataStore.SearchCriteria
+    {
+        let chipGroup =
+            selectedCategoryIds.isEmpty ? getGroupFilterForCurrentChip() : -1
         let filterExpression = buildFilterExpression()
 
         return PasteDataStore.SearchCriteria(
@@ -451,10 +462,15 @@ final class TopBarViewModel {
         )
     }
 
-    private func criteriaUnchanged(_ criteria: PasteDataStore.SearchCriteria) -> Bool {
+    private func criteriaUnchanged(_ criteria: PasteDataStore.SearchCriteria)
+        -> Bool
+    {
         criteria.keyword == lastCriteria.keyword
             && criteria.chipGroup == lastCriteria.chipGroup
-            && compareExpressions(criteria.filterExpression, lastCriteria.filterExpression)
+            && compareExpressions(
+                criteria.filterExpression,
+                lastCriteria.filterExpression
+            )
     }
 
     private func executeSearch() async {
@@ -470,10 +486,8 @@ final class TopBarViewModel {
 
         if !hasFilters, selectedChipId == 1 {
             dataStore.resetDefaultList()
-            isSearching = false
         } else {
             dataStore.searchData(criteria)
-            isSearching = true
         }
 
         lastCriteria = criteria

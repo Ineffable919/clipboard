@@ -26,15 +26,16 @@ struct ChipView: View {
     @Environment(\.colorScheme) private var colorScheme
     @AppStorage(PrefKey.backgroundType.rawValue)
     private var backgroundTypeRaw: Int = 0
+    @Bindable var topBarVM: TopBarViewModel
     @State private var isTypeHovered: Bool = false
     @State private var isDropTargeted: Bool = false
     @State private var syncingFocus = false
-    @FocusState private var isTextFieldFocused: Bool
+    @FocusState private var focus: FocusField?
 
     private var pd: PasteDataStore { PasteDataStore.main }
 
     private var isEditing: Bool {
-        env.topBarVM.editingChipId == chip.id
+        topBarVM.editingChipId == chip.id
     }
 
     var body: some View {
@@ -48,7 +49,7 @@ struct ChipView: View {
         .contextMenu {
             if !chip.isSystem {
                 Button {
-                    env.topBarVM.startEditingChip(chip)
+                    topBarVM.startEditingChip(chip)
                 } label: {
                     Label("编辑", systemImage: "pencil")
                 }
@@ -81,7 +82,7 @@ struct ChipView: View {
                 if #available(macOS 15.0, *) {
                     Image(
                         systemName:
-                        "clock.arrow.trianglehead.counterclockwise.rotate.90"
+                            "clock.arrow.trianglehead.counterclockwise.rotate.90"
                     )
                 } else {
                     Image("clock.arrow.trianglehead.counterclockwise.rotate.90")
@@ -115,48 +116,23 @@ struct ChipView: View {
     }
 
     private var editingView: some View {
-        @Bindable var topBarVM = env.topBarVM
-        return HStack(spacing: Const.space8) {
-            Circle()
-                .fill(topBarVM.editingChipColor)
-                .frame(width: Const.space12, height: Const.space12)
-                .onTapGesture {
-                    topBarVM.cycleEditingChipColor()
-                }
-
-            TextField("", text: $topBarVM.editingChipName)
-                .textFieldStyle(.plain)
-                .font(.body)
-                .focused($isTextFieldFocused)
-                .onSubmit {
-                    env.topBarVM.commitEditingChip()
-                }
-                .frame(minWidth: 54.0)
-        }
-        .padding(
-            EdgeInsets(
-                top: Const.space4,
-                leading: Const.space10,
-                bottom: Const.space4,
-                trailing: Const.space10
-            )
-        ).background(
-            RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
-                .fill(Color.secondary.opacity(0.08)),
-        )
-        .contentShape(
-            RoundedRectangle(cornerRadius: Const.radius, style: .continuous),
-        )
-        .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-                env.focusView = .editChip
-                isTextFieldFocused = true
+        return ChipEditorView(
+            name: $topBarVM.editingChipName,
+            color: $topBarVM.editingChipColor,
+            focus: $focus,
+            focusValue: .editChip,
+            onSubmit: {
+                topBarVM.commitEditingChip()
+                env.focusView = .history
+            },
+            onCycleColor: {
+                topBarVM.cycleEditingChipColor()
             }
-        }
-        .onChange(of: isTextFieldFocused) { _, isFocused in
+        )
+        .onChange(of: focus) { _, isFocused in
             guard !syncingFocus else { return }
             syncingFocus = true
-            if isFocused {
+            if isFocused == .editChip {
                 env.focusView = .editChip
             } else if env.focusView == .editChip {
                 env.focusView = .history
@@ -166,12 +142,12 @@ struct ChipView: View {
         .onChange(of: env.focusView) { _, newFocus in
             guard !syncingFocus else { return }
             syncingFocus = true
-            if newFocus == .editChip, !isTextFieldFocused {
+            if newFocus == .editChip, focus != .editChip {
                 DispatchQueue.main.async {
-                    isTextFieldFocused = true
+                    focus = .editChip
                 }
-            } else if newFocus != .editChip, isTextFieldFocused {
-                isTextFieldFocused = false
+            } else if newFocus != .editChip, focus == .editChip {
+                focus = nil
             }
             syncingFocus = false
         }
@@ -271,7 +247,7 @@ struct ChipView: View {
                 return
             }
 
-            env.topBarVM.removeChip(chip)
+            topBarVM.removeChip(chip)
         }
 
         if #available(macOS 26.0, *) {
@@ -289,10 +265,11 @@ struct ChipView: View {
 }
 
 #Preview {
-    let topBarVM = TopBarViewModel()
+    @Previewable @State var topBarVM = TopBarViewModel()
     ChipView(
         isSelected: true,
-        chip: topBarVM.chips[0]
+        chip: topBarVM.chips[0],
+        topBarVM: topBarVM
     )
     .frame(width: 128, height: 32)
 }

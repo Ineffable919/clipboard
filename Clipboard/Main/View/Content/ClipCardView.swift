@@ -158,19 +158,13 @@ struct ClipCardView: View {
     // MARK: - Context Menu Actions
 
     private func pasteToCode() {
-        env.actions.paste(
-            model,
-            isSearchingProvider: { false },
-            setSearching: { _ in }
-        )
+        env.actions.paste(model)
     }
 
     private func pasteAsPlainText() {
         env.actions.paste(
             model,
-            isAttribute: false,
-            isSearchingProvider: { false },
-            setSearching: { _ in }
+            isAttribute: false
         )
     }
 
