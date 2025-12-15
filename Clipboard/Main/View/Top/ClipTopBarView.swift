@@ -65,11 +65,6 @@ struct ClipTopBarView: View {
                         env.focusView = .search
                     }
                 }
-                .onChange(of: env.focusView) {
-                    if env.focusView != .search {
-                        focus = nil
-                    }
-                }
 
             if !topBarVM.query.isEmpty {
                 Button {
@@ -268,10 +263,9 @@ struct ClipTopBarView: View {
             }
             if topBarVM.hasInput, env.focusView == .search {
                 topBarVM.clearInput()
-                env.focusView = .history
                 return nil
             }
-            if topBarVM.query.isEmpty, env.focusView == .search {
+            if !topBarVM.hasInput, env.focusView == .search {
                 env.focusView = .history
                 return nil
             }
@@ -284,7 +278,7 @@ struct ClipTopBarView: View {
     }
 
     private func focusHistory() {
-        focus = .history
+        focus = nil
         if isFilterPopoverPresented {
             isFilterPopoverPresented = false
         }
