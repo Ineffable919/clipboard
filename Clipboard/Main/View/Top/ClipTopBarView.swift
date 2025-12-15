@@ -60,6 +60,16 @@ struct ClipTopBarView: View {
             TextField(topBarVM.hasInput ? "" : "搜索", text: $topBarVM.query)
                 .textFieldStyle(.plain)
                 .focused($focus, equals: .search)
+                .onChange(of: focus) {
+                    if focus == .search, env.focusView != .search {
+                        env.focusView = .search
+                    }
+                }
+                .onChange(of: env.focusView) {
+                    if env.focusView != .search {
+                        focus = nil
+                    }
+                }
 
             if !topBarVM.query.isEmpty {
                 Button {
@@ -76,8 +86,6 @@ struct ClipTopBarView: View {
                 isFilterPopoverPresented.toggle()
                 if isFilterPopoverPresented {
                     env.focusView = .filter
-                } else {
-                    env.focusView = .search
                 }
             } label: {
                 Image(systemName: "line.3.horizontal.decrease.circle")
@@ -103,7 +111,6 @@ struct ClipTopBarView: View {
                 )
                 .padding(-1)
         )
-
     }
 
     private var searchIcon: some View {
@@ -133,6 +140,7 @@ struct ClipTopBarView: View {
                     ChipView(
                         isSelected: topBarVM.selectedChipId == chip.id,
                         chip: chip,
+                        focus: $focus,
                         topBarVM: topBarVM
                     )
                     .onTapGesture {
@@ -260,6 +268,7 @@ struct ClipTopBarView: View {
             }
             if topBarVM.hasInput, env.focusView == .search {
                 topBarVM.clearInput()
+                env.focusView = .history
                 return nil
             }
             if topBarVM.query.isEmpty, env.focusView == .search {
@@ -275,24 +284,17 @@ struct ClipTopBarView: View {
     }
 
     private func focusHistory() {
-        focus = nil
+        focus = .history
         if isFilterPopoverPresented {
             isFilterPopoverPresented = false
-        } else {
-            env.focusView = .history
         }
-    }
-
-    private func focusSearch() {
-        if env.focusView != .search {
-            env.focusView = .search
-        }
-        if focus != .search {
-            focus = .search
-        }
+        env.focusView = .history
     }
 }
 
 #Preview {
+    @Previewable @State var env = AppEnvironment()
     ClipTopBarView()
+        .environment(env)
+        .frame(width: 1000.0, height: 50.0)
 }

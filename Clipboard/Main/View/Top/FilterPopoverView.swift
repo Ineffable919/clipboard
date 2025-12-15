@@ -94,7 +94,7 @@ struct FilterPopoverView: View {
             }
             .padding(Const.space16)
         }
-        .frame(width: 480.0, height: 280.0)
+        .frame(width: 480.0, height: 270.0)
         .focusEffectDisabled()
         .task {
             await loadAppInfo()

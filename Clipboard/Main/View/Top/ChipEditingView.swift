@@ -7,17 +7,17 @@
 
 import SwiftUI
 
-struct ChipEditorView<FocusValue: Hashable>: View {
+struct ChipEditorView: View {
     @Binding var name: String
     @Binding var color: Color
-    var focus: FocusState<FocusValue?>.Binding
-    var focusValue: FocusValue
+    @FocusState.Binding var focus: FocusField?
+    var focusValue: FocusField
 
     var onSubmit: () -> Void
     var onCycleColor: () -> Void
 
     var body: some View {
-        HStack(spacing: Const.space8) {
+        HStack(spacing: Const.space6) {
             Circle()
                 .fill(color)
                 .frame(width: Const.space12, height: Const.space12)
@@ -28,30 +28,31 @@ struct ChipEditorView<FocusValue: Hashable>: View {
             TextField("", text: $name)
                 .textFieldStyle(.plain)
                 .font(.body)
-                .foregroundStyle(.primary)
-                .textSelection(.disabled)
-                .focused(focus, equals: focusValue)
+                .focused($focus, equals: focusValue)
                 .onSubmit {
                     onSubmit()
                 }
-                .frame(minWidth: 48.0)
         }
         .padding(
             EdgeInsets(
-                top: Const.space4,
-                leading: Const.space10,
-                bottom: Const.space4,
-                trailing: Const.space10
+                top: Const.space6,
+                leading: Const.space8,
+                bottom: Const.space6,
+                trailing: Const.space8
             )
         )
-        .background(
+        .overlay(
             RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
-                .fill(Color.secondary.opacity(0.08))
+                .stroke(
+                    focus == focusValue
+                        ? Color.accentColor.opacity(0.4)
+                        : Color.clear,
+                    lineWidth: 3
+                )
         )
-        .contentShape(Rectangle())
         .onAppear {
             DispatchQueue.main.async {
-                focus.wrappedValue = focusValue
+                focus = focusValue
             }
         }
     }

@@ -24,13 +24,14 @@ struct ChipView: View {
 
     @Environment(AppEnvironment.self) private var env
     @Environment(\.colorScheme) private var colorScheme
+
     @AppStorage(PrefKey.backgroundType.rawValue)
     private var backgroundTypeRaw: Int = 0
+
+    @FocusState.Binding var focus: FocusField?
     @Bindable var topBarVM: TopBarViewModel
     @State private var isTypeHovered: Bool = false
     @State private var isDropTargeted: Bool = false
-    @State private var syncingFocus = false
-    @FocusState private var focus: FocusField?
 
     private var pd: PasteDataStore { PasteDataStore.main }
 
@@ -50,6 +51,7 @@ struct ChipView: View {
             if !chip.isSystem {
                 Button {
                     topBarVM.startEditingChip(chip)
+                    env.focusView = .editChip
                 } label: {
                     Label("编辑", systemImage: "pencil")
                 }
@@ -100,10 +102,10 @@ struct ChipView: View {
         }
         .padding(
             EdgeInsets(
-                top: Const.space4,
-                leading: Const.space10,
-                bottom: Const.space4,
-                trailing: Const.space10
+                top: Const.space6,
+                leading: Const.space8,
+                bottom: Const.space6,
+                trailing: Const.space8
             )
         )
         .background {
@@ -129,27 +131,10 @@ struct ChipView: View {
                 topBarVM.cycleEditingChipColor()
             }
         )
-        .onChange(of: focus) { _, isFocused in
-            guard !syncingFocus else { return }
-            syncingFocus = true
-            if isFocused == .editChip {
-                env.focusView = .editChip
-            } else if env.focusView == .editChip {
-                env.focusView = .history
+        .onChange(of: env.focusView) {
+            if env.focusView != .editChip {
+                topBarVM.commitEditingChip()
             }
-            syncingFocus = false
-        }
-        .onChange(of: env.focusView) { _, newFocus in
-            guard !syncingFocus else { return }
-            syncingFocus = true
-            if newFocus == .editChip, focus != .editChip {
-                DispatchQueue.main.async {
-                    focus = .editChip
-                }
-            } else if newFocus != .editChip, focus == .editChip {
-                focus = nil
-            }
-            syncingFocus = false
         }
     }
 
@@ -266,10 +251,24 @@ struct ChipView: View {
 
 #Preview {
     @Previewable @State var topBarVM = TopBarViewModel()
-    ChipView(
-        isSelected: true,
-        chip: topBarVM.chips[0],
-        topBarVM: topBarVM
-    )
-    .frame(width: 128, height: 32)
+    @Previewable @State var env = AppEnvironment()
+
+    ChipViewPreviewWrapper(topBarVM: topBarVM, env: env)
+}
+
+private struct ChipViewPreviewWrapper: View {
+    var topBarVM: TopBarViewModel
+    var env: AppEnvironment
+    @FocusState private var focus: FocusField?
+
+    var body: some View {
+        ChipView(
+            isSelected: true,
+            chip: topBarVM.chips[0],
+            focus: $focus,
+            topBarVM: topBarVM
+        )
+        .environment(env)
+        .frame(width: 128, height: 32)
+    }
 }
