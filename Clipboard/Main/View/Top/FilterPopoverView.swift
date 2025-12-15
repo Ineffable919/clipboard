@@ -7,52 +7,6 @@
 
 import SwiftUI
 
-// MARK: - 统一的筛选按钮组件
-
-struct FilterButton: View {
-    let icon: AnyView
-    let label: String
-    let isSelected: Bool
-    let action: () -> Void
-
-    init<Icon: View>(
-        @ViewBuilder icon: () -> Icon,
-        label: String,
-        isSelected: Bool,
-        action: @escaping () -> Void
-    ) {
-        self.icon = AnyView(icon())
-        self.label = label
-        self.isSelected = isSelected
-        self.action = action
-    }
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: Const.space8) {
-                icon.frame(width: 20.0, height: 20.0)
-                Text(label)
-                    .foregroundStyle(isSelected ? .white : .secondary)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                Spacer()
-            }
-            .padding(.horizontal, Const.space8)
-            .padding(.vertical, Const.space6)
-            .background(
-                RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
-                    .fill(
-                        isSelected
-                            ? Color.accentColor
-                            : Color.secondary.opacity(0.1)
-                    )
-            )
-            .frame(width: 140.0, height: 30.0)
-        }
-        .buttonStyle(.plain)
-    }
-}
-
 struct FilterPopoverView: View {
     @Environment(AppEnvironment.self) private var env
     @Environment(\.colorScheme) private var colorScheme
