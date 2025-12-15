@@ -2,7 +2,7 @@
 //  WebContentView.swift
 //  Clipboard
 //
-//  Created by 王晶 on 2025/11/14.
+//  Created by crown on 2025/11/14.
 //
 
 import SwiftUI
