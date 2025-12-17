@@ -70,27 +70,20 @@ struct ClipTopBarView: View {
     }
 
     private var searchField: some View {
-        HStack(spacing: Const.space8) {
+        HStack(spacing: Const.space6) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: Const.iconHdSize, weight: .regular))
-                .foregroundColor(.black).opacity(0.6)
+                .foregroundColor(.black.opacity(0.6))
 
-            TextField(topBarVM.hasInput ? "" : "搜索", text: $topBarVM.query)
-                .textFieldStyle(.plain)
-                .focused($focus, equals: .search)
-                .onChange(of: focus) {
-                    if focus == .search, env.focusView != .search {
-                        env.focusView = .search
-                    }
-                }
+            inputTagView
 
-            if !topBarVM.hasInput {
+            if topBarVM.hasInput {
                 Button {
                     topBarVM.clearInput()
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 14.0, weight: .medium))
-                        .foregroundColor(.gray)
+                        .font(.system(size: Const.iconHdSize, weight: .regular))
+                        .foregroundColor(.black.opacity(0.6))
                 }
                 .buttonStyle(.plain)
             }
@@ -98,19 +91,22 @@ struct ClipTopBarView: View {
             Button {
                 toggleFilterPopover()
             } label: {
-                Image(systemName: "line.3.horizontal.decrease.circle")
+                Image(systemName: "line.3.horizontal.decrease")
                     .font(.system(size: Const.iconHdSize, weight: .regular))
-                    .foregroundColor(.black).opacity(0.6)
+                    .foregroundColor(.black.opacity(0.6))
             }
             .buttonStyle(.plain)
-            .frame(width: 20.0, height: 20.0)
             .focusEffectDisabled()
             .popover(isPresented: $isFilterPopoverPresented) {
                 FilterPopoverView(topBarVM: topBarVM)
             }
         }
-        .padding(Const.space6)
-        .frame(width: Const.topBarWidth)
+        .padding(Const.space4)
+        .frame(width: Const.topBarWidth, height: 32.0)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            focus = .search
+        }
         .overlay(
             RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
                 .stroke(
@@ -123,10 +119,50 @@ struct ClipTopBarView: View {
         )
     }
 
+    private var inputTagView: some View {
+        GeometryReader { geo in
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: Const.space6) {
+                        if !topBarVM.tags.isEmpty {
+                            ForEach(topBarVM.tags) { tag in
+                                TagView(tag: tag) {
+                                    topBarVM.removeTag(tag)
+                                }
+                            }
+                        }
+                        TextField(
+                            topBarVM.hasInput ? "" : "搜索",
+                            text: $topBarVM.query
+                        )
+                        .textFieldStyle(.plain)
+                        .focused($focus, equals: .search)
+                        .id("textfield")
+                        .autoScrollOnIMEInput {
+                            proxy.scrollTo("textfield", anchor: .trailing)
+                        }
+                        .onChange(of: focus) {
+                            if focus == .search, env.focusView != .search {
+                                env.focusView = .search
+                            }
+                        }
+                    }
+                    .frame(minWidth: geo.size.width, minHeight: geo.size.height, alignment: .leading)
+                }
+                .onChange(of: topBarVM.tags.count) {
+                    proxy.scrollTo("textfield", anchor: .trailing)
+                }
+                .onChange(of: topBarVM.query) {
+                    proxy.scrollTo("textfield", anchor: .trailing)
+                }
+            }
+        }
+    }
+
     private var searchIcon: some View {
         Image(systemName: "magnifyingglass")
             .font(.system(size: Const.iconHdSize, weight: .regular))
-            .padding(Const.space4)
+            .padding(Const.space6)
             .background(
                 RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
                     .fill(isIconHovered ? hoverColor() : Color.clear)
@@ -202,7 +238,7 @@ struct ClipTopBarView: View {
         Image(systemName: "plus")
             .font(.system(size: Const.iconHdSize, weight: .regular))
             .symbolRenderingMode(.hierarchical)
-            .padding(Const.space4)
+            .padding(Const.space6)
             .background(
                 RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
                     .fill(isPlusHovered ? hoverColor() : Color.clear)
@@ -307,9 +343,9 @@ struct ClipTopBarView: View {
             focus = nil
         } else {
             env.focusView = .search
-            DispatchQueue.main.async {
-                focus = .search
-            }
+            //            DispatchQueue.main.async {
+            //                focus = .search
+            //            }
         }
     }
 }

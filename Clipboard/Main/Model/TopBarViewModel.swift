@@ -44,28 +44,13 @@ final class TopBarViewModel {
     // MARK: - Filter Properties
 
     // 类型筛选：支持多选
-    var selectedTypes: Set<PasteModelType> = [] {
-        didSet {
-            syncFiltersToTags()
-            performSearch()
-        }
-    }
+    private(set) var selectedTypes: Set<PasteModelType> = []
 
     // 应用筛选：支持多选
-    var selectedAppNames: Set<String> = [] {
-        didSet {
-            syncFiltersToTags()
-            performSearch()
-        }
-    }
+    private(set) var selectedAppNames: Set<String> = []
 
     // 日期筛选：单选
-    var selectedDateFilter: DateFilterOption? {
-        didSet {
-            syncFiltersToTags()
-            performSearch()
-        }
-    }
+    private(set) var selectedDateFilter: DateFilterOption?
 
     // 分类筛选：支持多选
     var selectedCategoryIds: Set<Int> = [] {
@@ -364,21 +349,38 @@ final class TopBarViewModel {
     func toggleType(_ type: PasteModelType) {
         if selectedTypes.contains(type) {
             selectedTypes.remove(type)
+            removeTagForType(type)
         } else {
             selectedTypes.insert(type)
+            addTagForType(type)
         }
+        performSearch()
     }
 
     func toggleApp(_ appName: String) {
         if selectedAppNames.contains(appName) {
             selectedAppNames.remove(appName)
+            tags.removeAll { $0.type == .filterApp && $0.associatedValue == appName }
         } else {
             selectedAppNames.insert(appName)
+            addTagForApp(appName)
         }
+        performSearch()
     }
 
     func setDateFilter(_ option: DateFilterOption?) {
+        tags.removeAll { $0.type == .filterDate }
         selectedDateFilter = option
+        if let dateFilter = option {
+            let tag = InputTag(
+                icon: AnyView(Image(systemName: "calendar")),
+                label: dateFilter.displayName,
+                type: .filterDate,
+                associatedValue: dateFilter.rawValue
+            )
+            tags.append(tag)
+        }
+        performSearch()
     }
 
     func toggleCategory(_ categoryId: Int) {
@@ -394,88 +396,102 @@ final class TopBarViewModel {
         selectedAppNames.removeAll()
         selectedDateFilter = nil
         selectedCategoryIds.removeAll()
+        tags.removeAll()
     }
 
-    // MARK: - Tags Sync Methods
+    // MARK: - Tags Management
+    private let textTagAssociatedValue = "text"
 
-    private func syncFiltersToTags() {
-        var newTags: [InputTag] = []
-
-        for type in selectedTypes {
+    private func addTagForType(_ type: PasteModelType) {
+        if type == .string || type == .rich {
+            let hasTextTag = tags.contains {
+                $0.type == .filterType && $0.associatedValue == textTagAssociatedValue
+            }
+            if !hasTextTag {
+                let tag = InputTag(
+                    icon: AnyView(Image(systemName: "text.document")),
+                    label: "文本",
+                    type: .filterType,
+                    associatedValue: textTagAssociatedValue
+                )
+                tags.append(tag)
+            }
+        } else {
             let (icon, label) = type.iconAndLabel
             let tag = InputTag(
-                icon: AnyView(
-                    Image(systemName: icon)
-                ),
+                icon: AnyView(Image(systemName: icon)),
                 label: label,
                 type: .filterType,
                 associatedValue: type.rawValue
             )
-            newTags.append(tag)
+            tags.append(tag)
         }
+    }
 
-        for appName in selectedAppNames {
-            let appPath = appPathCache[appName] ?? ""
-            let appIcon: AnyView
-            if FileManager.default.fileExists(atPath: appPath) {
-                appIcon = AnyView(
-                    Image(nsImage: NSWorkspace.shared.icon(forFile: appPath))
-                        .resizable()
-                        .scaledToFit()
-                )
-            } else {
-                appIcon = AnyView(
-                    Image(systemName: "app.fill")
-                )
+    private func removeTagForType(_ type: PasteModelType) {
+        if type == .string || type == .rich {
+            let hasString = selectedTypes.contains(.string)
+            let hasRich = selectedTypes.contains(.rich)
+            if !hasString, !hasRich {
+                tags.removeAll {
+                    $0.type == .filterType && $0.associatedValue == textTagAssociatedValue
+                }
             }
-
-            let tag = InputTag(
-                icon: appIcon,
-                label: appName,
-                type: .filterApp,
-                associatedValue: appName,
-                appPath: appPath
-            )
-            newTags.append(tag)
+        } else {
+            tags.removeAll {
+                $0.type == .filterType && $0.associatedValue == type.rawValue
+            }
         }
+    }
 
-        if let dateFilter = selectedDateFilter {
-            let tag = InputTag(
-                icon: AnyView(
-                    Image(systemName: "calendar")
-                ),
-                label: dateFilter.displayName,
-                type: .filterDate,
-                associatedValue: dateFilter.rawValue
+    private func addTagForApp(_ appName: String) {
+        let appPath = appPathCache[appName] ?? ""
+        let appIcon: AnyView
+        if FileManager.default.fileExists(atPath: appPath) {
+            appIcon = AnyView(
+                Image(nsImage: NSWorkspace.shared.icon(forFile: appPath))
+                    .resizable()
+                    .scaledToFit()
             )
-            newTags.append(tag)
+        } else {
+            appIcon = AnyView(Image(systemName: "app.fill"))
         }
-
-        tags = newTags
+        let tag = InputTag(
+            icon: appIcon,
+            label: appName,
+            type: .filterApp,
+            associatedValue: appName,
+            appPath: appPath
+        )
+        tags.append(tag)
     }
 
     func loadAppPathCache() async {
         let appInfo = await dataStore.getAllAppInfo()
         await MainActor.run {
-            appPathCache = Dictionary(uniqueKeysWithValues: appInfo.map { ($0.name, $0.path) })
+            appPathCache = Dictionary(
+                uniqueKeysWithValues: appInfo.map { ($0.name, $0.path) }
+            )
         }
     }
 
     func removeTag(_ tag: InputTag) {
+        tags.removeAll { $0 == tag }
+
         switch tag.type {
         case .filterType:
-            if let type = PasteModelType(rawValue: tag.associatedValue) {
+            if tag.associatedValue == textTagAssociatedValue {
+                selectedTypes.remove(.string)
+                selectedTypes.remove(.rich)
+            } else if let type = PasteModelType(rawValue: tag.associatedValue) {
                 selectedTypes.remove(type)
             }
         case .filterApp:
             selectedAppNames.remove(tag.associatedValue)
         case .filterDate:
-            if let dateFilter = DateFilterOption(rawValue: tag.associatedValue),
-               selectedDateFilter == dateFilter
-            {
-                selectedDateFilter = nil
-            }
+            selectedDateFilter = nil
         }
+        performSearch()
     }
 
     func toggleTextType() {
@@ -485,10 +501,24 @@ final class TopBarViewModel {
         if hasString, hasRich {
             selectedTypes.remove(.string)
             selectedTypes.remove(.rich)
+            tags.removeAll {
+                $0.type == .filterType && $0.associatedValue == textTagAssociatedValue
+            }
         } else {
+            let needAddTag = !hasString && !hasRich
             selectedTypes.insert(.string)
             selectedTypes.insert(.rich)
+            if needAddTag {
+                let tag = InputTag(
+                    icon: AnyView(Image(systemName: "text.document")),
+                    label: "文本",
+                    type: .filterType,
+                    associatedValue: textTagAssociatedValue
+                )
+                tags.append(tag)
+            }
         }
+        performSearch()
     }
 
     func isTextTypeSelected() -> Bool {
