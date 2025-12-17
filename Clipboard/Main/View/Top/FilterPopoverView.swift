@@ -72,9 +72,9 @@ struct FilterPopoverView: View {
             ) {
                 typeButton(type: .color, icon: "paintpalette", label: "颜色")
                 typeButton(type: .file, icon: "folder", label: "文件")
-                typeButton(type: .image, icon: "photo.circle", label: "图片")
+                typeButton(type: .image, icon: "photo", label: "图片")
                 typeButton(type: .link, icon: "link", label: "链接")
-                typeButton(type: .string, icon: "text.document", label: "文本")
+                textTypeButton()
             }
         }
     }
@@ -94,6 +94,24 @@ struct FilterPopoverView: View {
             isSelected: topBarVM.selectedTypes.contains(type),
             action: {
                 topBarVM.toggleType(type)
+            }
+        )
+    }
+
+    /// 文本类型按钮(合并 string 和 rich)
+    private func textTypeButton() -> some View {
+        FilterButton(
+            icon: {
+                Image(systemName: "text.document")
+                    .foregroundStyle(
+                        topBarVM.isTextTypeSelected()
+                            ? .white : .secondary
+                    )
+            },
+            label: "文本",
+            isSelected: topBarVM.isTextTypeSelected(),
+            action: {
+                topBarVM.toggleTextType()
             }
         )
     }

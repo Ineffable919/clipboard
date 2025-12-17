@@ -5,7 +5,6 @@ import SwiftUI
 
 @Observable
 final class HistoryViewModel {
-
     private let pd = PasteDataStore.main
     var selectedId: PasteboardModel.ID?
     var lastTapId: PasteboardModel.ID?
@@ -78,8 +77,8 @@ final class HistoryViewModel {
 
     func scrollAnchor() -> UnitPoint? {
         guard let first = pd.dataList.first?.id,
-            let last = pd.dataList.last?.id,
-            let id = selectedId
+              let last = pd.dataList.last?.id,
+              let id = selectedId
         else {
             return .none
         }

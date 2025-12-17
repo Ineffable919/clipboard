@@ -22,7 +22,9 @@ struct PreviewPopoverView: View {
 
     var body: some View {
         FocusableContainer(onInteraction: {
-            env.focusView = .popover
+            Task { @MainActor in
+                env.focusView = .popover
+            }
         }) {
             contentView
         }
@@ -391,6 +393,7 @@ class InterceptingHostingView<Content: View>: NSHostingView<Content> {
             searchText: "",
             length: 0,
             group: -1,
+            tag: "string"
         ),
     )
     .frame(width: 800, height: 600)

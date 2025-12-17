@@ -21,6 +21,7 @@ enum Col {
     static let searchText = Expression<String>("search_text")
     static let length = Expression<Int>("length")
     static let group = Expression<Int>("group")
+    static let tag = Expression<String?>("tag")
 }
 
 final class PasteSQLManager: NSObject {
@@ -83,9 +84,11 @@ final class PasteSQLManager: NSObject {
             t.column(Col.searchText)
             t.column(Col.length)
             t.column(Col.group, defaultValue: -1)
+            t.column(Col.tag)
         }
         do {
             try db?.run(stateMent)
+            migrateTagFieldAsync()
         } catch {
             log.error("Create Table Error: \(error)")
         }
@@ -119,6 +122,7 @@ extension PasteSQLManager {
             Col.searchText <- item.searchText,
             Col.length <- item.length,
             Col.group <- item.group,
+            Col.tag <- item.tag
         )
         do {
             let rowId = try db?.run(insert)
@@ -161,6 +165,7 @@ extension PasteSQLManager {
             Col.searchText <- item.searchText,
             Col.length <- item.length,
             Col.group <- item.group,
+            Col.tag <- item.tag
         )
         do {
             let count = try db?.run(update)
@@ -197,6 +202,7 @@ extension PasteSQLManager {
                 Col.id, Col.type, Col.data, Col.ts,
                 Col.appPath, Col.appName, Col.searchText,
                 Col.showData, Col.length, Col.group,
+                Col.tag,
             ]
         let ord = order ?? [Col.ts.desc]
 
@@ -214,13 +220,13 @@ extension PasteSQLManager {
             return []
         }
     }
-    
+
     // 获取所有唯一的应用名称
     func getDistinctAppNames() async -> [String] {
         do {
             let query = table.select(distinct: Col.appName)
                 .order(Col.appName.asc)
-            
+
             var appNames: [String] = []
             if let result = try db?.prepare(query) {
                 for row in result {
@@ -235,22 +241,23 @@ extension PasteSQLManager {
             return []
         }
     }
-    
+
     // 获取应用名称和对应的路径（每个应用名称取第一个路径）
     func getDistinctAppInfo() async -> [(name: String, path: String)] {
         do {
             var appInfo: [(name: String, path: String)] = []
             var seenNames: Set<String> = []
-            
+
             let query = table.select(Col.appName, Col.appPath)
                 .order(Col.appName.asc, Col.ts.desc)
-            
+
             if let result = try db?.prepare(query) {
                 for row in result {
                     if let appName = try? row.get(Col.appName),
                        let appPath = try? row.get(Col.appPath),
                        !appName.isEmpty,
-                       !seenNames.contains(appName) {
+                       !seenNames.contains(appName)
+                    {
                         appInfo.append((name: appName, path: appPath))
                         seenNames.insert(appName)
                     }
@@ -260,6 +267,123 @@ extension PasteSQLManager {
         } catch {
             log.error("获取应用信息列表失败：\(error)")
             return []
+        }
+    }
+}
+
+// MARK: - 数据迁移
+
+extension PasteSQLManager {
+    func migrateTagFieldAsync() {
+        guard !PasteUserDefaults.tagFieldMigrated else {
+            log.debug("数据已迁移，跳过")
+            return
+        }
+
+        Task.detached(priority: .background) { [weak self] in
+            guard let self else { return }
+
+            await performTagMigration()
+
+            await MainActor.run {
+                PasteUserDefaults.tagFieldMigrated = true
+                log.info("数据迁移完成")
+            }
+        }
+    }
+
+    private func performTagMigration() async {
+        log.info("开始迁移 tag 字段数据")
+
+        guard let db else {
+            log.error("数据库未初始化，跳过")
+            return
+        }
+
+        do {
+            try db.run("ALTER TABLE Clip ADD COLUMN tag TEXT")
+        } catch {
+            log.debug("添加 tag 列失败: \(error)")
+        }
+
+        let batchSize = 500
+        var totalMigrated = 0
+
+        while true {
+            guard !Task.isCancelled else {
+                log.warn("迁移任务被取消")
+                break
+            }
+
+            let query = table
+                .filter(Col.tag == nil)
+                .limit(batchSize, offset: 0)
+
+            do {
+                let rows = try db.prepare(query)
+                let rowsArray = Array(rows)
+
+                if rowsArray.isEmpty {
+                    break
+                }
+
+                try db.transaction {
+                    for row in rowsArray {
+                        autoreleasepool {
+                            let id = row[Col.id]
+                            let typeStr = row[Col.type]
+                            let data = row[Col.data]
+
+                            let pasteboardType = PasteboardType(typeStr)
+                            let tagValue = self.calculateTagValue(
+                                type: pasteboardType,
+                                data: data
+                            )
+
+                            let update = table.filter(Col.id == id)
+                                .update(Col.tag <- tagValue)
+
+                            do {
+                                try db.run(update)
+                            } catch {
+                                log.error("更新记录 \(id) 的 tag 失败: \(error)")
+                            }
+                        }
+                    }
+                }
+
+                totalMigrated += rowsArray.count
+                log.debug("已迁移 \(totalMigrated) 条记录")
+
+                try await Task.sleep(for: .milliseconds(100))
+
+            } catch {
+                log.error("迁移批次失败: \(error)")
+                break
+            }
+        }
+
+        log.info("tag 字段数据迁移完成，共迁移 \(totalMigrated) 条记录")
+    }
+
+    private func calculateTagValue(type: PasteboardType, data: Data) -> String {
+        switch type {
+        case .rtf, .rtfd:
+            return "rich"
+        case .string:
+            if let str = String(data: data, encoding: .utf8), str.isCSSHexColor {
+                return "color"
+            }
+            if let str = String(data: data, encoding: .utf8), str.asCompleteURL() != nil {
+                return "link"
+            }
+            return "string"
+        case .png, .tiff:
+            return "image"
+        case .fileURL:
+            return "file"
+        default:
+            return ""
         }
     }
 }

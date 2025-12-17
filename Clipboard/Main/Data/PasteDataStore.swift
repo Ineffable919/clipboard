@@ -108,11 +108,15 @@ extension PasteDataStore {
                 let searchText = try? row.get(Col.searchText)
                 let length = try? row.get(Col.length)
                 let group = try? row.get(Col.group)
+                let tag = try? row.get(Col.tag)
+
                 let pType = PasteboardType(type)
-                // TODO: 兼容旧数据，后续版本删除
+
                 if pType.isText(), showData == nil {
                     if let searchText {
-                        showData = String(searchText.prefix(250)).data(using: .utf8)
+                        showData = String(searchText.prefix(250)).data(
+                            using: .utf8
+                        )
                     }
                 }
 
@@ -126,6 +130,7 @@ extension PasteDataStore {
                     searchText: searchText ?? "",
                     length: length ?? 0,
                     group: group ?? -1,
+                    tag: tag ?? ""
                 )
                 pasteModel.id = id
                 return pasteModel
@@ -134,7 +139,28 @@ extension PasteDataStore {
         }
     }
 
-    /// 将关键词 + chip 分组 + 过滤视图表达式组合成最终 SQL 过滤器
+    private func calculateTagValue(type: PasteboardType, data: Data) -> String {
+        switch type {
+        case .rtf, .rtfd:
+            return "rich"
+        case .string:
+            if let str = String(data: data, encoding: .utf8) {
+                if str.isCSSHexColor {
+                    return "color"
+                } else if str.asCompleteURL() != nil {
+                    return "link"
+                }
+            }
+            return "string"
+        case .png, .tiff:
+            return "image"
+        case .fileURL:
+            return "file"
+        default:
+            return ""
+        }
+    }
+
     private func buildFilter(
         keyword: String,
         chipGroup: Int,
@@ -144,7 +170,8 @@ extension PasteDataStore {
 
         if !keyword.isEmpty {
             clauses.append(
-                Col.appName.like("%\(keyword)%") || Col.searchText.like("%\(keyword)%")
+                Col.appName.like("%\(keyword)%")
+                    || Col.searchText.like("%\(keyword)%")
             )
         }
 
@@ -168,8 +195,6 @@ extension PasteDataStore {
 // MARK: - 数据操作 对外接口
 
 extension PasteDataStore {
-    /// 加载下一页
-    /// - Returns: 返回从0到当前页所有数据list
     func loadNextPage() {
         Task {
             guard dataList.count < totalCount else { return }
@@ -382,7 +407,9 @@ extension PasteDataStore {
                 id: itemId,
                 groupId: groupId,
             )
-            if let model = dataList.first(where: { $0.id == itemId }), groupId != model.group {
+            if let model = dataList.first(where: { $0.id == itemId }),
+               groupId != model.group
+            {
                 model.updateGroup(val: groupId)
             }
         }
@@ -399,7 +426,9 @@ extension PasteDataStore {
     }
 
     func invalidateAppInfoCache(_ model: PasteboardModel) {
-        if let index = cachedAppInfo?.firstIndex(where: { $0.name == model.appName }) {
+        if let index = cachedAppInfo?.firstIndex(where: {
+            $0.name == model.appName
+        }) {
             cachedAppInfo?[index].path = model.appPath
         } else {
             cachedAppInfo?.append((name: model.appName, path: model.appPath))

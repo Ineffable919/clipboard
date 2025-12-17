@@ -87,7 +87,8 @@ struct LargeTextView: NSViewRepresentable {
         appName: "Preview",
         searchText: "",
         length: 1000,
-        group: -1
+        group: -1,
+        tag: "string"
     )
 
     LargeTextView(model: testModel)

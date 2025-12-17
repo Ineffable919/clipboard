@@ -13,8 +13,8 @@ struct FilterButton: View {
     let isSelected: Bool
     let action: () -> Void
 
-    init<Icon: View>(
-        @ViewBuilder icon: () -> Icon,
+    init(
+        @ViewBuilder icon: () -> some View,
         label: String,
         isSelected: Bool,
         action: @escaping () -> Void
@@ -42,7 +42,7 @@ struct FilterButton: View {
                     .fill(
                         isSelected
                             ? Color.accentColor
-                            : Color.secondary.opacity(0.1)
+                            : Color.secondary.opacity(0.15)
                     )
             )
             .frame(width: 140.0, height: 30.0)

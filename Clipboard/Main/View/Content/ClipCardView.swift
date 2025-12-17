@@ -186,6 +186,7 @@ struct ClipCardView: View {
             searchText: "",
             length: 9,
             group: -1,
+            tag: "string"
         ),
         isSelected: true,
         showPreview: .constant(false),

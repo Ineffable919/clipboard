@@ -52,7 +52,6 @@ struct TextCardStyleModifier: ViewModifier {
 }
 
 struct AutoScrollOnIMEInputModifier: ViewModifier {
-
     let onIMEInput: () -> Void
 
     private let imePublisher =

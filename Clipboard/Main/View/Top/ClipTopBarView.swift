@@ -70,7 +70,7 @@ struct ClipTopBarView: View {
     }
 
     private var searchField: some View {
-        return HStack(spacing: Const.space8) {
+        HStack(spacing: Const.space8) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: Const.iconHdSize, weight: .regular))
                 .foregroundColor(.black).opacity(0.6)
@@ -161,7 +161,7 @@ struct ClipTopBarView: View {
                 if topBarVM.editingNewChip {
                     addChipView
                 }
-                if env.focusView != .search && env.focusView != .filter {
+                if env.focusView != .search, env.focusView != .filter {
                     plusIcon
                 }
             }
@@ -175,7 +175,7 @@ struct ClipTopBarView: View {
     }
 
     private var addChipView: some View {
-        return ChipEditorView(
+        ChipEditorView(
             name: $topBarVM.newChipName,
             color: $topBarVM.newChipColor,
             focus: $focus,

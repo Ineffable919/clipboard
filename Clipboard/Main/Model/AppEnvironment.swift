@@ -3,7 +3,6 @@ import SwiftUI
 
 @MainActor
 final class AppEnvironment: ObservableObject {
-
     var actions: ClipboardActionService {
         ClipboardActionService()
     }

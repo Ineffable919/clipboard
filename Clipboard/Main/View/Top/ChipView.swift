@@ -84,7 +84,7 @@ struct ChipView: View {
                 if #available(macOS 15.0, *) {
                     Image(
                         systemName:
-                            "clock.arrow.trianglehead.counterclockwise.rotate.90"
+                        "clock.arrow.trianglehead.counterclockwise.rotate.90"
                     )
                 } else {
                     Image("clock.arrow.trianglehead.counterclockwise.rotate.90")
@@ -95,7 +95,7 @@ struct ChipView: View {
                     .frame(width: Const.space12, height: Const.space12)
                     .padding(Const.space2)
             }
-            if env.focusView != .search && env.focusView != .filter {
+            if env.focusView != .search, env.focusView != .filter {
                 Text(chip.name)
                     .font(.body)
             }
@@ -118,7 +118,7 @@ struct ChipView: View {
     }
 
     private var editingView: some View {
-        return ChipEditorView(
+        ChipEditorView(
             name: $topBarVM.editingChipName,
             color: $topBarVM.editingChipColor,
             focus: $focus,

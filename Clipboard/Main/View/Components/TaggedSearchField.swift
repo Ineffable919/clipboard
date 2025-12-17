@@ -28,8 +28,8 @@ struct TaggedSearchField: View {
         onSubmit: @escaping () -> Void = {},
         onDeleteTag: ((SearchTag) -> Void)? = nil
     ) {
-        self._tags = tags
-        self._text = text
+        _tags = tags
+        _text = text
         self.placeholder = placeholder
         self.onSubmit = onSubmit
         self.onDeleteTag = onDeleteTag
@@ -141,11 +141,11 @@ struct TagChipView: View {
             RoundedRectangle(cornerRadius: Const.radius)
                 .fill(Color.accentColor.opacity(0.2))
         )
-
     }
 }
 
 // MARK: - Preview
+
 #Preview {
     TaggedSearchFieldExample()
         .padding(40)

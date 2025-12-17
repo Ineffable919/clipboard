@@ -95,7 +95,7 @@ final class TopBarViewModel {
     var editingChipColor: Color {
         get {
             guard editingChipColorIndex >= 0,
-                editingChipColorIndex < CategoryChip.palette.count
+                  editingChipColorIndex < CategoryChip.palette.count
             else {
                 return .blue
             }
@@ -256,7 +256,7 @@ final class TopBarViewModel {
         color: Color? = nil
     ) {
         guard !chip.isSystem,
-            let index = chips.firstIndex(where: { $0.id == chip.id })
+              let index = chips.firstIndex(where: { $0.id == chip.id })
         else {
             return
         }
@@ -315,7 +315,7 @@ final class TopBarViewModel {
 
     func commitEditingChip() {
         guard let chipId = editingChipId,
-            let chip = chips.first(where: { $0.id == chipId })
+              let chip = chips.first(where: { $0.id == chipId })
         else {
             cancelEditingChip()
             return
@@ -389,24 +389,47 @@ final class TopBarViewModel {
         selectedCategoryIds.removeAll()
     }
 
+    func toggleTextType() {
+        let hasString = selectedTypes.contains(.string)
+        let hasRich = selectedTypes.contains(.rich)
+
+        if hasString, hasRich {
+            selectedTypes.remove(.string)
+            selectedTypes.remove(.rich)
+        } else {
+            selectedTypes.insert(.string)
+            selectedTypes.insert(.rich)
+        }
+    }
+
+    func isTextTypeSelected() -> Bool {
+        selectedTypes.contains(.string) || selectedTypes.contains(.rich)
+    }
+
     // MARK: - Filter Expression Building
 
     func buildFilterExpression() -> Expression<Bool>? {
         var conditions: [Expression<Bool>] = []
 
         // 类型筛选
-//        if !selectedTypes.isEmpty {
-//            let tagValues = Array(Set(selectedTypes.map(\.tagValue)))
-//            if !tagValues.isEmpty {
-//                let typeCondition = tagValues.map { (Col.tag ?? "") == $0 }
-//                    .reduce(
-//                        Expression<Bool>(value: false)
-//                    ) { result, condition in
-//                        result || condition
-//                    }
-//                conditions.append(typeCondition)
-//            }
-//        }
+        if !selectedTypes.isEmpty {
+            var tagValues: [String] = []
+
+            for type in selectedTypes {
+                let value = type.tagValue
+                if !value.isEmpty {
+                    tagValues.append(value)
+                }
+            }
+
+            if !tagValues.isEmpty {
+                let tagCondition = tagValues.map { (Col.tag ?? "") == $0 }
+                    .reduce(Expression<Bool>(value: false)) { result, condition in
+                        result || condition
+                    }
+                conditions.append(tagCondition)
+            }
+        }
 
         // 应用筛选
         if !selectedAppNames.isEmpty {
@@ -443,9 +466,11 @@ final class TopBarViewModel {
             conditions.append(categoryCondition)
         }
 
-        guard !conditions.isEmpty else { return nil }
-        return conditions.reduce(conditions[0]) { result, condition in
-            result && condition
+        return conditions.reduce(nil) { partial, next in
+            if let existing = partial {
+                return existing && next
+            }
+            return next
         }
     }
 

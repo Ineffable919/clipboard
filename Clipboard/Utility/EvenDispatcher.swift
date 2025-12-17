@@ -96,7 +96,7 @@ final class EventDispatcher {
                 ])
 
                 if modifiers.contains(.command), !modifiers.contains(.option),
-                    !modifiers.contains(.control)
+                   !modifiers.contains(.control)
                 {
                     var handled = false
 

@@ -53,6 +53,8 @@ enum PrefKey: String {
     case backgroundType
     /// 玻璃材质强度
     case glassMaterial
+    /// tag 字段迁移标记
+    case tagFieldMigrated
 }
 
 enum AppearanceMode: Int, CaseIterable {

@@ -36,6 +36,7 @@ final class PasteboardModel: Identifiable {
     )
 
     private(set) var group: Int
+    let tag: String
     private var cachedAttributed: AttributedString?
     private var cachedThumbnail: NSImage?
     private var cachedImageSize: CGSize?
@@ -69,7 +70,8 @@ final class PasteboardModel: Identifiable {
         appName: String,
         searchText: String,
         length: Int,
-        group: Int
+        group: Int,
+        tag: String
     ) {
         self.pasteboardType = pasteboardType
         self.data = data
@@ -81,6 +83,7 @@ final class PasteboardModel: Identifiable {
         self.searchText = searchText
         self.length = length
         self.group = group
+        self.tag = tag
         attributeString =
             NSAttributedString(
                 with: showData,
@@ -129,14 +132,35 @@ final class PasteboardModel: Identifiable {
         if type.isText() {
             att =
                 NSAttributedString(with: content, type: type)
-                ?? NSAttributedString()
+                    ?? NSAttributedString()
             guard !att.string.allSatisfy(\.isWhitespace) else {
                 return nil
             }
             showAtt =
                 att.length > 250
-                ? att.attributedSubstring(from: NSMakeRange(0, 250)) : att
+                    ? att.attributedSubstring(from: NSMakeRange(0, 250)) : att
             showData = showAtt?.toData(with: type)
+        }
+
+        let calculatedTag: String
+        switch type {
+        case .rtf, .rtfd:
+            calculatedTag = "rich"
+        case .string:
+            let str = String(data: content ?? Data(), encoding: .utf8) ?? ""
+            if str.isCSSHexColor {
+                calculatedTag = "color"
+            } else if str.asCompleteURL() != nil {
+                calculatedTag = "link"
+            } else {
+                calculatedTag = "string"
+            }
+        case .png, .tiff:
+            calculatedTag = "image"
+        case .fileURL:
+            calculatedTag = "file"
+        default:
+            calculatedTag = ""
         }
 
         self.init(
@@ -149,6 +173,7 @@ final class PasteboardModel: Identifiable {
             searchText: att.string,
             length: att.length,
             group: -1,
+            tag: calculatedTag
         )
     }
 
@@ -288,11 +313,11 @@ extension PasteboardModel {
             return (fallbackBG, .secondary, false)
         }
         if attributeString.length > 0,
-            let bg = attributeString.attribute(
-                .backgroundColor,
-                at: 0,
-                effectiveRange: nil,
-            ) as? NSColor
+           let bg = attributeString.attribute(
+               .backgroundColor,
+               at: 0,
+               effectiveRange: nil,
+           ) as? NSColor
         {
             return (Color(bg), getRTFColor(baseNS: bg), true)
         }
@@ -413,7 +438,7 @@ extension PasteboardModel {
     private func promisedTypeIdentifier(for fileURL: URL) -> String {
         do {
             let values = try fileURL.resourceValues(forKeys: [
-                .contentTypeKey
+                .contentTypeKey,
             ])
             if let type = values.contentType {
                 return type.identifier
@@ -483,6 +508,18 @@ enum PasteModelType {
         case .link: "链接"
         case .file: "文件"
         default: ""
+        }
+    }
+
+    var tagValue: String {
+        switch self {
+        case .none: ""
+        case .image: "image"
+        case .string: "string"
+        case .rich: "rich"
+        case .file: "file"
+        case .link: "link"
+        case .color: "color"
         }
     }
 }
