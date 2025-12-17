@@ -15,7 +15,7 @@ struct ClipCardView: View {
     var quickPasteIndex: Int?
     var onRequestDelete: (() -> Void)?
 
-    @Environment(AppEnvironment.self) private var env
+    @EnvironmentObject private var env: AppEnvironment
     private let controller = ClipMainWindowController.shared
     @AppStorage(PrefKey.enableLinkPreview.rawValue)
     private var enableLinkPreview: Bool = PasteUserDefaults.enableLinkPreview

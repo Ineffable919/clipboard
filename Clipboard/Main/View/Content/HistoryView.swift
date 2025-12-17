@@ -19,7 +19,7 @@ struct HistoryView: View {
 
     // MARK: - Properties
 
-    @Environment(AppEnvironment.self) private var env
+    @EnvironmentObject private var env: AppEnvironment
     @State private var historyVM = HistoryViewModel()
     private let pd = PasteDataStore.main
 

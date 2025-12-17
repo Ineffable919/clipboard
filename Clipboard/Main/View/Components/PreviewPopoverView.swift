@@ -16,7 +16,7 @@ struct PreviewPopoverView: View {
 
     let model: PasteboardModel
 
-    @Environment(AppEnvironment.self) private var env
+    @EnvironmentObject private var env: AppEnvironment
     @AppStorage(PrefKey.enableLinkPreview.rawValue)
     private var enableLinkPreview: Bool = PasteUserDefaults.enableLinkPreview
 

@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct FilterPopoverView: View {
-    @Environment(AppEnvironment.self) private var env
     @Environment(\.colorScheme) private var colorScheme
     @Bindable var topBarVM: TopBarViewModel
 
@@ -172,7 +171,14 @@ struct FilterPopoverView: View {
                 .font(.headline)
                 .foregroundStyle(.secondary)
 
-            HStack(spacing: Const.space8) {
+            LazyVGrid(
+                columns: [
+                    GridItem(.flexible(), spacing: Const.space8),
+                    GridItem(.flexible(), spacing: Const.space8),
+                    GridItem(.flexible(), spacing: Const.space8),
+                ],
+                spacing: Const.space8
+            ) {
                 ForEach(TopBarViewModel.DateFilterOption.allCases, id: \.self) {
                     option in
                     dateButton(option: option)

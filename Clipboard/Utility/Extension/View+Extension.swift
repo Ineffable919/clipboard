@@ -5,6 +5,7 @@
 //  Created by crown on 2025/12/06.
 //
 
+import Combine
 import SwiftUI
 
 // MARK: - Settings Style Modifier
@@ -50,6 +51,35 @@ struct TextCardStyleModifier: ViewModifier {
     }
 }
 
+struct AutoScrollOnIMEInputModifier: ViewModifier {
+
+    let onIMEInput: () -> Void
+
+    private let imePublisher =
+        NotificationCenter.default.publisher(
+            for: NSTextView.didChangeSelectionNotification
+        )
+        .compactMap { notification -> NSTextView? in
+            notification.object as? NSTextView
+        }
+        .filter { textView in
+            let range = textView.markedRange()
+            return range.location != NSNotFound && range.length > 0
+        }
+        .throttle(
+            for: .milliseconds(50),
+            scheduler: RunLoop.main,
+            latest: true
+        )
+
+    func body(content: Content) -> some View {
+        content
+            .onReceive(imePublisher) { _ in
+                onIMEInput()
+            }
+    }
+}
+
 extension View {
     func settingsStyle() -> some View {
         modifier(SettingsStyleModifier())
@@ -57,5 +87,12 @@ extension View {
 
     func textCardStyle() -> some View {
         modifier(TextCardStyleModifier())
+    }
+
+    @ViewBuilder
+    func autoScrollOnIMEInput(
+        perform action: @escaping () -> Void
+    ) -> some View {
+        modifier(AutoScrollOnIMEInputModifier(onIMEInput: action))
     }
 }

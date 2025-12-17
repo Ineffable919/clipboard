@@ -10,7 +10,7 @@ import SwiftUI
 // MARK: - ContentView
 
 struct ContentView: View {
-    @Environment(AppEnvironment.self) private var env
+    @EnvironmentObject private var env: AppEnvironment
     @FocusState private var focused: Bool
     @State private var pd = PasteDataStore.main
 
@@ -79,8 +79,8 @@ struct ContentView: View {
 // MARK: - Preview
 
 #Preview {
-    @Previewable @State var env = AppEnvironment()
+    @Previewable @StateObject var env = AppEnvironment()
     ContentView()
-        .environment(env)
+        .environmentObject(env)
         .frame(width: 1000, height: 330.0)
 }

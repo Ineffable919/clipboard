@@ -10,7 +10,7 @@ import SwiftUI
 
 struct ClipTopBarView: View {
     @Environment(\.colorScheme) private var colorScheme
-    @Environment(AppEnvironment.self) private var env
+    @EnvironmentObject private var env: AppEnvironment
     @AppStorage(PrefKey.backgroundType.rawValue)
     private var backgroundTypeRaw: Int = 0
     @FocusState private var focus: FocusField?
@@ -96,10 +96,7 @@ struct ClipTopBarView: View {
             }
 
             Button {
-                isFilterPopoverPresented.toggle()
-                if isFilterPopoverPresented {
-                    env.focusView = .filter
-                }
+                toggleFilterPopover()
             } label: {
                 Image(systemName: "line.3.horizontal.decrease.circle")
                     .font(.system(size: Const.iconHdSize, weight: .regular))
@@ -110,7 +107,6 @@ struct ClipTopBarView: View {
             .focusEffectDisabled()
             .popover(isPresented: $isFilterPopoverPresented) {
                 FilterPopoverView(topBarVM: topBarVM)
-                    .environment(env)
             }
         }
         .padding(Const.space6)
@@ -191,7 +187,7 @@ struct ClipTopBarView: View {
             onCycleColor: {
                 let nextIndex =
                     (topBarVM.newChipColorIndex + 1)
-                    % CategoryChip.palette.count
+                        % CategoryChip.palette.count
                 topBarVM.newChipColorIndex = nextIndex
             }
         )
@@ -303,11 +299,24 @@ struct ClipTopBarView: View {
         }
         env.focusView = .history
     }
+
+    private func toggleFilterPopover() {
+        isFilterPopoverPresented.toggle()
+        if isFilterPopoverPresented {
+            env.focusView = .filter
+            focus = nil
+        } else {
+            env.focusView = .search
+            DispatchQueue.main.async {
+                focus = .search
+            }
+        }
+    }
 }
 
 #Preview {
-    @Previewable @State var env = AppEnvironment()
+    @Previewable @StateObject var env = AppEnvironment()
     ClipTopBarView()
-        .environment(env)
+        .environmentObject(env)
         .frame(width: 1000.0, height: 50.0)
 }

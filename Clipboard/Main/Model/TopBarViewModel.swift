@@ -134,12 +134,16 @@ final class TopBarViewModel {
         case today = "Today"
         case yesterday = "Yesterday"
         case thisWeek = "This week"
+        case lastWeek = "Last week"
+        case thisMonth = "This month"
 
         var displayName: String {
             switch self {
-            case .today: return "今天"
-            case .yesterday: return "昨天"
-            case .thisWeek: return "近七天"
+            case .today: "今天"
+            case .yesterday: "昨天"
+            case .thisWeek: "本周"
+            case .lastWeek: "上周"
+            case .thisMonth: "近一个月"
             }
         }
 
@@ -178,6 +182,36 @@ final class TopBarViewModel {
                         )
                     ) ?? now
                 let startTimestamp = Int64(startOfWeek.timeIntervalSince1970)
+                return (startTimestamp, nil)
+
+            case .lastWeek:
+                let thisWeekStart =
+                    calendar.date(
+                        from: calendar.dateComponents(
+                            [.yearForWeekOfYear, .weekOfYear],
+                            from: now
+                        )
+                    ) ?? now
+                let lastWeekStart =
+                    calendar.date(
+                        byAdding: .weekOfYear,
+                        value: -1,
+                        to: thisWeekStart
+                    ) ?? now
+                let endOfLastWeek = thisWeekStart
+                let startTimestamp = Int64(lastWeekStart.timeIntervalSince1970)
+                let endTimestamp = Int64(endOfLastWeek.timeIntervalSince1970)
+                return (startTimestamp, endTimestamp)
+
+            case .thisMonth:
+                let startOfMonth =
+                    calendar.date(
+                        from: calendar.dateComponents(
+                            [.year, .month],
+                            from: now
+                        )
+                    ) ?? now
+                let startTimestamp = Int64(startOfMonth.timeIntervalSince1970)
                 return (startTimestamp, nil)
             }
         }
@@ -361,38 +395,18 @@ final class TopBarViewModel {
         var conditions: [Expression<Bool>] = []
 
         // 类型筛选
-        if !selectedTypes.isEmpty {
-            let typeStrings = selectedTypes.flatMap { type -> [String] in
-                switch type {
-                case .image:
-                    return [
-                        PasteboardType.png.rawValue,
-                        PasteboardType.tiff.rawValue,
-                    ]
-                case .string, .rich:
-                    return [
-                        PasteboardType.string.rawValue,
-                        PasteboardType.rtf.rawValue,
-                        PasteboardType.rtfd.rawValue,
-                    ]
-                case .file:
-                    return [PasteboardType.fileURL.rawValue]
-                case .link, .color:
-                    return [PasteboardType.string.rawValue]
-                case .none:
-                    return []
-                }
-            }
-            let uniqueTypes = Array(Set(typeStrings))
-            if !uniqueTypes.isEmpty {
-                let typeCondition = uniqueTypes.map { Col.type == $0 }.reduce(
-                    Expression<Bool>(value: false)
-                ) { result, condition in
-                    result || condition
-                }
-                conditions.append(typeCondition)
-            }
-        }
+//        if !selectedTypes.isEmpty {
+//            let tagValues = Array(Set(selectedTypes.map(\.tagValue)))
+//            if !tagValues.isEmpty {
+//                let typeCondition = tagValues.map { (Col.tag ?? "") == $0 }
+//                    .reduce(
+//                        Expression<Bool>(value: false)
+//                    ) { result, condition in
+//                        result || condition
+//                    }
+//                conditions.append(typeCondition)
+//            }
+//        }
 
         // 应用筛选
         if !selectedAppNames.isEmpty {

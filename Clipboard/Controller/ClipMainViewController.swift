@@ -15,28 +15,17 @@ final class ClipMainViewController: NSViewController {
     private(set) var isPresented: Bool = false
 
     private let slideContainer: NSView = {
-        if #available(macOS 26, *) {
-            let v = NSView()
-            v.translatesAutoresizingMaskIntoConstraints = false
-            v.wantsLayer = true
-            return v
-        } else {
-            let v = NSView()
-            v.translatesAutoresizingMaskIntoConstraints = false
-            v.wantsLayer = true
-            // v.material = .sidebar
-            // v.blendingMode = .behindWindow
-            // v.state = .active
-            // v.isEmphasized = true
-            return v
-        }
+        let v = NSView()
+        v.translatesAutoresizingMaskIntoConstraints = false
+        v.wantsLayer = true
+        return v
     }()
 
     var env = AppEnvironment()
 
     private lazy var hostingView: NSHostingView<some View> = {
         let contentView = ContentView()
-            .environment(env)
+            .environmentObject(env)
         let v = NSHostingView(rootView: contentView)
         v.translatesAutoresizingMaskIntoConstraints = false
         v.wantsLayer = true
