@@ -470,7 +470,7 @@ struct ClipDragToken: Codable, Sendable, Identifiable, Transferable {
     }
 }
 
-enum PasteModelType {
+enum PasteModelType: String {
     case none
     case image
     case string
@@ -520,6 +520,23 @@ enum PasteModelType {
         case .file: "file"
         case .link: "link"
         case .color: "color"
+        }
+    }
+
+    var iconAndLabel: (icon: String, label: String) {
+        switch self {
+        case .image:
+            return ("photo", "图片")
+        case .string, .rich:
+            return ("text.document", "文本")
+        case .file:
+            return ("folder", "文件")
+        case .link:
+            return ("link", "链接")
+        case .color:
+            return ("paintpalette", "颜色")
+        case .none:
+            return ("", "")
         }
     }
 }

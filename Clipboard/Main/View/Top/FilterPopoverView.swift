@@ -253,5 +253,6 @@ struct FilterPopoverView: View {
             appInfoList = info
             isLoadingApps = false
         }
+        await topBarVM.loadAppPathCache()
     }
 }

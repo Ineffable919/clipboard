@@ -84,7 +84,7 @@ struct ClipTopBarView: View {
                     }
                 }
 
-            if !topBarVM.query.isEmpty {
+            if !topBarVM.hasInput {
                 Button {
                     topBarVM.clearInput()
                 } label: {

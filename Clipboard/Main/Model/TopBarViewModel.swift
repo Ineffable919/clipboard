@@ -20,6 +20,8 @@ final class TopBarViewModel {
         }
     }
 
+    var tags: [InputTag] = []
+
     // MARK: - Chip Properties
 
     var chips: [CategoryChip] = []
@@ -44,6 +46,7 @@ final class TopBarViewModel {
     // 类型筛选：支持多选
     var selectedTypes: Set<PasteModelType> = [] {
         didSet {
+            syncFiltersToTags()
             performSearch()
         }
     }
@@ -51,6 +54,7 @@ final class TopBarViewModel {
     // 应用筛选：支持多选
     var selectedAppNames: Set<String> = [] {
         didSet {
+            syncFiltersToTags()
             performSearch()
         }
     }
@@ -58,11 +62,12 @@ final class TopBarViewModel {
     // 日期筛选：单选
     var selectedDateFilter: DateFilterOption? {
         didSet {
+            syncFiltersToTags()
             performSearch()
         }
     }
 
-    // 分类筛选：支持多选（使用 CategoryChip ID）
+    // 分类筛选：支持多选
     var selectedCategoryIds: Set<Int> = [] {
         didSet {
             performSearch()
@@ -127,6 +132,8 @@ final class TopBarViewModel {
     private var searchTask: Task<Void, Never>?
 
     private var lastCriteria: PasteDataStore.SearchCriteria = .empty
+
+    private var appPathCache: [String: String] = [:]
 
     // MARK: - DateFilterOption
 
@@ -387,6 +394,88 @@ final class TopBarViewModel {
         selectedAppNames.removeAll()
         selectedDateFilter = nil
         selectedCategoryIds.removeAll()
+    }
+
+    // MARK: - Tags Sync Methods
+
+    private func syncFiltersToTags() {
+        var newTags: [InputTag] = []
+
+        for type in selectedTypes {
+            let (icon, label) = type.iconAndLabel
+            let tag = InputTag(
+                icon: AnyView(
+                    Image(systemName: icon)
+                ),
+                label: label,
+                type: .filterType,
+                associatedValue: type.rawValue
+            )
+            newTags.append(tag)
+        }
+
+        for appName in selectedAppNames {
+            let appPath = appPathCache[appName] ?? ""
+            let appIcon: AnyView
+            if FileManager.default.fileExists(atPath: appPath) {
+                appIcon = AnyView(
+                    Image(nsImage: NSWorkspace.shared.icon(forFile: appPath))
+                        .resizable()
+                        .scaledToFit()
+                )
+            } else {
+                appIcon = AnyView(
+                    Image(systemName: "app.fill")
+                )
+            }
+
+            let tag = InputTag(
+                icon: appIcon,
+                label: appName,
+                type: .filterApp,
+                associatedValue: appName,
+                appPath: appPath
+            )
+            newTags.append(tag)
+        }
+
+        if let dateFilter = selectedDateFilter {
+            let tag = InputTag(
+                icon: AnyView(
+                    Image(systemName: "calendar")
+                ),
+                label: dateFilter.displayName,
+                type: .filterDate,
+                associatedValue: dateFilter.rawValue
+            )
+            newTags.append(tag)
+        }
+
+        tags = newTags
+    }
+
+    func loadAppPathCache() async {
+        let appInfo = await dataStore.getAllAppInfo()
+        await MainActor.run {
+            appPathCache = Dictionary(uniqueKeysWithValues: appInfo.map { ($0.name, $0.path) })
+        }
+    }
+
+    func removeTag(_ tag: InputTag) {
+        switch tag.type {
+        case .filterType:
+            if let type = PasteModelType(rawValue: tag.associatedValue) {
+                selectedTypes.remove(type)
+            }
+        case .filterApp:
+            selectedAppNames.remove(tag.associatedValue)
+        case .filterDate:
+            if let dateFilter = DateFilterOption(rawValue: tag.associatedValue),
+               selectedDateFilter == dateFilter
+            {
+                selectedDateFilter = nil
+            }
+        }
     }
 
     func toggleTextType() {
