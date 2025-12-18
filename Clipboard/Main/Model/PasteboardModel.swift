@@ -327,8 +327,7 @@ extension PasteboardModel {
 
 extension PasteboardModel {
     func itemProvider() -> NSItemProvider {
-        // 拖拽状态由 DragDropViewModel 管理，不在此处设置
-        if type == .string {
+        if type == .string || type == .color || type == .link {
             if let str = String(data: data, encoding: .utf8) {
                 return NSItemProvider(object: str as NSString)
             }
