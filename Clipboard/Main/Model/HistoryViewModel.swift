@@ -53,6 +53,13 @@ final class HistoryViewModel {
         return true
     }
 
+    @MainActor
+    func scheduleLoadNextPage(at index: Int) {
+        Task { @MainActor in
+            loadNextPageIfNeeded(at: index)
+        }
+    }
+
     func loadNextPageIfNeeded(at index: Int? = nil) {
         guard pd.dataList.count < pd.totalCount else {
             return
@@ -77,8 +84,8 @@ final class HistoryViewModel {
 
     func scrollAnchor() -> UnitPoint? {
         guard let first = pd.dataList.first?.id,
-              let last = pd.dataList.last?.id,
-              let id = selectedId
+            let last = pd.dataList.last?.id,
+            let id = selectedId
         else {
             return .none
         }

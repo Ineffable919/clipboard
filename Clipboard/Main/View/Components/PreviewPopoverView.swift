@@ -29,6 +29,7 @@ struct PreviewPopoverView: View {
             contentView
         }
         .onDisappear {
+            guard env.focusView != .history else { return }
             env.focusView = .history
         }
     }

@@ -22,8 +22,7 @@ struct TagView: View {
 
             Button(action: onDelete) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 8.0, weight: .semibold))
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 10.0, weight: .semibold))
             }
             .buttonStyle(.plain)
         }

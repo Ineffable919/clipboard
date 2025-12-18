@@ -6,7 +6,6 @@
 //
 
 import AppKit
-import AVFoundation
 import Foundation
 
 final class PasteBoard {
@@ -16,8 +15,24 @@ final class PasteBoard {
     private let timerInterval = 1.0
     private var changeCount: Int
     private var pasteModel: PasteboardModel?
-    private var audioPlayer: AVAudioPlayer?
     private var timer: Timer?
+
+    private lazy var notificationSound: NSSound? = {
+        guard let soundURL = Bundle.main.url(
+            forResource: "copy",
+            withExtension: "aiff"
+        ) else {
+            log.warn("无法找到音效文件: copy.aiff")
+            return nil
+        }
+
+        guard let sound = NSSound(contentsOf: soundURL, byReference: false) else {
+            log.warn("无法加载音效文件: \(soundURL.path)")
+            return nil
+        }
+
+        return sound
+    }()
 
     init() {
         changeCount = pasteboard.changeCount
@@ -81,7 +96,7 @@ final class PasteBoard {
             }
 
             if shouldIgnore {
-                log.debug(
+                log.info(
                     "来自忽略应用的内容，跳过记录: \(sourceApp.localizedName ?? "Unknown")",
                 )
                 changeCount = pasteboard.changeCount
@@ -96,7 +111,7 @@ final class PasteBoard {
         PasteDataStore.main.addNewItem(pasteboard)
         changeCount = pasteboard.changeCount
 
-        DispatchQueue.main.async {
+        Task { @MainActor in
             AppDelegate.shared?.triggerStatusBarPulse()
             if PasteUserDefaults.soundEnabled {
                 self.playNotificationSound()
@@ -162,23 +177,15 @@ final class PasteBoard {
     }
 
     private func playNotificationSound() {
-        guard
-            let url = Bundle.main.url(
-                forResource: "copy",
-                withExtension: "mp3",
-            )
-        else {
+        guard let sound = notificationSound else {
             return
         }
 
-        do {
-            let player = try AVAudioPlayer(contentsOf: url)
-            player.prepareToPlay()
-            player.play()
-            audioPlayer = player
-        } catch {
-            log.warn("播放音效失败: \(error.localizedDescription)")
+        if sound.isPlaying {
+            return
         }
+
+        sound.play()
     }
 
     func pasteData(_ data: PasteboardModel, _ isAttribute: Bool = true) {

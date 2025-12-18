@@ -43,22 +43,7 @@ struct ClipTopBarView: View {
         }
         .frame(height: Const.topBarHeight)
         .onChange(of: env.focusView) {
-            switch env.focusView {
-            case .search:
-                DispatchQueue.main.async {
-                    focus = .search
-                }
-            case .newChip:
-                DispatchQueue.main.async {
-                    focus = .newChip
-                }
-            case .editChip:
-                DispatchQueue.main.async {
-                    focus = .editChip
-                }
-            case .history, .filter, .popover:
-                focus = nil
-            }
+            syncFocus()
         }
         .onAppear {
             EventDispatcher.shared.registerHandler(
@@ -83,7 +68,7 @@ struct ClipTopBarView: View {
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: Const.iconHdSize, weight: .regular))
-                        .foregroundColor(.black.opacity(0.6))
+                        .foregroundColor(.secondary)
                 }
                 .buttonStyle(.plain)
             }
@@ -147,7 +132,11 @@ struct ClipTopBarView: View {
                             }
                         }
                     }
-                    .frame(minWidth: geo.size.width, minHeight: geo.size.height, alignment: .leading)
+                    .frame(
+                        minWidth: geo.size.width,
+                        minHeight: geo.size.height,
+                        alignment: .leading
+                    )
                 }
                 .onChange(of: topBarVM.tags.count) {
                     proxy.scrollTo("textfield", anchor: .trailing)
@@ -334,6 +323,25 @@ struct ClipTopBarView: View {
             isFilterPopoverPresented = false
         }
         env.focusView = .history
+    }
+
+    private func syncFocus() {
+        switch env.focusView {
+        case .search:
+            DispatchQueue.main.async {
+                focus = .search
+            }
+        case .newChip:
+            DispatchQueue.main.async {
+                focus = .newChip
+            }
+        case .editChip:
+            DispatchQueue.main.async {
+                focus = .editChip
+            }
+        case .history, .filter, .popover:
+            focus = nil
+        }
     }
 
     private func toggleFilterPopover() {

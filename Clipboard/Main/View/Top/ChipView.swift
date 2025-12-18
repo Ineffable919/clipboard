@@ -103,9 +103,9 @@ struct ChipView: View {
         .padding(
             EdgeInsets(
                 top: Const.space6,
-                leading: Const.space8,
+                leading: Const.space10,
                 bottom: Const.space6,
-                trailing: Const.space8
+                trailing: Const.space10
             )
         )
         .background {

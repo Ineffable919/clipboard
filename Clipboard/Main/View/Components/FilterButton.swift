@@ -36,7 +36,7 @@ struct FilterButton: View {
                 Spacer()
             }
             .padding(.horizontal, Const.space8)
-            .padding(.vertical, Const.space6)
+            .padding(.vertical, Const.space4)
             .background(
                 RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
                     .fill(

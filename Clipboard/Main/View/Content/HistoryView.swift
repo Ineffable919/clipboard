@@ -10,13 +10,6 @@ import Carbon
 import SwiftUI
 
 struct HistoryView: View {
-    // MARK: - Constants
-
-    private enum Constants {
-        static let doubleTapInterval: TimeInterval = 0.2
-        static let deleteAnimationDelay: TimeInterval = 0.2
-    }
-
     // MARK: - Properties
 
     @EnvironmentObject private var env: AppEnvironment
@@ -85,13 +78,13 @@ struct HistoryView: View {
             if #available(macOS 26.0, *) {
                 ForEach(pd.dataList.enumerated(), id: \.element.id) {
                     index,
-                        item in
+                    item in
                     cardViewItem(for: item, at: index)
                 }
             } else {
                 ForEach(Array(pd.dataList.enumerated()), id: \.element.id) {
                     index,
-                        item in
+                    item in
                     cardViewItem(for: item, at: index)
                 }
             }
@@ -112,14 +105,16 @@ struct HistoryView: View {
                 ? index + 1 : nil,
             onRequestDelete: { requestDel(id: item.id) }
         )
+        .id(item.id)
         .onTapGesture { handleOptimisticTap(on: item) }
         .onDrag {
             env.draggingItemId = item.id
             return item.itemProvider()
         }
         .task(id: item.id) {
-            if historyVM.shouldLoadNextPage(at: index) {
-                historyVM.loadNextPageIfNeeded(at: index)
+            guard historyVM.shouldLoadNextPage(at: index) else { return }
+            await MainActor.run {
+                historyVM.scheduleLoadNextPage(at: index)
             }
         }
     }
@@ -148,7 +143,7 @@ struct HistoryView: View {
         if historyVM.shouldHandleDoubleTap(
             for: item.id,
             currentTime: now,
-            interval: Constants.doubleTapInterval
+            interval: 0.2
         ) {
             handleDoubleTap(on: item)
             historyVM.resetTapState()
@@ -167,9 +162,7 @@ struct HistoryView: View {
     }
 
     private func deleteItem(for id: PasteboardModel.ID) {
-        guard
-            let index = pd.dataList.firstIndex(where: { $0.id == id }
-            )
+        guard let index = pd.dataList.firstIndex(where: { $0.id == id })
         else {
             return
         }
@@ -179,19 +172,17 @@ struct HistoryView: View {
         let item = pd.dataList[index]
         env.actions.delete(item)
 
-        withAnimation(.easeOut(duration: Constants.deleteAnimationDelay)) {
+        withAnimation(.easeInOut(duration: 0.2)) {
             pd.dataList.remove(at: index)
             updateSelectionAfterDeletion(at: index)
         }
 
-        DispatchQueue.main.asyncAfter(
-            deadline: .now() + Constants.deleteAnimationDelay,
-        ) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             historyVM.isDel = false
 
             if pd.dataList.count < 50,
-               pd.hasMoreData,
-               !pd.isLoadingPage
+                pd.hasMoreData,
+                !pd.isLoadingPage
             {
                 pd.loadNextPage()
             }
@@ -257,7 +248,7 @@ struct HistoryView: View {
 
     private func flagsChangedEvent(_ event: NSEvent) -> NSEvent? {
         guard event.window == ClipMainWindowController.shared.window,
-              env.focusView == .history
+            env.focusView == .history
         else {
             return event
         }
@@ -345,7 +336,7 @@ struct HistoryView: View {
 
     private func handleCopyCommand() -> NSEvent? {
         guard let id = historyVM.selectedId,
-              let item = pd.dataList.first(where: { $0.id == id })
+            let item = pd.dataList.first(where: { $0.id == id })
         else {
             NSSound.beep()
             return nil
@@ -371,7 +362,7 @@ struct HistoryView: View {
     private func handleReturnKey(_ event: NSEvent) -> NSEvent? {
         guard env.focusView == .history else { return event }
         guard let id = historyVM.selectedId,
-              let item = pd.dataList.first(where: { $0.id == id })
+            let item = pd.dataList.first(where: { $0.id == id })
         else {
             return event
         }
@@ -420,7 +411,7 @@ struct HistoryView: View {
             }
 
             guard response == .alertFirstButtonReturn,
-                  let id = historyVM.pendingDeleteId
+                let id = historyVM.pendingDeleteId
             else {
                 return
             }
