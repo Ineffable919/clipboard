@@ -51,7 +51,7 @@ struct ChipEditorView: View {
                 )
         )
         .onAppear {
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 focus = focusValue
             }
         }
