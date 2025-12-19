@@ -17,7 +17,8 @@ struct ClipTopBarView: View {
     @State private var topBarVM = TopBarViewModel()
     @State private var isIconHovered: Bool = false
     @State private var isPlusHovered: Bool = false
-    @State private var isFilterPopoverPresented: Bool = false
+    @State private var showFilter: Bool = false
+    @State private var syncingFocus = false
 
     var body: some View {
         GeometryReader { geo in
@@ -42,8 +43,15 @@ struct ClipTopBarView: View {
             }
         }
         .frame(height: Const.topBarHeight)
+        .onChange(of: focus) {
+            guard !syncingFocus else { return }
+            guard !showFilter else { return }
+            syncFocusFromFocus()
+        }
         .onChange(of: env.focusView) {
-            syncFocus()
+            guard !syncingFocus else { return }
+            guard env.focusView != .filter else { return }
+            syncFocusFromEnv()
         }
         .onAppear {
             EventDispatcher.shared.registerHandler(
@@ -55,10 +63,11 @@ struct ClipTopBarView: View {
     }
 
     private var searchField: some View {
-        HStack(spacing: Const.space6) {
+        HStack(spacing: 0) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: Const.iconHdSize, weight: .regular))
-                .foregroundColor(.black.opacity(0.6))
+                .foregroundColor(.primary.opacity(0.6))
+                .padding(.horizontal, Const.space6)
 
             inputTagView
 
@@ -73,35 +82,34 @@ struct ClipTopBarView: View {
                 .buttonStyle(.plain)
             }
 
-            Button {
-                toggleFilterPopover()
-            } label: {
-                Image(systemName: "line.3.horizontal.decrease")
-                    .font(.system(size: Const.iconHdSize, weight: .regular))
-                    .foregroundColor(.black.opacity(0.6))
-            }
-            .buttonStyle(.plain)
-            .focusEffectDisabled()
-            .popover(isPresented: $isFilterPopoverPresented) {
-                FilterPopoverView(topBarVM: topBarVM)
-            }
+            filterIcon
         }
         .padding(Const.space4)
         .frame(width: Const.topBarWidth, height: 32.0)
         .contentShape(Rectangle())
-        .onTapGesture {
-            focus = .search
-        }
+        .gesture(
+            TapGesture().onEnded {
+                env.focusView = .search
+            },
+            including: .gesture
+        )
         .overlay(
             RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
                 .stroke(
                     focus == .search
                         ? Color.accentColor.opacity(0.4)
                         : Color.gray.opacity(0.4),
-                    lineWidth: 3
+                    lineWidth: 3.5
                 )
                 .padding(-1)
         )
+        .onAppear {
+            if env.focusView.requiresSystemFocus, focus != env.focusView {
+                Task { @MainActor in
+                    focus = env.focusView
+                }
+            }
+        }
     }
 
     private var inputTagView: some View {
@@ -109,11 +117,9 @@ struct ClipTopBarView: View {
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: Const.space6) {
-                        if !topBarVM.tags.isEmpty {
-                            ForEach(topBarVM.tags) { tag in
-                                TagView(tag: tag) {
-                                    topBarVM.removeTag(tag)
-                                }
+                        ForEach(topBarVM.tags) { tag in
+                            TagView(tag: tag) {
+                                topBarVM.removeTag(tag)
                             }
                         }
                         TextField(
@@ -125,11 +131,6 @@ struct ClipTopBarView: View {
                         .id("textfield")
                         .autoScrollOnIMEInput {
                             proxy.scrollTo("textfield", anchor: .trailing)
-                        }
-                        .onChange(of: focus) {
-                            if focus == .search, env.focusView != .search {
-                                env.focusView = .search
-                            }
                         }
                     }
                     .frame(
@@ -146,6 +147,20 @@ struct ClipTopBarView: View {
                 }
             }
         }
+    }
+
+    private var filterIcon: some View {
+        Image(systemName: "line.3.horizontal.decrease")
+            .font(.system(size: Const.iconHdSize, weight: .regular))
+            .foregroundColor(.primary.opacity(0.6))
+            .frame(width: 24, height: 32)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                toggleFilterPopover()
+            }
+            .popover(isPresented: $showFilter) {
+                FilterPopoverView(topBarVM: topBarVM)
+            }
     }
 
     private var searchIcon: some View {
@@ -238,8 +253,6 @@ struct ClipTopBarView: View {
             .onTapGesture {
                 if !topBarVM.editingNewChip {
                     topBarVM.editingNewChip = true
-
-                    focus = .newChip
                 } else {
                     topBarVM.commitNewChipOrCancel(commitIfNonEmpty: true)
                 }
@@ -306,8 +319,8 @@ struct ClipTopBarView: View {
                 return nil
             }
             if env.focusView == .filter {
-                if isFilterPopoverPresented {
-                    isFilterPopoverPresented.toggle()
+                if showFilter {
+                    showFilter.toggle()
                 }
                 env.focusView = .search
                 return nil
@@ -318,42 +331,31 @@ struct ClipTopBarView: View {
     }
 
     private func focusHistory() {
-        focus = nil
-        if isFilterPopoverPresented {
-            isFilterPopoverPresented = false
+        if showFilter {
+            showFilter = false
         }
         env.focusView = .history
     }
 
-    private func syncFocus() {
-        switch env.focusView {
-        case .search:
-            DispatchQueue.main.async {
-                focus = .search
-            }
-        case .newChip:
-            DispatchQueue.main.async {
-                focus = .newChip
-            }
-        case .editChip:
-            DispatchQueue.main.async {
-                focus = .editChip
-            }
-        case .history, .filter, .popover:
-            focus = nil
-        }
+    private func syncFocusFromEnv() {
+        guard !syncingFocus else { return }
+        syncingFocus = true
+        defer { syncingFocus = false }
+        focus = env.focusView.asOptional
+    }
+
+    private func syncFocusFromFocus() {
+        guard !syncingFocus else { return }
+        syncingFocus = true
+        defer { syncingFocus = false }
+        env.focusView = FocusField.fromOptional(focus)
     }
 
     private func toggleFilterPopover() {
-        isFilterPopoverPresented.toggle()
-        if isFilterPopoverPresented {
-            env.focusView = .filter
+        showFilter.toggle()
+        if showFilter {
             focus = nil
-        } else {
-            env.focusView = .search
-            //            DispatchQueue.main.async {
-            //                focus = .search
-            //            }
+            env.focusView = .filter
         }
     }
 }
