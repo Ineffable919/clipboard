@@ -104,12 +104,18 @@ final class PasteboardModel: Identifiable {
     }
 
     convenience init?(with pasteboard: NSPasteboard) {
-        guard let item = pasteboard.pasteboardItems?.first else { return nil }
+        guard let items = pasteboard.pasteboardItems, !items.isEmpty
+        else { return nil }
+        let item = items[0]
 
-        let app = NSWorkspace.shared.frontmostApplication
         guard let type = item.availableType(from: PasteboardType.supportTypes)
         else { return nil }
+
         var content: Data?
+        var searchText = ""
+        var length = 0
+        var filePaths: [String]?
+
         if type.isFile() {
             guard
                 let fileURLs = pasteboard.readObjects(
@@ -117,9 +123,18 @@ final class PasteboardModel: Identifiable {
                     options: nil,
                 ) as? [URL]
             else { return nil }
-            let filePaths = fileURLs.map(\.path)
-            FileAccessHelper.shared.saveSecurityBookmarks(for: filePaths)
-            let filePathsString = filePaths.joined(separator: "\n")
+
+            filePaths = fileURLs.map(\.path)
+            searchText = filePaths!.joined(separator: "")
+
+            let pathsToSave = filePaths!
+            Task.detached(priority: .utility) {
+                await FileAccessHelper.shared.saveSecurityBookmarks(
+                    for: pathsToSave
+                )
+            }
+
+            let filePathsString = filePaths!.joined(separator: "\n")
             content = filePathsString.data(using: .utf8) ?? Data()
         } else {
             content = item.data(forType: type)
@@ -128,40 +143,27 @@ final class PasteboardModel: Identifiable {
 
         var showData: Data?
         var showAtt: NSAttributedString?
-        var att = NSAttributedString()
         if type.isText() {
-            att =
+            let att =
                 NSAttributedString(with: content, type: type)
                     ?? NSAttributedString()
             guard !att.string.allSatisfy(\.isWhitespace) else {
                 return nil
             }
+            length = att.length
             showAtt =
-                att.length > 250
+                length > 250
                     ? att.attributedSubstring(from: NSMakeRange(0, 250)) : att
             showData = showAtt?.toData(with: type)
+            searchText = att.string
         }
 
-        let calculatedTag: String
-        switch type {
-        case .rtf, .rtfd:
-            calculatedTag = "rich"
-        case .string:
-            let str = String(data: content ?? Data(), encoding: .utf8) ?? ""
-            if str.isCSSHexColor {
-                calculatedTag = "color"
-            } else if str.asCompleteURL() != nil {
-                calculatedTag = "link"
-            } else {
-                calculatedTag = "string"
-            }
-        case .png, .tiff:
-            calculatedTag = "image"
-        case .fileURL:
-            calculatedTag = "file"
-        default:
-            calculatedTag = ""
-        }
+        let calculatedTag = Self.calculateTag(
+            type: type, 
+            content: content ?? Data()
+        )
+
+        let app = NSWorkspace.shared.frontmostApplication
 
         self.init(
             pasteboardType: type,
@@ -170,11 +172,39 @@ final class PasteboardModel: Identifiable {
             timestamp: Int64(Date().timeIntervalSince1970),
             appPath: app?.bundleURL?.path ?? "",
             appName: app?.localizedName ?? "",
-            searchText: att.string,
-            length: att.length,
+            searchText: searchText,
+            length: length,
             group: -1,
             tag: calculatedTag
         )
+    }
+
+    // MARK: - Public Helper
+
+    static func calculateTag(type: PasteboardType, content: Data)
+        -> String
+    {
+        switch type {
+        case .rtf, .rtfd:
+            return "rich"
+        case .string:
+            guard let str = String(data: content, encoding: .utf8) else {
+                return "string"
+            }
+            if str.isCSSHexColor {
+                return "color"
+            } else if str.asCompleteURL() != nil {
+                return "link"
+            } else {
+                return "string"
+            }
+        case .png, .tiff:
+            return "image"
+        case .fileURL:
+            return "file"
+        default:
+            return ""
+        }
     }
 
     func introString() -> String {

@@ -335,9 +335,9 @@ extension PasteSQLManager {
                             let data = row[Col.data]
 
                             let pasteboardType = PasteboardType(typeStr)
-                            let tagValue = self.calculateTagValue(
+                            let tagValue = PasteboardModel.calculateTag(
                                 type: pasteboardType,
-                                data: data
+                                content: data
                             )
 
                             let update = table.filter(Col.id == id)
@@ -366,24 +366,4 @@ extension PasteSQLManager {
         log.info("tag 字段数据迁移完成，共迁移 \(totalMigrated) 条记录")
     }
 
-    private func calculateTagValue(type: PasteboardType, data: Data) -> String {
-        switch type {
-        case .rtf, .rtfd:
-            return "rich"
-        case .string:
-            if let str = String(data: data, encoding: .utf8), str.isCSSHexColor {
-                return "color"
-            }
-            if let str = String(data: data, encoding: .utf8), str.asCompleteURL() != nil {
-                return "link"
-            }
-            return "string"
-        case .png, .tiff:
-            return "image"
-        case .fileURL:
-            return "file"
-        default:
-            return ""
-        }
-    }
 }
