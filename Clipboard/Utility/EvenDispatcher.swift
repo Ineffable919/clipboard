@@ -86,8 +86,9 @@ final class EventDispatcher {
     /// Core dispatch: iterate handlers; first `nil` stops chain.
     /// Propagate modified event through chain; returning nil consumes.
     private func handle(event: NSEvent) -> NSEvent? {
-        // 全局开关：如果打开，所有事件都交给系统（ESC除外）
-        if bypassAllEvents, event.keyCode != KeyCode.escape {
+        if bypassAllEvents, event.keyCode != KeyCode.escape,
+            event.keyCode != KeyCode.delete
+        {
             if event.type == .keyDown {
                 let keyChar =
                     event.charactersIgnoringModifiers?.lowercased() ?? ""

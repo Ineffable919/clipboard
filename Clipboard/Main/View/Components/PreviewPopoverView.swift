@@ -141,7 +141,7 @@ struct PreviewPopoverView: View {
                 textPreview
             }
         case .color:
-            CSSView(model: model)
+            CSSPreview
         case .string:
             textPreview
         case .rich:
@@ -159,6 +159,22 @@ struct PreviewPopoverView: View {
                     height: PreviewPopoverView.defaultHeight,
                     alignment: .center,
                 )
+        }
+    }
+
+    @ViewBuilder
+    private var CSSPreview: some View {
+        if let hex = String(data: model.data, encoding: .utf8) {
+            VStack(alignment: .center) {
+                Text(hex)
+                    .font(.title2)
+            }
+            .frame(
+                maxWidth: Const.maxPreviewWidth,
+                maxHeight: Const.maxPreviewHeight,
+                alignment: .center
+            )
+            .background(Color(nsColor: NSColor(hex: hex)))
         }
     }
 

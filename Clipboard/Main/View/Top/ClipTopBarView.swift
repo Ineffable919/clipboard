@@ -18,7 +18,6 @@ struct ClipTopBarView: View {
     @State private var isIconHovered: Bool = false
     @State private var isPlusHovered: Bool = false
     @State private var showFilter: Bool = false
-    @State private var syncingFocus = false
 
     var body: some View {
         GeometryReader { geo in
@@ -43,14 +42,7 @@ struct ClipTopBarView: View {
             }
         }
         .frame(height: Const.topBarHeight)
-        .onChange(of: focus) {
-            guard !syncingFocus else { return }
-            guard !showFilter else { return }
-            syncFocusFromFocus()
-        }
         .onChange(of: env.focusView) {
-            guard !syncingFocus else { return }
-            guard env.focusView != .filter else { return }
             syncFocusFromEnv()
         }
         .onAppear {
@@ -86,13 +78,6 @@ struct ClipTopBarView: View {
         }
         .padding(Const.space4)
         .frame(width: Const.topBarWidth, height: 32.0)
-        .contentShape(Rectangle())
-        .gesture(
-            TapGesture().onEnded {
-                env.focusView = .search
-            },
-            including: .gesture
-        )
         .overlay(
             RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
                 .stroke(
@@ -103,12 +88,9 @@ struct ClipTopBarView: View {
                 )
                 .padding(-1)
         )
-        .onAppear {
-            if env.focusView.requiresSystemFocus, focus != env.focusView {
-                Task { @MainActor in
-                    focus = env.focusView
-                }
-            }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            env.focusView = .search
         }
     }
 
@@ -131,6 +113,11 @@ struct ClipTopBarView: View {
                         .id("textfield")
                         .autoScrollOnIMEInput {
                             proxy.scrollTo("textfield", anchor: .trailing)
+                        }
+                        .onChange(of: focus) {
+                            if focus == .search, env.focusView != .search {
+                                env.focusView = .search
+                            }
                         }
                     }
                     .frame(
@@ -299,6 +286,17 @@ struct ClipTopBarView: View {
             return nil
         }
 
+        if event.keyCode == KeyCode.delete {
+            if !topBarVM.query.isEmpty {
+                return event
+            }
+            if topBarVM.hasActiveFilters {
+                topBarVM.removeLastFilter()
+                return nil
+            }
+            return event
+        }
+
         if event.keyCode == KeyCode.escape {
             if topBarVM.isEditingChip {
                 topBarVM.cancelEditingChip()
@@ -338,17 +336,11 @@ struct ClipTopBarView: View {
     }
 
     private func syncFocusFromEnv() {
-        guard !syncingFocus else { return }
-        syncingFocus = true
-        defer { syncingFocus = false }
-        focus = env.focusView.asOptional
-    }
-
-    private func syncFocusFromFocus() {
-        guard !syncingFocus else { return }
-        syncingFocus = true
-        defer { syncingFocus = false }
-        env.focusView = FocusField.fromOptional(focus)
+        if env.focusView.requiresSystemFocus {
+            Task { @MainActor in
+                focus = env.focusView
+            }
+        }
     }
 
     private func toggleFilterPopover() {

@@ -33,7 +33,7 @@ struct FilterPopoverView: View {
     }
 
     var body: some View {
-        ScrollView {
+        ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: Const.space16) {
                 typeSection
 
@@ -98,7 +98,6 @@ struct FilterPopoverView: View {
         )
     }
 
-    /// 文本类型按钮(合并 string 和 rich)
     private func textTypeButton() -> some View {
         FilterButton(
             icon: {

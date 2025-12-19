@@ -494,6 +494,11 @@ final class TopBarViewModel {
         performSearch()
     }
 
+    func removeLastFilter() {
+        guard let lastTag = tags.last else { return }
+        removeTag(lastTag)
+    }
+
     func toggleTextType() {
         let hasString = selectedTypes.contains(.string)
         let hasRich = selectedTypes.contains(.rich)
