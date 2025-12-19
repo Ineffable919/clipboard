@@ -55,7 +55,6 @@ struct StartupShortcutsView: View {
     var body: some View {
         HStack {
             Text("启动 \(appName)")
-                .font(.body)
             Spacer()
             ShortcutRecorder("app_launch") {
                 ClipMainWindowController.shared.toggleWindow()
