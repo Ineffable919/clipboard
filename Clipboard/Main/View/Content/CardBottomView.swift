@@ -65,7 +65,6 @@ struct CommonBottomView: View {
                     )
                 }
             }
-            .clipShape(Const.contentShape)
     }
 
     private func calculateNeedsMask() -> Bool {
@@ -77,21 +76,33 @@ struct CommonBottomView: View {
         }
 
         let textHeight = calculateTextHeight(text: text)
-        // 只要内容延伸到底部区域（最后两行位置），就显示遮罩
         return textHeight > (Const.cntSize - Const.bottomSize)
     }
 
     /// 计算文本实际渲染高度
     private func calculateTextHeight(text: String) -> CGFloat {
-        let font = NSFont.systemFont(ofSize: NSFont.preferredFont(forTextStyle: .body).pointSize)
-        // 宽度 = 卡片宽度 - 左右 padding
-        let availableWidth = Const.cardSize - Const.space10 - Const.space8
-        let constraintRect = CGSize(width: availableWidth, height: .greatestFiniteMagnitude)
+        let font = NSFont.preferredFont(forTextStyle: .callout)
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineBreakMode = .byWordWrapping
 
-        let boundingBox = (text as NSString).boundingRect(
+        var normalized = text.replacingOccurrences(of: "\r\n", with: "\n")
+        if normalized.hasSuffix("\n") {
+            normalized.append(" ")
+        }
+
+        let availableWidth = Const.cardSize - (Const.space12 * 2)
+        let constraintRect = CGSize(
+            width: max(0, availableWidth),
+            height: .greatestFiniteMagnitude
+        )
+
+        let boundingBox = (normalized as NSString).boundingRect(
             with: constraintRect,
-            options: [.usesLineFragmentOrigin, .usesFontLeading],
-            attributes: [.font: font],
+            options: [.usesLineFragmentOrigin, .usesFontLeading, .usesDeviceMetrics],
+            attributes: [
+                .font: font,
+                .paragraphStyle: paragraphStyle,
+            ],
             context: nil
         )
 

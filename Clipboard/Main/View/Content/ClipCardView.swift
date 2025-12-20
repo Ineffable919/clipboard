@@ -44,7 +44,7 @@ struct ClipCardView: View {
                 x: 0,
                 y: isSelected ? 0 : 2,
             )
-            .padding(4)
+            .padding(Const.space4)
             .contextMenu(menuItems: {
                 contextMenuContent
             })
@@ -55,29 +55,29 @@ struct ClipCardView: View {
 
     @ViewBuilder
     private var cardContent: some View {
-        ZStack(alignment: .bottom) {
-            VStack(spacing: 0) {
-                CardHeadView(model: model)
-                    .id("\(model.id ?? 0)-\(model.group)")
+        VStack(spacing: 0) {
+            CardHeadView(model: model)
+                .id("\(model.id ?? 0)-\(model.group)")
 
+            ZStack(alignment: .bottom) {
                 CardContentView(model: model)
                     .frame(
                         maxWidth: .infinity,
                         maxHeight: .infinity,
                         alignment: textAlignment,
                     )
-                    .background {
-                        if model.url == nil
-                            || !enableLinkPreview
-                        {
-                            model.backgroundColor
-                        }
-                    }
-                    .clipShape(Const.contentShape)
-            }
 
-            CardBottomView(model: model)
-                .id("\(model.id ?? 0)-\(model.group)")
+                CardBottomView(model: model)
+                    .id("\(model.id ?? 0)-\(model.group)")
+            }
+            .background {
+                if model.url == nil
+                    || !enableLinkPreview
+                {
+                    model.backgroundColor
+                }
+            }
+            .clipShape(Const.contentShape)
         }
     }
 
