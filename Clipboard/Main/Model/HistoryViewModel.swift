@@ -53,13 +53,6 @@ final class HistoryViewModel {
         return true
     }
 
-    @MainActor
-    func scheduleLoadNextPage(at index: Int) {
-        Task { @MainActor in
-            loadNextPageIfNeeded(at: index)
-        }
-    }
-
     func loadNextPageIfNeeded(at index: Int? = nil) {
         guard pd.dataList.count < pd.totalCount else {
             return

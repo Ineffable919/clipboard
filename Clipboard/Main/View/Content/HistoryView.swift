@@ -113,6 +113,7 @@ struct HistoryView: View {
             onRequestDelete: { requestDel(id: item.id) }
         )
         .id(item.id)
+        .contentShape(Rectangle())
         .onTapGesture { handleOptimisticTap(on: item) }
         .onDrag {
             env.draggingItemId = item.id
@@ -120,9 +121,7 @@ struct HistoryView: View {
         }
         .task(id: item.id) {
             guard historyVM.shouldLoadNextPage(at: index) else { return }
-            await MainActor.run {
-                historyVM.scheduleLoadNextPage(at: index)
-            }
+            historyVM.loadNextPageIfNeeded(at: index)
         }
     }
 

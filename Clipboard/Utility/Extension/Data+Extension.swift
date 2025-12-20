@@ -10,7 +10,10 @@ import SwiftUI
 
 extension Data {
     var sha256Hex: String {
-        SHA256.hash(data: self).map { String(format: "%02x", $0) }.joined()
+        let digest = SHA256.hash(data: self)
+        return digest.reduce(into: "") { result, byte in
+            result += String(format: "%02hhx", byte)
+        }
     }
 
     var sha256Data: Data {

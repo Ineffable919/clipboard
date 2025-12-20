@@ -25,13 +25,7 @@ struct PreviewPopoverView: View {
             Task { @MainActor in
                 env.focusView = .popover
             }
-        }) {
-            contentView
-        }
-        .onDisappear {
-            guard env.focusView != .history else { return }
-            env.focusView = .history
-        }
+        }) { contentView }
     }
 
     private var contentView: some View {
@@ -80,8 +74,8 @@ struct PreviewPopoverView: View {
                 }
 
                 if model.url != nil,
-                   enableLinkPreview,
-                   let browserName = getDefaultBrowserName()
+                    enableLinkPreview,
+                    let browserName = getDefaultBrowserName()
                 {
                     BorderedButton(title: "使用 \(browserName) 打开") {
                         withAnimation {
@@ -111,7 +105,7 @@ struct PreviewPopoverView: View {
 
     func getDefaultBrowserName() -> String? {
         if let appURL = NSWorkspace.shared.urlForApplication(toOpen: .html),
-           let bundle = Bundle(url: appURL)
+            let bundle = Bundle(url: appURL)
         {
             return bundle.object(forInfoDictionaryKey: "CFBundleDisplayName")
                 as? String ?? bundle.object(

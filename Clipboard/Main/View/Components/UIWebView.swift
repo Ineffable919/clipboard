@@ -44,7 +44,7 @@ private struct WebViewRepresentable: NSViewRepresentable {
         if nsView.url != url {
             let request = URLRequest(
                 url: url,
-                cachePolicy: .useProtocolCachePolicy,
+                cachePolicy: .reloadIgnoringCacheData,
                 timeoutInterval: 5,
             )
             nsView.load(request)

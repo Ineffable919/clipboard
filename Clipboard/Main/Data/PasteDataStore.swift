@@ -301,7 +301,7 @@ extension PasteDataStore {
                 return
             }
             var list = dataList
-            list.removeAll(where: { $0 == model })
+            list.removeAll(where: { $0.uniqueId == model.uniqueId })
             list.insert(model, at: 0)
             hasMoreData = list.count >= pageSize
             list = Array(list.prefix(pageSize))

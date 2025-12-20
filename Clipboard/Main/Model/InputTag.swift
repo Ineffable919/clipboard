@@ -12,8 +12,8 @@ struct InputTag: Identifiable, Equatable {
     let icon: AnyView
     let label: String
     let type: TagType
-    let associatedValue: String // 用于关联具体的类型/应用/日期值
-    let appPath: String? // 应用路径，仅用于 filterApp 类型
+    let associatedValue: String
+    let appPath: String?
 
     init(icon: AnyView, label: String, type: TagType, associatedValue: String, appPath: String? = nil) {
         self.icon = icon
@@ -24,9 +24,9 @@ struct InputTag: Identifiable, Equatable {
     }
 
     enum TagType {
-        case filterType // 类型筛选
-        case filterApp // 应用筛选
-        case filterDate // 日期筛选
+        case filterType
+        case filterApp
+        case filterDate
     }
 
     static func == (lhs: InputTag, rhs: InputTag) -> Bool {

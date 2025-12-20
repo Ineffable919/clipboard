@@ -76,7 +76,6 @@ final class PasteboardModel: Identifiable {
         self.pasteboardType = pasteboardType
         self.data = data
         self.showData = showData
-        uniqueId = data.sha256Hex
         self.timestamp = timestamp
         self.appPath = appPath
         self.appName = appName
@@ -84,11 +83,16 @@ final class PasteboardModel: Identifiable {
         self.length = length
         self.group = group
         self.tag = tag
-        attributeString =
-            NSAttributedString(
-                with: showData,
-                type: pasteboardType,
-            ) ?? NSAttributedString()
+
+        attributeString = NSAttributedString(
+            with: showData,
+            type: pasteboardType
+        ) ?? NSAttributedString()
+
+        uniqueId = Self.generateUniqueId(
+            for: pasteboardType,
+            data: data
+        )
 
         let (bg, fg, hasBg) = computeColors()
         cachedBackgroundColor = bg
@@ -312,7 +316,7 @@ final class PasteboardModel: Identifiable {
 
 extension PasteboardModel: Equatable {
     static func == (lhs: PasteboardModel, rhs: PasteboardModel) -> Bool {
-        lhs.uniqueId == rhs.uniqueId && lhs.id == rhs.id
+        lhs.uniqueId == rhs.uniqueId
     }
 }
 
@@ -481,6 +485,24 @@ extension PasteboardModel {
 
     func createToken() -> ClipDragToken {
         ClipDragToken(id: id)
+    }
+
+    /// 唯一标识符
+    private static func generateUniqueId(
+        for type: PasteboardType,
+        data: Data
+    ) -> String {
+        switch type {
+        case .rtf, .rtfd:
+            if let attributeString = NSAttributedString(with: data, type: type),
+               let textData = attributeString.string.data(using: .utf8)
+            {
+                return textData.sha256Hex
+            }
+            return data.sha256Hex
+        default:
+            return data.sha256Hex
+        }
     }
 }
 

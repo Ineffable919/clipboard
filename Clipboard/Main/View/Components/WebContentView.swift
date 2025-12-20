@@ -25,7 +25,13 @@ struct WebContentView: View {
             height: Const.maxContentHeight,
         )
         .onAppear {
-            webPage.load(url)
+            webPage.load(
+                URLRequest(
+                    url: url,
+                    cachePolicy: .reloadIgnoringCacheData,
+                    timeoutInterval: 5.0
+                )
+            )
         }
     }
 }

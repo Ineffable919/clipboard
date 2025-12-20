@@ -84,7 +84,7 @@ struct ChipView: View {
                 if #available(macOS 15.0, *) {
                     Image(
                         systemName:
-                        "clock.arrow.trianglehead.counterclockwise.rotate.90"
+                            "clock.arrow.trianglehead.counterclockwise.rotate.90"
                     )
                 } else {
                     Image("clock.arrow.trianglehead.counterclockwise.rotate.90")
@@ -115,6 +115,7 @@ struct ChipView: View {
         .onHover { hovering in
             isTypeHovered = hovering
         }
+        .help(chip.id == 1 ? "\(PasteDataStore.main.totalCount)条" : "")
     }
 
     private var editingView: some View {
