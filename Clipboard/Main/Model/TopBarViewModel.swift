@@ -252,6 +252,7 @@ final class TopBarViewModel {
 
     private func saveUserCategories() {
         PasteUserDefaults.userCategoryChip = chips.filter { !$0.isSystem }
+        dataStore.notifyCategoryChipsChanged()
     }
 
     func toggleChip(_ chip: CategoryChip) {

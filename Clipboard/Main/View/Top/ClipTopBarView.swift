@@ -404,6 +404,10 @@ struct SettingsMenu: View {
             keyEquivalent: ",",
         )
         settingsItem.target = MenuActions.shared
+        settingsItem.image = NSImage(
+            systemSymbolName: "gearshape",
+            accessibilityDescription: nil,
+        )
         menu.addItem(settingsItem)
 
         let updateItem = NSMenuItem(
@@ -412,6 +416,10 @@ struct SettingsMenu: View {
             keyEquivalent: "",
         )
         updateItem.target = MenuActions.shared
+        updateItem.image = NSImage(
+            systemSymbolName: "arrow.clockwise",
+            accessibilityDescription: nil,
+        )
         menu.addItem(updateItem)
 
         let helpItem = NSMenuItem(
@@ -420,6 +428,10 @@ struct SettingsMenu: View {
             keyEquivalent: "",
         )
         helpItem.target = MenuActions.shared
+        helpItem.image = NSImage(
+            systemSymbolName: "questionmark.circle",
+            accessibilityDescription: nil,
+        )
         menu.addItem(helpItem)
 
         let quitItem = NSMenuItem(

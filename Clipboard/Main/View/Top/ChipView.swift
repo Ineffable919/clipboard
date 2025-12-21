@@ -95,7 +95,7 @@ struct ChipView: View {
                     .frame(width: Const.space12, height: Const.space12)
                     .padding(Const.space2)
             }
-            if !topBarVM.hasInput {
+            if focusHistory() {
                 Text(chip.name)
             }
         }
@@ -140,7 +140,7 @@ struct ChipView: View {
 
     @ViewBuilder
     private func overlayColor() -> some View {
-        if env.focusView != .history {
+        if !focusHistory() {
             Color.clear
         } else {
             overlayColorForHistory()
@@ -211,6 +211,11 @@ struct ChipView: View {
             return false
         }
         return true
+    }
+
+    private func focusHistory() -> Bool {
+        !topBarVM.hasInput && env.focusView != .search
+            && env.focusView != .filter
     }
 
     private func showDelAlert(_ chip: CategoryChip) {

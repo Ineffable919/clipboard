@@ -116,7 +116,6 @@ struct HelpCenterButton: View {
             HStack {
                 Image(systemName: "questionmark.circle")
                 Text("帮助中心")
-                    .font(.body)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, Const.space8)

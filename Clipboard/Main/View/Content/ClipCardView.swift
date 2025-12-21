@@ -57,7 +57,6 @@ struct ClipCardView: View {
     private var cardContent: some View {
         VStack(spacing: 0) {
             CardHeadView(model: model)
-                .id("\(model.id ?? 0)-\(model.group)")
 
             ZStack(alignment: .bottom) {
                 CardContentView(model: model)

@@ -17,6 +17,8 @@ final class PasteDataStore {
     private let pageSize = 50
     var dataList: [PasteboardModel] = []
 
+    private(set) var chipsVersion: Int = 0
+
     private(set) var totalCount: Int = 0
     private(set) var pageIndex = 0
 
@@ -33,7 +35,6 @@ final class PasteDataStore {
 
     private(set) var lastDataChangeType: DataChangeType = .reset
 
-    /// 当前的筛选条件（用于分页加载筛选结果）
     private var currentFilter: Expression<Bool>?
     private(set) var isInFilterMode: Bool = false
 
@@ -50,6 +51,11 @@ final class PasteDataStore {
             }
         }
         colorDict = PasteUserDefaults.appColorData
+    }
+
+    @MainActor
+    func notifyCategoryChipsChanged() {
+        chipsVersion &+= 1
     }
 
     @MainActor
@@ -142,7 +148,9 @@ extension PasteDataStore {
         }
     }
 
-    private func buildFilter(from criteria: TopBarViewModel.SearchCriteria) -> Expression<Bool>? {
+    private func buildFilter(from criteria: TopBarViewModel.SearchCriteria)
+        -> Expression<Bool>?
+    {
         var clauses: [Expression<Bool>] = []
 
         // 关键词搜索
@@ -316,6 +324,21 @@ extension PasteDataStore {
 
     func insertModel(_ model: PasteboardModel) {
         Task {
+            let exist: [Row]
+            await exist = sqlManager.search(
+                filter: Col.uniqueId == model.uniqueId,
+            )
+            if !exist.isEmpty {
+                if let ex = await getItems(rows: exist).first {
+                    ex.updateDate()
+                    await sqlManager.update(id: ex.id!, item: ex)
+                    await MainActor.run {
+                        moveItemToFirst(ex)
+                    }
+                    return
+                }
+            }
+
             let itemId: Int64
             await itemId = sqlManager.insert(item: model)
             model.id = itemId
@@ -334,16 +357,19 @@ extension PasteDataStore {
 
     @MainActor
     func moveItemToFirst(_ model: PasteboardModel) {
-        guard let index = dataList.firstIndex(where: { $0.id == model.id })
-        else {
-            return
+        var list = dataList
+
+        if let index = list.firstIndex(where: { $0.id == model.id }) {
+            guard index != 0 else { return }
+            list.remove(at: index)
         }
 
-        guard index != 0 else { return }
-
-        var list = dataList
-        list.remove(at: index)
         list.insert(model, at: 0)
+
+        if list.count > pageSize {
+            list = Array(list.prefix(pageSize))
+        }
+
         updateData(with: list, changeType: .reset)
     }
 
@@ -472,6 +498,8 @@ extension PasteDataStore {
     }
 
     func colorWith(_ model: PasteboardModel) -> Color {
+        let _ = chipsVersion
+
         if let chip = model.getGroupChip() {
             return chip.color
         }
