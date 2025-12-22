@@ -64,11 +64,11 @@ struct CommonBottomView: View {
                             .init(color: baseColor, location: 0.35),
                             .init(
                                 color: baseColor.opacity(0.9),
-                                location: 0.65
+                                location: 0.65,
                             ),
                             .init(
                                 color: baseColor.opacity(0.8),
-                                location: 0.85
+                                location: 0.85,
                             ),
                             .init(color: .clear, location: 1.0),
                         ]),

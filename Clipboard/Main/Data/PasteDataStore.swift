@@ -17,6 +17,8 @@ final class PasteDataStore {
     private let pageSize = 50
     var dataList: [PasteboardModel] = []
 
+    private(set) var currentSearchKeyword: String = ""
+
     private(set) var chipsVersion: Int = 0
 
     private(set) var totalCount: Int = 0
@@ -45,7 +47,7 @@ final class PasteDataStore {
 
     func setup() {
         Task {
-            await resetDefaultListAsync()
+            await resetDefaultList()
             await MainActor.run {
                 totalCount = sqlManager.totalCount
             }
@@ -155,10 +157,7 @@ extension PasteDataStore {
 
         // 关键词搜索
         if !criteria.keyword.isEmpty {
-            clauses.append(
-                Col.appName.like("%\(criteria.keyword)%")
-                    || Col.searchText.like("%\(criteria.keyword)%"),
-            )
+            clauses.append(Col.searchText.like("%\(criteria.keyword)%"))
         }
 
         // 分组筛选
@@ -277,13 +276,10 @@ extension PasteDataStore {
     }
 
     func resetDefaultList() async {
-        await resetDefaultListAsync()
-    }
-
-    private func resetDefaultListAsync() async {
         pageIndex = 0
         currentFilter = nil
         isInFilterMode = false
+        currentSearchKeyword = ""
         let list = await getItems(limit: pageSize, offset: pageSize * pageIndex)
         updateData(with: list)
         hasMoreData = list.count == pageSize
@@ -294,6 +290,8 @@ extension PasteDataStore {
         searchTask?.cancel()
         searchTask = Task {
             let filter = buildFilter(from: criteria)
+
+            currentSearchKeyword = criteria.keyword
 
             currentFilter = filter
             isInFilterMode = (filter != nil)

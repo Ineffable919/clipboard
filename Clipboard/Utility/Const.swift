@@ -23,6 +23,13 @@ class Const {
             8.0
         }
 
+    static let topRadius: CGFloat =
+        if #available(macOS 26.0, *) {
+            28.0
+        } else {
+            8.0
+        }
+
     static let settingsRadius: CGFloat = 12.0
 
     static let topBarHeight: CGFloat = 54.0
@@ -34,12 +41,16 @@ class Const {
     static let hoverLightColorLiquid: Color = .init(NSColor(hex: "#E1E4E7"))
         .opacity(0.6)
     static let hoverLightColorFrosted: Color = .white.opacity(0.6)
-    static let hoverLightColorFrostedLow: Color = .init(nsColor: NSColor(hex: "#D0D0CF")).opacity(0.6)
+    static let hoverLightColorFrostedLow: Color = .init(
+        nsColor: NSColor(hex: "#D0D0CF"),
+    ).opacity(0.6)
 
     static let chooseDarkColor: Color = .init(NSColor(hex: "#2e2e39"))
     static let chooseLightColorLiquid: Color = .init(NSColor(hex: "#E1E4E7"))
     static let chooseLightColorFrosted: Color = .white.opacity(0.8)
-    static let chooseLightColorFrostedLow: Color = .init(nsColor: NSColor(hex: "#D0D0CF"))
+    static let chooseLightColorFrostedLow: Color = .init(
+        nsColor: NSColor(hex: "#D0D0CF"),
+    )
 
     static let contentShape = UnevenRoundedRectangle(
         topLeadingRadius: 0,

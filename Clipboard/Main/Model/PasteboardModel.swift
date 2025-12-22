@@ -38,6 +38,10 @@ final class PasteboardModel: Identifiable {
     private(set) var group: Int
     let tag: String
     private var cachedAttributed: AttributedString?
+    private var cachedHighlightedPlainKeyword: String?
+    private var cachedHighlightedPlainText: AttributedString?
+    private var cachedHighlightedRichKeyword: String?
+    private var cachedHighlightedRichText: AttributedString?
     private var cachedThumbnail: NSImage?
     private var cachedImageSize: CGSize?
     private var cachedBackgroundColor: Color?
@@ -54,7 +58,7 @@ final class PasteboardModel: Identifiable {
     }
 
     var isCSS: Bool {
-        return attributeString.string.isCSSHexColor
+        attributeString.string.isCSSHexColor
     }
 
     init(
@@ -147,14 +151,14 @@ final class PasteboardModel: Identifiable {
         if type.isText() {
             let att =
                 NSAttributedString(with: content, type: type)
-                ?? NSAttributedString()
+                    ?? NSAttributedString()
             guard !att.string.allSatisfy(\.isWhitespace) else {
                 return nil
             }
             length = att.length
             showAtt =
                 length > 250
-                ? att.attributedSubstring(from: NSMakeRange(0, 250)) : att
+                    ? att.attributedSubstring(from: NSMakeRange(0, 250)) : att
             showData = showAtt?.toData(with: type)
             searchText = att.string
         }
@@ -352,11 +356,11 @@ extension PasteboardModel {
             return (fallbackBG, .secondary, false)
         }
         if attributeString.length > 0,
-            let bg = attributeString.attribute(
-                .backgroundColor,
-                at: 0,
-                effectiveRange: nil,
-            ) as? NSColor
+           let bg = attributeString.attribute(
+               .backgroundColor,
+               at: 0,
+               effectiveRange: nil,
+           ) as? NSColor
         {
             return (Color(bg), getRTFColor(baseNS: bg), true)
         }
@@ -381,6 +385,102 @@ extension PasteboardModel {
         let attr = AttributedString(attributeString)
         cachedAttributed = attr
         return attr
+    }
+
+    func highlightedPlainText(keyword: String) -> AttributedString {
+        let trimmedKeyword = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedKeyword.isEmpty else {
+            return AttributedString(attributeString.string)
+        }
+
+        if cachedHighlightedPlainKeyword == trimmedKeyword,
+           let cachedHighlightedPlainText
+        {
+            return cachedHighlightedPlainText
+        }
+
+        let source = attributeString.string
+        var attributed = AttributedString(source)
+
+        let options: String.CompareOptions = [
+            .caseInsensitive,
+            .diacriticInsensitive,
+            .widthInsensitive,
+        ]
+
+        var searchStart = source.startIndex
+        while searchStart < source.endIndex,
+              let range = source.range(
+                  of: trimmedKeyword,
+                  options: options,
+                  range: searchStart ..< source.endIndex,
+                  locale: .current,
+              )
+        {
+            if let attributedRange = Range(range, in: attributed) {
+                attributed[attributedRange].backgroundColor =
+                    Color.yellow.opacity(0.65)
+            }
+            searchStart = range.upperBound
+        }
+
+        cachedHighlightedPlainKeyword = trimmedKeyword
+        cachedHighlightedPlainText = attributed
+        return attributed
+    }
+
+    func highlightedRichText(keyword: String) -> AttributedString {
+        let trimmedKeyword = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedKeyword.isEmpty else {
+            return attributed()
+        }
+
+        if cachedHighlightedRichKeyword == trimmedKeyword,
+           let cachedHighlightedRichText
+        {
+            return cachedHighlightedRichText
+        }
+
+        let mutable = NSMutableAttributedString(attributedString: attributeString)
+        let string = mutable.string as NSString
+
+        let options: NSString.CompareOptions = [
+            .caseInsensitive,
+            .diacriticInsensitive,
+            .widthInsensitive,
+        ]
+
+        var searchRange = NSRange(location: 0, length: string.length)
+        while searchRange.length > 0 {
+            let found = string.range(
+                of: trimmedKeyword,
+                options: options,
+                range: searchRange,
+                locale: .current,
+            )
+
+            if found.location == NSNotFound {
+                break
+            }
+
+            mutable.addAttribute(
+                .backgroundColor,
+                value: NSColor.systemYellow.withAlphaComponent(0.65),
+                range: found,
+            )
+
+            let nextLocation = found.location + found.length
+            guard nextLocation < string.length else { break }
+            searchRange = NSRange(
+                location: nextLocation,
+                length: string.length - nextLocation,
+            )
+        }
+
+        let highlighted = AttributedString(mutable)
+        cachedHighlightedRichKeyword = trimmedKeyword
+        cachedHighlightedRichText = highlighted
+        return highlighted
     }
 
     private static let formatter: NumberFormatter = {
@@ -477,7 +577,7 @@ extension PasteboardModel {
     private func promisedTypeIdentifier(for fileURL: URL) -> String {
         do {
             let values = try fileURL.resourceValues(forKeys: [
-                .contentTypeKey
+                .contentTypeKey,
             ])
             if let type = values.contentType {
                 return type.identifier
@@ -500,7 +600,7 @@ extension PasteboardModel {
         switch type {
         case .rtf, .rtfd:
             if let attributeString = NSAttributedString(with: data, type: type),
-                let textData = attributeString.string.data(using: .utf8)
+               let textData = attributeString.string.data(using: .utf8)
             {
                 return textData.sha256Hex
             }

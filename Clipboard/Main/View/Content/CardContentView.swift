@@ -10,24 +10,29 @@ import WebKit
 
 struct CardContentView: View {
     var model: PasteboardModel
+    private let pd = PasteDataStore.main
     @AppStorage(PrefKey.enableLinkPreview.rawValue)
     private var enableLinkPreview: Bool = PasteUserDefaults.enableLinkPreview
 
     @ViewBuilder
     var body: some View {
+        let keyword = pd.lastDataChangeType == .searchFilter
+            ? pd.currentSearchKeyword
+            : ""
+
         switch model.type {
         case .link:
             if enableLinkPreview {
                 LinkPreviewCard(model: model)
             } else {
-                StringContentView(model: model)
+                StringContentView(model: model, keyword: keyword)
             }
         case .color:
             CSSView(model: model)
         case .string:
-            StringContentView(model: model)
+            StringContentView(model: model, keyword: keyword)
         case .rich:
-            RichContentView(model: model)
+            RichContentView(model: model, keyword: keyword)
         case .file:
             FileContentView(model: model)
         case .image:
@@ -192,8 +197,8 @@ struct LinkPreviewCard: View {
             guard !Task.isCancelled else { return }
 
             if let html = String(data: data, encoding: .utf8),
-                let iconURL = parseFirstHTMLIconURL(html: html, baseURL: url),
-                let img = await fetchImage(iconURL, session: session)
+               let iconURL = parseFirstHTMLIconURL(html: html, baseURL: url),
+               let img = await fetchImage(iconURL, session: session)
             {
                 await MainActor.run { favicon = img }
                 return
@@ -236,7 +241,7 @@ struct LinkPreviewCard: View {
             if let dataRange = url.absoluteString.range(of: ",") {
                 let b64 = String(url.absoluteString[dataRange.upperBound...])
                 if let data = Data(base64Encoded: b64),
-                    let img = NSImage(data: data)
+                   let img = NSImage(data: data)
                 {
                     img.cacheMode = .bySize
                     return img
@@ -297,12 +302,12 @@ struct LinkPreviewCard: View {
                     let titleHTML = String(html[titleMatch])
                     let title =
                         titleHTML
-                        .replacingOccurrences(
-                            of: "<[^>]+>",
-                            with: "",
-                            options: .regularExpression,
-                        )
-                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                            .replacingOccurrences(
+                                of: "<[^>]+>",
+                                with: "",
+                                options: .regularExpression,
+                            )
+                            .trimmingCharacters(in: .whitespacesAndNewlines)
 
                     if !title.isEmpty, title != url.host {
                         guard !Task.isCancelled else { return }
@@ -318,23 +323,40 @@ struct LinkPreviewCard: View {
 
 struct StringContentView: View {
     var model: PasteboardModel
+    var keyword: String
 
     var body: some View {
-        Text(model.attributeString.string)
-            .textCardStyle()
+        if keyword.isEmpty {
+            Text(model.attributeString.string)
+                .textCardStyle()
+        } else {
+            Text(model.highlightedPlainText(keyword: keyword))
+                .textCardStyle()
+        }
     }
 }
 
 struct RichContentView: View {
     var model: PasteboardModel
+    var keyword: String
 
     var body: some View {
         if model.hasBgColor {
-            Text(model.attributed())
-                .textCardStyle()
+            if keyword.isEmpty {
+                Text(model.attributed())
+                    .textCardStyle()
+            } else {
+                Text(model.highlightedRichText(keyword: keyword))
+                    .textCardStyle()
+            }
         } else {
-            Text(model.attributeString.string)
-                .textCardStyle()
+            if keyword.isEmpty {
+                Text(model.attributeString.string)
+                    .textCardStyle()
+            } else {
+                Text(model.highlightedPlainText(keyword: keyword))
+                    .textCardStyle()
+            }
         }
     }
 }
@@ -451,8 +473,8 @@ struct CheckerboardBackground: View {
             let rows = Int(ceil(size.height / squareSize))
             let cols = Int(ceil(size.width / squareSize))
 
-            for row in 0..<rows {
-                for col in 0..<cols {
+            for row in 0 ..< rows {
+                for col in 0 ..< cols {
                     let rect = CGRect(
                         x: CGFloat(col) * squareSize,
                         y: CGFloat(row) * squareSize,
