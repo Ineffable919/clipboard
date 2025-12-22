@@ -14,10 +14,10 @@ struct TagView: View {
     var body: some View {
         HStack(spacing: Const.space4) {
             tag.icon
-                .font(.system(size: 10))
+                .font(.system(size: 6))
 
             Text(tag.label)
-                .font(.system(size: 12))
+                .font(.system(size: 10))
                 .lineLimit(1)
 
             Button(action: onDelete) {
@@ -27,7 +27,7 @@ struct TagView: View {
             .buttonStyle(.plain)
         }
         .padding(.horizontal, Const.space6)
-        .padding(.vertical, Const.space4)
+        .padding(.vertical, Const.space2)
         .frame(height: 24.0, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: Const.radius * 2)
