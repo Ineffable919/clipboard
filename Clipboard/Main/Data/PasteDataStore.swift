@@ -271,9 +271,7 @@ extension PasteDataStore {
             list += newItems
 
             updateData(with: list, changeType: .loadMore)
-
-            hasMoreData = newItems.count == pageSize
-
+            hasMoreData = (newItems.count == pageSize)
             isLoadingPage = false
         }
     }

@@ -52,7 +52,7 @@ struct HistoryView: View {
     private var emptyStateView: some View {
         GeometryReader { geo in
             HStack(alignment: .center) {
-                VStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .center, spacing: Const.space12) {
                     if #available(macOS 26.0, *) {
                         Image(systemName: "sparkle.text.clipboard")
                             .font(.system(size: 64))
@@ -64,7 +64,6 @@ struct HistoryView: View {
                     }
 
                     Text("没有剪贴板历史")
-                        .font(.body)
                         .foregroundColor(.secondary)
 
                     Text("复制内容后将显示在这里")
@@ -117,6 +116,7 @@ struct HistoryView: View {
         .onTapGesture { handleOptimisticTap(on: item) }
         .onDrag {
             env.draggingItemId = item.id
+            historyVM.selectedId = item.id
             return item.itemProvider()
         }
         .task(id: item.id) {
