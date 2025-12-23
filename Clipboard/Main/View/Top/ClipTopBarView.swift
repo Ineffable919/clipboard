@@ -86,7 +86,7 @@ struct ClipTopBarView: View {
                     focus == .search
                         ? Color.accentColor.opacity(0.4)
                         : Color.gray.opacity(0.4),
-                    lineWidth: 4.0,
+                    lineWidth: 3.5,
                 )
                 .padding(-1),
         )
@@ -216,7 +216,7 @@ struct ClipTopBarView: View {
             onCycleColor: {
                 let nextIndex =
                     (topBarVM.newChipColorIndex + 1)
-                        % CategoryChip.palette.count
+                    % CategoryChip.palette.count
                 topBarVM.newChipColorIndex = nextIndex
             },
         )
@@ -336,6 +336,7 @@ struct ClipTopBarView: View {
     }
 
     private func focusHistory() {
+        focus = nil
         if showFilter {
             showFilter = false
         }
@@ -466,7 +467,7 @@ class MenuActions: NSObject {
     @objc func invokeHelp() {
         if let url = URL(
             string:
-            "https://github.com/Ineffable919/clipboard/blob/master/README.md",
+                "https://github.com/Ineffable919/clipboard/blob/master/README.md",
         ) {
             NSWorkspace.shared.open(url)
         }
