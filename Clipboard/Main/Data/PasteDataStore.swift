@@ -206,16 +206,6 @@ extension PasteDataStore {
             }
         }
 
-        // 分类筛选
-        if !criteria.selectedCategoryIds.isEmpty {
-            let categoryIdsArray = Array(criteria.selectedCategoryIds)
-            let categoryCondition = categoryIdsArray.map { Col.group == $0 }
-                .reduce(Expression<Bool>(value: false)) { result, condition in
-                    result || condition
-                }
-            clauses.append(categoryCondition)
-        }
-
         return clauses.reduce(nil) { partial, next in
             if let existing = partial {
                 return existing && next
@@ -366,7 +356,7 @@ extension PasteDataStore {
             list = Array(list.prefix(pageSize))
         }
 
-        updateData(with: list, changeType: .reset)
+        updateData(with: list)
     }
 
     func deleteItems(_ items: PasteboardModel...) {

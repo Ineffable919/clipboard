@@ -52,13 +52,6 @@ final class TopBarViewModel {
     // 日期筛选：单选
     private(set) var selectedDateFilter: DateFilterOption?
 
-    // 分类筛选：支持多选
-    var selectedCategoryIds: Set<Int> = [] {
-        didSet {
-            performSearch()
-        }
-    }
-
     var hasInput: Bool {
         !query.isEmpty || !selectedTypes.isEmpty || !selectedAppNames.isEmpty
             || selectedDateFilter != nil
@@ -108,7 +101,7 @@ final class TopBarViewModel {
 
     var hasActiveFilters: Bool {
         !selectedTypes.isEmpty || !selectedAppNames.isEmpty
-            || selectedDateFilter != nil || !selectedCategoryIds.isEmpty
+            || selectedDateFilter != nil
     }
 
     // MARK: - Private Properties
@@ -127,7 +120,6 @@ final class TopBarViewModel {
         var selectedTypes: Set<PasteModelType>
         var selectedAppNames: Set<String>
         var selectedDateFilter: DateFilterOption?
-        var selectedCategoryIds: Set<Int>
 
         static let empty = SearchCriteria(
             keyword: "",
@@ -135,7 +127,6 @@ final class TopBarViewModel {
             selectedTypes: [],
             selectedAppNames: [],
             selectedDateFilter: nil,
-            selectedCategoryIds: [],
         )
 
         var isEmpty: Bool {
@@ -144,7 +135,6 @@ final class TopBarViewModel {
                 && selectedTypes.isEmpty
                 && selectedAppNames.isEmpty
                 && selectedDateFilter == nil
-                && selectedCategoryIds.isEmpty
         }
     }
 
@@ -414,19 +404,10 @@ final class TopBarViewModel {
         performSearch()
     }
 
-    func toggleCategory(_ categoryId: Int) {
-        if selectedCategoryIds.contains(categoryId) {
-            selectedCategoryIds.remove(categoryId)
-        } else {
-            selectedCategoryIds.insert(categoryId)
-        }
-    }
-
     func clearAllFilters() {
         selectedTypes.removeAll()
         selectedAppNames.removeAll()
         selectedDateFilter = nil
-        selectedCategoryIds.removeAll()
         tags.removeAll()
     }
 
@@ -581,16 +562,12 @@ final class TopBarViewModel {
     private func makeSearchCriteria(from trimmedQuery: String)
         -> SearchCriteria
     {
-        let chipGroup =
-            selectedCategoryIds.isEmpty ? getGroupFilterForCurrentChip() : -1
-
-        return SearchCriteria(
+        SearchCriteria(
             keyword: trimmedQuery,
-            chipGroup: chipGroup,
+            chipGroup: getGroupFilterForCurrentChip(),
             selectedTypes: selectedTypes,
             selectedAppNames: selectedAppNames,
             selectedDateFilter: selectedDateFilter,
-            selectedCategoryIds: selectedCategoryIds,
         )
     }
 
@@ -604,9 +581,7 @@ final class TopBarViewModel {
         }
         lastSearchCriteria = criteria
 
-        let hasFilters = !criteria.isEmpty
-
-        if !hasFilters, selectedChipId == 1 {
+        if criteria.isEmpty, selectedChipId == 1 {
             await dataStore.resetDefaultList()
         } else {
             await dataStore.searchData(criteria)

@@ -56,18 +56,6 @@ struct AboutSettingView: View {
             }
             .padding(.top, Const.space16)
 
-            VStack(spacing: Const.space12) {
-                Text("优雅的剪贴板管理工具")
-                    .font(.headline)
-
-                Text("一款简洁、现代化的 macOS 剪贴板管理应用\n帮助您轻松管理和访问剪贴板历史记录")
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(4)
-            }
-            .padding(.top, Const.space32)
-
             Button(action: {
                 checkForUpdates()
             }) {

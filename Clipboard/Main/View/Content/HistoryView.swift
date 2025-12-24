@@ -18,34 +18,41 @@ struct HistoryView: View {
     private let pd = PasteDataStore.main
 
     var body: some View {
-        if pd.dataList.isEmpty {
-            emptyStateView
-        } else {
-            ScrollViewReader { proxy in
-                ScrollView(.horizontal, showsIndicators: false) {
-                    contentView()
-                }
-                .focusable()
-                .focused($isFocused)
-                .focusEffectDisabled()
-                .onChange(of: env.focusView) {
-                    isFocused = (env.focusView == .history)
-                }
-                .onChange(of: historyVM.selectedId) { _, newId in
-                    if let id = newId {
-                        proxy.scrollTo(id, anchor: historyVM.scrollAnchor())
+        ZStack {
+            if pd.dataList.isEmpty {
+                emptyStateView
+            } else {
+                ScrollViewReader { proxy in
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        contentView()
+                    }
+                    .focusable()
+                    .focused($isFocused)
+                    .focusEffectDisabled()
+                    .onChange(of: env.focusView) {
+                        isFocused = (env.focusView == .history)
+                    }
+                    .onChange(of: historyVM.selectedId) { _, newId in
+                        if let id = newId {
+                            proxy.scrollTo(id, anchor: historyVM.scrollAnchor())
+                        }
+                    }
+                    .onChange(of: pd.dataList) {
+                        historyVM.reset(proxy: proxy)
                     }
                 }
-                .onChange(of: pd.dataList) {
-                    historyVM.reset(proxy: proxy)
+                .onAppear {
+                    appear()
+                }
+                .onDisappear {
+                    historyVM.cleanup()
                 }
             }
-            .onAppear {
-                appear()
-            }
-            .onDisappear {
-                historyVM.cleanup()
-            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            guard env.focusView != .history else { return }
+            env.focusView = .history
         }
     }
 
@@ -109,9 +116,8 @@ struct HistoryView: View {
             quickPasteIndex: quickPasteIndex(for: index),
             onRequestDelete: { requestDel(id: item.id) },
         )
-        .id(item.id)
         .contentShape(Rectangle())
-        .onTapGesture { handleOptimisticTap(on: item) }
+        .onTapGesture { handleOptimisticTap(on: item, index: index) }
         .onDrag {
             env.draggingItemId = item.id
             historyVM.selectedId = item.id
@@ -129,22 +135,19 @@ struct HistoryView: View {
     }
 
     private func handleDoubleTap(on item: PasteboardModel) {
-        if historyVM.selectedId != item.id {
-            historyVM.selectedId = item.id
-        }
         env.actions.paste(
             item,
             isAttribute: true,
         )
     }
 
-    private func handleOptimisticTap(on item: PasteboardModel) {
+    private func handleOptimisticTap(on item: PasteboardModel, index: Int) {
         if env.focusView != .history {
             env.focusView = .history
         }
 
         if historyVM.selectedId != item.id {
-            historyVM.selectedId = item.id
+            historyVM.setSelection(id: item.id, index: index)
         }
 
         let now = ProcessInfo.processInfo.systemUptime
@@ -211,8 +214,8 @@ struct HistoryView: View {
     private func moveSelection(offset: Int, event: NSEvent) -> NSEvent? {
         guard env.focusView == .history else { return event }
         guard !pd.dataList.isEmpty else {
-            historyVM.selectedId = nil
             historyVM.showPreviewId = nil
+            historyVM.setSelection(id: nil, index: 0)
             NSSound.beep()
             return nil
         }

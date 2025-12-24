@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 
 struct ClipboardActionService {
@@ -9,6 +10,21 @@ struct ClipboardActionService {
         _ item: PasteboardModel,
         isAttribute: Bool = true,
     ) {
+        let hasPermission = AXIsProcessTrusted()
+
+        if !hasPermission {
+            log.debug(
+                "Accessibility permission not granted, cannot send keyboard events",
+            )
+            DispatchQueue.main.async {
+                requestAccessibilityPermission(
+                    item: item,
+                    isAttribute: isAttribute,
+                )
+            }
+            return
+        }
+
         pasteBoard.pasteData(item, isAttribute)
         guard userDefaults.pasteDirect else {
             ClipMainWindowController.shared.toggleWindow()
@@ -36,5 +52,36 @@ struct ClipboardActionService {
             return
         }
         dataStore.deleteItems(item)
+    }
+
+    private func requestAccessibilityPermission(
+        item: PasteboardModel,
+        isAttribute: Bool = true,
+    ) {
+        let alert = NSAlert()
+        alert.messageText = "需要辅助功能权限"
+        alert.informativeText = """
+        Clipboard 需要获取辅助功能权限
+        才能直接粘贴到其它应用
+        """
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "设置")
+        alert.addButton(withTitle: "稍后设置，复制到剪贴板")
+
+        let response = alert.runModal()
+
+        switch response {
+        case .alertFirstButtonReturn:
+            if let url = URL(
+                string:
+                "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
+            ) {
+                NSWorkspace.shared.open(url)
+            }
+        case .alertSecondButtonReturn:
+            pasteBoard.pasteData(item, isAttribute)
+        default:
+            break
+        }
     }
 }

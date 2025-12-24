@@ -75,7 +75,7 @@ struct CommonBottomView: View {
                     width: Const.cardSize,
                 )
         }
-        .frame(maxHeight: 32.0)
+        .frame(maxHeight: 24.0)
     }
 
     private func calculateNeedsMask() -> Bool {
