@@ -250,7 +250,7 @@ struct HistoryView: View {
         }
 
         if historyVM.selectedId == nil {
-            historyVM.selectedId = pd.dataList.first?.id
+            historyVM.setSelection(id: pd.dataList.first?.id, index: 0)
         }
     }
 

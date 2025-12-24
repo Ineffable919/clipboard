@@ -87,7 +87,7 @@ final class EventDispatcher {
     /// Propagate modified event through chain; returning nil consumes.
     private func handle(event: NSEvent) -> NSEvent? {
         if bypassAllEvents, event.keyCode != KeyCode.escape,
-           event.keyCode != KeyCode.delete
+            event.keyCode != KeyCode.delete
         {
             if event.type == .keyDown {
                 let keyChar =
@@ -97,7 +97,7 @@ final class EventDispatcher {
                 ])
 
                 if modifiers.contains(.command), !modifiers.contains(.option),
-                   !modifiers.contains(.control)
+                    !modifiers.contains(.control)
                 {
                     var handled = false
 
@@ -137,6 +137,22 @@ final class EventDispatcher {
                             from: nil,
                         )
                         log.debug("Sent undo command: \(handled)")
+                    case "m":
+                        if event.window == SettingWindowController.shared.window {
+                            event.window?.miniaturize(nil)
+                            handled = true
+                            log.debug("Window minimized")
+                        }
+                    case "w":
+                        if event.window == SettingWindowController.shared.window {
+                            event.window?.close()
+                            handled = true
+                            log.debug("Window closed")
+                        }
+                    case "q":
+                        log.debug("Quit command received")
+                        NSApp.terminate(nil)
+                        handled = true    
                     default:
                         break
                     }
