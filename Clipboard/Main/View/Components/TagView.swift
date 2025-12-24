@@ -17,13 +17,14 @@ struct TagView: View {
                 .frame(height: 14.0)
 
             Text(tag.label)
+                .font(.system(size: 10, weight: .regular, design: .default))
                 .lineLimit(1)
 
-        //    Button(action: onDelete) {
-        //        Image(systemName: "xmark")
-        //            .font(.system(size: 10.0, weight: .semibold))
-        //    }
-        //    .buttonStyle(.plain)
+            //    Button(action: onDelete) {
+            //        Image(systemName: "xmark")
+            //            .font(.system(size: 10.0, weight: .semibold))
+            //    }
+            //    .buttonStyle(.plain)
         }
         .padding(.horizontal, Const.space6)
         .padding(.vertical, Const.space4)

@@ -106,9 +106,7 @@ struct HistoryView: View {
             model: item,
             isSelected: historyVM.selectedId == item.id,
             showPreview: makePreviewBinding(for: item.id),
-            quickPasteIndex: historyVM.isQuickPastePressed
-                && index < 9
-                ? index + 1 : nil,
+            quickPasteIndex: quickPasteIndex(for: index),
             onRequestDelete: { requestDel(id: item.id) },
         )
         .id(item.id)
@@ -123,6 +121,11 @@ struct HistoryView: View {
             guard historyVM.shouldLoadNextPage(at: index) else { return }
             historyVM.loadNextPageIfNeeded(at: index)
         }
+    }
+
+    private func quickPasteIndex(for index: Int) -> Int? {
+        guard historyVM.isQuickPastePressed, index < 9 else { return nil }
+        return index + 1
     }
 
     private func handleDoubleTap(on item: PasteboardModel) {
@@ -198,38 +201,36 @@ struct HistoryView: View {
     private func updateSelectionAfterDeletion(at index: Int) {
         if pd.dataList.isEmpty {
             historyVM.selectedId = nil
+            historyVM.selectedIndex = nil
         } else {
             let newIndex = min(index, pd.dataList.count - 1)
-            historyVM.selectedId = pd.dataList[newIndex].id
+            historyVM.setSelection(id: pd.dataList[newIndex].id, index: newIndex)
         }
     }
 
     private func moveSelection(offset: Int, event: NSEvent) -> NSEvent? {
         guard env.focusView == .history else { return event }
-        let count = pd.dataList.count
-        guard count > 0 else {
+        guard !pd.dataList.isEmpty else {
             historyVM.selectedId = nil
             historyVM.showPreviewId = nil
             NSSound.beep()
             return nil
         }
 
-        let currentIndex =
-            historyVM.selectedId.flatMap { id in
-                pd.dataList.firstIndex { $0.id == id }
-            } ?? 0
-
-        let newIndex = max(0, min(currentIndex + offset, count - 1))
+        let currentIndex = historyVM.selectedIndex ?? 0
+        let newIndex = max(0, min(currentIndex + offset, pd.dataList.count - 1))
 
         guard newIndex != currentIndex else {
             NSSound.beep()
             return nil
         }
-        let newId = pd.dataList[newIndex].id
-        historyVM.selectedId = newId
+
+        historyVM.setSelection(id: pd.dataList[newIndex].id, index: newIndex)
 
         if offset > 0, historyVM.shouldLoadNextPage(at: newIndex) {
-            historyVM.loadNextPageIfNeeded(at: newIndex)
+            Task.detached(priority: .userInitiated) { [weak historyVM] in
+                await historyVM?.loadNextPageIfNeeded(at: newIndex)
+            }
         }
         return nil
     }

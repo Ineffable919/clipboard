@@ -7,6 +7,7 @@ import SwiftUI
 final class HistoryViewModel {
     private let pd = PasteDataStore.main
     var selectedId: PasteboardModel.ID?
+    var selectedIndex: Int?
     var lastTapId: PasteboardModel.ID?
     var lastTapTime: TimeInterval = 0
     var pendingDeleteId: PasteboardModel.ID?
@@ -35,6 +36,11 @@ final class HistoryViewModel {
     func updateTapState(id: PasteboardModel.ID, time: TimeInterval) {
         lastTapId = id
         lastTapTime = time
+    }
+
+    func setSelection(id: PasteboardModel.ID, index: Int) {
+        selectedId = id
+        selectedIndex = index
     }
 
     // MARK: - Pagination
@@ -99,6 +105,7 @@ final class HistoryViewModel {
         if changeType == .searchFilter || changeType == .reset {
             if pd.dataList.isEmpty {
                 selectedId = nil
+                selectedIndex = nil
                 showPreviewId = nil
                 return
             }
@@ -106,6 +113,7 @@ final class HistoryViewModel {
             let firstId = pd.dataList.first?.id
             let needsScrolling = selectedId != firstId
             selectedId = firstId
+            selectedIndex = 0
             showPreviewId = nil
 
             if !needsScrolling {
@@ -157,5 +165,6 @@ final class HistoryViewModel {
         isDel = false
         isQuickPastePressed = false
         showPreviewId = nil
+        selectedIndex = nil
     }
 }

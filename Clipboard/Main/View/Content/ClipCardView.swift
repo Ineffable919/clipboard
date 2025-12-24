@@ -97,7 +97,7 @@ struct ClipCardView: View {
 
     private var contetPadding: CGFloat {
         if model.pasteboardType.isImage()
-            || (model.url != nil && enableLinkPreview)
+            || (model.type == .link && enableLinkPreview)
             || model.pasteboardType.isText()
         {
             return 0.0
