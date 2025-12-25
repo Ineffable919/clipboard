@@ -94,6 +94,9 @@ struct ClipTopBarView: View {
         .onTapGesture {
             env.focusView = .search
         }
+        .task {
+            await topBarVM.loadAppPathCache()
+        }
     }
 
     private var inputTagView: some View {
@@ -139,17 +142,22 @@ struct ClipTopBarView: View {
     }
 
     private var filterIcon: some View {
-        Image(systemName: "line.3.horizontal.decrease")
-            .font(.system(size: Const.iconHdSize, weight: .regular))
-            .foregroundColor(.primary.opacity(0.6))
-            .frame(width: 24, height: 32)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                toggleFilterPopover()
-            }
-            .popover(isPresented: $showFilter) {
-                FilterPopoverView(topBarVM: topBarVM)
-            }
+        Button {
+            toggleFilterPopover()
+        } label: {
+            Image(systemName: "line.3.horizontal.decrease")
+                .font(.system(size: Const.iconHdSize, weight: .regular))
+                .foregroundColor(.primary.opacity(0.6))
+                .frame(width: 24, height: 32)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .popover(isPresented: $showFilter) {
+            FilterPopoverView(topBarVM: topBarVM)
+                .onDisappear {
+                    handleFilterDismiss()
+                }
+        }
     }
 
     private var searchIcon: some View {
@@ -352,10 +360,20 @@ struct ClipTopBarView: View {
     }
 
     private func toggleFilterPopover() {
-        showFilter.toggle()
         if showFilter {
+            showFilter = false
+        } else {
+            showFilter = true
             focus = nil
             env.focusView = .filter
+        }
+    }
+
+    private func handleFilterDismiss() {
+        if !showFilter {
+            if env.focusView == .filter {
+                focus = .search
+            }
         }
     }
 }

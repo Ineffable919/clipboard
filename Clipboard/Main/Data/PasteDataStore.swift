@@ -44,6 +44,7 @@ final class PasteDataStore {
     private var searchTask: Task<Void, Error>?
     private var colorDict = [String: String]()
     private var cachedAppInfo: [(name: String, path: String)]?
+    private var cachedTagTypes: [PasteModelType]?
 
     func setup() {
         Task {
@@ -329,6 +330,7 @@ extension PasteDataStore {
             await itemId = sqlManager.insert(item: model)
             model.id = itemId
             updateTotalCount()
+            invalidateTagTypesCache()
             if lastDataChangeType == .searchFilter {
                 return
             }
@@ -367,6 +369,7 @@ extension PasteDataStore {
         Task {
             await sqlManager.delete(filter: filter)
             updateTotalCount()
+            invalidateTagTypesCache()
         }
     }
 
@@ -468,6 +471,53 @@ extension PasteDataStore {
         } else {
             cachedAppInfo?.append((name: model.appName, path: model.appPath))
         }
+    }
+
+    func getAllTagTypes() async -> [PasteModelType] {
+        if let cached = cachedTagTypes {
+            return cached
+        }
+
+        let tags = await sqlManager.getDistinctTags()
+        let types = tags.compactMap { tag -> PasteModelType? in
+            switch tag {
+            case "image": return .image
+            case "string": return .string
+            case "rich": return .rich
+            case "file": return .file
+            case "link": return .link
+            case "color": return .color
+            default: return nil
+            }
+        }
+
+        var finalTypes: [PasteModelType] = []
+        let hasString = types.contains(.string)
+        let hasRich = types.contains(.rich)
+
+        if hasString || hasRich {
+            finalTypes.append(.string) // .string 代表文本类型
+        }
+
+        for type in types where type != .string && type != .rich {
+            if !finalTypes.contains(type) {
+                finalTypes.append(type)
+            }
+        }
+
+        let order: [PasteModelType] = [.color, .file, .image, .link, .string]
+        finalTypes.sort { type1, type2 in
+            let index1 = order.firstIndex(of: type1) ?? order.count
+            let index2 = order.firstIndex(of: type2) ?? order.count
+            return index1 < index2
+        }
+
+        cachedTagTypes = finalTypes
+        return finalTypes
+    }
+
+    func invalidateTagTypesCache() {
+        cachedTagTypes = nil
     }
 }
 

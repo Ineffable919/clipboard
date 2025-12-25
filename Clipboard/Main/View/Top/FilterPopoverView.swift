@@ -14,6 +14,7 @@ struct FilterPopoverView: View {
     @State private var appInfoList: [(name: String, path: String)] = []
     @State private var isLoadingApps: Bool = false
     @State private var showAllApps: Bool = false
+    @State private var tagTypes: [PasteModelType] = []
 
     private var displayedAppInfo: [(name: String, path: String)] {
         let totalCount = appInfoList.count
@@ -35,9 +36,13 @@ struct FilterPopoverView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: Const.space16) {
-                typeSection
+                if !tagTypes.isEmpty {
+                    typeSection
+                }
 
-                appSection
+                if !appInfoList.isEmpty {
+                    appSection
+                }
 
                 dateSection
 
@@ -70,11 +75,18 @@ struct FilterPopoverView: View {
                 ],
                 spacing: Const.space8,
             ) {
-                typeButton(type: .color, icon: "paintpalette", label: "颜色")
-                typeButton(type: .file, icon: "folder", label: "文件")
-                typeButton(type: .image, icon: "photo", label: "图片")
-                typeButton(type: .link, icon: "link", label: "链接")
-                textTypeButton()
+                ForEach(tagTypes, id: \.self) { type in
+                    if type == .string {
+                        textTypeButton()
+                    } else {
+                        let iconAndLabel = type.iconAndLabel
+                        typeButton(
+                            type: type,
+                            icon: iconAndLabel.icon,
+                            label: iconAndLabel.label,
+                        )
+                    }
+                }
             }
         }
     }
@@ -247,11 +259,15 @@ struct FilterPopoverView: View {
 
     private func loadAppInfo() async {
         isLoadingApps = true
-        let info = await PasteDataStore.main.getAllAppInfo()
+        async let info = PasteDataStore.main.getAllAppInfo()
+        async let types = PasteDataStore.main.getAllTagTypes()
+
+        let (appInfo, tagTypeList) = await (info, types)
+
         await MainActor.run {
-            appInfoList = info
+            appInfoList = appInfo
+            tagTypes = tagTypeList
             isLoadingApps = false
         }
-        await topBarVM.loadAppPathCache()
     }
 }

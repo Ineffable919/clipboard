@@ -269,6 +269,29 @@ extension PasteSQLManager {
             return []
         }
     }
+
+    // 获取数据库中存在的不同 tag 类型
+    func getDistinctTags() async -> [String] {
+        do {
+            var tags: Set<String> = []
+            let query = table.select(distinct: Col.tag)
+                .filter(Col.tag != nil)
+
+            if let result = try db?.prepare(query) {
+                for row in result {
+                    if let tag = try? row.get(Col.tag),
+                       !tag.isEmpty
+                    {
+                        tags.insert(tag)
+                    }
+                }
+            }
+            return Array(tags).sorted()
+        } catch {
+            log.error("获取 tag 列表失败：\(error)")
+            return []
+        }
+    }
 }
 
 // MARK: - 数据迁移

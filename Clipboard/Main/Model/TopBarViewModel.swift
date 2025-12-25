@@ -409,6 +409,7 @@ final class TopBarViewModel {
         selectedAppNames.removeAll()
         selectedDateFilter = nil
         tags.removeAll()
+        performSearch()
     }
 
     // MARK: - Tags Management
