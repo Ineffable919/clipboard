@@ -242,7 +242,8 @@ final class PasteboardModel: Identifiable {
 
     func getGroupChip() -> CategoryChip? {
         guard group != -1 else { return nil }
-        let allChips = CategoryChip.systemChips + PasteUserDefaults.userCategoryChip
+        let allChips =
+            CategoryChip.systemChips + PasteUserDefaults.userCategoryChip
         return allChips.first(where: { $0.id == group })
     }
 
@@ -333,10 +334,9 @@ extension PasteboardModel {
             }
         }
 
-        let provider = NSItemProvider()
-
         if type == .rich {
-            provider.registerDataRepresentation(
+            let richProvider = NSItemProvider()
+            richProvider.registerDataRepresentation(
                 forTypeIdentifier: pasteboardType.rawValue,
                 visibility: .all,
             ) { [weak self] completion in
@@ -349,64 +349,50 @@ extension PasteboardModel {
                 }
                 return nil
             }
+            return richProvider
         }
 
         if type == .image {
-            provider.registerDataRepresentation(
-                forTypeIdentifier: pasteboardType.rawValue,
-                visibility: .all,
-            ) { [weak self] completion in
-                guard let data = self?.data else {
-                    completion(nil, nil)
+            let name = appName + "-" + timestamp.date()
+            if #available(macOS 15.0, *) {
+                let provider = NSItemProvider()
+                provider.registerDataRepresentation(
+                    forTypeIdentifier: pasteboardType.rawValue,
+                    visibility: .all,
+                ) { [weak self] completion in
+                    guard let data = self?.data else {
+                        completion(nil, nil)
+                        return nil
+                    }
+                    DispatchQueue.global(qos: .userInitiated).async {
+                        completion(data, nil)
+                    }
                     return nil
                 }
-                DispatchQueue.global(qos: .userInitiated).async {
-                    completion(data, nil)
+                provider.suggestedName = name
+                return provider
+            } else {
+                if let image = NSImage(data: data) {
+                    let imgProvider = NSItemProvider(object: image)
+                    imgProvider.suggestedName = name
+                    return imgProvider
                 }
-                return nil
             }
-            let name = appName + "-" + timestamp.date()
-            provider.suggestedName = name
         }
 
         if type == .file {
             if let paths = cachedFilePaths {
-                for path in paths {
-                    let fileURL = URL(fileURLWithPath: path)
-                    let promisedType: String = promisedTypeIdentifier(
-                        for: fileURL,
-                    )
-                    provider.registerFileRepresentation(
-                        forTypeIdentifier: promisedType,
-                        fileOptions: [],
-                        visibility: .all,
-                    ) { completion in
-                        DispatchQueue.global(qos: .userInitiated).async {
-                            if FileManager.default.fileExists(atPath: path) {
-                                completion(fileURL, true, nil)
-                            } else {
-                                let error = NSError(
-                                    domain: NSCocoaErrorDomain,
-                                    code: NSFileReadNoSuchFileError,
-                                    userInfo: [NSFilePathErrorKey: path]
-                                )
-                                completion(nil, false, error)
-                            }
-                        }
-                        return nil
-                    }
-                }
-
-                if paths.count == 1 {
-                    provider.suggestedName =
-                        URL(fileURLWithPath: paths[0]).lastPathComponent
-                } else {
-                    provider.suggestedName = "\(paths.count)个文件"
-                }
+                let fileProvider = NSItemProvider(
+                    object: URL(fileURLWithPath: paths[0])
+                        as NSItemProviderWriting
+                )
+                fileProvider.suggestedName =
+                    URL(fileURLWithPath: paths[0]).lastPathComponent
+                return fileProvider
             }
         }
 
-        return provider
+        return NSItemProvider()
     }
 
     private func promisedTypeIdentifier(for fileURL: URL) -> String {
