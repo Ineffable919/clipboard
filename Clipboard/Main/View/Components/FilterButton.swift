@@ -31,7 +31,7 @@ struct FilterButton: View {
         isSelected: Bool,
         action: @escaping () -> Void
     ) {
-        self.icon = AnyView(
+        icon = AnyView(
             Image(systemName: systemImage)
                 .foregroundStyle(isSelected ? .white : .secondary)
         )

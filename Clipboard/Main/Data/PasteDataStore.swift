@@ -49,8 +49,9 @@ final class PasteDataStore {
     func setup() {
         Task {
             await resetDefaultList()
+            let count = await sqlManager.getTotalCount()
             await MainActor.run {
-                totalCount = sqlManager.totalCount
+                totalCount = count
             }
         }
         colorDict = PasteUserDefaults.appColorData
@@ -74,8 +75,8 @@ final class PasteDataStore {
 // MARK: - private 辅助方法
 
 extension PasteDataStore {
-    private func updateTotalCount() {
-        totalCount = sqlManager.totalCount
+    private func updateTotalCount() async {
+        totalCount = await sqlManager.getTotalCount()
     }
 
     private func getItems(limit: Int = 50, offset: Int? = nil) async
@@ -186,12 +187,8 @@ extension PasteDataStore {
 
         // 应用筛选
         if !criteria.selectedAppNames.isEmpty {
-            let appNamesArray = Array(criteria.selectedAppNames)
-            let appCondition = appNamesArray.map { Col.appName == $0 }.reduce(
-                Expression<Bool>(value: false),
-            ) { result, condition in
-                result || condition
-            }
+            let appCondition = criteria.selectedAppNames.map { Col.appName == $0 }
+                .reduce(Expression<Bool>(value: false)) { $0 || $1 }
             clauses.append(appCondition)
         }
 
@@ -320,7 +317,10 @@ extension PasteDataStore {
                     ex.updateDate()
                     await sqlManager.update(id: ex.id!, item: ex)
                     await MainActor.run {
-                        moveItemToFirst(ex)
+                        if lastDataChangeType == .reset, let existingModel = dataList.first(where: { $0.id == ex.id }) {
+                            existingModel.updateDate()
+                            moveItemToFirst(existingModel)
+                        }
                     }
                     return
                 }
@@ -329,7 +329,7 @@ extension PasteDataStore {
             let itemId: Int64
             await itemId = sqlManager.insert(item: model)
             model.id = itemId
-            updateTotalCount()
+            await updateTotalCount()
             invalidateTagTypesCache()
             if lastDataChangeType == .searchFilter {
                 return
@@ -368,7 +368,7 @@ extension PasteDataStore {
     func deleteItems(filter: Expression<Bool>) {
         Task {
             await sqlManager.delete(filter: filter)
-            updateTotalCount()
+            await updateTotalCount()
             invalidateTagTypesCache()
         }
     }
@@ -525,7 +525,7 @@ extension PasteDataStore {
 
 extension PasteDataStore {
     func updateColor(_ model: PasteboardModel) async {
-        if !colorDict.contains(where: { $0.key == model.appName }) {
+        if colorDict[model.appName] == nil {
             let iconImage = NSWorkspace.shared.icon(forFile: model.appPath)
             let hex = getAppThemeColor(for: model.appName, appIcon: iconImage)
             colorDict[model.appName] = hex
@@ -632,6 +632,7 @@ extension PasteDataStore {
         }
 
         var colorGroupWeights: [ColorGroup: Float] = [:]
+        var colorGroupCache: [UInt32: ColorGroup] = [:]
 
         for (color, count) in colorCounts {
             let r = Int((color >> 16) & 0xFF)
@@ -639,6 +640,7 @@ extension PasteDataStore {
             let b = Int(color & 0xFF)
 
             let group = getColorGroup(r: r, g: g, b: b)
+            colorGroupCache[color] = group
             if group != .other {
                 colorGroupWeights[group, default: 0] += count
             }
@@ -664,7 +666,7 @@ extension PasteDataStore {
             var score = count * quality
 
             if shouldSuppressWarmColors {
-                let group = getColorGroup(r: r, g: g, b: b)
+                let group = colorGroupCache[color] ?? .other
                 switch group {
                 case .red:
                     score *= 0.1 // 红色优先级最低

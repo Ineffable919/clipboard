@@ -40,7 +40,12 @@ struct ClipTopBarView: View {
                 }
                 typeView
                 Spacer()
-                SettingsMenu()
+                SettingsMenu(topBarVM: topBarVM)
+            }
+            .overlay(alignment: .leading) {
+                if topBarVM.isPaused {
+                    pauseIndicator
+                }
             }
         }
         .frame(height: Const.topBarHeight)
@@ -51,9 +56,38 @@ struct ClipTopBarView: View {
             EventDispatcher.shared.registerHandler(
                 matching: .keyDown,
                 key: "top",
-                handler: topKeyDownEvent(_:),
+                handler: topKeyDownEvent(_:)
+            )
+            topBarVM.startPauseDisplayTimer()
+        }
+        .onDisappear {
+            topBarVM.stopPauseDisplayTimer()
+        }
+    }
+
+    private var pauseIndicator: some View {
+        Button {
+            topBarVM.resumePasteboard()
+        } label: {
+            HStack(spacing: Const.space4) {
+                Image(systemName: "pause.circle.fill")
+                    .font(.system(size: 14))
+                    .foregroundStyle(.orange)
+                Text(topBarVM.formattedRemainingTime)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+            }
+            .padding(.horizontal, Const.space10)
+            .padding(.vertical, Const.space6)
+            .background(
+                RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
+                    .fill(Color.orange.opacity(0.2))
             )
         }
+        .padding(.leading, Const.space8)
+        .buttonStyle(.plain)
+        .help("点击恢复记录")
     }
 
     private var searchField: some View {
@@ -384,6 +418,8 @@ struct SettingsMenu: View {
     private var backgroundTypeRaw: Int = 0
     @State private var isHovered: Bool = false
 
+    var topBarVM: TopBarViewModel
+
     var body: some View {
         Image(systemName: "ellipsis")
             .font(.system(size: Const.iconHdSize, weight: .regular))
@@ -391,7 +427,7 @@ struct SettingsMenu: View {
             .padding(.vertical, Const.space10)
             .background(
                 RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
-                    .fill(isHovered ? hoverColor() : Color.clear),
+                    .fill(isHovered ? hoverColor() : Color.clear)
             )
             .padding(.trailing)
             .onHover { hovering in
@@ -425,49 +461,147 @@ struct SettingsMenu: View {
         let settingsItem = NSMenuItem(
             title: "设置...",
             action: #selector(MenuActions.openSettings),
-            keyEquivalent: ",",
+            keyEquivalent: ","
         )
         settingsItem.target = MenuActions.shared
         settingsItem.image = NSImage(
             systemSymbolName: "gearshape",
-            accessibilityDescription: nil,
+            accessibilityDescription: nil
         )
         menu.addItem(settingsItem)
 
         let updateItem = NSMenuItem(
             title: "检查更新",
             action: #selector(MenuActions.checkForUpdates),
-            keyEquivalent: "",
+            keyEquivalent: ""
         )
         updateItem.target = MenuActions.shared
         updateItem.image = NSImage(
             systemSymbolName: "arrow.clockwise",
-            accessibilityDescription: nil,
+            accessibilityDescription: nil
         )
         menu.addItem(updateItem)
 
         let helpItem = NSMenuItem(
             title: "帮助",
             action: #selector(MenuActions.invokeHelp),
-            keyEquivalent: "",
+            keyEquivalent: ""
         )
         helpItem.target = MenuActions.shared
         helpItem.image = NSImage(
             systemSymbolName: "questionmark.circle",
-            accessibilityDescription: nil,
+            accessibilityDescription: nil
         )
         menu.addItem(helpItem)
+
+        menu.addItem(NSMenuItem.separator())
+
+        let pauseItem = NSMenuItem(
+            title: topBarVM.pauseMenuTitle,
+            action: nil,
+            keyEquivalent: ""
+        )
+        pauseItem.image = NSImage(
+            systemSymbolName: "pause.circle",
+            accessibilityDescription: nil
+        )
+
+        let pauseSubmenu = NSMenu()
+
+        if topBarVM.isPaused {
+            let resumeItem = NSMenuItem(
+                title: "恢复",
+                action: #selector(MenuActions.resumePasteboard),
+                keyEquivalent: ""
+            )
+            resumeItem.target = MenuActions.shared
+            resumeItem.image = NSImage(
+                systemSymbolName: "play.circle",
+                accessibilityDescription: nil
+            )
+            pauseSubmenu.addItem(resumeItem)
+            pauseSubmenu.addItem(NSMenuItem.separator())
+        } else {
+            let pauseIndefiniteItem = NSMenuItem(
+                title: "暂停",
+                action: #selector(MenuActions.pauseIndefinitely),
+                keyEquivalent: ""
+            )
+            pauseIndefiniteItem.target = MenuActions.shared
+            pauseIndefiniteItem.image = NSImage(
+                systemSymbolName: "pause.circle",
+                accessibilityDescription: nil
+            )
+            pauseSubmenu.addItem(pauseIndefiniteItem)
+
+            pauseSubmenu.addItem(NSMenuItem.separator())
+        }
+
+        let pause15Item = NSMenuItem(
+            title: "暂停 15 分钟",
+            action: #selector(MenuActions.pause15Minutes),
+            keyEquivalent: ""
+        )
+        pause15Item.target = MenuActions.shared
+        pause15Item.image = symbolImage(number: 15)
+        pauseSubmenu.addItem(pause15Item)
+
+        let pause30Item = NSMenuItem(
+            title: "暂停 30 分钟",
+            action: #selector(MenuActions.pause30Minutes),
+            keyEquivalent: ""
+        )
+        pause30Item.target = MenuActions.shared
+        pause30Item.image = symbolImage(number: 30)
+        pauseSubmenu.addItem(pause30Item)
+
+        let pause1hItem = NSMenuItem(
+            title: "暂停 1 小时",
+            action: #selector(MenuActions.pause1Hour),
+            keyEquivalent: ""
+        )
+        pause1hItem.target = MenuActions.shared
+        pause1hItem.image = symbolImage(number: 1)
+        pauseSubmenu.addItem(pause1hItem)
+
+        let pause3hItem = NSMenuItem(
+            title: "暂停 3 小时",
+            action: #selector(MenuActions.pause3Hours),
+            keyEquivalent: ""
+        )
+        pause3hItem.target = MenuActions.shared
+        pause3hItem.image = symbolImage(number: 3)
+        pauseSubmenu.addItem(pause3hItem)
+
+        let pause8hItem = NSMenuItem(
+            title: "暂停 8 小时",
+            action: #selector(MenuActions.pause8Hours),
+            keyEquivalent: ""
+        )
+        pause8hItem.target = MenuActions.shared
+        pause8hItem.image = symbolImage(number: 8)
+        pauseSubmenu.addItem(pause8hItem)
+
+        pauseItem.submenu = pauseSubmenu
+        menu.addItem(pauseItem)
 
         let quitItem = NSMenuItem(
             title: "退出",
             action: #selector(NSApplication.shared.terminate),
-            keyEquivalent: "q",
+            keyEquivalent: "q"
         )
         menu.addItem(quitItem)
 
         if let event = NSApp.currentEvent {
             NSMenu.popUpContextMenu(menu, with: event, for: NSView())
         }
+    }
+
+    private func symbolImage(number: Int) -> NSImage? {
+        NSImage(
+            systemSymbolName: "\(number).circle",
+            accessibilityDescription: nil
+        )
     }
 }
 
@@ -485,10 +619,40 @@ class MenuActions: NSObject {
     @objc func invokeHelp() {
         if let url = URL(
             string:
-            "https://github.com/Ineffable919/clipboard/blob/master/README.md",
+            "https://github.com/Ineffable919/clipboard/blob/master/README.md"
         ) {
             NSWorkspace.shared.open(url)
         }
+    }
+
+    // MARK: - 暂停功能
+
+    @objc func resumePasteboard() {
+        PasteBoard.main.resume()
+    }
+
+    @objc func pause15Minutes() {
+        PasteBoard.main.pause(for: 15 * 60)
+    }
+
+    @objc func pause30Minutes() {
+        PasteBoard.main.pause(for: 30 * 60)
+    }
+
+    @objc func pause1Hour() {
+        PasteBoard.main.pause(for: 60 * 60)
+    }
+
+    @objc func pause3Hours() {
+        PasteBoard.main.pause(for: 3 * 60 * 60)
+    }
+
+    @objc func pause8Hours() {
+        PasteBoard.main.pause(for: 8 * 60 * 60)
+    }
+
+    @objc func pauseIndefinitely() {
+        PasteBoard.main.pause()
     }
 }
 

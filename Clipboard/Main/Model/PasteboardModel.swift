@@ -49,12 +49,8 @@ final class PasteboardModel: Identifiable {
     var cachedFilePaths: [String]?
     private var cachedHasBackgroundColor: Bool = false
 
-    var url: URL? {
-        if pasteboardType == .string {
-            let urlString = String(data: data, encoding: .utf8) ?? ""
-            return urlString.asCompleteURL()
-        }
-        return nil
+    var isLink: Bool {
+        attributeString.string.isLink()
     }
 
     var isCSS: Bool {
@@ -231,7 +227,7 @@ final class PasteboardModel: Identifiable {
             return ""
         case .link:
             if PasteUserDefaults.enableLinkPreview {
-                return String(data: data, encoding: .utf8) ?? ""
+                return attributeString.string
             }
             return
                 "\(PasteboardModel.formatter.string(from: NSNumber(value: length)) ?? "")个字符"
@@ -491,7 +487,6 @@ extension PasteboardModel {
 }
 
 extension PasteboardModel {
-  
     func itemProvider() -> NSItemProvider {
         if type == .string || type == .color || type == .link {
             let provider = NSItemProvider()
@@ -591,7 +586,6 @@ extension PasteboardModel {
         return NSItemProvider()
     }
 
-
     private static func generateUniqueId(
         for type: PasteboardType,
         data: Data,
@@ -624,7 +618,7 @@ enum PasteModelType: String {
         case .rtf, .rtfd:
             if model.isCSS {
                 self = .color
-            } else if model.url != nil {
+            } else if model.isLink {
                 self = .link
             } else {
                 self = .rich
@@ -632,7 +626,7 @@ enum PasteModelType: String {
         case .string:
             if model.isCSS {
                 self = .color
-            } else if model.url != nil {
+            } else if model.isLink {
                 self = .link
             } else {
                 self = .string

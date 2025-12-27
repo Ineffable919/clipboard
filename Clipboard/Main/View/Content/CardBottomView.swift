@@ -54,9 +54,9 @@ struct CommonBottomView: View {
 
     init(model: PasteboardModel) {
         self.model = model
-        self.colors = model.colors()
-        self.introString = model.introString()
-        self.needsMask = Self.calculateNeedsMask(model: model)
+        colors = model.colors()
+        introString = model.introString()
+        needsMask = Self.calculateNeedsMask(model: model)
     }
 
     var body: some View {
@@ -154,7 +154,7 @@ struct CommonBottomView: View {
         }
 
         if mutable.length > 0,
-            mutable.attribute(.font, at: 0, effectiveRange: nil) == nil
+           mutable.attribute(.font, at: 0, effectiveRange: nil) == nil
         {
             mutable.addAttribute(
                 .font,

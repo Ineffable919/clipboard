@@ -47,7 +47,7 @@ struct ClipCardView: View {
                     .strokeBorder(selectionColor, lineWidth: 4)
                     .padding(-4)
             }
-            
+
             if let index = quickPasteIndex {
                 quickPasteIndexBadge(index: index)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
@@ -75,7 +75,7 @@ struct ClipCardView: View {
                 CardBottomView(model: model, enableLinkPreview: enableLinkPreview)
             }
             .background {
-                if model.url == nil || !enableLinkPreview {
+                if !model.isLink || !enableLinkPreview {
                     model.backgroundColor
                 }
             }

@@ -9,7 +9,7 @@ import SwiftUI
 
 struct CardHeadView: View {
     let model: PasteboardModel
-    
+
     private var isSystem: Bool { model.group == -1 }
 
     var body: some View {
@@ -48,7 +48,7 @@ struct CardHeadView: View {
 private struct AppIconView: View {
     let appPath: String
     @State private var icon: NSImage?
-    
+
     var body: some View {
         Group {
             if let icon {

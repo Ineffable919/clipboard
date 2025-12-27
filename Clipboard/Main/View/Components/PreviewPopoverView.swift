@@ -146,7 +146,7 @@ struct PreviewPopoverView: View {
     }
 
     private func openInBrowser() {
-        guard let url = model.url else { return }
+        guard let url = model.attributeString.string.asCompleteURL() else { return }
         NSWorkspace.shared.open(url)
     }
 
@@ -174,7 +174,7 @@ struct PreviewPopoverView: View {
 
     @ViewBuilder
     private var linkPreview: some View {
-        if enableLinkPreview, let url = model.url {
+        if enableLinkPreview, model.isLink, let url = model.attributeString.string.asCompleteURL() {
             if #available(macOS 26.0, *) {
                 WebContentView(url: url)
             } else {

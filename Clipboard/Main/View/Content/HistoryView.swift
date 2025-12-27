@@ -86,13 +86,13 @@ struct HistoryView: View {
             if #available(macOS 26.0, *) {
                 ForEach(pd.dataList.enumerated(), id: \.element.id) {
                     index,
-                    item in
+                        item in
                     cardViewItem(for: item, at: index)
                 }
             } else {
                 ForEach(Array(pd.dataList.enumerated()), id: \.element.id) {
                     index,
-                    item in
+                        item in
                     cardViewItem(for: item, at: index)
                 }
             }
@@ -195,8 +195,8 @@ struct HistoryView: View {
             historyVM.isDel = false
 
             if pd.dataList.count < 50,
-                pd.hasMoreData,
-                !pd.isLoadingPage
+               pd.hasMoreData,
+               !pd.isLoadingPage
             {
                 pd.loadNextPage()
             }
@@ -348,7 +348,7 @@ struct HistoryView: View {
 
     private func handleCopyCommand() -> NSEvent? {
         guard let id = historyVM.selectedId,
-            let item = pd.dataList.first(where: { $0.id == id })
+              let item = pd.dataList.first(where: { $0.id == id })
         else {
             NSSound.beep()
             return nil
@@ -374,7 +374,7 @@ struct HistoryView: View {
     private func handleReturnKey(_ event: NSEvent) -> NSEvent? {
         guard env.focusView == .history else { return event }
         guard let id = historyVM.selectedId,
-            let item = pd.dataList.first(where: { $0.id == id })
+              let item = pd.dataList.first(where: { $0.id == id })
         else {
             return event
         }
@@ -423,7 +423,7 @@ struct HistoryView: View {
             }
 
             guard response == .alertFirstButtonReturn,
-                let id = historyVM.pendingDeleteId
+                  let id = historyVM.pendingDeleteId
             else {
                 return
             }

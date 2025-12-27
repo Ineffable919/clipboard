@@ -113,6 +113,41 @@ final class TopBarViewModel {
 
     private var appPathCache: [String: String] = [:]
 
+    // MARK: - Pause Properties
+
+    private(set) var isPaused: Bool = false
+    private(set) var remainingTime: TimeInterval = 0
+    private var pauseDisplayTimer: Timer?
+
+    var pauseMenuTitle: String {
+        guard isPaused else {
+            return "暂停"
+        }
+
+        if let endTime = PasteBoard.main.pauseEndTime {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "HH:mm"
+            return "暂停到 \(formatter.string(from: endTime))"
+        }
+
+        return "已暂停"
+    }
+
+    var formattedRemainingTime: String {
+        if remainingTime <= 0 {
+            return "已暂停"
+        }
+        let hours = Int(remainingTime) / 3600
+        let minutes = (Int(remainingTime) % 3600) / 60
+        let seconds = Int(remainingTime) % 60
+
+        if hours > 0 {
+            return String(format: "%d:%02d:%02d", hours, minutes, seconds)
+        } else {
+            return String(format: "%d:%02d", minutes, seconds)
+        }
+    }
+
     /// 搜索条件：关键词 + 顶栏分组（自定义 chip）+ 原始筛选条件
     struct SearchCriteria: Equatable {
         var keyword: String
@@ -232,6 +267,58 @@ final class TopBarViewModel {
     init(dataStore: PasteDataStore = .main) {
         self.dataStore = dataStore
         loadCategories()
+        setupPauseObserver()
+    }
+
+    // MARK: - Pause Methods
+
+    private func setupPauseObserver() {
+        NotificationCenter.default.addObserver(
+            forName: .pasteboardPauseStateChanged,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.updatePauseState()
+            }
+        }
+    }
+
+    func startPauseDisplayTimer() {
+        stopPauseDisplayTimer()
+        updatePauseState()
+
+        pauseDisplayTimer = Timer.scheduledTimer(
+            withTimeInterval: 1,
+            repeats: true
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.updatePauseState()
+            }
+        }
+        RunLoop.main.add(pauseDisplayTimer!, forMode: .common)
+    }
+
+    func stopPauseDisplayTimer() {
+        pauseDisplayTimer?.invalidate()
+        pauseDisplayTimer = nil
+    }
+
+    private func updatePauseState() {
+        isPaused = PasteBoard.main.isPaused
+        remainingTime = PasteBoard.main.remainingPauseTime ?? 0
+    }
+
+    func resumePasteboard() {
+        PasteBoard.main.resume()
+    }
+
+    func pauseIndefinitely() {
+        PasteBoard.main.pause()
+    }
+
+    func pause(for minutes: Int) {
+        PasteBoard.main.pause(for: TimeInterval(minutes * 60))
     }
 
     // MARK: - Category Management
@@ -482,12 +569,19 @@ final class TopBarViewModel {
         tags.append(tag)
     }
 
+    private var isLoadingAppPathCache = false
+
     func loadAppPathCache() async {
+        // 避免重复加载
+        guard !isLoadingAppPathCache, appPathCache.isEmpty else { return }
+        isLoadingAppPathCache = true
+
         let appInfo = await dataStore.getAllAppInfo()
         await MainActor.run {
             appPathCache = Dictionary(
                 uniqueKeysWithValues: appInfo.map { ($0.name, $0.path) },
             )
+            isLoadingAppPathCache = false
         }
     }
 

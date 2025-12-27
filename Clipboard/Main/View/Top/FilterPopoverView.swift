@@ -11,19 +11,19 @@ struct FilterPopoverView: View {
     @Environment(\.colorScheme) private var colorScheme
     @Bindable var topBarVM: TopBarViewModel
 
-    @State private var appInfoList: [(name: String, path: String)] = []
-    @State private var isLoadingApps: Bool = false
+    @State private var appInfoList: [AppInfo] = []
     @State private var showAllApps: Bool = false
     @State private var tagTypes: [PasteModelType] = []
 
     // MARK: - 统一的三列网格布局
+
     private let threeColumnGrid = [
         GridItem(.flexible(), spacing: Const.space8),
         GridItem(.flexible(), spacing: Const.space8),
         GridItem(.flexible(), spacing: Const.space8),
     ]
 
-    private var displayedAppInfo: [(name: String, path: String)] {
+    private var displayedAppInfo: [AppInfo] {
         let totalCount = appInfoList.count
         if totalCount <= 9 {
             return appInfoList
@@ -88,8 +88,9 @@ struct FilterPopoverView: View {
 
     private func textTypeButton() -> some View {
         let isSelected = topBarVM.isTextTypeSelected()
-        let iconName = if #available(macOS 15.0, *) { "text.document" } else { "doc.text" }
-        
+        let iconName =
+            if #available(macOS 15.0, *) { "text.document" } else { "doc.text" }
+
         return FilterButton(
             systemImage: iconName,
             label: "文本",
@@ -102,8 +103,8 @@ struct FilterPopoverView: View {
 
     private var appSection: some View {
         filterSection(title: "App") {
-            ForEach(displayedAppInfo, id: \.name) { appInfo in
-                appButton(name: appInfo.name, path: appInfo.path)
+            ForEach(displayedAppInfo) { appInfo in
+                appButton(appInfo: appInfo)
             }
 
             if shouldShowMoreButton {
@@ -112,11 +113,11 @@ struct FilterPopoverView: View {
         }
     }
 
-    private func appButton(name: String, path: String) -> some View {
+    private func appButton(appInfo: AppInfo) -> some View {
         FilterButton(
             icon: {
-                if FileManager.default.fileExists(atPath: path) {
-                    Image(nsImage: NSWorkspace.shared.icon(forFile: path))
+                if let icon = appInfo.icon {
+                    Image(nsImage: icon)
                         .resizable()
                         .scaledToFit()
                 } else {
@@ -125,17 +126,18 @@ struct FilterPopoverView: View {
                         .foregroundStyle(.secondary)
                 }
             },
-            label: name,
-            isSelected: topBarVM.selectedAppNames.contains(name),
+            label: appInfo.name,
+            isSelected: topBarVM.selectedAppNames.contains(appInfo.name),
             action: {
-                topBarVM.toggleApp(name)
-            },
+                topBarVM.toggleApp(appInfo.name)
+            }
         )
     }
 
     private var moreButton: some View {
         FilterButton(
-            systemImage: showAllApps ? "chevron.up.circle" : "chevron.down.circle",
+            systemImage: showAllApps
+                ? "chevron.up.circle" : "chevron.down.circle",
             label: showAllApps ? "收起" : "更多",
             isSelected: false,
             action: { showAllApps.toggle() }
@@ -146,13 +148,16 @@ struct FilterPopoverView: View {
 
     private var dateSection: some View {
         filterSection(title: "Date") {
-            ForEach(TopBarViewModel.DateFilterOption.allCases, id: \.self) { option in
+            ForEach(TopBarViewModel.DateFilterOption.allCases, id: \.self) {
+                option in
                 let isSelected = topBarVM.selectedDateFilter == option
                 FilterButton(
                     systemImage: "calendar",
                     label: option.displayName,
                     isSelected: isSelected,
-                    action: { topBarVM.setDateFilter(isSelected ? nil : option) }
+                    action: {
+                        topBarVM.setDateFilter(isSelected ? nil : option)
+                    }
                 )
             }
         }
@@ -172,9 +177,9 @@ struct FilterPopoverView: View {
     // MARK: - Reusable Components
 
     /// 通用筛选区块
-    private func filterSection<Content: View>(
+    private func filterSection(
         title: String,
-        @ViewBuilder content: () -> Content
+        @ViewBuilder content: () -> some View
     ) -> some View {
         VStack(alignment: .leading, spacing: Const.space8) {
             Text(title)
@@ -190,16 +195,41 @@ struct FilterPopoverView: View {
     // MARK: - Helper Methods
 
     private func loadAppInfo() async {
-        isLoadingApps = true
+        guard appInfoList.isEmpty else { return }
+
         async let info = PasteDataStore.main.getAllAppInfo()
         async let types = PasteDataStore.main.getAllTagTypes()
 
-        let (appInfo, tagTypeList) = await (info, types)
+        let (rawAppInfo, tagTypeList) = await (info, types)
 
-        await MainActor.run {
-            appInfoList = appInfo
-            tagTypes = tagTypeList
-            isLoadingApps = false
-        }
+        let appInfoWithIcons = await Task.detached(priority: .userInitiated) {
+            rawAppInfo.map { info -> AppInfo in
+                let icon: NSImage? = if FileManager.default.fileExists(atPath: info.path) {
+                    NSWorkspace.shared.icon(forFile: info.path)
+                } else {
+                    nil
+                }
+                return AppInfo(name: info.name, path: info.path, icon: icon)
+            }
+        }.value
+
+        appInfoList = appInfoWithIcons
+        tagTypes = tagTypeList
+    }
+}
+
+// MARK: - AppInfo Model
+
+struct AppInfo: Identifiable, Sendable {
+    let id: String
+    let name: String
+    let path: String
+    let icon: NSImage?
+
+    nonisolated init(name: String, path: String, icon: NSImage?) {
+        id = name
+        self.name = name
+        self.path = path
+        self.icon = icon
     }
 }

@@ -29,36 +29,139 @@ class AppDelegate: NSObject {
         let item1 = NSMenuItem(
             title: "偏好设置",
             action: #selector(settingsAction),
-            keyEquivalent: ",",
+            keyEquivalent: ","
         )
         item1.image = NSImage(
             systemSymbolName: "gearshape",
-            accessibilityDescription: nil,
+            accessibilityDescription: nil
         )
         menu.addItem(item1)
 
         let item2 = NSMenuItem(
             title: "检查更新",
             action: #selector(checkUpdate),
-            keyEquivalent: "",
+            keyEquivalent: ""
         )
         item2.image = NSImage(
             systemSymbolName: "arrow.clockwise",
-            accessibilityDescription: nil,
+            accessibilityDescription: nil
         )
         menu.addItem(item2)
 
         menu.addItem(NSMenuItem.separator())
 
+        let pauseItem = NSMenuItem(
+            title: "暂停",
+            action: nil,
+            keyEquivalent: ""
+        )
+        pauseItem.image = NSImage(
+            systemSymbolName: "pause.circle",
+            accessibilityDescription: nil
+        )
+        pauseItem.submenu = createPauseSubmenu()
+        menu.addItem(pauseItem)
+
         let item3 = NSMenuItem(
             title: "退出",
             action: #selector(NSApplication.shared.terminate),
-            keyEquivalent: "q",
+            keyEquivalent: "q"
         )
         menu.addItem(item3)
 
+        menu.delegate = self
+
         return menu
     }()
+
+    private func createPauseSubmenu() -> NSMenu {
+        let submenu = NSMenu()
+        let isPaused = PasteBoard.main.isPaused
+
+        if isPaused {
+            let resumeItem = NSMenuItem(
+                title: "恢复",
+                action: #selector(resumePasteboard),
+                keyEquivalent: ""
+            )
+            resumeItem.image = NSImage(
+                systemSymbolName: "play.circle",
+                accessibilityDescription: nil
+            )
+            submenu.addItem(resumeItem)
+            submenu.addItem(NSMenuItem.separator())
+        } else {
+            let pauseIndefinite = NSMenuItem(
+                title: "暂停",
+                action: #selector(pauseIndefinitely),
+                keyEquivalent: ""
+            )
+            pauseIndefinite.image = NSImage(
+                systemSymbolName: "pause.circle",
+                accessibilityDescription: nil
+            )
+            submenu.addItem(pauseIndefinite)
+
+            submenu.addItem(NSMenuItem.separator())
+        }
+
+        let pause15 = NSMenuItem(
+            title: "暂停 15 分钟",
+            action: #selector(pause15Minutes),
+            keyEquivalent: ""
+        )
+        pause15.image = NSImage(
+            systemSymbolName: "15.circle",
+            accessibilityDescription: nil
+        )
+        submenu.addItem(pause15)
+
+        let pause30 = NSMenuItem(
+            title: "暂停 30 分钟",
+            action: #selector(pause30Minutes),
+            keyEquivalent: ""
+        )
+        pause30.image = NSImage(
+            systemSymbolName: "30.circle",
+            accessibilityDescription: nil
+        )
+        submenu.addItem(pause30)
+
+        let pause1h = NSMenuItem(
+            title: "暂停 1 小时",
+            action: #selector(pause1Hour),
+            keyEquivalent: ""
+        )
+        pause1h.image = NSImage(
+            systemSymbolName: "1.circle",
+            accessibilityDescription: nil
+        )
+        submenu.addItem(pause1h)
+
+        let pause3h = NSMenuItem(
+            title: "暂停 3 小时",
+            action: #selector(pause3Hours),
+            keyEquivalent: ""
+        )
+        pause3h.image = NSImage(
+            systemSymbolName: "3.circle",
+            accessibilityDescription: nil
+        )
+        submenu.addItem(pause3h)
+
+        let pause8h = NSMenuItem(
+            title: "暂停 8 小时",
+            action: #selector(pause8Hours),
+            keyEquivalent: ""
+        )
+        pause8h.image = NSImage(
+            systemSymbolName: "8.circle",
+            accessibilityDescription: nil
+        )
+        submenu.addItem(pause8h)
+
+        return submenu
+    }
 
     private lazy var clipWinController = ClipMainWindowController.shared
     private lazy var settingWinController = SettingWindowController.shared
@@ -105,20 +208,20 @@ extension AppDelegate: NSApplicationDelegate {
 extension AppDelegate {
     private func initClipboardAsync() async {
         PasteBoard.main.startListening()
-        
+
         PasteDataStore.main.setup()
-        
+
         initEvent()
-        
+
         HotKeyManager.shared.initialize()
-        
+
         syncLaunchAtLoginStatus()
-        
+
         Task.detached(priority: .utility) {
             await FileAccessHelper.shared.restoreAllAccesses()
         }
     }
-    
+
     private func syncLaunchAtLoginStatus() {
         let userDefaultsValue = PasteUserDefaults.onStart
         let actualValue = LaunchAtLoginHelper.shared.isEnabled
@@ -142,11 +245,10 @@ extension AppDelegate {
         )
 
         let iconName = "heart.text.clipboard.fill"
-        let icon: NSImage?
-        if #available(macOS 15.0, *) {
-            icon = NSImage(systemSymbolName: iconName, accessibilityDescription: nil)
+        let icon: NSImage? = if #available(macOS 15.0, *) {
+            NSImage(systemSymbolName: iconName, accessibilityDescription: nil)
         } else {
-            icon = NSImage(named: iconName)
+            NSImage(named: iconName)
         }
 
         menuBarItem.button?.image = icon?.withSymbolConfiguration(config)
@@ -179,6 +281,34 @@ extension AppDelegate {
         updaterController.checkForUpdates(nil)
     }
 
+    @objc private func resumePasteboard() {
+        PasteBoard.main.resume()
+    }
+
+    @objc private func pause15Minutes() {
+        PasteBoard.main.pause(for: 15 * 60)
+    }
+
+    @objc private func pause30Minutes() {
+        PasteBoard.main.pause(for: 30 * 60)
+    }
+
+    @objc private func pause1Hour() {
+        PasteBoard.main.pause(for: 60 * 60)
+    }
+
+    @objc private func pause3Hours() {
+        PasteBoard.main.pause(for: 3 * 60 * 60)
+    }
+
+    @objc private func pause8Hours() {
+        PasteBoard.main.pause(for: 8 * 60 * 60)
+    }
+
+    @objc private func pauseIndefinitely() {
+        PasteBoard.main.pause()
+    }
+
     @objc
     func triggerStatusBarPulse() {
         guard let button = menuBarItem?.button else { return }
@@ -206,7 +336,7 @@ extension AppDelegate {
 
         EventDispatcher.shared.registerHandler(
             matching: .keyDown,
-            key: "setting",
+            key: "setting"
         ) { [weak self] event in
             if event.modifierFlags.contains(.command) {
                 let modifiers = event.charactersIgnoringModifiers
@@ -221,5 +351,33 @@ extension AppDelegate {
             }
             return event
         }
+    }
+}
+
+// MARK: - NSMenuDelegate
+
+extension AppDelegate: NSMenuDelegate {
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        if let pauseItem = menu.item(withTitle: "暂停")
+            ?? menu.item(withTitle: "已暂停")
+            ?? menu.items.first(where: { $0.title.hasPrefix("暂停到") })
+        {
+            pauseItem.title = pauseMenuTitle()
+            pauseItem.submenu = createPauseSubmenu()
+        }
+    }
+
+    private func pauseMenuTitle() -> String {
+        guard PasteBoard.main.isPaused else {
+            return "暂停"
+        }
+
+        if let endTime = PasteBoard.main.pauseEndTime {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "HH:mm"
+            return "暂停到 \(formatter.string(from: endTime))"
+        }
+
+        return "已暂停"
     }
 }

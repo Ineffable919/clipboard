@@ -88,18 +88,39 @@ final class PasteSQLManager: NSObject {
         }
         do {
             try db?.run(stateMent)
+            createIndexesAsync()
             migrateTagFieldAsync()
         } catch {
             log.error("Create Table Error: \(error)")
         }
         return tab
     }()
+
+    private func createIndexesAsync() {
+        Task.detached(priority: .background) { [weak self] in
+            await self?.performIndexCreation()
+        }
+    }
+
+    private func performIndexCreation() {
+        guard let db else { return }
+
+        do {
+            try db.run("CREATE INDEX IF NOT EXISTS idx_app_name ON Clip(app_name)")
+            try db.run("CREATE INDEX IF NOT EXISTS idx_tag ON Clip(tag)")
+            try db.run("CREATE INDEX IF NOT EXISTS idx_ts ON Clip(timestamp DESC)")
+            try db.run("CREATE INDEX IF NOT EXISTS idx_group ON Clip(\"group\")")
+            log.debug("索引创建完成")
+        } catch {
+            log.debug("索引已存在或创建失败: \(error)")
+        }
+    }
 }
 
 // MARK: - 数据库操作 对外接口
 
 extension PasteSQLManager {
-    var totalCount: Int {
+    func getTotalCount() async -> Int {
         do {
             return try db?.scalar(table.count) ?? 0
         } catch {
@@ -242,24 +263,28 @@ extension PasteSQLManager {
         }
     }
 
-    // 获取应用名称和对应的路径（每个应用名称取第一个路径）
+    // 获取应用名称和对应的路径（每个应用名称取最新的路径）
     func getDistinctAppInfo() async -> [(name: String, path: String)] {
         do {
             var appInfo: [(name: String, path: String)] = []
-            var seenNames: Set<String> = []
 
-            let query = table.select(Col.appName, Col.appPath)
-                .order(Col.appName.asc, Col.ts.desc)
+            let sql = """
+            SELECT app_name, app_path FROM Clip
+            WHERE id IN (
+                SELECT MAX(id) FROM Clip
+                WHERE app_name != ''
+                GROUP BY app_name
+            )
+            ORDER BY app_name ASC
+            """
 
-            if let result = try db?.prepare(query) {
+            if let result = try db?.prepare(sql) {
                 for row in result {
-                    if let appName = try? row.get(Col.appName),
-                       let appPath = try? row.get(Col.appPath),
-                       !appName.isEmpty,
-                       !seenNames.contains(appName)
+                    if let appName = row[0] as? String,
+                       let appPath = row[1] as? String,
+                       !appName.isEmpty
                     {
                         appInfo.append((name: appName, path: appPath))
-                        seenNames.insert(appName)
                     }
                 }
             }
