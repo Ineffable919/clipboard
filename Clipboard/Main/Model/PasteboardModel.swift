@@ -491,108 +491,107 @@ extension PasteboardModel {
 }
 
 extension PasteboardModel {
+  
     func itemProvider() -> NSItemProvider {
         if type == .string || type == .color || type == .link {
-            if let str = String(data: data, encoding: .utf8) {
-                return NSItemProvider(object: str as NSString)
+            let provider = NSItemProvider()
+            let dataCopy = data
+            let typeIdentifier = pasteboardType.rawValue
+            provider.registerDataRepresentation(
+                forTypeIdentifier: typeIdentifier,
+                visibility: .all
+            ) { completion in
+                completion(dataCopy, nil)
+                return nil
             }
+            return provider
         }
 
-        let provider = NSItemProvider()
-
         if type == .rich {
-            provider.registerDataRepresentation(
-                forTypeIdentifier: pasteboardType.rawValue,
-                visibility: .all,
-            ) { [weak self] completion in
-                guard let data = self?.data else {
-                    completion(nil, nil)
+            if #available(macOS 15.0, *) {
+                let provider = NSItemProvider()
+                let dataCopy = data
+                let typeIdentifier = pasteboardType.rawValue
+                provider.registerDataRepresentation(
+                    forTypeIdentifier: typeIdentifier,
+                    visibility: .all
+                ) { completion in
+                    completion(dataCopy, nil)
                     return nil
                 }
-                DispatchQueue.global(qos: .userInitiated).async {
-                    completion(data, nil)
+                return provider
+            } else {
+                let provider = NSItemProvider(
+                    object: attributeString.string as NSString
+                )
+                let dataCopy = data
+                let typeIdentifier = pasteboardType.rawValue
+                provider.registerDataRepresentation(
+                    forTypeIdentifier: typeIdentifier,
+                    visibility: .all
+                ) { completion in
+                    completion(dataCopy, nil)
+                    return nil
                 }
-                return nil
+                return provider
             }
         }
 
         if type == .image {
-            provider.registerDataRepresentation(
-                forTypeIdentifier: pasteboardType.rawValue,
-                visibility: .all,
-            ) { [weak self] completion in
-                guard let data = self?.data else {
-                    completion(nil, nil)
+            let name = appName + "-" + timestamp.date()
+            if #available(macOS 15.0, *) {
+                let provider = NSItemProvider()
+                provider.registerDataRepresentation(
+                    forTypeIdentifier: pasteboardType.rawValue,
+                    visibility: .all
+                ) { [self] completion in
+                    completion(data, nil)
                     return nil
                 }
-                DispatchQueue.global(qos: .userInitiated).async {
-                    completion(data, nil)
+                provider.suggestedName = name
+                return provider
+            } else {
+                if let image = NSImage(data: data) {
+                    let provider = NSItemProvider(object: image)
+                    provider.suggestedName = name
+                    return provider
                 }
-                return nil
             }
-            let name = appName + "-" + timestamp.date()
-            provider.suggestedName = name
         }
 
         if type == .file {
-            if let paths = cachedFilePaths {
-                for path in paths {
-                    let fileURL = URL(fileURLWithPath: path)
-                    let promisedType: String = promisedTypeIdentifier(
-                        for: fileURL,
-                    )
-                    provider.registerFileRepresentation(
-                        forTypeIdentifier: promisedType,
-                        fileOptions: [],
-                        visibility: .all,
-                    ) { completion in
-                        DispatchQueue.global(qos: .userInitiated).async {
-                            if FileManager.default.fileExists(atPath: path) {
-                                completion(fileURL, true, nil)
-                            } else {
-                                let error = NSError(
-                                    domain: NSCocoaErrorDomain,
-                                    code: NSFileReadNoSuchFileError,
-                                    userInfo: [NSFilePathErrorKey: path],
-                                )
-                                completion(nil, false, error)
-                            }
-                        }
-                        return nil
+            if let paths = cachedFilePaths, !paths.isEmpty {
+                let path = paths[0]
+                guard path.hasPrefix("/") else {
+                    return NSItemProvider()
+                }
+
+                let fileURL = URL(fileURLWithPath: path)
+                guard fileURL.isFileURL else {
+                    return NSItemProvider()
+                }
+
+                let hasAccess = fileURL.startAccessingSecurityScopedResource()
+                defer {
+                    if hasAccess {
+                        fileURL.stopAccessingSecurityScopedResource()
                     }
                 }
 
-                if paths.count == 1 {
+                if let provider = NSItemProvider(contentsOf: fileURL) {
                     provider.suggestedName =
-                        URL(fileURLWithPath: paths[0]).lastPathComponent
-                } else {
-                    provider.suggestedName = "\(paths.count)个文件"
+                        fileURL.deletingPathExtension().lastPathComponent
+                    return provider
                 }
+
+                return NSItemProvider()
             }
         }
 
-        return provider
+        return NSItemProvider()
     }
 
-    private func promisedTypeIdentifier(for fileURL: URL) -> String {
-        do {
-            let values = try fileURL.resourceValues(forKeys: [
-                .contentTypeKey,
-            ])
-            if let type = values.contentType {
-                return type.identifier
-            }
-        } catch {
-            // ignore and fall through to fallback
-        }
-        return UTType.data.identifier
-    }
 
-    func createToken() -> ClipDragToken {
-        ClipDragToken(id: id)
-    }
-
-    /// 唯一标识符
     private static func generateUniqueId(
         for type: PasteboardType,
         data: Data,
@@ -608,22 +607,6 @@ extension PasteboardModel {
         default:
             return data.sha256Hex
         }
-    }
-}
-
-struct ClipDragToken: Codable, Sendable, Identifiable, Transferable {
-    var id: Int64?
-
-    static var transferRepresentation: some TransferRepresentation {
-        DataRepresentation(
-            contentType: .data,
-            exporting: { item in
-                try JSONEncoder().encode(item)
-            },
-            importing: { data in
-                try JSONDecoder().decode(ClipDragToken.self, from: data)
-            },
-        )
     }
 }
 
