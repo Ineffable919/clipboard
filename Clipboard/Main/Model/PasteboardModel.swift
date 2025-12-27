@@ -129,13 +129,13 @@ final class PasteboardModel: Identifiable {
         if type.isText() {
             att =
                 NSAttributedString(with: content, type: type)
-                    ?? NSAttributedString()
+                ?? NSAttributedString()
             guard !att.string.allSatisfy(\.isWhitespace) else {
                 return nil
             }
             showAtt =
                 att.length > 250
-                    ? att.attributedSubstring(from: NSMakeRange(0, 250)) : att
+                ? att.attributedSubstring(from: NSMakeRange(0, 250)) : att
             showData = showAtt?.toData(with: type)
         }
 
@@ -288,11 +288,11 @@ extension PasteboardModel {
             return (fallbackBG, .secondary, false)
         }
         if attributeString.length > 0,
-           let bg = attributeString.attribute(
-               .backgroundColor,
-               at: 0,
-               effectiveRange: nil,
-           ) as? NSColor
+            let bg = attributeString.attribute(
+                .backgroundColor,
+                at: 0,
+                effectiveRange: nil,
+            ) as? NSColor
         {
             return (Color(bg), getRTFColor(baseNS: bg), true)
         }
@@ -329,27 +329,47 @@ extension PasteboardModel {
 extension PasteboardModel {
     func itemProvider() -> NSItemProvider {
         if type == .string || type == .color || type == .link {
-            if let str = String(data: data, encoding: .utf8) {
-                return NSItemProvider(object: str as NSString)
+            let provider = NSItemProvider()
+            let dataCopy = data
+            let typeIdentifier = pasteboardType.rawValue
+            provider.registerDataRepresentation(
+                forTypeIdentifier: typeIdentifier,
+                visibility: .all
+            ) { completion in
+                completion(dataCopy, nil)
+                return nil
             }
+            return provider
         }
 
         if type == .rich {
-            let richProvider = NSItemProvider()
-            richProvider.registerDataRepresentation(
-                forTypeIdentifier: pasteboardType.rawValue,
-                visibility: .all,
-            ) { [weak self] completion in
-                guard let data = self?.data else {
-                    completion(nil, nil)
+            if #available(macOS 15.0, *) {
+                let provider = NSItemProvider()
+                let dataCopy = data
+                let typeIdentifier = pasteboardType.rawValue
+                provider.registerDataRepresentation(
+                    forTypeIdentifier: typeIdentifier,
+                    visibility: .all
+                ) { completion in
+                    completion(dataCopy, nil)
                     return nil
                 }
-                DispatchQueue.global(qos: .userInitiated).async {
-                    completion(data, nil)
+                return provider
+            } else {
+                let provider = NSItemProvider(
+                    object: attributeString.string as NSString
+                )
+                let dataCopy = data
+                let typeIdentifier = pasteboardType.rawValue
+                provider.registerDataRepresentation(
+                    forTypeIdentifier: typeIdentifier,
+                    visibility: .all
+                ) { completion in
+                    completion(dataCopy, nil)
+                    return nil
                 }
-                return nil
+                return provider
             }
-            return richProvider
         }
 
         if type == .image {
@@ -358,75 +378,52 @@ extension PasteboardModel {
                 let provider = NSItemProvider()
                 provider.registerDataRepresentation(
                     forTypeIdentifier: pasteboardType.rawValue,
-                    visibility: .all,
-                ) { [weak self] completion in
-                    guard let data = self?.data else {
-                        completion(nil, nil)
-                        return nil
-                    }
-                    DispatchQueue.global(qos: .userInitiated).async {
-                        completion(data, nil)
-                    }
+                    visibility: .all
+                ) { [self] completion in
+                    completion(data, nil)
                     return nil
                 }
                 provider.suggestedName = name
                 return provider
             } else {
                 if let image = NSImage(data: data) {
-                    let imgProvider = NSItemProvider(object: image)
-                    imgProvider.suggestedName = name
-                    return imgProvider
+                    let provider = NSItemProvider(object: image)
+                    provider.suggestedName = name
+                    return provider
                 }
             }
         }
 
         if type == .file {
-            if let paths = cachedFilePaths {
-                let fileProvider = NSItemProvider(
-                    object: URL(fileURLWithPath: paths[0])
-                        as NSItemProviderWriting
-                )
-                fileProvider.suggestedName =
-                    URL(fileURLWithPath: paths[0]).lastPathComponent
-                return fileProvider
+            if let paths = cachedFilePaths, !paths.isEmpty {
+                let path = paths[0]
+                guard path.hasPrefix("/") else {
+                    return NSItemProvider()
+                }
+
+                let fileURL = URL(fileURLWithPath: path)
+                guard fileURL.isFileURL else {
+                    return NSItemProvider()
+                }
+
+                let hasAccess = fileURL.startAccessingSecurityScopedResource()
+                defer {
+                    if hasAccess {
+                        fileURL.stopAccessingSecurityScopedResource()
+                    }
+                }
+
+                if let provider = NSItemProvider(contentsOf: fileURL) {
+                    provider.suggestedName =
+                        fileURL.deletingPathExtension().lastPathComponent
+                    return provider
+                }
+
+                return NSItemProvider()
             }
         }
 
         return NSItemProvider()
-    }
-
-    private func promisedTypeIdentifier(for fileURL: URL) -> String {
-        do {
-            let values = try fileURL.resourceValues(forKeys: [
-                .contentTypeKey,
-            ])
-            if let type = values.contentType {
-                return type.identifier
-            }
-        } catch {
-            // ignore and fall through to fallback
-        }
-        return UTType.data.identifier
-    }
-
-    func createToken() -> ClipDragToken {
-        ClipDragToken(id: id)
-    }
-}
-
-struct ClipDragToken: Codable, Sendable, Identifiable, Transferable {
-    var id: Int64?
-
-    static var transferRepresentation: some TransferRepresentation {
-        DataRepresentation(
-            contentType: .data,
-            exporting: { item in
-                try JSONEncoder().encode(item)
-            },
-            importing: { data in
-                try JSONDecoder().decode(ClipDragToken.self, from: data)
-            }
-        )
     }
 }
 
