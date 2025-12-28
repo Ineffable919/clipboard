@@ -11,7 +11,7 @@ import SwiftUI
 struct ClipCardView: View {
     let model: PasteboardModel
     let isSelected: Bool
-    @Binding var showPreview: Bool
+    @Binding var showPreviewId: PasteboardModel.ID?
     let quickPasteIndex: Int?
     let enableLinkPreview: Bool
     let searchKeyword: String
@@ -19,6 +19,10 @@ struct ClipCardView: View {
 
     @EnvironmentObject private var env: AppEnvironment
     private let controller = ClipMainWindowController.shared
+
+    private var showPreview: Bool {
+        showPreviewId == model.id
+    }
 
     var body: some View {
         cardContent
@@ -34,7 +38,12 @@ struct ClipCardView: View {
             )
             .padding(Const.space4)
             .contextMenu { contextMenuContent }
-            .popover(isPresented: $showPreview) {
+            .popover(
+                isPresented: Binding(
+                    get: { showPreview },
+                    set: { showPreviewId = $0 ? model.id : nil }
+                )
+            ) {
                 PreviewPopoverView(model: model)
             }
     }
@@ -43,14 +52,21 @@ struct ClipCardView: View {
     private var cardOverlay: some View {
         ZStack(alignment: .bottomTrailing) {
             if isSelected {
-                RoundedRectangle(cornerRadius: Const.radius + 4, style: .continuous)
-                    .strokeBorder(selectionColor, lineWidth: 4)
-                    .padding(-4)
+                RoundedRectangle(
+                    cornerRadius: Const.radius + 4,
+                    style: .continuous
+                )
+                .strokeBorder(selectionColor, lineWidth: 4)
+                .padding(-4)
             }
 
             if let index = quickPasteIndex {
                 quickPasteIndexBadge(index: index)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                    .frame(
+                        maxWidth: .infinity,
+                        maxHeight: .infinity,
+                        alignment: .bottomTrailing
+                    )
             }
         }
     }
@@ -58,7 +74,7 @@ struct ClipCardView: View {
     private var cardContent: some View {
         VStack(spacing: 0) {
             CardHeadView(model: model)
-                .id("\(model.id ?? 0)-\(model.group)")
+                .id("\(model.id ?? 0)-\(model.group)-\(model.timestamp)")
 
             ZStack(alignment: .bottom) {
                 CardContentView(
@@ -72,7 +88,10 @@ struct ClipCardView: View {
                     alignment: textAlignment
                 )
 
-                CardBottomView(model: model, enableLinkPreview: enableLinkPreview)
+                CardBottomView(
+                    model: model,
+                    enableLinkPreview: enableLinkPreview
+                )
             }
             .background {
                 if !model.isLink || !enableLinkPreview {
@@ -110,18 +129,31 @@ struct ClipCardView: View {
 
     @ViewBuilder
     private var contextMenuContent: some View {
-        Button(pasteButtonTitle, systemImage: "doc.on.clipboard", action: pasteToCode)
-            .keyboardShortcut(.return, modifiers: [])
+        Button(
+            pasteButtonTitle,
+            systemImage: "doc.on.clipboard",
+            action: pasteToCode
+        )
+        .keyboardShortcut(.return, modifiers: [])
 
         if model.pasteboardType.isText() {
-            Button("以纯文本粘贴", systemImage: "text.alignleft", action: pasteAsPlainText)
-                .keyboardShortcut(.return, modifiers: plainTextModifiers)
+            Button(
+                "以纯文本粘贴",
+                systemImage: "text.alignleft",
+                action: pasteAsPlainText
+            )
+            .keyboardShortcut(.return, modifiers: plainTextModifiers)
         }
 
         Button("复制", systemImage: "doc.on.doc", action: copyToClipboard)
             .keyboardShortcut("c", modifiers: [.command])
 
         Divider()
+
+        if model.pasteboardType.isText() {
+            Button("编辑", systemImage: "pencil", action: openEditWindow)
+                .keyboardShortcut("e", modifiers: [.command])
+        }
 
         Button("删除", systemImage: "trash", action: deleteItem)
             .keyboardShortcut(.delete, modifiers: [])
@@ -139,13 +171,23 @@ struct ClipCardView: View {
     // MARK: - Actions
 
     private func pasteToCode() { env.actions.paste(model) }
-    private func pasteAsPlainText() { env.actions.paste(model, isAttribute: false) }
+    private func pasteAsPlainText() {
+        env.actions.paste(model, isAttribute: false)
+    }
+
     private func copyToClipboard() { env.actions.copy(model) }
     private func deleteItem() { onRequestDelete?() }
-    private func togglePreview() { showPreview.toggle() }
+    private func togglePreview() {
+        showPreviewId = showPreview ? nil : model.id
+    }
+
+    private func openEditWindow() {
+        EditWindowController.shared.openWindow(with: model)
+    }
 }
 
 #Preview {
+    @Previewable @State var previewId: PasteboardModel.ID? = nil
     let data = "Clipboard".data(using: .utf8)
     ClipCardView(
         model: PasteboardModel(
@@ -161,7 +203,7 @@ struct ClipCardView: View {
             tag: "string"
         ),
         isSelected: true,
-        showPreview: .constant(false),
+        showPreviewId: $previewId,
         quickPasteIndex: 1,
         enableLinkPreview: true,
         searchKeyword: ""

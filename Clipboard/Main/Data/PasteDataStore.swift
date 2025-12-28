@@ -314,14 +314,23 @@ extension PasteDataStore {
             )
             if !exist.isEmpty {
                 if let ex = await getItems(rows: exist).first {
-                    ex.updateDate()
-                    await sqlManager.update(id: ex.id!, item: ex)
                     await MainActor.run {
-                        if lastDataChangeType == .reset, let existingModel = dataList.first(where: { $0.id == ex.id }) {
-                            existingModel.updateDate()
-                            moveItemToFirst(existingModel)
+                        if lastDataChangeType == .reset {
+                            if let existingModel = dataList.first(where: { $0.id == ex.id }) {
+                                existingModel.updateDate()
+                                moveItemToFirst(existingModel)
+                            } else {
+                                ex.updateDate()
+                                var list = dataList
+                                list.insert(ex, at: 0)
+                                if list.count > pageSize {
+                                    list = Array(list.prefix(pageSize))
+                                }
+                                dataList = list
+                            }
                         }
                     }
+                    await sqlManager.update(id: ex.id!, item: ex)
                     return
                 }
             }
@@ -335,7 +344,6 @@ extension PasteDataStore {
                 return
             }
             var list = dataList
-            list.removeAll(where: { $0.uniqueId == model.uniqueId })
             list.insert(model, at: 0)
             hasMoreData = list.count >= pageSize
             list = Array(list.prefix(pageSize))
@@ -436,6 +444,46 @@ extension PasteDataStore {
     func updateDbItem(id: Int64, item: PasteboardModel) {
         Task {
             await sqlManager.update(id: id, item: item)
+        }
+    }
+
+    /// 编辑更新
+    func updateItemContent(
+        id: Int64,
+        newData: Data,
+        newShowData: Data?,
+        newSearchText: String,
+        newLength: Int,
+        newTag: String
+    ) async {
+        await sqlManager.updateItemContent(
+            id: id,
+            data: newData,
+            showData: newShowData,
+            searchText: newSearchText,
+            length: newLength,
+            tag: newTag
+        )
+
+        await MainActor.run {
+            if let index = dataList.firstIndex(where: { $0.id == id }) {
+                let oldModel = dataList[index]
+                let newModel = PasteboardModel(
+                    pasteboardType: oldModel.pasteboardType,
+                    data: newData,
+                    showData: newShowData,
+                    timestamp: Int64(Date().timeIntervalSince1970),
+                    appPath: oldModel.appPath,
+                    appName: oldModel.appName,
+                    searchText: newSearchText,
+                    length: newLength,
+                    group: oldModel.group,
+                    tag: newTag
+                )
+                newModel.id = id
+                dataList.remove(at: index)
+                dataList.insert(newModel, at: 0)
+            }
         }
     }
 

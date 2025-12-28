@@ -19,6 +19,8 @@ struct HistoryView: View {
     private var enableLinkPreview: Bool = PasteUserDefaults.enableLinkPreview
     private let pd = PasteDataStore.main
 
+    @State private var flagsMonitorToken: Any?
+
     var body: some View {
         ZStack {
             if pd.dataList.isEmpty {
@@ -47,7 +49,7 @@ struct HistoryView: View {
                     appear()
                 }
                 .onDisappear {
-                    historyVM.cleanup()
+                    disappear()
                 }
             }
         }
@@ -111,7 +113,7 @@ struct HistoryView: View {
         ClipCardView(
             model: item,
             isSelected: historyVM.selectedId == item.id,
-            showPreview: makePreviewBinding(for: item.id),
+            showPreviewId: $historyVM.showPreviewId,
             quickPasteIndex: quickPasteIndex(for: index),
             enableLinkPreview: enableLinkPreview,
             searchKeyword: searchKeyword,
@@ -147,7 +149,9 @@ struct HistoryView: View {
             env.focusView = .history
         }
 
-        if historyVM.selectedId != item.id {
+        let isSameItem = historyVM.selectedId == item.id
+
+        if !isSameItem {
             historyVM.setSelection(id: item.id, index: index)
         }
 
@@ -163,15 +167,6 @@ struct HistoryView: View {
         } else {
             historyVM.updateTapState(id: item.id, time: now)
         }
-    }
-
-    private func makePreviewBinding(for itemId: PasteboardModel.ID) -> Binding<
-        Bool
-    > {
-        Binding(
-            get: { historyVM.showPreviewId == itemId },
-            set: { historyVM.showPreviewId = $0 ? itemId : nil },
-        )
     }
 
     private func deleteItem(for id: PasteboardModel.ID) {
@@ -205,8 +200,7 @@ struct HistoryView: View {
 
     private func updateSelectionAfterDeletion(at index: Int) {
         if pd.dataList.isEmpty {
-            historyVM.selectedId = nil
-            historyVM.selectedIndex = nil
+            historyVM.setSelection(id: nil, index: 0)
         } else {
             let newIndex = min(index, pd.dataList.count - 1)
             historyVM.setSelection(
@@ -216,8 +210,7 @@ struct HistoryView: View {
         }
     }
 
-    private func moveSelection(offset: Int, event: NSEvent) -> NSEvent? {
-        guard env.focusView == .history else { return event }
+    private func moveSelection(offset: Int, event _: NSEvent) -> NSEvent? {
         guard !pd.dataList.isEmpty else {
             historyVM.showPreviewId = nil
             historyVM.setSelection(id: nil, index: 0)
@@ -250,13 +243,21 @@ struct HistoryView: View {
             handler: keyDownEvent(_:),
         )
 
-        NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { event in
+        flagsMonitorToken = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { event in
             flagsChangedEvent(event)
         }
 
         if historyVM.selectedId == nil {
             historyVM.setSelection(id: pd.dataList.first?.id, index: 0)
         }
+    }
+
+    private func disappear() {
+        if let token = flagsMonitorToken {
+            NSEvent.removeMonitor(token)
+            flagsMonitorToken = nil
+        }
+        historyVM.cleanup()
     }
 
     private func flagsChangedEvent(_ event: NSEvent) -> NSEvent? {
@@ -274,7 +275,11 @@ struct HistoryView: View {
             return event
         }
 
-        if event.keyCode == KeyCode.escape, env.focusView == .history {
+        guard env.focusView == .history else {
+            return event
+        }
+
+        if event.keyCode == KeyCode.escape {
             if ClipMainWindowController.shared.isVisible {
                 ClipMainWindowController.shared.toggleWindow()
                 return nil
@@ -319,7 +324,7 @@ struct HistoryView: View {
         }
 
         let item = pd.dataList[index]
-        historyVM.selectedId = item.id
+        historyVM.setSelection(id: item.id, index: index)
         env.actions.paste(
             item,
             isAttribute: true,
@@ -334,33 +339,39 @@ struct HistoryView: View {
     }
 
     private func handleCommandKeyEvent(_ event: NSEvent) -> NSEvent? {
-        guard env.focusView == .history else {
-            return event
-        }
-
         switch event.keyCode {
         case UInt16(kVK_ANSI_C):
-            return handleCopyCommand()
+            handleCopy()
+
+        case UInt16(kVK_ANSI_E):
+            handleEdit()
+
         default:
-            return event
+            event
         }
     }
 
-    private func handleCopyCommand() -> NSEvent? {
-        guard let id = historyVM.selectedId,
-              let item = pd.dataList.first(where: { $0.id == id })
+    private func handleEdit() -> NSEvent? {
+        guard let index = historyVM.selectedIndex
         else {
             NSSound.beep()
             return nil
         }
-        env.actions.copy(item)
+        EditWindowController.shared.openWindow(with: pd.dataList[index])
         return nil
     }
 
-    private func handleSpace(_ event: NSEvent) -> NSEvent? {
-        guard env.focusView == .history else {
-            return event
+    private func handleCopy() -> NSEvent? {
+        guard let index = historyVM.selectedIndex
+        else {
+            NSSound.beep()
+            return nil
         }
+        env.actions.copy(pd.dataList[index])
+        return nil
+    }
+
+    private func handleSpace(_: NSEvent) -> NSEvent? {
         if let id = historyVM.selectedId {
             if historyVM.showPreviewId == id {
                 historyVM.showPreviewId = nil
@@ -372,21 +383,18 @@ struct HistoryView: View {
     }
 
     private func handleReturnKey(_ event: NSEvent) -> NSEvent? {
-        guard env.focusView == .history else { return event }
-        guard let id = historyVM.selectedId,
-              let item = pd.dataList.first(where: { $0.id == id })
+        guard let index = historyVM.selectedIndex
         else {
             return event
         }
         env.actions.paste(
-            item,
+            pd.dataList[index],
             isAttribute: !hasPlainTextModifier(event),
         )
         return nil
     }
 
-    private func deleteKeyDown(_ event: NSEvent) -> NSEvent? {
-        guard env.focusView == .history else { return event }
+    private func deleteKeyDown(_: NSEvent) -> NSEvent? {
         guard let id = historyVM.selectedId else {
             NSSound.beep()
             return nil

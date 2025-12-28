@@ -7,11 +7,7 @@ final class AppEnvironment: ObservableObject {
         ClipboardActionService()
     }
 
-    @Published var focusView: FocusField = .history {
-        didSet {
-            EventDispatcher.shared.bypassAllEvents = focusView != .history
-        }
-    }
+    @Published var focusView: FocusField = .history
 
     // UI 状态
     @Published var isShowDel: Bool = false

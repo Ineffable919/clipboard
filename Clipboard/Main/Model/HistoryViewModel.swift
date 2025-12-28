@@ -8,8 +8,8 @@ final class HistoryViewModel {
     private let pd = PasteDataStore.main
     var selectedId: PasteboardModel.ID?
     var selectedIndex: Int?
-    var lastTapId: PasteboardModel.ID?
-    var lastTapTime: TimeInterval = 0
+    @ObservationIgnored var lastTapId: PasteboardModel.ID?
+    @ObservationIgnored var lastTapTime: TimeInterval = 0
     var pendingDeleteId: PasteboardModel.ID?
 
     var showPreviewId: PasteboardModel.ID?
@@ -117,7 +117,7 @@ final class HistoryViewModel {
             showPreviewId = nil
 
             if !needsScrolling {
-                DispatchQueue.main.async {
+                Task { @MainActor in
                     proxy.scrollTo(firstId, anchor: .trailing)
                 }
             }

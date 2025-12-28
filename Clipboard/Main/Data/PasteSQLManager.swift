@@ -208,6 +208,33 @@ extension PasteSQLManager {
         }
     }
 
+    /// 编辑更新
+    func updateItemContent(
+        id: Int64,
+        data: Data,
+        showData: Data?,
+        searchText: String,
+        length: Int,
+        tag: String
+    ) async {
+        let query = table.filter(Col.id == id)
+        let timestamp = Int64(Date().timeIntervalSince1970)
+        let update = query.update(
+            Col.data <- data,
+            Col.showData <- showData,
+            Col.searchText <- searchText,
+            Col.length <- length,
+            Col.tag <- tag,
+            Col.ts <- timestamp
+        )
+        do {
+            let count = try db?.run(update)
+            log.debug("更新文本内容成功，影响行数：\(String(describing: count))")
+        } catch {
+            log.error("更新文本内容失败：\(error)")
+        }
+    }
+
     // 查
     func search(
         filter: Expression<Bool>? = nil,

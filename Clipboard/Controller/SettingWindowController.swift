@@ -43,9 +43,8 @@ class SettingWindowController: NSWindowController {
     private func setupKeyboardShortcuts() {
         EventDispatcher.shared.registerHandler(
             matching: .keyDown,
-            key: "settingWindow",
-        ) {
-            [weak self] event in
+            key: "settingWindow"
+        ) { [weak self] event in
             guard event.window === SettingWindowController.shared.window else {
                 return event
             }
@@ -66,6 +65,9 @@ class SettingWindowController: NSWindowController {
                     self?.minWindow()
                     return nil
                 }
+            }
+            if EventDispatcher.shared.handleSystemEditingCommand(event) {
+                return nil
             }
             return event
         }

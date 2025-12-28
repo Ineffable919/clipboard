@@ -314,60 +314,73 @@ struct ClipTopBarView: View {
         }
     }
 
-
-
     private func topKeyDownEvent(_ event: NSEvent) -> NSEvent? {
         guard event.window === ClipMainWindowController.shared.window
         else {
             return event
         }
 
-        if KeyCode.shouldTriggerSearch(for: event) {
-            if env.focusView == .editChip || env.focusView == .newChip {
-                return event
+        let isInInputMode = env.focusView == .search
+            || env.focusView == .newChip
+            || env.focusView == .editChip
+            || env.focusView == .popover
+
+        if isInInputMode {
+            if EventDispatcher.shared.handleSystemEditingCommand(event) {
+                return nil
             }
+
+            if event.keyCode == KeyCode.escape {
+                if topBarVM.isEditingChip {
+                    topBarVM.cancelEditingChip()
+                    env.focusView = .history
+                    return nil
+                }
+                if topBarVM.editingNewChip {
+                    topBarVM.commitNewChipOrCancel(commitIfNonEmpty: false)
+                    env.focusView = .history
+                    return nil
+                }
+                if topBarVM.hasInput, env.focusView == .search {
+                    topBarVM.clearInput()
+                    return nil
+                }
+                if !topBarVM.hasInput, env.focusView == .search {
+                    env.focusView = .history
+                    return nil
+                }
+                if env.focusView == .filter {
+                    if showFilter {
+                        showFilter.toggle()
+                    }
+                    env.focusView = .search
+                    return nil
+                }
+                if env.focusView == .popover {
+                    env.focusView = .history
+                    return nil
+                }
+            }
+
+            if event.keyCode == KeyCode.delete, env.focusView == .search {
+                if !topBarVM.query.isEmpty {
+                    return event
+                }
+                if topBarVM.hasActiveFilters {
+                    topBarVM.removeLastFilter()
+                    return nil
+                }
+            }
+
+            return event
+        }
+
+        if KeyCode.shouldTriggerSearch(for: event) {
             env.focusView = .search
             return nil
         }
 
-        if event.keyCode == KeyCode.delete, env.focusView == .search {
-            if !topBarVM.query.isEmpty {
-                return event
-            }
-            if topBarVM.hasActiveFilters {
-                topBarVM.removeLastFilter()
-                return nil
-            }
-            return event
-        }
-
-        if event.keyCode == KeyCode.escape {
-            if topBarVM.isEditingChip {
-                topBarVM.cancelEditingChip()
-                env.focusView = .history
-                return nil
-            }
-            if topBarVM.editingNewChip {
-                topBarVM.commitNewChipOrCancel(commitIfNonEmpty: false)
-                env.focusView = .history
-                return nil
-            }
-            if topBarVM.hasInput, env.focusView == .search {
-                topBarVM.clearInput()
-                return nil
-            }
-            if !topBarVM.hasInput, env.focusView == .search {
-                env.focusView = .history
-                return nil
-            }
-            if env.focusView == .filter {
-                if showFilter {
-                    showFilter.toggle()
-                }
-                env.focusView = .search
-                return nil
-            }
-        }
+        if event.keyCode == KeyCode.escape {}
 
         return event
     }

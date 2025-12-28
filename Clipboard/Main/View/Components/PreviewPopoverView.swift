@@ -93,12 +93,12 @@ struct PreviewPopoverView: View {
             }
 
             Text(model.appName)
-                .font(.body)
 
             Spacer()
 
-            Text(model.type.string)
-                .font(.body)
+            if model.pasteboardType.isText() {
+                BorderedButton(title: "编辑", action: openEditWindow)
+            }
 
             if let fileUrl = model.cachedFilePaths?.first,
                let defaultApp = cachedDefaultAppForFile
@@ -110,19 +110,34 @@ struct PreviewPopoverView: View {
         }
     }
 
+    private var shouldShowStatistics: Bool {
+        if model.type == .link, enableLinkPreview, model.isLink {
+            return false
+        }
+        return model.pasteboardType.isText()
+    }
+
+    private var textStatistics: TextStatistics {
+        TextStatistics(from: model.attributeString.string)
+    }
+
     private var footerView: some View {
         HStack {
-            Text(model.introString())
-                .foregroundStyle(.secondary)
-                .lineLimit(2)
-                .truncationMode(.head)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.bottom, Const.space4)
-                .frame(
-                    maxWidth: Const.maxPreviewWidth - 128,
-                    alignment: .topLeading,
-                )
-
+            if shouldShowStatistics {
+                Text(textStatistics.displayString)
+                    .font(.callout)
+            } else {
+                Text(model.introString())
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .truncationMode(.head)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.bottom, Const.space4)
+                    .frame(
+                        maxWidth: Const.maxPreviewWidth - 128,
+                        alignment: .topLeading,
+                    )
+            }
             Spacer()
 
             if model.type == .file, model.fileSize() == 1 {
@@ -133,7 +148,10 @@ struct PreviewPopoverView: View {
                enableLinkPreview,
                let browserName = cachedDefaultBrowserName
             {
-                BorderedButton(title: "使用 \(browserName) 打开", action: openInBrowser)
+                BorderedButton(
+                    title: "使用 \(browserName) 打开",
+                    action: openInBrowser
+                )
             }
         }
     }
@@ -146,8 +164,14 @@ struct PreviewPopoverView: View {
     }
 
     private func openInBrowser() {
-        guard let url = model.attributeString.string.asCompleteURL() else { return }
+        guard let url = model.attributeString.string.asCompleteURL() else {
+            return
+        }
         NSWorkspace.shared.open(url)
+    }
+
+    private func openEditWindow() {
+        EditWindowController.shared.openWindow(with: model)
     }
 
     // MARK: - Preview Content
@@ -174,7 +198,9 @@ struct PreviewPopoverView: View {
 
     @ViewBuilder
     private var linkPreview: some View {
-        if enableLinkPreview, model.isLink, let url = model.attributeString.string.asCompleteURL() {
+        if enableLinkPreview, model.isLink,
+           let url = model.attributeString.string.asCompleteURL()
+        {
             if #available(macOS 26.0, *) {
                 WebContentView(url: url)
             } else {
@@ -251,7 +277,10 @@ struct PreviewPopoverView: View {
     @ViewBuilder
     private var richTextContent: some View {
         if model.hasBgColor,
-           let attr = NSAttributedString(with: model.data, type: model.pasteboardType)
+           let attr = NSAttributedString(
+               with: model.data,
+               type: model.pasteboardType
+           )
         {
             Text(AttributedString(attr))
                 .textSelection(.enabled)
@@ -339,7 +368,7 @@ struct BorderedButton: View {
         }
         .focusable(false)
         .buttonStyle(.borderless)
-        .padding(.horizontal, Const.space8)
+        .padding(.horizontal, Const.space10)
         .padding(.vertical, Const.space4)
         .background(
             RoundedRectangle(cornerRadius: Const.radius)

@@ -16,8 +16,6 @@ final class EventDispatcher {
 
     private var monitorToken: Any?
 
-    var bypassAllEvents: Bool = false
-
     struct Handler {
         let key: String
         let mask: NSEvent.EventTypeMask
@@ -33,7 +31,7 @@ final class EventDispatcher {
     func start(
         matching mask: NSEvent.EventTypeMask = [
             .keyDown,
-        ],
+        ]
     ) {
         guard monitorToken == nil else { return }
 
@@ -60,14 +58,14 @@ final class EventDispatcher {
         matching mask: NSEvent.EventTypeMask,
         key: String,
         priority: Int = 0,
-        handler: @escaping (NSEvent) -> NSEvent?,
+        handler: @escaping (NSEvent) -> NSEvent?
     ) {
         unregisterHandler(key)
         let h = Handler(
             key: key,
             mask: mask,
             priority: priority,
-            handler: handler,
+            handler: handler
         )
         handlers.append(h)
         handlers.sort { a, b in
@@ -81,96 +79,52 @@ final class EventDispatcher {
         }
     }
 
-    // MARK: - Dispatching
+    // MARK: - System Editing Commands
 
-    /// Core dispatch: iterate handlers; first `nil` stops chain.
-    /// Propagate modified event through chain; returning nil consumes.
-    private func handle(event: NSEvent) -> NSEvent? {
-        if bypassAllEvents, event.keyCode != KeyCode.escape,
-           event.keyCode != KeyCode.delete
-        {
-            if event.type == .keyDown {
-                let keyChar =
-                    event.charactersIgnoringModifiers?.lowercased() ?? ""
-                let modifiers = event.modifierFlags.intersection([
-                    .command, .option, .control, .shift,
-                ])
+    func handleSystemEditingCommand(_ event: NSEvent) -> Bool {
+        guard event.type == .keyDown else { return false }
 
-                if modifiers.contains(.command), !modifiers.contains(.option),
-                   !modifiers.contains(.control)
-                {
-                    var handled = false
+        let keyChar = event.charactersIgnoringModifiers?.lowercased() ?? ""
+        let modifiers = event.modifierFlags.intersection([
+            .command, .option, .control, .shift,
+        ])
 
-                    switch keyChar {
-                    case "c":
-                        handled = NSApp.sendAction(
-                            #selector(NSText.copy(_:)),
-                            to: nil,
-                            from: nil,
-                        )
-                        log.debug("Sent copy command: \(handled)")
-                    case "v":
-                        handled = NSApp.sendAction(
-                            #selector(NSText.paste(_:)),
-                            to: nil,
-                            from: nil,
-                        )
-                        log.debug("Sent paste command: \(handled)")
-                    case "x":
-                        handled = NSApp.sendAction(
-                            #selector(NSText.cut(_:)),
-                            to: nil,
-                            from: nil,
-                        )
-                        log.debug("Sent cut command: \(handled)")
-                    case "a":
-                        handled = NSApp.sendAction(
-                            #selector(NSResponder.selectAll(_:)),
-                            to: nil,
-                            from: nil,
-                        )
-                        log.debug("Sent selectAll command: \(handled)")
-                    case "z":
-                        handled = NSApp.sendAction(
-                            Selector(("undo:")),
-                            to: nil,
-                            from: nil,
-                        )
-                        log.debug("Sent undo command: \(handled)")
-                    case "m":
-                        if event.window == SettingWindowController.shared.window {
-                            event.window?.miniaturize(nil)
-                            handled = true
-                            log.debug("Window minimized")
-                        }
-                    case "w":
-                        if event.window == SettingWindowController.shared.window {
-                            event.window?.close()
-                            handled = true
-                            log.debug("Window closed")
-                        }
-                    case "q":
-                        log.debug("Quit command received")
-                        NSApp.terminate(nil)
-                        handled = true
-                    default:
-                        break
-                    }
-
-                    if handled {
-                        return nil
-                    }
-                }
-
-                log.debug("Bypass all: '\(keyChar)' - returning to system")
-            }
-            return event
+        guard modifiers.contains(.command),
+              !modifiers.contains(.option),
+              !modifiers.contains(.control)
+        else {
+            return false
         }
 
+        let isShiftHeld = modifiers.contains(.shift)
+
+        switch keyChar {
+        case "c":
+            return NSApp.sendAction(#selector(NSText.copy(_:)), to: nil, from: nil)
+        case "v":
+            return NSApp.sendAction(#selector(NSText.paste(_:)), to: nil, from: nil)
+        case "x":
+            return NSApp.sendAction(#selector(NSText.cut(_:)), to: nil, from: nil)
+        case "a":
+            return NSApp.sendAction(#selector(NSResponder.selectAll(_:)), to: nil, from: nil)
+        case "z":
+            if isShiftHeld {
+                return NSApp.sendAction(Selector(("redo:")), to: nil, from: nil)
+            } else {
+                return NSApp.sendAction(Selector(("undo:")), to: nil, from: nil)
+            }
+        default:
+            return false
+        }
+    }
+
+    // MARK: - Dispatching
+
+    private func handle(event: NSEvent) -> NSEvent? {
         var currentEvent = event
         for h in handlers {
             let eventMask = NSEvent.EventTypeMask(
-                rawValue: 1 << currentEvent.type.rawValue,
+                rawValue: 1 << currentEvent.type.rawValue
             )
             if !h.mask.contains(eventMask) { continue }
             if let next = h.handler(currentEvent) {
