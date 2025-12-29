@@ -67,18 +67,26 @@ enum PasteUserDefaults {
     /// 忽略的应用程序信息
     @CodableUserDefaultsWrapper(
         .ignoredApps,
-        defaultValue: [
-            IgnoredAppInfo(
-                name: "密码",
-                bundleIdentifier: "com.apple.Passwords",
-                path: "/System/Applications/Passwords.app",
-            ),
-            IgnoredAppInfo(
-                name: "钥匙串访问",
-                bundleIdentifier: "com.apple.keychainaccess",
-                path: "/System/Applications/Utilities/Keychain Access.app",
-            ),
-        ],
+        defaultValue: {
+            var apps: [IgnoredAppInfo] = [
+                IgnoredAppInfo(
+                    name: "钥匙串访问",
+                    bundleIdentifier: "com.apple.keychainaccess",
+                    path: "/System/Applications/Utilities/Keychain Access.app",
+                ),
+            ]
+            if #available(macOS 15.0, *) {
+                apps.insert(
+                    IgnoredAppInfo(
+                        name: "密码",
+                        bundleIdentifier: "com.apple.Passwords",
+                        path: "/System/Applications/Passwords.app",
+                    ),
+                    at: 0,
+                )
+            }
+            return apps
+        }(),
     )
     static var ignoredApps
 

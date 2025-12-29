@@ -16,6 +16,8 @@ struct ShortcutRecorder: View {
     @State private var shortcut: KeyboardShortcut
     @State private var displayText: String
     @State private var isRecording: Bool = false
+    @State private var viewFrame: CGRect = .zero
+    @State private var mouseMonitor: Any?
 
     @Binding var value: KeyboardShortcut
 
@@ -73,6 +75,17 @@ struct ShortcutRecorder: View {
         .onTapGesture {
             startRecording()
         }
+        .background(
+            GeometryReader { geo in
+                Color.clear
+                    .onAppear {
+                        viewFrame = geo.frame(in: .global)
+                    }
+                    .onChange(of: geo.frame(in: .global)) { _, newFrame in
+                        viewFrame = newFrame
+                    }
+            }
+        )
         .onAppear {
             value = shortcut
             if shortcut.isEmpty {
@@ -128,10 +141,37 @@ struct ShortcutRecorder: View {
         ) { [self] event in
             return handleKeyEvent(event)
         }
+
+        mouseMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [self] event in
+            return handleMouseEvent(event)
+        }
     }
 
     private func uninstallEventHandle() {
         EventDispatcher.shared.unregisterHandler("shortcutRecorder")
+
+        if let monitor = mouseMonitor {
+            NSEvent.removeMonitor(monitor)
+            mouseMonitor = nil
+        }
+    }
+
+    private func handleMouseEvent(_ event: NSEvent) -> NSEvent? {
+        guard isRecording else { return event }
+        guard let window = event.window,
+              window === SettingWindowController.shared.window
+        else {
+            return event
+        }
+
+        let windowLocation = event.locationInWindow
+        let screenLocation = window.convertPoint(toScreen: windowLocation)
+
+        if !viewFrame.contains(screenLocation) {
+            stopRecording()
+        }
+
+        return event
     }
 
     private func handleKeyEvent(_ event: NSEvent) -> NSEvent? {
