@@ -110,7 +110,7 @@ final class PasteSQLManager: NSObject {
             try db.run("CREATE INDEX IF NOT EXISTS idx_tag ON Clip(tag)")
             try db.run("CREATE INDEX IF NOT EXISTS idx_ts ON Clip(timestamp DESC)")
             try db.run("CREATE INDEX IF NOT EXISTS idx_group ON Clip(\"group\")")
-            log.debug("索引创建完成")
+            log.info("索引初始化成功")
         } catch {
             log.debug("索引已存在或创建失败: \(error)")
         }
@@ -269,7 +269,6 @@ extension PasteSQLManager {
         }
     }
 
-    // 获取所有唯一的应用名称
     func getDistinctAppNames() async -> [String] {
         do {
             let query = table.select(distinct: Col.appName)
@@ -322,7 +321,6 @@ extension PasteSQLManager {
         }
     }
 
-    // 获取数据库中存在的不同 tag 类型
     func getDistinctTags() async -> [String] {
         do {
             var tags: Set<String> = []
@@ -378,7 +376,7 @@ extension PasteSQLManager {
         do {
             try db.run("ALTER TABLE Clip ADD COLUMN tag TEXT")
         } catch {
-            log.debug("添加 tag 列失败: \(error)")
+            log.warn("新增 tag 字段失败: \(error)")
         }
 
         let batchSize = 500
@@ -430,7 +428,7 @@ extension PasteSQLManager {
                 totalMigrated += rowsArray.count
                 log.debug("已迁移 \(totalMigrated) 条记录")
 
-                try await Task.sleep(for: .milliseconds(100))
+                try await Task.sleep(for: .milliseconds(500))
 
             } catch {
                 log.error("迁移批次失败: \(error)")

@@ -13,30 +13,38 @@ struct UIWebView: View {
     @State private var isLoading = true
 
     var body: some View {
-        VStack(alignment: .center) {
+        ZStack {
+            WebViewRepresentable(url: url, isLoading: $isLoading)
+                .opacity(isLoading ? 0 : 1)
+
             if isLoading {
                 ProgressView()
-            } else {
-                WebViewRepresentable(url: url)
             }
         }
         .frame(
             width: Const.maxPreviewWidth - 36,
             height: Const.maxContentHeight,
         )
-        .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                isLoading = false
-            }
-        }
     }
 }
 
 private struct WebViewRepresentable: NSViewRepresentable {
     let url: URL
+    @Binding var isLoading: Bool
 
-    func makeNSView(context _: Context) -> WKWebView {
-        let webView = WKWebView()
+    func makeCoordinator() -> Coordinator {
+        Coordinator(isLoading: $isLoading)
+    }
+
+    func makeNSView(context: Context) -> WKWebView {
+        let configuration = WKWebViewConfiguration()
+        configuration.websiteDataStore = .nonPersistent()
+        let webView = WKWebView(frame: .zero, configuration: configuration)
+        webView.navigationDelegate = context.coordinator
+        if let scrollView = webView.enclosingScrollView {
+            scrollView.hasHorizontalScroller = true
+            scrollView.hasVerticalScroller = true
+        }
         return webView
     }
 
@@ -44,10 +52,30 @@ private struct WebViewRepresentable: NSViewRepresentable {
         if nsView.url != url {
             let request = URLRequest(
                 url: url,
-                cachePolicy: .reloadIgnoringCacheData,
+                cachePolicy: .reloadIgnoringLocalCacheData,
                 timeoutInterval: 5,
             )
             nsView.load(request)
+        }
+    }
+
+    final class Coordinator: NSObject, WKNavigationDelegate {
+        @Binding var isLoading: Bool
+
+        init(isLoading: Binding<Bool>) {
+            _isLoading = isLoading
+        }
+
+        func webView(_: WKWebView, didFinish _: WKNavigation!) {
+            isLoading = false
+        }
+
+        func webView(_: WKWebView, didFail _: WKNavigation!, withError _: Error) {
+            isLoading = false
+        }
+
+        func webView(_: WKWebView, didFailProvisionalNavigation _: WKNavigation!, withError _: Error) {
+            isLoading = false
         }
     }
 }
@@ -55,8 +83,6 @@ private struct WebViewRepresentable: NSViewRepresentable {
 #Preview {
     let url = "https://www.apple.com.cn"
         .asCompleteURL()
-    UIWebView(
-        url: url!,
-    )
-    .frame(width: Const.maxPreviewWidth, height: Const.maxPreviewHeight)
+    UIWebView(url: url!)
+        .frame(width: Const.maxPreviewWidth, height: Const.maxPreviewHeight)
 }
