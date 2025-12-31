@@ -10,12 +10,20 @@ import WebKit
 
 @available(macOS 26.0, *)
 struct WebContentView: View {
-    @State private var webPage = WebPage()
+    private static let config: WebPage.Configuration = {
+        var config = WebPage.Configuration()
+        config.websiteDataStore = .nonPersistent()
+        return config
+    }()
+
+    @State private var webPage = WebPage(configuration: config)
+
     let url: URL
 
     var body: some View {
         ZStack(alignment: .center) {
             WebView(webPage)
+                .scrollBounceBehavior(.basedOnSize, axes: [.horizontal, .vertical])
 
             ProgressView()
                 .opacity(webPage.isLoading ? 1 : 0)
@@ -25,7 +33,16 @@ struct WebContentView: View {
             height: Const.maxContentHeight,
         )
         .onAppear {
-            webPage.load(url)
+            webPage.load(
+                URLRequest(
+                    url: url,
+                    cachePolicy: .reloadIgnoringLocalCacheData,
+                    timeoutInterval: 5.0,
+                ),
+            )
+        }
+        .onDisappear {
+            webPage.stopLoading()
         }
     }
 }

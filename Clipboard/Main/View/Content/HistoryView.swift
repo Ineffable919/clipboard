@@ -10,99 +10,93 @@ import Carbon
 import SwiftUI
 
 struct HistoryView: View {
-    // MARK: - Constants
-
-    private enum Constants {
-        static let doubleTapInterval: TimeInterval = 0.2
-        static let deleteAnimationDelay: TimeInterval = 0.2
-    }
-
     // MARK: - Properties
 
-    @Environment(AppEnvironment.self) private var env
+    @EnvironmentObject private var env: AppEnvironment
     @State private var historyVM = HistoryViewModel()
+    @FocusState private var isFocused: Bool
+    @AppStorage(PrefKey.enableLinkPreview.rawValue)
+    private var enableLinkPreview: Bool = PasteUserDefaults.enableLinkPreview
     private let pd = PasteDataStore.main
 
+    @State private var flagsMonitorToken: Any?
+
     var body: some View {
-        if pd.dataList.isEmpty {
-            emptyStateView
-        } else {
+        ZStack {
             ScrollViewReader { proxy in
-                ScrollView(.horizontal, showsIndicators: false) {
-                    contentView()
-                }
-                .onChange(of: historyVM.selectedId) { _, newId in
-                    if let id = newId {
-                        proxy.scrollTo(id, anchor: scrollAnchor())
+                if pd.dataList.isEmpty {
+                    emptyStateView
+                } else {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        contentView()
+                    }
+                    .focusable()
+                    .focused($isFocused)
+                    .focusEffectDisabled()
+                    .onChange(of: env.focusView) {
+                        isFocused = (env.focusView == .history)
+                    }
+                    .onChange(of: historyVM.selectedId) { _, newId in
+                        if let id = newId {
+                            proxy.scrollTo(id, anchor: historyVM.scrollAnchor())
+                        }
                     }
                 }
-                .onChange(of: pd.dataList) {
-                    reset(proxy: proxy)
-                }
+                EmptyView()
+                    .onChange(of: pd.dataList) {
+                        historyVM.reset(proxy: proxy)
+                    }
             }
             .onAppear {
                 appear()
             }
             .onDisappear {
-                cleanup()
+                disappear()
             }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            guard env.focusView != .history else { return }
+            env.focusView = .history
         }
     }
 
     private var emptyStateView: some View {
-        GeometryReader { geo in
-            HStack(alignment: .center) {
-                VStack(alignment: .center, spacing: 12) {
-                    if #available(macOS 26.0, *) {
-                        Image(systemName: "sparkle.text.clipboard")
-                            .font(.system(size: 64))
-                            .foregroundColor(.accentColor.opacity(0.8))
-                    } else {
-                        Image("sparkle.text.clipboard")
-                            .font(.system(size: 64))
-                            .foregroundColor(.accentColor.opacity(0.8))
-                    }
-
-                    Text("没有剪贴板历史")
-                        .font(.body)
-                        .foregroundColor(.secondary)
-
-                    Text("复制内容后将显示在这里")
-                        .font(.callout)
-                        .foregroundColor(.secondary)
-                }
-                .padding()
+        VStack(spacing: Const.space12) {
+            if #available(macOS 26.0, *) {
+                Image(systemName: "sparkle.text.clipboard")
+                    .font(.system(size: 64))
+                    .foregroundStyle(Color.accentColor.opacity(0.8))
+            } else {
+                Image("sparkle.text.clipboard")
+                    .font(.system(size: 64))
+                    .foregroundStyle(Color.accentColor.opacity(0.8))
             }
-            .frame(
-                width: geo.size.width,
-                height: geo.size.height,
-            )
+
+            Text("没有剪贴板历史")
+                .foregroundStyle(.secondary)
+
+            Text("复制内容后将显示在这里")
+                .font(.callout)
+                .foregroundStyle(.secondary)
         }
+        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func contentView() -> some View {
         LazyHStack(alignment: .top, spacing: Const.cardSpace) {
-            ForEach(
-                Array(pd.dataList.enumerated()),
-                id: \.element.id
-            ) { index, item in
-                ClipCardView(
-                    model: item,
-                    isSelected: historyVM.selectedId == item.id,
-                    showPreview: makePreviewBinding(for: item.id),
-                    quickPasteIndex: historyVM.isQuickPastePressed && index < 9
-                        ? index + 1 : nil,
-                    onRequestDelete: { requestDel(id: item.id) }
-                )
-                .onTapGesture { handleOptimisticTap(on: item) }
-                .onDrag {
-                    env.draggingItemId = item.id
-                    return item.itemProvider()
+            if #available(macOS 26.0, *) {
+                ForEach(pd.dataList.enumerated(), id: \.element.id) {
+                    index,
+                        item in
+                    cardViewItem(for: item, at: index)
                 }
-                .task(id: item.id) {
-                    if shouldLoadNextPage(at: index) {
-                        loadNextPageIfNeeded(at: index)
-                    }
+            } else {
+                ForEach(Array(pd.dataList.enumerated()), id: \.element.id) {
+                    index,
+                        item in
+                    cardViewItem(for: item, at: index)
                 }
             }
         }
@@ -110,91 +104,73 @@ struct HistoryView: View {
         .padding(.vertical, Const.space4)
     }
 
-    private func handleDoubleTap(on item: PasteboardModel) {
-        if historyVM.selectedId != item.id {
-            historyVM.selectedId = item.id
+    private var searchKeyword: String {
+        pd.lastDataChangeType == .searchFilter ? pd.currentSearchKeyword : ""
+    }
+
+    private func cardViewItem(for item: PasteboardModel, at index: Int)
+        -> some View
+    {
+        ClipCardView(
+            model: item,
+            isSelected: historyVM.selectedId == item.id,
+            showPreviewId: $historyVM.showPreviewId,
+            quickPasteIndex: quickPasteIndex(for: index),
+            enableLinkPreview: enableLinkPreview,
+            searchKeyword: searchKeyword,
+            onRequestDelete: { requestDel(id: item.id) }
+        )
+        .contentShape(Rectangle())
+        .onTapGesture { handleOptimisticTap(on: item, index: index) }
+        .onDrag {
+            env.draggingItemId = item.id
+            historyVM.setSelection(id: item.id, index: index)
+            return item.itemProvider()
         }
+        .task(id: item.id) {
+            guard historyVM.shouldLoadNextPage(at: index) else { return }
+            historyVM.loadNextPageIfNeeded(at: index)
+        }
+    }
+
+    private func quickPasteIndex(for index: Int) -> Int? {
+        guard historyVM.isQuickPastePressed, index < 9 else { return nil }
+        return index + 1
+    }
+
+    private func handleDoubleTap(on item: PasteboardModel) {
         env.actions.paste(
             item,
             isAttribute: true,
-            isSearchingProvider: { env.searchVM.isSearching },
-            setSearching: { env.searchVM.isSearching = $0 }
         )
     }
 
-    private func handleOptimisticTap(on item: PasteboardModel) {
+    private func handleOptimisticTap(on item: PasteboardModel, index: Int) {
         if env.focusView != .history {
             env.focusView = .history
         }
 
-        if historyVM.selectedId != item.id {
-            historyVM.selectedId = item.id
-        }
-
         let now = ProcessInfo.processInfo.systemUptime
+        let isSameItem = historyVM.selectedId == item.id
 
-        if let lastId = historyVM.lastTapId,
-            lastId == item.id,
-            now - historyVM.lastTapTime <= Constants.doubleTapInterval
-        {
+        if isSameItem, historyVM.shouldHandleDoubleTap(
+            for: item.id,
+            currentTime: now,
+            interval: 0.2
+        ) {
             handleDoubleTap(on: item)
-            resetTapState()
-        } else {
-            updateTapState(id: item.id, time: now)
-        }
-    }
-
-    // MARK: - Pagination
-
-    private func shouldLoadNextPage(at index: Int) -> Bool {
-        if pd.hasMoreData == false { return false }
-        let triggerIndex = pd.dataList.count - 5
-        return index >= triggerIndex
-    }
-
-    private func loadNextPageIfNeeded(at index: Int? = nil) {
-        guard pd.dataList.count < pd.totalCount else {
+            historyVM.resetTapState()
             return
         }
-        guard !pd.isLoadingPage else { return }
 
-        if index != nil {
-            let triggerIndex = pd.dataList.count - 5
-            guard historyVM.lastLoadTriggerIndex != triggerIndex else {
-                return
-            }
-            historyVM.lastLoadTriggerIndex = triggerIndex
+        if !isSameItem {
+            historyVM.setSelection(id: item.id, index: index)
         }
-
-        log.debug(
-            "触发滚动加载下一页 (index: \(index ?? -1), dataCount: \(pd.dataList.count))",
-        )
-        pd.loadNextPage()
-    }
-
-    private func resetTapState() {
-        historyVM.lastTapId = nil
-        historyVM.lastTapTime = 0
-    }
-
-    private func updateTapState(id: PasteboardModel.ID, time: TimeInterval) {
-        historyVM.lastTapId = id
-        historyVM.lastTapTime = time
-    }
-
-    private func makePreviewBinding(for itemId: PasteboardModel.ID) -> Binding<
-        Bool
-    > {
-        Binding(
-            get: { historyVM.showPreviewId == itemId },
-            set: { historyVM.showPreviewId = $0 ? itemId : nil },
-        )
+        historyVM.updateTapState(id: item.id, time: now)
     }
 
     private func deleteItem(for id: PasteboardModel.ID) {
-        guard
-            let index = pd.dataList.firstIndex(where: { $0.id == id }
-            )
+        guard let index = pd.dataList.firstIndex(where: { $0.id == id })
         else {
             return
         }
@@ -204,19 +180,18 @@ struct HistoryView: View {
         let item = pd.dataList[index]
         env.actions.delete(item)
 
-        withAnimation(.easeOut(duration: Constants.deleteAnimationDelay)) {
+        withAnimation(.easeInOut(duration: 0.2)) {
             pd.dataList.remove(at: index)
             updateSelectionAfterDeletion(at: index)
         }
 
-        DispatchQueue.main.asyncAfter(
-            deadline: .now() + Constants.deleteAnimationDelay,
-        ) {
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(200))
             historyVM.isDel = false
 
             if pd.dataList.count < 50,
-                pd.hasMoreData,
-                !pd.isLoadingPage
+               pd.hasMoreData,
+               !pd.isLoadingPage
             {
                 pd.loadNextPage()
             }
@@ -225,56 +200,38 @@ struct HistoryView: View {
 
     private func updateSelectionAfterDeletion(at index: Int) {
         if pd.dataList.isEmpty {
-            historyVM.selectedId = nil
+            historyVM.setSelection(id: nil, index: 0)
         } else {
             let newIndex = min(index, pd.dataList.count - 1)
-            historyVM.selectedId = pd.dataList[newIndex].id
+            historyVM.setSelection(
+                id: pd.dataList[newIndex].id,
+                index: newIndex
+            )
         }
     }
 
-    private func scrollAnchor() -> UnitPoint? {
-        guard let first = pd.dataList.first?.id,
-            let last = pd.dataList.last?.id,
-            let id = historyVM.selectedId
-        else {
-            return .none
-        }
-
-        if id == first {
-            return .trailing
-        } else if id == last {
-            return .leading
-        } else {
-            return .none
-        }
-    }
-
-    private func moveSelection(offset: Int, event: NSEvent) -> NSEvent? {
-        guard env.focusView == .history else { return event }
-        let count = pd.dataList.count
-        guard count > 0 else {
-            historyVM.selectedId = nil
+    private func moveSelection(offset: Int, event _: NSEvent) -> NSEvent? {
+        guard !pd.dataList.isEmpty else {
             historyVM.showPreviewId = nil
+            historyVM.setSelection(id: nil, index: 0)
             NSSound.beep()
             return nil
         }
 
-        let currentIndex =
-            historyVM.selectedId.flatMap { id in
-                pd.dataList.firstIndex { $0.id == id }
-            } ?? 0
-
-        let newIndex = max(0, min(currentIndex + offset, count - 1))
+        let currentIndex = historyVM.selectedIndex ?? 0
+        let newIndex = max(0, min(currentIndex + offset, pd.dataList.count - 1))
 
         guard newIndex != currentIndex else {
             NSSound.beep()
             return nil
         }
-        let newId = pd.dataList[newIndex].id
-        historyVM.selectedId = newId
 
-        if offset > 0, shouldLoadNextPage(at: newIndex) {
-            loadNextPageIfNeeded(at: newIndex)
+        historyVM.setSelection(id: pd.dataList[newIndex].id, index: newIndex)
+
+        if offset > 0, historyVM.shouldLoadNextPage(at: newIndex) {
+            Task.detached(priority: .userInitiated) { [weak historyVM] in
+                await historyVM?.loadNextPageIfNeeded(at: newIndex)
+            }
         }
         return nil
     }
@@ -283,30 +240,28 @@ struct HistoryView: View {
         EventDispatcher.shared.registerHandler(
             matching: .keyDown,
             key: "history",
-            priority: 100,
             handler: keyDownEvent(_:),
         )
 
-        EventDispatcher.shared.registerHandler(
-            matching: .flagsChanged,
-            key: "historyFlags",
-            handler: flagsChangedEvent(_:)
-        )
+        flagsMonitorToken = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { event in
+            flagsChangedEvent(event)
+        }
 
         if historyVM.selectedId == nil {
-            historyVM.selectedId = pd.dataList.first?.id
+            historyVM.setSelection(id: pd.dataList.first?.id, index: 0)
         }
     }
 
-    private func cleanup() {
-        historyVM.isDel = false
-        historyVM.isQuickPastePressed = false
-        historyVM.showPreviewId = nil
+    private func disappear() {
+        if let token = flagsMonitorToken {
+            NSEvent.removeMonitor(token)
+            flagsMonitorToken = nil
+        }
+        historyVM.cleanup()
     }
 
     private func flagsChangedEvent(_ event: NSEvent) -> NSEvent? {
-        guard event.window == ClipMainWindowController.shared.window,
-            env.focusView == .history
+        guard event.window == ClipMainWindowController.shared.window
         else {
             return event
         }
@@ -320,24 +275,20 @@ struct HistoryView: View {
             return event
         }
 
-        if event.keyCode == KeyCode.escape {
-            handleEscapeKeyEvent()
-            return nil
-        }
-
-        if env.chipVM.isEditingChip || env.chipVM.editingNewChip {
+        guard env.focusView == .history else {
             return event
         }
 
-        if let index = handleQuickPasteShortcut(event) {
-            performQuickPaste(at: index)
-            return nil
+        if event.keyCode == KeyCode.escape {
+            if ClipMainWindowController.shared.isVisible {
+                ClipMainWindowController.shared.toggleWindow()
+                return nil
+            }
+            return event
         }
 
-        if KeyCode.shouldTriggerSearch(for: event),
-            env.focusView != .search
-        {
-            env.focusView = .search
+        if let index = HistoryViewModel.handleQuickPasteShortcut(event) {
+            performQuickPaste(at: index)
             return nil
         }
 
@@ -366,44 +317,6 @@ struct HistoryView: View {
         }
     }
 
-    /// 处理快速粘贴快捷键
-    /// - Parameter event: 键盘事件
-    /// - Returns: 如果匹配快速粘贴快捷键，返回对应的索引（0-8），否则返回 nil
-    private func handleQuickPasteShortcut(_ event: NSEvent) -> Int? {
-        guard
-            KeyCode.hasModifier(
-                event,
-                modifierIndex: PasteUserDefaults.quickPasteModifier,
-            )
-        else {
-            return nil
-        }
-
-        let quickPasteModifier = KeyCode.modifierFlags(
-            from: PasteUserDefaults.quickPasteModifier,
-        )
-        let otherModifiers = event.modifierFlags.subtracting(quickPasteModifier)
-            .intersection([.command, .option, .control])
-
-        guard otherModifiers.isEmpty else {
-            return nil
-        }
-
-        let numberKeyCodes: [UInt16: Int] = [
-            UInt16(kVK_ANSI_1): 0,
-            UInt16(kVK_ANSI_2): 1,
-            UInt16(kVK_ANSI_3): 2,
-            UInt16(kVK_ANSI_4): 3,
-            UInt16(kVK_ANSI_5): 4,
-            UInt16(kVK_ANSI_6): 5,
-            UInt16(kVK_ANSI_7): 6,
-            UInt16(kVK_ANSI_8): 7,
-            UInt16(kVK_ANSI_9): 8,
-        ]
-
-        return numberKeyCodes[event.keyCode]
-    }
-
     private func performQuickPaste(at index: Int) {
         guard index >= 0, index < pd.dataList.count else {
             NSSound.beep()
@@ -411,12 +324,10 @@ struct HistoryView: View {
         }
 
         let item = pd.dataList[index]
-        historyVM.selectedId = item.id
+        historyVM.setSelection(id: item.id, index: index)
         env.actions.paste(
             item,
             isAttribute: true,
-            isSearchingProvider: { env.searchVM.isSearching },
-            setSearching: { env.searchVM.isSearching = $0 }
         )
     }
 
@@ -428,58 +339,39 @@ struct HistoryView: View {
     }
 
     private func handleCommandKeyEvent(_ event: NSEvent) -> NSEvent? {
-        guard env.focusView == .history else {
-            return event
-        }
-
         switch event.keyCode {
         case UInt16(kVK_ANSI_C):
-            handleCopyCommand()
-            return nil
+            handleCopy()
+
+        case UInt16(kVK_ANSI_E):
+            handleEdit()
+
         default:
-            return event
+            event
         }
     }
 
-    private func handleCopyCommand() {
-        guard let id = historyVM.selectedId,
-            let item = pd.dataList.first(where: { $0.id == id })
+    private func handleEdit() -> NSEvent? {
+        guard let index = historyVM.selectedIndex
         else {
             NSSound.beep()
-            return
+            return nil
         }
-        env.actions.copy(item)
+        EditWindowController.shared.openWindow(with: pd.dataList[index])
+        return nil
     }
 
-    private func handleEscapeKeyEvent() {
-        if env.chipVM.isEditingChip {
-            env.chipVM.cancelEditingChip()
-        } else if env.chipVM.editingNewChip {
-            env.chipVM.commitNewChipOrCancel(commitIfNonEmpty: false)
-        } else if env.focusView == .search {
-            env.searchVM.query = ""
-            env.focusView = .history
-        } else {
-            escapeKeyDown()
+    private func handleCopy() -> NSEvent? {
+        guard let index = historyVM.selectedIndex
+        else {
+            NSSound.beep()
+            return nil
         }
+        env.actions.copy(pd.dataList[index])
+        return nil
     }
 
-    private func escapeKeyDown() {
-        if env.focusView == .search {
-            if !env.searchVM.query.isEmpty {
-                env.searchVM.query = ""
-            } else {
-                env.focusView = .history
-            }
-        } else {
-            ClipMainWindowController.shared.toggleWindow()
-        }
-    }
-
-    private func handleSpace(_ event: NSEvent) -> NSEvent? {
-        guard env.focusView == .history else {
-            return event
-        }
+    private func handleSpace(_: NSEvent) -> NSEvent? {
         if let id = historyVM.selectedId {
             if historyVM.showPreviewId == id {
                 historyVM.showPreviewId = nil
@@ -491,23 +383,18 @@ struct HistoryView: View {
     }
 
     private func handleReturnKey(_ event: NSEvent) -> NSEvent? {
-        guard env.focusView == .history else { return event }
-        guard let id = historyVM.selectedId,
-            let item = pd.dataList.first(where: { $0.id == id })
+        guard let index = historyVM.selectedIndex
         else {
             return event
         }
         env.actions.paste(
-            item,
+            pd.dataList[index],
             isAttribute: !hasPlainTextModifier(event),
-            isSearchingProvider: { env.searchVM.isSearching },
-            setSearching: { env.searchVM.isSearching = $0 }
         )
         return nil
     }
 
-    private func deleteKeyDown(_ event: NSEvent) -> NSEvent? {
-        guard env.focusView == .history else { return event }
+    private func deleteKeyDown(_: NSEvent) -> NSEvent? {
         guard let id = historyVM.selectedId else {
             NSSound.beep()
             return nil
@@ -528,30 +415,6 @@ struct HistoryView: View {
         showDeleteAlert()
     }
 
-    private func reset(proxy: ScrollViewProxy) {
-        guard !historyVM.isDel else { return }
-        historyVM.lastLoadTriggerIndex = -1
-        let changeType = pd.lastDataChangeType
-        if changeType == .searchFilter || changeType == .reset {
-            if pd.dataList.isEmpty {
-                historyVM.selectedId = nil
-                historyVM.showPreviewId = nil
-                return
-            }
-
-            let firstId = pd.dataList.first?.id
-            let needsScrolling = historyVM.selectedId != firstId
-            historyVM.selectedId = firstId
-            historyVM.showPreviewId = nil
-
-            if !needsScrolling {
-                DispatchQueue.main.async {
-                    proxy.scrollTo(firstId, anchor: .trailing)
-                }
-            }
-        }
-    }
-
     private func showDeleteAlert() {
         let alert = NSAlert()
         alert.messageText = "确认删除吗？"
@@ -568,7 +431,7 @@ struct HistoryView: View {
             }
 
             guard response == .alertFirstButtonReturn,
-                let id = historyVM.pendingDeleteId
+                  let id = historyVM.pendingDeleteId
             else {
                 return
             }
@@ -580,7 +443,7 @@ struct HistoryView: View {
             if let window = NSApp.keyWindow {
                 alert.beginSheetModal(
                     for: window,
-                    completionHandler: handleResponse
+                    completionHandler: handleResponse,
                 )
             }
         } else {

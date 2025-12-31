@@ -9,6 +9,7 @@ import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
+@MainActor
 @Observable
 final class PasteboardModel: Identifiable {
     var id: Int64?
@@ -32,32 +33,30 @@ final class PasteboardModel: Identifiable {
     @ObservationIgnored
     private(set) lazy var type = PasteModelType(
         with: pasteboardType,
-        model: self
+        model: self,
     )
 
     private(set) var group: Int
+    let tag: String
     private var cachedAttributed: AttributedString?
+    private var cachedHighlightedPlainKeyword: String?
+    private var cachedHighlightedPlainText: AttributedString?
+    private var cachedHighlightedRichKeyword: String?
+    private var cachedHighlightedRichText: AttributedString?
     private var cachedThumbnail: NSImage?
     private var cachedImageSize: CGSize?
     private var cachedBackgroundColor: Color?
     private var cachedForegroundColor: Color?
-    private var cachedFilePaths: [String]?
+    var cachedFilePaths: [String]?
     private var cachedHasBackgroundColor: Bool = false
+    private var isThumbnailLoading: Bool = false
 
-    var url: URL? {
-        if pasteboardType == .string {
-            let urlString = String(data: data, encoding: .utf8) ?? ""
-            return urlString.asCompleteURL()
-        }
-        return nil
+    var isLink: Bool {
+        attributeString.string.isLink()
     }
 
     var isCSS: Bool {
-        if pasteboardType == .string {
-            let str = String(data: data, encoding: .utf8) ?? ""
-            return str.isCSSHexColor
-        }
-        return false
+        attributeString.string.isCSSHexColor
     }
 
     init(
@@ -69,23 +68,30 @@ final class PasteboardModel: Identifiable {
         appName: String,
         searchText: String,
         length: Int,
-        group: Int
+        group: Int,
+        tag: String
     ) {
         self.pasteboardType = pasteboardType
         self.data = data
         self.showData = showData
-        uniqueId = data.sha256Hex
         self.timestamp = timestamp
         self.appPath = appPath
         self.appName = appName
         self.searchText = searchText
         self.length = length
         self.group = group
+        self.tag = tag
+
         attributeString =
             NSAttributedString(
                 with: showData,
                 type: pasteboardType,
             ) ?? NSAttributedString()
+
+        uniqueId = Self.generateUniqueId(
+            for: pasteboardType,
+            data: data,
+        )
 
         let (bg, fg, hasBg) = computeColors()
         cachedBackgroundColor = bg
@@ -98,92 +104,15 @@ final class PasteboardModel: Identifiable {
                     .filter { !$0.isEmpty }
             }
         }
-    }
 
-    convenience init?(with pasteboard: NSPasteboard) {
-        guard let item = pasteboard.pasteboardItems?.first else { return nil }
-
-        let app = NSWorkspace.shared.frontmostApplication
-        guard let type = item.availableType(from: PasteboardType.supportTypes)
-        else { return nil }
-        var content: Data?
-        if type.isFile() {
-            guard
-                let fileURLs = pasteboard.readObjects(
-                    forClasses: [NSURL.self],
-                    options: nil,
-                ) as? [URL]
-            else { return nil }
-            let filePaths = fileURLs.map(\.path)
-            FileAccessHelper.shared.saveSecurityBookmarks(for: filePaths)
-            let filePathsString = filePaths.joined(separator: "\n")
-            content = filePathsString.data(using: .utf8) ?? Data()
-        } else {
-            content = item.data(forType: type)
-        }
-        guard content != nil else { return nil }
-
-        var showData: Data?
-        var showAtt: NSAttributedString?
-        var att = NSAttributedString()
-        if type.isText() {
-            att =
-                NSAttributedString(with: content, type: type)
-                    ?? NSAttributedString()
-            guard !att.string.allSatisfy(\.isWhitespace) else {
-                return nil
-            }
-            showAtt =
-                att.length > 250
-                    ? att.attributedSubstring(from: NSMakeRange(0, 250)) : att
-            showData = showAtt?.toData(with: type)
-        }
-
-        self.init(
-            pasteboardType: type,
-            data: content ?? Data(),
-            showData: showData,
-            timestamp: Int64(Date().timeIntervalSince1970),
-            appPath: app?.bundleURL?.path ?? "",
-            appName: app?.localizedName ?? "",
-            searchText: att.string,
-            length: att.length,
-            group: -1,
-        )
-    }
-
-    func introString() -> String {
-        switch type {
-        case .none:
-            return ""
-        case .image:
-            guard let imgSize = imageSize() else { return "" }
-            return "\(Int(imgSize.width)) × \(Int(imgSize.height)) "
-        case .color:
-            return ""
-        case .link:
-            if PasteUserDefaults.enableLinkPreview {
-                return String(data: data, encoding: .utf8) ?? ""
-            }
-            return
-                "\(PasteboardModel.formatter.string(from: NSNumber(value: length)) ?? "")个字符"
-        case .string, .rich:
-            return
-                "\(PasteboardModel.formatter.string(from: NSNumber(value: length)) ?? "")个字符"
-        case .file:
-            guard let filePaths = cachedFilePaths else { return "" }
-            return filePaths.count > 1
-                ? "\(filePaths.count) 个文件" : (filePaths.first ?? "")
+        if pasteboardType == .png || pasteboardType == .tiff {
+            cachedImageSize = Self.computeImageSize(from: data)
         }
     }
 
-    func fileSize() -> Int {
-        cachedFilePaths?.count ?? 0
-    }
+    // MARK: - 计算图片尺寸
 
-    func imageSize() -> CGSize? {
-        if let cachedImageSize { return cachedImageSize }
-
+    private static func computeImageSize(from data: Data) -> CGSize? {
         let options = [kCGImageSourceShouldCache: false] as CFDictionary
         guard
             let source = CGImageSourceCreateWithData(data as CFData, options),
@@ -215,20 +144,174 @@ final class PasteboardModel: Identifiable {
             return nil
         }
 
-        // 获取 DPI
         let dpi = properties[kCGImagePropertyDPIWidth] as? CGFloat ?? 72.0
         let scale = dpi / 72.0
 
-        let size = CGSize(width: width / scale, height: height / scale)
-        cachedImageSize = size
-        return size
+        return CGSize(width: width / scale, height: height / scale)
+    }
+
+    convenience init?(with pasteboard: NSPasteboard) {
+        guard let items = pasteboard.pasteboardItems, !items.isEmpty
+        else { return nil }
+        let item = items[0]
+
+        guard let type = item.availableType(from: PasteboardType.supportTypes)
+        else { return nil }
+
+        var content: Data?
+        var searchText = ""
+        var length = 0
+        var filePaths: [String]?
+
+        if type.isFile() {
+            guard
+                let fileURLs = pasteboard.readObjects(
+                    forClasses: [NSURL.self],
+                    options: nil,
+                ) as? [URL]
+            else { return nil }
+
+            filePaths = fileURLs.map(\.path)
+            searchText = filePaths!.joined(separator: "")
+
+            let pathsToSave = filePaths!
+            Task.detached(priority: .utility) {
+                await FileAccessHelper.shared.saveSecurityBookmarks(
+                    for: pathsToSave,
+                )
+            }
+
+            let filePathsString = filePaths!.joined(separator: "\n")
+            content = filePathsString.data(using: .utf8) ?? Data()
+        } else {
+            content = item.data(forType: type)
+        }
+        guard content != nil else { return nil }
+
+        var showData: Data?
+        var showAtt: NSAttributedString?
+        if type.isText() {
+            let att =
+                NSAttributedString(with: content, type: type)
+                    ?? NSAttributedString()
+            guard !att.string.allSatisfy(\.isWhitespace) else {
+                return nil
+            }
+            length = att.length
+            showAtt =
+                length > 300
+                    ? att.attributedSubstring(from: NSMakeRange(0, 300)) : att
+            showData = showAtt?.toData(with: type)
+            searchText = att.string
+        }
+
+        let calculatedTag = Self.calculateTag(
+            type: type,
+            content: content ?? Data(),
+        )
+
+        let app = NSWorkspace.shared.frontmostApplication
+
+        self.init(
+            pasteboardType: type,
+            data: content ?? Data(),
+            showData: showData,
+            timestamp: Int64(Date().timeIntervalSince1970),
+            appPath: app?.bundleURL?.path ?? "",
+            appName: app?.localizedName ?? "",
+            searchText: searchText,
+            length: length,
+            group: -1,
+            tag: calculatedTag,
+        )
+    }
+
+    // MARK: - Public Helper
+
+    static func calculateTag(type: PasteboardType, content: Data)
+        -> String
+    {
+        switch type {
+        case .rtf, .rtfd:
+            if let attr = NSAttributedString(with: content, type: type) {
+                if attr.string.isCSSHexColor {
+                    return "color"
+                }
+                if attr.string.asCompleteURL() != nil {
+                    return "link"
+                }
+            }
+            return "rich"
+        case .string:
+            guard let str = String(data: content, encoding: .utf8) else {
+                return "string"
+            }
+            if str.isCSSHexColor {
+                return "color"
+            } else if str.asCompleteURL() != nil {
+                return "link"
+            } else {
+                return "string"
+            }
+        case .png, .tiff:
+            return "image"
+        case .fileURL:
+            return "file"
+        default:
+            return ""
+        }
+    }
+
+    func introString() -> String {
+        switch type {
+        case .none:
+            return ""
+        case .image:
+            guard let imgSize = imageSize() else { return "" }
+            return "\(Int(imgSize.width)) × \(Int(imgSize.height)) "
+        case .color:
+            return ""
+        case .link:
+            if PasteUserDefaults.enableLinkPreview {
+                return attributeString.string
+            }
+            return
+                "\(PasteboardModel.formatter.string(from: NSNumber(value: length)) ?? "")个字符"
+        case .string, .rich:
+            return
+                "\(PasteboardModel.formatter.string(from: NSNumber(value: length)) ?? "")个字符"
+        case .file:
+            guard let filePaths = cachedFilePaths else { return "" }
+            return filePaths.count > 1
+                ? "\(filePaths.count) 个文件" : (filePaths.first ?? "")
+        }
+    }
+
+    func fileSize() -> Int {
+        cachedFilePaths?.count ?? 0
+    }
+
+    func imageSize() -> CGSize? {
+        cachedImageSize
     }
 
     func thumbnail() -> NSImage? {
-        if let cachedThumbnail { return cachedThumbnail }
+        cachedThumbnail
+    }
 
-        let image = NSImage(data: data)
+    func loadThumbnail() async -> NSImage? {
+        if let cachedThumbnail { return cachedThumbnail }
+        guard !isThumbnailLoading else { return nil }
+
+        isThumbnailLoading = true
+        let imageData = data
+
+        let image = await Task.detached(priority: .utility) {
+            NSImage(data: imageData)
+        }.value
+
         cachedThumbnail = image
+        isThumbnailLoading = false
         return image
     }
 
@@ -242,7 +325,8 @@ final class PasteboardModel: Identifiable {
 
     func getGroupChip() -> CategoryChip? {
         guard group != -1 else { return nil }
-        let allChips = CategoryChip.systemChips + PasteUserDefaults.userCategoryChip
+        let allChips =
+            CategoryChip.systemChips + PasteUserDefaults.userCategoryChip
         return allChips.first(where: { $0.id == group })
     }
 
@@ -256,7 +340,7 @@ final class PasteboardModel: Identifiable {
 
 extension PasteboardModel: Equatable {
     static func == (lhs: PasteboardModel, rhs: PasteboardModel) -> Bool {
-        lhs.uniqueId == rhs.uniqueId && lhs.id == rhs.id
+        lhs.uniqueId == rhs.uniqueId
     }
 }
 
@@ -318,6 +402,102 @@ extension PasteboardModel {
         return attr
     }
 
+    func highlightedPlainText(keyword: String) -> AttributedString {
+        let trimmedKeyword = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedKeyword.isEmpty else {
+            return AttributedString(attributeString.string)
+        }
+
+        if cachedHighlightedPlainKeyword == trimmedKeyword,
+           let cachedHighlightedPlainText
+        {
+            return cachedHighlightedPlainText
+        }
+
+        let source = attributeString.string
+        var attributed = AttributedString(source)
+
+        let options: String.CompareOptions = [
+            .caseInsensitive,
+            .diacriticInsensitive,
+            .widthInsensitive,
+        ]
+
+        var searchStart = source.startIndex
+        while searchStart < source.endIndex,
+              let range = source.range(
+                  of: trimmedKeyword,
+                  options: options,
+                  range: searchStart ..< source.endIndex,
+                  locale: .current,
+              )
+        {
+            if let attributedRange = Range(range, in: attributed) {
+                attributed[attributedRange].backgroundColor =
+                    Color.yellow.opacity(0.65)
+            }
+            searchStart = range.upperBound
+        }
+
+        cachedHighlightedPlainKeyword = trimmedKeyword
+        cachedHighlightedPlainText = attributed
+        return attributed
+    }
+
+    func highlightedRichText(keyword: String) -> AttributedString {
+        let trimmedKeyword = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedKeyword.isEmpty else {
+            return attributed()
+        }
+
+        if cachedHighlightedRichKeyword == trimmedKeyword,
+           let cachedHighlightedRichText
+        {
+            return cachedHighlightedRichText
+        }
+
+        let mutable = NSMutableAttributedString(attributedString: attributeString)
+        let string = mutable.string as NSString
+
+        let options: NSString.CompareOptions = [
+            .caseInsensitive,
+            .diacriticInsensitive,
+            .widthInsensitive,
+        ]
+
+        var searchRange = NSRange(location: 0, length: string.length)
+        while searchRange.length > 0 {
+            let found = string.range(
+                of: trimmedKeyword,
+                options: options,
+                range: searchRange,
+                locale: .current,
+            )
+
+            if found.location == NSNotFound {
+                break
+            }
+
+            mutable.addAttribute(
+                .backgroundColor,
+                value: NSColor.systemYellow.withAlphaComponent(0.65),
+                range: found,
+            )
+
+            let nextLocation = found.location + found.length
+            guard nextLocation < string.length else { break }
+            searchRange = NSRange(
+                location: nextLocation,
+                length: string.length - nextLocation,
+            )
+        }
+
+        let highlighted = AttributedString(mutable)
+        cachedHighlightedRichKeyword = trimmedKeyword
+        cachedHighlightedRichText = highlighted
+        return highlighted
+    }
+
     private static let formatter: NumberFormatter = {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
@@ -327,125 +507,126 @@ extension PasteboardModel {
 
 extension PasteboardModel {
     func itemProvider() -> NSItemProvider {
-        // 拖拽状态由 DragDropViewModel 管理，不在此处设置
-        if type == .string {
-            if let str = String(data: data, encoding: .utf8) {
-                return NSItemProvider(object: str as NSString)
+        if type == .string || type == .color || type == .link {
+            let provider = NSItemProvider()
+            let dataCopy = data
+            let typeIdentifier = pasteboardType.rawValue
+            provider.registerDataRepresentation(
+                forTypeIdentifier: typeIdentifier,
+                visibility: .all
+            ) { completion in
+                completion(dataCopy, nil)
+                return nil
             }
+            return provider
         }
 
-        let provider = NSItemProvider()
-
         if type == .rich {
-            provider.registerDataRepresentation(
-                forTypeIdentifier: pasteboardType.rawValue,
-                visibility: .all,
-            ) { [weak self] completion in
-                guard let data = self?.data else {
-                    completion(nil, nil)
+            if #available(macOS 15.0, *) {
+                let provider = NSItemProvider()
+                let dataCopy = data
+                let typeIdentifier = pasteboardType.rawValue
+                provider.registerDataRepresentation(
+                    forTypeIdentifier: typeIdentifier,
+                    visibility: .all
+                ) { completion in
+                    completion(dataCopy, nil)
                     return nil
                 }
-                DispatchQueue.global(qos: .userInitiated).async {
-                    completion(data, nil)
+                return provider
+            } else {
+                let provider = NSItemProvider(
+                    object: attributeString.string as NSString
+                )
+                let dataCopy = data
+                let typeIdentifier = pasteboardType.rawValue
+                provider.registerDataRepresentation(
+                    forTypeIdentifier: typeIdentifier,
+                    visibility: .all
+                ) { completion in
+                    completion(dataCopy, nil)
+                    return nil
                 }
-                return nil
+                return provider
             }
         }
 
         if type == .image {
-            provider.registerDataRepresentation(
-                forTypeIdentifier: pasteboardType.rawValue,
-                visibility: .all,
-            ) { [weak self] completion in
-                guard let data = self?.data else {
-                    completion(nil, nil)
+            let name = appName + "-" + timestamp.date()
+            if #available(macOS 15.0, *) {
+                let provider = NSItemProvider()
+                provider.registerDataRepresentation(
+                    forTypeIdentifier: pasteboardType.rawValue,
+                    visibility: .all
+                ) { [self] completion in
+                    completion(data, nil)
                     return nil
                 }
-                DispatchQueue.global(qos: .userInitiated).async {
-                    completion(data, nil)
+                provider.suggestedName = name
+                return provider
+            } else {
+                if let image = NSImage(data: data) {
+                    let provider = NSItemProvider(object: image)
+                    provider.suggestedName = name
+                    return provider
                 }
-                return nil
             }
-            let name = appName + "-" + timestamp.date()
-            provider.suggestedName = name
         }
 
         if type == .file {
-            if let paths = cachedFilePaths {
-                for path in paths {
-                    let fileURL = URL(fileURLWithPath: path)
-                    let promisedType: String = promisedTypeIdentifier(
-                        for: fileURL,
-                    )
-                    provider.registerFileRepresentation(
-                        forTypeIdentifier: promisedType,
-                        fileOptions: [],
-                        visibility: .all,
-                    ) { completion in
-                        DispatchQueue.global(qos: .userInitiated).async {
-                            if FileManager.default.fileExists(atPath: path) {
-                                completion(fileURL, true, nil)
-                            } else {
-                                let error = NSError(
-                                    domain: NSCocoaErrorDomain,
-                                    code: NSFileReadNoSuchFileError,
-                                    userInfo: [NSFilePathErrorKey: path]
-                                )
-                                completion(nil, false, error)
-                            }
-                        }
-                        return nil
+            if let paths = cachedFilePaths, !paths.isEmpty {
+                let path = paths[0]
+                guard path.hasPrefix("/") else {
+                    return NSItemProvider()
+                }
+
+                let fileURL = URL(fileURLWithPath: path)
+                guard fileURL.isFileURL else {
+                    return NSItemProvider()
+                }
+
+                let hasAccess = fileURL.startAccessingSecurityScopedResource()
+                defer {
+                    if hasAccess {
+                        fileURL.stopAccessingSecurityScopedResource()
                     }
                 }
 
-                if paths.count == 1 {
+                if let provider = NSItemProvider(contentsOf: fileURL) {
                     provider.suggestedName =
-                        URL(fileURLWithPath: paths[0]).lastPathComponent
-                } else {
-                    provider.suggestedName = "\(paths.count)个文件"
+                        fileURL.deletingPathExtension().lastPathComponent
+                    return provider
                 }
+
+                return NSItemProvider()
             }
         }
 
-        return provider
+        return NSItemProvider()
     }
 
-    private func promisedTypeIdentifier(for fileURL: URL) -> String {
-        do {
-            let values = try fileURL.resourceValues(forKeys: [
-                .contentTypeKey,
-            ])
-            if let type = values.contentType {
-                return type.identifier
+    private static func generateUniqueId(
+        for type: PasteboardType,
+        data: Data,
+    ) -> String {
+        switch type {
+        case .png, .tiff:
+            let prefix = data.prefix(1024)
+            return "\(prefix.sha256Hex)-\(data.count)"
+        case .rtf, .rtfd:
+            if let attributeString = NSAttributedString(with: data, type: type),
+               let textData = attributeString.string.data(using: .utf8)
+            {
+                return textData.sha256Hex
             }
-        } catch {
-            // ignore and fall through to fallback
+            return data.sha256Hex
+        default:
+            return data.sha256Hex
         }
-        return UTType.data.identifier
-    }
-
-    func createToken() -> ClipDragToken {
-        ClipDragToken(id: id)
     }
 }
 
-struct ClipDragToken: Codable, Sendable, Identifiable, Transferable {
-    var id: Int64?
-
-    static var transferRepresentation: some TransferRepresentation {
-        DataRepresentation(
-            contentType: .data,
-            exporting: { item in
-                try JSONEncoder().encode(item)
-            },
-            importing: { data in
-                try JSONDecoder().decode(ClipDragToken.self, from: data)
-            }
-        )
-    }
-}
-
-enum PasteModelType {
+enum PasteModelType: String {
     case none
     case image
     case string
@@ -457,11 +638,17 @@ enum PasteModelType {
     init(with type: PasteboardType, model: PasteboardModel) {
         switch type {
         case .rtf, .rtfd:
-            self = .rich
+            if model.isCSS {
+                self = .color
+            } else if model.isLink {
+                self = .link
+            } else {
+                self = .rich
+            }
         case .string:
             if model.isCSS {
                 self = .color
-            } else if model.url != nil {
+            } else if model.isLink {
                 self = .link
             } else {
                 self = .string
@@ -483,6 +670,35 @@ enum PasteModelType {
         case .link: "链接"
         case .file: "文件"
         default: ""
+        }
+    }
+
+    var tagValue: String {
+        switch self {
+        case .none: ""
+        case .image: "image"
+        case .string: "string"
+        case .rich: "rich"
+        case .file: "file"
+        case .link: "link"
+        case .color: "color"
+        }
+    }
+
+    var iconAndLabel: (icon: String, label: String) {
+        switch self {
+        case .image:
+            ("photo", "图片")
+        case .string, .rich:
+            ("text.document", "文本")
+        case .file:
+            ("folder", "文件")
+        case .link:
+            ("link", "链接")
+        case .color:
+            ("paintpalette", "颜色")
+        case .none:
+            ("", "")
         }
     }
 }

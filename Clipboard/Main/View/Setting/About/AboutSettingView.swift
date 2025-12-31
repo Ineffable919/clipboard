@@ -44,6 +44,19 @@ struct AboutSettingView: View {
                             x: 0,
                             y: 6,
                         )
+                        .onDrag {
+                            if let appURL = Bundle.main.bundleURL as NSURL? {
+                                return NSItemProvider(object: appURL)
+                            }
+                            return NSItemProvider()
+                        }
+                        .onHover { isHovered in
+                            if isHovered {
+                                NSCursor.openHand.set()
+                            } else {
+                                NSCursor.arrow.set()
+                            }
+                        }
                 }
                 Text(appName)
                     .font(
@@ -55,18 +68,6 @@ struct AboutSettingView: View {
                     .foregroundColor(.secondary)
             }
             .padding(.top, Const.space16)
-
-            VStack(spacing: Const.space12) {
-                Text("优雅的剪贴板管理工具")
-                    .font(.headline)
-
-                Text("一款简洁、现代化的 macOS 剪贴板管理应用\n帮助您轻松管理和访问剪贴板历史记录")
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(4)
-            }
-            .padding(.top, Const.space32)
 
             Button(action: {
                 checkForUpdates()
@@ -101,37 +102,22 @@ struct AboutSettingView: View {
                     UpdaterSettingsView(updater: updater)
                 }
                 HStack(spacing: 20) {
-                    LinkButton(
-                        title: "GitHub",
-                        icon: "chevron.left.forwardslash.chevron.right",
-                    ) {
-                        if let url = URL(
-                            string:
-                            "https://github.com/Ineffable919/clipboard",
-                        ) {
-                            NSWorkspace.shared.open(url)
-                        }
+                    if let github = URL(string: "https://github.com/Ineffable919/clipboard") {
+                        Link("Github", destination: github)
                     }
-
-                    LinkButton(title: "反馈建议", icon: "envelope") {
-                        if let url = URL(
-                            string:
-                            "https://github.com/Ineffable919/clipboard/issues",
-                        ) {
-                            NSWorkspace.shared.open(url)
-                        }
+                    if let issues = URL(string: "https://github.com/Ineffable919/clipboard/issues") {
+                        Link("反馈建议", destination: issues)
                     }
                 }
-                VStack(spacing: 4) {
+                VStack(spacing: Const.space4) {
+                    Text("Made with ❤️ for macOS")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                     Text(
                         "Copyright © \(currentYear) Crown. All rights reserved.",
                     )
                     .font(.caption)
                     .foregroundColor(.secondary)
-
-                    Text("Made with ❤️ for macOS")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
                 }
                 .padding(.bottom, Const.space16)
             }
@@ -167,7 +153,8 @@ struct LinkButton: View {
             .background(
                 RoundedRectangle(cornerRadius: Const.radius)
                     .fill(
-                        isHovered ? Color.accentColor.opacity(0.1) : Color.clear,
+                        isHovered
+                            ? Color.accentColor.opacity(0.1) : Color.clear,
                     ),
             )
             .overlay(

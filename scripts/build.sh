@@ -20,7 +20,8 @@ echo -e "${BLUE}📂 项目根目录: $PROJECT_ROOT${NC}"
 echo ""
 
 # 配置
-APP_NAME="Clipboard"
+APP_NAME="Clipboard"      # 项目/Target 名称（.app 文件名）
+DISPLAY_NAME="Clip"       # 显示名称（DMG 文件名使用）
 SCHEME="Clipboard"
 CONFIGURATION="Release"
 
@@ -191,9 +192,9 @@ echo ""
 echo -e "${BLUE}💿 步骤 5/5: 创建 DMG 安装包...${NC}"
 
 if [ "$ARCH" = "universal" ]; then
-    DMG_NAME="$APP_NAME-$VERSION.dmg"
+    DMG_NAME="$DISPLAY_NAME-$VERSION.dmg"
 else
-    DMG_NAME="$APP_NAME-$VERSION-$ARCH.dmg"
+    DMG_NAME="$DISPLAY_NAME-$VERSION-$ARCH.dmg"
 fi
 DMG_PATH="./$DMG_NAME"
 
@@ -206,13 +207,13 @@ if command -v create-dmg &> /dev/null; then
     mkdir -p "$DMG_DIR"
     
     # create-dmg 格式: create-dmg [options] <app> [destination]
-    create-dmg --overwrite --skip-jenkins --dmg-title="$APP_NAME $VERSION" "$APP_PATH" . 2>&1 | grep -v "Code signing failed" || true
+    create-dmg --overwrite --skip-jenkins --dmg-title="$DISPLAY_NAME $VERSION" "$APP_PATH" . 2>&1 | grep -v "Code signing failed" || true
     
-    GENERATED_DMG=$(ls -t ${APP_NAME}*.dmg 2>/dev/null | head -n 1)
+    GENERATED_DMG=$(ls -t ${DISPLAY_NAME}*.dmg 2>/dev/null | head -n 1)
     if [ -n "$GENERATED_DMG" ] && [ "$GENERATED_DMG" != "$DMG_NAME" ]; then
         mv "$GENERATED_DMG" "$DMG_PATH"
     elif [ -n "$GENERATED_DMG" ]; then
-        DMG_PATH="$GENERATED_DMG"
+        DMG_PATH="./$GENERATED_DMG"
     fi
 else
     echo "未找到 create-dmg，使用 hdiutil..."
@@ -224,7 +225,7 @@ else
     ln -s /Applications "$DMG_TEMP_DIR/Applications"
     
     hdiutil create \
-        -volname "$APP_NAME $VERSION" \
+        -volname "$DISPLAY_NAME $VERSION" \
         -srcfolder "$DMG_TEMP_DIR" \
         -ov \
         -format UDZO \

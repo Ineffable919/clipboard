@@ -11,18 +11,6 @@ import Foundation
 
 enum KeyboardShortcuts {
     static func postCmdVEvent() {
-        let hasPermission = AXIsProcessTrusted()
-
-        if !hasPermission {
-            log.debug(
-                "Accessibility permission not granted, cannot send keyboard events",
-            )
-            DispatchQueue.main.async {
-                requestAccessibilityPermission()
-            }
-            return
-        }
-
         let source = CGEventSource(stateID: .combinedSessionState)
         let cgEvent = CGEvent(
             keyboardEventSource: source,
@@ -31,27 +19,5 @@ enum KeyboardShortcuts {
         )
         cgEvent?.flags = .maskCommand
         cgEvent?.post(tap: .cghidEventTap)
-    }
-
-    private static func requestAccessibilityPermission() {
-        let alert = NSAlert()
-        alert.messageText = "需要辅助功能权限"
-        alert.informativeText = """
-        Clipboard 需要获取辅助功能权限
-        才能直接粘贴到其它应用
-        """
-        alert.alertStyle = .informational
-        alert.addButton(withTitle: "设置")
-        alert.addButton(withTitle: "稍后设置，复制到剪贴板")
-
-        let response = alert.runModal()
-        if response == .alertFirstButtonReturn {
-            if let url = URL(
-                string:
-                "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
-            ) {
-                NSWorkspace.shared.open(url)
-            }
-        }
     }
 }

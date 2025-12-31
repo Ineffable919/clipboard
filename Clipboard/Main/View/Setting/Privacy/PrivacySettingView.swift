@@ -164,6 +164,20 @@ struct PrivacySettingView: View {
         .onDisappear {
             stopPermissionTimer()
         }
+        .onReceive(
+            NotificationCenter.default.publisher(
+                for: NSWindow.didBecomeKeyNotification,
+            ),
+        ) { _ in
+            startPermissionTimer()
+        }
+        .onReceive(
+            NotificationCenter.default.publisher(
+                for: NSWindow.didResignKeyNotification,
+            ),
+        ) { _ in
+            stopPermissionTimer()
+        }
     }
 
     // MARK: - 添加应用
@@ -236,7 +250,7 @@ struct PrivacySettingView: View {
     private func startPermissionTimer() {
         stopPermissionTimer()
         permissionTimer = Timer.scheduledTimer(
-            withTimeInterval: 5.0,
+            withTimeInterval: 2.0,
             repeats: true,
         ) { _ in
             Task { @MainActor in

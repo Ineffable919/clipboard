@@ -7,10 +7,10 @@
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
 	<key>SUScheduledCheckInterval</key>
-	<integer>86400</integer>
+	<integer>43200</integer>
 	<key>SUAllowsAutomaticUpdates</key>
 	<true/>
-    <key>SUPublicEDKey</key>
-    <string>blW5K9TjhxvURPS+S9fxAyDcIp+QZYaxw2NqTagdiYU=</string>
+	<key>SUPublicEDKey</key>
+	<string>blW5K9TjhxvURPS+S9fxAyDcIp+QZYaxw2NqTagdiYU=</string>
 </dict>
 </plist>

@@ -2,7 +2,7 @@
 //  SettingWindowController.swift
 //  Clipboard
 //
-//  Created on 2025/10/26.
+//  Created on crown 2025/10/26.
 //
 
 import AppKit
@@ -10,7 +10,7 @@ import SwiftUI
 
 class SettingWindowController: NSWindowController {
     static let shared = SettingWindowController()
-    private static var settingView = SettingView()
+    private var settingView = SettingView()
 
     private init() {
         let window = NSWindow(
@@ -31,11 +31,9 @@ class SettingWindowController: NSWindowController {
         window.center()
         window.isReleasedWhenClosed = false
         window.titlebarSeparatorStyle = .none
-
         window.titlebarAppearsTransparent = true
-        window.backgroundColor = NSColor.windowBackgroundColor
 
-        window.contentView = NSHostingView(rootView: Self.settingView)
+        window.contentView = NSHostingView(rootView: settingView)
 
         super.init(window: window)
 
@@ -46,12 +44,11 @@ class SettingWindowController: NSWindowController {
         EventDispatcher.shared.registerHandler(
             matching: .keyDown,
             key: "settingWindow"
-        ) {
-            [weak self] event in
+        ) { [weak self] event in
             guard event.window === SettingWindowController.shared.window else {
                 return event
             }
-            // Cmd+W 关闭窗口
+            // Cmd + W 关闭窗口
             if event.modifierFlags.contains(.command),
                event.charactersIgnoringModifiers == "w"
             {
@@ -69,6 +66,9 @@ class SettingWindowController: NSWindowController {
                     return nil
                 }
             }
+            if EventDispatcher.shared.handleSystemEditingCommand(event) {
+                return nil
+            }
             return event
         }
     }
@@ -84,8 +84,8 @@ class SettingWindowController: NSWindowController {
         if window.isVisible {
             window.orderOut(nil)
         } else {
-            window.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
+            window.makeKeyAndOrderFront(nil)
         }
     }
 

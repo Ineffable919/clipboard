@@ -119,7 +119,8 @@ enum KeyCode {
         kVK_ANSI_0, kVK_ANSI_1, kVK_ANSI_2, kVK_ANSI_3, kVK_ANSI_4,
         kVK_ANSI_5, kVK_ANSI_6, kVK_ANSI_7, kVK_ANSI_8, kVK_ANSI_9,
         // 符号键
-        kVK_ANSI_Equal, kVK_ANSI_Minus, kVK_ANSI_RightBracket, kVK_ANSI_LeftBracket,
+        kVK_ANSI_Equal, kVK_ANSI_Minus, kVK_ANSI_RightBracket,
+        kVK_ANSI_LeftBracket,
         kVK_ANSI_Quote, kVK_ANSI_Semicolon, kVK_ANSI_Backslash, kVK_ANSI_Comma,
         kVK_ANSI_Slash, kVK_ANSI_Period, kVK_ANSI_Grave,
         // 小键盘
@@ -170,7 +171,9 @@ enum KeyCode {
     /// 将用户设置的修饰键索引转换为 SwiftUI 的 EventModifiers
     /// - Parameter modifierIndex: 修饰键索引 (0: Command, 1: Option, 2: Control, 3: Shift)
     /// - Returns: 对应的 EventModifiers
-    static func eventModifiers(from modifierIndex: Int) -> SwiftUI.EventModifiers {
+    static func eventModifiers(from modifierIndex: Int)
+        -> SwiftUI.EventModifiers
+    {
         switch modifierIndex {
         case 0: .command
         case 1: .option
@@ -201,6 +204,7 @@ enum KeyCode {
     /// 检查当前是否按下了快速粘贴的修饰键
     /// - Returns: 是否按下了 quickPasteModifier 对应的修饰键
     static func isQuickPasteModifierPressed() -> Bool {
-        isModifierPressed(modifierIndex: PasteUserDefaults.quickPasteModifier)
+        let modifier = modifierFlags(from: PasteUserDefaults.quickPasteModifier)
+        return NSEvent.modifierFlags.contains(modifier)
     }
 }

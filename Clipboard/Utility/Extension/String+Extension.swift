@@ -6,17 +6,20 @@
 //
 
 import Foundation
+import NaturalLanguage
 
 extension String {
     static let regex =
         "^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{4}|[A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})$"
 
     func isCompleteURL() -> Bool {
-        guard
-            let url = URL(
-                string: trimmingCharacters(in: .whitespacesAndNewlines)
-            )
-        else {
+        let trimmedString = trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !trimmedString.isEmpty else {
+            return false
+        }
+
+        guard let url = URL(string: trimmedString) else {
             return false
         }
 
@@ -29,11 +32,22 @@ extension String {
             return false
         }
 
-        guard let host = url.host, !host.isEmpty else {
+        guard let host = url.host else {
             return false
         }
 
-        let trimmedString = trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleanHost = host.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleanHost.isEmpty else {
+            return false
+        }
+
+        let hasValidHostFormat =
+            cleanHost.contains(".")
+                || cleanHost.localizedStandardContains("localhost")
+        guard hasValidHostFormat else {
+            return false
+        }
+
         return url.absoluteString == trimmedString
     }
 
@@ -50,12 +64,87 @@ extension String {
         if let url = asCompleteURL() {
             return [url]
         }
-        return []
+
+        guard
+            let detector = try? NSDataDetector(
+                types: NSTextCheckingResult.CheckingType.link.rawValue
+            )
+        else {
+            return []
+        }
+
+        let matches = detector.matches(
+            in: self,
+            range: NSRange(startIndex..., in: self)
+        )
+        return matches.compactMap { match in
+            guard let range = Range(match.range, in: self),
+                  let url = match.url
+            else {
+                return nil
+            }
+
+            let urlString = String(self[range])
+            return urlString.isCompleteURL() ? url : nil
+        }
     }
 
     var isCSSHexColor: Bool {
         let predicate = NSPredicate(format: "SELF MATCHES %@", String.regex)
-
         return predicate.evaluate(with: self)
     }
+
+    func trimmingTrailingNewlines() -> String {
+        var endIndex = endIndex
+        while endIndex > startIndex {
+            let prevIndex = index(before: endIndex)
+            let char = self[prevIndex]
+            if char == "\n" || char == "\r" {
+                endIndex = prevIndex
+            } else {
+                break
+            }
+        }
+        return String(self[startIndex ..< endIndex])
+    }
+
+    var wordCount: Int {
+        var count = 0
+        enumerateSubstrings(
+            in: startIndex ..< endIndex,
+            options: .byWords
+        ) { _, _, _, _ in
+            count += 1
+        }
+        return count
+    }
+
+    var smartWordCount: Int {
+        var count = 0
+
+        let tokenizer = NLTokenizer(unit: .word)
+        tokenizer.string = self
+
+        tokenizer.enumerateTokens(in: startIndex ..< endIndex) {
+            range,
+                _ in
+            let token = self[range]
+
+            // CJK：逐字符
+            if token.unicodeScalars.allSatisfy({
+                CharacterSet.cjkUnifiedIdeographs.contains($0)
+            }) {
+                count += token.count
+            } else {
+                count += 1
+            }
+            return true
+        }
+        return count
+    }
+}
+
+extension CharacterSet {
+    static let cjkUnifiedIdeographs =
+        CharacterSet(charactersIn: "\u{4E00}" ... "\u{9FFF}")
 }

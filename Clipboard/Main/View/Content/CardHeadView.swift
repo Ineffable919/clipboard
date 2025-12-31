@@ -8,11 +8,12 @@
 import SwiftUI
 
 struct CardHeadView: View {
-    var model: PasteboardModel
+    let model: PasteboardModel
+
+    private var isSystem: Bool { model.group == -1 }
 
     var body: some View {
         HStack(spacing: 0) {
-            let isSystem = model.group == -1
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(model.type.string)
@@ -21,8 +22,8 @@ struct CardHeadView: View {
                     if isSystem {
                         Text(
                             model.timestamp.timeAgo(
-                                relativeTo: TimeManager.shared.currentTime,
-                            ),
+                                relativeTo: TimeManager.shared.currentTime
+                            )
                         )
                         .font(.caption2)
                         .foregroundStyle(.white.opacity(0.85))
@@ -33,16 +34,35 @@ struct CardHeadView: View {
             .padding(.horizontal, 10)
 
             if isSystem {
-                Image(nsImage: NSWorkspace.shared.icon(forFile: model.appPath))
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: Const.iconSize, height: Const.iconSize)
+                AppIconView(appPath: model.appPath)
                     .offset(x: 15)
             }
         }
         .frame(height: Const.hdSize)
         .background(PasteDataStore.main.colorWith(model))
         .clipShape(Const.headShape)
+    }
+}
+
+/// 缓存 app icon 的视图
+private struct AppIconView: View {
+    let appPath: String
+    @State private var icon: NSImage?
+
+    var body: some View {
+        Group {
+            if let icon {
+                Image(nsImage: icon)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                Color.clear
+            }
+        }
+        .frame(width: Const.iconSize, height: Const.iconSize)
+        .task(id: appPath) {
+            icon = NSWorkspace.shared.icon(forFile: appPath)
+        }
     }
 }
 
@@ -59,6 +79,7 @@ struct CardHeadView: View {
             searchText: "",
             length: 9,
             group: -1,
+            tag: "string",
         ),
     )
 }

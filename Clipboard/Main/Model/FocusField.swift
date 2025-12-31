@@ -7,21 +7,18 @@
 
 import Foundation
 
-enum FocusField: Hashable {
+enum FocusField: Hashable, Sendable {
     case search
     case newChip
     case editChip
     case history
     case popover
+    case filter
 
-    static func fromOptional(_ field: FocusField?) -> FocusField {
-        field ?? .history
-    }
-
-    var asOptional: FocusField? {
+    var requiresSystemFocus: Bool {
         switch self {
-        case .search, .newChip, .editChip: self
-        case .history, .popover: nil
+        case .search, .newChip, .editChip: true
+        case .history, .popover, .filter: false
         }
     }
 }

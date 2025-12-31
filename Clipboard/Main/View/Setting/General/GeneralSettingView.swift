@@ -5,6 +5,7 @@
 //  Created by crown on 2025/10/28.
 //
 
+import Foundation
 import SwiftUI
 
 // MARK: - 通用设置视图
@@ -12,7 +13,8 @@ import SwiftUI
 struct GeneralSettingView: View {
     @Environment(\.colorScheme) var colorScheme
 
-    @State private var launchAtLogin = PasteUserDefaults.onStart
+    @State private var launchAtLogin: Bool = LaunchAtLoginHelper.shared
+        .isEnabled
     @AppStorage(PrefKey.soundEnabled.rawValue)
     private var soundEnabled = true
     @State private var selectedPasteTarget: PasteTargetMode =
@@ -23,6 +25,7 @@ struct GeneralSettingView: View {
     private var removeTailingNewline = false
     @State private var selectedHistoryTimeUnit: HistoryTimeUnit =
         .init(rawValue: PasteUserDefaults.historyTime)
+    @State private var launchAtLoginTimer: Timer?
 
     private var db: PasteDataStore = .main
 
@@ -35,8 +38,17 @@ struct GeneralSettingView: View {
                         isOn: $launchAtLogin,
                     )
                     .onChange(of: launchAtLogin) { _, newValue in
-                        PasteUserDefaults.onStart = newValue
-                        LaunchAtLoginHelper.shared.setEnabled(newValue)
+                        let success = LaunchAtLoginHelper.shared.setEnabled(
+                            newValue,
+                        )
+                        if success {
+                            PasteUserDefaults.onStart = newValue
+                        } else {
+                            Task { @MainActor in
+                                launchAtLogin =
+                                    LaunchAtLoginHelper.shared.isEnabled
+                            }
+                        }
                     }
 
                     Divider()
@@ -74,7 +86,7 @@ struct GeneralSettingView: View {
 
                     ToggleRow(
                         isEnabled: $removeTailingNewline,
-                        title: "粘贴时去掉末尾的换行符"
+                        title: "粘贴时去掉末尾的换行符",
                     )
                 }
                 .padding(Const.space8)
@@ -102,7 +114,7 @@ struct GeneralSettingView: View {
                             Button {
                                 db.clearAllData()
                             } label: {
-                                Text("删除历史")
+                                Text("删除历史...")
                                     .font(.callout)
                             }
                             .buttonStyle(.glass)
@@ -110,7 +122,7 @@ struct GeneralSettingView: View {
                             Button {
                                 db.clearAllData()
                             } label: {
-                                Text("删除历史")
+                                Text("删除历史...")
                                     .font(.callout)
                             }
                             .buttonStyle(.bordered)
@@ -125,6 +137,51 @@ struct GeneralSettingView: View {
             .padding(Const.space24)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear {
+            refreshLaunchAtLoginStatus()
+            startLaunchAtLoginTimer()
+        }
+        .onDisappear {
+            stopLaunchAtLoginTimer()
+        }
+        .onReceive(
+            NotificationCenter.default.publisher(
+                for: NSWindow.didBecomeKeyNotification,
+            ),
+        ) { _ in
+            startLaunchAtLoginTimer()
+        }
+        .onReceive(
+            NotificationCenter.default.publisher(
+                for: NSWindow.didResignKeyNotification,
+            ),
+        ) { _ in
+            stopLaunchAtLoginTimer()
+        }
+    }
+
+    // MARK: - 刷新登录启动状态
+
+    private func refreshLaunchAtLoginStatus() {
+        launchAtLogin = LaunchAtLoginHelper.shared.isEnabled
+        PasteUserDefaults.onStart = launchAtLogin
+    }
+
+    private func startLaunchAtLoginTimer() {
+        stopLaunchAtLoginTimer()
+        launchAtLoginTimer = Timer.scheduledTimer(
+            withTimeInterval: 2.0,
+            repeats: true,
+        ) { _ in
+            Task { @MainActor in
+                refreshLaunchAtLoginStatus()
+            }
+        }
+    }
+
+    private func stopLaunchAtLoginTimer() {
+        launchAtLoginTimer?.invalidate()
+        launchAtLoginTimer = nil
     }
 }
 
@@ -247,7 +304,7 @@ struct ThinSlider: View {
                         color: Color.black.opacity(0.2),
                         radius: 2,
                         x: 0,
-                        y: 1
+                        y: 1,
                     )
                     .offset(x: geometry.size.width * normalizedValue - 2)
                     .gesture(
@@ -261,9 +318,9 @@ struct ThinSlider: View {
                                     max(
                                         0,
                                         dragValue.location.x
-                                            / geometry.size.width
+                                            / geometry.size.width,
                                     ),
-                                    1
+                                    1,
                                 )
                                 value =
                                     bounds.lowerBound

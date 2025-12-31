@@ -10,9 +10,7 @@ import SwiftUI
 // MARK: - ContentView
 
 struct ContentView: View {
-    @Environment(AppEnvironment.self) private var env
-    @FocusState private var focused: Bool
-    @State private var pd = PasteDataStore.main
+    @EnvironmentObject private var env: AppEnvironment
 
     @AppStorage(PrefKey.backgroundType.rawValue) private var backgroundTypeRaw:
         Int = 0
@@ -29,13 +27,9 @@ struct ContentView: View {
 
     @ViewBuilder
     private func contentStack() -> some View {
-        VStack {
-            Spacer()
+        VStack(spacing: 0) {
             ClipTopBarView()
             HistoryView()
-                .focusable()
-                .focusEffectDisabled()
-                .focused($focused)
         }
     }
 
@@ -53,7 +47,7 @@ struct ContentView: View {
                         RoundedRectangle(cornerRadius: Const.radius)
                             .fill(Color.clear)
                             .glassEffect(
-                                in: RoundedRectangle(cornerRadius: Const.radius)
+                                in: RoundedRectangle(cornerRadius: Const.radius),
                             )
                         contentStack()
                     }
@@ -67,20 +61,14 @@ struct ContentView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .task {
-            if Task.isCancelled { return }
-            await MainActor.run {
-                focused = true
-            }
-        }
     }
 }
 
 // MARK: - Preview
 
 #Preview {
-    @Previewable @State var env = AppEnvironment()
+    let env = AppEnvironment()
     ContentView()
-        .environment(env)
+        .environmentObject(env)
         .frame(width: 1000, height: 330.0)
 }

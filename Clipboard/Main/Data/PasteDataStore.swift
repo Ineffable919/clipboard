@@ -17,6 +17,10 @@ final class PasteDataStore {
     private let pageSize = 50
     var dataList: [PasteboardModel] = []
 
+    private(set) var currentSearchKeyword: String = ""
+
+    private(set) var chipsVersion: Int = 0
+
     private(set) var totalCount: Int = 0
     private(set) var pageIndex = 0
 
@@ -27,28 +31,35 @@ final class PasteDataStore {
 
     enum DataChangeType {
         case loadMore
-        case searchFilter // 搜索或筛选（首次）
-        case reset // 重置/初始化
+        case searchFilter
+        case reset
     }
 
     private(set) var lastDataChangeType: DataChangeType = .reset
 
-    /// 当前的筛选条件（用于分页加载筛选结果）
     private var currentFilter: Expression<Bool>?
     private(set) var isInFilterMode: Bool = false
 
     private var sqlManager = PasteSQLManager.manager
     private var searchTask: Task<Void, Error>?
     private var colorDict = [String: String]()
+    private var cachedAppInfo: [(name: String, path: String)]?
+    private var cachedTagTypes: [PasteModelType]?
 
     func setup() {
         Task {
-            await resetDefaultListAsync()
+            await resetDefaultList()
+            let count = await sqlManager.getTotalCount()
             await MainActor.run {
-                totalCount = sqlManager.totalCount
+                totalCount = count
             }
         }
         colorDict = PasteUserDefaults.appColorData
+    }
+
+    @MainActor
+    func notifyCategoryChipsChanged() {
+        chipsVersion &+= 1
     }
 
     @MainActor
@@ -64,8 +75,8 @@ final class PasteDataStore {
 // MARK: - private 辅助方法
 
 extension PasteDataStore {
-    private func updateTotalCount() {
-        totalCount = sqlManager.totalCount
+    private func updateTotalCount() async {
+        totalCount = await sqlManager.getTotalCount()
     }
 
     private func getItems(limit: Int = 50, offset: Int? = nil) async
@@ -88,11 +99,15 @@ extension PasteDataStore {
                 let searchText = try? row.get(Col.searchText)
                 let length = try? row.get(Col.length)
                 let group = try? row.get(Col.group)
+                let tag = try? row.get(Col.tag)
+
                 let pType = PasteboardType(type)
-                // TODO: 兼容旧数据，后续版本删除
+
                 if pType.isText(), showData == nil {
                     if let searchText {
-                        showData = String(searchText.prefix(250)).data(using: .utf8)
+                        showData = String(searchText.prefix(300)).data(
+                            using: .utf8,
+                        )
                     }
                 }
 
@@ -106,6 +121,7 @@ extension PasteDataStore {
                     searchText: searchText ?? "",
                     length: length ?? 0,
                     group: group ?? -1,
+                    tag: tag ?? "",
                 )
                 pasteModel.id = id
                 return pasteModel
@@ -113,13 +129,93 @@ extension PasteDataStore {
             return nil
         }
     }
+
+    private func calculateTagValue(type: PasteboardType, data: Data) -> String {
+        switch type {
+        case .rtf, .rtfd:
+            return "rich"
+        case .string:
+            if let str = String(data: data, encoding: .utf8) {
+                if str.isCSSHexColor {
+                    return "color"
+                } else if str.asCompleteURL() != nil {
+                    return "link"
+                }
+            }
+            return "string"
+        case .png, .tiff:
+            return "image"
+        case .fileURL:
+            return "file"
+        default:
+            return ""
+        }
+    }
+
+    private func buildFilter(from criteria: TopBarViewModel.SearchCriteria)
+        -> Expression<Bool>?
+    {
+        var clauses: [Expression<Bool>] = []
+
+        // 关键词搜索
+        if !criteria.keyword.isEmpty {
+            clauses.append(Col.searchText.like("%\(criteria.keyword)%"))
+        }
+
+        // 分组筛选
+        if criteria.chipGroup != -1 {
+            clauses.append(Col.group == criteria.chipGroup)
+        }
+
+        // 类型筛选
+        if !criteria.selectedTypes.isEmpty {
+            var tagValues: [String] = []
+            for type in criteria.selectedTypes {
+                let value = type.tagValue
+                if !value.isEmpty {
+                    tagValues.append(value)
+                }
+            }
+            if !tagValues.isEmpty {
+                let tagCondition = tagValues.map { (Col.tag ?? "") == $0 }
+                    .reduce(Expression<Bool>(value: false)) { result, condition in
+                        result || condition
+                    }
+                clauses.append(tagCondition)
+            }
+        }
+
+        // 应用筛选
+        if !criteria.selectedAppNames.isEmpty {
+            let appCondition = criteria.selectedAppNames.map { Col.appName == $0 }
+                .reduce(Expression<Bool>(value: false)) { $0 || $1 }
+            clauses.append(appCondition)
+        }
+
+        // 日期筛选
+        if let dateFilter = criteria.selectedDateFilter {
+            let (start, end) = dateFilter.timestampRange()
+            if let endTimestamp = end {
+                let dateCondition = Col.ts >= start && Col.ts < endTimestamp
+                clauses.append(dateCondition)
+            } else {
+                let dateCondition = Col.ts >= start
+                clauses.append(dateCondition)
+            }
+        }
+
+        return clauses.reduce(nil) { partial, next in
+            if let existing = partial {
+                return existing && next
+            }
+            return next
+        }
+    }
 }
 
-// MARK: - 数据操作 对外接口
+// MARK: - 数据操作
 
 extension PasteDataStore {
-    /// 加载下一页
-    /// - Returns: 返回从0到当前页所有数据list
     func loadNextPage() {
         Task {
             guard dataList.count < totalCount else { return }
@@ -162,70 +258,28 @@ extension PasteDataStore {
             list += newItems
 
             updateData(with: list, changeType: .loadMore)
-
-            hasMoreData = newItems.count == pageSize
-
+            hasMoreData = (newItems.count == pageSize)
             isLoadingPage = false
         }
     }
 
-    func resetDefaultList() {
-        Task {
-            await resetDefaultListAsync()
-        }
-    }
-
-    private func resetDefaultListAsync() async {
+    func resetDefaultList() async {
         pageIndex = 0
         currentFilter = nil
         isInFilterMode = false
+        currentSearchKeyword = ""
         let list = await getItems(limit: pageSize, offset: pageSize * pageIndex)
         updateData(with: list)
         hasMoreData = list.count == pageSize
     }
 
-    /// 数据搜索
-    /// - Parameter keyWord: 搜索关键词
-    /// - Parameter typeFilter: 类型过滤条件，nil表示不过滤类型
-    /// - Parameter group: 自定义过滤条件，-1默认值
-    /// - Returns: 搜索结果list
-    func searchData(
-        _ keyWord: String,
-        _ typeFilter: [String]?,
-        _ group: Int,
-    ) {
+    /// 数据搜索（关键词 + 自定义分组 + 过滤视图）
+    func searchData(_ criteria: TopBarViewModel.SearchCriteria) async {
         searchTask?.cancel()
         searchTask = Task {
-            var filter: Expression<Bool>?
+            let filter = buildFilter(from: criteria)
 
-            if !keyWord.isEmpty {
-                filter =
-                    Col.appName.like("%\(keyWord)%")
-                        || Col.searchText.like("%\(keyWord)%")
-            }
-
-            if let types = typeFilter, !types.isEmpty {
-                let typeCondition = types.map { Col.type == $0 }.reduce(
-                    Expression<Bool>(value: false),
-                ) { result, condition in
-                    result || condition
-                }
-
-                if let existingFilter = filter {
-                    filter = existingFilter && typeCondition
-                } else {
-                    filter = typeCondition
-                }
-            }
-
-            if group != -1 {
-                let groupCondition = Col.group == group
-                if let existingFilter = filter {
-                    filter = existingFilter && groupCondition
-                } else {
-                    filter = groupCondition
-                }
-            }
+            currentSearchKeyword = criteria.keyword
 
             currentFilter = filter
             isInFilterMode = (filter != nil)
@@ -233,35 +287,37 @@ extension PasteDataStore {
             lastRequestedPage = 0
 
             let rows = await sqlManager.search(filter: filter, limit: pageSize)
+            try Task.checkCancellation()
+
             let result = await getItems(rows: rows)
             try Task.checkCancellation()
+
             updateData(with: result, changeType: .searchFilter)
             hasMoreData = result.count == pageSize
         }
     }
 
-    /// 增加新数据
     func addNewItem(_ item: NSPasteboard) {
         guard let model = PasteboardModel(with: item) else { return }
         insertModel(model)
         Task {
             await updateColor(model)
         }
+        invalidateAppInfoCache(model)
+        invalidateTagTypesCache(model)
     }
 
-    /// 插入数据
-    /// - Parameter model: PasteboardModel
     func insertModel(_ model: PasteboardModel) {
         Task {
             let itemId: Int64
             await itemId = sqlManager.insert(item: model)
             model.id = itemId
-            updateTotalCount()
+            await updateTotalCount()
             if lastDataChangeType == .searchFilter {
                 return
             }
             var list = dataList
-            list.removeAll(where: { $0 == model })
+            list.removeAll(where: { $0.uniqueId == model.uniqueId })
             list.insert(model, at: 0)
             hasMoreData = list.count >= pageSize
             list = Array(list.prefix(pageSize))
@@ -271,17 +327,20 @@ extension PasteDataStore {
 
     @MainActor
     func moveItemToFirst(_ model: PasteboardModel) {
-        guard let index = dataList.firstIndex(where: { $0.id == model.id })
-        else {
-            return
+        var list = dataList
+
+        if let index = list.firstIndex(where: { $0.id == model.id }) {
+            guard index != 0 else { return }
+            list.remove(at: index)
         }
 
-        guard index != 0 else { return }
-
-        var list = dataList
-        list.remove(at: index)
         list.insert(model, at: 0)
-        updateData(with: list, changeType: .reset)
+
+        if list.count > pageSize {
+            list = Array(list.prefix(pageSize))
+        }
+
+        updateData(with: list)
     }
 
     func deleteItems(_ items: PasteboardModel...) {
@@ -291,7 +350,8 @@ extension PasteDataStore {
     func deleteItems(filter: Expression<Bool>) {
         Task {
             await sqlManager.delete(filter: filter)
-            updateTotalCount()
+            await updateTotalCount()
+            invalidateTagTypesCache()
         }
     }
 
@@ -361,14 +421,151 @@ extension PasteDataStore {
         }
     }
 
+    /// 编辑更新
+    func updateItemContent(
+        id: Int64,
+        newData: Data,
+        newShowData: Data?,
+        newSearchText: String,
+        newLength: Int,
+        newTag: String
+    ) async {
+        await sqlManager.updateItemContent(
+            id: id,
+            data: newData,
+            showData: newShowData,
+            searchText: newSearchText,
+            length: newLength,
+            tag: newTag
+        )
+
+        await MainActor.run {
+            if let index = dataList.firstIndex(where: { $0.id == id }) {
+                let oldModel = dataList[index]
+                let newModel = PasteboardModel(
+                    pasteboardType: oldModel.pasteboardType,
+                    data: newData,
+                    showData: newShowData,
+                    timestamp: Int64(Date().timeIntervalSince1970),
+                    appPath: oldModel.appPath,
+                    appName: oldModel.appName,
+                    searchText: newSearchText,
+                    length: newLength,
+                    group: oldModel.group,
+                    tag: newTag
+                )
+                newModel.id = id
+                dataList.remove(at: index)
+                dataList.insert(newModel, at: 0)
+            }
+        }
+    }
+
     func updateItemGroup(itemId: Int64, groupId: Int) throws {
         Task {
             await sqlManager.updateItemGroup(
                 id: itemId,
                 groupId: groupId,
             )
-            if let model = dataList.first(where: { $0.id == itemId }), groupId != model.group {
+            if let model = dataList.first(where: { $0.id == itemId }),
+               groupId != model.group
+            {
                 model.updateGroup(val: groupId)
+            }
+        }
+    }
+
+    func getAllAppInfo() async -> [(name: String, path: String)] {
+        if let cached = cachedAppInfo {
+            return cached
+        }
+
+        let appInfo = await sqlManager.getDistinctAppInfo()
+        cachedAppInfo = appInfo
+        return appInfo
+    }
+
+    func invalidateAppInfoCache(_ model: PasteboardModel) {
+        if let index = cachedAppInfo?.firstIndex(where: {
+            $0.name == model.appName
+        }) {
+            cachedAppInfo?[index].path = model.appPath
+        } else {
+            cachedAppInfo?.append((name: model.appName, path: model.appPath))
+        }
+    }
+
+    func getAllTagTypes() async -> [PasteModelType] {
+        if let cached = cachedTagTypes {
+            return cached
+        }
+
+        let tags = await sqlManager.getDistinctTags()
+        let types = tags.compactMap { tag -> PasteModelType? in
+            switch tag {
+            case "image": return .image
+            case "string": return .string
+            case "rich": return .rich
+            case "file": return .file
+            case "link": return .link
+            case "color": return .color
+            default: return nil
+            }
+        }
+
+        var finalTypes: [PasteModelType] = []
+        let hasString = types.contains(.string)
+        let hasRich = types.contains(.rich)
+
+        if hasString || hasRich {
+            finalTypes.append(.string)
+        }
+
+        for type in types where type != .string && type != .rich {
+            if !finalTypes.contains(type) {
+                finalTypes.append(type)
+            }
+        }
+
+        let order: [PasteModelType] = [.color, .file, .image, .link, .string]
+        finalTypes.sort { type1, type2 in
+            let index1 = order.firstIndex(of: type1) ?? order.count
+            let index2 = order.firstIndex(of: type2) ?? order.count
+            return index1 < index2
+        }
+
+        cachedTagTypes = finalTypes
+        return finalTypes
+    }
+
+    func invalidateTagTypesCache(_ model: PasteboardModel? = nil) {
+        guard let model, !model.tag.isEmpty else {
+            cachedTagTypes = nil
+            return
+        }
+
+        let modelType: PasteModelType? = switch model.tag {
+        case "image": .image
+        case "string": .string
+        case "rich": .rich
+        case "file": .file
+        case "link": .link
+        case "color": .color
+        default: nil
+        }
+
+        guard let modelType else { return }
+
+        if cachedTagTypes == nil {
+            cachedTagTypes = [modelType]
+        } else if !cachedTagTypes!.contains(modelType) {
+            cachedTagTypes?.append(modelType)
+
+            let order: [PasteModelType] = [.color, .file, .image, .link, .string]
+            cachedTagTypes?.sort { type1, type2 in
+                let index1 = order.firstIndex(of: type1) ?? order.count
+                let index2 = order.firstIndex(of: type2) ?? order.count
+                return index1 < index2
             }
         }
     }
@@ -378,7 +575,7 @@ extension PasteDataStore {
 
 extension PasteDataStore {
     func updateColor(_ model: PasteboardModel) async {
-        if !colorDict.contains(where: { $0.key == model.appName }) {
+        if colorDict[model.appName] == nil {
             let iconImage = NSWorkspace.shared.icon(forFile: model.appPath)
             let hex = getAppThemeColor(for: model.appName, appIcon: iconImage)
             colorDict[model.appName] = hex
@@ -387,6 +584,8 @@ extension PasteDataStore {
     }
 
     func colorWith(_ model: PasteboardModel) -> Color {
+        let _ = chipsVersion
+
         if let chip = model.getGroupChip() {
             return chip.color
         }
@@ -483,6 +682,7 @@ extension PasteDataStore {
         }
 
         var colorGroupWeights: [ColorGroup: Float] = [:]
+        var colorGroupCache: [UInt32: ColorGroup] = [:]
 
         for (color, count) in colorCounts {
             let r = Int((color >> 16) & 0xFF)
@@ -490,6 +690,7 @@ extension PasteDataStore {
             let b = Int(color & 0xFF)
 
             let group = getColorGroup(r: r, g: g, b: b)
+            colorGroupCache[color] = group
             if group != .other {
                 colorGroupWeights[group, default: 0] += count
             }
@@ -515,7 +716,7 @@ extension PasteDataStore {
             var score = count * quality
 
             if shouldSuppressWarmColors {
-                let group = getColorGroup(r: r, g: g, b: b)
+                let group = colorGroupCache[color] ?? .other
                 switch group {
                 case .red:
                     score *= 0.1 // 红色优先级最低

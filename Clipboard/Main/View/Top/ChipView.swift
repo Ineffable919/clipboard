@@ -22,19 +22,21 @@ struct ChipView: View {
     var isSelected: Bool
     var chip: CategoryChip
 
-    @Environment(AppEnvironment.self) private var env
+    @EnvironmentObject private var env: AppEnvironment
     @Environment(\.colorScheme) private var colorScheme
+
     @AppStorage(PrefKey.backgroundType.rawValue)
     private var backgroundTypeRaw: Int = 0
+
+    @FocusState.Binding var focus: FocusField?
+    @Bindable var topBarVM: TopBarViewModel
     @State private var isTypeHovered: Bool = false
     @State private var isDropTargeted: Bool = false
-    @State private var syncingFocus = false
-    @FocusState private var isTextFieldFocused: Bool
 
     private var pd: PasteDataStore { PasteDataStore.main }
 
     private var isEditing: Bool {
-        env.chipVM.editingChipId == chip.id
+        topBarVM.editingChipId == chip.id
     }
 
     var body: some View {
@@ -48,7 +50,8 @@ struct ChipView: View {
         .contextMenu {
             if !chip.isSystem {
                 Button {
-                    env.chipVM.startEditingChip(chip)
+                    topBarVM.startEditingChip(chip)
+                    env.focusView = .editChip
                 } label: {
                     Label("编辑", systemImage: "pencil")
                 }
@@ -81,7 +84,7 @@ struct ChipView: View {
                 if #available(macOS 15.0, *) {
                     Image(
                         systemName:
-                        "clock.arrow.trianglehead.counterclockwise.rotate.90"
+                        "clock.arrow.trianglehead.counterclockwise.rotate.90",
                     )
                 } else {
                     Image("clock.arrow.trianglehead.counterclockwise.rotate.90")
@@ -90,17 +93,19 @@ struct ChipView: View {
                 Circle()
                     .fill(chip.color)
                     .frame(width: Const.space12, height: Const.space12)
+                    .padding(Const.space2)
             }
-            Text(chip.name)
-                .font(.body)
+            if focusHistory() {
+                Text(chip.name)
+            }
         }
         .padding(
             EdgeInsets(
-                top: Const.space4,
+                top: Const.space6,
                 leading: Const.space10,
-                bottom: Const.space4,
-                trailing: Const.space10
-            )
+                bottom: Const.space6,
+                trailing: Const.space10,
+            ),
         )
         .background {
             overlayColor()
@@ -109,101 +114,77 @@ struct ChipView: View {
         .onHover { hovering in
             isTypeHovered = hovering
         }
+        .help(chip.id == 1 ? "\(PasteDataStore.main.totalCount)条" : "")
     }
 
     private var editingView: some View {
-        @Bindable var chipVM = env.chipVM
-        return HStack(spacing: Const.space8) {
-            Circle()
-                .fill(chipVM.editingChipColor)
-                .frame(width: Const.space12, height: Const.space12)
-                .onTapGesture {
-                    chipVM.cycleEditingChipColor()
-                }
-
-            TextField("", text: $chipVM.editingChipName)
-                .textFieldStyle(.plain)
-                .font(.body)
-                .focused($isTextFieldFocused)
-                .onSubmit {
-                    env.chipVM.commitEditingChip()
-                }
-                .frame(minWidth: 54)
-        }
-        .padding(
-            EdgeInsets(
-                top: Const.space4,
-                leading: Const.space10,
-                bottom: Const.space4,
-                trailing: Const.space10
-            )
-        ).background(
-            RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
-                .fill(Color.secondary.opacity(0.08)),
-        )
-        .contentShape(
-            RoundedRectangle(cornerRadius: Const.radius, style: .continuous),
-        )
-        .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) {
-                env.focusView = .editChip
-                isTextFieldFocused = true
-            }
-        }
-        .onChange(of: isTextFieldFocused) { _, isFocused in
-            guard !syncingFocus else { return }
-            syncingFocus = true
-            if isFocused {
-                env.focusView = .editChip
-            } else if env.focusView == .editChip {
+        ChipEditorView(
+            name: $topBarVM.editingChipName,
+            color: $topBarVM.editingChipColor,
+            focus: $focus,
+            focusValue: .editChip,
+            onSubmit: {
+                topBarVM.commitEditingChip()
                 env.focusView = .history
+            },
+            onCycleColor: {
+                topBarVM.cycleEditingChipColor()
+            },
+        )
+        .onChange(of: env.focusView) {
+            if env.focusView != .editChip {
+                topBarVM.commitEditingChip()
             }
-            syncingFocus = false
-        }
-        .onChange(of: env.focusView) { _, newFocus in
-            guard !syncingFocus else { return }
-            syncingFocus = true
-            if newFocus == .editChip, !isTextFieldFocused {
-                DispatchQueue.main.async {
-                    isTextFieldFocused = true
-                }
-            } else if newFocus != .editChip, isTextFieldFocused {
-                isTextFieldFocused = false
-            }
-            syncingFocus = false
         }
     }
 
     @ViewBuilder
     private func overlayColor() -> some View {
+        if !focusHistory() {
+            Color.clear
+        } else {
+            overlayColorForHistory()
+        }
+    }
+
+    private func overlayColorForHistory() -> Color {
         let backgroundType =
             BackgroundType(rawValue: backgroundTypeRaw) ?? .liquid
+
         if isSelected {
-            if #available(macOS 26.0, *) {
-                colorScheme == .dark
-                    ? Const.chooseDarkColor
-                    : (backgroundType == .liquid
-                        ? Const.chooseLightColorLiquid
-                        : Const.chooseLightColorFrosted)
-            } else {
-                colorScheme == .dark
-                    ? Const.chooseDarkColor
-                    : Const.chooseLightColorFrostedLow
-            }
+            return selectedColor(backgroundType: backgroundType)
         } else if isDropTargeted || isTypeHovered {
-            if #available(macOS 26.0, *) {
-                colorScheme == .dark
-                    ? Const.hoverDarkColor
-                    : (backgroundType == .liquid
-                        ? Const.hoverLightColorLiquid
-                        : Const.hoverLightColorFrosted)
-            } else {
-                colorScheme == .dark
-                    ? Const.hoverDarkColor
-                    : Const.hoverLightColorFrostedLow
-            }
+            return hoverColor(backgroundType: backgroundType)
         } else {
-            Color.clear
+            return Color.clear
+        }
+    }
+
+    private func selectedColor(backgroundType: BackgroundType) -> Color {
+        if colorScheme == .dark {
+            return Const.chooseDarkColor
+        }
+
+        if #available(macOS 26.0, *) {
+            return backgroundType == .liquid
+                ? Const.chooseLightColorLiquid
+                : Const.chooseLightColorFrosted
+        } else {
+            return Const.chooseLightColorFrostedLow
+        }
+    }
+
+    private func hoverColor(backgroundType: BackgroundType) -> Color {
+        if colorScheme == .dark {
+            return Const.hoverDarkColor
+        }
+
+        if #available(macOS 26.0, *) {
+            return backgroundType == .liquid
+                ? Const.hoverLightColorLiquid
+                : Const.hoverLightColorFrosted
+        } else {
+            return Const.hoverLightColorFrostedLow
         }
     }
 
@@ -232,6 +213,11 @@ struct ChipView: View {
         return true
     }
 
+    private func focusHistory() -> Bool {
+        !topBarVM.hasInput && env.focusView != .search
+            && env.focusView != .filter
+    }
+
     private func showDelAlert(_ chip: CategoryChip) {
         let alert = NSAlert()
         alert.messageText = "删除『\(chip.name)』？"
@@ -251,7 +237,7 @@ struct ChipView: View {
                 return
             }
 
-            env.chipVM.removeChip(chip)
+            topBarVM.removeChip(chip)
         }
 
         if #available(macOS 26.0, *) {
@@ -269,10 +255,25 @@ struct ChipView: View {
 }
 
 #Preview {
-    let chipVM = ChipBarViewModel()
-    ChipView(
-        isSelected: true,
-        chip: chipVM.chips[0]
-    )
-    .frame(width: 128, height: 32)
+    @Previewable @State var topBarVM = TopBarViewModel()
+    @Previewable @StateObject var env = AppEnvironment()
+
+    ChipViewPreviewWrapper(topBarVM: topBarVM, env: env)
+}
+
+private struct ChipViewPreviewWrapper: View {
+    var topBarVM: TopBarViewModel
+    var env: AppEnvironment
+    @FocusState private var focus: FocusField?
+
+    var body: some View {
+        ChipView(
+            isSelected: true,
+            chip: topBarVM.chips[0],
+            focus: $focus,
+            topBarVM: topBarVM,
+        )
+        .environmentObject(env)
+        .frame(width: 128, height: 32)
+    }
 }

@@ -16,77 +16,64 @@ struct PreviewPopoverView: View {
 
     let model: PasteboardModel
 
-    @Environment(AppEnvironment.self) private var env
+    @EnvironmentObject private var env: AppEnvironment
     @AppStorage(PrefKey.enableLinkPreview.rawValue)
     private var enableLinkPreview: Bool = PasteUserDefaults.enableLinkPreview
 
+    // MARK: - 属性
+
+    private var appIcon: NSImage? {
+        guard !model.appPath.isEmpty else { return nil }
+        return NSWorkspace.shared.icon(forFile: model.appPath)
+    }
+
+    private var cachedDataString: String? {
+        String(data: model.data, encoding: .utf8)
+    }
+
+    private var cachedDefaultBrowserName: String? {
+        guard let appURL = NSWorkspace.shared.urlForApplication(toOpen: .html),
+              let bundle = Bundle(url: appURL)
+        else { return nil }
+        return bundle.object(forInfoDictionaryKey: "CFBundleDisplayName")
+            as? String
+            ?? bundle.object(forInfoDictionaryKey: "CFBundleName") as? String
+    }
+
+    private var cachedDefaultAppForFile: String? {
+        guard model.type == .file,
+              model.fileSize() == 1,
+              let fileUrl = model.cachedFilePaths?.first
+        else { return nil }
+        let url = URL(fileURLWithPath: fileUrl)
+        guard let appURL = NSWorkspace.shared.urlForApplication(toOpen: url),
+              let bundle = Bundle(url: appURL)
+        else { return nil }
+        return bundle.object(forInfoDictionaryKey: "CFBundleDisplayName")
+            as? String
+            ?? bundle.object(forInfoDictionaryKey: "CFBundleName") as? String
+    }
+
     var body: some View {
         FocusableContainer(onInteraction: {
-            env.focusView = .popover
-        }) {
-            contentView
-        }
-        .onDisappear {
-            env.focusView = .history
-        }
+            Task { @MainActor in
+                env.focusView = .popover
+            }
+        }) { contentView }
+            .onDisappear {
+                if env.focusView != .search {
+                    env.focusView = .history
+                }
+            }
     }
 
     private var contentView: some View {
         VStack(alignment: .leading, spacing: Const.space12) {
-            HStack {
-                if let appIcon {
-                    Image(nsImage: appIcon)
-                        .resizable()
-                        .frame(width: 20, height: 20)
-                }
-
-                Text(model.appName)
-                    .font(.body)
-
-                Spacer()
-
-                Text(model.type.string)
-                    .font(.body)
-            }
-
+            headerView
             previewContent
-                .cornerRadius(Const.radius)
+                .clipShape(.rect(cornerRadius: Const.radius))
                 .shadow(radius: 0.5)
-
-            HStack {
-                Text(model.introString())
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .lineLimit(2)
-                    .truncationMode(.head)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.bottom, Const.space4)
-                    .frame(
-                        maxWidth: Const.maxPreviewWidth - 128,
-                        alignment: .topLeading
-                    )
-
-                Spacer()
-
-                if model.type == .file, model.fileSize() == 1 {
-                    BorderedButton(title: "在访达中显示") {
-                        withAnimation {
-                            openInFinder()
-                        }
-                    }
-                }
-
-                if model.url != nil,
-                   enableLinkPreview,
-                   let browserName = getDefaultBrowserName()
-                {
-                    BorderedButton(title: "使用 \(browserName) 打开") {
-                        withAnimation {
-                            openInBrowser()
-                        }
-                    }
-                }
-            }
+            footerView
         }
         .padding(Const.space12)
         .frame(
@@ -97,48 +84,116 @@ struct PreviewPopoverView: View {
         )
     }
 
-    private func openInFinder() {
-        if let filePath = String(data: model.data, encoding: .utf8) {
-            NSWorkspace.shared.selectFile(
-                filePath,
-                inFileViewerRootedAtPath: "",
-            )
+    // MARK: - 子视图
+
+    private var headerView: some View {
+        HStack {
+            if let appIcon {
+                Image(nsImage: appIcon)
+                    .resizable()
+                    .frame(width: 20, height: 20)
+            }
+
+            Text(model.appName)
+
+            Spacer()
+
+            if model.pasteboardType.isText() {
+                BorderedButton(title: "编辑", action: openEditWindow)
+            }
+
+            if let fileUrl = model.cachedFilePaths?.first,
+               let defaultApp = cachedDefaultAppForFile
+            {
+                BorderedButton(title: "通过 \(defaultApp) 打开") {
+                    NSWorkspace.shared.open(URL(fileURLWithPath: fileUrl))
+                }
+            }
         }
     }
 
-    func getDefaultBrowserName() -> String? {
-        if let appURL = NSWorkspace.shared.urlForApplication(toOpen: .html),
-           let bundle = Bundle(url: appURL)
-        {
-            return bundle.object(forInfoDictionaryKey: "CFBundleDisplayName")
-                as? String ?? bundle.object(
-                    forInfoDictionaryKey: "CFBundleName",
-                ) as? String
+    private var shouldShowStatistics: Bool {
+        if model.type == .link, enableLinkPreview, model.isLink {
+            return false
         }
-        return nil
+        return model.pasteboardType.isText()
+    }
+
+    private var textStatistics: TextStatistics {
+        let fullText: String =
+            if let attr = NSAttributedString(
+                with: model.data,
+                type: model.pasteboardType
+            ) {
+                attr.string
+            } else {
+                String(data: model.data, encoding: .utf8) ?? ""
+            }
+        return TextStatistics(from: fullText)
+    }
+
+    private var footerView: some View {
+        HStack {
+            if shouldShowStatistics {
+                Text(textStatistics.displayString)
+                    .font(.callout)
+            } else {
+                Text(model.introString())
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .truncationMode(.head)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.bottom, Const.space4)
+                    .frame(
+                        maxWidth: Const.maxPreviewWidth - 128,
+                        alignment: .topLeading,
+                    )
+            }
+            Spacer()
+
+            if model.type == .file, model.fileSize() == 1 {
+                BorderedButton(title: "在访达中显示", action: openInFinder)
+            }
+
+            if model.type == .link,
+               enableLinkPreview,
+               let browserName = cachedDefaultBrowserName
+            {
+                BorderedButton(
+                    title: "使用 \(browserName) 打开",
+                    action: openInBrowser
+                )
+            }
+        }
+    }
+
+    // MARK: - Actions
+
+    private func openInFinder() {
+        guard let filePath = cachedDataString else { return }
+        NSWorkspace.shared.selectFile(filePath, inFileViewerRootedAtPath: "")
     }
 
     private func openInBrowser() {
-        if let url = model.url {
-            NSWorkspace.shared.open(url)
+        guard let url = model.attributeString.string.asCompleteURL() else {
+            return
         }
+        NSWorkspace.shared.open(url)
     }
+
+    private func openEditWindow() {
+        EditWindowController.shared.openWindow(with: model)
+    }
+
+    // MARK: - Preview Content
 
     @ViewBuilder
     private var previewContent: some View {
         switch model.type {
         case .link:
-            if enableLinkPreview {
-                if #available(macOS 26.0, *) {
-                    WebContentView(url: model.url!)
-                } else {
-                    UIWebView(url: model.url!)
-                }
-            } else {
-                textPreview
-            }
+            linkPreview
         case .color:
-            CSSView(model: model)
+            colorPreview
         case .string:
             textPreview
         case .rich:
@@ -148,14 +203,38 @@ struct PreviewPopoverView: View {
         case .file:
             filePreview
         case .none:
-            Text("无预览内容")
-                .font(.callout)
-                .foregroundColor(.secondary)
-                .frame(
-                    width: PreviewPopoverView.defaultWidth,
-                    height: PreviewPopoverView.defaultHeight,
-                    alignment: .center,
-                )
+            emptyPreview
+        }
+    }
+
+    @ViewBuilder
+    private var linkPreview: some View {
+        if enableLinkPreview, model.isLink,
+           let url = model.attributeString.string.asCompleteURL()
+        {
+            if #available(macOS 26.0, *) {
+                WebContentView(url: url)
+            } else {
+                UIWebView(url: url)
+            }
+        } else {
+            textPreview
+        }
+    }
+
+    @ViewBuilder
+    private var colorPreview: some View {
+        if let hex = cachedDataString {
+            VStack(alignment: .center) {
+                Text(hex)
+                    .font(.title2)
+            }
+            .frame(
+                maxWidth: Const.maxPreviewWidth,
+                maxHeight: Const.maxPreviewHeight,
+                alignment: .center,
+            )
+            .background(Color(nsColor: NSColor(hex: hex)))
         }
     }
 
@@ -170,18 +249,16 @@ struct PreviewPopoverView: View {
         } else {
             ZStack {
                 Color(nsColor: .controlBackgroundColor)
-                ScrollView(.vertical, showsIndicators: true) {
-                    Text(String(data: model.data, encoding: .utf8) ?? "")
+                ScrollView(.vertical) {
+                    Text(cachedDataString ?? "")
                         .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(Const.space8)
                 }
+                .scrollIndicators(.hidden)
                 .scrollContentBackground(.hidden)
             }
-            .frame(
-                maxWidth: Const.maxPreviewWidth,
-                alignment: .topLeading,
-            )
+            .frame(maxWidth: Const.maxPreviewWidth, alignment: .topLeading)
         }
     }
 
@@ -196,72 +273,47 @@ struct PreviewPopoverView: View {
         } else {
             ZStack {
                 model.backgroundColor
-                ScrollView(.vertical, showsIndicators: true) {
-                    VStack(alignment: .leading) {
-                        if model.hasBgColor {
-                            Text(
-                                AttributedString(
-                                    NSAttributedString(
-                                        with: model.data,
-                                        type: model.pasteboardType,
-                                    )!,
-                                ),
-                            )
-                            .textSelection(.enabled)
-                        } else {
-                            Text(model.attributeString.string)
-                                .foregroundStyle(.primary)
-                                .textSelection(.enabled)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(Const.space8)
+                ScrollView(.vertical) {
+                    richTextContent
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(Const.space8)
                 }
+                .scrollIndicators(.hidden)
                 .scrollContentBackground(.hidden)
             }
-            .frame(
-                maxWidth: Const.maxPreviewWidth,
-                alignment: .topLeading,
-            )
+            .frame(maxWidth: Const.maxPreviewWidth, alignment: .topLeading)
+        }
+    }
+
+    @ViewBuilder
+    private var richTextContent: some View {
+        let attr =
+            NSAttributedString(
+                with: model.data,
+                type: model.pasteboardType
+            ) ?? NSAttributedString()
+        if model.hasBgColor {
+            Text(AttributedString(attr))
+                .textSelection(.enabled)
+        } else {
+            Text(attr.string)
+                .foregroundStyle(.primary)
+                .textSelection(.enabled)
         }
     }
 
     @ViewBuilder
     private var imagePreview: some View {
-        if let image = NSImage(data: model.data) {
-            ZStack {
-                CheckerboardBackground()
-                Image(nsImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(
-                        maxWidth: Const.maxPreviewWidth,
-                        maxHeight: Const.maxPreviewWidth,
-                    )
-            }
-        } else {
-            Image(systemName: "photo")
-                .resizable()
-                .font(.largeTitle)
-                .foregroundColor(Color.accentColor.opacity(0.8))
-                .frame(width: 144, height: 144, alignment: .center)
-        }
+        PreviewImageView(model: model)
     }
 
     @ViewBuilder
     private var filePreview: some View {
-        VStack(alignment: .leading, spacing: Const.space8) {
-            if let filePaths = String(data: model.data, encoding: .utf8) {
-                let paths = filePaths.split(separator: "\n")
-                    .map {
-                        String($0).trimmingCharacters(
-                            in: .whitespacesAndNewlines,
-                        )
-                    }
-                    .filter { !$0.isEmpty }
-                if paths.count == 1 {
+        Group {
+            if let paths = model.cachedFilePaths, !paths.isEmpty {
+                if paths.count == 1, let firstPath = paths.first {
                     QuickLookPreview(
-                        url: URL(fileURLWithPath: paths.first!),
+                        url: URL(fileURLWithPath: firstPath),
                         maxWidth: Const.maxPreviewWidth - 32,
                         maxHeight: Const.maxContentHeight,
                     )
@@ -276,17 +328,55 @@ struct PreviewPopoverView: View {
         }
         .frame(
             width: Const.maxPreviewWidth - 32,
-            height: Const.maxContentHeight
+            height: Const.maxContentHeight,
         )
     }
 
-    private var appIcon: NSImage? {
-        guard !model.appPath.isEmpty else { return nil }
-        return NSWorkspace.shared.icon(forFile: model.appPath)
+    private var emptyPreview: some View {
+        Text("无预览内容")
+            .font(.callout)
+            .foregroundStyle(.secondary)
+            .frame(
+                width: PreviewPopoverView.defaultWidth,
+                height: PreviewPopoverView.defaultHeight,
+                alignment: .center,
+            )
     }
 }
 
-// MARK: - BorderedButton with Hover Effect
+private struct PreviewImageView: View {
+    let model: PasteboardModel
+    @State private var image: NSImage?
+
+    var body: some View {
+        Group {
+            if let image {
+                ZStack {
+                    CheckerboardBackground()
+                    Image(nsImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(
+                            maxWidth: Const.maxPreviewWidth,
+                            maxHeight: Const.maxPreviewWidth,
+                        )
+                }
+            } else {
+                Image(systemName: "photo")
+                    .resizable()
+                    .font(.largeTitle)
+                    .frame(
+                        width: Const.minPreviewWidth,
+                        height: Const.minPreviewHeight,
+                        alignment: .center
+                    )
+            }
+        }
+        .task {
+            image = await model.loadThumbnail()
+        }
+    }
+}
 
 struct BorderedButton: View {
     let title: String
@@ -302,8 +392,9 @@ struct BorderedButton: View {
                 .font(.system(size: Const.space12, weight: .light))
                 .foregroundStyle(scheme == .dark ? .white : .black)
         }
+        .focusable(false)
         .buttonStyle(.borderless)
-        .padding(.horizontal, Const.space8)
+        .padding(.horizontal, Const.space10)
         .padding(.vertical, Const.space4)
         .background(
             RoundedRectangle(cornerRadius: Const.radius)
@@ -336,7 +427,7 @@ struct FocusableContainer<Content: View>: NSViewRepresentable {
     func makeNSView(context _: Context) -> NSHostingView<Content> {
         let hostingView = InterceptingHostingView(
             rootView: content,
-            onInteraction: onInteraction
+            onInteraction: onInteraction,
         )
         return hostingView
     }
@@ -391,6 +482,7 @@ class InterceptingHostingView<Content: View>: NSHostingView<Content> {
             searchText: "",
             length: 0,
             group: -1,
+            tag: "string",
         ),
     )
     .frame(width: 800, height: 600)

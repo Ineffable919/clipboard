@@ -21,6 +21,7 @@ enum Col {
     static let searchText = Expression<String>("search_text")
     static let length = Expression<Int>("length")
     static let group = Expression<Int>("group")
+    static let tag = Expression<String?>("tag")
 }
 
 final class PasteSQLManager: NSObject {
@@ -83,20 +84,43 @@ final class PasteSQLManager: NSObject {
             t.column(Col.searchText)
             t.column(Col.length)
             t.column(Col.group, defaultValue: -1)
+            t.column(Col.tag)
         }
         do {
             try db?.run(stateMent)
+            createIndexesAsync()
+            migrateTagFieldAsync()
         } catch {
             log.error("Create Table Error: \(error)")
         }
         return tab
     }()
+
+    private func createIndexesAsync() {
+        Task.detached(priority: .background) { [weak self] in
+            await self?.performIndexCreation()
+        }
+    }
+
+    private func performIndexCreation() {
+        guard let db else { return }
+
+        do {
+            try db.run("CREATE INDEX IF NOT EXISTS idx_app_name ON Clip(app_name)")
+            try db.run("CREATE INDEX IF NOT EXISTS idx_tag ON Clip(tag)")
+            try db.run("CREATE INDEX IF NOT EXISTS idx_ts ON Clip(timestamp DESC)")
+            try db.run("CREATE INDEX IF NOT EXISTS idx_group ON Clip(\"group\")")
+            log.info("索引初始化成功")
+        } catch {
+            log.debug("索引已存在或创建失败: \(error)")
+        }
+    }
 }
 
 // MARK: - 数据库操作 对外接口
 
 extension PasteSQLManager {
-    var totalCount: Int {
+    func getTotalCount() async -> Int {
         do {
             return try db?.scalar(table.count) ?? 0
         } catch {
@@ -119,6 +143,7 @@ extension PasteSQLManager {
             Col.searchText <- item.searchText,
             Col.length <- item.length,
             Col.group <- item.group,
+            Col.tag <- item.tag,
         )
         do {
             let rowId = try db?.run(insert)
@@ -161,6 +186,7 @@ extension PasteSQLManager {
             Col.searchText <- item.searchText,
             Col.length <- item.length,
             Col.group <- item.group,
+            Col.tag <- item.tag,
         )
         do {
             let count = try db?.run(update)
@@ -182,6 +208,33 @@ extension PasteSQLManager {
         }
     }
 
+    /// 编辑更新
+    func updateItemContent(
+        id: Int64,
+        data: Data,
+        showData: Data?,
+        searchText: String,
+        length: Int,
+        tag: String
+    ) async {
+        let query = table.filter(Col.id == id)
+        let timestamp = Int64(Date().timeIntervalSince1970)
+        let update = query.update(
+            Col.data <- data,
+            Col.showData <- showData,
+            Col.searchText <- searchText,
+            Col.length <- length,
+            Col.tag <- tag,
+            Col.ts <- timestamp
+        )
+        do {
+            let count = try db?.run(update)
+            log.debug("更新文本内容成功，影响行数：\(String(describing: count))")
+        } catch {
+            log.error("更新文本内容失败：\(error)")
+        }
+    }
+
     // 查
     func search(
         filter: Expression<Bool>? = nil,
@@ -197,6 +250,7 @@ extension PasteSQLManager {
                 Col.id, Col.type, Col.data, Col.ts,
                 Col.appPath, Col.appName, Col.searchText,
                 Col.showData, Col.length, Col.group,
+                Col.tag,
             ]
         let ord = order ?? [Col.ts.desc]
 
@@ -213,5 +267,177 @@ extension PasteSQLManager {
             log.error("查询失败：\(error)")
             return []
         }
+    }
+
+    func getDistinctAppNames() async -> [String] {
+        do {
+            let query = table.select(distinct: Col.appName)
+                .order(Col.appName.asc)
+
+            var appNames: [String] = []
+            if let result = try db?.prepare(query) {
+                for row in result {
+                    if let appName = try? row.get(Col.appName), !appName.isEmpty {
+                        appNames.append(appName)
+                    }
+                }
+            }
+            return appNames
+        } catch {
+            log.error("获取应用名称列表失败：\(error)")
+            return []
+        }
+    }
+
+    func getDistinctAppInfo() async -> [(name: String, path: String)] {
+        do {
+            var appInfo: [(name: String, path: String)] = []
+
+            let sql = """
+            SELECT app_name, app_path FROM Clip
+            WHERE id IN (
+                SELECT MAX(id) FROM Clip
+                WHERE app_name != ''
+                GROUP BY app_name
+            )
+            ORDER BY (
+                SELECT MAX(timestamp) FROM Clip c2
+                WHERE c2.app_name = Clip.app_name
+            ) DESC
+            """
+
+            if let result = try db?.prepare(sql) {
+                for row in result {
+                    if let appName = row[0] as? String,
+                       let appPath = row[1] as? String,
+                       !appName.isEmpty
+                    {
+                        appInfo.append((name: appName, path: appPath))
+                    }
+                }
+            }
+            return appInfo
+        } catch {
+            log.error("获取应用信息列表失败：\(error)")
+            return []
+        }
+    }
+
+    func getDistinctTags() async -> [String] {
+        do {
+            var tags: Set<String> = []
+            let query = table.select(distinct: Col.tag)
+                .filter(Col.tag != nil)
+
+            if let result = try db?.prepare(query) {
+                for row in result {
+                    if let tag = try? row.get(Col.tag),
+                       !tag.isEmpty
+                    {
+                        tags.insert(tag)
+                    }
+                }
+            }
+            return Array(tags).sorted()
+        } catch {
+            log.error("获取 tag 列表失败：\(error)")
+            return []
+        }
+    }
+}
+
+// MARK: - 数据迁移
+
+extension PasteSQLManager {
+    func migrateTagFieldAsync() {
+        guard !PasteUserDefaults.tagFieldMigrated else {
+            log.debug("数据已迁移，跳过")
+            return
+        }
+
+        Task.detached(priority: .background) { [weak self] in
+            guard let self else { return }
+
+            await performTagMigration()
+
+            await MainActor.run {
+                PasteUserDefaults.tagFieldMigrated = true
+                log.info("数据迁移完成")
+            }
+        }
+    }
+
+    private func performTagMigration() async {
+        log.info("开始迁移 tag 字段数据")
+
+        guard let db else {
+            log.error("数据库未初始化，跳过")
+            return
+        }
+
+        do {
+            try db.run("ALTER TABLE Clip ADD COLUMN tag TEXT")
+        } catch {
+            log.warn("新增 tag 字段失败: \(error)")
+        }
+
+        let batchSize = 500
+        var totalMigrated = 0
+
+        while true {
+            guard !Task.isCancelled else {
+                log.warn("迁移任务被取消")
+                break
+            }
+
+            let query = table
+                .filter(Col.tag == nil)
+                .limit(batchSize, offset: 0)
+
+            do {
+                let rows = try db.prepare(query)
+                let rowsArray = Array(rows)
+
+                if rowsArray.isEmpty {
+                    break
+                }
+
+                try db.transaction {
+                    for row in rowsArray {
+                        autoreleasepool {
+                            let id = row[Col.id]
+                            let typeStr = row[Col.type]
+                            let data = row[Col.data]
+
+                            let pasteboardType = PasteboardType(typeStr)
+                            let tagValue = PasteboardModel.calculateTag(
+                                type: pasteboardType,
+                                content: data,
+                            )
+
+                            let update = table.filter(Col.id == id)
+                                .update(Col.tag <- tagValue)
+
+                            do {
+                                try db.run(update)
+                            } catch {
+                                log.error("更新记录 \(id) 的 tag 失败: \(error)")
+                            }
+                        }
+                    }
+                }
+
+                totalMigrated += rowsArray.count
+                log.debug("已迁移 \(totalMigrated) 条记录")
+
+                try await Task.sleep(for: .milliseconds(500))
+
+            } catch {
+                log.error("迁移批次失败: \(error)")
+                break
+            }
+        }
+
+        log.info("tag 字段数据迁移完成，共迁移 \(totalMigrated) 条记录")
     }
 }

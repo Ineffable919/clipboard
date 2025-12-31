@@ -14,12 +14,11 @@ class AppDelegate: NSObject {
     static var shared: AppDelegate?
 
     // Sparkle
-    let updaterController: SPUStandardUpdaterController =
-        .init(
-            startingUpdater: true,
-            updaterDelegate: nil,
-            userDriverDelegate: nil,
-        )
+    lazy var updaterController: SPUStandardUpdaterController = .init(
+        startingUpdater: true,
+        updaterDelegate: self,
+        userDriverDelegate: nil
+    )
 
     private var menuBarItem: NSStatusItem?
 
@@ -29,36 +28,139 @@ class AppDelegate: NSObject {
         let item1 = NSMenuItem(
             title: "偏好设置",
             action: #selector(settingsAction),
-            keyEquivalent: ",",
+            keyEquivalent: ","
         )
         item1.image = NSImage(
             systemSymbolName: "gearshape",
-            accessibilityDescription: nil,
+            accessibilityDescription: nil
         )
         menu.addItem(item1)
 
-        let item3 = NSMenuItem(
+        let item2 = NSMenuItem(
             title: "检查更新",
             action: #selector(checkUpdate),
-            keyEquivalent: "",
+            keyEquivalent: ""
         )
-        item3.image = NSImage(
+        item2.image = NSImage(
             systemSymbolName: "arrow.clockwise",
-            accessibilityDescription: nil,
-        )
-        menu.addItem(item3)
-
-        menu.addItem(NSMenuItem.separator())
-
-        let item2 = NSMenuItem(
-            title: "退出",
-            action: #selector(NSApplication.shared.terminate),
-            keyEquivalent: "q",
+            accessibilityDescription: nil
         )
         menu.addItem(item2)
 
+        menu.addItem(NSMenuItem.separator())
+
+        let pauseItem = NSMenuItem(
+            title: "暂停",
+            action: nil,
+            keyEquivalent: ""
+        )
+        pauseItem.image = NSImage(
+            systemSymbolName: "pause.circle",
+            accessibilityDescription: nil
+        )
+        pauseItem.submenu = createPauseSubmenu()
+        menu.addItem(pauseItem)
+
+        let item3 = NSMenuItem(
+            title: "退出",
+            action: #selector(NSApplication.shared.terminate),
+            keyEquivalent: "q"
+        )
+        menu.addItem(item3)
+
+        menu.delegate = self
+
         return menu
     }()
+
+    private func createPauseSubmenu() -> NSMenu {
+        let submenu = NSMenu()
+        let isPaused = PasteBoard.main.isPaused
+
+        if isPaused {
+            let resumeItem = NSMenuItem(
+                title: "恢复",
+                action: #selector(resumePasteboard),
+                keyEquivalent: ""
+            )
+            resumeItem.image = NSImage(
+                systemSymbolName: "play.circle",
+                accessibilityDescription: nil
+            )
+            submenu.addItem(resumeItem)
+            submenu.addItem(NSMenuItem.separator())
+        } else {
+            let pauseIndefinite = NSMenuItem(
+                title: "暂停",
+                action: #selector(pauseIndefinitely),
+                keyEquivalent: ""
+            )
+            pauseIndefinite.image = NSImage(
+                systemSymbolName: "pause.circle",
+                accessibilityDescription: nil
+            )
+            submenu.addItem(pauseIndefinite)
+
+            submenu.addItem(NSMenuItem.separator())
+        }
+
+        let pause15 = NSMenuItem(
+            title: "暂停 15 分钟",
+            action: #selector(pause15Minutes),
+            keyEquivalent: ""
+        )
+        pause15.image = NSImage(
+            systemSymbolName: "15.circle",
+            accessibilityDescription: nil
+        )
+        submenu.addItem(pause15)
+
+        let pause30 = NSMenuItem(
+            title: "暂停 30 分钟",
+            action: #selector(pause30Minutes),
+            keyEquivalent: ""
+        )
+        pause30.image = NSImage(
+            systemSymbolName: "30.circle",
+            accessibilityDescription: nil
+        )
+        submenu.addItem(pause30)
+
+        let pause1h = NSMenuItem(
+            title: "暂停 1 小时",
+            action: #selector(pause1Hour),
+            keyEquivalent: ""
+        )
+        pause1h.image = NSImage(
+            systemSymbolName: "1.circle",
+            accessibilityDescription: nil
+        )
+        submenu.addItem(pause1h)
+
+        let pause3h = NSMenuItem(
+            title: "暂停 3 小时",
+            action: #selector(pause3Hours),
+            keyEquivalent: ""
+        )
+        pause3h.image = NSImage(
+            systemSymbolName: "3.circle",
+            accessibilityDescription: nil
+        )
+        submenu.addItem(pause3h)
+
+        let pause8h = NSMenuItem(
+            title: "暂停 8 小时",
+            action: #selector(pause8Hours),
+            keyEquivalent: ""
+        )
+        pause8h.image = NSImage(
+            systemSymbolName: "8.circle",
+            accessibilityDescription: nil
+        )
+        submenu.addItem(pause8h)
+
+        return submenu
+    }
 
     private lazy var clipWinController = ClipMainWindowController.shared
     private lazy var settingWinController = SettingWindowController.shared
@@ -67,9 +169,14 @@ class AppDelegate: NSObject {
 extension AppDelegate: NSApplicationDelegate {
     func applicationDidFinishLaunching(_: Notification) {
         Self.shared = self
-        initClipboard()
-        syncLaunchAtLoginStatus()
+
+        initStatus()
+
         applyAppearanceSettings()
+
+        Task {
+            await initClipboardAsync()
+        }
     }
 
     func applicationSupportsSecureRestorableState(_: NSApplication) -> Bool {
@@ -82,44 +189,41 @@ extension AppDelegate: NSApplicationDelegate {
     }
 
     private func applyAppearanceSettings() {
-        let appearanceMode =
-            AppearanceMode(
-                rawValue: PasteUserDefaults.appearance,
-            ) ?? .system
+        let appearanceMode = AppearanceMode(
+            rawValue: PasteUserDefaults.appearance,
+        ) ?? .system
 
-        DispatchQueue.main.async {
-            switch appearanceMode {
-            case .system:
-                NSApp.appearance = nil
-            case .light:
-                NSApp.appearance = NSAppearance(named: .aqua)
-            case .dark:
-                NSApp.appearance = NSAppearance(named: .darkAqua)
-            }
+        switch appearanceMode {
+        case .system:
+            NSApp.appearance = nil
+        case .light:
+            NSApp.appearance = NSAppearance(named: .aqua)
+        case .dark:
+            NSApp.appearance = NSAppearance(named: .darkAqua)
         }
     }
 }
 
 extension AppDelegate {
-    private func initClipboard() {
-        initStatus()
-
+    private func initClipboardAsync() async {
         PasteBoard.main.startListening()
 
         PasteDataStore.main.setup()
 
+        initEvent()
+
         HotKeyManager.shared.initialize()
 
-        DispatchQueue.main.async { [weak self] in
-            FileAccessHelper.shared.restoreAllAccesses()
-            self?.initEvent()
+        syncLaunchAtLoginStatus()
+
+        Task.detached(priority: .utility) {
+            await FileAccessHelper.shared.restoreAllAccesses()
         }
     }
 
     private func syncLaunchAtLoginStatus() {
         let userDefaultsValue = PasteUserDefaults.onStart
         let actualValue = LaunchAtLoginHelper.shared.isEnabled
-
         if userDefaultsValue != actualValue {
             LaunchAtLoginHelper.shared.setEnabled(userDefaultsValue)
         }
@@ -138,18 +242,15 @@ extension AppDelegate {
             weight: .medium,
             scale: .large,
         )
-        if #available(macOS 15.0, *) {
-            menuBarItem.button?.image = NSImage(
-                systemSymbolName: "heart.text.clipboard.fill",
-                accessibilityDescription: "",
-            )?
-            .withSymbolConfiguration(config)
+
+        let iconName = "heart.text.clipboard.fill"
+        let icon: NSImage? = if #available(macOS 15.0, *) {
+            NSImage(systemSymbolName: iconName, accessibilityDescription: nil)
         } else {
-            menuBarItem.button?.image = NSImage(
-                named: "heart.text.clipboard.fill",
-            )?
-            .withSymbolConfiguration(config)
+            NSImage(named: iconName)
         }
+
+        menuBarItem.button?.image = icon?.withSymbolConfiguration(config)
         menuBarItem.button?.target = self
         menuBarItem.button?.action = #selector(statusBarClick)
         menuBarItem.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
@@ -177,6 +278,34 @@ extension AppDelegate {
     @objc
     private func checkUpdate() {
         updaterController.checkForUpdates(nil)
+    }
+
+    @objc private func resumePasteboard() {
+        PasteBoard.main.resume()
+    }
+
+    @objc private func pause15Minutes() {
+        PasteBoard.main.pause(for: 15 * 60)
+    }
+
+    @objc private func pause30Minutes() {
+        PasteBoard.main.pause(for: 30 * 60)
+    }
+
+    @objc private func pause1Hour() {
+        PasteBoard.main.pause(for: 60 * 60)
+    }
+
+    @objc private func pause3Hours() {
+        PasteBoard.main.pause(for: 3 * 60 * 60)
+    }
+
+    @objc private func pause8Hours() {
+        PasteBoard.main.pause(for: 8 * 60 * 60)
+    }
+
+    @objc private func pauseIndefinitely() {
+        PasteBoard.main.pause()
     }
 
     @objc
@@ -220,6 +349,64 @@ extension AppDelegate {
                 }
             }
             return event
+        }
+    }
+}
+
+// MARK: - NSMenuDelegate
+
+extension AppDelegate: NSMenuDelegate {
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        if let pauseItem = menu.item(withTitle: "暂停")
+            ?? menu.item(withTitle: "已暂停")
+            ?? menu.items.first(where: { $0.title.hasPrefix("暂停到") })
+        {
+            pauseItem.title = pauseMenuTitle()
+            pauseItem.submenu = createPauseSubmenu()
+        }
+    }
+
+    private func pauseMenuTitle() -> String {
+        guard PasteBoard.main.isPaused else {
+            return "暂停"
+        }
+
+        if let endTime = PasteBoard.main.pauseEndTime {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "HH:mm"
+            return "暂停到 \(formatter.string(from: endTime))"
+        }
+
+        return "已暂停"
+    }
+}
+
+// MARK: - SPUUpdaterDelegate
+
+extension AppDelegate: SPUUpdaterDelegate {
+    nonisolated func updater(_: SPUUpdater, didFindValidUpdate item: SUAppcastItem) {
+        let version = item.displayVersionString
+        Task { @MainActor in
+            UpdateManager.shared.setUpdateAvailable(version: version)
+        }
+    }
+
+    nonisolated func updaterDidNotFindUpdate(_: SPUUpdater) {
+        Task { @MainActor in
+            UpdateManager.shared.clearUpdate()
+        }
+    }
+
+    nonisolated func updater(
+        _: SPUUpdater,
+        userDidMake choice: SPUUserUpdateChoice,
+        forUpdate _: SUAppcastItem,
+        state _: SPUUserUpdateState
+    ) {
+        if choice == .skip {
+            Task { @MainActor in
+                UpdateManager.shared.clearUpdate()
+            }
         }
     }
 }

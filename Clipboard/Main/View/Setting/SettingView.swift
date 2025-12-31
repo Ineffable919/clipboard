@@ -52,28 +52,21 @@ struct SettingView: View {
             }
             .frame(minWidth: 150)
         } detail: {
-            NavigationStack {
-                Group {
-                    switch selectedPage {
-                    case .general:
-                        GeneralSettingView()
-                    case .appearance:
-                        AppearanceSettingsView()
-                    case .privacy:
-                        PrivacySettingView()
-                    case .keyboard:
-                        KeyboardSettingView()
-                    case .about:
-                        AboutSettingView()
-                    }
-                }
-                .navigationTitle(selectedPage.rawValue)
-                .toolbar {
-                    ToolbarItem(placement: .automatic) {
-                        Spacer()
-                    }
+            Group {
+                switch selectedPage {
+                case .general:
+                    GeneralSettingView()
+                case .appearance:
+                    AppearanceSettingsView()
+                case .privacy:
+                    PrivacySettingView()
+                case .keyboard:
+                    KeyboardSettingView()
+                case .about:
+                    AboutSettingView()
                 }
             }
+            .navigationTitle(selectedPage.rawValue)
         }
         .onAppear {
             isSidebarFocused = true
@@ -116,11 +109,10 @@ struct HelpCenterButton: View {
             HStack {
                 Image(systemName: "questionmark.circle")
                 Text("帮助中心")
-                    .font(.body)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, Const.space8)
-            .padding(.vertical, 6)
+            .padding(.vertical, Const.space6)
         }
         .buttonStyle(.plain)
         .contentShape(Rectangle())

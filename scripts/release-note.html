@@ -19,16 +19,6 @@
             border-radius: 8px;
         }
 
-        h1 {
-            text-align: center;
-            color: #2c3e50;
-            margin-top: 0;
-            margin-bottom: 30px;
-            font-weight: 600;
-            font-size: 24px;
-            letter-spacing: 1px;
-        }
-
         h5 {
             color: #2c3e50;
             margin-top: 28px;
@@ -50,9 +40,6 @@
             transform: translateY(-50%);
             width: 14px;
             height: 14px;
-            /* background-color: #3498db; */
-            /* mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 2L14 14H2L8 2Z'/%3E%3C/svg%3E"); */
-            /* -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 2L14 14H2L8 2Z'/%3E%3C/svg%3E"); */
             mask-size: cover;
             -webkit-mask-size: cover;
         }
@@ -65,9 +52,6 @@
             transform: translateY(-50%);
             width: 14px;
             height: 14px;
-            /* background-color: #e74c3c; */
-            /* mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 1C4.1 1 1 4.1 1 8s3.1 7 7 7 7-3.1 7-7-3.1-7-7-7zm0 12.1c-2.8 0-5.1-2.3-5.1-5.1s2.3-5.1 5.1-5.1 5.1 2.3 5.1 5.1-2.3 5.1-5.1 5.1z'/%3E%3Cpath d='M11.3 5.3l-1.1-1.1-2.2 2.2-2.2-2.2-1.1 1.1 2.2 2.2-2.2 2.2 1.1 1.1 2.2-2.2 2.2 2.2 1.1-1.1-2.2-2.2 2.2-2.2z'/%3E%3C/svg%3E"); */
-            /* -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 1C4.1 1 1 4.1 1 8s3.1 7 7 7 7-3.1 7-7-3.1-7-7-7zm0 12.1c-2.8 0-5.1-2.3-5.1-5.1s2.3-5.1 5.1-5.1 5.1 2.3 5.1 5.1-2.3 5.1-5.1 5.1z'/%3E%3Cpath d='M11.3 5.3l-1.1-1.1-2.2 2.2-2.2-2.2-1.1 1.1 2.2 2.2-2.2 2.2 1.1 1.1 2.2-2.2 2.2 2.2 1.1-1.1-2.2-2.2 2.2-2.2z'/%3E%3C/svg%3E"); */
             mask-size: cover;
             -webkit-mask-size: cover;
         }
@@ -80,9 +64,6 @@
             transform: translateY(-50%);
             width: 14px;
             height: 14px;
-            /* background-color: #2ecc71; */
-            /* mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 1.5l2.5 5.1 5.1.7-3.7 3.6.9 5.1-4.8-2.5-4.8 2.5.9-5.1-3.7-3.6 5.1-.7 2.5-5.1z'/%3E%3C/svg%3E"); */
-            /* -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 1.5l2.5 5.1 5.1.7-3.7 3.6.9 5.1-4.8-2.5-4.8 2.5.9-5.1-3.7-3.6 5.1-.7 2.5-5.1z'/%3E%3C/svg%3E"); */
             mask-size: cover;
             -webkit-mask-size: cover;
         }
@@ -109,7 +90,7 @@
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background-color: #1765D9;
+            background-color: black;
         }
 
         a {
@@ -140,7 +121,7 @@
         }
 
         .release-date {
-            margin: 0;
+            margin-top: 10px;
             font-size: 14px;
             color: #7f8c8d;
         }
@@ -152,8 +133,37 @@
 </head>
 
 <body>
+    <!-- 0.3.0 -->
     <div class="release-header">
-        <span class="release-version"><span class="emoji">✨</span>v0.2.5</span>
+        <span class="release-version"><span class="emoji">🎉</span>0.3.0</span>
+        <span class="release-date">2026-01-01</span>
+    </div>
+    <!-- <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 12px 15px; margin: 15px 0; border-radius: 4px; font-size: 13px; color: #856404;">
+        <strong>⚠️ 重要提示：</strong>本版本包含数据库及结构更新。首次启动时，应用将自动迁移您的剪贴板历史记录到新格式。迁移过程可能需要几秒钟，请勿强制退出应用。
+    </div> -->
+    <h5 class="feature">What's new</h5>
+    <ul>
+        <li>提供按类型、应用或日期更丰富的过滤方式，以便于更好的查询历史记录</li>
+        <li>关键字搜索支持高亮展示</li>
+        <li>文本支持编辑并保存</li>
+        <li>支持暂停并恢复剪贴板记录</li>
+    </ul>
+    <h5 class="improvements">Improvements</h5>
+    <ul>
+        <li>改进链接、图片卡片展示</li>
+        <li>预览窗口体验优化</li>
+        <li>设置-关于界面的图标支持直接拖拽获取权限</li>
+        <li>更好的检测应用更新</li>
+        <li>兼容macOS Sonoma</li>
+    </ul>
+    <h5 class="bug-fixes">Bug Fixes</h5>
+    <ul>
+        <li>修复了一些已知问题</li>
+    </ul>
+
+    <!-- 0.2.5 -->
+    <div class="release-header">
+        <span class="release-version"><span class="emoji">🎉</span>0.2.5</span>
         <span class="release-date">2025-12-10</span>
     </div>
     <h5 class="feature">What's new</h5>
@@ -171,7 +181,7 @@
     </ul>
 
     <div class="release-header">
-        <span class="release-version"><span class="emoji">✨</span>v0.2.4</span>
+        <span class="release-version"><span class="emoji">🎉</span>0.2.4</span>
         <span class="release-date">2025-11-29</span>
     </div>
     <h5 class="improvements">Improvements</h5>
@@ -186,7 +196,7 @@
     </ul>
 
     <div class="release-header">
-        <span class="release-version"><span class="emoji">✨</span>v0.2.3</span>
+        <span class="release-version"><span class="emoji">🎉</span>0.2.3</span>
         <span class="release-date">2025-11-25</span>
     </div>
     <h5 class="improvements">Improvements</h5>
@@ -200,7 +210,7 @@
     </ul>
 
     <div class="release-header">
-        <span class="release-version"><span class="emoji">✨</span>v0.2.2</span>
+        <span class="release-version"><span class="emoji">🎉</span>0.2.2</span>
         <span class="release-date">2025-11-21</span>
     </div>
     <h5 class="feature">What's new</h5>

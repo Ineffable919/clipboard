@@ -6,35 +6,37 @@
 //
 
 import SwiftUI
-import WebKit
 
 struct CardContentView: View {
-    var model: PasteboardModel
-    @AppStorage(PrefKey.enableLinkPreview.rawValue)
-    private var enableLinkPreview: Bool = PasteUserDefaults.enableLinkPreview
+    let model: PasteboardModel
+    let keyword: String
+    let enableLinkPreview: Bool
 
-    @ViewBuilder
+    init(model: PasteboardModel, keyword: String = "", enableLinkPreview: Bool = false) {
+        self.model = model
+        self.keyword = keyword
+        self.enableLinkPreview = enableLinkPreview
+    }
+
     var body: some View {
         switch model.type {
         case .link:
             if enableLinkPreview {
-                LinkPreviewCard(model: model)
+                LinkPreviewCardView(model: model)
             } else {
-                StringContentView(model: model)
+                StringContentView(model: model, keyword: keyword)
             }
         case .color:
             CSSView(model: model)
         case .string:
-            StringContentView(model: model)
+            StringContentView(model: model, keyword: keyword)
         case .rich:
-            RichContentView(model: model)
+            RichContentView(model: model, keyword: keyword)
         case .file:
             FileContentView(model: model)
         case .image:
             ImageContentView(model: model)
-        case .none:
-            EmptyView()
-        @unknown default:
+        default:
             EmptyView()
         }
     }
@@ -43,301 +45,56 @@ struct CardContentView: View {
 struct CSSView: View {
     var model: PasteboardModel
     var body: some View {
-        if let hex = String(data: model.data, encoding: .utf8) {
-            VStack(alignment: .center) {
-                Text(hex)
-                    .font(.title2)
-            }
-            .frame(
-                width: Const.cardSize,
-                height: Const.cntSize,
-                alignment: .center
-            )
-            .background(Color(nsColor: NSColor(hex: hex)))
+        VStack(alignment: .center) {
+            Text(model.attributeString.string)
+                .font(.title2)
+                .foregroundStyle(.primary)
         }
-    }
-}
-
-struct LinkPreviewCard: View {
-    @Environment(\.colorScheme) var colorScheme
-
-    var model: PasteboardModel
-    @State private var favicon: NSImage?
-    @State private var pageTitle: String = ""
-    @State private var isLoading: Bool = false
-    @State private var loadingTask: Task<Void, Never>?
-    @State private var displayTitle: String = ""
-
-    var body: some View {
-        if let url = model.url {
-            VStack(spacing: 0) {
-                HStack(alignment: .center) {
-                    if let favicon {
-                        Image(nsImage: favicon)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 42, height: 42)
-                    } else {
-                        Image(systemName: "link")
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 42, height: 42)
-                            .foregroundColor(.accentColor)
-                    }
-                }
-                .frame(
-                    width: Const.cardSize,
-                    height: Const.cntSize - 48,
-                )
-                .background(
-                    colorScheme == .light
-                        ? Const.lightBackground : Const.darkBackground,
-                )
-
-                VStack(alignment: .leading, spacing: 4) {
-                    if !displayTitle.isEmpty {
-                        Text(displayTitle)
-                            .font(.headline)
-                            .foregroundColor(.primary)
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                    }
-
-                    Text(url.host ?? url.absoluteString)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                }
-                .padding(Const.space8)
-                .frame(
-                    width: Const.cardSize,
-                    height: 48,
-                    alignment: .leading,
-                )
-                .background(Color(nsColor: .controlBackgroundColor))
-            }
-            .onAppear {
-                if !isLoading, favicon == nil, displayTitle.isEmpty {
-                    loadContent(from: url)
-                }
-            }
-            .onDisappear {
-                loadingTask?.cancel()
-                loadingTask = nil
-            }
-        }
-    }
-
-    private func loadContent(from url: URL) {
-        guard !isLoading else { return }
-        isLoading = true
-
-        loadingTask?.cancel()
-
-        loadingTask = Task {
-            await loadPageMetadata(from: url)
-
-            guard !Task.isCancelled else { return }
-            await MainActor.run {
-                isLoading = false
-            }
-        }
-    }
-
-    private func loadPageMetadata(from url: URL) async {
-        guard !Task.isCancelled else { return }
-
-        await MainActor.run {
-            displayTitle = url.host ?? ""
-        }
-
-        let session = URLSession.shared
-
-        await loadFavicon(from: url, session: session)
-        guard !Task.isCancelled else { return }
-
-        await loadPageTitle(from: url, session: session)
-    }
-
-    private func loadFavicon(from url: URL, session: URLSession) async {
-        guard !Task.isCancelled else { return }
-
-        if let host = url.host {
-            let scheme = url.scheme ?? "https"
-            let base = URL(string: "\(scheme)://\(host)")!
-            let fallbacks = [
-                base.appendingPathComponent("favicon.ico"),
-                base.appendingPathComponent("apple-touch-icon.png"),
-                base.appendingPathComponent("favicon.png"),
-            ]
-            for u in fallbacks {
-                guard !Task.isCancelled else { return }
-                if let img = await fetchImage(u, session: session) {
-                    await MainActor.run { favicon = img }
-                    return
-                }
-            }
-        }
-
-        guard !Task.isCancelled else { return }
-
-        do {
-            var request = URLRequest(url: url)
-            request.setValue(
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko)",
-                forHTTPHeaderField: "User-Agent",
-            )
-            request.cachePolicy = .returnCacheDataElseLoad
-            request.timeoutInterval = 5.0
-
-            let (data, _) = try await session.data(for: request)
-            guard !Task.isCancelled else { return }
-
-            if let html = String(data: data, encoding: .utf8),
-               let iconURL = parseFirstHTMLIconURL(html: html, baseURL: url),
-               let img = await fetchImage(iconURL, session: session)
-            {
-                await MainActor.run { favicon = img }
-                return
-            }
-        } catch {}
-    }
-
-    private func parseFirstHTMLIconURL(html: String, baseURL: URL) -> URL? {
-        let pattern =
-            "<link[^>]*rel=\\\"([^\\\"]*)\\\"[^>]*href=\\\"([^\\\"]+)\\\"[^>]*>"
-        guard
-            let regex = try? NSRegularExpression(
-                pattern: pattern,
-                options: [.caseInsensitive],
-            )
-        else { return nil }
-        let ns = html as NSString
-        for m in regex.matches(
-            in: html,
-            range: NSRange(location: 0, length: ns.length),
-        ) {
-            guard m.numberOfRanges >= 3 else { continue }
-            let rel = ns.substring(with: m.range(at: 1)).lowercased()
-            if rel.contains("icon") {
-                let href = ns.substring(with: m.range(at: 2))
-                if href.hasPrefix("//"), let scheme = baseURL.scheme {
-                    return URL(string: "\(scheme):\(href)")
-                }
-                return URL(string: href, relativeTo: baseURL)?.absoluteURL
-            }
-        }
-        return nil
-    }
-
-    private func fetchImage(_ url: URL, session: URLSession) async -> NSImage? {
-        guard !Task.isCancelled else { return nil }
-
-        // data:image/*;base64, ...
-        if url.scheme == "data" {
-            if let dataRange = url.absoluteString.range(of: ",") {
-                let b64 = String(url.absoluteString[dataRange.upperBound...])
-                if let data = Data(base64Encoded: b64),
-                   let img = NSImage(data: data)
-                {
-                    img.cacheMode = .bySize
-                    return img
-                }
-            }
-            return nil
-        }
-
-        var request = URLRequest(url: url)
-        request.setValue(
-            "image/avif,image/webp,image/apng,image/*;q=0.8,*/*;q=0.5",
-            forHTTPHeaderField: "Accept",
+        .frame(
+            width: Const.cardSize,
+            height: Const.cntSize,
+            alignment: .center,
         )
-        request.setValue(
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko)",
-            forHTTPHeaderField: "User-Agent",
-        )
-        request.cachePolicy = .returnCacheDataElseLoad
-        request.timeoutInterval = 5.0
-
-        do {
-            let (data, response) = try await session.data(for: request)
-            guard !Task.isCancelled else { return nil }
-
-            if let http = response as? HTTPURLResponse, http.statusCode >= 400 {
-                return nil
-            }
-            // macOS 对 ICO、PNG、JPEG 普遍支持；SVG 不一定支持，忽略 SVG
-            if url.pathExtension.lowercased() == "svg" { return nil }
-            if let image = NSImage(data: data), image.isValid {
-                image.cacheMode = .bySize
-                return image
-            }
-        } catch {}
-        return nil
-    }
-
-    private func loadPageTitle(from url: URL, session: URLSession) async {
-        guard !Task.isCancelled else { return }
-
-        do {
-            var request = URLRequest(url: url)
-            request.timeoutInterval = 5.0
-            request.setValue(
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko)",
-                forHTTPHeaderField: "User-Agent",
-            )
-            request.cachePolicy = .returnCacheDataElseLoad
-
-            let (data, _) = try await session.data(for: request)
-            guard !Task.isCancelled else { return }
-
-            if let html = String(data: data, encoding: .utf8) {
-                if let titleMatch = html.range(
-                    of: "<title[^>]*>([^<]+)</title>",
-                    options: [.regularExpression, .caseInsensitive],
-                ) {
-                    let titleHTML = String(html[titleMatch])
-                    let title =
-                        titleHTML
-                            .replacingOccurrences(
-                                of: "<[^>]+>",
-                                with: "",
-                                options: .regularExpression,
-                            )
-                            .trimmingCharacters(in: .whitespacesAndNewlines)
-
-                    if !title.isEmpty, title != url.host {
-                        guard !Task.isCancelled else { return }
-                        await MainActor.run {
-                            displayTitle = title
-                        }
-                    }
-                }
-            }
-        } catch {}
+        .background(Color(nsColor: NSColor(hex: model.attributeString.string)))
     }
 }
 
 struct StringContentView: View {
     var model: PasteboardModel
+    var keyword: String
 
     var body: some View {
-        Text(String(data: model.showData ?? Data(), encoding: .utf8) ?? "")
-            .textCardStyle()
+        if keyword.isEmpty {
+            Text(model.attributeString.string)
+                .textCardStyle()
+        } else {
+            Text(model.highlightedPlainText(keyword: keyword))
+                .textCardStyle()
+        }
     }
 }
 
 struct RichContentView: View {
     var model: PasteboardModel
+    var keyword: String
 
     var body: some View {
         if model.hasBgColor {
-            Text(model.attributed())
-                .textCardStyle()
+            if keyword.isEmpty {
+                Text(model.attributed())
+                    .textCardStyle()
+            } else {
+                Text(model.highlightedRichText(keyword: keyword))
+                    .textCardStyle()
+            }
         } else {
-            Text(model.attributeString.string)
-                .textCardStyle()
+            if keyword.isEmpty {
+                Text(model.attributeString.string)
+                    .textCardStyle()
+            } else {
+                Text(model.highlightedPlainText(keyword: keyword))
+                    .textCardStyle()
+            }
         }
     }
 }
@@ -346,10 +103,7 @@ struct FileContentView: View {
     var model: PasteboardModel
 
     var body: some View {
-        if let url = String(data: model.data, encoding: .utf8) {
-            let fileUrls = url.components(separatedBy: "\n").filter {
-                !$0.isEmpty
-            }
+        if let fileUrls = model.cachedFilePaths {
             if fileUrls.count > 1 {
                 MultipleFilesView(fileURLs: fileUrls)
             } else if let firstURL = fileUrls.first {
@@ -383,6 +137,10 @@ struct ImageContentView: View {
     @State private var thumbnail: NSImage?
     @State private var isLoading = false
     @State private var loadingTask: Task<Void, Never>?
+    @State private var cachedContentMode: ContentMode = .fit
+
+    private static let containerSize = CGSize(width: Const.cardSize, height: Const.cntSize)
+    private static let containerRatio = Const.cardSize / Const.cntSize
 
     var body: some View {
         ZStack {
@@ -390,25 +148,21 @@ struct ImageContentView: View {
             if let thumbnail {
                 Image(nsImage: thumbnail)
                     .resizable()
-                    .interpolation(.high)
-                    .scaledToFit()
+                    .interpolation(.medium)
+                    .aspectRatio(contentMode: cachedContentMode)
+                    .frame(width: Self.containerSize.width, height: Self.containerSize.height)
+                    .clipped()
+            } else if isLoading {
+                ProgressView()
+                    .controlSize(.small)
             } else {
-                if isLoading {
-                    ProgressView()
-                        .controlSize(.small)
-                } else {
-                    Image(systemName: "photo.badge.arrow.down")
-                        .resizable()
-                        .foregroundStyle(.secondary)
-                        .frame(width: 48, height: 48, alignment: .center)
-                }
+                Image(systemName: "photo.badge.arrow.down")
+                    .resizable()
+                    .foregroundStyle(.secondary)
+                    .frame(width: 48, height: 48)
             }
         }
-        .frame(
-            maxWidth: Const.cardSize,
-            maxHeight: Const.cntSize,
-            alignment: .center,
-        )
+        .frame(width: Self.containerSize.width, height: Self.containerSize.height)
         .clipShape(Const.contentShape)
         .onAppear(perform: loadImage)
         .onDisappear {
@@ -418,20 +172,27 @@ struct ImageContentView: View {
     }
 
     private func loadImage() {
-        guard thumbnail == nil else { return }
+        guard thumbnail == nil, !isLoading else { return }
         isLoading = true
 
-        loadingTask?.cancel()
         loadingTask = Task {
             guard !Task.isCancelled else { return }
 
-            let loadedImage = await Task.detached {
-                await model.thumbnail()
-            }.value
+            let loadedImage = await model.loadThumbnail()
 
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled, let image = loadedImage else {
+                await MainActor.run { isLoading = false }
+                return
+            }
+
+            // 预计算 contentMode
+            let imageRatio = image.size.width / image.size.height
+            let ratioDiff = abs(imageRatio - Self.containerRatio)
+            let mode: ContentMode = ratioDiff < 0.5 ? .fill : .fit
+
             await MainActor.run {
-                thumbnail = loadedImage
+                cachedContentMode = mode
+                thumbnail = image
                 isLoading = false
             }
         }
@@ -439,42 +200,63 @@ struct ImageContentView: View {
 }
 
 struct CheckerboardBackground: View {
-    let squareSize: CGFloat = 8
     @Environment(\.colorScheme) var colorScheme
 
-    var lightColor: Color {
-        colorScheme == .light ? Color.white : Color.black.opacity(0.2)
-    }
-
-    var darkColor: Color {
-        colorScheme == .light
-            ? Color(nsColor: NSColor(hex: "#f2f2f2"))
-            : Color(nsColor: NSColor(hex: "#282828"))
+    private var backgroundImage: NSImage {
+        CheckerboardCache.shared.image(for: colorScheme)
     }
 
     var body: some View {
-        Canvas { context, size in
-            let rows = Int(ceil(size.height / squareSize))
-            let cols = Int(ceil(size.width / squareSize))
+        Image(nsImage: backgroundImage)
+            .resizable(resizingMode: .tile)
+    }
+}
 
-            for row in 0 ..< rows {
-                for col in 0 ..< cols {
-                    let rect = CGRect(
-                        x: CGFloat(col) * squareSize,
-                        y: CGFloat(row) * squareSize,
-                        width: squareSize,
-                        height: squareSize,
-                    )
+private final class CheckerboardCache: @unchecked Sendable {
+    static let shared = CheckerboardCache()
 
-                    let isEven = (row + col) % 2 == 0
-                    let color = isEven ? lightColor : darkColor
+    private let squareSize: CGFloat = 8
+    private var lightImage: NSImage?
+    private var darkImage: NSImage?
+    private let lock = NSLock()
 
-                    context.fill(
-                        Path(rect),
-                        with: .color(color),
-                    )
-                }
-            }
+    func image(for colorScheme: ColorScheme) -> NSImage {
+        lock.lock()
+        defer { lock.unlock() }
+
+        if colorScheme == .light {
+            if let cached = lightImage { return cached }
+            let img = createCheckerboard(
+                light: .white,
+                dark: NSColor(Const.lightImageColor)
+            )
+            lightImage = img
+            return img
+        } else {
+            if let cached = darkImage { return cached }
+            let img = createCheckerboard(
+                light: NSColor.black.withAlphaComponent(0.2),
+                dark: NSColor(Const.darkImageColor)
+            )
+            darkImage = img
+            return img
         }
+    }
+
+    private func createCheckerboard(light: NSColor, dark: NSColor) -> NSImage {
+        let tileSize = squareSize * 2
+        let image = NSImage(size: NSSize(width: tileSize, height: tileSize))
+        image.lockFocus()
+
+        light.setFill()
+        NSRect(x: 0, y: 0, width: squareSize, height: squareSize).fill()
+        NSRect(x: squareSize, y: squareSize, width: squareSize, height: squareSize).fill()
+
+        dark.setFill()
+        NSRect(x: squareSize, y: 0, width: squareSize, height: squareSize).fill()
+        NSRect(x: 0, y: squareSize, width: squareSize, height: squareSize).fill()
+
+        image.unlockFocus()
+        return image
     }
 }

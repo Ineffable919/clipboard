@@ -13,7 +13,7 @@ final class ClipMainWindowController: NSWindowController {
     private let viewHeight: CGFloat = 330.0
 
     static let shared = ClipMainWindowController()
-    private var isVisible: Bool { window?.isVisible ?? false }
+    var isVisible: Bool { window?.isVisible ?? false }
 
     var preApp: NSRunningApplication?
 

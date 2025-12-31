@@ -15,7 +15,7 @@ struct CategoryChip: Identifiable, Equatable, Codable {
 
     // 全局调色板，后续可以直接在这里添加新颜色
     static let palette: [Color] = [
-        .gray.opacity(0.8),
+        .gray,
         .blue,
         .green,
         .purple,
@@ -80,9 +80,6 @@ struct CategoryChip: Identifiable, Equatable, Codable {
     }
 
     static let systemChips: [CategoryChip] = [
-        .init(id: 1, name: "剪贴板", color: .gray.opacity(0.8), isSystem: true),
-        .init(id: 2, name: "文本", color: .blue, isSystem: true),
-        .init(id: 3, name: "图片", color: .green, isSystem: true),
-        .init(id: 4, name: "文件", color: .purple, isSystem: true),
+        .init(id: 1, name: "剪贴板", color: .gray, isSystem: true),
     ]
 }

@@ -55,7 +55,6 @@ struct StartupShortcutsView: View {
     var body: some View {
         HStack {
             Text("启动 \(appName)")
-                .font(.body)
             Spacer()
             ShortcutRecorder("app_launch") {
                 ClipMainWindowController.shared.toggleWindow()
@@ -79,7 +78,6 @@ struct QuickPasteModifierView: View {
     var body: some View {
         HStack {
             Text("快速粘贴")
-                .font(.body)
             Spacer()
             HStack(spacing: 4) {
                 Picker("", selection: $selectedModifier) {
@@ -95,7 +93,6 @@ struct QuickPasteModifierView: View {
                 }
 
                 Text("+ 1...9")
-                    .font(.body)
                     .foregroundColor(.primary)
             }
         }
