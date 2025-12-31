@@ -302,8 +302,9 @@ extension PasteDataStore {
         insertModel(model)
         Task {
             await updateColor(model)
-            invalidateAppInfoCache(model)
         }
+        invalidateAppInfoCache(model)
+        invalidateTagTypesCache(model)
     }
 
     func insertModel(_ model: PasteboardModel) {
@@ -312,7 +313,6 @@ extension PasteDataStore {
             await itemId = sqlManager.insert(item: model)
             model.id = itemId
             await updateTotalCount()
-            invalidateTagTypesCache()
             if lastDataChangeType == .searchFilter {
                 return
             }
@@ -538,8 +538,36 @@ extension PasteDataStore {
         return finalTypes
     }
 
-    func invalidateTagTypesCache() {
-        cachedTagTypes = nil
+    func invalidateTagTypesCache(_ model: PasteboardModel? = nil) {
+        guard let model, !model.tag.isEmpty else {
+            cachedTagTypes = nil
+            return
+        }
+        
+        let modelType: PasteModelType? = switch model.tag {
+        case "image": .image
+        case "string": .string
+        case "rich": .rich
+        case "file": .file
+        case "link": .link
+        case "color": .color
+        default: nil
+        }
+
+        guard let modelType else { return }
+
+        if cachedTagTypes == nil {
+            cachedTagTypes = [modelType]
+        } else if !cachedTagTypes!.contains(modelType) {
+            cachedTagTypes?.append(modelType)
+
+            let order: [PasteModelType] = [.color, .file, .image, .link, .string]
+            cachedTagTypes?.sort { type1, type2 in
+                let index1 = order.firstIndex(of: type1) ?? order.count
+                let index2 = order.firstIndex(of: type2) ?? order.count
+                return index1 < index2
+            }
+        }
     }
 }
 

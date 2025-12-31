@@ -289,7 +289,6 @@ extension PasteSQLManager {
         }
     }
 
-    // 获取应用名称和对应的路径（每个应用名称取最新的路径）
     func getDistinctAppInfo() async -> [(name: String, path: String)] {
         do {
             var appInfo: [(name: String, path: String)] = []
@@ -301,7 +300,10 @@ extension PasteSQLManager {
                 WHERE app_name != ''
                 GROUP BY app_name
             )
-            ORDER BY app_name ASC
+            ORDER BY (
+                SELECT MAX(timestamp) FROM Clip c2
+                WHERE c2.app_name = Clip.app_name
+            ) DESC
             """
 
             if let result = try db?.prepare(sql) {

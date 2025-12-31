@@ -69,7 +69,7 @@ struct FilterPopoverView: View {
     // MARK: - Type Section
 
     private var typeSection: some View {
-        filterSection(title: "Type") {
+        filterSection(title: "类型") {
             ForEach(tagTypes, id: \.self) { type in
                 if type == .string {
                     textTypeButton()
@@ -102,7 +102,7 @@ struct FilterPopoverView: View {
     // MARK: - App Section
 
     private var appSection: some View {
-        filterSection(title: "App") {
+        filterSection(title: "应用") {
             ForEach(displayedAppInfo) { appInfo in
                 appButton(appInfo: appInfo)
             }
@@ -147,7 +147,7 @@ struct FilterPopoverView: View {
     // MARK: - Date Section
 
     private var dateSection: some View {
-        filterSection(title: "Date") {
+        filterSection(title: "日期") {
             ForEach(TopBarViewModel.DateFilterOption.allCases, id: \.self) {
                 option in
                 let isSelected = topBarVM.selectedDateFilter == option

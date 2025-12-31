@@ -19,7 +19,7 @@ struct TagView: View {
                 .frame(width: iconSize, height: iconSize)
 
             Text(tag.label)
-                .font(.system(size: 12, weight: .regular, design:.monospaced))
+                .font(.system(size: 12, weight: .regular, design: .monospaced))
                 .lineLimit(1)
 
             // Button(action: onDelete) {
@@ -30,7 +30,7 @@ struct TagView: View {
             // .buttonStyle(.plain)
         }
         .padding(.horizontal, Const.space8)
-        .frame(height: 20.0, alignment: .leading)
+        .frame(height: 20.0)
         .background(
             RoundedRectangle(cornerRadius: Const.radius * 2)
                 .fill(Color.secondary.opacity(0.2)),
