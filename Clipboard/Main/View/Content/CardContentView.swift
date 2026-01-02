@@ -158,6 +158,7 @@ struct ImageContentView: View {
             } else {
                 Image(systemName: "photo.badge.arrow.down")
                     .resizable()
+                    .aspectRatio(contentMode: .fit)
                     .foregroundStyle(.secondary)
                     .frame(width: 48, height: 48)
             }

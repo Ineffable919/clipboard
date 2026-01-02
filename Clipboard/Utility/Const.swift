@@ -84,10 +84,10 @@ class Const {
     static let lightBackground: Color = .init(NSColor(hex: "#f8f8f8"))
     static let lightToolColor: Color = .init(NSColor(hex: "#eeeeef"))
     static let darkToolColor: Color = .init(NSColor(hex: "#2e2e39"))
-    static let darkImageShallowColor: NSColor = NSColor(hex: "#383838")
-    static let darkImageDeepColor: NSColor = NSColor(hex: "#424242")
-    static let lightImageShallowColor: NSColor = NSColor(hex: "#ffffff")
-    static let lightImageDeepColor: NSColor = NSColor(hex: "#f5f5f5")
+    static let darkImageShallowColor: NSColor = .init(hex: "#383838")
+    static let darkImageDeepColor: NSColor = .init(hex: "#424242")
+    static let lightImageShallowColor: NSColor = .init(hex: "#ffffff")
+    static let lightImageDeepColor: NSColor = .init(hex: "#f5f5f5")
 
     static let space32: CGFloat = 32.0
     static let space24: CGFloat = 24.0

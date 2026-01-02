@@ -40,7 +40,7 @@ struct PreviewPopoverView: View {
 
     private var cachedDefaultBrowserName: String? {
         guard let appURL = NSWorkspace.shared.urlForApplication(toOpen: .html),
-            let bundle = Bundle(url: appURL)
+              let bundle = Bundle(url: appURL)
         else { return nil }
         return bundle.object(forInfoDictionaryKey: "CFBundleDisplayName")
             as? String
@@ -49,12 +49,12 @@ struct PreviewPopoverView: View {
 
     private var cachedDefaultAppForFile: String? {
         guard model.type == .file,
-            model.fileSize() == 1,
-            let fileUrl = model.cachedFilePaths?.first
+              model.fileSize() == 1,
+              let fileUrl = model.cachedFilePaths?.first
         else { return nil }
         let url = URL(fileURLWithPath: fileUrl)
         guard let appURL = NSWorkspace.shared.urlForApplication(toOpen: url),
-            let bundle = Bundle(url: appURL)
+              let bundle = Bundle(url: appURL)
         else { return nil }
         return bundle.object(forInfoDictionaryKey: "CFBundleDisplayName")
             as? String
@@ -67,11 +67,11 @@ struct PreviewPopoverView: View {
                 env.focusView = .popover
             }
         }) { contentView }
-        .onDisappear {
-            if env.focusView != .search {
-                env.focusView = .history
+            .onDisappear {
+                if env.focusView != .search {
+                    env.focusView = .history
+                }
             }
-        }
     }
 
     private var contentView: some View {
@@ -110,7 +110,7 @@ struct PreviewPopoverView: View {
             }
 
             if let fileUrl = model.cachedFilePaths?.first,
-                let defaultApp = cachedDefaultAppForFile
+               let defaultApp = cachedDefaultAppForFile
             {
                 BorderedButton(title: "通过 \(defaultApp) 打开") {
                     NSWorkspace.shared.open(URL(fileURLWithPath: fileUrl))
@@ -163,8 +163,8 @@ struct PreviewPopoverView: View {
             }
 
             if model.type == .link,
-                enableLinkPreview,
-                let browserName = cachedDefaultBrowserName
+               enableLinkPreview,
+               let browserName = cachedDefaultBrowserName
             {
                 BorderedButton(
                     title: "使用 \(browserName) 打开",
@@ -217,7 +217,7 @@ struct PreviewPopoverView: View {
     @ViewBuilder
     private var linkPreview: some View {
         if enableLinkPreview, model.isLink,
-            let url = model.attributeString.string.asCompleteURL()
+           let url = model.attributeString.string.asCompleteURL()
         {
             if #available(macOS 26.0, *) {
                 WebContentView(url: url)
@@ -231,10 +231,12 @@ struct PreviewPopoverView: View {
 
     @ViewBuilder
     private var colorPreview: some View {
+        let (_, textColor) = model.colors()
         if let hex = cachedDataString {
             VStack(alignment: .center) {
                 Text(hex)
                     .font(.title2)
+                    .foregroundStyle(textColor)
             }
             .frame(
                 maxWidth: Const.maxPreviewWidth,
@@ -311,7 +313,24 @@ struct PreviewPopoverView: View {
 
     @ViewBuilder
     private var imagePreview: some View {
-        PreviewImageView(model: model)
+        ZStack {
+            CheckerboardBackground()
+            if let image = NSImage(data: model.data) {
+                Image(nsImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(
+                        maxWidth: Const.maxPreviewWidth,
+                        maxHeight: Const.maxPreviewWidth,
+                    )
+            } else {
+                Image(systemName: "photo.badge.arrow.down")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .foregroundStyle(.secondary)
+                    .frame(width: 64, height: 64)
+            }
+        }
     }
 
     @ViewBuilder
@@ -324,13 +343,13 @@ struct PreviewPopoverView: View {
                         maxWidth: Const.maxPreviewWidth - 32,
                         maxHeight: Const.maxContentHeight,
                     )
-                } else {
-                    Image(systemName: "folder")
-                        .resizable()
-                        .symbolRenderingMode(.hierarchical)
-                        .foregroundStyle(Color.accentColor.opacity(0.8))
-                        .frame(width: 144, height: 144, alignment: .center)
                 }
+            } else {
+                Image(systemName: "folder")
+                    .resizable()
+                    .symbolRenderingMode(.hierarchical)
+                    .foregroundStyle(Color.accentColor.opacity(0.8))
+                    .frame(width: 144, height: 144, alignment: .center)
             }
         }
         .frame(
@@ -348,40 +367,6 @@ struct PreviewPopoverView: View {
                 height: PreviewPopoverView.defaultHeight,
                 alignment: .center,
             )
-    }
-}
-
-private struct PreviewImageView: View {
-    let model: PasteboardModel
-    @State private var image: NSImage?
-
-    var body: some View {
-        Group {
-            if let image {
-                ZStack {
-                    CheckerboardBackground()
-                    Image(nsImage: image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(
-                            maxWidth: Const.maxPreviewWidth,
-                            maxHeight: Const.maxPreviewWidth,
-                        )
-                }
-            } else {
-                Image(systemName: "photo")
-                    .resizable()
-                    .font(.largeTitle)
-                    .frame(
-                        width: Const.minPreviewWidth,
-                        height: Const.minPreviewHeight,
-                        alignment: .center
-                    )
-            }
-        }
-        .task {
-            image = await model.loadThumbnail()
-        }
     }
 }
 
