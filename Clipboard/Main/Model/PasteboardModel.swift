@@ -367,6 +367,12 @@ extension PasteboardModel {
         guard pasteboardType.isText() else {
             return (fallbackBG, .secondary, false)
         }
+
+        if type == .color {
+            let colorNS = NSColor(hex: attributeString.string)
+            return (Color(colorNS), getContrastingColor(baseNS: colorNS), true)
+        }
+
         if pasteboardType == .string {
             return (fallbackBG, .secondary, false)
         }
@@ -377,12 +383,23 @@ extension PasteboardModel {
                effectiveRange: nil,
            ) as? NSColor
         {
-            return (Color(bg), getRTFColor(baseNS: bg), true)
+            return (Color(bg), getContrastingColor(baseNS: bg), true)
         }
         return (fallbackBG, .secondary, false)
     }
 
-    // 在 sRGB 空间基于亮度粗分
+    private func getContrastingColor(baseNS: NSColor) -> Color {
+        let c = baseNS.usingColorSpace(.sRGB) ?? baseNS
+        var r: CGFloat = 0
+        var g: CGFloat = 0
+        var b: CGFloat = 0
+        var a: CGFloat = 0
+        c.getRed(&r, green: &g, blue: &b, alpha: &a)
+        let brightness = 0.299 * r + 0.587 * g + 0.114 * b
+        return brightness > 0.5 ? .black.opacity(0.8) : .white.opacity(0.8)
+    }
+
+    // 在 sRGB 空间基于亮度粗分（用于富文本背景）
     private func getRTFColor(baseNS: NSColor) -> Color {
         let c = baseNS.usingColorSpace(.sRGB) ?? baseNS
         var r: CGFloat = 0

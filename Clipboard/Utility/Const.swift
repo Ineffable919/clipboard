@@ -37,19 +37,19 @@ class Const {
     static let cardBottomPadding: CGFloat = 16.0
     static let iconHdSize: CGFloat = 14.0
 
-    static let hoverDarkColor: Color = .init(NSColor(hex: "#2e2e39"))
+    static let hoverDarkColor: Color = .init(NSColor(hex: "#171D38"))
     static let hoverLightColorLiquid: Color = .init(NSColor(hex: "#E1E4E7"))
         .opacity(0.6)
     static let hoverLightColorFrosted: Color = .white.opacity(0.6)
     static let hoverLightColorFrostedLow: Color = .init(
-        nsColor: NSColor(hex: "#D0D0CF"),
+        nsColor: NSColor(hex: "#D0D0CF")
     ).opacity(0.6)
 
-    static let chooseDarkColor: Color = .init(NSColor(hex: "#2e2e39"))
+    static let chooseDarkColor: Color = .init(NSColor(hex: "#171D38"))
     static let chooseLightColorLiquid: Color = .init(NSColor(hex: "#E1E4E7"))
     static let chooseLightColorFrosted: Color = .white.opacity(0.8)
     static let chooseLightColorFrostedLow: Color = .init(
-        nsColor: NSColor(hex: "#D0D0CF"),
+        nsColor: NSColor(hex: "#D0D0CF")
     )
 
     static let contentShape = UnevenRoundedRectangle(
@@ -57,7 +57,7 @@ class Const {
         bottomLeadingRadius: Const.radius,
         bottomTrailingRadius: Const.radius,
         topTrailingRadius: 0,
-        style: .continuous,
+        style: .continuous
     )
 
     static let headShape = UnevenRoundedRectangle(
@@ -65,7 +65,7 @@ class Const {
         bottomLeadingRadius: 0,
         bottomTrailingRadius: 0,
         topTrailingRadius: Const.radius,
-        style: .continuous,
+        style: .continuous
     )
 
     static let maxPreviewWidth: CGFloat = 800.0
@@ -84,8 +84,10 @@ class Const {
     static let lightBackground: Color = .init(NSColor(hex: "#f8f8f8"))
     static let lightToolColor: Color = .init(NSColor(hex: "#eeeeef"))
     static let darkToolColor: Color = .init(NSColor(hex: "#2e2e39"))
-    static let darkImageColor: Color = .init(NSColor(hex: "#282828"))
-    static let lightImageColor: Color = .init(NSColor(hex: "#f2f2f2"))
+    static let darkImageShallowColor: NSColor = NSColor(hex: "#383838")
+    static let darkImageDeepColor: NSColor = NSColor(hex: "#424242")
+    static let lightImageShallowColor: NSColor = NSColor(hex: "#ffffff")
+    static let lightImageDeepColor: NSColor = NSColor(hex: "#f5f5f5")
 
     static let space32: CGFloat = 32.0
     static let space24: CGFloat = 24.0

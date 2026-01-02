@@ -115,7 +115,6 @@ struct HelpCenterButton: View {
             .padding(.vertical, Const.space6)
         }
         .buttonStyle(.plain)
-        .contentShape(Rectangle())
     }
 }
 

@@ -45,17 +45,17 @@ struct CardContentView: View {
 struct CSSView: View {
     var model: PasteboardModel
     var body: some View {
+        let (_, textColor) = model.colors()
         VStack(alignment: .center) {
             Text(model.attributeString.string)
                 .font(.title2)
-                .foregroundStyle(.primary)
+                .foregroundStyle(textColor)
         }
         .frame(
             width: Const.cardSize,
             height: Const.cntSize,
-            alignment: .center,
+            alignment: .center
         )
-        .background(Color(nsColor: NSColor(hex: model.attributeString.string)))
     }
 }
 
@@ -227,16 +227,16 @@ private final class CheckerboardCache: @unchecked Sendable {
         if colorScheme == .light {
             if let cached = lightImage { return cached }
             let img = createCheckerboard(
-                light: .white,
-                dark: NSColor(Const.lightImageColor)
+                light: Const.lightImageShallowColor,
+                dark: Const.lightImageDeepColor
             )
             lightImage = img
             return img
         } else {
             if let cached = darkImage { return cached }
             let img = createCheckerboard(
-                light: NSColor.black.withAlphaComponent(0.2),
-                dark: NSColor(Const.darkImageColor)
+                light: Const.darkImageShallowColor,
+                dark: Const.darkImageDeepColor
             )
             darkImage = img
             return img

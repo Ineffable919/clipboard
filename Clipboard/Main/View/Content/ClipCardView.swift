@@ -92,7 +92,9 @@ struct ClipCardView: View {
                 )
             }
             .background {
-                if !model.isLink || !enableLinkPreview {
+                if model.type == .color {
+                    Color(nsColor: NSColor(hex: model.attributeString.string))
+                } else if !model.isLink || !enableLinkPreview {
                     model.backgroundColor
                 }
             }

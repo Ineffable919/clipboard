@@ -38,7 +38,7 @@ struct ShortcutRecorder: View {
             binding
                 ?? Binding(
                     get: { saved },
-                    set: { _ in },
+                    set: { _ in }
                 )
     }
 
@@ -67,8 +67,8 @@ struct ShortcutRecorder: View {
                 .fill(Color(NSColor.controlBackgroundColor))
                 .overlay(
                     RoundedRectangle(cornerRadius: Const.radius)
-                        .strokeBorder(borderColor, lineWidth: borderSize),
-                ),
+                        .strokeBorder(borderColor, lineWidth: borderSize)
+                )
         )
         .contentShape(Rectangle())
         .onTapGesture {
@@ -141,7 +141,9 @@ struct ShortcutRecorder: View {
             return handleKeyEvent(event)
         }
 
-        mouseMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [self] event in
+        mouseMonitor = NSEvent.addLocalMonitorForEvents(
+            matching: .leftMouseDown
+        ) { [self] event in
             return handleMouseEvent(event)
         }
     }
@@ -164,9 +166,10 @@ struct ShortcutRecorder: View {
         }
 
         let windowLocation = event.locationInWindow
-        let screenLocation = window.convertPoint(toScreen: windowLocation)
+        let flippedY = window.frame.height - windowLocation.y
+        let flippedLocation = CGPoint(x: windowLocation.x, y: flippedY)
 
-        if !viewFrame.contains(screenLocation) {
+        if !viewFrame.contains(flippedLocation) {
             stopRecording()
         }
 
