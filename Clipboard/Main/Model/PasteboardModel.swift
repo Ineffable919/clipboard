@@ -20,7 +20,7 @@ final class PasteboardModel: Identifiable {
     private(set) var timestamp: Int64
     let appPath: String
     let appName: String
-    let searchText: String
+    private(set) var searchText: String
     let length: Int
     // 截取后的富文本
     let attributeString: NSAttributedString
@@ -164,20 +164,18 @@ final class PasteboardModel: Identifiable {
         var filePaths: [String]?
 
         if type.isFile() {
-            guard
-                let fileURLs = pasteboard.readObjects(
-                    forClasses: [NSURL.self],
-                    options: nil,
-                ) as? [URL]
+            guard let fileURLs = pasteboard.readObjects(
+                forClasses: [NSURL.self],
+                options: nil,
+            ) as? [URL]
             else { return nil }
 
             filePaths = fileURLs.map(\.path)
             searchText = filePaths!.joined(separator: "")
 
-            let pathsToSave = filePaths!
             Task.detached(priority: .utility) {
                 await FileAccessHelper.shared.saveSecurityBookmarks(
-                    for: pathsToSave,
+                    for: filePaths!,
                 )
             }
 
@@ -215,7 +213,7 @@ final class PasteboardModel: Identifiable {
         self.init(
             pasteboardType: type,
             data: content ?? Data(),
-            showData: showData,
+            showData: showData ?? Data(),
             timestamp: Int64(Date().timeIntervalSince1970),
             appPath: app?.bundleURL?.path ?? "",
             appName: app?.localizedName ?? "",
@@ -321,6 +319,10 @@ final class PasteboardModel: Identifiable {
 
     func updateDate() {
         timestamp = Int64(Date().timeIntervalSince1970)
+    }
+
+    func updateSearchText(val: String) {
+        searchText = val
     }
 
     func getGroupChip() -> CategoryChip? {

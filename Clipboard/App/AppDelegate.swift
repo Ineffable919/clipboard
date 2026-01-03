@@ -238,12 +238,15 @@ extension AppDelegate {
 
         menuBarItem.isVisible = true
         let config = NSImage.SymbolConfiguration(
-            pointSize: 12,
-            weight: .medium,
-            scale: .large,
+            pointSize: 14,
+            weight: .medium
         )
 
-        let iconName = "heart.text.clipboard.fill"
+        let iconName = if #available(macOS 26.0, *) {
+            "sparkle.text.clipboard.fill"
+        } else {
+            "heart.text.clipboard.fill"
+        }
         let icon: NSImage? = if #available(macOS 15.0, *) {
             NSImage(systemSymbolName: iconName, accessibilityDescription: nil)
         } else {

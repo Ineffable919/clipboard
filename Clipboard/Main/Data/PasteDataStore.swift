@@ -303,6 +303,15 @@ extension PasteDataStore {
         Task {
             await updateColor(model)
         }
+        Task {
+            if model.type == .image, let id = model.id {
+                let searchText = await OCRViewModel.shared.recognizeText(
+                    from: model.data
+                )
+                model.updateSearchText(val: searchText)
+                await sqlManager.update(id: id, item: model)
+            }
+        }
         invalidateAppInfoCache(model)
         invalidateTagTypesCache(model)
     }
@@ -544,29 +553,41 @@ extension PasteDataStore {
             return
         }
 
-        let modelType: PasteModelType? = switch model.tag {
-        case "image": .image
-        case "string": .string
-        case "rich": .rich
-        case "file": .file
-        case "link": .link
-        case "color": .color
-        default: nil
-        }
+        let modelType: PasteModelType? =
+            switch model.tag {
+            case "image": .image
+            case "string": .string
+            case "rich": .rich
+            case "file": .file
+            case "link": .link
+            case "color": .color
+            default: nil
+            }
 
         guard let modelType else { return }
 
-        if cachedTagTypes == nil {
-            cachedTagTypes = [modelType]
-        } else if !cachedTagTypes!.contains(modelType) {
-            cachedTagTypes?.append(modelType)
+        Task {
+            if cachedTagTypes == nil {
+                cachedTagTypes = await getAllTagTypes()
+            }
 
-            let order: [PasteModelType] = [.color, .file, .image, .link, .string]
-            cachedTagTypes?.sort { type1, type2 in
+            guard let cachedTagTypes, !cachedTagTypes.contains(modelType) else {
+                return
+            }
+
+            var updatedTypes = cachedTagTypes
+            updatedTypes.append(modelType)
+
+            let order: [PasteModelType] = [
+                .color, .file, .image, .link, .string,
+            ]
+            updatedTypes.sort { type1, type2 in
                 let index1 = order.firstIndex(of: type1) ?? order.count
                 let index2 = order.firstIndex(of: type2) ?? order.count
                 return index1 < index2
             }
+
+            self.cachedTagTypes = updatedTypes
         }
     }
 }

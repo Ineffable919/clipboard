@@ -227,6 +227,9 @@ struct HistoryView: View {
         }
 
         historyVM.setSelection(id: pd.dataList[newIndex].id, index: newIndex)
+        if historyVM.showPreviewId != nil {
+            historyVM.showPreviewId = nil
+        }
 
         if offset > 0, historyVM.shouldLoadNextPage(at: newIndex) {
             Task.detached(priority: .userInitiated) { [weak historyVM] in
@@ -280,6 +283,10 @@ struct HistoryView: View {
         }
 
         if event.keyCode == KeyCode.escape {
+            if historyVM.showPreviewId != nil {
+                historyVM.showPreviewId = nil
+                return event
+            }
             if ClipMainWindowController.shared.isVisible {
                 ClipMainWindowController.shared.toggleWindow()
                 return nil

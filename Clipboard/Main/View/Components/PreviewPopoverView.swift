@@ -8,6 +8,7 @@
 import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
+import VisionKit
 import WebKit
 
 struct PreviewPopoverView: View {
@@ -19,8 +20,6 @@ struct PreviewPopoverView: View {
     @EnvironmentObject private var env: AppEnvironment
     @AppStorage(PrefKey.enableLinkPreview.rawValue)
     private var enableLinkPreview: Bool = PasteUserDefaults.enableLinkPreview
-
-    // MARK: - 属性
 
     private var appIcon: NSImage? {
         guard !model.appPath.isEmpty else { return nil }
@@ -77,17 +76,20 @@ struct PreviewPopoverView: View {
     private var contentView: some View {
         VStack(alignment: .leading, spacing: Const.space12) {
             headerView
+                .frame(height: 24)
             previewContent
                 .clipShape(.rect(cornerRadius: Const.radius))
                 .shadow(radius: 0.5)
+                .frame(maxHeight: .infinity)
             footerView
+                .frame(height: 24)
         }
         .padding(Const.space12)
         .frame(
             minWidth: Const.minPreviewWidth,
             maxWidth: Const.maxPreviewWidth,
             minHeight: Const.minPreviewHeight,
-            maxHeight: Const.maxPreviewHeight,
+            maxHeight: Const.maxPreviewHeight
         )
     }
 
@@ -315,39 +317,26 @@ struct PreviewPopoverView: View {
     private var imagePreview: some View {
         ZStack {
             CheckerboardBackground()
-            if let image = NSImage(data: model.data) {
-                Image(nsImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(
-                        maxWidth: Const.maxPreviewWidth,
-                        maxHeight: Const.maxPreviewWidth,
-                    )
-            } else {
-                Image(systemName: "photo.badge.arrow.down")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .foregroundStyle(.secondary)
-                    .frame(width: 64, height: 64)
-            }
+            LiveTextImageView(imageData: model.data)
+                .frame(
+                    maxWidth: Const.maxPreviewWidth - Const.space12 * 2,
+                    maxHeight: Const.maxContentHeight
+                )
         }
     }
 
     @ViewBuilder
     private var filePreview: some View {
         Group {
-            if let paths = model.cachedFilePaths, !paths.isEmpty {
-                if paths.count == 1, let firstPath = paths.first {
-                    QuickLookPreview(
-                        url: URL(fileURLWithPath: firstPath),
-                        maxWidth: Const.maxPreviewWidth - 32,
-                        maxHeight: Const.maxContentHeight,
-                    )
-                }
+            if let paths = model.cachedFilePaths, paths.count == 1, let firstPath = paths.first {
+                QuickLookPreview(
+                    url: URL(fileURLWithPath: firstPath),
+                    maxWidth: Const.maxPreviewWidth - 32,
+                    maxHeight: Const.maxContentHeight,
+                )
             } else {
                 Image(systemName: "folder")
                     .resizable()
-                    .symbolRenderingMode(.hierarchical)
                     .foregroundStyle(Color.accentColor.opacity(0.8))
                     .frame(width: 144, height: 144, alignment: .center)
             }

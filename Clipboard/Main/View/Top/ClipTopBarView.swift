@@ -356,8 +356,7 @@ struct ClipTopBarView: View {
                     return nil
                 }
                 if env.focusView == .popover {
-                    env.focusView = .history
-                    return nil
+                    return event
                 }
             }
 
