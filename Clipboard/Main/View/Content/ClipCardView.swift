@@ -88,7 +88,8 @@ struct ClipCardView: View {
 
                 CardBottomView(
                     model: model,
-                    enableLinkPreview: enableLinkPreview
+                    enableLinkPreview: enableLinkPreview,
+                    keyword: searchKeyword
                 )
             }
             .background {

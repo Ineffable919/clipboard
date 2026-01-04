@@ -433,7 +433,11 @@ extension PasteboardModel {
             return cachedHighlightedPlainText
         }
 
-        let source = attributeString.string
+        let source: String = if pasteboardType.isFile() {
+            searchText
+        } else {
+            attributeString.string
+        }
         var attributed = AttributedString(source)
 
         let options: String.CompareOptions = [

@@ -12,6 +12,7 @@ struct LinkPreviewCardView: View {
     @Environment(\.colorScheme) var colorScheme
 
     let model: PasteboardModel
+    let keyword: String
 
     @State private var title: String?
     @State private var previewImage: NSImage?
@@ -30,7 +31,7 @@ struct LinkPreviewCardView: View {
                             ? Const.lightBackground : Const.darkBackground
                     )
 
-                infoSection(url: url)
+                infoSection(url: url, keyword: keyword)
                     .padding(Const.space8)
                     .frame(
                         width: Const.cardSize,
@@ -66,17 +67,23 @@ struct LinkPreviewCardView: View {
         }
     }
 
-    private func infoSection(url: URL) -> some View {
+    private func infoSection(url: URL, keyword: String) -> some View {
         VStack(alignment: .leading, spacing: Const.space4) {
             Text(title ?? url.host() ?? "")
                 .font(.headline)
                 .foregroundStyle(.primary)
                 .lineLimit(1)
 
-            Text(url.absoluteString)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
+            Group {
+                if keyword.isEmpty {
+                    Text(url.absoluteString)
+                } else {
+                    Text(model.highlightedPlainText(keyword: keyword))
+                }
+            }
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
         }
     }
 

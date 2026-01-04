@@ -22,7 +22,7 @@ struct CardContentView: View {
         switch model.type {
         case .link:
             if enableLinkPreview {
-                LinkPreviewCardView(model: model)
+                LinkPreviewCardView(model: model, keyword: keyword)
             } else {
                 StringContentView(model: model, keyword: keyword)
             }
@@ -103,32 +103,29 @@ struct FileContentView: View {
     var model: PasteboardModel
 
     var body: some View {
-        if let fileUrls = model.cachedFilePaths {
-            if fileUrls.count > 1 {
-                MultipleFilesView(fileURLs: fileUrls)
-            } else if let firstURL = fileUrls.first {
-                FileThumbnailView(fileURLString: firstURL)
-                    .padding(Const.space12)
-                    .frame(
-                        maxWidth: .infinity,
-                        maxHeight: .infinity,
-                        alignment: .top,
-                    )
-            } else {
-                VStack(alignment: .center) {
-                    Image(systemName: "doc.text")
-                        .resizable()
-                        .symbolRenderingMode(.hierarchical)
-                        .foregroundStyle(Color.accentColor.opacity(0.8))
-                        .frame(width: 48.0, height: 48.0)
+        Group {
+            if let fileUrls = model.cachedFilePaths, !fileUrls.isEmpty {
+                if fileUrls.count > 1 {
+                    MultipleFilesView(fileURLs: fileUrls)
+                } else {
+                    FileThumbnailView(fileURLString: fileUrls[0])
+                        .padding(Const.space12)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 }
-                .frame(
-                    maxWidth: .infinity,
-                    maxHeight: .infinity,
-                    alignment: .center,
-                )
+            } else {
+                FileIconPlaceholder()
             }
         }
+    }
+}
+
+private struct FileIconPlaceholder: View {
+    var body: some View {
+        Image(systemName: "doc.text")
+            .resizable()
+            .foregroundStyle(Color.accentColor.opacity(0.8))
+            .frame(width: 48, height: 48)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
 }
 

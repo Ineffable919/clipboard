@@ -11,6 +11,7 @@ import SwiftUI
 struct CardBottomView: View {
     let model: PasteboardModel
     let enableLinkPreview: Bool
+    let keyword: String
 
     var body: some View {
         switch model.type {
@@ -22,10 +23,46 @@ struct CardBottomView: View {
             } else {
                 CommonBottomView(model: model)
             }
+        case .file:
+            FileBottomView(model: model, keyword: keyword)
         case .color:
             EmptyView()
         default:
             CommonBottomView(model: model)
+        }
+    }
+}
+
+private struct FileBottomView: View {
+    let model: PasteboardModel
+    let keyword: String
+
+    var body: some View {
+        let (_, textColor) = model.colors()
+
+        if let cachePaths = model.cachedFilePaths {
+            if cachePaths.count > 1 {
+                Text(model.introString())
+                    .font(.callout)
+                    .foregroundStyle(textColor)
+                    .padding(.bottom, Const.space4)
+            } else {
+                Group {
+                    if keyword.isEmpty {
+                        Text(model.introString())
+                    } else {
+                        Text(model.highlightedPlainText(keyword: keyword))
+                    }
+                }
+                .font(.callout)
+                .lineLimit(2)
+                .truncationMode(.head)
+                .fixedSize(horizontal: false, vertical: true)
+                .foregroundStyle(textColor)
+                .padding(.horizontal, Const.space12)
+                .padding(.bottom, Const.space4)
+                .frame(width: Const.cardSize)
+            }
         }
     }
 }
@@ -78,18 +115,12 @@ struct CommonBottomView: View {
 
             Text(introString)
                 .font(.callout)
-                .lineLimit(2)
-                .truncationMode(.head)
-                .fixedSize(horizontal: false, vertical: true)
                 .foregroundStyle(textColor)
                 .padding(.horizontal, Const.space12)
-                .padding(
-                    .bottom,
-                    model.pasteboardType.isFile() ? Const.space8 : Const.space4
-                )
+                .padding(.bottom, Const.space4)
                 .frame(width: Const.cardSize)
         }
-        .frame(maxHeight: model.pasteboardType.isFile() ? 28.0 : 24.0)
+        .frame(maxHeight: 24.0)
     }
 
     private static func calculateNeedsMask(model: PasteboardModel) -> Bool {
