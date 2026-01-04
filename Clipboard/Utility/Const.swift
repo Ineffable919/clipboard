@@ -30,7 +30,7 @@ class Const {
             8.0
         }
 
-    static let settingsRadius: CGFloat = 12.0
+    static let settingsRadius: CGFloat = 8.0
 
     static let topBarHeight: CGFloat = 54.0
     static let topBarWidth: CGFloat = 450.0

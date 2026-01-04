@@ -343,6 +343,22 @@ final class TopBarViewModel {
         selectedChipId = chip.id
     }
 
+    func selectPreviousChip() {
+        guard let currentIndex = chips.firstIndex(where: { $0.id == selectedChipId }) else {
+            return
+        }
+        let previousIndex = currentIndex > 0 ? currentIndex - 1 : chips.count - 1
+        selectedChipId = chips[previousIndex].id
+    }
+
+    func selectNextChip() {
+        guard let currentIndex = chips.firstIndex(where: { $0.id == selectedChipId }) else {
+            return
+        }
+        let nextIndex = (currentIndex + 1) % chips.count
+        selectedChipId = chips[nextIndex].id
+    }
+
     func addChip(name: String, color: Color) {
         let newId = (chips.last?.id ?? 0) + 1
         let new = CategoryChip(

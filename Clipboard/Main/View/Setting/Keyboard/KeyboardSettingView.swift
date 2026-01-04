@@ -11,16 +11,22 @@ import SwiftUI
 
 struct KeyboardSettingView: View {
     @Environment(\.colorScheme) var scheme
-    private var appName: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
-            ?? "Clipboard"
-    }
 
     var body: some View {
         VStack(spacing: 0) {
             VStack(spacing: 20) {
                 VStack(spacing: 0) {
                     StartupShortcutsView()
+                }
+                .padding(.vertical, Const.space4)
+                .padding(.horizontal, Const.space16)
+                .settingsStyle()
+
+                VStack(spacing: 0) {
+                    PreviousTabView()
+                    Divider()
+                        .padding(.vertical, Const.space4)
+                    NextTabView()
                 }
                 .padding(.vertical, Const.space4)
                 .padding(.horizontal, Const.space16)
@@ -59,6 +65,26 @@ struct StartupShortcutsView: View {
             ShortcutRecorder("app_launch") {
                 ClipMainWindowController.shared.toggleWindow()
             }
+        }
+    }
+}
+
+struct PreviousTabView: View {
+    var body: some View {
+        HStack {
+            Text("显示上一个 Tab")
+            Spacer()
+            ShortcutRecorder("previous_tab")
+        }
+    }
+}
+
+struct NextTabView: View {
+    var body: some View {
+        HStack {
+            Text("显示下一个 Tab")
+            Spacer()
+            ShortcutRecorder("next_tab")
         }
     }
 }

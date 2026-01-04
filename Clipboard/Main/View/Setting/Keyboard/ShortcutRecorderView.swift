@@ -63,10 +63,10 @@ struct ShortcutRecorder: View {
         }
         .frame(maxWidth: 128.0, minHeight: Const.space24)
         .background(
-            RoundedRectangle(cornerRadius: Const.radius)
+            RoundedRectangle(cornerRadius: Const.settingsRadius)
                 .fill(Color(NSColor.controlBackgroundColor))
                 .overlay(
-                    RoundedRectangle(cornerRadius: Const.radius)
+                    RoundedRectangle(cornerRadius: Const.settingsRadius)
                         .strokeBorder(borderColor, lineWidth: borderSize)
                 )
         )
@@ -193,39 +193,78 @@ struct ShortcutRecorder: View {
             .command, .option, .control, .shift,
         ])
 
-        let isFunctionKey =
-            (0x7A ... 0x7D).contains(keyCode)
-                || [0x63, 0x76, 0x60, 0x61, 0x62, 0x64, 0x65, 0x6D, 0x67, 0x6F]
-                .contains(keyCode)
+        let functionKeyCodes: Set<UInt16> = [
+            0x7A, 0x78, 0x63, 0x76, 0x60, 0x61,
+            0x62, 0x64, 0x65, 0x6D, 0x67, 0x6F,
+        ]
+        let isFunctionKey = functionKeyCodes.contains(keyCode)
 
         if modifiers.isEmpty, !isFunctionKey {
             return event
         }
 
-        guard let chars = event.charactersIgnoringModifiers, !chars.isEmpty
-        else {
-            return event
-        }
-
         let specialMap: [UInt16: String] = [
-            0x33: "⌫", 0x75: "⌦", 0x24: "↩", 0x4C: "⌅",
-            0x31: "Space", 0x30: "⇥",
-            0x7B: "←", 0x7C: "→", 0x7D: "↓", 0x7E: "↑",
+            KeyCode.delete: "⌫",
+            0x75: "⌦",
+            KeyCode.return: "↩",
+            KeyCode.keypadEnter: "⌅",
+            KeyCode.space: "Space",
+            KeyCode.tab: "⇥",
+            KeyCode.leftArrow: "←",
+            KeyCode.rightArrow: "→",
+            KeyCode.downArrow: "↓",
+            KeyCode.upArrow: "↑",
             0x7A: "F1", 0x78: "F2", 0x63: "F3", 0x76: "F4", 0x60: "F5",
             0x61: "F6", 0x62: "F7", 0x64: "F8", 0x65: "F9", 0x6D: "F10",
             0x67: "F11", 0x6F: "F12",
         ]
 
-        let displayKey = specialMap[keyCode] ?? chars.uppercased()
+        let displayKey: String = if let special = specialMap[keyCode] {
+            special
+        } else if let eventChars = event.charactersIgnoringModifiers,
+                  !eventChars.isEmpty,
+                  eventChars.unicodeScalars.allSatisfy({ $0.value >= 32 })
+        {
+            eventChars.uppercased()
+        } else {
+            keyCodeToDisplayString(keyCode)
+        }
+
+        guard !displayKey.isEmpty else {
+            return event
+        }
+
         shortcut = KeyboardShortcut(
             modifiersRawValue: modifiers.rawValue,
             keyCode: keyCode,
-            displayKey: displayKey,
+            displayKey: displayKey
         )
 
         stopRecording()
         save()
         return nil
+    }
+
+    private func keyCodeToDisplayString(_ keyCode: UInt16) -> String {
+        let keyCodeMap: [UInt16: String] = [
+            KeyCode.a: "A", KeyCode.b: "B", KeyCode.c: "C", KeyCode.d: "D",
+            KeyCode.e: "E", KeyCode.f: "F", KeyCode.g: "G", KeyCode.h: "H",
+            KeyCode.i: "I", KeyCode.j: "J", KeyCode.k: "K", KeyCode.l: "L",
+            KeyCode.m: "M", KeyCode.n: "N", KeyCode.o: "O", KeyCode.p: "P",
+            KeyCode.q: "Q", KeyCode.r: "R", KeyCode.s: "S", KeyCode.t: "T",
+            KeyCode.u: "U", KeyCode.v: "V", KeyCode.w: "W", KeyCode.x: "X",
+            KeyCode.y: "Y", KeyCode.z: "Z",
+            KeyCode.zero: "0", KeyCode.one: "1", KeyCode.two: "2",
+            KeyCode.three: "3", KeyCode.four: "4", KeyCode.five: "5",
+            KeyCode.six: "6", KeyCode.seven: "7", KeyCode.eight: "8",
+            KeyCode.nine: "9",
+            KeyCode.minus: "-", KeyCode.equal: "=",
+            KeyCode.leftBracket: "[", KeyCode.rightBracket: "]",
+            KeyCode.backslash: "\\", KeyCode.semicolon: ";",
+            KeyCode.quote: "'", KeyCode.comma: ",",
+            KeyCode.period: ".", KeyCode.slash: "/", KeyCode.grave: "`",
+        ]
+        return keyCodeMap[keyCode] ?? ""
     }
 
     private func save() {

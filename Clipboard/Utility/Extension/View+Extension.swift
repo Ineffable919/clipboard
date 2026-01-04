@@ -15,6 +15,7 @@ struct SettingsStyleModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
+            .frame(maxWidth: .infinity)
             .background(
                 RoundedRectangle(cornerRadius: Const.settingsRadius)
                     .fill(

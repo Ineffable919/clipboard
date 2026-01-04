@@ -313,6 +313,35 @@ struct ClipTopBarView: View {
         }
     }
 
+    private func handleTabNavigationShortcut(_ event: NSEvent) -> Bool {
+        guard let previousTabInfo = HotKeyManager.shared.getHotKey(key: "previous_tab"),
+              let nextTabInfo = HotKeyManager.shared.getHotKey(key: "next_tab")
+        else {
+            return false
+        }
+
+        let relevantModifiers: NSEvent.ModifierFlags = [.command, .option, .control, .shift]
+        let eventModifiers = event.modifierFlags.intersection(relevantModifiers)
+
+        if previousTabInfo.isEnabled,
+           event.keyCode == previousTabInfo.shortcut.keyCode,
+           eventModifiers == previousTabInfo.shortcut.modifiers.intersection(relevantModifiers)
+        {
+            topBarVM.selectPreviousChip()
+            return true
+        }
+
+        if nextTabInfo.isEnabled,
+           event.keyCode == nextTabInfo.shortcut.keyCode,
+           eventModifiers == nextTabInfo.shortcut.modifiers.intersection(relevantModifiers)
+        {
+            topBarVM.selectNextChip()
+            return true
+        }
+
+        return false
+    }
+
     private func topKeyDownEvent(_ event: NSEvent) -> NSEvent? {
         guard event.window === ClipMainWindowController.shared.window
         else {
@@ -323,6 +352,10 @@ struct ClipTopBarView: View {
             || env.focusView == .newChip
             || env.focusView == .editChip
             || env.focusView == .popover
+
+        if handleTabNavigationShortcut(event), !isInInputMode {
+            return nil
+        }
 
         if isInInputMode {
             if EventDispatcher.shared.handleSystemEditingCommand(event) {
