@@ -20,19 +20,14 @@ struct KeyboardSettingView: View {
                 VStack(spacing: 0) {
                     StartupShortcutsView()
                 }
-                .padding(.vertical, Const.space4)
-                .padding(.horizontal, Const.space16)
                 .settingsStyle()
                 .id(refreshID)
 
                 VStack(spacing: 0) {
                     PreviousTabView()
                     Divider()
-                        .padding(.vertical, Const.space4)
                     NextTabView()
                 }
-                .padding(.vertical, Const.space4)
-                .padding(.horizontal, Const.space16)
                 .settingsStyle()
                 .id(refreshID)
 
@@ -43,7 +38,8 @@ struct KeyboardSettingView: View {
                     PlainTextModifierView(refreshID: $refreshID)
                 }
                 .padding(.vertical, Const.space8)
-                .padding(.horizontal, Const.space16)
+                .padding(.leading, Const.space16)
+                .padding(.trailing, Const.space10)
                 .settingsStyle()
 
                 HStack {
@@ -93,6 +89,9 @@ struct StartupShortcutsView: View {
                 ClipMainWindowController.shared.toggleWindow()
             }
         }
+        .padding(.vertical, Const.space6)
+        .padding(.leading, Const.space16)
+        .padding(.trailing, Const.space10)
     }
 }
 
@@ -103,6 +102,9 @@ struct PreviousTabView: View {
             Spacer()
             ShortcutRecorder("previous_tab")
         }
+        .padding(.vertical, Const.space6)
+        .padding(.leading, Const.space16)
+        .padding(.trailing, Const.space10)
     }
 }
 
@@ -113,6 +115,9 @@ struct NextTabView: View {
             Spacer()
             ShortcutRecorder("next_tab")
         }
+        .padding(.vertical, Const.space6)
+        .padding(.leading, Const.space16)
+        .padding(.trailing, Const.space10)
     }
 }
 
@@ -132,7 +137,7 @@ struct QuickPasteModifierView: View {
         HStack {
             Text("快速粘贴")
             Spacer()
-            HStack(spacing: 4) {
+            HStack(spacing: Const.space4) {
                 Picker("", selection: $selectedModifier) {
                     ForEach(modifiers, id: \.id) { modifier in
                         Text("\(modifier.symbol) \(modifier.name)")

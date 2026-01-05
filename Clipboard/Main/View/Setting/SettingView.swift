@@ -50,7 +50,7 @@ struct SettingView: View {
                     .padding(.bottom, Const.space12)
                     .padding(.horizontal, Const.space8)
             }
-            .frame(minWidth: 150)
+            .frame(minWidth: 200)
         } detail: {
             Group {
                 switch selectedPage {

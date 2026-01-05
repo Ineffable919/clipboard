@@ -43,7 +43,7 @@ struct ShortcutRecorder: View {
     }
 
     var body: some View {
-        HStack {
+        HStack(spacing: 0) {
             Text(displayText)
                 .font(.system(size: 13))
                 .foregroundStyle(textColor)
@@ -55,13 +55,16 @@ struct ShortcutRecorder: View {
                     displayText = "请录入快捷键…"
                     save()
                 } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.secondary)
+                    Image(systemName: "xmark")
+                        .resizable()
+                        .foregroundStyle(.primary)
+                        .frame(width: Const.space8, height: Const.space8)
+                        .padding(.trailing, Const.space8)
                 }
                 .buttonStyle(.plain)
             }
         }
-        .frame(maxWidth: 128.0, minHeight: Const.space24)
+        .frame(maxWidth: 120.0, minHeight: 25.0)
         .background(
             RoundedRectangle(cornerRadius: Const.settingsRadius)
                 .fill(Color(NSColor.controlBackgroundColor))
