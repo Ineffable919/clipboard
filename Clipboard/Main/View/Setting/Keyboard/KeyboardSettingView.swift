@@ -11,6 +11,8 @@ import SwiftUI
 
 struct KeyboardSettingView: View {
     @Environment(\.colorScheme) var scheme
+    @State private var resetIsPresented = false
+    @State private var refreshID = UUID()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -21,6 +23,7 @@ struct KeyboardSettingView: View {
                 .padding(.vertical, Const.space4)
                 .padding(.horizontal, Const.space16)
                 .settingsStyle()
+                .id(refreshID)
 
                 VStack(spacing: 0) {
                     PreviousTabView()
@@ -31,16 +34,40 @@ struct KeyboardSettingView: View {
                 .padding(.vertical, Const.space4)
                 .padding(.horizontal, Const.space16)
                 .settingsStyle()
+                .id(refreshID)
 
                 VStack(spacing: 0) {
-                    QuickPasteModifierView()
+                    QuickPasteModifierView(refreshID: $refreshID)
                     Divider()
                         .padding(.vertical, Const.space8)
-                    PlainTextModifierView()
+                    PlainTextModifierView(refreshID: $refreshID)
                 }
                 .padding(.vertical, Const.space8)
                 .padding(.horizontal, Const.space16)
                 .settingsStyle()
+
+                HStack {
+                    Spacer()
+                    BorderedButton(title: "重置快键方式为默认...") {
+                        resetIsPresented = true
+                    }
+                    .confirmationDialog("您确定将所有的快键方式重置为默认值吗？", isPresented: $resetIsPresented) {
+                        if #available(macOS 26.0, *) {
+                            Button("重置", role: .confirm) {
+                                HotKeyManager.shared.resetToDefaults()
+                                refreshID = UUID()
+                            }
+                        } else {
+                            Button("重置") {
+                                HotKeyManager.shared.resetToDefaults()
+                                refreshID = UUID()
+                            }
+                        }
+                        Button("取消", role: .cancel) {
+                            resetIsPresented = false
+                        }
+                    }
+                }
             }
         }
         .padding(Const.space24)
@@ -92,8 +119,8 @@ struct NextTabView: View {
 // MARK: - 快速粘贴修饰键视图
 
 struct QuickPasteModifierView: View {
-    @State private var selectedModifier: Int = PasteUserDefaults
-        .quickPasteModifier
+    @State private var selectedModifier: Int = PasteUserDefaults.quickPasteModifier
+    @Binding var refreshID: UUID
 
     private let modifiers = [
         (id: 0, symbol: "⌘", name: "Command"),
@@ -117,6 +144,9 @@ struct QuickPasteModifierView: View {
                 .onChange(of: selectedModifier) {
                     PasteUserDefaults.quickPasteModifier = selectedModifier
                 }
+                .onChange(of: refreshID) {
+                    selectedModifier = PasteUserDefaults.quickPasteModifier
+                }
 
                 Text("+ 1...9")
                     .foregroundColor(.primary)
@@ -128,8 +158,8 @@ struct QuickPasteModifierView: View {
 // MARK: - 纯文本粘贴修饰键视图
 
 struct PlainTextModifierView: View {
-    @State private var selectedModifier: Int = PasteUserDefaults
-        .plainTextModifier
+    @State private var selectedModifier: Int = PasteUserDefaults.plainTextModifier
+    @Binding var refreshID: UUID
 
     private let modifiers = [
         (id: 0, symbol: "⌘", name: "Command"),
@@ -153,6 +183,9 @@ struct PlainTextModifierView: View {
             .buttonStyle(.borderless)
             .onChange(of: selectedModifier) {
                 PasteUserDefaults.plainTextModifier = selectedModifier
+            }
+            .onChange(of: refreshID) {
+                selectedModifier = PasteUserDefaults.plainTextModifier
             }
         }
     }

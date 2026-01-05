@@ -13,5 +13,12 @@ final class AppEnvironment: ObservableObject {
     @Published var isShowDel: Bool = false
     var draggingItemId: Int64?
 
+    // 快速粘贴状态重置
+    @Published var quickPasteResetTrigger: Bool = false
+
     init() {}
+
+    func resetQuickPasteState() {
+        quickPasteResetTrigger.toggle()
+    }
 }

@@ -32,6 +32,7 @@ struct ChipView: View {
     @Bindable var topBarVM: TopBarViewModel
     @State private var isTypeHovered: Bool = false
     @State private var isDropTargeted: Bool = false
+    @State private var helpText: String = ""
 
     private var pd: PasteDataStore { PasteDataStore.main }
 
@@ -113,8 +114,39 @@ struct ChipView: View {
         .cornerRadius(Const.radius)
         .onHover { hovering in
             isTypeHovered = hovering
+            if hovering {
+                Task {
+                    await updateHelpText()
+                }
+            }
         }
-        .help(chip.id == 1 ? "\(PasteDataStore.main.totalCount)条" : "")
+        .help(helpText)
+    }
+
+    private func updateHelpText() async {
+        let count: Int = if chip.id == 1 {
+            pd.totalCount
+        } else {
+            await pd.getCountByGroup(groupId: chip.id)
+        }
+
+        let formattedCount = NumberFormatter.localizedString(
+            from: NSNumber(value: count),
+            number: .decimal
+        )
+
+        var shortcutText = ""
+        if let prevInfo = HotKeyManager.shared.getHotKey(key: "previous_tab"),
+           let nextInfo = HotKeyManager.shared.getHotKey(key: "next_tab"),
+           prevInfo.isEnabled,
+           nextInfo.isEnabled
+        {
+            let prevDisplay = prevInfo.shortcut.displayString
+            let nextDisplay = nextInfo.shortcut.displayString
+            shortcutText = "（\(prevDisplay)，\(nextDisplay)切换Tab）"
+        }
+
+        helpText = "\(formattedCount)条\(shortcutText)"
     }
 
     private var editingView: some View {

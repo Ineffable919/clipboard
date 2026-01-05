@@ -556,8 +556,7 @@ extension PasteDataStore {
         let modelType: PasteModelType? =
             switch model.tag {
             case "image": .image
-            case "string": .string
-            case "rich": .rich
+            case "string", "rich": .string
             case "file": .file
             case "link": .link
             case "color": .color
@@ -589,6 +588,10 @@ extension PasteDataStore {
 
             self.cachedTagTypes = updatedTypes
         }
+    }
+
+    func getCountByGroup(groupId: Int) async -> Int {
+        await sqlManager.getCountByGroup(groupId: groupId)
     }
 }
 

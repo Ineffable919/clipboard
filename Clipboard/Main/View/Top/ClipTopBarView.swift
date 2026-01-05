@@ -353,7 +353,7 @@ struct ClipTopBarView: View {
             || env.focusView == .editChip
             || env.focusView == .popover
 
-        if handleTabNavigationShortcut(event), !isInInputMode {
+        if !isInInputMode, handleTabNavigationShortcut(event) {
             return nil
         }
 

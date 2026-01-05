@@ -95,6 +95,8 @@ final class ClipMainWindowController: NSWindowController {
             win.ignoresMouseEvents = false
             win.makeKey()
 
+            env.resetQuickPasteState()
+
             clipVC.setPresented(true, animated: animated, completion: nil)
         } else {
             win.ignoresMouseEvents = true

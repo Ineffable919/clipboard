@@ -344,6 +344,16 @@ extension PasteSQLManager {
             return []
         }
     }
+
+    func getCountByGroup(groupId: Int) async -> Int {
+        do {
+            let query = table.filter(Col.group == groupId)
+            return try db?.scalar(query.count) ?? 0
+        } catch {
+            log.error("获取分组统计失败：\(error)")
+            return 0
+        }
+    }
 }
 
 // MARK: - 数据迁移

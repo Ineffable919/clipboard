@@ -46,6 +46,9 @@ struct HistoryView: View {
                     .onChange(of: pd.dataList) {
                         historyVM.reset(proxy: proxy)
                     }
+                    .onChange(of: env.quickPasteResetTrigger) {
+                        historyVM.isQuickPastePressed = false
+                    }
             }
             .onAppear {
                 appear()
@@ -264,10 +267,12 @@ struct HistoryView: View {
     }
 
     private func flagsChangedEvent(_ event: NSEvent) -> NSEvent? {
-        guard event.window == ClipMainWindowController.shared.window
+        guard event.window == ClipMainWindowController.shared.window,
+              ClipMainWindowController.shared.isVisible
         else {
             return event
         }
+
         historyVM.isQuickPastePressed = KeyCode.isQuickPasteModifierPressed()
         return event
     }

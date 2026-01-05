@@ -359,38 +359,6 @@ struct PreviewPopoverView: View {
     }
 }
 
-struct BorderedButton: View {
-    let title: String
-    let action: () -> Void
-    @State private var isHovered = false
-    @Environment(\.colorScheme) var scheme
-
-    var body: some View {
-        Button {
-            action()
-        } label: {
-            Text(title)
-                .font(.system(size: Const.space12, weight: .light))
-                .foregroundStyle(scheme == .dark ? .white : .black)
-        }
-        .focusable(false)
-        .buttonStyle(.borderless)
-        .padding(.horizontal, Const.space10)
-        .padding(.vertical, Const.space4)
-        .background(
-            RoundedRectangle(cornerRadius: Const.radius)
-                .fill(isHovered ? .gray.opacity(0.1) : Color.clear),
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: Const.radius)
-                .stroke(Color.gray.opacity(0.2), lineWidth: 1),
-        )
-        .onHover { hovering in
-            isHovered = hovering
-        }
-    }
-}
-
 // MARK: - FocusableContainer
 
 struct FocusableContainer<Content: View>: NSViewRepresentable {
