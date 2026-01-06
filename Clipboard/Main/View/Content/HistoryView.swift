@@ -308,11 +308,20 @@ struct HistoryView: View {
             return handleCommandKeyEvent(event)
         }
 
+        // 检查是否有修饰键（用于 tab 切换功能）
+        let hasModifiers = !event.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty
+
         switch event.keyCode {
         case UInt16(kVK_LeftArrow):
+            if hasModifiers {
+                return event
+            }
             return moveSelection(offset: -1, event: event)
 
         case UInt16(kVK_RightArrow):
+            if hasModifiers {
+                return event
+            }
             return moveSelection(offset: 1, event: event)
 
         case UInt16(kVK_Space):

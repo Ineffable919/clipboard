@@ -275,11 +275,19 @@ struct ShortcutRecorder: View {
         if shortcut.isEmpty {
             HotKeyManager.shared.deleteHotKey(key: hotKeyId)
         } else {
-            HotKeyManager.shared.addHotKey(
-                key: hotKeyId,
-                shortcut: shortcut,
-                isGlobal: hotKeyId == "app_launch",
-            )
+            if HotKeyManager.shared.getHotKey(key: hotKeyId) != nil {
+                HotKeyManager.shared.updateHotKey(
+                    key: hotKeyId,
+                    shortcut: shortcut,
+                    isEnabled: true,
+                )
+            } else {
+                HotKeyManager.shared.addHotKey(
+                    key: hotKeyId,
+                    shortcut: shortcut,
+                    isGlobal: hotKeyId == "app_launch",
+                )
+            }
             onShortcutChanged?()
         }
     }

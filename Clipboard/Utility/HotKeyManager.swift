@@ -307,8 +307,8 @@ class HotKeyManager {
         hotKeyList[index] = newInfo
         saveHotKeys(hotKeyList)
 
-        unregisterSystemHotKey(key: key)
         if newInfo.isEnabled, newInfo.isGlobal, let handler = handlers[key] {
+            unregisterSystemHotKey(key: key)
             _ = registerSystemHotKey(info: newInfo, handler: handler)
         }
 
