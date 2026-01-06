@@ -18,8 +18,6 @@ struct ClipCardView: View {
     var onRequestDelete: (() -> Void)?
 
     @EnvironmentObject private var env: AppEnvironment
-    private let controller = ClipMainWindowController.shared
-
     var body: some View {
         let showPreview = showPreviewId == model.id
 
@@ -122,7 +120,7 @@ struct ClipCardView: View {
     }
 
     private var pasteButtonTitle: String {
-        if let appName = controller.preApp?.localizedName {
+        if let appName = env.preApp?.localizedName {
             return "粘贴到 " + appName
         }
         return "粘贴"
