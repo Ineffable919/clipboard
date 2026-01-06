@@ -263,9 +263,9 @@ extension AppDelegate {
         if event.type == .leftMouseUp {
             clipWinController.toggleWindow()
         } else if event.type == .rightMouseUp {
-            menuBarItem!.menu = rMenu
+            menuBarItem?.menu = rMenu
             sender.performClick(nil)
-            menuBarItem!.menu = nil
+            menuBarItem?.menu = nil
         }
     }
 

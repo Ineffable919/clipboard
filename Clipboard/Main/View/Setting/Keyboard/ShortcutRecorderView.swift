@@ -43,7 +43,7 @@ struct ShortcutRecorder: View {
     }
 
     var body: some View {
-        HStack(spacing: 0) {
+        ZStack(alignment: .trailing) {
             Text(displayText)
                 .font(.system(size: 13))
                 .foregroundStyle(textColor)
@@ -65,6 +65,7 @@ struct ShortcutRecorder: View {
             }
         }
         .frame(maxWidth: 120.0, minHeight: 25.0)
+        .padding(.vertical, Const.space2)
         .background(
             RoundedRectangle(cornerRadius: Const.settingsRadius)
                 .fill(Color(NSColor.controlBackgroundColor))
@@ -274,18 +275,11 @@ struct ShortcutRecorder: View {
         if shortcut.isEmpty {
             HotKeyManager.shared.deleteHotKey(key: hotKeyId)
         } else {
-            if HotKeyManager.shared.getHotKey(key: hotKeyId) != nil {
-                HotKeyManager.shared.updateHotKey(
-                    key: hotKeyId,
-                    shortcut: shortcut,
-                    isEnabled: true,
-                )
-            } else {
-                HotKeyManager.shared.addHotKey(
-                    key: hotKeyId,
-                    shortcut: shortcut,
-                )
-            }
+            HotKeyManager.shared.addHotKey(
+                key: hotKeyId,
+                shortcut: shortcut,
+                isGlobal: hotKeyId == "app_launch",
+            )
             onShortcutChanged?()
         }
     }

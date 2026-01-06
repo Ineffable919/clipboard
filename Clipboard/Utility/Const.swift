@@ -77,8 +77,8 @@ class Const {
     static let maxRichTextSize: Int = 2000
 
     /// 设置页面
-    static let settingWidth: CGFloat = 640.0
-    static let settingHeight: CGFloat = 640.0
+    static let settingWidth: CGFloat = 650.0
+    static let settingHeight: CGFloat = 660.0
 
     static let darkBackground: Color = .init(NSColor(hex: "#272835"))
     static let lightBackground: Color = .init(NSColor(hex: "#f8f8f8"))

@@ -156,8 +156,6 @@ class HotKeyManager {
             name: NSApplication.willTerminateNotification,
             object: nil,
         )
-
-        log.info("HotKeyManager 初始化完成")
     }
 
     private func migrateHotKeysIfNeeded() {
@@ -251,11 +249,6 @@ class HotKeyManager {
             return nil
         }
 
-        guard let handler = handlers[key] else {
-            log.warn("快捷键 \(key) 没有对应的内置 handler")
-            return nil
-        }
-
         let info = HotKeyInfo(
             key: key,
             shortcut: shortcut,
@@ -265,11 +258,17 @@ class HotKeyManager {
         hotKeyList.append(info)
         saveHotKeys(hotKeyList)
 
-        if registerSystemHotKey(info: info, handler: handler) {
-            return info
+        if isGlobal {
+            guard let handler = handlers[key] else {
+                log.warn("快捷键 \(key) 没有对应的内置 handler")
+                return nil
+            }
+            if registerSystemHotKey(info: info, handler: handler) {
+                return info
+            }
         }
 
-        return nil
+        return info
     }
 
     @discardableResult

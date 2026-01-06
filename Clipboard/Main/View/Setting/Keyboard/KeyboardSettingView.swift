@@ -89,7 +89,7 @@ struct StartupShortcutsView: View {
                 ClipMainWindowController.shared.toggleWindow()
             }
         }
-        .padding(.vertical, Const.space6)
+        .padding(.vertical, Const.space4)
         .padding(.leading, Const.space16)
         .padding(.trailing, Const.space10)
     }
@@ -102,7 +102,7 @@ struct PreviousTabView: View {
             Spacer()
             ShortcutRecorder("previous_tab")
         }
-        .padding(.vertical, Const.space6)
+        .padding(.vertical, Const.space4)
         .padding(.leading, Const.space16)
         .padding(.trailing, Const.space10)
     }
@@ -115,7 +115,7 @@ struct NextTabView: View {
             Spacer()
             ShortcutRecorder("next_tab")
         }
-        .padding(.vertical, Const.space6)
+        .padding(.vertical, Const.space4)
         .padding(.leading, Const.space16)
         .padding(.trailing, Const.space10)
     }
