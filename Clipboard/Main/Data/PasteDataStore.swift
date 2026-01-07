@@ -42,6 +42,7 @@ final class PasteDataStore {
 
     private var sqlManager = PasteSQLManager.manager
     private var searchTask: Task<Void, Error>?
+    private var loadPageTask: Task<Void, Never>?
     private var colorDict = [String: String]()
     private var cachedAppInfo: [(name: String, path: String)]?
     private var cachedTagTypes: [PasteModelType]?
@@ -217,49 +218,59 @@ extension PasteDataStore {
 
 extension PasteDataStore {
     func loadNextPage() {
-        Task {
-            guard dataList.count < totalCount else { return }
-            guard !isLoadingPage else { return }
+        guard !isLoadingPage else { return }
+        guard dataList.count < totalCount else { return }
 
-            let nextPage = pageIndex + 1
-            guard nextPage != lastRequestedPage else { return }
+        let nextPage = pageIndex + 1
+        guard nextPage != lastRequestedPage else { return }
 
-            isLoadingPage = true
-            lastRequestedPage = nextPage
-            pageIndex = nextPage
+        loadPageTask?.cancel()
 
-            log.debug(
-                "loadNextPage \(pageIndex) (filterMode: \(isInFilterMode))",
-            )
+        isLoadingPage = true
+        lastRequestedPage = nextPage
+        pageIndex = nextPage
+
+        let currentOffset = dataList.count
+        let filter = isInFilterMode ? currentFilter : nil
+
+        log.debug(
+            "loadNextPage \(pageIndex) (filterMode: \(isInFilterMode))",
+        )
+
+        loadPageTask = Task { [weak self] in
+            guard let self else { return }
 
             let newItems: [PasteboardModel]
-            if isInFilterMode, let filter = currentFilter {
+            if let filter {
                 let rows = await sqlManager.search(
                     filter: filter,
                     limit: pageSize,
-                    offset: dataList.count,
+                    offset: currentOffset,
                 )
                 newItems = await getItems(rows: rows)
             } else {
                 newItems = await getItems(
                     limit: pageSize,
-                    offset: dataList.count,
+                    offset: currentOffset,
                 )
             }
 
-            guard !newItems.isEmpty else {
-                log.debug("No more items to load.")
-                hasMoreData = false
+            guard !Task.isCancelled else { return }
+
+            await MainActor.run {
+                guard !newItems.isEmpty else {
+                    hasMoreData = false
+                    isLoadingPage = false
+                    return
+                }
+
+                var list = dataList
+                list += newItems
+
+                updateData(with: list, changeType: .loadMore)
+                hasMoreData = (newItems.count == pageSize)
                 isLoadingPage = false
-                return
             }
-
-            var list = dataList
-            list += newItems
-
-            updateData(with: list, changeType: .loadMore)
-            hasMoreData = (newItems.count == pageSize)
-            isLoadingPage = false
         }
     }
 
@@ -349,7 +360,7 @@ extension PasteDataStore {
             list = Array(list.prefix(pageSize))
         }
 
-        updateData(with: list)
+        updateData(with: list, changeType: lastDataChangeType)
     }
 
     func deleteItems(_ items: PasteboardModel...) {

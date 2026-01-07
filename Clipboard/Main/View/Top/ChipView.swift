@@ -22,7 +22,7 @@ struct ChipView: View {
     var isSelected: Bool
     var chip: CategoryChip
 
-    @EnvironmentObject private var env: AppEnvironment
+    @Environment(AppEnvironment.self) private var env
     @Environment(\.colorScheme) private var colorScheme
 
     @AppStorage(PrefKey.backgroundType.rawValue)
@@ -288,7 +288,7 @@ struct ChipView: View {
 
 #Preview {
     @Previewable @State var topBarVM = TopBarViewModel()
-    @Previewable @StateObject var env = AppEnvironment()
+    @Previewable @State var env = AppEnvironment()
 
     ChipViewPreviewWrapper(topBarVM: topBarVM, env: env)
 }
@@ -305,7 +305,7 @@ private struct ChipViewPreviewWrapper: View {
             focus: $focus,
             topBarVM: topBarVM,
         )
-        .environmentObject(env)
+        .environment(env)
         .frame(width: 128, height: 32)
     }
 }

@@ -66,10 +66,11 @@ final class HistoryViewModel {
         }
         guard !pd.isLoadingPage else { return }
 
-        if index != nil {
-            let triggerIndex = pd.dataList.count - 5
-            guard shouldUpdateLoadTrigger(triggerIndex: triggerIndex)
-            else {
+        if let index {
+            guard shouldUpdateLoadTrigger(triggerIndex: pd.pageIndex) else {
+                return
+            }
+            guard shouldLoadNextPage(at: index) else {
                 return
             }
         }

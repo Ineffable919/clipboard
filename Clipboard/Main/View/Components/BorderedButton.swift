@@ -14,10 +14,9 @@ struct BorderedButton: View {
 
     var body: some View {
         Button(title, action: action)
-            .font(.system(size: Const.space12, weight: .regular))
-            .foregroundStyle(.primary)
             .focusable(false)
-            .buttonStyle(.borderless)
+            .controlSize(.regular)
+            .buttonStyle(.plain)
             .padding(.horizontal, Const.space10)
             .padding(.vertical, Const.space4)
             .background(isHovered ? .gray.opacity(0.1) : .clear)

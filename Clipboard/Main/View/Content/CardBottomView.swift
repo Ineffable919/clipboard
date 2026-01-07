@@ -93,7 +93,7 @@ struct CommonBottomView: View {
         self.model = model
         colors = model.colors()
         introString = model.introString()
-        needsMask = Self.calculateNeedsMask(model: model)
+        needsMask = ContentMaskCalculator.needsMask(for: model)
     }
 
     var body: some View {
@@ -101,29 +101,54 @@ struct CommonBottomView: View {
 
         ZStack(alignment: .bottom) {
             if needsMask {
-                LinearGradient(
-                    gradient: Gradient(stops: [
-                        .init(color: baseColor, location: 0.0),
-                        .init(color: baseColor, location: 0.6),
-                        .init(color: baseColor.opacity(0.8), location: 0.9),
-                        .init(color: .clear, location: 1.0),
-                    ]),
-                    startPoint: .bottom,
-                    endPoint: .top
-                )
+                BottomGradientMaskView(baseColor: baseColor)
             }
 
-            Text(introString)
-                .font(.callout)
-                .foregroundStyle(textColor)
-                .padding(.horizontal, Const.space12)
-                .padding(.bottom, Const.space4)
-                .frame(width: Const.cardSize)
+            BottomIntroTextView(introString: introString, textColor: textColor)
         }
         .frame(maxHeight: 24.0)
     }
+}
 
-    private static func calculateNeedsMask(model: PasteboardModel) -> Bool {
+// MARK: - Bottom Gradient Mask View
+
+private struct BottomGradientMaskView: View {
+    let baseColor: Color
+
+    var body: some View {
+        LinearGradient(
+            gradient: Gradient(stops: [
+                .init(color: baseColor, location: 0.0),
+                .init(color: baseColor, location: 0.6),
+                .init(color: baseColor.opacity(0.8), location: 0.9),
+                .init(color: .clear, location: 1.0),
+            ]),
+            startPoint: .bottom,
+            endPoint: .top
+        )
+    }
+}
+
+// MARK: - Bottom Intro Text View
+
+private struct BottomIntroTextView: View {
+    let introString: String
+    let textColor: Color
+
+    var body: some View {
+        Text(introString)
+            .font(.callout)
+            .foregroundStyle(textColor)
+            .padding(.horizontal, Const.space12)
+            .padding(.bottom, Const.space4)
+            .frame(width: Const.cardSize)
+    }
+}
+
+// MARK: - Content Mask Calculator
+
+private enum ContentMaskCalculator {
+    static func needsMask(for model: PasteboardModel) -> Bool {
         guard model.pasteboardType.isText() else { return false }
 
         let contentTopPadding = Const.space8
@@ -134,9 +159,7 @@ struct CommonBottomView: View {
             > contentHeightBeforeBottomOverlay
     }
 
-    private static func calculateContentTextHeight(model: PasteboardModel)
-        -> CGFloat
-    {
+    private static func calculateContentTextHeight(model: PasteboardModel) -> CGFloat {
         let availableWidth = Const.cardSize - Const.space10 - Const.space8
         let constraintRect = CGSize(
             width: max(0, availableWidth),

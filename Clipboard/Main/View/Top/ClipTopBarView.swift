@@ -11,7 +11,7 @@ import SwiftUI
 
 struct ClipTopBarView: View {
     @Environment(\.colorScheme) private var colorScheme
-    @EnvironmentObject private var env: AppEnvironment
+    @Environment(AppEnvironment.self) private var env
     @AppStorage(PrefKey.backgroundType.rawValue)
     private var backgroundTypeRaw: Int = 0
     @FocusState private var focus: FocusField?
@@ -733,8 +733,8 @@ class MenuActions: NSObject {
 }
 
 #Preview {
-    @Previewable @StateObject var env = AppEnvironment()
+    @Previewable @State var env = AppEnvironment()
     ClipTopBarView()
-        .environmentObject(env)
+        .environment(env)
         .frame(width: 1000.0, height: 50.0)
 }

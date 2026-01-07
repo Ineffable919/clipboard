@@ -10,12 +10,11 @@ import SwiftUI
 // MARK: - ContentView
 
 struct ContentView: View {
-    @EnvironmentObject private var env: AppEnvironment
+    @Environment(AppEnvironment.self) private var env
 
-    @AppStorage(PrefKey.backgroundType.rawValue) private var backgroundTypeRaw:
-        Int = 0
-    @AppStorage(PrefKey.glassMaterial.rawValue) private var glassMaterialRaw:
-        Int = 2
+    @AppStorage(PrefKey.backgroundType.rawValue) private var backgroundTypeRaw =
+        0
+    @AppStorage(PrefKey.glassMaterial.rawValue) private var glassMaterialRaw = 2
 
     private var backgroundType: BackgroundType {
         .init(rawValue: backgroundTypeRaw) ?? .liquid
@@ -25,42 +24,25 @@ struct ContentView: View {
         .init(rawValue: glassMaterialRaw) ?? .regular
     }
 
-    @ViewBuilder
-    private func contentStack() -> some View {
+    var body: some View {
         VStack(spacing: 0) {
             ClipTopBarView()
             HistoryView()
         }
-    }
-
-    @ViewBuilder
-    private func materialBackground() -> some View {
-        RoundedRectangle(cornerRadius: Const.radius)
-            .fill(glassMaterial.material)
-    }
-
-    var body: some View {
-        Group {
-            if #available(macOS 26.0, *) {
-                if backgroundType == .liquid {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: Const.radius)
-                            .fill(Color.clear)
-                            .glassEffect(
-                                in: RoundedRectangle(cornerRadius: Const.radius),
-                            )
-                        contentStack()
-                    }
-                } else {
-                    contentStack()
-                        .background(materialBackground())
-                }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background {
+            if #available(macOS 26.0, *), backgroundType == .liquid {
+                RoundedRectangle(cornerRadius: Const.radius)
+                    .fill(.clear)
+                    .glassEffect(
+                        .regular,
+                        in: .rect(cornerRadius: Const.radius)
+                    )
             } else {
-                contentStack()
-                    .background(materialBackground())
+                RoundedRectangle(cornerRadius: Const.radius)
+                    .fill(glassMaterial.material)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
@@ -69,6 +51,6 @@ struct ContentView: View {
 #Preview {
     let env = AppEnvironment()
     ContentView()
-        .environmentObject(env)
+        .environment(env)
         .frame(width: 1000, height: 330.0)
 }

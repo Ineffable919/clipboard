@@ -17,7 +17,7 @@ struct PreviewPopoverView: View {
 
     let model: PasteboardModel
 
-    @EnvironmentObject private var env: AppEnvironment
+    @Environment(AppEnvironment.self) private var env
     @AppStorage(PrefKey.enableLinkPreview.rawValue)
     private var enableLinkPreview: Bool = PasteUserDefaults.enableLinkPreview
 
@@ -100,6 +100,7 @@ struct PreviewPopoverView: View {
             if let appIcon {
                 Image(nsImage: appIcon)
                     .resizable()
+                    .scaledToFill()
                     .frame(width: 20, height: 20)
             }
 

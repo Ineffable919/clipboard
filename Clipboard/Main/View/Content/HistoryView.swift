@@ -12,7 +12,7 @@ import SwiftUI
 struct HistoryView: View {
     // MARK: - Properties
 
-    @EnvironmentObject private var env: AppEnvironment
+    @Environment(AppEnvironment.self) private var env
     @State private var historyVM = HistoryViewModel()
     @FocusState private var isFocused: Bool
     @AppStorage(PrefKey.enableLinkPreview.rawValue)
@@ -360,15 +360,20 @@ struct HistoryView: View {
     }
 
     private func handleCommandKeyEvent(_ event: NSEvent) -> NSEvent? {
+        let hasModifiers = !event.modifierFlags.intersection([.option, .control, .shift]).isEmpty
+        guard !hasModifiers else {
+            return event
+        }
+
         switch event.keyCode {
         case UInt16(kVK_ANSI_C):
-            handleCopy()
+            return handleCopy()
 
         case UInt16(kVK_ANSI_E):
-            handleEdit()
+            return handleEdit()
 
         default:
-            event
+            return event
         }
     }
 
