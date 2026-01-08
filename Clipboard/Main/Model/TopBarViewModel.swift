@@ -25,7 +25,7 @@ final class TopBarViewModel {
     // MARK: - Chip Properties
 
     var chips: [CategoryChip] = []
-    var selectedChipId: Int = 1 {
+    var selectedChipId: Int = -1 {
         didSet {
             performSearch()
         }
@@ -397,7 +397,7 @@ final class TopBarViewModel {
         chips.removeAll { $0.id == chip.id }
 
         if selectedChipId == chip.id {
-            selectedChipId = CategoryChip.systemChips.first?.id ?? 1
+            selectedChipId = CategoryChip.systemChips.first?.id ?? -1
         }
 
         saveUserCategories()
@@ -721,7 +721,7 @@ final class TopBarViewModel {
         }
         lastSearchCriteria = criteria
 
-        if criteria.isEmpty, selectedChipId == 1 {
+        if criteria.isEmpty, selectedChipId == -1 {
             await dataStore.resetDefaultList()
         } else {
             await dataStore.searchData(criteria)

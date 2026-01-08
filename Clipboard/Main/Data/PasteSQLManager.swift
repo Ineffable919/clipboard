@@ -165,7 +165,7 @@ extension PasteSQLManager {
         }
     }
 
-    func dropTable() {
+    func dropTable() async{
         do {
             let d = try db?.run(table.drop())
             log.debug("删除所有\(String(describing: d?.columnCount))")

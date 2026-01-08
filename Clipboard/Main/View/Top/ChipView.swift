@@ -69,19 +69,13 @@ struct ChipView: View {
             of: ChipView.dropTypes,
             isTargeted: $isDropTargeted,
         ) { _ in
-            if chip.isSystem {
-                return false
-            }
-            if env.draggingItemId != nil {
-                return handleDrop()
-            }
-            return false
+            handleDrop()
         }
     }
 
     private var normalView: some View {
         HStack(spacing: Const.space6) {
-            if chip.id == 1 {
+            if chip.id == -1 {
                 if #available(macOS 15.0, *) {
                     Image(
                         systemName:
@@ -124,7 +118,7 @@ struct ChipView: View {
     }
 
     private func updateHelpText() async {
-        let count: Int = if chip.id == 1 {
+        let count: Int = if chip.id == -1 {
             pd.totalCount
         } else {
             await pd.getCountByGroup(groupId: chip.id)
@@ -225,12 +219,20 @@ struct ChipView: View {
             return false
         }
 
-        if let item = pd.dataList.first(where: { $0.id == draggingId }) {
-            if item.group == chip.id { return false }
+        guard let item = pd.dataList.first(where: { $0.id == draggingId }) else {
+            return false
         }
 
-        defer {
-            env.draggingItemId = nil
+        if item.group == chip.id {
+            return true
+        }
+
+        if let selectedChip = topBarVM.chips.first(where: { $0.id == topBarVM.selectedChipId }),
+           !selectedChip.isSystem
+        {
+            var list = pd.dataList
+            list.removeAll(where: { $0.id == item.id })
+            pd.dataList = list
         }
 
         do {

@@ -430,7 +430,9 @@ extension PasteDataStore {
         let response = alert.runModal()
 
         if response == .alertFirstButtonReturn {
-            sqlManager.dropTable()
+            Task {
+                await sqlManager.dropTable()
+            }
             NSApplication.shared.terminate(self)
         }
     }
@@ -485,8 +487,10 @@ extension PasteDataStore {
         Task {
             await sqlManager.updateItemGroup(
                 id: itemId,
-                groupId: groupId,
+                groupId: groupId
             )
+        }
+        Task { @MainActor in
             if let model = dataList.first(where: { $0.id == itemId }),
                groupId != model.group
             {

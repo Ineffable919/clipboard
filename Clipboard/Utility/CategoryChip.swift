@@ -80,6 +80,6 @@ struct CategoryChip: Identifiable, Equatable, Codable {
     }
 
     static let systemChips: [CategoryChip] = [
-        .init(id: 1, name: "剪贴板", color: .gray, isSystem: true),
+        .init(id: -1, name: "剪贴板", color: .gray, isSystem: true),
     ]
 }
