@@ -91,7 +91,7 @@ struct StartupShortcutsView: View {
         }
         .padding(.vertical, Const.space4)
         .padding(.leading, Const.space16)
-        .padding(.trailing, Const.space10)
+        .padding(.trailing, Const.space8)
     }
 }
 
@@ -104,7 +104,7 @@ struct PreviousTabView: View {
         }
         .padding(.vertical, Const.space4)
         .padding(.leading, Const.space16)
-        .padding(.trailing, Const.space10)
+        .padding(.trailing, Const.space8)
     }
 }
 
@@ -117,7 +117,7 @@ struct NextTabView: View {
         }
         .padding(.vertical, Const.space4)
         .padding(.leading, Const.space16)
-        .padding(.trailing, Const.space10)
+        .padding(.trailing, Const.space8)
     }
 }
 

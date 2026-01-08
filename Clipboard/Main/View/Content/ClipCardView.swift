@@ -33,10 +33,10 @@ struct ClipCardView: View {
             }
             .frame(width: Const.cardSize, height: Const.cardSize)
             .shadow(
-                color: isSelected ? .clear : .black.opacity(0.1),
+                color: isSelected ? .clear : Color(hex: "#30689C").opacity(0.1),
                 radius: isSelected ? 0 : 4,
                 x: 0,
-                y: isSelected ? 0 : 2
+                y: isSelected ? 0 : 6
             )
             .padding(Const.space4)
             .contextMenu { contextMenuContent }
@@ -137,7 +137,7 @@ struct ClipCardView: View {
                 .font(.system(size: 12, weight: .regular, design: .rounded))
                 .foregroundStyle(textColor)
                 .padding(.bottom, Const.space4)
-                .padding(.trailing, Const.space4)
+                .padding(.trailing, Const.space6)
                 .transition(.scale.combined(with: .opacity))
         }
     }
@@ -218,6 +218,7 @@ struct ClipCardView: View {
 
 #Preview {
     @Previewable @State var previewId: PasteboardModel.ID? = nil
+    let env = AppEnvironment()
     let data = "Clipboard".data(using: .utf8)
     ClipCardView(
         model: PasteboardModel(
@@ -232,10 +233,12 @@ struct ClipCardView: View {
             group: -1,
             tag: "string"
         ),
-        isSelected: true,
+        isSelected: false,
         showPreviewId: $previewId,
         quickPasteIndex: 1,
         enableLinkPreview: true,
         searchKeyword: ""
     )
+    .environment(env)
+    .padding()
 }
