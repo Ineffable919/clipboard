@@ -240,7 +240,7 @@ final class PasteBoard {
         let shouldPasteAsPlainText = !isAttribute || PasteUserDefaults.pasteOnlyText
 
         switch data.type {
-        case .string, .rich where shouldPasteAsPlainText:
+        case .string where shouldPasteAsPlainText, .rich where shouldPasteAsPlainText:
             writePlainText(data)
             return true
 
