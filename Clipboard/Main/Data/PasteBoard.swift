@@ -46,26 +46,6 @@ final class PasteBoard {
         "com.apple.pasteboard.promised-file-content-type",
     ]
 
-    private lazy var notificationSound: NSSound? = {
-        guard
-            let soundURL = Bundle.main.url(
-                forResource: "copy",
-                withExtension: "aiff"
-            )
-        else {
-            log.warn("无法找到音效文件: copy.aiff")
-            return nil
-        }
-
-        guard let sound = NSSound(contentsOf: soundURL, byReference: false)
-        else {
-            log.warn("无法加载音效文件: \(soundURL.path)")
-            return nil
-        }
-
-        return sound
-    }()
-
     init() {
         changeCount = pasteboard.changeCount
     }
@@ -214,9 +194,7 @@ final class PasteBoard {
         changeCount = pasteboard.changeCount
 
         AppDelegate.shared?.triggerStatusBarPulse()
-        if PasteUserDefaults.soundEnabled {
-            playNotificationSound()
-        }
+        SoundManager.shared.play(.copy)
     }
 
     /// 检查敏感内容和瞬时内容
@@ -241,78 +219,88 @@ final class PasteBoard {
         NSWorkspace.shared.frontmostApplication
     }
 
-    private func playNotificationSound() {
-        guard let sound = notificationSound, !sound.isPlaying else {
-            return
-        }
-        sound.play()
-    }
-
     func pasteData(_ data: PasteboardModel, _ isAttribute: Bool = true) {
         data.updateDate()
         pasteModel = data
         if let itemId = data.id {
             PasteDataStore.main.updateDbItem(id: itemId, item: data)
         }
-        PasteDataStore.main.moveItemToFirst(data)
         NSPasteboard.general.clearContents()
 
-        let shouldPasteAsPlainText =
-            !isAttribute || PasteUserDefaults.pasteOnlyText
+        let success = writeToPasteboard(data, isAttribute: isAttribute)
+        guard success else { return }
 
-        if (data.type == .string) || (data.type == .rich),
-           shouldPasteAsPlainText
-        {
-            var textToPaste = data.searchText
-            if PasteUserDefaults.removeTailingNewline {
-                textToPaste = textToPaste.trimmingTrailingNewlines()
-            }
-            NSPasteboard.general.setString(textToPaste, forType: .string)
-        } else if data.type == .file {
-            if let filePaths = String(data: data.data, encoding: .utf8) {
-                let fileManager = FileManager.default
-                let validURLs = filePaths
-                    .components(separatedBy: "\n")
-                    .lazy
-                    .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-                    .filter { !$0.isEmpty && fileManager.fileExists(atPath: $0) }
-                    .map { URL(fileURLWithPath: $0) }
+        PasteDataStore.main.moveItemToFirst(data)
+        SoundManager.shared.play(.paste)
+    }
 
-                let urlArray = Array(validURLs)
-                guard !urlArray.isEmpty else { return }
+    /// 将数据写入系统剪贴板
+    /// - Returns: 是否成功写入
+    private func writeToPasteboard(_ data: PasteboardModel, isAttribute: Bool) -> Bool {
+        let shouldPasteAsPlainText = !isAttribute || PasteUserDefaults.pasteOnlyText
 
-                pasteboard.writeObjects(urlArray as [NSPasteboardWriting])
-            }
-        } else {
-            if data.pasteboardType.isText(),
-               PasteUserDefaults.removeTailingNewline
-            {
-                if let attributedString = NSAttributedString(
-                    with: data.data,
-                    type: data.pasteboardType
-                ) {
-                    let mutableString = NSMutableAttributedString(
-                        attributedString: attributedString
-                    )
-                    mutableString.trimTrailingNewlines()
+        switch data.type {
+        case .string, .rich where shouldPasteAsPlainText:
+            writePlainText(data)
+            return true
 
-                    if let processedData = mutableString.toData(
-                        with: data.pasteboardType
-                    ) {
-                        NSPasteboard.general.setData(
-                            processedData,
-                            forType: data.pasteboardType
-                        )
-                        return
-                    }
-                }
-            }
+        case .file:
+            return writeFileURLs(data)
 
-            NSPasteboard.general.setData(
-                data.data,
-                forType: data.pasteboardType
-            )
+        default:
+            writeRawData(data)
+            return true
         }
+    }
+
+    /// 写入纯文本
+    private func writePlainText(_ data: PasteboardModel) {
+        var text = data.searchText
+        if PasteUserDefaults.removeTailingNewline {
+            text = text.trimmingTrailingNewlines()
+        }
+        NSPasteboard.general.setString(text, forType: .string)
+    }
+
+    /// 写入文件 URL
+    /// - Returns: 是否有有效文件写入
+    private func writeFileURLs(_ data: PasteboardModel) -> Bool {
+        guard let filePaths = String(data: data.data, encoding: .utf8) else {
+            return false
+        }
+
+        let fileManager = FileManager.default
+        let validURLs = filePaths
+            .components(separatedBy: "\n")
+            .lazy
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty && fileManager.fileExists(atPath: $0) }
+            .map { URL(fileURLWithPath: $0) }
+
+        let urlArray = Array(validURLs)
+        guard !urlArray.isEmpty else { return false }
+
+        pasteboard.writeObjects(urlArray as [NSPasteboardWriting])
+        return true
+    }
+
+    /// 写入原始数据（富文本、图片等）
+    private func writeRawData(_ data: PasteboardModel) {
+        // 处理需要去除末尾换行的富文本
+        if data.pasteboardType.isText(),
+           PasteUserDefaults.removeTailingNewline,
+           let attributedString = NSAttributedString(with: data.data, type: data.pasteboardType)
+        {
+            let mutableString = NSMutableAttributedString(attributedString: attributedString)
+            mutableString.trimTrailingNewlines()
+
+            if let processedData = mutableString.toData(with: data.pasteboardType) {
+                NSPasteboard.general.setData(processedData, forType: data.pasteboardType)
+                return
+            }
+        }
+
+        NSPasteboard.general.setData(data.data, forType: data.pasteboardType)
     }
 }
 
