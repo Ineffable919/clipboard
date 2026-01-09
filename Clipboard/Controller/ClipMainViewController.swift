@@ -133,7 +133,7 @@ final class ClipMainViewController: NSViewController {
         anim.fromValue = from
         anim.toValue = to
         anim.duration = duration
-        anim.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        anim.timingFunction = CAMediaTimingFunction(name: .easeOut)
         anim.fillMode = .forwards
         anim.isRemovedOnCompletion = false
 

@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-enum PrefKey: String {
+enum PrefKey: String, CaseIterable {
     /// 开机自启
     case onStart
     /// 直接粘贴
