@@ -510,6 +510,8 @@ struct SettingsMenu: View {
     }
 
     private func showNativeMenu() {
+        silentCheckForUpdates()
+
         let menu = NSMenu()
 
         if updateManager.hasUpdate {
@@ -678,6 +680,10 @@ struct SettingsMenu: View {
             systemSymbolName: "\(number).circle",
             accessibilityDescription: nil
         )
+    }
+
+    private func silentCheckForUpdates() {
+        AppDelegate.shared?.updaterController.updater.checkForUpdatesInBackground()
     }
 }
 
