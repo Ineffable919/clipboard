@@ -556,17 +556,28 @@ extension PasteDataStore {
 
         guard let modelType else { return }
 
-        if cachedTagTypes == nil {
-            cachedTagTypes = [modelType]
-        } else if !cachedTagTypes!.contains(modelType) {
-            cachedTagTypes?.append(modelType)
+        Task {
+            if cachedTagTypes == nil {
+                cachedTagTypes = await getAllTagTypes()
+            }
 
-            let order: [PasteModelType] = [.color, .file, .image, .link, .string]
-            cachedTagTypes?.sort { type1, type2 in
+            guard let cachedTagTypes, !cachedTagTypes.contains(modelType) else {
+                return
+            }
+
+            var updatedTypes = cachedTagTypes
+            updatedTypes.append(modelType)
+
+            let order: [PasteModelType] = [
+                .color, .file, .image, .link, .string,
+            ]
+            updatedTypes.sort { type1, type2 in
                 let index1 = order.firstIndex(of: type1) ?? order.count
                 let index2 = order.firstIndex(of: type2) ?? order.count
                 return index1 < index2
             }
+
+            self.cachedTagTypes = updatedTypes
         }
     }
 }
