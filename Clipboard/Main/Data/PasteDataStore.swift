@@ -544,15 +544,15 @@ extension PasteDataStore {
             return
         }
 
-        let modelType: PasteModelType? = switch model.tag {
-        case "image": .image
-        case "string": .string
-        case "rich": .rich
-        case "file": .file
-        case "link": .link
-        case "color": .color
-        default: nil
-        }
+        let modelType: PasteModelType? =
+            switch model.tag {
+            case "image": .image
+            case "string", "rich": .string
+            case "file": .file
+            case "link": .link
+            case "color": .color
+            default: nil
+            }
 
         guard let modelType else { return }
 
