@@ -10,8 +10,8 @@
             <sparkle:releaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
             </sparkle:releaseNotesLink>
-            <pubDate>Wed, 31 Dec 2025 20:27:00 +0800</pubDate>
-            <sparkle:version>90</sparkle:version>
+            <pubDate>Sat, 10 Jan 2026 16:06:56 +0800</pubDate>
+            <sparkle:version>91</sparkle:version>
             <sparkle:shortVersionString>0.3.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
             <sparkle:tags>
@@ -19,8 +19,8 @@
             </sparkle:tags>
             <enclosure
                 url="https://github.com/Ineffable919/clipboard/releases/download/0.3.0/Clipboard-0.3.0-arm64.zip"
-                sparkle:edSignature="RiZ9rwcIN0U6IotNLjnaPig5rKp1F6Q3bb7P6F5s2GSpgtfaP7737bGkTFY5+Xre0Rm5aA3tOuVwNosH0S8lCQ=="
-                length="3038681"
+                sparkle:edSignature="w1eOX3r4q6pSZ80EMxpOHLR8BCER299/hsiwU48u+7lE2mIvAcg3lIs1gbDmU6/N/YpEwmXLOuysj46lX4bHBA=="
+                length="3039206"
                 type="application/octet-stream" />
         </item>
 
@@ -29,8 +29,8 @@
             <sparkle:releaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
             </sparkle:releaseNotesLink>
-            <pubDate>Wed, 31 Dec 2025 20:29:08 +0800</pubDate>
-            <sparkle:version>90</sparkle:version>
+            <pubDate>Sat, 10 Jan 2026 16:08:17 +0800</pubDate>
+            <sparkle:version>91</sparkle:version>
             <sparkle:shortVersionString>0.3.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
             <sparkle:tags>
@@ -38,8 +38,8 @@
             </sparkle:tags>
             <enclosure
                 url="https://github.com/Ineffable919/clipboard/releases/download/0.3.0/Clipboard-0.3.0-x86_64.zip"
-                sparkle:edSignature="+HuxTH0y1HY8RXvuA9k72PNGQOjTT3cUE7ITtpJFUYIn4JkJUk6CScTBjCG9AAQzWflgeF2Ob0SpgI2MsihVCg=="
-                length="3139274"
+                sparkle:edSignature="HbHJy1S+Omco8J4vk5G67Bxd2en/jKWhIeZhr+C0nkYP4FEyOoAYgJdmAyHrFFJ5PjJ5kP0WbgKTuQC0O4QvCw=="
+                length="3139498"
                 type="application/octet-stream" />
         </item>
 
