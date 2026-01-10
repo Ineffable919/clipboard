@@ -359,7 +359,9 @@ extension PasteDataStore {
         if list.count > pageSize {
             list = Array(list.prefix(pageSize))
         }
-
+        if lastDataChangeType == .loadMore {
+            lastDataChangeType = .reset
+        }
         updateData(with: list, changeType: lastDataChangeType)
     }
 

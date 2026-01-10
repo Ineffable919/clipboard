@@ -81,7 +81,7 @@ class Const {
     static let settingHeight: CGFloat = 660.0
 
     static let darkBackground: Color = .init(NSColor(hex: "#272835"))
-    static let lightBackground: Color = .init(NSColor(hex: "#f9f9f9"))
+    static let lightBackground: Color = .init(NSColor(hex: "#f5f5f5"))
     static let lightToolColor: Color = .init(NSColor(hex: "#eeeeef"))
     static let darkToolColor: Color = .init(NSColor(hex: "#2e2e39"))
     static let darkImageShallowColor: NSColor = .init(hex: "#383838")

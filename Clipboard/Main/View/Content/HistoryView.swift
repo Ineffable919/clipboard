@@ -288,9 +288,9 @@ struct HistoryView: View {
         }
 
         if event.keyCode == KeyCode.escape {
-            if historyVM.showPreviewId != nil {
+            if case .some(_?) = historyVM.showPreviewId {
                 historyVM.showPreviewId = nil
-                return event
+                return nil
             }
             if ClipMainWindowController.shared.isVisible {
                 ClipMainWindowController.shared.toggleWindow()

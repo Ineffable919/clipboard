@@ -42,7 +42,7 @@ struct StorageSettingView: View {
                 .padding(.horizontal, Const.space16)
                 .settingsStyle()
 
-                Text("日志")
+                Text("应用日志")
                     .font(.headline)
                     .bold()
 
@@ -312,13 +312,17 @@ struct LogFileRow: View {
     var body: some View {
         HStack(alignment: .center, spacing: Const.space12) {
             VStack(alignment: .leading, spacing: Const.space4) {
-                Text("日志文件")
+                Text("存储路径")
                     .font(.callout)
-                Text(logFilePath)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
+                Button(logFilePath) {
+                    showLogFileInFinder()
+                }
+                .buttonStyle(.plain)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             Spacer()
@@ -333,6 +337,11 @@ struct LogFileRow: View {
             }
         }
         .padding(.vertical, Const.space12)
+    }
+    
+    private func showLogFileInFinder() {
+        guard let logURL = AppLogger.getLogFileURL() else { return }
+        NSWorkspace.shared.selectFile(logURL.path, inFileViewerRootedAtPath: "")
     }
 }
 

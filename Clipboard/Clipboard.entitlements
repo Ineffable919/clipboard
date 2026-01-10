@@ -2,6 +2,38 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
     <dict>
+        <key>com.apple.security.app-sandbox</key>
+        <true/>
+        
+        <key>com.apple.security.network.client</key>
+        <true/>
+        
+        <!-- 文件访问：用户选择的文件（读写） -->
+        <key>com.apple.security.files.user-selected.read-write</key>
+        <true/>
+        
+        <!-- 文件访问：Downloads 文件夹（读写） -->
+        <key>com.apple.security.files.downloads.read-write</key>
+        <true/>
+        
+        <!-- 文件访问：Pictures 文件夹（只读） -->
+        <key>com.apple.security.assets.pictures.read-only</key>
+        <true/>
+        
+        <!-- 文件访问：Music 文件夹（只读） -->
+        <key>com.apple.security.assets.music.read-only</key>
+        <true/>
+        
+        <!-- 文件访问：Movies 文件夹（只读） -->
+        <key>com.apple.security.assets.movies.read-only</key>
+        <true/>
+        
+        <!-- 临时例外：读取旧版本配置文件（迁移偏好与设置） -->
+        <key>com.apple.security.temporary-exception.files.home-relative-path.read-only</key>
+        <array>
+            <string>/Library/Preferences/</string>
+        </array>
+        
         <key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
         <array>
             <string>$(PRODUCT_BUNDLE_IDENTIFIER)-spks</string>

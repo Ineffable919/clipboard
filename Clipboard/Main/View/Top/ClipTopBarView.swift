@@ -410,9 +410,6 @@ struct ClipTopBarView: View {
             env.focusView = .search
             return nil
         }
-
-        if event.keyCode == KeyCode.escape {}
-
         return event
     }
 
