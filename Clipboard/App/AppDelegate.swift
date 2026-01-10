@@ -170,7 +170,7 @@ extension AppDelegate: NSApplicationDelegate {
     func applicationDidFinishLaunching(_: Notification) {
         Self.shared = self
 
-        PasteSQLManager.performSandboxMigrationIfNeeded()
+        PasteSQLManager.migrateUserDefaultsIfNeeded()
 
         initStatus()
 

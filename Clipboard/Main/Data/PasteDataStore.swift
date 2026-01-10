@@ -21,7 +21,7 @@ final class PasteDataStore {
 
     private(set) var chipsVersion: Int = 0
 
-    private(set) var totalCount: Int = 0
+    var totalCount: Int = 0
     private(set) var pageIndex = 0
 
     private(set) var isLoadingPage = false

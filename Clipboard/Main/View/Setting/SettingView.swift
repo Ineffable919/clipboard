@@ -12,6 +12,7 @@ enum SettingPage: String, CaseIterable, Identifiable {
     case appearance = "外观"
     case privacy = "隐私"
     case keyboard = "快捷键"
+    case storage = "存储"
     case about = "关于"
 
     var id: String { rawValue }
@@ -22,6 +23,7 @@ enum SettingPage: String, CaseIterable, Identifiable {
         case .appearance: "paintpalette"
         case .privacy: "hand.raised"
         case .keyboard: "command"
+        case .storage: "externaldrive"
         case .about: "info.circle"
         }
     }
@@ -62,6 +64,8 @@ struct SettingView: View {
                     PrivacySettingView()
                 case .keyboard:
                     KeyboardSettingView()
+                case .storage:
+                    StorageSettingView()
                 case .about:
                     AboutSettingView()
                 }

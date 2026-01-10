@@ -9,36 +9,25 @@ import AppKit
 import Foundation
 import SQLite
 
-enum Col {
-    static let id = Expression<Int64>("id")
-    static let uniqueId = Expression<String>("unique_id")
-    static let type = Expression<String>("type")
-    static let data = Expression<Data>("data")
-    static let showData = Expression<Data?>("show_data")
-    static let ts = Expression<Int64>("timestamp")
-    static let appPath = Expression<String>("app_path")
-    static let appName = Expression<String>("app_name")
-    static let searchText = Expression<String>("search_text")
-    static let length = Expression<Int>("length")
-    static let group = Expression<Int>("group")
-    static let tag = Expression<String?>("tag")
+enum Col: Sendable {
+    nonisolated(unsafe) static let id = Expression<Int64>("id")
+    nonisolated(unsafe) static let uniqueId = Expression<String>("unique_id")
+    nonisolated(unsafe) static let type = Expression<String>("type")
+    nonisolated(unsafe) static let data = Expression<Data>("data")
+    nonisolated(unsafe) static let showData = Expression<Data?>("show_data")
+    nonisolated(unsafe) static let ts = Expression<Int64>("timestamp")
+    nonisolated(unsafe) static let appPath = Expression<String>("app_path")
+    nonisolated(unsafe) static let appName = Expression<String>("app_name")
+    nonisolated(unsafe) static let searchText = Expression<String>("search_text")
+    nonisolated(unsafe) static let length = Expression<Int>("length")
+    nonisolated(unsafe) static let group = Expression<Int>("group")
+    nonisolated(unsafe) static let tag = Expression<String?>("tag")
 }
 
 final class PasteSQLManager: NSObject {
     static let manager = PasteSQLManager()
     private static var isInitialized = false
     private nonisolated static let initLock = NSLock()
-
-    private static var legacyDatabasePath: String {
-        let home = NSHomeDirectory()
-        if home.contains("/Library/Containers/") {
-            let components = home.components(separatedBy: "/Library/Containers/")
-            if let userHome = components.first {
-                return "\(userHome)/Documents/Clip/Clip.sqlite3"
-            }
-        }
-        return "\(home)/Documents/Clip/Clip.sqlite3"
-    }
 
     private static var sandboxDatabaseDirectory: String {
         URL.documentsDirectory.appending(path: "Clip").path
@@ -371,136 +360,249 @@ extension PasteSQLManager {
     }
 }
 
-// MARK: - 数据迁移
+// MARK: - 数据导入导出
 
 extension PasteSQLManager {
-    private static let sandboxMigrationKey = "sandboxDataMigrated"
-
-    private static var hasMigratedToSandbox: Bool {
-        get { UserDefaults.standard.bool(forKey: sandboxMigrationKey) }
-        set { UserDefaults.standard.set(newValue, forKey: sandboxMigrationKey) }
+    struct ImportExportResult: Sendable {
+        let success: Bool
+        let message: String
     }
 
-    private static var legacyUserDefaultsPath: String {
-        let bundleId = Bundle.main.bundleIdentifier ?? "com.crown.clipboard"
-        let home = NSHomeDirectory()
-        if home.contains("/Library/Containers/") {
-            let components = home.components(separatedBy: "/Library/Containers/")
-            if let userHome = components.first {
-                return "\(userHome)/Library/Preferences/\(bundleId).plist"
+    /// 导出数据库到指定路径
+    nonisolated func exportDatabase(to destinationURL: URL) async -> ImportExportResult {
+        let sourcePath = await Self.sandboxDatabasePath
+
+        return await Task.detached(priority: .userInitiated) {
+            guard FileManager.default.fileExists(atPath: sourcePath) else {
+                return ImportExportResult(success: false, message: "源数据库文件不存在")
             }
+
+            do {
+                let sourceDb = try Connection(sourcePath)
+                try sourceDb.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+
+                if FileManager.default.fileExists(atPath: destinationURL.path) {
+                    try FileManager.default.removeItem(at: destinationURL)
+                }
+
+                try FileManager.default.copyItem(
+                    atPath: sourcePath,
+                    toPath: destinationURL.path
+                )
+
+                return ImportExportResult(success: true, message: "导出成功")
+            } catch {
+                return ImportExportResult(
+                    success: false,
+                    message: "导出失败：\(error.localizedDescription)"
+                )
+            }
+        }.value
+    }
+
+    /// 从指定路径导入数据库
+    nonisolated func importDatabase(from sourceURL: URL) async -> ImportExportResult {
+        let validationResult = await validateImportDatabase(at: sourceURL)
+        guard validationResult.success else {
+            return validationResult
         }
-        return "\(home)/Library/Preferences/\(bundleId).plist"
-    }
 
-    private static var needsSandboxMigration: Bool {
-        guard !hasMigratedToSandbox else { return false }
-        return FileManager.default.fileExists(atPath: legacyDatabasePath)
-    }
+        let destPath = await Self.sandboxDatabasePath
 
-    static func performSandboxMigrationIfNeeded() {
-        guard needsSandboxMigration else {
-            if hasMigratedToSandbox {
-                log.info("沙盒迁移：已完成迁移，跳过")
-            } else {
-                log.info("沙盒迁移：无旧数据需要迁移")
-                hasMigratedToSandbox = true
+        return await Task.detached(priority: .userInitiated) {
+            do {
+                let sourceDb = try Connection(sourceURL.path, readonly: true)
+                let destDb = try Connection(destPath)
+
+                let sourceTable = Table("Clip")
+                let destTable = Table("Clip")
+                let rows = try sourceDb.prepare(sourceTable)
+
+                var importedCount = 0
+                var skippedCount = 0
+
+                try destDb.transaction {
+                    for row in rows {
+                        guard !Task.isCancelled else {
+                            throw NSError(
+                                domain: "ImportCancelled",
+                                code: -1,
+                                userInfo: [NSLocalizedDescriptionKey: "导入被取消"]
+                            )
+                        }
+
+                        let uniqueId = try row.get(Col.uniqueId)
+
+                        // uniqueId 去重
+                        let existingQuery = destTable.filter(Col.uniqueId == uniqueId)
+                        let existingCount = try destDb.scalar(existingQuery.count)
+
+                        if existingCount > 0 {
+                            skippedCount += 1
+                            continue
+                        }
+
+                        let insert = try destTable.insert(
+                            Col.uniqueId <- uniqueId,
+                            Col.type <- row.get(Col.type),
+                            Col.data <- row.get(Col.data),
+                            Col.showData <- row.get(Col.showData),
+                            Col.ts <- row.get(Col.ts),
+                            Col.appPath <- row.get(Col.appPath),
+                            Col.appName <- row.get(Col.appName),
+                            Col.searchText <- row.get(Col.searchText),
+                            Col.length <- row.get(Col.length),
+                            Col.group <- (try? row.get(Col.group)) ?? -1,
+                            Col.tag <- try? row.get(Col.tag)
+                        )
+
+                        try destDb.run(insert)
+                        importedCount += 1
+                    }
+                }
+
+                let message = "成功导入 \(importedCount) 条记录" +
+                    (skippedCount > 0 ? "，跳过 \(skippedCount) 条重复记录" : "")
+
+                return ImportExportResult(success: true, message: message)
+            } catch {
+                return ImportExportResult(
+                    success: false,
+                    message: "导入失败：\(error.localizedDescription)"
+                )
             }
+        }.value
+    }
+
+    /// 验证导入的数据库文件格式
+    private nonisolated func validateImportDatabase(at url: URL) async -> ImportExportResult {
+        await Task.detached(priority: .userInitiated) {
+            guard FileManager.default.fileExists(atPath: url.path) else {
+                return ImportExportResult(success: false, message: "文件不存在")
+            }
+
+            do {
+                let sourceDb = try Connection(url.path, readonly: true)
+
+                let tableExists = try sourceDb.scalar(
+                    "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='Clip'"
+                ) as? Int64 ?? 0
+
+                guard tableExists > 0 else {
+                    return ImportExportResult(
+                        success: false,
+                        message: "无效的备份文件：缺少 Clip 表"
+                    )
+                }
+
+                let requiredColumns = [
+                    "unique_id", "type", "data", "timestamp",
+                    "app_path", "app_name", "search_text", "length",
+                ]
+
+                let tableInfo = try sourceDb.prepare("PRAGMA table_info(Clip)")
+                var existingColumns: Set<String> = []
+
+                for row in tableInfo {
+                    if let columnName = row[1] as? String {
+                        existingColumns.insert(columnName)
+                    }
+                }
+
+                for column in requiredColumns {
+                    guard existingColumns.contains(column) else {
+                        return ImportExportResult(
+                            success: false,
+                            message: "无效的备份文件：缺少必要的列 \(column)"
+                        )
+                    }
+                }
+
+                let sampleQuery = "SELECT unique_id, type, data, timestamp FROM Clip LIMIT 1"
+                if let row = try sourceDb.prepare(sampleQuery).makeIterator().next() {
+                    guard row[0] is String else {
+                        return ImportExportResult(
+                            success: false,
+                            message: "无效的备份文件：unique_id 字段类型错误"
+                        )
+                    }
+
+                    guard row[1] is String else {
+                        return ImportExportResult(
+                            success: false,
+                            message: "无效的备份文件：type 字段类型错误"
+                        )
+                    }
+
+                    guard row[2] is SQLite.Blob else {
+                        return ImportExportResult(
+                            success: false,
+                            message: "无效的备份文件：data 字段类型错误"
+                        )
+                    }
+
+                    guard row[3] is Int64 else {
+                        return ImportExportResult(
+                            success: false,
+                            message: "无效的备份文件：timestamp 字段类型错误"
+                        )
+                    }
+                }
+
+                return ImportExportResult(success: true, message: "验证通过")
+            } catch {
+                return ImportExportResult(
+                    success: false,
+                    message: "无效的备份文件：无法读取数据库"
+                )
+            }
+        }.value
+    }
+}
+
+// MARK: - 配置迁移
+
+extension PasteSQLManager {
+    private static let userDefaultsMigrationKey = "userDefaultsMigrated"
+
+    private static var hasMigratedUserDefaults: Bool {
+        get { UserDefaults.standard.bool(forKey: userDefaultsMigrationKey) }
+        set { UserDefaults.standard.set(newValue, forKey: userDefaultsMigrationKey) }
+    }
+
+    static func migrateUserDefaultsIfNeeded() {
+        guard !hasMigratedUserDefaults else {
             return
         }
 
-        log.info("开始沙盒数据迁移...")
+        let bundleId = Bundle.main.bundleIdentifier ?? "com.crown.Clipboard"
+        let appDefinedKeys = PrefKey.allCases.map(\.rawValue)
 
-        let fileManager = FileManager.default
-        let legacyDir = (legacyDatabasePath as NSString).deletingLastPathComponent
-
-        var migrationSuccess = true
-
-        do {
-            try fileManager.createDirectory(
-                atPath: sandboxDatabaseDirectory,
-                withIntermediateDirectories: true
-            )
-
-            let filesToMigrate = ["Clip.sqlite3", "Clip.sqlite3-shm", "Clip.sqlite3-wal"]
-
-            for fileName in filesToMigrate {
-                let sourcePath = "\(legacyDir)/\(fileName)"
-                let destPath = "\(sandboxDatabaseDirectory)/\(fileName)"
-
-                guard fileManager.fileExists(atPath: sourcePath) else { continue }
-
-                try? fileManager.removeItem(atPath: destPath)
-                try fileManager.copyItem(atPath: sourcePath, toPath: destPath)
-                log.info("已迁移数据库文件: \(fileName)")
-            }
-        } catch {
-            log.error("数据库迁移失败: \(error)")
-            migrationSuccess = false
+        let hasLegacyConfig = appDefinedKeys.contains { key in
+            CFPreferencesCopyAppValue(key as CFString, bundleId as CFString) != nil
         }
 
-        migrateUserDefaults()
-
-        if migrationSuccess {
-            hasMigratedToSandbox = true
-            log.info("沙盒数据迁移完成")
-        }
-    }
-
-    private static func migrateUserDefaults() {
-        guard FileManager.default.fileExists(atPath: legacyUserDefaultsPath) else {
-            log.warn("\(legacyUserDefaultsPath) UserDefaults文件不存在")
+        guard hasLegacyConfig else {
+            hasMigratedUserDefaults = true
             return
         }
 
-        guard let legacyDefaults = NSDictionary(contentsOfFile: legacyUserDefaultsPath) as? [String: Any] else {
-            log.warn("读取\(legacyUserDefaultsPath) UserDefaults文件失败")
-            return
-        }
-
-        let appDefinedKeys: Set<String> = Set(PrefKey.allCases.map(\.rawValue))
+        log.info("开始迁移 UserDefaults...")
 
         let currentDefaults = UserDefaults.standard
         var migratedCount = 0
 
-        for (key, value) in legacyDefaults {
-            if key.hasPrefix("NS") || key.hasPrefix("Apple") {
-                continue
-            }
-
-            if appDefinedKeys.contains(key) {
+        for key in appDefinedKeys {
+            if let value = CFPreferencesCopyAppValue(key as CFString, bundleId as CFString) {
                 currentDefaults.set(value, forKey: key)
-                log.debug("迁移 UserDefaults: \(key), 类型: \(type(of: value))")
+                log.info("迁移 UserDefaults: \(key)")
                 migratedCount += 1
             }
         }
 
         currentDefaults.synchronize()
-        log.info("已迁移 \(migratedCount) 个 UserDefaults 键值")
-    }
-
-    /// 清理数据
-    static func cleanupLegacyData() {
-        let fileManager = FileManager.default
-        let legacyDir = (legacyDatabasePath as NSString).deletingLastPathComponent
-
-        do {
-            if fileManager.fileExists(atPath: legacyDir) {
-                try fileManager.removeItem(atPath: legacyDir)
-                log.info("已清理旧数据目录\(legacyDir)")
-            }
-        } catch {
-            log.warn("清理旧数据目录\(legacyDir)，失败: \(error)")
-        }
-
-        do {
-            if fileManager.fileExists(atPath: legacyUserDefaultsPath) {
-                try fileManager.removeItem(atPath: legacyUserDefaultsPath)
-                log.info("已清理旧 UserDefaults 文件\(legacyUserDefaultsPath)")
-            }
-        } catch {
-            log.warn("清理旧 UserDefaults 文件\(legacyUserDefaultsPath)，失败: \(error)")
-        }
+        hasMigratedUserDefaults = true
+        log.info("UserDefaults 迁移完成，共迁移 \(migratedCount) 项")
     }
 
     func migrateTagFieldAsync() {
