@@ -338,7 +338,7 @@ struct LogFileRow: View {
         }
         .padding(.vertical, Const.space12)
     }
-    
+
     private func showLogFileInFinder() {
         guard let logURL = AppLogger.getLogFileURL() else { return }
         NSWorkspace.shared.selectFile(logURL.path, inFileViewerRootedAtPath: "")

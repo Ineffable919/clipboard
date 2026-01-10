@@ -379,7 +379,7 @@ struct AccessibilityPermissionRow: View {
                 Text(
                     hasPermission
                         ? "已授权，可以直接粘贴内容到其它应用"
-                        : "未授权，仅能复制内容到剪贴板",
+                        : "未授权，仅能复制内容到剪贴板，若已存在，请删除后重新添加",
                 )
                 .font(.caption2)
                 .foregroundColor(.secondary)

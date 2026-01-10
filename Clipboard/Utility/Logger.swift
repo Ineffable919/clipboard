@@ -12,12 +12,14 @@ extension DateFormatter {
     static let logFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
+        formatter.timeZone = .current
         return formatter
     }()
 
     static let fileFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = .current
         return formatter
     }()
 }
@@ -153,7 +155,7 @@ class AppLogger {
         logQueue.async { [weak self] in
             guard let self, let logURL = logFileURL else { return }
 
-            let timestamp = ISO8601DateFormatter().string(from: Date())
+            let timestamp = DateFormatter.logFormatter.string(from: Date())
             let logEntry = "[\(timestamp)] [\(level.rawValue)] \(message)\n"
 
             guard let data = logEntry.data(using: .utf8) else { return }

@@ -155,6 +155,24 @@ if [ -f "$APP_PATH/Contents/MacOS/$APP_NAME" ]; then
 fi
 echo ""
 
+# 移除 Sparkle Downloader XPC Service（沙盒应用不需要）
+echo -e "${BLUE}🗑️  移除不需要的 Sparkle XPC Service...${NC}"
+SPARKLE_FRAMEWORK="$APP_PATH/Contents/Frameworks/Sparkle.framework"
+DOWNLOADER_XPC="$SPARKLE_FRAMEWORK/Versions/B/XPCServices/Downloader.xpc"
+
+if [ -d "$SPARKLE_FRAMEWORK" ]; then
+    if [ -e "$DOWNLOADER_XPC" ]; then
+        echo "移除 Downloader XPC Service: $DOWNLOADER_XPC"
+        rm -rf "$DOWNLOADER_XPC"
+        echo -e "${GREEN}✅ Downloader XPC Service 已移除${NC}"
+    else
+        echo -e "${YELLOW}⚠️  Downloader XPC Service 不存在，跳过${NC}"
+    fi
+else
+    echo -e "${YELLOW}⚠️  未找到 Sparkle.framework，跳过 XPC 移除${NC}"
+fi
+echo ""
+
 echo -e "${BLUE}🔐 步骤 4/5: 重新签名应用...${NC}"
 
 xattr -cr "$APP_PATH" 2>/dev/null || true
