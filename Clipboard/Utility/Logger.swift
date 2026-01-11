@@ -2,14 +2,14 @@
 //  Logger.swift
 //  clipboard
 //
-//  Created by wangj on 2025/6/14.
+//  Created by crown on 2025/6/14.
 //
 
 import Foundation
 import os.log
 
 extension DateFormatter {
-    static let logFormatter: DateFormatter = {
+    nonisolated static let logFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
         formatter.timeZone = .current
@@ -57,18 +57,24 @@ enum LogLevel: String, CaseIterable, Comparable {
     }
 }
 
-class AppLogger {
+final class AppLogger: @unchecked Sendable {
     static let shared = AppLogger()
 
     private let osLogger: os.Logger
     private let logQueue = DispatchQueue(label: "com.crown.clipboard.logger", qos: .utility)
-    private nonisolated(unsafe) var logFileURL: URL?
+    private var logFileURL: URL?
+    private let lock = NSLock()
 
     #if DEBUG
-        var minimumLogLevel: LogLevel = .debug
+        private var _minimumLogLevel: LogLevel = .debug
     #else
-        var minimumLogLevel: LogLevel = .info
+        private var _minimumLogLevel: LogLevel = .info
     #endif
+    
+    var minimumLogLevel: LogLevel {
+        get { lock.withLock { _minimumLogLevel } }
+        set { lock.withLock { _minimumLogLevel = newValue } }
+    }
 
     private init() {
         osLogger = os.Logger(subsystem: "com.crown.clipboard", category: "AppLogger")
@@ -146,14 +152,18 @@ class AppLogger {
 
         let logFileName = "Clip-\(DateFormatter.fileFormatter.string(from: Date())).log"
 
-        logFileURL = logsDir.appendingPathComponent(logFileName)
+        lock.withLock {
+            logFileURL = logsDir.appendingPathComponent(logFileName)
+        }
 
         cleanOldLogFiles(in: logsDir)
     }
 
     private func writeToFile(_ message: String, level: LogLevel) {
+        let logURL = lock.withLock { logFileURL }
+        
         logQueue.async { [weak self] in
-            guard let self, let logURL = logFileURL else { return }
+            guard let self, let logURL else { return }
 
             let timestamp = DateFormatter.logFormatter.string(from: Date())
             let logEntry = "[\(timestamp)] [\(level.rawValue)] \(message)\n"
@@ -167,14 +177,14 @@ class AppLogger {
                     fileHandle.seekToEndOfFile()
                     fileHandle.write(data)
                 } catch {
-                    osLogger.error(
+                    self.osLogger.error(
                         "Failed to write to log file: \(error.localizedDescription)")
                 }
             } else {
                 do {
                     try data.write(to: logURL)
                 } catch {
-                    osLogger.error("Failed to create log file: \(error.localizedDescription)")
+                    self.osLogger.error("Failed to create log file: \(error.localizedDescription)")
                 }
             }
         }
@@ -213,7 +223,7 @@ class AppLogger {
     }
 
     static func getLogFileURL() -> URL? {
-        shared.logFileURL
+        shared.lock.withLock { shared.logFileURL }
     }
 
     static func getAllLogFiles() -> [URL] {

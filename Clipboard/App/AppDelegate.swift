@@ -176,7 +176,7 @@ extension AppDelegate: NSApplicationDelegate {
     func applicationDidFinishLaunching(_: Notification) {
         Self.shared = self
 
-        PasteSQLManager.migrateUserDefaultsIfNeeded()
+        LegacyConfigMigrator.shared.startMigrationIfNeeded()
 
         initStatus()
 

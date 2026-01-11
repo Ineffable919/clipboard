@@ -180,25 +180,45 @@ xattr -cr "$APP_PATH" 2>/dev/null || true
 ENTITLEMENTS_PATH=""
 for path in "./Clipboard/Clipboard.entitlements" "./Clipboard.entitlements" "./entitlements.plist"; do
     if [ -f "$path" ]; then
-        ENTITLEMENTS_PATH="$path"
-        break
+        if grep -q "com.apple.security.app-sandbox" "$path"; then
+            ENTITLEMENTS_PATH="$path"
+            echo "使用本地 entitlements: $ENTITLEMENTS_PATH"
+            break
+        else
+            echo -e "${YELLOW}⚠️  $path 缺少沙盒配置，跳过${NC}"
+        fi
     fi
 done
 
+if [ -z "$ENTITLEMENTS_PATH" ]; then
+    EXTRACTED_ENTITLEMENTS="/tmp/${APP_NAME}_entitlements.plist"
+    if codesign -d --entitlements :"$EXTRACTED_ENTITLEMENTS" "$APP_PATH" 2>/dev/null; then
+        if [ -s "$EXTRACTED_ENTITLEMENTS" ] && grep -q "com.apple.security.app-sandbox" "$EXTRACTED_ENTITLEMENTS" 2>/dev/null; then
+            echo "从构建产物提取 entitlements 成功"
+            ENTITLEMENTS_PATH="$EXTRACTED_ENTITLEMENTS"
+        else
+            echo -e "${YELLOW}⚠️  提取的 entitlements 不包含沙盒配置${NC}"
+        fi
+    else
+        echo -e "${YELLOW}⚠️  无法从构建产物提取 entitlements${NC}"
+    fi
+fi
+
 # 签名应用
-if [ -n "$ENTITLEMENTS_PATH" ]; then
-    echo "使用 entitlements: $ENTITLEMENTS_PATH"
-    if codesign --force --deep --sign - \
+if [ -n "$ENTITLEMENTS_PATH" ] && [ -f "$ENTITLEMENTS_PATH" ]; then
+    echo "使用 entitlements 重签名..."
+    codesign --force --deep --sign - \
         --entitlements "$ENTITLEMENTS_PATH" \
         --timestamp=none \
-        "$APP_PATH" 2>/dev/null; then
-        echo -e "${GREEN}✅ 使用 entitlements 签名成功${NC}"
-    else
-        codesign --force --deep --sign - "$APP_PATH"
-    fi
+        "$APP_PATH"
+    echo -e "${GREEN}✅ 使用 entitlements 签名成功（沙盒已启用）${NC}"
 else
-    codesign --force --deep --sign - "$APP_PATH"
+    echo -e "${RED}❌ 错误: 未找到有效的 entitlements 文件，无法启用沙盒${NC}"
+    echo "请确保 Clipboard/Clipboard.entitlements 文件存在且包含 com.apple.security.app-sandbox"
+    exit 1
 fi
+
+rm -f "/tmp/${APP_NAME}_entitlements.plist" 2>/dev/null
 
 if codesign --verify --verbose "$APP_PATH" 2>&1; then
     echo -e "${GREEN}✅ 应用签名完成并验证通过${NC}"

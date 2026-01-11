@@ -157,6 +157,11 @@ struct StorageSettingView: View {
             UTType(filenameExtension: "sqlite3") ?? .database,
         ]
 
+        let clipDataDir = URL.documentsDirectory.appending(path: "Clip")
+        if FileManager.default.fileExists(atPath: clipDataDir.path) {
+            panel.directoryURL = clipDataDir
+        }
+
         guard panel.runModal() == .OK, let url = panel.url else { return }
 
         isImporting = true
@@ -223,9 +228,7 @@ struct StorageSettingView: View {
                 try FileManager.default.copyItem(at: sourceURL, to: destURL)
                 success = true
             } catch {
-                await MainActor.run {
-                    log.error("日志导出失败: \(error.localizedDescription)")
-                }
+                await log.error("日志导出失败: \(error.localizedDescription)")
             }
 
             await MainActor.run {

@@ -560,98 +560,9 @@ extension PasteSQLManager {
     }
 }
 
-// MARK: - 配置迁移
+// MARK: - 数据迁移
 
 extension PasteSQLManager {
-    private static let userDefaultsMigrationKey = "userDefaultsMigrated"
-
-    private static var hasMigratedUserDefaults: Bool {
-        get { UserDefaults.standard.bool(forKey: userDefaultsMigrationKey) }
-        set { UserDefaults.standard.set(newValue, forKey: userDefaultsMigrationKey) }
-    }
-
-    static func migrateUserDefaultsIfNeeded() {
-        guard !hasMigratedUserDefaults else {
-            log.info("UserDefaults 已迁移，跳过（标记位已设置）")
-            return
-        }
-
-        let bundleId = Bundle.main.bundleIdentifier ?? "com.crown.clipboard"
-
-        let appDefinedKeys = PrefKey.allCases.map(\.rawValue)
-
-        var legacyConfigs: [(key: String, value: Any)] = []
-        var notFoundKeys: [String] = []
-
-        let realHomeDirectory: String = if let pw = getpwuid(getuid()), let home = pw.pointee.pw_dir {
-            String(cString: home)
-        } else {
-            NSHomeDirectory()
-        }
-
-        let legacyPlistPath = "\(realHomeDirectory)/Library/Preferences/\(bundleId).plist"
-        log.info("尝试读取旧配置文件: \(legacyPlistPath)")
-
-        if let legacyDict = NSDictionary(contentsOfFile: legacyPlistPath) as? [String: Any] {
-            log.info("旧配置文件所有键: \(legacyDict.keys.joined(separator: ", "))")
-
-            for key in appDefinedKeys {
-                if let value = legacyDict[key] {
-                    legacyConfigs.append((key: key, value: value))
-                } else {
-                    notFoundKeys.append(key)
-                }
-            }
-        } else {
-            log.warn("无法读取旧配置文件，尝试使用 CFPreferences...")
-
-            for key in appDefinedKeys {
-                var value: Any?
-
-                if let cfValue = CFPreferencesCopyAppValue(key as CFString, bundleId as CFString) {
-                    value = cfValue
-                } else if let globalValue = CFPreferencesCopyValue(
-                    key as CFString,
-                    bundleId as CFString,
-                    kCFPreferencesCurrentUser,
-                    kCFPreferencesAnyHost
-                ) {
-                    value = globalValue
-                }
-
-                if let value {
-                    legacyConfigs.append((key: key, value: value))
-                } else {
-                    notFoundKeys.append(key)
-                }
-            }
-        }
-
-        if legacyConfigs.isEmpty {
-            log.info("未发现旧配置，标记为已迁移")
-            hasMigratedUserDefaults = true
-            return
-        }
-
-        if !notFoundKeys.isEmpty {
-            log.info("未找到的配置项: \(notFoundKeys.joined(separator: ", "))，未设置或新用户")
-        }
-
-        let currentDefaults = UserDefaults.standard
-        var migratedKeys: [String] = []
-
-        for config in legacyConfigs {
-            currentDefaults.set(config.value, forKey: config.key)
-            migratedKeys.append(config.key)
-            log.info("✅ 迁移配置项: \(config.key)")
-        }
-
-        let syncSuccess = currentDefaults.synchronize()
-
-        hasMigratedUserDefaults = true
-        log.info("UserDefaults同步\(syncSuccess ? "成功" : "失败")，共迁移 \(migratedKeys.count) 项，已迁移的配置项: \(migratedKeys.joined(separator: ", "))")
-    }
-
     func migrateTagFieldAsync() {
         guard !PasteUserDefaults.tagFieldMigrated else {
             log.debug("数据已迁移，跳过")
@@ -682,6 +593,7 @@ extension PasteSQLManager {
             try db.run("ALTER TABLE Clip ADD COLUMN tag TEXT")
         } catch {
             log.warn("新增 tag 字段失败: \(error)")
+            return
         }
 
         let batchSize = 500
