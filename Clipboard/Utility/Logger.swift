@@ -70,7 +70,7 @@ final class AppLogger: @unchecked Sendable {
     #else
         private var _minimumLogLevel: LogLevel = .info
     #endif
-    
+
     var minimumLogLevel: LogLevel {
         get { lock.withLock { _minimumLogLevel } }
         set { lock.withLock { _minimumLogLevel = newValue } }
@@ -161,7 +161,7 @@ final class AppLogger: @unchecked Sendable {
 
     private func writeToFile(_ message: String, level: LogLevel) {
         let logURL = lock.withLock { logFileURL }
-        
+
         logQueue.async { [weak self] in
             guard let self, let logURL else { return }
 
@@ -177,14 +177,14 @@ final class AppLogger: @unchecked Sendable {
                     fileHandle.seekToEndOfFile()
                     fileHandle.write(data)
                 } catch {
-                    self.osLogger.error(
+                    osLogger.error(
                         "Failed to write to log file: \(error.localizedDescription)")
                 }
             } else {
                 do {
                     try data.write(to: logURL)
                 } catch {
-                    self.osLogger.error("Failed to create log file: \(error.localizedDescription)")
+                    osLogger.error("Failed to create log file: \(error.localizedDescription)")
                 }
             }
         }
