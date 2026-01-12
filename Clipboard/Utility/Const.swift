@@ -38,6 +38,7 @@ class Const {
     static let iconHdSize: CGFloat = 14.0
 
     static let hoverDarkColor: Color = .init(NSColor(hex: "#171D38"))
+        .opacity(0.6)
     static let hoverLightColorLiquid: Color = .init(NSColor(hex: "#E1E4E7"))
         .opacity(0.6)
     static let hoverLightColorFrosted: Color = .white.opacity(0.6)

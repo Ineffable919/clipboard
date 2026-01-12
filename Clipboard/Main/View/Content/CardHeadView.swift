@@ -93,11 +93,12 @@ private struct AppIconView: View {
             showData: Data(),
             timestamp: 1_728_878_384_000,
             appPath: "/Applications/Xcode.app",
-            appName: "微信",
+            appName: "Xcode",
             searchText: "",
             length: 9,
             group: -1,
             tag: "string",
         ),
     )
+    .padding()
 }

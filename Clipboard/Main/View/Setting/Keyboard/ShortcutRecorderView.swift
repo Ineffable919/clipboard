@@ -68,7 +68,7 @@ struct ShortcutRecorder: View {
         .padding(.vertical, Const.space2)
         .background(
             RoundedRectangle(cornerRadius: Const.settingsRadius)
-                .fill(Color(NSColor.controlBackgroundColor))
+                .fill(Const.darkBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: Const.settingsRadius)
                         .strokeBorder(borderColor, lineWidth: borderSize)
