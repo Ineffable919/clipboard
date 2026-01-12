@@ -20,6 +20,7 @@ struct ShortcutRecorder: View {
     @State private var mouseMonitor: Any?
 
     @Binding var value: KeyboardShortcut
+    @Environment(\.colorScheme) var colorScheme
 
     init(
         _ key: String,
@@ -68,7 +69,7 @@ struct ShortcutRecorder: View {
         .padding(.vertical, Const.space2)
         .background(
             RoundedRectangle(cornerRadius: Const.settingsRadius)
-                .fill(Const.darkBackground)
+                .fill(colorScheme == .dark ? Const.darkBackground : .white)
                 .overlay(
                     RoundedRectangle(cornerRadius: Const.settingsRadius)
                         .strokeBorder(borderColor, lineWidth: borderSize)

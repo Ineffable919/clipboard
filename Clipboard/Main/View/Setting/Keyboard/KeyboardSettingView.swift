@@ -10,7 +10,6 @@ import SwiftUI
 // MARK: - 键盘设置视图
 
 struct KeyboardSettingView: View {
-    @Environment(\.colorScheme) var scheme
     @State private var resetIsPresented = false
     @State private var refreshID = UUID()
 
