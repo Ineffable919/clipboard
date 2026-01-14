@@ -632,9 +632,9 @@ extension PasteDataStore {
         }
 
         if let colorStr = colorDict[model.appName] {
-            return Color(nsColor: NSColor(hex: colorStr)).opacity(0.85)
+            return Color(hex: colorStr).opacity(0.85)
         }
-        return Color(nsColor: NSColor(hex: "#1765D9")).opacity(0.85)
+        return Color(hex: "#1765D9").opacity(0.85)
     }
 
     private func getAppThemeColor(for _: String, appIcon: NSImage?) -> String {

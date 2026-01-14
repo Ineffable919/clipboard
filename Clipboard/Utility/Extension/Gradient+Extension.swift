@@ -7,24 +7,6 @@
 
 import SwiftUI
 
-extension Color {
-    /// 从 hex 字符串创建 Color
-    /// - Parameter hex: 十六进制颜色字符串，支持 "#RRGGBB" 或 "RRGGBB" 格式
-    nonisolated init(hex: String) {
-        var hexString = hex.trimmingCharacters(in: .whitespacesAndNewlines)
-        hexString = hexString.replacing("#", with: "")
-
-        var rgb: UInt64 = 0
-        Scanner(string: hexString).scanHexInt64(&rgb)
-
-        let red = Double((rgb & 0xFF0000) >> 16) / 255.0
-        let green = Double((rgb & 0x00FF00) >> 8) / 255.0
-        let blue = Double(rgb & 0x0000FF) / 255.0
-
-        self.init(red: red, green: green, blue: blue)
-    }
-}
-
 extension LinearGradient {
     /// 从 hex 字符串数组创建线性渐变
     /// - Parameters:
@@ -56,7 +38,9 @@ extension LinearGradient {
         startPoint: UnitPoint = .leading,
         endPoint: UnitPoint = .trailing
     ) -> LinearGradient {
-        let gradientStops = stops.map { Gradient.Stop(color: Color(hex: $0.hex), location: $0.location) }
+        let gradientStops = stops.map {
+            Gradient.Stop(color: Color(hex: $0.hex), location: $0.location)
+        }
         return LinearGradient(
             stops: gradientStops,
             startPoint: startPoint,
@@ -101,7 +85,9 @@ extension RadialGradient {
         startRadius: CGFloat = 0,
         endRadius: CGFloat = 200
     ) -> RadialGradient {
-        let gradientStops = stops.map { Gradient.Stop(color: Color(hex: $0.hex), location: $0.location) }
+        let gradientStops = stops.map {
+            Gradient.Stop(color: Color(hex: $0.hex), location: $0.location)
+        }
         return RadialGradient(
             stops: gradientStops,
             center: center,
@@ -143,7 +129,9 @@ extension AngularGradient {
         stops: [(hex: String, location: Double)],
         center: UnitPoint = .center
     ) -> AngularGradient {
-        let gradientStops = stops.map { Gradient.Stop(color: Color(hex: $0.hex), location: $0.location) }
+        let gradientStops = stops.map {
+            Gradient.Stop(color: Color(hex: $0.hex), location: $0.location)
+        }
         return AngularGradient(
             stops: gradientStops,
             center: center
@@ -164,7 +152,9 @@ extension Gradient {
     /// - Parameter stops: 渐变停止点数组，每个元素为 (hex颜色, 位置)
     /// - Returns: Gradient 实例
     static func fromHex(stops: [(hex: String, location: Double)]) -> Gradient {
-        let gradientStops = stops.map { Gradient.Stop(color: Color(hex: $0.hex), location: $0.location) }
+        let gradientStops = stops.map {
+            Gradient.Stop(color: Color(hex: $0.hex), location: $0.location)
+        }
         return Gradient(stops: gradientStops)
     }
 }

@@ -372,7 +372,7 @@ extension PasteboardModel {
 
         if type == .color {
             let colorNS = NSColor(hex: attributeString.string)
-            return (Color(colorNS), getContrastingColor(baseNS: colorNS), true)
+            return (Color(hex: attributeString.string), getContrastingColor(baseNS: colorNS), true)
         }
 
         if pasteboardType == .string {
