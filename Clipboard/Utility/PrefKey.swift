@@ -55,6 +55,12 @@ enum PrefKey: String, CaseIterable {
     case glassMaterial
     /// tag 字段迁移标记
     case tagFieldMigrated
+    /// 显示模式（抽屉式/窗口式）
+    case displayMode
+    /// 窗口位置模式（中心/鼠标/上次位置）
+    case windowPosition
+    /// 上次窗口位置和大小
+    case lastWindowFrame
 }
 
 enum AppearanceMode: Int, CaseIterable {
@@ -153,6 +159,34 @@ enum GlassMaterial: Int, CaseIterable {
         case .regular: .regularMaterial
         case .thick: .thickMaterial
         case .ultraThick: .ultraThickMaterial
+        }
+    }
+}
+
+/// 显示模式
+enum DisplayMode: Int, CaseIterable {
+    case drawer = 0
+    case floating = 1
+
+    var title: String {
+        switch self {
+        case .drawer: "抽屉式"
+        case .floating: "窗口式"
+        }
+    }
+}
+
+/// 窗口位置模式
+enum WindowPositionMode: Int, CaseIterable {
+    case center = 0
+    case mouse = 1
+    case lastPosition = 2
+
+    var title: String {
+        switch self {
+        case .center: "屏幕中心"
+        case .mouse: "鼠标位置"
+        case .lastPosition: "上次位置"
         }
     }
 }

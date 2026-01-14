@@ -155,7 +155,7 @@ struct PrivacySettingView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onChange(of: showDuringScreenShare) {
-            ClipMainWindowController.shared.configureWindowSharing()
+            WindowManager.shared.configureWindowSharing()
         }
         .onAppear {
             refreshPermissionStatus()

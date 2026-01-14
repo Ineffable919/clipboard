@@ -91,7 +91,7 @@ class HotKeyManager {
 
     private func registerBuiltInHandlers() {
         handlers["app_launch"] = {
-            ClipMainWindowController.shared.toggleWindow()
+            WindowManager.shared.toggleWindow()
         }
     }
 

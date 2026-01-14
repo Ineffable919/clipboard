@@ -85,7 +85,7 @@ struct StartupShortcutsView: View {
             Text("启动 \(appName)")
             Spacer()
             ShortcutRecorder("app_launch") {
-                ClipMainWindowController.shared.toggleWindow()
+                WindowManager.shared.toggleWindow()
             }
         }
         .padding(.vertical, Const.space4)

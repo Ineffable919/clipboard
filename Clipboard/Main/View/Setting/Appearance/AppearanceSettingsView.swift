@@ -12,10 +12,22 @@ struct AppearanceSettingsView: View {
 
     @AppStorage(PrefKey.backgroundType.rawValue) private var backgroundTypeRaw:
         Int = 0
+    @AppStorage(PrefKey.displayMode.rawValue) private var displayModeRaw: Int = 0
+    @AppStorage(PrefKey.windowPosition.rawValue) private var windowPositionRaw: Int = 0
 
     private var backgroundType: BackgroundType {
         get { .init(rawValue: backgroundTypeRaw) ?? .liquid }
         nonmutating set { backgroundTypeRaw = newValue.rawValue }
+    }
+
+    private var displayMode: DisplayMode {
+        get { .init(rawValue: displayModeRaw) ?? .drawer }
+        nonmutating set { displayModeRaw = newValue.rawValue }
+    }
+
+    private var windowPosition: WindowPositionMode {
+        get { .init(rawValue: windowPositionRaw) ?? .center }
+        nonmutating set { windowPositionRaw = newValue.rawValue }
     }
 
     var body: some View {
@@ -23,11 +35,26 @@ struct AppearanceSettingsView: View {
             AppearanceSettingsRow()
                 .settingsStyle()
 
+            VStack(spacing: 0) {
+                DisplayModeRow(displayMode: Binding(
+                    get: { displayMode },
+                    set: { displayMode = $0 }
+                ))
+
+                if displayMode == .floating {
+                    WindowPositionRow(windowPosition: Binding(
+                        get: { windowPosition },
+                        set: { windowPosition = $0 }
+                    ))
+                }
+            }
+            .settingsStyle()
+
             Text("背景")
                 .font(.headline)
                 .fontWeight(.medium)
 
-            VStack(spacing: Const.space24) {
+            VStack(spacing: 0) {
                 if #available(macOS 26.0, *) {
                     HStack {
                         Text("类型")
@@ -37,9 +64,9 @@ struct AppearanceSettingsView: View {
                                 systemName: backgroundType == .liquid
                                     ? "record.circle.fill" : "circle",
                             )
-                            .foregroundColor(
+                            .foregroundStyle(
                                 backgroundType == .liquid
-                                    ? .accentColor : .secondary,
+                                    ? Color.accentColor : .secondary,
                             )
                             .font(.system(size: Const.space16))
                             .onTapGesture {
@@ -52,9 +79,9 @@ struct AppearanceSettingsView: View {
                                 systemName: backgroundType == .frosted
                                     ? "record.circle.fill" : "circle",
                             )
-                            .foregroundColor(
+                            .foregroundStyle(
                                 backgroundType == .frosted
-                                    ? .accentColor : .secondary,
+                                    ? Color.accentColor : .secondary,
                             )
                             .font(.system(size: Const.space16))
                             .onTapGesture {
@@ -141,6 +168,7 @@ struct GlassMaterialSlider: View {
             }
             .frame(width: 240.0)
         }
+        .padding(.top, Const.space16)
     }
 }
 
@@ -209,6 +237,66 @@ struct AppearanceSettingsRow: View {
                 NSApp.appearance = targetAppearance
             }
         }
+    }
+}
+
+// MARK: - 显示模式行
+
+struct DisplayModeRow: View {
+    @Binding var displayMode: DisplayMode
+
+    var body: some View {
+        HStack {
+            Text("显示模式")
+            Spacer()
+            HStack(spacing: Const.space16) {
+                ForEach(DisplayMode.allCases, id: \.self) { mode in
+                    HStack(spacing: Const.space4) {
+                        Image(
+                            systemName: displayMode == mode
+                                ? "record.circle.fill" : "circle"
+                        )
+                        .foregroundStyle(
+                            displayMode == mode
+                                ? Color.accentColor : .secondary
+                        )
+                        .font(.system(size: Const.space16))
+                        .onTapGesture {
+                            displayMode = mode
+                        }
+                        Text(mode.title)
+                    }
+                }
+            }
+        }
+        .padding(.vertical, Const.space8)
+        .padding(.horizontal, Const.space16)
+    }
+}
+
+// MARK: - 窗口位置行
+
+struct WindowPositionRow: View {
+    @Binding var windowPosition: WindowPositionMode
+
+    var body: some View {
+        HStack {
+            Text("窗口位置")
+                .font(.body)
+            Spacer()
+            Picker(
+                "",
+                selection: $windowPosition
+            ) {
+                ForEach(WindowPositionMode.allCases, id: \.self) { mode in
+                    Text(mode.title).tag(mode)
+                }
+            }
+            .pickerStyle(.menu)
+            .buttonStyle(.borderless)
+        }
+        .padding(.vertical, Const.space8)
+        .padding(.horizontal, Const.space16)
     }
 }
 

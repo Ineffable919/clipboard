@@ -162,7 +162,7 @@ class AppDelegate: NSObject {
         return submenu
     }
 
-    private lazy var clipWinController = ClipMainWindowController.shared
+    private lazy var windowManager = WindowManager.shared
     private lazy var settingWinController = SettingWindowController.shared
 
     private lazy var timeFormatter: DateFormatter = {
@@ -269,7 +269,7 @@ extension AppDelegate {
     private func statusBarClick(sender: NSStatusBarButton) {
         guard let event = NSApplication.shared.currentEvent else { return }
         if event.type == .leftMouseUp {
-            clipWinController.toggleWindow()
+            windowManager.toggleWindow()
         } else if event.type == .rightMouseUp {
             updaterController.updater.checkForUpdatesInBackground()
             menuBarItem?.menu = rMenu
@@ -332,7 +332,7 @@ extension AppDelegate {
     }
 
     func toggleWindow(_ completionHandler: (() -> Void)? = nil) {
-        clipWinController.toggleWindow(completionHandler)
+        windowManager.toggleWindow(completionHandler)
     }
 
     private func initEvent() {

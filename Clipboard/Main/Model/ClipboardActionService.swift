@@ -27,10 +27,10 @@ struct ClipboardActionService {
 
         pasteBoard.pasteData(item, isAttribute)
         guard userDefaults.pasteDirect else {
-            ClipMainWindowController.shared.toggleWindow()
+            WindowManager.shared.toggleWindow()
             return
         }
-        ClipMainWindowController.shared.toggleWindow {
+        WindowManager.shared.toggleWindow {
             KeyboardShortcuts.postCmdVEvent()
         }
     }
