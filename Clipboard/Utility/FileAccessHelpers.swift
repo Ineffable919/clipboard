@@ -29,7 +29,7 @@ extension FileAccessHelper {
                         resolvingBookmarkData: existingBookmark,
                         options: .withSecurityScope,
                         relativeTo: nil,
-                        bookmarkDataIsStale: &isStale,
+                        bookmarkDataIsStale: &isStale
                     )
 
                     if !isStale {
@@ -45,7 +45,7 @@ extension FileAccessHelper {
                 let bookmark = try fileURL.bookmarkData(
                     options: .withSecurityScope,
                     includingResourceValuesForKeys: nil,
-                    relativeTo: nil,
+                    relativeTo: nil
                 )
                 allBookmarks[path] = bookmark
             } catch {
@@ -68,7 +68,7 @@ extension FileAccessHelper {
                     resolvingBookmarkData: bookmarkData,
                     options: .withSecurityScope,
                     relativeTo: nil,
-                    bookmarkDataIsStale: &isStale,
+                    bookmarkDataIsStale: &isStale
                 )
 
                 if isStale {
@@ -76,7 +76,7 @@ extension FileAccessHelper {
                         let newBookmark = try url.bookmarkData(
                             options: .withSecurityScope,
                             includingResourceValuesForKeys: nil,
-                            relativeTo: nil,
+                            relativeTo: nil
                         )
                         updatedBookmarks[path] = newBookmark
                         hasStaleBookmarks = true
@@ -112,7 +112,7 @@ extension FileAccessHelper {
             let newBookmark = try fileURL.bookmarkData(
                 options: .withSecurityScope,
                 includingResourceValuesForKeys: nil,
-                relativeTo: nil,
+                relativeTo: nil
             )
             allBookmarks[path] = newBookmark
             saveAllBookmarks(allBookmarks)
@@ -134,7 +134,7 @@ extension FileAccessHelper {
                     resolvingBookmarkData: bookmarkData,
                     options: .withSecurityScope,
                     relativeTo: nil,
-                    bookmarkDataIsStale: &isStale,
+                    bookmarkDataIsStale: &isStale
                 )
 
                 if isStale {
@@ -142,7 +142,7 @@ extension FileAccessHelper {
                         let newBookmark = try url.bookmarkData(
                             options: .withSecurityScope,
                             includingResourceValuesForKeys: nil,
-                            relativeTo: nil,
+                            relativeTo: nil
                         )
                         updatedBookmarks[path] = newBookmark
                         hasUpdates = true
@@ -173,7 +173,7 @@ extension FileAccessHelper {
                     resolvingBookmarkData: bookmarkData,
                     options: .withSecurityScope,
                     relativeTo: nil,
-                    bookmarkDataIsStale: &isStale,
+                    bookmarkDataIsStale: &isStale
                 )
 
                 if !isStale {

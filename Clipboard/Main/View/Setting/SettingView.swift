@@ -105,7 +105,7 @@ struct HelpCenterButton: View {
         Button(action: {
             if let url = URL(
                 string:
-                "https://github.com/Ineffable919/clipboard/blob/master/README.md",
+                "https://github.com/Ineffable919/clipboard/blob/master/README.md"
             ) {
                 NSWorkspace.shared.open(url)
             }

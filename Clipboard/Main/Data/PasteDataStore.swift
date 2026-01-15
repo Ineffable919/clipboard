@@ -66,7 +66,7 @@ final class PasteDataStore {
     @MainActor
     func updateData(
         with list: [PasteboardModel],
-        changeType: DataChangeType = .reset,
+        changeType: DataChangeType = .reset
     ) {
         dataList = list
         lastDataChangeType = changeType
@@ -107,7 +107,7 @@ extension PasteDataStore {
                 if pType.isText(), showData == nil {
                     if let searchText {
                         showData = String(searchText.prefix(300)).data(
-                            using: .utf8,
+                            using: .utf8
                         )
                     }
                 }
@@ -122,7 +122,7 @@ extension PasteDataStore {
                     searchText: searchText ?? "",
                     length: length ?? 0,
                     group: group ?? -1,
-                    tag: tag ?? "",
+                    tag: tag ?? ""
                 )
                 pasteModel.id = id
                 return pasteModel
@@ -234,7 +234,7 @@ extension PasteDataStore {
         let filter = isInFilterMode ? currentFilter : nil
 
         log.debug(
-            "loadNextPage \(pageIndex) (filterMode: \(isInFilterMode))",
+            "loadNextPage \(pageIndex) (filterMode: \(isInFilterMode))"
         )
 
         loadPageTask = Task { [weak self] in
@@ -245,13 +245,13 @@ extension PasteDataStore {
                 let rows = await sqlManager.search(
                     filter: filter,
                     limit: pageSize,
-                    offset: currentOffset,
+                    offset: currentOffset
                 )
                 newItems = await getItems(rows: rows)
             } else {
                 newItems = await getItems(
                     limit: pageSize,
-                    offset: currentOffset,
+                    offset: currentOffset
                 )
             }
 
@@ -655,7 +655,7 @@ extension PasteDataStore {
               let cgImage = resizedImage.cgImage(
                   forProposedRect: nil,
                   context: nil,
-                  hints: nil,
+                  hints: nil
               )
         else {
             return nil
@@ -663,7 +663,7 @@ extension PasteDataStore {
 
         let colorSpace = CGColorSpaceCreateDeviceRGB()
         let bitmapInfo = CGBitmapInfo(
-            rawValue: CGImageAlphaInfo.premultipliedLast.rawValue,
+            rawValue: CGImageAlphaInfo.premultipliedLast.rawValue
         )
 
         guard
@@ -674,7 +674,7 @@ extension PasteDataStore {
                 bitsPerComponent: 8,
                 bytesPerRow: 0,
                 space: colorSpace,
-                bitmapInfo: bitmapInfo.rawValue,
+                bitmapInfo: bitmapInfo.rawValue
             )
         else { return nil }
 
@@ -683,7 +683,7 @@ extension PasteDataStore {
         guard let data = context.data else { return nil }
         let pixelData = data.bindMemory(
             to: UInt8.self,
-            capacity: Int(targetSize.width * targetSize.height * 4),
+            capacity: Int(targetSize.width * targetSize.height * 4)
         )
 
         var colorCounts: [UInt32: Float] = [:]
@@ -714,7 +714,7 @@ extension PasteDataStore {
                             x: x,
                             y: y,
                             width: width,
-                            height: height,
+                            height: height
                         )
                         colorCounts[colorKey, default: 0] += weight
                     }
@@ -887,7 +887,7 @@ extension PasteDataStore {
 
         // 距离中心越近权重越高，但四个角落也有额外权重
         let distanceFromCenter = sqrt(
-            pow(fx - centerX, 2) + pow(fy - centerY, 2),
+            pow(fx - centerX, 2) + pow(fy - centerY, 2)
         )
         let maxDistance = sqrt(pow(centerX, 2) + pow(centerY, 2))
         var weight = 1.0 + (1.0 - distanceFromCenter / maxDistance) * 0.5
@@ -937,7 +937,7 @@ extension PasteDataStore {
             in: NSRect(origin: .zero, size: size),
             from: NSRect(origin: .zero, size: image.size),
             operation: .copy,
-            fraction: 1.0,
+            fraction: 1.0
         )
         newImage.unlockFocus()
         return newImage

@@ -40,14 +40,14 @@ extension NSColor {
                 lroundf(Float(r * 255)),
                 lroundf(Float(g * 255)),
                 lroundf(Float(b * 255)),
-                lroundf(Float(a * 255)),
+                lroundf(Float(a * 255))
             )
         } else {
             return String(
                 format: "#%02lX%02lX%02lX",
                 lroundf(Float(r * 255)),
                 lroundf(Float(g * 255)),
-                lroundf(Float(b * 255)),
+                lroundf(Float(b * 255))
             )
         }
     }

@@ -123,9 +123,9 @@ struct ClipTopBarView: View {
                     focus == .search
                         ? Color.accentColor.opacity(0.4)
                         : Color.gray.opacity(0.4),
-                    lineWidth: 3.5,
+                    lineWidth: 3.5
                 )
-                .padding(-1),
+                .padding(-1)
         )
         .contentShape(Rectangle())
         .onTapGesture {
@@ -207,7 +207,7 @@ struct ClipTopBarView: View {
             .padding(Const.space6)
             .background(
                 RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
-                    .fill(isIconHovered ? hoverColor() : Color.clear),
+                    .fill(isIconHovered ? hoverColor() : Color.clear)
             )
             .onHover { hovering in
                 isIconHovered = hovering
@@ -226,7 +226,7 @@ struct ClipTopBarView: View {
                         isSelected: topBarVM.selectedChipId == chip.id,
                         chip: chip,
                         focus: $focus,
-                        topBarVM: topBarVM,
+                        topBarVM: topBarVM
                     )
                     .onTapGesture {
                         topBarVM.clearInput()
@@ -267,7 +267,7 @@ struct ClipTopBarView: View {
                     (topBarVM.newChipColorIndex + 1)
                         % CategoryChip.palette.count
                 topBarVM.newChipColorIndex = nextIndex
-            },
+            }
         )
         .onChange(of: env.focusView) {
             if env.focusView != .newChip {
@@ -282,7 +282,7 @@ struct ClipTopBarView: View {
             .padding(Const.space6)
             .background(
                 RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
-                    .fill(isPlusHovered ? hoverColor() : Color.clear),
+                    .fill(isPlusHovered ? hoverColor() : Color.clear)
             )
             .onHover { hovering in
                 isPlusHovered = hovering

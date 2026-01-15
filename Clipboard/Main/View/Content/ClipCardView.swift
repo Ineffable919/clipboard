@@ -9,8 +9,6 @@ import AppKit
 import SwiftUI
 
 struct ClipCardView: View {
-    private static let cardShadowColor = Color(hex: "#30689C").opacity(0.1)
-
     let model: PasteboardModel
     let isSelected: Bool
     @Binding var showPreviewId: PasteboardModel.ID?
@@ -35,7 +33,7 @@ struct ClipCardView: View {
             }
             .frame(width: Const.cardSize, height: Const.cardSize)
             .shadow(
-                color: isSelected ? .clear : ClipCardView.cardShadowColor,
+                color: isSelected ? .clear : Const.cardShadowColor,
                 radius: isSelected ? 0 : 4,
                 x: 0,
                 y: isSelected ? 0 : 6
@@ -140,7 +138,6 @@ struct ClipCardView: View {
                 .foregroundStyle(textColor)
                 .padding(.bottom, Const.space4)
                 .padding(.trailing, Const.space6)
-                .transition(.scale.combined(with: .opacity))
         }
     }
 

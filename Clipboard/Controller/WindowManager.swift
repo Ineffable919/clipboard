@@ -11,12 +11,12 @@ import Foundation
 final class WindowManager {
     static let shared = WindowManager()
 
-    private let drawerController = ClipMainWindowController.shared
-    private let floatingController = ClipFloatingWindowController.shared
+    private lazy var drawerController = ClipMainWindowController.shared
+    private lazy var floatingController = ClipFloatingWindowController.shared
 
     private init() {}
 
-    private func getCurrentDisplayMode() -> DisplayMode {
+    func getCurrentDisplayMode() -> DisplayMode {
         let rawValue = UserDefaults.standard.integer(forKey: PrefKey.displayMode.rawValue)
         return DisplayMode(rawValue: rawValue) ?? .drawer
     }

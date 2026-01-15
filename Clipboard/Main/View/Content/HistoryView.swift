@@ -65,42 +65,13 @@ struct HistoryView: View {
     }
 
     private var emptyStateView: some View {
-        VStack(spacing: Const.space12) {
-            if #available(macOS 26.0, *) {
-                Image(systemName: "sparkle.text.clipboard")
-                    .font(.system(size: 64))
-                    .foregroundStyle(Color.accentColor.opacity(0.8))
-            } else {
-                Image("sparkle.text.clipboard")
-                    .font(.system(size: 64))
-                    .foregroundStyle(Color.accentColor.opacity(0.8))
-            }
-
-            Text("没有剪贴板历史")
-                .foregroundStyle(.secondary)
-
-            Text("复制内容后将显示在这里")
-                .font(.callout)
-                .foregroundStyle(.secondary)
-        }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        ClipboardEmptyStateView(style: .main)
     }
 
     private func contentView() -> some View {
         LazyHStack(alignment: .top, spacing: Const.cardSpace) {
-            if #available(macOS 26.0, *) {
-                ForEach(pd.dataList.enumerated(), id: \.element.id) {
-                    index,
-                        item in
-                    cardViewItem(for: item, at: index)
-                }
-            } else {
-                ForEach(Array(pd.dataList.enumerated()), id: \.element.id) {
-                    index,
-                        item in
-                    cardViewItem(for: item, at: index)
-                }
+            EnumeratedForEach(pd.dataList) { index, item in
+                cardViewItem(for: item, at: index)
             }
         }
         .padding(.horizontal, Const.cardSpace)
@@ -108,7 +79,7 @@ struct HistoryView: View {
     }
 
     private var searchKeyword: String {
-        pd.lastDataChangeType == .searchFilter ? pd.currentSearchKeyword : ""
+        HistoryHelpers.searchKeyword(from: pd)
     }
 
     private func cardViewItem(for item: PasteboardModel, at index: Int)
@@ -137,39 +108,21 @@ struct HistoryView: View {
     }
 
     private func quickPasteIndex(for index: Int) -> Int? {
-        guard historyVM.isQuickPastePressed, index < 9 else { return nil }
-        return index + 1
+        HistoryHelpers.quickPasteIndex(for: index, isPressed: historyVM.isQuickPastePressed)
     }
 
     private func handleDoubleTap(on item: PasteboardModel) {
         env.actions.paste(
             item,
-            isAttribute: true,
+            isAttribute: true
         )
     }
 
     private func handleOptimisticTap(on item: PasteboardModel, index: Int) {
-        if env.focusView != .history {
-            env.focusView = .history
-        }
-
-        let now = ProcessInfo.processInfo.systemUptime
-        let isSameItem = historyVM.selectedId == item.id
-
-        if isSameItem, historyVM.shouldHandleDoubleTap(
-            for: item.id,
-            currentTime: now,
-            interval: 0.2
-        ) {
+        let handler = HistoryTapHandler(env: env, historyVM: historyVM)
+        handler.handleTap(on: item, index: index) {
             handleDoubleTap(on: item)
-            historyVM.resetTapState()
-            return
         }
-
-        if !isSameItem {
-            historyVM.setSelection(id: item.id, index: index)
-        }
-        historyVM.updateTapState(id: item.id, time: now)
     }
 
     private func deleteItem(for id: PasteboardModel.ID) {
@@ -202,15 +155,11 @@ struct HistoryView: View {
     }
 
     private func updateSelectionAfterDeletion(at index: Int) {
-        if pd.dataList.isEmpty {
-            historyVM.setSelection(id: nil, index: 0)
-        } else {
-            let newIndex = min(index, pd.dataList.count - 1)
-            historyVM.setSelection(
-                id: pd.dataList[newIndex].id,
-                index: newIndex
-            )
-        }
+        HistoryHelpers.updateSelectionAfterDeletion(
+            at: index,
+            dataList: pd.dataList,
+            historyVM: historyVM
+        )
     }
 
     private func moveSelection(offset: Int, event _: NSEvent) -> NSEvent? {
@@ -246,7 +195,7 @@ struct HistoryView: View {
         EventDispatcher.shared.registerHandler(
             matching: .keyDown,
             key: "history",
-            handler: keyDownEvent(_:),
+            handler: keyDownEvent(_:)
         )
 
         flagsMonitorToken = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { event in
@@ -348,14 +297,14 @@ struct HistoryView: View {
         historyVM.setSelection(id: item.id, index: index)
         env.actions.paste(
             item,
-            isAttribute: true,
+            isAttribute: true
         )
     }
 
     private func hasPlainTextModifier(_ event: NSEvent) -> Bool {
         KeyCode.hasModifier(
             event,
-            modifierIndex: PasteUserDefaults.plainTextModifier,
+            modifierIndex: PasteUserDefaults.plainTextModifier
         )
     }
 
@@ -415,7 +364,7 @@ struct HistoryView: View {
         }
         env.actions.paste(
             pd.dataList[index],
-            isAttribute: !hasPlainTextModifier(event),
+            isAttribute: !hasPlainTextModifier(event)
         )
         return nil
     }
@@ -469,7 +418,7 @@ struct HistoryView: View {
             if let window = NSApp.keyWindow {
                 alert.beginSheetModal(
                     for: window,
-                    completionHandler: handleResponse,
+                    completionHandler: handleResponse
                 )
             }
         } else {

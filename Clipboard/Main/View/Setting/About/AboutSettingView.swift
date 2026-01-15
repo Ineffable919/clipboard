@@ -42,7 +42,7 @@ struct AboutSettingView: View {
                             color: Color.accentColor.opacity(0.15),
                             radius: Const.radius,
                             x: 0,
-                            y: 6,
+                            y: 6
                         )
                         .onDrag {
                             if let appURL = Bundle.main.bundleURL as NSURL? {
@@ -60,7 +60,7 @@ struct AboutSettingView: View {
                 }
                 Text(appName)
                     .font(
-                        .system(size: 28, weight: .medium, design: .default),
+                        .system(size: 28, weight: .medium, design: .default)
                     )
 
                 Text("\(appVersion) (\(buildNumber))")
@@ -82,7 +82,7 @@ struct AboutSettingView: View {
                 .padding(.vertical, 6)
                 .background(
                     RoundedRectangle(cornerRadius: Const.radius)
-                        .fill(Color.accentColor),
+                        .fill(Color.accentColor)
                 )
                 .foregroundColor(.white)
             }
@@ -91,7 +91,7 @@ struct AboutSettingView: View {
                 color: Color.accentColor.opacity(0.3),
                 radius: Const.radius,
                 x: 0,
-                y: 4,
+                y: 4
             )
             .padding(Const.space32)
 
@@ -114,7 +114,7 @@ struct AboutSettingView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                     Text(
-                        "Copyright © \(currentYear) Crown. All rights reserved.",
+                        "Copyright © \(currentYear) Crown. All rights reserved."
                     )
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -154,15 +154,15 @@ struct LinkButton: View {
                 RoundedRectangle(cornerRadius: Const.radius)
                     .fill(
                         isHovered
-                            ? Color.accentColor.opacity(0.1) : Color.clear,
-                    ),
+                            ? Color.accentColor.opacity(0.1) : Color.clear
+                    )
             )
             .overlay(
                 RoundedRectangle(cornerRadius: Const.radius)
                     .stroke(
                         isHovered ? Color.accentColor : Color.gray.opacity(0.3),
-                        lineWidth: 1,
-                    ),
+                        lineWidth: 1
+                    )
             )
         }
         .buttonStyle(.plain)

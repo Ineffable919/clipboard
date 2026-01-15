@@ -30,15 +30,15 @@ struct WebContentView: View {
         }
         .frame(
             width: Const.maxPreviewWidth - 32,
-            height: Const.maxContentHeight,
+            height: Const.maxContentHeight
         )
         .onAppear {
             webPage.load(
                 URLRequest(
                     url: url,
                     cachePolicy: .reloadIgnoringLocalCacheData,
-                    timeoutInterval: 5.0,
-                ),
+                    timeoutInterval: 5.0
+                )
             )
         }
         .onDisappear {

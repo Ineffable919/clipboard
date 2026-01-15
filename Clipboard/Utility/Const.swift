@@ -89,6 +89,7 @@ class Const {
     static let darkImageDeepColor: NSColor = .init(hex: "#424242")
     static let lightImageShallowColor: NSColor = .init(hex: "#ffffff")
     static let lightImageDeepColor: NSColor = .init(hex: "#f5f5f5")
+    static let cardShadowColor = Color(hex: "#30689C").opacity(0.1)
 
     static let space32: CGFloat = 32.0
     static let space24: CGFloat = 24.0

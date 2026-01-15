@@ -69,7 +69,7 @@ struct KeyboardSettingView: View {
         .frame(
             maxWidth: .infinity,
             maxHeight: .infinity,
-            alignment: .topLeading,
+            alignment: .topLeading
         )
     }
 }

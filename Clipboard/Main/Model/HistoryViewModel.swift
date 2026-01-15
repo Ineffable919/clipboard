@@ -23,7 +23,7 @@ final class HistoryViewModel {
     func shouldHandleDoubleTap(
         for itemId: PasteboardModel.ID,
         currentTime: TimeInterval,
-        interval: TimeInterval,
+        interval: TimeInterval
     ) -> Bool {
         guard let lastId = lastTapId else { return false }
         return lastId == itemId && currentTime - lastTapTime <= interval
@@ -76,7 +76,7 @@ final class HistoryViewModel {
         }
 
         log.debug(
-            "触发滚动加载下一页 (index: \(index ?? -1), dataCount: \(pd.dataList.count))",
+            "触发滚动加载下一页 (index: \(index ?? -1), dataCount: \(pd.dataList.count))"
         )
         pd.loadNextPage()
     }
@@ -92,9 +92,9 @@ final class HistoryViewModel {
         }
 
         if id == first {
-            return .trailing
+            return WindowManager.shared.getCurrentDisplayMode() == .drawer ? .trailing : .bottom
         } else if id == last {
-            return .leading
+            return WindowManager.shared.getCurrentDisplayMode() == .drawer ? .leading : .top
         } else {
             return .none
         }
@@ -132,14 +132,14 @@ final class HistoryViewModel {
         guard
             KeyCode.hasModifier(
                 event,
-                modifierIndex: PasteUserDefaults.quickPasteModifier,
+                modifierIndex: PasteUserDefaults.quickPasteModifier
             )
         else {
             return nil
         }
 
         let quickPasteModifier = KeyCode.modifierFlags(
-            from: PasteUserDefaults.quickPasteModifier,
+            from: PasteUserDefaults.quickPasteModifier
         )
         let otherModifiers = event.modifierFlags.subtracting(quickPasteModifier)
             .intersection([.command, .option, .control])

@@ -10,8 +10,6 @@ import SwiftUI
 // MARK: - ContentView
 
 struct ContentView: View {
-    @Environment(AppEnvironment.self) private var env
-
     @AppStorage(PrefKey.backgroundType.rawValue) private var backgroundTypeRaw =
         0
     @AppStorage(PrefKey.glassMaterial.rawValue) private var glassMaterialRaw = 2

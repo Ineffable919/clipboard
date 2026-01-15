@@ -88,13 +88,7 @@ struct RichContentView: View {
                     .textCardStyle()
             }
         } else {
-            if keyword.isEmpty {
-                Text(model.attributeString.string)
-                    .textCardStyle()
-            } else {
-                Text(model.highlightedPlainText(keyword: keyword))
-                    .textCardStyle()
-            }
+            StringContentView(model: model, keyword: keyword)
         }
     }
 }

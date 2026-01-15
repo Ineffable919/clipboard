@@ -16,10 +16,10 @@ extension Int64 {
         let diffDate = NSCalendar.current.dateComponents(
             [.month, .day, .hour, .minute],
             from: Date(timeIntervalSince1970: TimeInterval(self)),
-            to: currentDate,
+            to: currentDate
         )
         let seconds = currentDate.timeIntervalSince(
-            Date(timeIntervalSince1970: TimeInterval(self)),
+            Date(timeIntervalSince1970: TimeInterval(self))
         )
         if seconds >= 30, seconds < 60 {
             return "30秒前"

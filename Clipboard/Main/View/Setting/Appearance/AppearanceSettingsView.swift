@@ -62,11 +62,11 @@ struct AppearanceSettingsView: View {
                         HStack(alignment: .top, spacing: Const.space4) {
                             Image(
                                 systemName: backgroundType == .liquid
-                                    ? "record.circle.fill" : "circle",
+                                    ? "record.circle.fill" : "circle"
                             )
                             .foregroundStyle(
                                 backgroundType == .liquid
-                                    ? Color.accentColor : .secondary,
+                                    ? Color.accentColor : .secondary
                             )
                             .font(.system(size: Const.space16))
                             .onTapGesture {
@@ -77,11 +77,11 @@ struct AppearanceSettingsView: View {
                         HStack(alignment: .top, spacing: Const.space4) {
                             Image(
                                 systemName: backgroundType == .frosted
-                                    ? "record.circle.fill" : "circle",
+                                    ? "record.circle.fill" : "circle"
                             )
                             .foregroundStyle(
                                 backgroundType == .frosted
-                                    ? Color.accentColor : .secondary,
+                                    ? Color.accentColor : .secondary
                             )
                             .font(.system(size: Const.space16))
                             .onTapGesture {
@@ -109,7 +109,7 @@ struct AppearanceSettingsView: View {
         .frame(
             maxWidth: .infinity,
             maxHeight: Const.settingHeight,
-            alignment: .topLeading,
+            alignment: .topLeading
         )
     }
 }
@@ -146,19 +146,19 @@ struct GlassMaterialSlider: View {
                     Slider(
                         value: Binding(
                             get: { glassMaterial },
-                            set: { glassMaterial = $0 },
+                            set: { glassMaterial = $0 }
                         ),
                         in: range,
-                        step: 1,
+                        step: 1
                     )
                     .tint(.accentColor)
                 } else {
                     Slider(
                         value: Binding(
                             get: { glassMaterial },
-                            set: { glassMaterial = $0 },
+                            set: { glassMaterial = $0 }
                         ),
-                        in: range,
+                        in: range
                     )
                     .tint(.accentColor)
                 }
@@ -200,8 +200,8 @@ struct AppearanceSettingsRow: View {
                     set: { newValue in
                         selectedAppearance = newValue
                         applyAppearance(newValue)
-                    },
-                ),
+                    }
+                )
             ) {
                 ForEach(options, id: \.mode) { option in
                     HStack {

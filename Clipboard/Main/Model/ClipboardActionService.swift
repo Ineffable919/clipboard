@@ -8,18 +8,18 @@ struct ClipboardActionService {
 
     func paste(
         _ item: PasteboardModel,
-        isAttribute: Bool = true,
+        isAttribute: Bool = true
     ) {
         let hasPermission = AXIsProcessTrusted()
 
         if !hasPermission {
             log.debug(
-                "Accessibility permission not granted, cannot send keyboard events",
+                "Accessibility permission not granted, cannot send keyboard events"
             )
             DispatchQueue.main.async {
                 requestAccessibilityPermission(
                     item: item,
-                    isAttribute: isAttribute,
+                    isAttribute: isAttribute
                 )
             }
             return
@@ -44,7 +44,7 @@ struct ClipboardActionService {
             do {
                 try dataStore.updateItemGroup(
                     itemId: item.id!,
-                    groupId: -1,
+                    groupId: -1
                 )
             } catch {
                 log.error("更新卡片 group 失败: \(error)")
@@ -56,7 +56,7 @@ struct ClipboardActionService {
 
     private func requestAccessibilityPermission(
         item: PasteboardModel,
-        isAttribute: Bool = true,
+        isAttribute: Bool = true
     ) {
         let alert = NSAlert()
         alert.messageText = "需要辅助功能权限"
@@ -74,7 +74,7 @@ struct ClipboardActionService {
         case .alertFirstButtonReturn:
             if let url = URL(
                 string:
-                "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
+                "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
             ) {
                 NSWorkspace.shared.open(url)
             }

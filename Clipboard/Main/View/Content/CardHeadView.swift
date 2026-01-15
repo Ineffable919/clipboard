@@ -97,8 +97,8 @@ private struct AppIconView: View {
             searchText: "",
             length: 9,
             group: -1,
-            tag: "string",
-        ),
+            tag: "string"
+        )
     )
     .padding()
 }

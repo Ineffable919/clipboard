@@ -38,8 +38,8 @@ struct ChipEditorView: View {
                 top: Const.space6,
                 leading: Const.space10,
                 bottom: Const.space6,
-                trailing: Const.space10,
-            ),
+                trailing: Const.space10
+            )
         )
         .overlay(
             RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
@@ -47,8 +47,8 @@ struct ChipEditorView: View {
                     focus == focusValue
                         ? Color.accentColor.opacity(0.4)
                         : Color.clear,
-                    lineWidth: 3,
-                ),
+                    lineWidth: 3
+                )
         )
         .onAppear {
             Task { @MainActor in

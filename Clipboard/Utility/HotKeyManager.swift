@@ -98,7 +98,7 @@ class HotKeyManager {
     private func installGlobalEventHandler() {
         var eventType = EventTypeSpec(
             eventClass: OSType(kEventClassKeyboard),
-            eventKind: UInt32(kEventHotKeyPressed),
+            eventKind: UInt32(kEventHotKeyPressed)
         )
 
         InstallEventHandler(
@@ -112,7 +112,7 @@ class HotKeyManager {
                     nil,
                     MemoryLayout<EventHotKeyID>.size,
                     nil,
-                    &hotKeyID,
+                    &hotKeyID
                 )
 
                 let manager = Unmanaged<HotKeyManager>.fromOpaque(userData!)
@@ -133,7 +133,7 @@ class HotKeyManager {
             1,
             &eventType,
             Unmanaged.passUnretained(self).toOpaque(),
-            &eventHandlerRef,
+            &eventHandlerRef
         )
 
         log.debug("全局快捷键事件处理器初始化完成")
@@ -154,7 +154,7 @@ class HotKeyManager {
             self,
             selector: #selector(applicationWillTerminate),
             name: NSApplication.willTerminateNotification,
-            object: nil,
+            object: nil
         )
     }
 
@@ -353,7 +353,7 @@ class HotKeyManager {
         let hashValue = abs(info.key.hashValue) % Int(UInt32.max)
         let hotKeyID = EventHotKeyID(
             signature: OSType(truncatingIfNeeded: hashValue),
-            id: UInt32(truncatingIfNeeded: hashValue),
+            id: UInt32(truncatingIfNeeded: hashValue)
         )
 
         let status = RegisterEventHotKey(
@@ -362,7 +362,7 @@ class HotKeyManager {
             hotKeyID,
             GetEventDispatcherTarget(),
             0,
-            &hotKeyRef,
+            &hotKeyRef
         )
 
         guard status == noErr else {
