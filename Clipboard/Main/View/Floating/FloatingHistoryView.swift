@@ -23,7 +23,9 @@ struct FloatingHistoryView: View {
                 ScrollView {
                     contentView()
                 }
-                .focusable()
+                .contentMargins(.top, FloatingConst.headerHeight, for: .scrollContent)
+                .contentMargins(.top, FloatingConst.headerHeight, for: .scrollIndicators)
+                .modifier(BottomMarginsModifier(height: FloatingConst.footerHeight)).focusable()
                 .focused($isFocused)
                 .focusEffectDisabled()
                 .onChange(of: env.focusView) {
@@ -54,8 +56,6 @@ struct FloatingHistoryView: View {
 
     private func contentView() -> some View {
         LazyVStack(spacing: FloatingConst.cardSpacing) {
-            Color.clear
-                .frame(height: FloatingConst.headerHeight - FloatingConst.cardSpacing)
             EnumeratedForEach(pd.dataList) { index, item in
                 cardItem(item: item, index: index)
             }
@@ -120,6 +120,24 @@ struct FloatingHistoryView: View {
         )
     }
 }
+
+// MARK: - Bottom Margins Modifier
+
+private struct BottomMarginsModifier: ViewModifier {
+    let height: CGFloat
+
+    func body(content: Content) -> some View {
+        if #available(macOS 26, *) {
+            content
+                .contentMargins(.bottom, height, for: .scrollContent)
+                .contentMargins(.bottom, height, for: .scrollIndicators)
+        } else {
+            content
+        }
+    }
+}
+
+// MARK: - Preview
 
 #Preview {
     let env = AppEnvironment()

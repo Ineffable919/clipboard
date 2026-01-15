@@ -46,12 +46,16 @@ struct FloatingView: View {
             .clipShape(.rect(cornerRadius: Const.radius))
 
         } else {
-            // Fallback on earlier versions
+            ZStack(alignment: .top) {
+                FloatingHistoryView()
+                    .background(mainBackground)
+
+                FloatingHeaderView()
+                    .background(mainBackground)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .clipShape(.rect(cornerRadius: Const.radius))
         }
-        //        .background {
-        //            mainBackground
-        //        }
-        //        .clipShape(.rect(cornerRadius: Const.radius))
     }
 
     @ViewBuilder
@@ -64,7 +68,7 @@ struct FloatingView: View {
                     in: .rect(cornerRadius: Const.radius)
                 )
         } else {
-            RoundedRectangle(cornerRadius: Const.radius)
+            Rectangle()
                 .fill(glassMaterial.material)
         }
     }

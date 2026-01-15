@@ -27,6 +27,7 @@ struct FloatingCardView: View {
         } label: {
             cardContent
         }
+        .padding(.vertical, Const.space2)
         .buttonStyle(
             FloatingCardButtonStyle(
                 isSelected: isSelected,
