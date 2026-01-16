@@ -46,7 +46,7 @@ struct FloatingCardView: View {
     }
 
     private var cardContent: some View {
-        HStack(spacing: Const.space12) {
+        HStack(alignment: .center, spacing: Const.space4) {
             appIconView
                 .frame(width: 32, height: 32)
 
@@ -56,6 +56,7 @@ struct FloatingCardView: View {
             .padding(Const.space4)
             .frame(
                 maxWidth: .infinity,
+                maxHeight: .infinity,
                 alignment: model.pasteboardType.isText() ? .leading : .center
             )
 
@@ -68,13 +69,14 @@ struct FloatingCardView: View {
                     quickPasteBadge(index: index)
                 }
             }
-            .padding(.vertical, Const.space10)
+            .padding(.vertical, Const.space6)
+            .padding(.trailing, Const.space6)
         }
-        .padding(.horizontal, Const.space12)
+        .padding(.leading, Const.space12)
         .frame(
             maxWidth: .infinity,
-            minHeight: 80.0,
-            maxHeight: 80.0
+            minHeight: FloatConst.cardHeight,
+            maxHeight: FloatConst.cardHeight
         )
         .background {
             cardBackground
@@ -279,7 +281,7 @@ private struct FloatingImageThumbnailView: View {
             if let thumbnail {
                 Image(nsImage: thumbnail)
                     .resizable()
-                    .scaledToFill()
+                    .scaledToFit()
             } else if isLoading {
                 ProgressView()
                     .controlSize(.small)
@@ -291,7 +293,7 @@ private struct FloatingImageThumbnailView: View {
                     .padding(8)
             }
         }
-        .frame(width: 40, height: 40)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipped()
         .task {
             guard thumbnail == nil, !isLoading else { return }
@@ -305,16 +307,16 @@ private struct FloatingImageThumbnailView: View {
 #Preview {
     @Previewable @State var previewId: PasteboardModel.ID? = nil
     let env = AppEnvironment()
-    let data = "你好".data(using: .utf8)
+    let data = "你好".data(using: .utf8) ?? Data()
     FloatingCardView(
         model: PasteboardModel(
             pasteboardType: .string,
-            data: data ?? Data(),
-            showData: Data(),
+            data: data,
+            showData: data,
             timestamp: Int64(Date().timeIntervalSince1970),
             appPath: "/Applications/Wechat.app",
             appName: "微信",
-            searchText: "",
+            searchText: "你好",
             length: 2,
             group: -1,
             tag: "string"

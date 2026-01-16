@@ -22,27 +22,28 @@ struct FloatingView: View {
         .init(rawValue: glassMaterialRaw) ?? .regular
     }
 
-    private let pd = PasteDataStore.main
-
-    @Namespace private var namespace
-
     var body: some View {
         if #available(macOS 26.0, *) {
             ZStack(alignment: .top) {
                 FloatingHistoryView()
-                    .glassEffect(.regular, in: .rect)
+                    .background(mainBackground)
 
                 FloatingHeaderView()
-                    .glassEffect(.regular, in: .rect)
+                    .background(mainBackground)
 
                 VStack {
                     Spacer()
-                    FloatingFooterView(itemCount: pd.totalCount)
-                        .frame(height: FloatingConst.footerHeight)
-                        .glassEffect(.regular, in: .rect)
+                    FloatingFooterView()
+                        .frame(height: FloatConst.footerHeight)
+                        .background(mainBackground)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .shadow(color: Const.cardShadowColor, radius: 8, x: 0, y: 2)
+            .overlay {
+                RoundedRectangle(cornerRadius: Const.radius)
+                    .stroke(.separator, lineWidth: 1.0)
+            }
             .clipShape(.rect(cornerRadius: Const.radius))
 
         } else {
@@ -61,12 +62,9 @@ struct FloatingView: View {
     @ViewBuilder
     private var mainBackground: some View {
         if #available(macOS 26.0, *), backgroundType == .liquid {
-            RoundedRectangle(cornerRadius: Const.radius)
+            Rectangle()
                 .fill(.clear)
-                .glassEffect(
-                    .regular,
-                    in: .rect(cornerRadius: Const.radius)
-                )
+                .glassEffect(in: .rect)
         } else {
             Rectangle()
                 .fill(glassMaterial.material)
@@ -76,17 +74,21 @@ struct FloatingView: View {
 
 // MARK: - 常量
 
-enum FloatingConst {
+enum FloatConst {
     static let headerHeight: CGFloat = 90.0
     static let footerHeight: CGFloat = 32.0
     static let cardWidth: CGFloat = 330.0
+    static let cardHeight: CGFloat = 60.0
     static let cardSpacing: CGFloat = 10.0
     static let horizontalPadding: CGFloat = 16.0
+    static let floatWindowWidth: CGFloat = 350.0
+    static let floatWindowHeight: CGFloat = 650.0
 }
 
 #Preview {
     let env = AppEnvironment()
     FloatingView()
         .environment(env)
-        .frame(width: 350, height: 600)
+        .frame(width: 350, height: 650)
+        .padding()
 }

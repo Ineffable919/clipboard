@@ -24,9 +24,16 @@ final class TopBarViewModel {
 
     // MARK: - Chip Properties
 
-    var chips: [CategoryChip] = []
-    var selectedChipId: Int = -1 {
-        didSet {
+    private let chipStore = CategoryChipStore.shared
+
+    var chips: [CategoryChip] {
+        chipStore.chips
+    }
+
+    var selectedChipId: Int {
+        get { chipStore.selectedChipId }
+        set {
+            chipStore.selectedChipId = newValue
             performSearch()
         }
     }
@@ -96,7 +103,7 @@ final class TopBarViewModel {
     }
 
     var selectedChip: CategoryChip? {
-        chips.first { $0.id == selectedChipId }
+        chipStore.getSelectedChip()
     }
 
     var hasActiveFilters: Bool {
@@ -273,8 +280,8 @@ final class TopBarViewModel {
 
     init(dataStore: PasteDataStore = .main) {
         self.dataStore = dataStore
-        loadCategories()
         setupPauseObserver()
+        setupChipObserver()
     }
 
     // MARK: - Pause Methods
@@ -330,45 +337,33 @@ final class TopBarViewModel {
 
     // MARK: - Category Management
 
-    private func loadCategories() {
-        chips = CategoryChip.systemChips + PasteUserDefaults.userCategoryChip
-    }
-
-    private func saveUserCategories() {
-        PasteUserDefaults.userCategoryChip = chips.filter { !$0.isSystem }
-        dataStore.notifyCategoryChipsChanged()
+    private func setupChipObserver() {
+        NotificationCenter.default.addObserver(
+            forName: .categoryChipsDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                // Force UI update when chips change
+                self?.performSearch()
+            }
+        }
     }
 
     func toggleChip(_ chip: CategoryChip) {
-        selectedChipId = chip.id
+        chipStore.toggleChip(chip)
     }
 
     func selectPreviousChip() {
-        guard let currentIndex = chips.firstIndex(where: { $0.id == selectedChipId }) else {
-            return
-        }
-        let previousIndex = currentIndex > 0 ? currentIndex - 1 : chips.count - 1
-        selectedChipId = chips[previousIndex].id
+        chipStore.selectPreviousChip()
     }
 
     func selectNextChip() {
-        guard let currentIndex = chips.firstIndex(where: { $0.id == selectedChipId }) else {
-            return
-        }
-        let nextIndex = (currentIndex + 1) % chips.count
-        selectedChipId = chips[nextIndex].id
+        chipStore.selectNextChip()
     }
 
     func addChip(name: String, color: Color) {
-        let newId = (chips.last?.id ?? 0) + 1
-        let new = CategoryChip(
-            id: newId,
-            name: name,
-            color: color,
-            isSystem: false
-        )
-        chips.append(new)
-        saveUserCategories()
+        chipStore.addChip(name: name, color: color)
     }
 
     func updateChip(
@@ -376,32 +371,11 @@ final class TopBarViewModel {
         name: String? = nil,
         color: Color? = nil
     ) {
-        guard !chip.isSystem,
-              let index = chips.firstIndex(where: { $0.id == chip.id })
-        else {
-            return
-        }
-
-        if let newName = name {
-            chips[index].name = newName
-        }
-        if let newColor = color {
-            chips[index].color = newColor
-        }
-        saveUserCategories()
+        chipStore.updateChip(chip, name: name, color: color)
     }
 
     func removeChip(_ chip: CategoryChip) {
-        guard !chip.isSystem else { return }
-
-        chips.removeAll { $0.id == chip.id }
-
-        if selectedChipId == chip.id {
-            selectedChipId = CategoryChip.systemChips.first?.id ?? -1
-        }
-
-        saveUserCategories()
-        dataStore.deleteItemsByGroup(chip.id)
+        chipStore.removeChip(chip)
     }
 
     // MARK: - New Chip Methods
@@ -469,8 +443,7 @@ final class TopBarViewModel {
     }
 
     func getGroupFilterForCurrentChip() -> Int {
-        guard let chip = selectedChip else { return -1 }
-        return chip.isSystem ? -1 : chip.id
+        chipStore.getGroupFilterForCurrentChip()
     }
 
     // MARK: - Filter Methods

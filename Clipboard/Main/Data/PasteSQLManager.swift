@@ -358,6 +358,20 @@ extension PasteSQLManager {
             return 0
         }
     }
+
+    func getCount(filter: Expression<Bool>?) async -> Int {
+        do {
+            if let filter {
+                let query = table.filter(filter)
+                return try db?.scalar(query.count) ?? 0
+            } else {
+                return try db?.scalar(table.count) ?? 0
+            }
+        } catch {
+            log.error("获取筛选数量失败：\(error)")
+            return 0
+        }
+    }
 }
 
 // MARK: - 数据导入导出

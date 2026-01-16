@@ -23,7 +23,7 @@ struct FloatingHeaderView: View {
                 settingsButton
             }
             .padding(.top, Const.space16)
-            .padding(.horizontal, FloatingConst.horizontalPadding)
+            .padding(.horizontal, FloatConst.horizontalPadding)
 
             Spacer()
 
@@ -31,7 +31,7 @@ struct FloatingHeaderView: View {
                 .padding(.bottom, Const.space10)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: FloatingConst.headerHeight)
+        .frame(height: FloatConst.headerHeight)
         .onChange(of: env.focusView) {
             syncFocusFromEnv()
         }
@@ -108,6 +108,7 @@ struct FloatingHeaderView: View {
                             topBarVM.clearInput()
                             topBarVM.toggleChip(chip)
                             if env.focusView != .history {
+                                focus = nil
                                 env.focusView = .history
                             }
                         }
@@ -116,17 +117,21 @@ struct FloatingHeaderView: View {
 
                 addChipButton
             }
-            .padding(.horizontal, FloatingConst.horizontalPadding)
+            .padding(.horizontal, FloatConst.horizontalPadding)
         }
         .scrollIndicators(.hidden)
+        .onTapGesture {
+            guard env.focusView != .history else { return }
+            focus = nil
+            env.focusView = .history
+        }
     }
 
     private var addChipButton: some View {
-        Button("添加分类", systemImage: "plus") {}
+        Button("", systemImage: "plus") {}
             .labelStyle(.iconOnly)
-            .font(.system(size: 12, weight: .medium))
             .foregroundStyle(.secondary)
-            .frame(width: 28, height: 28)
+            .frame(width: 24, height: 24)
             .background {
                 Circle()
                     .fill(Color.secondary.opacity(0.1))
@@ -154,20 +159,19 @@ struct FloatingChipView: View {
         Button(action: onTap) {
             HStack(spacing: Const.space4) {
                 Text(chip.name)
-                    .font(
-                        .system(
-                            size: 12.0,
-                            weight: isSelected ? .medium : .regular,
-                            design: .monospaced
-                        )
+                    .foregroundStyle(
+                        isSelected ? .white : .primary.opacity(0.8)
                     )
-                    .foregroundStyle(isSelected ? .white : .primary.opacity(0.9))
             }
             .padding(.horizontal, Const.space10)
             .padding(.vertical, Const.space4)
             .background {
                 Capsule()
-                    .fill(isSelected ? chip.color : chip.color.opacity(0.2))
+                    .fill(
+                        isSelected
+                            ? chip.isSystem ? .accentColor : chip.color
+                            : .clear
+                    )
             }
         }
         .buttonStyle(.plain)

@@ -17,6 +17,8 @@
 - 技术栈：**SwiftUI 与 AppKit**（SwiftUI 为首选 UI 层，必要时可与 AppKit 互操作）。
 - 未经许可，请不要引入第三方框架。
 - 避免在常规场景下直接使用 AppKit；在 macOS 上应优先使用 SwiftUI。
+- 除非要求否则不生成总结的markdown文件。
+- 修改代码后至少保证编译不报错。
 
 ---
 

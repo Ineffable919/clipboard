@@ -9,9 +9,6 @@ import AppKit
 import Combine
 
 final class ClipFloatingWindowController: NSWindowController {
-    private let defaultWidth: CGFloat = 350.0
-    private let defaultHeight: CGFloat = 670.0
-
     static let shared = ClipFloatingWindowController()
     var isVisible: Bool { window?.isVisible ?? false }
 
@@ -35,7 +32,6 @@ final class ClipFloatingWindowController: NSWindowController {
         win.styleMask = [.nonactivatingPanel, .resizable]
         win.level = .floating
 
-        // win.isOpaque = false
         win.backgroundColor = .clear
         win.hasShadow = false
         win.titleVisibility = .hidden
@@ -182,7 +178,7 @@ final class ClipFloatingWindowController: NSWindowController {
 
         let finalSize: NSSize =
             if size.width < 100 || size.height < 100 {
-                NSSize(width: defaultWidth, height: defaultHeight)
+                NSSize(width: FloatConst.floatWindowWidth, height: FloatConst.floatWindowHeight)
             } else {
                 size
             }

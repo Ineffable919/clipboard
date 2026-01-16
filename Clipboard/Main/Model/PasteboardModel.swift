@@ -327,9 +327,7 @@ final class PasteboardModel: Identifiable {
 
     func getGroupChip() -> CategoryChip? {
         guard group != -1 else { return nil }
-        let allChips =
-            CategoryChip.systemChips + PasteUserDefaults.userCategoryChip
-        return allChips.first(where: { $0.id == group })
+        return CategoryChipStore.shared.chips.first(where: { $0.id == group })
     }
 
     func displayCategoryName() -> String {

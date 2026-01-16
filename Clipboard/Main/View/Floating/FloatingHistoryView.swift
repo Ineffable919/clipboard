@@ -20,14 +20,12 @@ struct FloatingHistoryView: View {
             if pd.dataList.isEmpty {
                 emptyStateView
             } else {
-                ScrollView {
+                ScrollView(showsIndicators: false) {
                     contentView()
                 }
-                .contentMargins(.top, FloatingConst.headerHeight, for: .scrollContent)
-                .contentMargins(.top, FloatingConst.headerHeight, for: .scrollIndicators)
-                .modifier(BottomMarginsModifier(height: FloatingConst.footerHeight)).focusable()
-                .focused($isFocused)
-                .focusEffectDisabled()
+                .contentMargins(.top, FloatConst.headerHeight, for: .scrollContent)
+                .contentMargins(.top, FloatConst.headerHeight, for: .scrollIndicators)
+                .modifier(BottomMarginsModifier(height: FloatConst.footerHeight))
                 .onChange(of: env.focusView) {
                     isFocused = (env.focusView == .history)
                 }
@@ -43,6 +41,9 @@ struct FloatingHistoryView: View {
                     historyVM.reset(proxy: proxy)
                 }
         }
+        .focusable()
+        .focused($isFocused)
+        .focusEffectDisabled()
         .onAppear {
             if historyVM.selectedId == nil {
                 historyVM.setSelection(id: pd.dataList.first?.id, index: 0)
@@ -55,13 +56,13 @@ struct FloatingHistoryView: View {
     }
 
     private func contentView() -> some View {
-        LazyVStack(spacing: FloatingConst.cardSpacing) {
+        LazyVStack(spacing: FloatConst.cardSpacing) {
             EnumeratedForEach(pd.dataList) { index, item in
                 cardItem(item: item, index: index)
             }
         }
-        .padding(.horizontal, FloatingConst.horizontalPadding)
-        .padding(.vertical, FloatingConst.cardSpacing)
+        .padding(.horizontal, FloatConst.horizontalPadding)
+        .padding(.vertical, FloatConst.cardSpacing)
     }
 
     private func cardItem(item: PasteboardModel, index: Int) -> some View {

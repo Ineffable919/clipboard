@@ -3,8 +3,8 @@ import Carbon
 import Foundation
 import SwiftUI
 
-@Observable
-final class HistoryViewModel {
+@MainActor
+@Observable final class HistoryViewModel {
     private let pd = PasteDataStore.main
 
     var selectedId: PasteboardModel.ID?

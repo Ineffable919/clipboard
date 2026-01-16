@@ -8,8 +8,15 @@
 import SwiftUI
 
 struct FloatingFooterView: View {
-    let itemCount: Int
     @State private var isSettingsHovered = false
+    private let pd = PasteDataStore.main
+
+    private var formattedCount: String {
+        NumberFormatter.localizedString(
+            from: NSNumber(value: pd.filteredCount),
+            number: .decimal
+        )
+    }
 
     var body: some View {
         HStack {
@@ -19,9 +26,9 @@ struct FloatingFooterView: View {
                 Image(systemName: "slider.horizontal.3")
                     .font(.system(size: 14, weight: .regular))
                     .foregroundStyle(.secondary)
-                    .frame(width: 32, height: 32)
+                    .frame(width: 28, height: 28)
                     .background {
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
                             .fill(isSettingsHovered ? Color.secondary.opacity(0.1) : .clear)
                     }
             }
@@ -32,7 +39,7 @@ struct FloatingFooterView: View {
 
             Spacer()
 
-            Text("\(itemCount) 个项目")
+            Text("\(formattedCount) 个项目")
                 .font(.system(size: 13, weight: .regular))
                 .foregroundStyle(.secondary)
 
@@ -41,12 +48,12 @@ struct FloatingFooterView: View {
             Color.clear
                 .frame(width: 32, height: 32)
         }
-        .padding(.horizontal, FloatingConst.horizontalPadding)
+        .padding(.horizontal, FloatConst.horizontalPadding)
     }
 }
 
 #Preview {
-    FloatingFooterView(itemCount: 39)
+    FloatingFooterView()
         .frame(width: 420, height: 44)
         .background(Color.gray.opacity(0.1))
 }

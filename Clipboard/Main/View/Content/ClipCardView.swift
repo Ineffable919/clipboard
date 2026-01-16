@@ -218,12 +218,12 @@ struct ClipCardView: View {
 #Preview {
     @Previewable @State var previewId: PasteboardModel.ID? = nil
     let env = AppEnvironment()
-    let data = "Clipboard".data(using: .utf8)
+    let data = "Clipboard".data(using: .utf8) ?? Data()
     ClipCardView(
         model: PasteboardModel(
             pasteboardType: PasteboardType.string,
-            data: data!,
-            showData: Data(),
+            data: data,
+            showData: data,
             timestamp: 1_728_878_384,
             appPath: "/Applications/WeChat.app",
             appName: "微信",

@@ -29,6 +29,8 @@ final class PasteDataStore {
 
     private(set) var hasMoreData = false
 
+    var filteredCount: Int = 0
+
     enum DataChangeType {
         case loadMore
         case searchFilter
@@ -53,9 +55,23 @@ final class PasteDataStore {
             let count = await sqlManager.getTotalCount()
             await MainActor.run {
                 totalCount = count
+                filteredCount = count
             }
         }
         colorDict = PasteUserDefaults.appColorData
+        setupChipObserver()
+    }
+
+    private func setupChipObserver() {
+        NotificationCenter.default.addObserver(
+            forName: .categoryChipsDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.chipsVersion &+= 1
+            }
+        }
     }
 
     @MainActor
@@ -280,6 +296,7 @@ extension PasteDataStore {
         isInFilterMode = false
         currentSearchKeyword = ""
         let list = await getItems(limit: pageSize, offset: pageSize * pageIndex)
+        filteredCount = totalCount
         updateData(with: list)
         hasMoreData = list.count == pageSize
     }
@@ -300,9 +317,13 @@ extension PasteDataStore {
             let rows = await sqlManager.search(filter: filter, limit: pageSize)
             try Task.checkCancellation()
 
+            let count = await sqlManager.getCount(filter: filter)
+            try Task.checkCancellation()
+
             let result = await getItems(rows: rows)
             try Task.checkCancellation()
 
+            filteredCount = count
             updateData(with: result, changeType: .searchFilter)
             hasMoreData = result.count == pageSize
         }
