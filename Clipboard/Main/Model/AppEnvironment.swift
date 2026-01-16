@@ -3,9 +3,8 @@ import SwiftUI
 @MainActor
 @Observable
 final class AppEnvironment {
-    var actions: ClipboardActionService {
-        ClipboardActionService()
-    }
+    @ObservationIgnored
+    let actions = ClipboardActionService()
 
     var focusView: FocusField = .history
     var isShowDel: Bool = false
