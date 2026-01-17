@@ -23,46 +23,25 @@ struct FloatingView: View {
     }
 
     var body: some View {
-        if #available(macOS 26.0, *) {
-            ZStack(alignment: .top) {
-                FloatingHistoryView()
-                    .background(mainBackground)
-
-                FloatingHeaderView()
-                    .background(mainBackground)
-
-                VStack {
-                    Spacer()
-                    FloatingFooterView()
-                        .frame(height: FloatConst.footerHeight)
-                        .background(mainBackground)
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .shadow(color: Const.cardShadowColor, radius: 8, x: 0, y: 2)
-            .overlay {
-                RoundedRectangle(cornerRadius: Const.radius)
-                    .stroke(.separator, lineWidth: 1.0)
-            }
-            .clipShape(.rect(cornerRadius: Const.radius))
-
-        } else {
-            ZStack(alignment: .top) {
-                FloatingHistoryView()
-                    .background(mainBackground)
-
-                FloatingHeaderView()
-                    .background(mainBackground)
-
-                VStack {
-                    Spacer()
-                    FloatingFooterView()
-                        .frame(height: FloatConst.footerHeight)
-                        .background(mainBackground)
-                }
-            }
+        contentStack
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .clipShape(.rect(cornerRadius: Const.radius))
+            .conditionalShadow()
+    }
+
+    private var contentStack: some View {
+        ZStack(alignment: .top) {
+            FloatingHistoryView()
+                .background(mainBackground)
+
+            FloatingHeaderView()
+                .background(mainBackground)
+
+            VStack {
+                Spacer()
+                FloatingFooterView()
+                    .background(mainBackground)
+            }
         }
     }
 
@@ -90,6 +69,23 @@ enum FloatConst {
     static let horizontalPadding: CGFloat = 16.0
     static let floatWindowWidth: CGFloat = 350.0
     static let floatWindowHeight: CGFloat = 650.0
+}
+
+// MARK: - View Extension
+
+private extension View {
+    @ViewBuilder
+    func conditionalShadow() -> some View {
+        if #available(macOS 26.0, *) {
+            shadow(color: Const.cardShadowColor, radius: 8.0, x: 0, y: 2)
+                .overlay {
+                    RoundedRectangle(cornerRadius: Const.radius)
+                        .stroke(.separator, lineWidth: 1.0)
+                }
+        } else {
+            self
+        }
+    }
 }
 
 #Preview {

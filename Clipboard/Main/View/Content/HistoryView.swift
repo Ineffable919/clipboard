@@ -92,7 +92,7 @@ struct HistoryView: View {
             quickPasteIndex: quickPasteIndex(for: index),
             enableLinkPreview: enableLinkPreview,
             searchKeyword: searchKeyword,
-            onRequestDelete: { requestDel(id: item.id) }
+            onRequestDelete: { requestDel(index: index) }
         )
         .contentShape(Rectangle())
         .onTapGesture { handleOptimisticTap(on: item, index: index) }
@@ -125,41 +125,34 @@ struct HistoryView: View {
         }
     }
 
-    private func deleteItem(for id: PasteboardModel.ID) {
-        guard let index = pd.dataList.firstIndex(where: { $0.id == id })
-        else {
-            return
-        }
+    private func deleteItem(for index: Int) {
+        guard index < pd.dataList.count else { return }
+        let item = pd.dataList[index]
 
         historyVM.isDel = true
 
-        let item = pd.dataList[index]
-        env.actions.delete(item)
-
-        withAnimation(.easeInOut(duration: 0.2)) {
+        _ = withAnimation(.easeInOut(duration: 0.2)) {
             pd.dataList.remove(at: index)
-            updateSelectionAfterDeletion(at: index)
         }
 
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(200))
+            HistoryHelpers.updateSelectionAfterDeletion(
+                at: index,
+                dataList: pd.dataList,
+                historyVM: historyVM
+            )
             historyVM.isDel = false
-
-            if pd.dataList.count < 50,
-               pd.hasMoreData,
-               !pd.isLoadingPage
-            {
-                pd.loadNextPage()
-            }
         }
-    }
 
-    private func updateSelectionAfterDeletion(at index: Int) {
-        HistoryHelpers.updateSelectionAfterDeletion(
-            at: index,
-            dataList: pd.dataList,
-            historyVM: historyVM
-        )
+        env.actions.delete(item)
+
+        if pd.dataList.count < 50,
+           pd.hasMoreData,
+           !pd.isLoadingPage
+        {
+            pd.loadNextPage()
+        }
     }
 
     private func moveSelection(offset: Int, event _: NSEvent) -> NSEvent? {
@@ -370,22 +363,19 @@ struct HistoryView: View {
     }
 
     private func deleteKeyDown(_: NSEvent) -> NSEvent? {
-        guard let id = historyVM.selectedId else {
+        guard let index = historyVM.selectedIndex else {
             NSSound.beep()
             return nil
         }
-        requestDel(id: id)
+        requestDel(index: index)
         return nil
     }
 
-    private func requestDel(id: PasteboardModel.ID) {
+    private func requestDel(index: Int) {
         guard PasteUserDefaults.delConfirm else {
-            deleteItem(for: id)
+            deleteItem(for: index)
             return
         }
-
-        historyVM.pendingDeleteId = id
-
         env.isShowDel = true
         showDeleteAlert()
     }
@@ -401,17 +391,16 @@ struct HistoryView: View {
         let handleResponse: (NSApplication.ModalResponse) -> Void = {
             [self] response in
             defer {
-                self.historyVM.pendingDeleteId = nil
                 self.env.isShowDel = false
             }
 
             guard response == .alertFirstButtonReturn,
-                  let id = historyVM.pendingDeleteId
+                  let index = historyVM.selectedIndex
             else {
                 return
             }
 
-            deleteItem(for: id)
+            deleteItem(for: index)
         }
 
         if #available(macOS 26.0, *) {

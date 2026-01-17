@@ -104,7 +104,7 @@ struct HistoryTapHandler {
            historyVM.shouldHandleDoubleTap(
                for: item.id,
                currentTime: now,
-               interval: 0.2
+               interval: 0.3
            )
         {
             doubleTapAction()

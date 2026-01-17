@@ -49,6 +49,7 @@ struct FloatingFooterView: View {
                 .frame(width: 32, height: 32)
         }
         .padding(.horizontal, FloatConst.horizontalPadding)
+        .frame(height: FloatConst.footerHeight)
     }
 }
 

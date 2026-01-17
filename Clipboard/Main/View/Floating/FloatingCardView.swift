@@ -49,11 +49,12 @@ struct FloatingCardView: View {
         HStack(alignment: .center, spacing: Const.space4) {
             appIconView
                 .frame(width: 32, height: 32)
+                .padding(.leading, Const.space12)
 
-            VStack(alignment: .leading, spacing: Const.space4) {
+            VStack {
                 FloatContentView
             }
-            .padding(Const.space4)
+            .padding(.vertical, Const.space4)
             .frame(
                 maxWidth: .infinity,
                 maxHeight: .infinity,
@@ -72,7 +73,6 @@ struct FloatingCardView: View {
             .padding(.vertical, Const.space6)
             .padding(.trailing, Const.space6)
         }
-        .padding(.leading, Const.space12)
         .frame(
             maxWidth: .infinity,
             minHeight: FloatConst.cardHeight,
@@ -97,7 +97,7 @@ struct FloatingCardView: View {
                 .clipShape(.rect(cornerRadius: 6.0))
         case .color:
             Text(model.attributeString.string)
-                .font(.system(size: 14, weight: .medium, design: .monospaced))
+                .font(.system(size: 14.0, weight: .medium, design: .monospaced))
                 .foregroundStyle(.primary)
         case .file:
             if let paths = model.cachedFilePaths {
@@ -118,7 +118,6 @@ struct FloatingCardView: View {
             } else {
                 if searchKeyword.isEmpty {
                     Text(model.attributeString.string)
-                        .textCardStyle()
                 } else {
                     Text(model.highlightedPlainText(keyword: searchKeyword))
                 }

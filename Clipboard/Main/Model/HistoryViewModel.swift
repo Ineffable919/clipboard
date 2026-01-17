@@ -14,7 +14,6 @@ import SwiftUI
     @ObservationIgnored var selectedIndex: Int?
     @ObservationIgnored var lastTapId: PasteboardModel.ID?
     @ObservationIgnored var lastTapTime: TimeInterval = 0
-    @ObservationIgnored var pendingDeleteId: PasteboardModel.ID?
     @ObservationIgnored var isDel: Bool = false
     @ObservationIgnored var lastLoadTriggerIndex: Int = -1
 

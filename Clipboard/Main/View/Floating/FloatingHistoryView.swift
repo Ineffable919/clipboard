@@ -74,7 +74,7 @@ struct FloatingHistoryView: View {
             quickPasteIndex: quickPasteIndex(for: index),
             searchKeyword: searchKeyword,
             onTap: { handleTap(on: item, index: index) },
-            onRequestDelete: { requestDelete(id: item.id) }
+            onRequestDelete: { requestDelete(index: index) }
         )
         .task(id: item.id) {
             guard historyVM.shouldLoadNextPage(at: index) else { return }
@@ -100,26 +100,34 @@ struct FloatingHistoryView: View {
         }
     }
 
-    private func requestDelete(id: PasteboardModel.ID) {
-        guard let index = pd.dataList.firstIndex(where: { $0.id == id }) else {
-            return
-        }
-
+    private func requestDelete(index: Int) {
+        guard index < pd.dataList.count else { return }
         let item = pd.dataList[index]
-        env.actions.delete(item)
 
-        withAnimation(.easeInOut(duration: 0.2)) {
+        historyVM.isDel = true
+
+        _ = withAnimation(.easeInOut(duration: 0.2)) {
             pd.dataList.remove(at: index)
-            updateSelectionAfterDeletion(at: index)
         }
-    }
 
-    private func updateSelectionAfterDeletion(at index: Int) {
-        HistoryHelpers.updateSelectionAfterDeletion(
-            at: index,
-            dataList: pd.dataList,
-            historyVM: historyVM
-        )
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(200))
+            HistoryHelpers.updateSelectionAfterDeletion(
+                at: index,
+                dataList: pd.dataList,
+                historyVM: historyVM
+            )
+            historyVM.isDel = false
+        }
+
+        env.actions.delete(item)
+        
+        if pd.dataList.count < 50,
+           pd.hasMoreData,
+           !pd.isLoadingPage
+        {
+            pd.loadNextPage()
+        }
     }
 }
 
