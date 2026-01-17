@@ -60,11 +60,11 @@ struct FloatingHeaderView: View {
         .padding(.horizontal, Const.space10)
         .padding(.vertical, Const.space6)
         .background {
-            Capsule()
+            RoundedRectangle(cornerRadius: Const.radius)
                 .fill(searchFieldBackground)
         }
         .overlay {
-            Capsule()
+            RoundedRectangle(cornerRadius: Const.radius + 3)
                 .strokeBorder(
                     focus == .search
                         ? Color.accentColor.opacity(0.45)
@@ -166,7 +166,7 @@ struct FloatingChipView: View {
             .padding(.horizontal, Const.space10)
             .padding(.vertical, Const.space4)
             .background {
-                Capsule()
+                RoundedRectangle(cornerRadius: Const.radius)
                     .fill(
                         isSelected
                             ? chip.isSystem ? .accentColor : chip.color

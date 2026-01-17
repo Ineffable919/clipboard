@@ -25,7 +25,8 @@ struct FloatingHistoryView: View {
                 }
                 .contentMargins(.top, FloatConst.headerHeight, for: .scrollContent)
                 .contentMargins(.top, FloatConst.headerHeight, for: .scrollIndicators)
-                .modifier(BottomMarginsModifier(height: FloatConst.footerHeight))
+                .contentMargins(.bottom, FloatConst.footerHeight, for: .scrollContent)
+                .contentMargins(.bottom, FloatConst.footerHeight, for: .scrollIndicators)
                 .onChange(of: env.focusView) {
                     isFocused = (env.focusView == .history)
                 }

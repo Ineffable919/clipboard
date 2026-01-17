@@ -53,6 +53,13 @@ struct FloatingView: View {
 
                 FloatingHeaderView()
                     .background(mainBackground)
+
+                VStack {
+                    Spacer()
+                    FloatingFooterView()
+                        .frame(height: FloatConst.footerHeight)
+                        .background(mainBackground)
+                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .clipShape(.rect(cornerRadius: Const.radius))
