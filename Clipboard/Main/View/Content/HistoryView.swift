@@ -25,7 +25,7 @@ struct HistoryView: View {
         ZStack {
             ScrollViewReader { proxy in
                 if pd.dataList.isEmpty {
-                    emptyStateView
+                    ClipboardEmptyStateView(style: .main)
                 } else {
                     ScrollView(.horizontal, showsIndicators: false) {
                         contentView()
@@ -62,10 +62,6 @@ struct HistoryView: View {
             guard env.focusView != .history else { return }
             env.focusView = .history
         }
-    }
-
-    private var emptyStateView: some View {
-        ClipboardEmptyStateView(style: .main)
     }
 
     private func contentView() -> some View {
@@ -126,33 +122,11 @@ struct HistoryView: View {
     }
 
     private func deleteItem(for index: Int) {
-        guard index < pd.dataList.count else { return }
-        let item = pd.dataList[index]
-
-        historyVM.isDel = true
-
-        _ = withAnimation(.easeInOut(duration: 0.2)) {
-            pd.dataList.remove(at: index)
-        }
-
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(200))
-            HistoryHelpers.updateSelectionAfterDeletion(
-                at: index,
-                dataList: pd.dataList,
-                historyVM: historyVM
-            )
-            historyVM.isDel = false
-        }
-
-        env.actions.delete(item)
-
-        if pd.dataList.count < 50,
-           pd.hasMoreData,
-           !pd.isLoadingPage
-        {
-            pd.loadNextPage()
-        }
+        HistoryHelpers.deleteItem(
+            at: index,
+            historyVM: historyVM,
+            env: env
+        )
     }
 
     private func moveSelection(offset: Int, event _: NSEvent) -> NSEvent? {
@@ -377,42 +351,12 @@ struct HistoryView: View {
             return
         }
         env.isShowDel = true
-        showDeleteAlert()
-    }
-
-    private func showDeleteAlert() {
-        let alert = NSAlert()
-        alert.messageText = "确认删除吗？"
-        alert.informativeText = "删除后无法恢复"
-        alert.alertStyle = .warning
-        alert.addButton(withTitle: "删除")
-        alert.addButton(withTitle: "取消")
-
-        let handleResponse: (NSApplication.ModalResponse) -> Void = {
-            [self] response in
-            defer {
-                self.env.isShowDel = false
-            }
-
-            guard response == .alertFirstButtonReturn,
-                  let index = historyVM.selectedIndex
-            else {
-                return
-            }
-
+        HistoryHelpers.showDeleteConfirmAlert(
+            for: index,
+            historyVM: historyVM,
+            env: env
+        ) { [self] in
             deleteItem(for: index)
-        }
-
-        if #available(macOS 26.0, *) {
-            if let window = NSApp.keyWindow {
-                alert.beginSheetModal(
-                    for: window,
-                    completionHandler: handleResponse
-                )
-            }
-        } else {
-            let response = alert.runModal()
-            handleResponse(response)
         }
     }
 }

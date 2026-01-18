@@ -10,8 +10,7 @@ import SwiftUI
 struct FloatingView: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(AppEnvironment.self) private var env
-    @AppStorage(PrefKey.backgroundType.rawValue) private var backgroundTypeRaw =
-        0
+    @AppStorage(PrefKey.backgroundType.rawValue) private var backgroundTypeRaw = 0
     @AppStorage(PrefKey.glassMaterial.rawValue) private var glassMaterialRaw = 2
 
     private var backgroundType: BackgroundType {

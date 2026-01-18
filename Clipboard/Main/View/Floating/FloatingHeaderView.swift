@@ -32,9 +32,6 @@ struct FloatingHeaderView: View {
         }
         .frame(maxWidth: .infinity)
         .frame(height: FloatConst.headerHeight)
-        .onChange(of: env.focusView) {
-            syncFocusFromEnv()
-        }
         .onAppear {
             topBarVM.startPauseDisplayTimer()
         }
@@ -137,14 +134,6 @@ struct FloatingHeaderView: View {
                     .fill(Color.secondary.opacity(0.1))
             }
             .buttonStyle(.plain)
-    }
-
-    private func syncFocusFromEnv() {
-        if env.focusView.requiresSystemFocus {
-            Task { @MainActor in
-                focus = env.focusView
-            }
-        }
     }
 }
 

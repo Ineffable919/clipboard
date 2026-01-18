@@ -30,13 +30,12 @@ final class ClipFloatingWindowController: NSWindowController {
         guard let win = window as? NSPanel else { return }
 
         win.styleMask = [.nonactivatingPanel, .resizable]
-        win.level = .floating
+        win.level = .statusBar
 
         win.backgroundColor = .clear
         win.hasShadow = false
         win.titleVisibility = .hidden
         win.titlebarAppearsTransparent = true
-        win.isMovableByWindowBackground = true
         win.hidesOnDeactivate = false
         win.isReleasedWhenClosed = false
         win.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]

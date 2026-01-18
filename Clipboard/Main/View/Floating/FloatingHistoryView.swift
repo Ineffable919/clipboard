@@ -6,23 +6,28 @@
 //
 
 import AppKit
+import Carbon
 import SwiftUI
 
 struct FloatingHistoryView: View {
     @Environment(AppEnvironment.self) private var env
     @State private var historyVM = HistoryViewModel()
     @FocusState private var isFocused: Bool
+    @State private var flagsMonitorToken: Any?
 
     private let pd = PasteDataStore.main
 
     var body: some View {
         ScrollViewReader { proxy in
             if pd.dataList.isEmpty {
-                emptyStateView
+                ClipboardEmptyStateView(style: .floating)
             } else {
                 ScrollView(showsIndicators: false) {
                     contentView()
                 }
+                .focusable()
+                .focused($isFocused)
+                .focusEffectDisabled()
                 .contentMargins(.top, FloatConst.headerHeight, for: .scrollContent)
                 .contentMargins(.top, FloatConst.headerHeight, for: .scrollIndicators)
                 .contentMargins(.bottom, FloatConst.footerHeight, for: .scrollContent)
@@ -41,19 +46,16 @@ struct FloatingHistoryView: View {
                 .onChange(of: pd.dataList) {
                     historyVM.reset(proxy: proxy)
                 }
+                .onChange(of: env.quickPasteResetTrigger) {
+                    historyVM.isQuickPastePressed = false
+                }
         }
-        .focusable()
-        .focused($isFocused)
-        .focusEffectDisabled()
         .onAppear {
-            if historyVM.selectedId == nil {
-                historyVM.setSelection(id: pd.dataList.first?.id, index: 0)
-            }
+            appear()
         }
-    }
-
-    private var emptyStateView: some View {
-        ClipboardEmptyStateView(style: .floating)
+        .onDisappear {
+            disappear()
+        }
     }
 
     private func contentView() -> some View {
@@ -73,9 +75,17 @@ struct FloatingHistoryView: View {
             showPreviewId: $historyVM.showPreviewId,
             quickPasteIndex: quickPasteIndex(for: index),
             searchKeyword: searchKeyword,
-            onTap: { handleTap(on: item, index: index) },
             onRequestDelete: { requestDelete(index: index) }
         )
+        .contentShape(Rectangle())
+        .onTapGesture {
+            handleTap(on: item, index: index)
+        }
+        .onDrag {
+            env.draggingItemId = item.id
+            historyVM.setSelection(id: item.id, index: index)
+            return item.itemProvider()
+        }
         .task(id: item.id) {
             guard historyVM.shouldLoadNextPage(at: index) else { return }
             historyVM.loadNextPageIfNeeded(at: index)
@@ -101,33 +111,243 @@ struct FloatingHistoryView: View {
     }
 
     private func requestDelete(index: Int) {
-        guard index < pd.dataList.count else { return }
+        guard PasteUserDefaults.delConfirm else {
+            deleteItem(for: index)
+            return
+        }
+        env.isShowDel = true
+        HistoryHelpers.showDeleteConfirmAlert(
+            for: index,
+            historyVM: historyVM,
+            env: env
+        ) { [self] in
+            deleteItem(for: index)
+        }
+    }
+
+    private func deleteItem(for index: Int) {
+        HistoryHelpers.deleteItem(
+            at: index,
+            historyVM: historyVM,
+            env: env
+        )
+    }
+
+    // MARK: - Event Handlers
+
+    private func appear() {
+        EventDispatcher.shared.registerHandler(
+            matching: .keyDown,
+            key: "floating",
+            handler: keyDownEvent(_:)
+        )
+
+        flagsMonitorToken = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { event in
+            flagsChangedEvent(event)
+        }
+
+        if historyVM.selectedId == nil {
+            historyVM.setSelection(id: pd.dataList.first?.id, index: 0)
+        }
+    }
+
+    private func disappear() {
+        if let token = flagsMonitorToken {
+            NSEvent.removeMonitor(token)
+            flagsMonitorToken = nil
+        }
+        historyVM.cleanup()
+    }
+
+    private func flagsChangedEvent(_ event: NSEvent) -> NSEvent? {
+        guard event.window == ClipFloatingWindowController.shared.window,
+              ClipFloatingWindowController.shared.isVisible
+        else {
+            return event
+        }
+
+        historyVM.isQuickPastePressed = KeyCode.isQuickPasteModifierPressed()
+        return event
+    }
+
+    private func keyDownEvent(_ event: NSEvent) -> NSEvent? {
+        guard event.window == ClipFloatingWindowController.shared.window
+        else {
+            return event
+        }
+
+        guard env.focusView == .history else {
+            return event
+        }
+
+        if event.keyCode == KeyCode.escape {
+            if case .some(_?) = historyVM.showPreviewId {
+                historyVM.showPreviewId = nil
+                return nil
+            }
+            if ClipFloatingWindowController.shared.isVisible {
+                ClipFloatingWindowController.shared.toggleWindow()
+                return nil
+            }
+            return event
+        }
+
+        if let index = HistoryViewModel.handleQuickPasteShortcut(event) {
+            performQuickPaste(at: index)
+            return nil
+        }
+
+        if event.modifierFlags.contains(.command) {
+            return handleCommandKeyEvent(event)
+        }
+
+        let hasModifiers = !event.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty
+
+        switch event.keyCode {
+        case UInt16(kVK_UpArrow):
+            if hasModifiers {
+                return event
+            }
+            return moveSelection(offset: -1, event: event)
+
+        case UInt16(kVK_DownArrow):
+            if hasModifiers {
+                return event
+            }
+            return moveSelection(offset: 1, event: event)
+
+        case UInt16(kVK_Space):
+            return handleSpace(event)
+
+        case UInt16(kVK_Return):
+            return handleReturnKey(event)
+
+        case UInt16(kVK_Delete), UInt16(kVK_ForwardDelete):
+            return deleteKeyDown(event)
+
+        default:
+            return event
+        }
+    }
+
+    private func moveSelection(offset: Int, event _: NSEvent) -> NSEvent? {
+        guard !pd.dataList.isEmpty else {
+            historyVM.showPreviewId = nil
+            historyVM.setSelection(id: nil, index: 0)
+            NSSound.beep()
+            return nil
+        }
+
+        let currentIndex = historyVM.selectedIndex ?? 0
+        let newIndex = max(0, min(currentIndex + offset, pd.dataList.count - 1))
+
+        guard newIndex != currentIndex else {
+            NSSound.beep()
+            return nil
+        }
+
+        historyVM.setSelection(id: pd.dataList[newIndex].id, index: newIndex)
+        if historyVM.showPreviewId != nil {
+            historyVM.showPreviewId = nil
+        }
+
+        if offset > 0, historyVM.shouldLoadNextPage(at: newIndex) {
+            Task.detached(priority: .userInitiated) { [weak historyVM] in
+                await historyVM?.loadNextPageIfNeeded(at: newIndex)
+            }
+        }
+        return nil
+    }
+
+    private func performQuickPaste(at index: Int) {
+        guard index >= 0, index < pd.dataList.count else {
+            NSSound.beep()
+            return
+        }
+
         let item = pd.dataList[index]
+        historyVM.setSelection(id: item.id, index: index)
+        env.actions.paste(
+            item,
+            isAttribute: true
+        )
+    }
 
-        historyVM.isDel = true
-
-        _ = withAnimation(.easeInOut(duration: 0.2)) {
-            pd.dataList.remove(at: index)
+    private func handleCommandKeyEvent(_ event: NSEvent) -> NSEvent? {
+        let hasModifiers = !event.modifierFlags.intersection([.option, .control, .shift]).isEmpty
+        guard !hasModifiers else {
+            return event
         }
 
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(200))
-            HistoryHelpers.updateSelectionAfterDeletion(
-                at: index,
-                dataList: pd.dataList,
-                historyVM: historyVM
-            )
-            historyVM.isDel = false
-        }
+        switch event.keyCode {
+        case UInt16(kVK_ANSI_C):
+            return handleCopy()
 
-        env.actions.delete(item)
-        
-        if pd.dataList.count < 50,
-           pd.hasMoreData,
-           !pd.isLoadingPage
-        {
-            pd.loadNextPage()
+        case UInt16(kVK_ANSI_E):
+            return handleEdit()
+
+        default:
+            return event
         }
+    }
+
+    private func handleEdit() -> NSEvent? {
+        guard let index = historyVM.selectedIndex
+        else {
+            NSSound.beep()
+            return nil
+        }
+        EditWindowController.shared.openWindow(with: pd.dataList[index])
+        return nil
+    }
+
+    private func handleCopy() -> NSEvent? {
+        guard let index = historyVM.selectedIndex
+        else {
+            NSSound.beep()
+            return nil
+        }
+        env.actions.copy(pd.dataList[index])
+        return nil
+    }
+
+    private func handleSpace(_: NSEvent) -> NSEvent? {
+        if let id = historyVM.selectedId {
+            if historyVM.showPreviewId == id {
+                historyVM.showPreviewId = nil
+            } else {
+                historyVM.showPreviewId = id
+            }
+        }
+        return nil
+    }
+
+    private func handleReturnKey(_ event: NSEvent) -> NSEvent? {
+        guard let index = historyVM.selectedIndex
+        else {
+            return event
+        }
+        env.actions.paste(
+            pd.dataList[index],
+            isAttribute: !hasPlainTextModifier(event)
+        )
+        return nil
+    }
+
+    private func hasPlainTextModifier(_ event: NSEvent) -> Bool {
+        KeyCode.hasModifier(
+            event,
+            modifierIndex: PasteUserDefaults.plainTextModifier
+        )
+    }
+
+    private func deleteKeyDown(_: NSEvent) -> NSEvent? {
+        guard let index = historyVM.selectedIndex else {
+            NSSound.beep()
+            return nil
+        }
+        requestDelete(index: index)
+        return nil
     }
 }
 

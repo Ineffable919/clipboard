@@ -13,7 +13,6 @@ struct FloatingCardView: View {
     @Binding var showPreviewId: PasteboardModel.ID?
     let quickPasteIndex: Int?
     let searchKeyword: String
-    var onTap: (() -> Void)?
     var onRequestDelete: (() -> Void)?
 
     @Environment(\.colorScheme) private var colorScheme
@@ -22,27 +21,33 @@ struct FloatingCardView: View {
     var body: some View {
         let showPreview = showPreviewId == model.id
 
-        Button {
-            onTap?()
-        } label: {
-            cardContent
-        }
-        .padding(.vertical, Const.space2)
-        .buttonStyle(
-            FloatingCardButtonStyle(
-                isSelected: isSelected,
-                selectionColor: selectionColor
+        cardContent
+            .overlay {
+                if isSelected {
+                    RoundedRectangle(
+                        cornerRadius: Const.radius + 2,
+                        style: .continuous
+                    )
+                    .strokeBorder(selectionColor, lineWidth: 2)
+                    .padding(-2)
+                }
+            }
+            .shadow(
+                color: isSelected ? .clear : Const.cardShadowColor,
+                radius: isSelected ? 0 : 6,
+                x: 0,
+                y: isSelected ? 0 : 3
             )
-        )
-        .contextMenu { contextMenuContent }
-        .popover(
-            isPresented: Binding(
-                get: { showPreview },
-                set: { showPreviewId = $0 ? model.id : nil }
-            )
-        ) {
-            PreviewPopoverView(model: model)
-        }
+            .padding(Const.space2)
+            .contextMenu { contextMenuContent }
+            .popover(
+                isPresented: Binding(
+                    get: { showPreview },
+                    set: { showPreviewId = $0 ? model.id : nil }
+                )
+            ) {
+                PreviewPopoverView(model: model)
+            }
     }
 
     private var cardContent: some View {
@@ -51,15 +56,13 @@ struct FloatingCardView: View {
                 .frame(width: 32, height: 32)
                 .padding(.leading, Const.space12)
 
-            VStack {
-                FloatContentView
-            }
-            .padding(.vertical, Const.space4)
-            .frame(
-                maxWidth: .infinity,
-                maxHeight: .infinity,
-                alignment: model.pasteboardType.isText() ? .leading : .center
-            )
+            FloatContentView
+                .padding(.vertical, Const.space4)
+                .frame(
+                    maxWidth: .infinity,
+                    maxHeight: .infinity,
+                    alignment: model.pasteboardType.isText() ? .leading : .center
+                )
 
             VStack(alignment: .trailing, spacing: Const.space4) {
                 Text(model.timestamp.timeAgo)
@@ -79,8 +82,13 @@ struct FloatingCardView: View {
             maxHeight: FloatConst.cardHeight
         )
         .background {
-            cardBackground
+            if model.type == .color {
+                Color(hex: model.attributeString.string)
+            } else {
+                model.backgroundColor
+            }
         }
+        .clipShape(.rect(cornerRadius: Const.radius, style: .continuous))
     }
 
     @ViewBuilder
@@ -128,17 +136,6 @@ struct FloatingCardView: View {
             } else {
                 Text(model.highlightedPlainText(keyword: searchKeyword))
             }
-        }
-    }
-
-    @ViewBuilder
-    private var cardBackground: some View {
-        if model.type == .color {
-            RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
-                .fill(Color(hex: model.attributeString.string))
-        } else {
-            RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
-                .fill(model.backgroundColor)
         }
     }
 
@@ -210,35 +207,6 @@ struct FloatingCardView: View {
 
     private func openEditWindow() {
         EditWindowController.shared.openWindow(with: model)
-    }
-}
-
-// MARK: - Floating Card Button Style
-
-private struct FloatingCardButtonStyle: ButtonStyle {
-    let isSelected: Bool
-    let selectionColor: Color
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration
-            .label
-            .clipShape(.rect(cornerRadius: Const.radius))
-            .overlay {
-                if isSelected {
-                    RoundedRectangle(
-                        cornerRadius: Const.radius + 2,
-                        style: .continuous
-                    )
-                    .strokeBorder(selectionColor, lineWidth: 2)
-                    .padding(-2)
-                }
-            }
-            .shadow(
-                color: isSelected ? .clear : Const.cardShadowColor,
-                radius: isSelected ? 0 : 6,
-                x: 0,
-                y: isSelected ? 0 : 3
-            )
     }
 }
 
@@ -323,8 +291,7 @@ private struct FloatingImageThumbnailView: View {
         isSelected: false,
         showPreviewId: $previewId,
         quickPasteIndex: 1,
-        searchKeyword: "",
-        onTap: {}
+        searchKeyword: ""
     )
     .environment(env)
     .padding()
