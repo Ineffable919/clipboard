@@ -90,8 +90,74 @@ extension String {
     }
 
     var isCSSHexColor: Bool {
-        let predicate = NSPredicate(format: "SELF MATCHES %@", String.regex)
-        return predicate.evaluate(with: self)
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, trimmed.count <= 50 else { return false }
+        
+        let lowercased = trimmed.lowercased()
+        
+        return isValidHexColor(lowercased)
+            || Self.cssNamedColors.contains(lowercased)
+            || isValidRGBColor(lowercased)
+            || isValidHSLColor(lowercased)
+    }
+    
+    private static let cssNamedColors: Set<String> = [
+        "black", "white", "red", "green", "blue", "yellow", "cyan", "magenta",
+        "gray", "grey", "silver", "maroon", "olive", "lime", "aqua", "teal",
+        "navy", "fuchsia", "purple", "orange", "pink", "brown", "gold",
+        "indigo", "violet", "tan", "beige", "coral", "crimson", "khaki",
+        "lavender", "salmon", "turquoise", "ivory", "azure", "snow", "mint",
+        "transparent"
+    ]
+    
+    private static let hexCharacters = CharacterSet(charactersIn: "0123456789abcdef")
+    
+    private static let rgbRegex = try? NSRegularExpression(
+        pattern: #"^rgba?\((\d+),(\d+),(\d+)(,(0|1|0?\.\d+))?\)$"#
+    )
+    
+    private static let hslRegex = try? NSRegularExpression(
+        pattern: #"^hsla?\((\d+),(\d+)%,(\d+)%(,(0|1|0?\.\d+))?\)$"#
+    )
+    
+    private func isValidHexColor(_ str: String) -> Bool {
+        let hex = str.hasPrefix("#") ? str.dropFirst() : str[...]
+        guard [3, 4, 6, 8].contains(hex.count) else { return false }
+        return hex.unicodeScalars.allSatisfy { Self.hexCharacters.contains($0) }
+    }
+    
+    private func isValidRGBColor(_ str: String) -> Bool {
+        let clean = str.replacing(" ", with: "")
+        guard let regex = Self.rgbRegex else { return false }
+        
+        let range = NSRange(clean.startIndex..., in: clean)
+        guard let match = regex.firstMatch(in: clean, range: range) else { return false }
+        
+        for i in 1...3 {
+            guard let range = Range(match.range(at: i), in: clean),
+                  let value = Int(clean[range]),
+                  value <= 255 else { return false }
+        }
+        return true
+    }
+    
+    private func isValidHSLColor(_ str: String) -> Bool {
+        let clean = str.replacing(" ", with: "")
+        guard let regex = Self.hslRegex else { return false }
+        
+        let range = NSRange(clean.startIndex..., in: clean)
+        guard let match = regex.firstMatch(in: clean, range: range) else { return false }
+        
+        guard let hRange = Range(match.range(at: 1), in: clean),
+              let h = Int(clean[hRange]),
+              h <= 360 else { return false }
+        
+        for i in 2...3 {
+            guard let range = Range(match.range(at: i), in: clean),
+                  let value = Int(clean[range]),
+                  value <= 100 else { return false }
+        }
+        return true
     }
 
     func trimmingTrailingNewlines() -> String {

@@ -16,6 +16,7 @@ struct PreviewPopoverView: View {
     static let defaultHeight: CGFloat = 220.0
 
     let model: PasteboardModel
+    var onClose: (() -> Void)?
 
     @Environment(AppEnvironment.self) private var env
     @AppStorage(PrefKey.enableLinkPreview.rawValue)
@@ -97,6 +98,16 @@ struct PreviewPopoverView: View {
 
     private var headerView: some View {
         HStack {
+            Button {
+                onClose?()
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 14))
+                    .foregroundStyle(.secondary)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            
             if let appIcon {
                 Image(nsImage: appIcon)
                     .resizable()
@@ -416,6 +427,7 @@ class InterceptingHostingView<Content: View>: NSHostingView<Content> {
 // MARK: - Preview
 
 #Preview {
+    let env = AppEnvironment()
     let data = "https://www.apple.com.cn"
         .data(
             using: .utf8
@@ -433,7 +445,9 @@ class InterceptingHostingView<Content: View>: NSHostingView<Content> {
             length: 0,
             group: -1,
             tag: "string"
-        )
+        ),
+        onClose: {}
     )
+    .environment(env)
     .frame(width: 800, height: 600)
 }

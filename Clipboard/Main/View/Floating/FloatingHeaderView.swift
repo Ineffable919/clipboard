@@ -18,14 +18,19 @@ struct FloatingHeaderView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            topDragArea
+
             HStack(spacing: Const.space12) {
                 searchField
                 settingsButton
             }
-            .padding(.top, Const.space16)
+            .padding(.top, Const.space6)
             .padding(.horizontal, FloatConst.horizontalPadding)
 
             Spacer()
+                .frame(maxWidth: .infinity)
+                .contentShape(.rect)
+                .windowDraggable()
 
             chipScrollView
                 .padding(.bottom, Const.space10)
@@ -33,8 +38,32 @@ struct FloatingHeaderView: View {
         .frame(maxWidth: .infinity)
         .frame(height: FloatConst.headerHeight)
         .onAppear {
+            EventDispatcher.shared.registerHandler(
+                matching: .keyDown,
+                key: "floatingTop",
+                handler: floatingKeyDownEvent(_:)
+            )
             topBarVM.startPauseDisplayTimer()
         }
+    }
+
+    // MARK: - 顶部拖拽区域
+
+    private var topDragArea: some View {
+        VStack(spacing: 0) {
+            Spacer()
+                .frame(height: Const.space6)
+
+            RoundedRectangle(cornerRadius: 2)
+                .fill(Color.secondary.opacity(0.3))
+                .frame(width: 36.0, height: 4.0)
+
+            Spacer()
+                .frame(height: Const.space4)
+        }
+        .frame(maxWidth: .infinity)
+        .contentShape(.rect)
+        .windowDraggable()
     }
 
     // MARK: - 搜索框
@@ -102,12 +131,10 @@ struct FloatingHeaderView: View {
                         chip: chip,
                         isSelected: topBarVM.selectedChipId == chip.id,
                         onTap: {
-                            topBarVM.clearInput()
                             topBarVM.toggleChip(chip)
-                            if env.focusView != .history {
-                                focus = nil
-                                env.focusView = .history
-                            }
+                            guard env.focusView != .history else { return }
+                            focus = nil
+                            env.focusView = .history
                         }
                     )
                 }
@@ -129,11 +156,52 @@ struct FloatingHeaderView: View {
             .labelStyle(.iconOnly)
             .foregroundStyle(.secondary)
             .frame(width: 24, height: 24)
-            .background {
-                Circle()
-                    .fill(Color.secondary.opacity(0.1))
-            }
             .buttonStyle(.plain)
+    }
+
+    // MARK: - 键盘事件处理
+
+    private func floatingKeyDownEvent(_ event: NSEvent) -> NSEvent? {
+        guard event.window === ClipFloatingWindowController.shared.window
+        else {
+            return event
+        }
+
+        let isInInputMode = env.focusView == .search
+
+        if isInInputMode {
+            if EventDispatcher.shared.handleSystemEditingCommand(event) {
+                return nil
+            }
+
+            if event.keyCode == KeyCode.escape {
+                if topBarVM.hasInput {
+                    topBarVM.clearInput()
+                } else {
+                    focus = nil
+                    env.focusView = .history
+                }
+                return nil
+            }
+
+            return event
+        }
+
+        if KeyCode.shouldTriggerSearch(for: event) {
+            env.focusView = .search
+            focus = .search
+            return nil
+        }
+
+        return event
+    }
+
+    private func syncFocusFromEnv() {
+        if env.focusView.requiresSystemFocus {
+            Task { @MainActor in
+                focus = env.focusView
+            }
+        }
     }
 }
 

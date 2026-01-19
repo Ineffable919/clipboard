@@ -46,7 +46,10 @@ struct ClipCardView: View {
                     set: { showPreviewId = $0 ? model.id : nil }
                 )
             ) {
-                PreviewPopoverView(model: model)
+                PreviewPopoverView(
+                    model: model,
+                    onClose: { showPreviewId = nil }
+                )
             }
     }
 

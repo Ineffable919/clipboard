@@ -44,17 +44,21 @@ struct FloatingCardView: View {
                 isPresented: Binding(
                     get: { showPreview },
                     set: { showPreviewId = $0 ? model.id : nil }
-                )
+                ),
+                arrowEdge: .leading
             ) {
-                PreviewPopoverView(model: model)
+                PreviewPopoverView(
+                    model: model,
+                    onClose: { showPreviewId = nil }
+                )
             }
     }
 
     private var cardContent: some View {
         HStack(alignment: .center, spacing: Const.space4) {
             appIconView
-                .frame(width: 32, height: 32)
-                .padding(.leading, Const.space12)
+                .frame(width: 24, height: 24)
+                .padding(.leading, Const.space6)
 
             FloatContentView
                 .padding(.vertical, Const.space4)
@@ -88,7 +92,7 @@ struct FloatingCardView: View {
                 model.backgroundColor
             }
         }
-        .clipShape(.rect(cornerRadius: Const.radius, style: .continuous))
+        .clipShape(.rect(cornerRadius: Const.radius))
     }
 
     @ViewBuilder
@@ -106,7 +110,7 @@ struct FloatingCardView: View {
         case .color:
             Text(model.attributeString.string)
                 .font(.system(size: 14.0, weight: .medium, design: .monospaced))
-                .foregroundStyle(.primary)
+                .foregroundStyle(model.colors().1)
         case .file:
             if let paths = model.cachedFilePaths {
                 if paths.count > 1 {
@@ -141,7 +145,7 @@ struct FloatingCardView: View {
 
     private func quickPasteBadge(index: Int) -> some View {
         Text(index, format: .number)
-            .font(.system(size: 12, weight: .medium, design: .rounded))
+            .font(.system(size: 10, weight: .regular, design: .rounded))
             .foregroundStyle(model.colors().1)
     }
 

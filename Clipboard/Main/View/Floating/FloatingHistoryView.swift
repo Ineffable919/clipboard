@@ -25,9 +25,6 @@ struct FloatingHistoryView: View {
                 ScrollView(showsIndicators: false) {
                     contentView()
                 }
-                .focusable()
-                .focused($isFocused)
-                .focusEffectDisabled()
                 .contentMargins(.top, FloatConst.headerHeight, for: .scrollContent)
                 .contentMargins(.top, FloatConst.headerHeight, for: .scrollIndicators)
                 .contentMargins(.bottom, FloatConst.footerHeight, for: .scrollContent)
@@ -50,6 +47,9 @@ struct FloatingHistoryView: View {
                     historyVM.isQuickPastePressed = false
                 }
         }
+        .focusable()
+        .focused($isFocused)
+        .focusEffectDisabled()
         .onAppear {
             appear()
         }

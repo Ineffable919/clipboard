@@ -95,4 +95,36 @@ extension View {
     ) -> some View {
         modifier(AutoScrollOnIMEInputModifier(onIMEInput: action))
     }
+
+    /// 为视图添加窗口拖拽功能
+    func windowDraggable() -> some View {
+        overlay {
+            WindowDragArea()
+        }
+    }
+}
+
+// MARK: - Window Drag Area
+
+struct WindowDragArea: NSViewRepresentable {
+    func makeNSView(context _: Context) -> WindowDragView {
+        let view = WindowDragView()
+        return view
+    }
+
+    func updateNSView(_: WindowDragView, context _: Context) {}
+}
+
+final class WindowDragView: NSView {
+    override var mouseDownCanMoveWindow: Bool { true }
+
+    override var acceptsFirstResponder: Bool { true }
+
+    override func acceptsFirstMouse(for _: NSEvent?) -> Bool {
+        true
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        window?.performDrag(with: event)
+    }
 }
