@@ -10,8 +10,8 @@
             <sparkle:releaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
             </sparkle:releaseNotesLink>
-            <pubDate>Wed, 31 Dec 2025 20:27:00 +0800</pubDate>
-            <sparkle:version>90</sparkle:version>
+            <pubDate>Sat, 10 Jan 2026 23:11:55 +0800</pubDate>
+            <sparkle:version>92</sparkle:version>
             <sparkle:shortVersionString>0.3.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
             <sparkle:tags>
@@ -19,8 +19,8 @@
             </sparkle:tags>
             <enclosure
                 url="https://github.com/Ineffable919/clipboard/releases/download/0.3.0/Clipboard-0.3.0-arm64.zip"
-                sparkle:edSignature="RiZ9rwcIN0U6IotNLjnaPig5rKp1F6Q3bb7P6F5s2GSpgtfaP7737bGkTFY5+Xre0Rm5aA3tOuVwNosH0S8lCQ=="
-                length="3038681"
+                sparkle:edSignature="ntpKPvz6qGdAGAtNonXjOyTD8t5rVaWjvIt3NM7NQBNXX5gjMxtZMxdV9RH7i+VR2tkZT4tvTXeu/MhIYcPyBA=="
+                length="3066886"
                 type="application/octet-stream" />
         </item>
 
@@ -29,8 +29,8 @@
             <sparkle:releaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
             </sparkle:releaseNotesLink>
-            <pubDate>Wed, 31 Dec 2025 20:29:08 +0800</pubDate>
-            <sparkle:version>90</sparkle:version>
+            <pubDate>Sat, 10 Jan 2026 23:12:58 +0800</pubDate>
+            <sparkle:version>92</sparkle:version>
             <sparkle:shortVersionString>0.3.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
             <sparkle:tags>
@@ -38,11 +38,10 @@
             </sparkle:tags>
             <enclosure
                 url="https://github.com/Ineffable919/clipboard/releases/download/0.3.0/Clipboard-0.3.0-x86_64.zip"
-                sparkle:edSignature="+HuxTH0y1HY8RXvuA9k72PNGQOjTT3cUE7ITtpJFUYIn4JkJUk6CScTBjCG9AAQzWflgeF2Ob0SpgI2MsihVCg=="
-                length="3139274"
+                sparkle:edSignature="hBqA9SBxkwD4/OI2ofNGb4wBnzcLNIlsktjpCbLtn6p9OXu1mwf/JnNIt3PL2Fk3lamEm00Ec4poYi9wcDpoAA=="
+                length="3138964"
                 type="application/octet-stream" />
         </item>
-
 
         <item>
             <title>Version 0.2.5 (Apple Silicon (arm64))</title>
