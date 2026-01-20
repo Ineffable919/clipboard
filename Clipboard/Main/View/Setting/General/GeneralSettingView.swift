@@ -11,8 +11,6 @@ import SwiftUI
 // MARK: - 通用设置视图
 
 struct GeneralSettingView: View {
-    @Environment(\.colorScheme) var colorScheme
-
     @State private var launchAtLogin: Bool = LaunchAtLoginHelper.shared
         .isEnabled
     @AppStorage(PrefKey.soundEnabled.rawValue)

@@ -8,6 +8,7 @@
 import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
+import VisionKit
 import WebKit
 
 struct PreviewPopoverView: View {
@@ -16,11 +17,9 @@ struct PreviewPopoverView: View {
 
     let model: PasteboardModel
 
-    @EnvironmentObject private var env: AppEnvironment
+    @Environment(AppEnvironment.self) private var env
     @AppStorage(PrefKey.enableLinkPreview.rawValue)
     private var enableLinkPreview: Bool = PasteUserDefaults.enableLinkPreview
-
-    // MARK: - 属性
 
     private var appIcon: NSImage? {
         guard !model.appPath.isEmpty else { return nil }
@@ -28,7 +27,14 @@ struct PreviewPopoverView: View {
     }
 
     private var cachedDataString: String? {
-        String(data: model.data, encoding: .utf8)
+        if let attr = NSAttributedString(
+            with: model.data,
+            type: model.pasteboardType
+        ) {
+            attr.string
+        } else {
+            String(data: model.data, encoding: .utf8)
+        }
     }
 
     private var cachedDefaultBrowserName: String? {
@@ -70,17 +76,20 @@ struct PreviewPopoverView: View {
     private var contentView: some View {
         VStack(alignment: .leading, spacing: Const.space12) {
             headerView
+                .frame(height: 24)
             previewContent
                 .clipShape(.rect(cornerRadius: Const.radius))
                 .shadow(radius: 0.5)
+                .frame(maxHeight: .infinity)
             footerView
+                .frame(height: 24)
         }
         .padding(Const.space12)
         .frame(
             minWidth: Const.minPreviewWidth,
             maxWidth: Const.maxPreviewWidth,
             minHeight: Const.minPreviewHeight,
-            maxHeight: Const.maxPreviewHeight,
+            maxHeight: Const.maxPreviewHeight
         )
     }
 
@@ -91,6 +100,7 @@ struct PreviewPopoverView: View {
             if let appIcon {
                 Image(nsImage: appIcon)
                     .resizable()
+                    .scaledToFill()
                     .frame(width: 20, height: 20)
             }
 
@@ -224,10 +234,12 @@ struct PreviewPopoverView: View {
 
     @ViewBuilder
     private var colorPreview: some View {
+        let (_, textColor) = model.colors()
         if let hex = cachedDataString {
             VStack(alignment: .center) {
                 Text(hex)
                     .font(.title2)
+                    .foregroundStyle(textColor)
             }
             .frame(
                 maxWidth: Const.maxPreviewWidth,
@@ -304,26 +316,30 @@ struct PreviewPopoverView: View {
 
     @ViewBuilder
     private var imagePreview: some View {
-        PreviewImageView(model: model)
+        ZStack {
+            CheckerboardBackground()
+            LiveTextImageView(imageData: model.data)
+                .frame(
+                    maxWidth: Const.maxPreviewWidth - Const.space12 * 2,
+                    maxHeight: Const.maxContentHeight
+                )
+        }
     }
 
     @ViewBuilder
     private var filePreview: some View {
         Group {
-            if let paths = model.cachedFilePaths, !paths.isEmpty {
-                if paths.count == 1, let firstPath = paths.first {
-                    QuickLookPreview(
-                        url: URL(fileURLWithPath: firstPath),
-                        maxWidth: Const.maxPreviewWidth - 32,
-                        maxHeight: Const.maxContentHeight,
-                    )
-                } else {
-                    Image(systemName: "folder")
-                        .resizable()
-                        .symbolRenderingMode(.hierarchical)
-                        .foregroundStyle(Color.accentColor.opacity(0.8))
-                        .frame(width: 144, height: 144, alignment: .center)
-                }
+            if let paths = model.cachedFilePaths, paths.count == 1, let firstPath = paths.first {
+                QuickLookPreview(
+                    url: URL(fileURLWithPath: firstPath),
+                    maxWidth: Const.maxPreviewWidth - 32,
+                    maxHeight: Const.maxContentHeight,
+                )
+            } else {
+                Image(systemName: "folder")
+                    .resizable()
+                    .foregroundStyle(Color.accentColor.opacity(0.8))
+                    .frame(width: 144, height: 144, alignment: .center)
             }
         }
         .frame(
@@ -341,72 +357,6 @@ struct PreviewPopoverView: View {
                 height: PreviewPopoverView.defaultHeight,
                 alignment: .center,
             )
-    }
-}
-
-private struct PreviewImageView: View {
-    let model: PasteboardModel
-    @State private var image: NSImage?
-
-    var body: some View {
-        Group {
-            if let image {
-                ZStack {
-                    CheckerboardBackground()
-                    Image(nsImage: image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(
-                            maxWidth: Const.maxPreviewWidth,
-                            maxHeight: Const.maxPreviewWidth,
-                        )
-                }
-            } else {
-                Image(systemName: "photo")
-                    .resizable()
-                    .font(.largeTitle)
-                    .frame(
-                        width: Const.minPreviewWidth,
-                        height: Const.minPreviewHeight,
-                        alignment: .center
-                    )
-            }
-        }
-        .task {
-            image = await model.loadThumbnail()
-        }
-    }
-}
-
-struct BorderedButton: View {
-    let title: String
-    let action: () -> Void
-    @State private var isHovered = false
-    @Environment(\.colorScheme) var scheme
-
-    var body: some View {
-        Button {
-            action()
-        } label: {
-            Text(title)
-                .font(.system(size: Const.space12, weight: .light))
-                .foregroundStyle(scheme == .dark ? .white : .black)
-        }
-        .focusable(false)
-        .buttonStyle(.borderless)
-        .padding(.horizontal, Const.space10)
-        .padding(.vertical, Const.space4)
-        .background(
-            RoundedRectangle(cornerRadius: Const.radius)
-                .fill(isHovered ? .gray.opacity(0.1) : Color.clear),
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: Const.radius)
-                .stroke(Color.gray.opacity(0.2), lineWidth: 1),
-        )
-        .onHover { hovering in
-            isHovered = hovering
-        }
     }
 }
 

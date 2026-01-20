@@ -11,7 +11,7 @@ import SwiftUI
 
 struct ClipTopBarView: View {
     @Environment(\.colorScheme) private var colorScheme
-    @EnvironmentObject private var env: AppEnvironment
+    @Environment(AppEnvironment.self) private var env
     @AppStorage(PrefKey.backgroundType.rawValue)
     private var backgroundTypeRaw: Int = 0
     @FocusState private var focus: FocusField?
@@ -313,6 +313,35 @@ struct ClipTopBarView: View {
         }
     }
 
+    private func handleTabNavigationShortcut(_ event: NSEvent) -> Bool {
+        guard let previousTabInfo = HotKeyManager.shared.getHotKey(key: "previous_tab"),
+              let nextTabInfo = HotKeyManager.shared.getHotKey(key: "next_tab")
+        else {
+            return false
+        }
+
+        let relevantModifiers: NSEvent.ModifierFlags = [.command, .option, .control, .shift]
+        let eventModifiers = event.modifierFlags.intersection(relevantModifiers)
+
+        if previousTabInfo.isEnabled,
+           event.keyCode == previousTabInfo.shortcut.keyCode,
+           eventModifiers == previousTabInfo.shortcut.modifiers.intersection(relevantModifiers)
+        {
+            topBarVM.selectPreviousChip()
+            return true
+        }
+
+        if nextTabInfo.isEnabled,
+           event.keyCode == nextTabInfo.shortcut.keyCode,
+           eventModifiers == nextTabInfo.shortcut.modifiers.intersection(relevantModifiers)
+        {
+            topBarVM.selectNextChip()
+            return true
+        }
+
+        return false
+    }
+
     private func topKeyDownEvent(_ event: NSEvent) -> NSEvent? {
         guard event.window === ClipMainWindowController.shared.window
         else {
@@ -323,6 +352,10 @@ struct ClipTopBarView: View {
             || env.focusView == .newChip
             || env.focusView == .editChip
             || env.focusView == .popover
+
+        if !isInInputMode, handleTabNavigationShortcut(event) {
+            return nil
+        }
 
         if isInInputMode {
             if EventDispatcher.shared.handleSystemEditingCommand(event) {
@@ -356,8 +389,7 @@ struct ClipTopBarView: View {
                     return nil
                 }
                 if env.focusView == .popover {
-                    env.focusView = .history
-                    return nil
+                    return event
                 }
             }
 
@@ -378,9 +410,6 @@ struct ClipTopBarView: View {
             env.focusView = .search
             return nil
         }
-
-        if event.keyCode == KeyCode.escape {}
-
         return event
     }
 
@@ -478,6 +507,8 @@ struct SettingsMenu: View {
     }
 
     private func showNativeMenu() {
+        silentCheckForUpdates()
+
         let menu = NSMenu()
 
         if updateManager.hasUpdate {
@@ -647,6 +678,10 @@ struct SettingsMenu: View {
             accessibilityDescription: nil
         )
     }
+
+    private func silentCheckForUpdates() {
+        AppDelegate.shared?.updaterController.updater.checkForUpdatesInBackground()
+    }
 }
 
 class MenuActions: NSObject {
@@ -701,8 +736,8 @@ class MenuActions: NSObject {
 }
 
 #Preview {
-    @Previewable @StateObject var env = AppEnvironment()
+    @Previewable @State var env = AppEnvironment()
     ClipTopBarView()
-        .environmentObject(env)
+        .environment(env)
         .frame(width: 1000.0, height: 50.0)
 }

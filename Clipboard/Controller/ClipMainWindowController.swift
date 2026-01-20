@@ -8,17 +8,13 @@
 import AppKit
 import Combine
 
-@Observable
 final class ClipMainWindowController: NSWindowController {
     private let viewHeight: CGFloat = 330.0
 
     static let shared = ClipMainWindowController()
     var isVisible: Bool { window?.isVisible ?? false }
 
-    var preApp: NSRunningApplication?
-
     private let clipVC = ClipMainViewController()
-    @ObservationIgnored private lazy var env = clipVC.env
     private let db = PasteDataStore.main
 
     init() {
@@ -88,12 +84,14 @@ final class ClipMainWindowController: NSWindowController {
 
         if presented {
             if !win.isVisible {
-                preApp = NSWorkspace.shared.frontmostApplication
+                clipVC.env.preApp = NSWorkspace.shared.frontmostApplication
                 layoutToBottom()
                 win.orderFront(nil)
             }
             win.ignoresMouseEvents = false
             win.makeKey()
+
+            clipVC.env.resetQuickPasteState()
 
             clipVC.setPresented(true, animated: animated, completion: nil)
         } else {
@@ -111,7 +109,7 @@ final class ClipMainWindowController: NSWindowController {
 
 extension ClipMainWindowController: NSWindowDelegate {
     func windowDidResignKey(_: Notification) {
-        if env.isShowDel {
+        if clipVC.env.isShowDel {
             return
         }
         setPresented(false, animated: true)

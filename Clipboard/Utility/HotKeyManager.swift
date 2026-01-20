@@ -80,7 +80,6 @@ class HotKeyManager {
     static let shared = HotKeyManager()
 
     private var hotKeys: [String: EventHotKeyRef?] = [:]
-    // 快捷键映射
     private var handlers: [String: () -> Void] = [:]
     private var isInitialized = false
     private var eventHandlerRef: EventHandlerRef?
@@ -148,6 +147,7 @@ class HotKeyManager {
         }
 
         isInitialized = true
+        migrateHotKeysIfNeeded()
         loadHotKeys()
 
         NotificationCenter.default.addObserver(
@@ -156,8 +156,47 @@ class HotKeyManager {
             name: NSApplication.willTerminateNotification,
             object: nil,
         )
+    }
 
-        log.info("HotKeyManager 初始化完成")
+    private func migrateHotKeysIfNeeded() {
+        var hotKeyList = getAllHotKeys()
+        var needsSave = false
+
+        if !hotKeyList.contains(where: { $0.key == "previous_tab" }) {
+            let previousTabInfo = HotKeyInfo(
+                key: "previous_tab",
+                shortcut: KeyboardShortcut(
+                    modifiersRawValue: NSEvent.ModifierFlags.command.rawValue,
+                    keyCode: KeyCode.leftArrow,
+                    displayKey: "←"
+                ),
+                isEnabled: true,
+                isGlobal: false
+            )
+            hotKeyList.append(previousTabInfo)
+            needsSave = true
+            log.info("新增 previous_tab 默认快捷键")
+        }
+
+        if !hotKeyList.contains(where: { $0.key == "next_tab" }) {
+            let nextTabInfo = HotKeyInfo(
+                key: "next_tab",
+                shortcut: KeyboardShortcut(
+                    modifiersRawValue: NSEvent.ModifierFlags.command.rawValue,
+                    keyCode: KeyCode.rightArrow,
+                    displayKey: "→"
+                ),
+                isEnabled: true,
+                isGlobal: false
+            )
+            hotKeyList.append(nextTabInfo)
+            needsSave = true
+            log.info("新增 next_tab 默认快捷键")
+        }
+
+        if needsSave {
+            saveHotKeys(hotKeyList)
+        }
     }
 
     @objc private func applicationWillTerminate() {
@@ -172,7 +211,7 @@ class HotKeyManager {
 
     private func loadHotKeys() {
         let infos = getAllHotKeys()
-        for info in infos where info.isEnabled {
+        for info in infos where info.isEnabled && info.isGlobal {
             if let handler = handlers[info.key] {
                 _ = registerSystemHotKey(info: info, handler: handler)
             }
@@ -193,6 +232,7 @@ class HotKeyManager {
     func addHotKey(
         key: String,
         shortcut: KeyboardShortcut,
+        isGlobal: Bool = true
     ) -> HotKeyInfo? {
         guard !shortcut.isEmpty else {
             return nil
@@ -209,31 +249,33 @@ class HotKeyManager {
             return nil
         }
 
-        guard let handler = handlers[key] else {
-            log.warn("快捷键 \(key) 没有对应的内置 handler")
-            return nil
-        }
-
         let info = HotKeyInfo(
             key: key,
             shortcut: shortcut,
             isEnabled: true,
+            isGlobal: isGlobal
         )
         hotKeyList.append(info)
         saveHotKeys(hotKeyList)
 
-        if registerSystemHotKey(info: info, handler: handler) {
-            return info
+        if isGlobal {
+            guard let handler = handlers[key] else {
+                log.warn("快捷键 \(key) 没有对应的内置 handler")
+                return nil
+            }
+            if registerSystemHotKey(info: info, handler: handler) {
+                return info
+            }
         }
 
-        return nil
+        return info
     }
 
     @discardableResult
     func updateHotKey(
         key: String,
         shortcut: KeyboardShortcut? = nil,
-        isEnabled: Bool? = nil,
+        isEnabled: Bool? = nil
     ) -> HotKeyInfo? {
         var hotKeyList = getAllHotKeys()
         guard let index = hotKeyList.firstIndex(where: { $0.key == key }) else {
@@ -252,6 +294,7 @@ class HotKeyManager {
             key: key,
             shortcut: newShortcut,
             isEnabled: isEnabled ?? oldInfo.isEnabled,
+            isGlobal: oldInfo.isGlobal
         )
 
         if let otherIndex = hotKeyList.firstIndex(where: {
@@ -264,21 +307,24 @@ class HotKeyManager {
         hotKeyList[index] = newInfo
         saveHotKeys(hotKeyList)
 
-        unregisterSystemHotKey(key: key)
-        if newInfo.isEnabled, let handler = handlers[key] {
-            if registerSystemHotKey(info: newInfo, handler: handler) {
-                return newInfo
-            }
+        if newInfo.isEnabled, newInfo.isGlobal, let handler = handlers[key] {
+            unregisterSystemHotKey(key: key)
+            _ = registerSystemHotKey(info: newInfo, handler: handler)
         }
-        return nil
+
+        return newInfo
     }
 
     @discardableResult
     func deleteHotKey(key: String) -> Bool {
         var hotKeyList = getAllHotKeys()
+
+        if let info = hotKeyList.first(where: { $0.key == key }), info.isGlobal {
+            unregisterSystemHotKey(key: key)
+        }
+
         hotKeyList.removeAll(where: { $0.key == key })
         saveHotKeys(hotKeyList)
-        unregisterSystemHotKey(key: key)
         return true
     }
 
@@ -300,7 +346,7 @@ class HotKeyManager {
 
     private func registerSystemHotKey(
         info: HotKeyInfo,
-        handler _: @escaping () -> Void,
+        handler _: @escaping () -> Void
     ) -> Bool {
         var hotKeyRef: EventHotKeyRef?
 
@@ -329,7 +375,6 @@ class HotKeyManager {
         return true
     }
 
-    /// 注销系统快捷键
     private func unregisterSystemHotKey(key: String) {
         if let hotKeyRef = hotKeys[key], let ref = hotKeyRef {
             UnregisterEventHotKey(ref)
@@ -347,6 +392,57 @@ class HotKeyManager {
     func clearAllHotKeys() {
         unregisterAllHotKeys()
         saveHotKeys([])
+    }
+
+    func resetToDefaults() {
+        unregisterAllHotKeys()
+
+        let defaultHotKeys = [
+            HotKeyInfo(
+                key: "app_launch",
+                shortcut: KeyboardShortcut(
+                    modifiersRawValue: NSEvent.ModifierFlags([.command, .shift]).rawValue,
+                    keyCode: KeyCode.v,
+                    displayKey: "V"
+                ),
+                isEnabled: true,
+                isGlobal: true
+            ),
+            HotKeyInfo(
+                key: "previous_tab",
+                shortcut: KeyboardShortcut(
+                    modifiersRawValue: NSEvent.ModifierFlags.command.rawValue,
+                    keyCode: KeyCode.leftArrow,
+                    displayKey: "←"
+                ),
+                isEnabled: true,
+                isGlobal: false
+            ),
+            HotKeyInfo(
+                key: "next_tab",
+                shortcut: KeyboardShortcut(
+                    modifiersRawValue: NSEvent.ModifierFlags.command.rawValue,
+                    keyCode: KeyCode.rightArrow,
+                    displayKey: "→"
+                ),
+                isEnabled: true,
+                isGlobal: false
+            ),
+        ]
+
+        saveHotKeys(defaultHotKeys)
+
+        for info in defaultHotKeys where info.isEnabled && info.isGlobal {
+            if let handler = handlers[info.key] {
+                _ = registerSystemHotKey(info: info, handler: handler)
+            }
+        }
+
+        // 重置修饰键设置
+        PasteUserDefaults.quickPasteModifier = 0
+        PasteUserDefaults.plainTextModifier = 3
+
+        log.info("已重置所有快捷键为默认值")
     }
 }
 

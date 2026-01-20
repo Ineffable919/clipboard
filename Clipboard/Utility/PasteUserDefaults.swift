@@ -35,15 +35,40 @@ enum PasteUserDefaults {
     @CodableUserDefaultsWrapper(
         .globalHotKeys,
         defaultValue: [
-            HotKeyInfo(key: "app_launch", shortcut: KeyboardShortcut(
-                modifiersRawValue: NSEvent.ModifierFlags([
-                    .command, .shift,
-                ])
-                .rawValue,
-                keyCode: KeyCode.v,
-                displayKey: "V",
-            )),
-        ],
+            HotKeyInfo(
+                key: "app_launch",
+                shortcut: KeyboardShortcut(
+                    modifiersRawValue: NSEvent.ModifierFlags([
+                        .command, .shift,
+                    ])
+                    .rawValue,
+                    keyCode: KeyCode.v,
+                    displayKey: "V"
+                ),
+                isEnabled: true,
+                isGlobal: true
+            ),
+            HotKeyInfo(
+                key: "previous_tab",
+                shortcut: KeyboardShortcut(
+                    modifiersRawValue: NSEvent.ModifierFlags.command.rawValue,
+                    keyCode: KeyCode.leftArrow,
+                    displayKey: "←"
+                ),
+                isEnabled: true,
+                isGlobal: false
+            ),
+            HotKeyInfo(
+                key: "next_tab",
+                shortcut: KeyboardShortcut(
+                    modifiersRawValue: NSEvent.ModifierFlags.command.rawValue,
+                    keyCode: KeyCode.rightArrow,
+                    displayKey: "→"
+                ),
+                isEnabled: true,
+                isGlobal: false
+            ),
+        ]
     )
     static var globalHotKeys
     /// 粘贴为纯文本

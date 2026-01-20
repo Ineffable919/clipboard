@@ -20,7 +20,7 @@ final class PasteboardModel: Identifiable {
     private(set) var timestamp: Int64
     let appPath: String
     let appName: String
-    let searchText: String
+    private(set) var searchText: String
     let length: Int
     // 截取后的富文本
     let attributeString: NSAttributedString
@@ -164,20 +164,18 @@ final class PasteboardModel: Identifiable {
         var filePaths: [String]?
 
         if type.isFile() {
-            guard
-                let fileURLs = pasteboard.readObjects(
-                    forClasses: [NSURL.self],
-                    options: nil,
-                ) as? [URL]
+            guard let fileURLs = pasteboard.readObjects(
+                forClasses: [NSURL.self],
+                options: nil,
+            ) as? [URL]
             else { return nil }
 
             filePaths = fileURLs.map(\.path)
             searchText = filePaths!.joined(separator: "")
 
-            let pathsToSave = filePaths!
             Task.detached(priority: .utility) {
                 await FileAccessHelper.shared.saveSecurityBookmarks(
-                    for: pathsToSave,
+                    for: filePaths!,
                 )
             }
 
@@ -215,7 +213,7 @@ final class PasteboardModel: Identifiable {
         self.init(
             pasteboardType: type,
             data: content ?? Data(),
-            showData: showData,
+            showData: showData ?? Data(),
             timestamp: Int64(Date().timeIntervalSince1970),
             appPath: app?.bundleURL?.path ?? "",
             appName: app?.localizedName ?? "",
@@ -323,6 +321,10 @@ final class PasteboardModel: Identifiable {
         timestamp = Int64(Date().timeIntervalSince1970)
     }
 
+    func updateSearchText(val: String) {
+        searchText = val
+    }
+
     func getGroupChip() -> CategoryChip? {
         guard group != -1 else { return nil }
         let allChips =
@@ -367,6 +369,12 @@ extension PasteboardModel {
         guard pasteboardType.isText() else {
             return (fallbackBG, .secondary, false)
         }
+
+        if type == .color {
+            let colorNS = NSColor(hex: attributeString.string)
+            return (Color(hex: attributeString.string), getContrastingColor(baseNS: colorNS), true)
+        }
+
         if pasteboardType == .string {
             return (fallbackBG, .secondary, false)
         }
@@ -377,12 +385,23 @@ extension PasteboardModel {
                effectiveRange: nil,
            ) as? NSColor
         {
-            return (Color(bg), getRTFColor(baseNS: bg), true)
+            return (Color(bg), getContrastingColor(baseNS: bg), true)
         }
         return (fallbackBG, .secondary, false)
     }
 
-    // 在 sRGB 空间基于亮度粗分
+    private func getContrastingColor(baseNS: NSColor) -> Color {
+        let c = baseNS.usingColorSpace(.sRGB) ?? baseNS
+        var r: CGFloat = 0
+        var g: CGFloat = 0
+        var b: CGFloat = 0
+        var a: CGFloat = 0
+        c.getRed(&r, green: &g, blue: &b, alpha: &a)
+        let brightness = 0.299 * r + 0.587 * g + 0.114 * b
+        return brightness > 0.5 ? .black.opacity(0.8) : .white.opacity(0.8)
+    }
+
+    // 在 sRGB 空间基于亮度粗分（用于富文本背景）
     private func getRTFColor(baseNS: NSColor) -> Color {
         let c = baseNS.usingColorSpace(.sRGB) ?? baseNS
         var r: CGFloat = 0
@@ -414,7 +433,11 @@ extension PasteboardModel {
             return cachedHighlightedPlainText
         }
 
-        let source = attributeString.string
+        let source: String = if pasteboardType.isFile() {
+            searchText
+        } else {
+            attributeString.string
+        }
         var attributed = AttributedString(source)
 
         let options: String.CompareOptions = [

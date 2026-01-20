@@ -14,24 +14,8 @@ struct CardHeadView: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(model.type.string)
-                        .font(isSystem ? .headline : .title3)
-                        .foregroundStyle(.white)
-                    if isSystem {
-                        Text(
-                            model.timestamp.timeAgo(
-                                relativeTo: TimeManager.shared.currentTime
-                            )
-                        )
-                        .font(.caption2)
-                        .foregroundStyle(.white.opacity(0.85))
-                    }
-                }
-                Spacer()
-            }
-            .padding(.horizontal, 10)
+            CardHeadTitleView(model: model, isSystem: isSystem)
+                .padding(.horizontal, 10)
 
             if isSystem {
                 AppIconView(appPath: model.appPath)
@@ -41,6 +25,40 @@ struct CardHeadView: View {
         .frame(height: Const.hdSize)
         .background(PasteDataStore.main.colorWith(model))
         .clipShape(Const.headShape)
+    }
+}
+
+// MARK: - Card Head Title View
+
+private struct CardHeadTitleView: View {
+    let model: PasteboardModel
+    let isSystem: Bool
+
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(model.type.string)
+                    .font(isSystem ? .headline : .title3)
+                    .foregroundStyle(.white)
+
+                if isSystem {
+                    CardHeadTimestampView(timestamp: model.timestamp)
+                }
+            }
+            Spacer()
+        }
+    }
+}
+
+// MARK: - Card Head Timestamp View
+
+private struct CardHeadTimestampView: View {
+    let timestamp: Int64
+
+    var body: some View {
+        Text(timestamp.timeAgo(relativeTo: TimeManager.shared.currentTime))
+            .font(.caption2)
+            .foregroundStyle(.white.opacity(0.85))
     }
 }
 
@@ -75,11 +93,12 @@ private struct AppIconView: View {
             showData: Data(),
             timestamp: 1_728_878_384_000,
             appPath: "/Applications/Xcode.app",
-            appName: "微信",
+            appName: "Xcode",
             searchText: "",
             length: 9,
             group: -1,
             tag: "string",
         ),
     )
+    .padding()
 }

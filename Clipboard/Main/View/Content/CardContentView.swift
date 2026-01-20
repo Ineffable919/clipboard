@@ -22,7 +22,7 @@ struct CardContentView: View {
         switch model.type {
         case .link:
             if enableLinkPreview {
-                LinkPreviewCardView(model: model)
+                LinkPreviewCardView(model: model, keyword: keyword)
             } else {
                 StringContentView(model: model, keyword: keyword)
             }
@@ -45,17 +45,17 @@ struct CardContentView: View {
 struct CSSView: View {
     var model: PasteboardModel
     var body: some View {
+        let (_, textColor) = model.colors()
         VStack(alignment: .center) {
             Text(model.attributeString.string)
                 .font(.title2)
-                .foregroundStyle(.primary)
+                .foregroundStyle(textColor)
         }
         .frame(
             width: Const.cardSize,
             height: Const.cntSize,
-            alignment: .center,
+            alignment: .center
         )
-        .background(Color(nsColor: NSColor(hex: model.attributeString.string)))
     }
 }
 
@@ -103,32 +103,29 @@ struct FileContentView: View {
     var model: PasteboardModel
 
     var body: some View {
-        if let fileUrls = model.cachedFilePaths {
-            if fileUrls.count > 1 {
-                MultipleFilesView(fileURLs: fileUrls)
-            } else if let firstURL = fileUrls.first {
-                FileThumbnailView(fileURLString: firstURL)
-                    .padding(Const.space12)
-                    .frame(
-                        maxWidth: .infinity,
-                        maxHeight: .infinity,
-                        alignment: .top,
-                    )
-            } else {
-                VStack(alignment: .center) {
-                    Image(systemName: "doc.text")
-                        .resizable()
-                        .symbolRenderingMode(.hierarchical)
-                        .foregroundStyle(Color.accentColor.opacity(0.8))
-                        .frame(width: 48.0, height: 48.0)
+        Group {
+            if let fileUrls = model.cachedFilePaths, !fileUrls.isEmpty {
+                if fileUrls.count > 1 {
+                    MultipleFilesView(fileURLs: fileUrls)
+                } else {
+                    FileThumbnailView(fileURLString: fileUrls[0])
+                        .padding(Const.space12)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 }
-                .frame(
-                    maxWidth: .infinity,
-                    maxHeight: .infinity,
-                    alignment: .center,
-                )
+            } else {
+                FileIconPlaceholder()
             }
         }
+    }
+}
+
+private struct FileIconPlaceholder: View {
+    var body: some View {
+        Image(systemName: "doc.text")
+            .resizable()
+            .foregroundStyle(Color.accentColor.opacity(0.8))
+            .frame(width: 48, height: 48)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
 }
 
@@ -158,6 +155,7 @@ struct ImageContentView: View {
             } else {
                 Image(systemName: "photo.badge.arrow.down")
                     .resizable()
+                    .aspectRatio(contentMode: .fit)
                     .foregroundStyle(.secondary)
                     .frame(width: 48, height: 48)
             }
@@ -227,16 +225,16 @@ private final class CheckerboardCache: @unchecked Sendable {
         if colorScheme == .light {
             if let cached = lightImage { return cached }
             let img = createCheckerboard(
-                light: .white,
-                dark: NSColor(Const.lightImageColor)
+                light: Const.lightImageShallowColor,
+                dark: Const.lightImageDeepColor
             )
             lightImage = img
             return img
         } else {
             if let cached = darkImage { return cached }
             let img = createCheckerboard(
-                light: NSColor.black.withAlphaComponent(0.2),
-                dark: NSColor(Const.darkImageColor)
+                light: Const.darkImageShallowColor,
+                dark: Const.darkImageDeepColor
             )
             darkImage = img
             return img

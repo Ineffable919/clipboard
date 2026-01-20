@@ -25,7 +25,7 @@ final class TopBarViewModel {
     // MARK: - Chip Properties
 
     var chips: [CategoryChip] = []
-    var selectedChipId: Int = 1 {
+    var selectedChipId: Int = -1 {
         didSet {
             performSearch()
         }
@@ -343,6 +343,22 @@ final class TopBarViewModel {
         selectedChipId = chip.id
     }
 
+    func selectPreviousChip() {
+        guard let currentIndex = chips.firstIndex(where: { $0.id == selectedChipId }) else {
+            return
+        }
+        let previousIndex = currentIndex > 0 ? currentIndex - 1 : chips.count - 1
+        selectedChipId = chips[previousIndex].id
+    }
+
+    func selectNextChip() {
+        guard let currentIndex = chips.firstIndex(where: { $0.id == selectedChipId }) else {
+            return
+        }
+        let nextIndex = (currentIndex + 1) % chips.count
+        selectedChipId = chips[nextIndex].id
+    }
+
     func addChip(name: String, color: Color) {
         let newId = (chips.last?.id ?? 0) + 1
         let new = CategoryChip(
@@ -381,7 +397,7 @@ final class TopBarViewModel {
         chips.removeAll { $0.id == chip.id }
 
         if selectedChipId == chip.id {
-            selectedChipId = CategoryChip.systemChips.first?.id ?? 1
+            selectedChipId = CategoryChip.systemChips.first?.id ?? -1
         }
 
         saveUserCategories()
@@ -705,7 +721,7 @@ final class TopBarViewModel {
         }
         lastSearchCriteria = criteria
 
-        if criteria.isEmpty, selectedChipId == 1 {
+        if criteria.isEmpty, selectedChipId == -1 {
             await dataStore.resetDefaultList()
         } else {
             await dataStore.searchData(criteria)

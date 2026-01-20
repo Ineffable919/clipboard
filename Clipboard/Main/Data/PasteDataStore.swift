@@ -21,7 +21,7 @@ final class PasteDataStore {
 
     private(set) var chipsVersion: Int = 0
 
-    private(set) var totalCount: Int = 0
+    var totalCount: Int = 0
     private(set) var pageIndex = 0
 
     private(set) var isLoadingPage = false
@@ -42,6 +42,7 @@ final class PasteDataStore {
 
     private var sqlManager = PasteSQLManager.manager
     private var searchTask: Task<Void, Error>?
+    private var loadPageTask: Task<Void, Never>?
     private var colorDict = [String: String]()
     private var cachedAppInfo: [(name: String, path: String)]?
     private var cachedTagTypes: [PasteModelType]?
@@ -217,49 +218,59 @@ extension PasteDataStore {
 
 extension PasteDataStore {
     func loadNextPage() {
-        Task {
-            guard dataList.count < totalCount else { return }
-            guard !isLoadingPage else { return }
+        guard !isLoadingPage else { return }
+        guard dataList.count < totalCount else { return }
 
-            let nextPage = pageIndex + 1
-            guard nextPage != lastRequestedPage else { return }
+        let nextPage = pageIndex + 1
+        guard nextPage != lastRequestedPage else { return }
 
-            isLoadingPage = true
-            lastRequestedPage = nextPage
-            pageIndex = nextPage
+        loadPageTask?.cancel()
 
-            log.debug(
-                "loadNextPage \(pageIndex) (filterMode: \(isInFilterMode))",
-            )
+        isLoadingPage = true
+        lastRequestedPage = nextPage
+        pageIndex = nextPage
+
+        let currentOffset = dataList.count
+        let filter = isInFilterMode ? currentFilter : nil
+
+        log.debug(
+            "loadNextPage \(pageIndex) (filterMode: \(isInFilterMode))",
+        )
+
+        loadPageTask = Task { [weak self] in
+            guard let self else { return }
 
             let newItems: [PasteboardModel]
-            if isInFilterMode, let filter = currentFilter {
+            if let filter {
                 let rows = await sqlManager.search(
                     filter: filter,
                     limit: pageSize,
-                    offset: dataList.count,
+                    offset: currentOffset,
                 )
                 newItems = await getItems(rows: rows)
             } else {
                 newItems = await getItems(
                     limit: pageSize,
-                    offset: dataList.count,
+                    offset: currentOffset,
                 )
             }
 
-            guard !newItems.isEmpty else {
-                log.debug("No more items to load.")
-                hasMoreData = false
+            guard !Task.isCancelled else { return }
+
+            await MainActor.run {
+                guard !newItems.isEmpty else {
+                    hasMoreData = false
+                    isLoadingPage = false
+                    return
+                }
+
+                var list = dataList
+                list += newItems
+
+                updateData(with: list, changeType: .loadMore)
+                hasMoreData = (newItems.count == pageSize)
                 isLoadingPage = false
-                return
             }
-
-            var list = dataList
-            list += newItems
-
-            updateData(with: list, changeType: .loadMore)
-            hasMoreData = (newItems.count == pageSize)
-            isLoadingPage = false
         }
     }
 
@@ -303,6 +314,15 @@ extension PasteDataStore {
         Task {
             await updateColor(model)
         }
+        Task {
+            if model.type == .image, let id = model.id {
+                let searchText = await OCRViewModel.shared.recognizeText(
+                    from: model.data
+                )
+                model.updateSearchText(val: searchText)
+                await sqlManager.update(id: id, item: model)
+            }
+        }
         invalidateAppInfoCache(model)
         invalidateTagTypesCache(model)
     }
@@ -339,8 +359,10 @@ extension PasteDataStore {
         if list.count > pageSize {
             list = Array(list.prefix(pageSize))
         }
-
-        updateData(with: list)
+        if lastDataChangeType == .loadMore {
+            lastDataChangeType = .reset
+        }
+        updateData(with: list, changeType: lastDataChangeType)
     }
 
     func deleteItems(_ items: PasteboardModel...) {
@@ -410,7 +432,9 @@ extension PasteDataStore {
         let response = alert.runModal()
 
         if response == .alertFirstButtonReturn {
-            sqlManager.dropTable()
+            Task {
+                await sqlManager.dropTable()
+            }
             NSApplication.shared.terminate(self)
         }
     }
@@ -465,8 +489,10 @@ extension PasteDataStore {
         Task {
             await sqlManager.updateItemGroup(
                 id: itemId,
-                groupId: groupId,
+                groupId: groupId
             )
+        }
+        Task { @MainActor in
             if let model = dataList.first(where: { $0.id == itemId }),
                groupId != model.group
             {
@@ -544,30 +570,45 @@ extension PasteDataStore {
             return
         }
 
-        let modelType: PasteModelType? = switch model.tag {
-        case "image": .image
-        case "string": .string
-        case "rich": .rich
-        case "file": .file
-        case "link": .link
-        case "color": .color
-        default: nil
-        }
+        let modelType: PasteModelType? =
+            switch model.tag {
+            case "image": .image
+            case "string", "rich": .string
+            case "file": .file
+            case "link": .link
+            case "color": .color
+            default: nil
+            }
 
         guard let modelType else { return }
 
-        if cachedTagTypes == nil {
-            cachedTagTypes = [modelType]
-        } else if !cachedTagTypes!.contains(modelType) {
-            cachedTagTypes?.append(modelType)
+        Task {
+            if cachedTagTypes == nil {
+                cachedTagTypes = await getAllTagTypes()
+            }
 
-            let order: [PasteModelType] = [.color, .file, .image, .link, .string]
-            cachedTagTypes?.sort { type1, type2 in
+            guard let cachedTagTypes, !cachedTagTypes.contains(modelType) else {
+                return
+            }
+
+            var updatedTypes = cachedTagTypes
+            updatedTypes.append(modelType)
+
+            let order: [PasteModelType] = [
+                .color, .file, .image, .link, .string,
+            ]
+            updatedTypes.sort { type1, type2 in
                 let index1 = order.firstIndex(of: type1) ?? order.count
                 let index2 = order.firstIndex(of: type2) ?? order.count
                 return index1 < index2
             }
+
+            self.cachedTagTypes = updatedTypes
         }
+    }
+
+    func getCountByGroup(groupId: Int) async -> Int {
+        await sqlManager.getCountByGroup(groupId: groupId)
     }
 }
 
@@ -591,9 +632,9 @@ extension PasteDataStore {
         }
 
         if let colorStr = colorDict[model.appName] {
-            return Color(nsColor: NSColor(hex: colorStr)).opacity(0.85)
+            return Color(hex: colorStr).opacity(0.85)
         }
-        return Color(nsColor: NSColor(hex: "#1765D9")).opacity(0.85)
+        return Color(hex: "#1765D9").opacity(0.85)
     }
 
     private func getAppThemeColor(for _: String, appIcon: NSImage?) -> String {

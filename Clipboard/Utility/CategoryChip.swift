@@ -13,7 +13,6 @@ struct CategoryChip: Identifiable, Equatable, Codable {
     var colorIndex: Int // 存储颜色在调色板中的索引
     var isSystem: Bool
 
-    // 全局调色板，后续可以直接在这里添加新颜色
     static let palette: [Color] = [
         .gray,
         .blue,
@@ -22,10 +21,6 @@ struct CategoryChip: Identifiable, Equatable, Codable {
         .red,
         .orange,
         .yellow,
-        .pink,
-        .cyan,
-        .brown,
-        .indigo,
     ]
 
     var color: Color {
@@ -80,6 +75,6 @@ struct CategoryChip: Identifiable, Equatable, Codable {
     }
 
     static let systemChips: [CategoryChip] = [
-        .init(id: 1, name: "剪贴板", color: .gray, isSystem: true),
+        .init(id: -1, name: "剪贴板", color: .gray, isSystem: true),
     ]
 }

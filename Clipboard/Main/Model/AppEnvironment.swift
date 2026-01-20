@@ -1,17 +1,21 @@
-import Combine
 import SwiftUI
 
 @MainActor
-final class AppEnvironment: ObservableObject {
+@Observable
+final class AppEnvironment {
     var actions: ClipboardActionService {
         ClipboardActionService()
     }
 
-    @Published var focusView: FocusField = .history
-
-    // UI 状态
-    @Published var isShowDel: Bool = false
-    var draggingItemId: Int64?
+    var focusView: FocusField = .history
+    var isShowDel: Bool = false
+    var quickPasteResetTrigger: Bool = false
+    @ObservationIgnored var draggingItemId: Int64?
+    @ObservationIgnored var preApp: NSRunningApplication?
 
     init() {}
+
+    func resetQuickPasteState() {
+        quickPasteResetTrigger.toggle()
+    }
 }

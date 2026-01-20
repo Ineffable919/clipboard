@@ -164,11 +164,19 @@ class AppDelegate: NSObject {
 
     private lazy var clipWinController = ClipMainWindowController.shared
     private lazy var settingWinController = SettingWindowController.shared
+
+    private lazy var timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        return formatter
+    }()
 }
 
 extension AppDelegate: NSApplicationDelegate {
     func applicationDidFinishLaunching(_: Notification) {
         Self.shared = self
+
+        LegacyConfigMigrator.shared.startMigrationIfNeeded()
 
         initStatus()
 
@@ -238,9 +246,8 @@ extension AppDelegate {
 
         menuBarItem.isVisible = true
         let config = NSImage.SymbolConfiguration(
-            pointSize: 12,
-            weight: .medium,
-            scale: .large,
+            pointSize: 15,
+            weight: .semibold
         )
 
         let iconName = "heart.text.clipboard.fill"
@@ -264,9 +271,10 @@ extension AppDelegate {
         if event.type == .leftMouseUp {
             clipWinController.toggleWindow()
         } else if event.type == .rightMouseUp {
-            menuBarItem!.menu = rMenu
+            updaterController.updater.checkForUpdatesInBackground()
+            menuBarItem?.menu = rMenu
             sender.performClick(nil)
-            menuBarItem!.menu = nil
+            menuBarItem?.menu = nil
         }
     }
 
@@ -320,9 +328,6 @@ extension AppDelegate {
         bounceAnimation.duration = 0.6
         bounceAnimation.timingFunction = CAMediaTimingFunction(name: .easeOut)
 
-        let animationGroup = CAAnimationGroup()
-        animationGroup.animations = [bounceAnimation]
-
         button.layer?.add(bounceAnimation, forKey: "bounceAnimation")
     }
 
@@ -372,9 +377,7 @@ extension AppDelegate: NSMenuDelegate {
         }
 
         if let endTime = PasteBoard.main.pauseEndTime {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "HH:mm"
-            return "暂停到 \(formatter.string(from: endTime))"
+            return "暂停到 \(timeFormatter.string(from: endTime))"
         }
 
         return "已暂停"

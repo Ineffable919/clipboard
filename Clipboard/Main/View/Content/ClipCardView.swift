@@ -9,6 +9,8 @@ import AppKit
 import SwiftUI
 
 struct ClipCardView: View {
+    private static let cardShadowColor = Color(hex: "#30689C").opacity(0.1)
+
     let model: PasteboardModel
     let isSelected: Bool
     @Binding var showPreviewId: PasteboardModel.ID?
@@ -17,22 +19,26 @@ struct ClipCardView: View {
     let searchKeyword: String
     var onRequestDelete: (() -> Void)?
 
-    @EnvironmentObject private var env: AppEnvironment
-    private let controller = ClipMainWindowController.shared
+    @Environment(AppEnvironment.self) private var env
 
     var body: some View {
         let showPreview = showPreviewId == model.id
 
         cardContent
             .overlay {
-                cardOverlay
+                CardOverlayView(
+                    model: model,
+                    isSelected: isSelected,
+                    quickPasteIndex: quickPasteIndex,
+                    selectionColor: selectionColor
+                )
             }
             .frame(width: Const.cardSize, height: Const.cardSize)
             .shadow(
-                color: isSelected ? .clear : .black.opacity(0.1),
+                color: isSelected ? .clear : ClipCardView.cardShadowColor,
                 radius: isSelected ? 0 : 4,
                 x: 0,
-                y: isSelected ? 0 : 2
+                y: isSelected ? 0 : 6
             )
             .padding(Const.space4)
             .contextMenu { contextMenuContent }
@@ -44,29 +50,6 @@ struct ClipCardView: View {
             ) {
                 PreviewPopoverView(model: model)
             }
-    }
-
-    @ViewBuilder
-    private var cardOverlay: some View {
-        ZStack(alignment: .bottomTrailing) {
-            if isSelected {
-                RoundedRectangle(
-                    cornerRadius: Const.radius + 4,
-                    style: .continuous
-                )
-                .strokeBorder(selectionColor, lineWidth: 4)
-                .padding(-4)
-            }
-
-            if let index = quickPasteIndex {
-                quickPasteIndexBadge(index: index)
-                    .frame(
-                        maxWidth: .infinity,
-                        maxHeight: .infinity,
-                        alignment: .bottomTrailing
-                    )
-            }
-        }
     }
 
     private var cardContent: some View {
@@ -88,11 +71,14 @@ struct ClipCardView: View {
 
                 CardBottomView(
                     model: model,
-                    enableLinkPreview: enableLinkPreview
+                    enableLinkPreview: enableLinkPreview,
+                    keyword: searchKeyword
                 )
             }
             .background {
-                if !model.isLink || !enableLinkPreview {
+                if model.type == .color {
+                    Color(hex: model.attributeString.string)
+                } else if !model.isLink || !enableLinkPreview {
                     model.backgroundColor
                 }
             }
@@ -100,14 +86,62 @@ struct ClipCardView: View {
         }
     }
 
-    private func quickPasteIndexBadge(index: Int) -> some View {
-        let (_, textColor) = model.colors()
-        return Text(index, format: .number)
-            .font(.system(size: 12, weight: .regular, design: .rounded))
-            .foregroundStyle(textColor)
-            .padding(.bottom, Const.space4)
-            .padding(.trailing, Const.space4)
-            .transition(.scale.combined(with: .opacity))
+    // MARK: - Card Overlay View
+
+    private struct CardOverlayView: View {
+        let model: PasteboardModel
+        let isSelected: Bool
+        let quickPasteIndex: Int?
+        let selectionColor: Color
+
+        var body: some View {
+            ZStack(alignment: .bottomTrailing) {
+                if isSelected {
+                    SelectionBorderView(color: selectionColor)
+                }
+
+                if let index = quickPasteIndex {
+                    QuickPasteIndexBadge(model: model, index: index)
+                        .frame(
+                            maxWidth: .infinity,
+                            maxHeight: .infinity,
+                            alignment: .bottomTrailing
+                        )
+                }
+            }
+        }
+    }
+
+    // MARK: - Selection Border View
+
+    private struct SelectionBorderView: View {
+        let color: Color
+
+        var body: some View {
+            RoundedRectangle(
+                cornerRadius: Const.radius + 4,
+                style: .continuous
+            )
+            .strokeBorder(color, lineWidth: 4)
+            .padding(-4)
+        }
+    }
+
+    // MARK: - Quick Paste Index Badge
+
+    private struct QuickPasteIndexBadge: View {
+        let model: PasteboardModel
+        let index: Int
+
+        var body: some View {
+            let (_, textColor) = model.colors()
+            Text(index, format: .number)
+                .font(.system(size: 12, weight: .regular, design: .rounded))
+                .foregroundStyle(textColor)
+                .padding(.bottom, Const.space4)
+                .padding(.trailing, Const.space6)
+                .transition(.scale.combined(with: .opacity))
+        }
     }
 
     private var textAlignment: Alignment {
@@ -119,7 +153,7 @@ struct ClipCardView: View {
     }
 
     private var pasteButtonTitle: String {
-        if let appName = controller.preApp?.localizedName {
+        if let appName = env.preApp?.localizedName {
             return "粘贴到 " + appName
         }
         return "粘贴"
@@ -186,6 +220,7 @@ struct ClipCardView: View {
 
 #Preview {
     @Previewable @State var previewId: PasteboardModel.ID? = nil
+    let env = AppEnvironment()
     let data = "Clipboard".data(using: .utf8)
     ClipCardView(
         model: PasteboardModel(
@@ -200,10 +235,12 @@ struct ClipCardView: View {
             group: -1,
             tag: "string"
         ),
-        isSelected: true,
+        isSelected: false,
         showPreviewId: $previewId,
         quickPasteIndex: 1,
         enableLinkPreview: true,
         searchKeyword: ""
     )
+    .environment(env)
+    .padding()
 }

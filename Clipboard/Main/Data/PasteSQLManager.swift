@@ -9,25 +9,33 @@ import AppKit
 import Foundation
 import SQLite
 
-enum Col {
-    static let id = Expression<Int64>("id")
-    static let uniqueId = Expression<String>("unique_id")
-    static let type = Expression<String>("type")
-    static let data = Expression<Data>("data")
-    static let showData = Expression<Data?>("show_data")
-    static let ts = Expression<Int64>("timestamp")
-    static let appPath = Expression<String>("app_path")
-    static let appName = Expression<String>("app_name")
-    static let searchText = Expression<String>("search_text")
-    static let length = Expression<Int>("length")
-    static let group = Expression<Int>("group")
-    static let tag = Expression<String?>("tag")
+enum Col: Sendable {
+    nonisolated(unsafe) static let id = Expression<Int64>("id")
+    nonisolated(unsafe) static let uniqueId = Expression<String>("unique_id")
+    nonisolated(unsafe) static let type = Expression<String>("type")
+    nonisolated(unsafe) static let data = Expression<Data>("data")
+    nonisolated(unsafe) static let showData = Expression<Data?>("show_data")
+    nonisolated(unsafe) static let ts = Expression<Int64>("timestamp")
+    nonisolated(unsafe) static let appPath = Expression<String>("app_path")
+    nonisolated(unsafe) static let appName = Expression<String>("app_name")
+    nonisolated(unsafe) static let searchText = Expression<String>("search_text")
+    nonisolated(unsafe) static let length = Expression<Int>("length")
+    nonisolated(unsafe) static let group = Expression<Int>("group")
+    nonisolated(unsafe) static let tag = Expression<String?>("tag")
 }
 
 final class PasteSQLManager: NSObject {
     static let manager = PasteSQLManager()
     private static var isInitialized = false
     private nonisolated static let initLock = NSLock()
+
+    private static var sandboxDatabaseDirectory: String {
+        URL.documentsDirectory.appending(path: "Clip").path
+    }
+
+    private static var sandboxDatabasePath: String {
+        "\(sandboxDatabaseDirectory)/Clip.sqlite3"
+    }
 
     private lazy var db: Connection? = {
         Self.initLock.lock()
@@ -37,11 +45,7 @@ final class PasteSQLManager: NSObject {
             return nil
         }
 
-        let path = NSSearchPathForDirectoriesInDomains(
-            .documentDirectory,
-            .userDomainMask,
-            true,
-        ).first!.appending("/Clip")
+        let path = Self.sandboxDatabaseDirectory
         var isDir = ObjCBool(false)
         let filExist = FileManager.default.fileExists(
             atPath: path,
@@ -59,7 +63,7 @@ final class PasteSQLManager: NSObject {
         }
         do {
             let db = try Connection("\(path)/Clip.sqlite3")
-            log.debug("数据库初始化 - 路径：\(path)/Clip.sqlite3")
+            log.info("数据库初始化 - 路径：\(path)/Clip.sqlite3")
             db.busyTimeout = 5.0
             Self.isInitialized = true
             return db
@@ -165,7 +169,7 @@ extension PasteSQLManager {
         }
     }
 
-    func dropTable() {
+    func dropTable() async {
         do {
             let d = try db?.run(table.drop())
             log.debug("删除所有\(String(describing: d?.columnCount))")
@@ -344,6 +348,216 @@ extension PasteSQLManager {
             return []
         }
     }
+
+    func getCountByGroup(groupId: Int) async -> Int {
+        do {
+            let query = table.filter(Col.group == groupId)
+            return try db?.scalar(query.count) ?? 0
+        } catch {
+            log.error("获取分组统计失败：\(error)")
+            return 0
+        }
+    }
+}
+
+// MARK: - 数据导入导出
+
+extension PasteSQLManager {
+    struct ImportExportResult: Sendable {
+        let success: Bool
+        let message: String
+    }
+
+    /// 导出数据库到指定路径
+    nonisolated func exportDatabase(to destinationURL: URL) async -> ImportExportResult {
+        let sourcePath = await Self.sandboxDatabasePath
+
+        return await Task.detached(priority: .userInitiated) {
+            guard FileManager.default.fileExists(atPath: sourcePath) else {
+                return ImportExportResult(success: false, message: "源数据库文件不存在")
+            }
+
+            do {
+                let sourceDb = try Connection(sourcePath)
+                try sourceDb.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+
+                if FileManager.default.fileExists(atPath: destinationURL.path) {
+                    try FileManager.default.removeItem(at: destinationURL)
+                }
+
+                try FileManager.default.copyItem(
+                    atPath: sourcePath,
+                    toPath: destinationURL.path
+                )
+
+                return ImportExportResult(success: true, message: "导出成功")
+            } catch {
+                return ImportExportResult(
+                    success: false,
+                    message: "导出失败：\(error.localizedDescription)"
+                )
+            }
+        }.value
+    }
+
+    /// 从指定路径导入数据库
+    nonisolated func importDatabase(from sourceURL: URL) async -> ImportExportResult {
+        let validationResult = await validateImportDatabase(at: sourceURL)
+        guard validationResult.success else {
+            return validationResult
+        }
+
+        let destPath = await Self.sandboxDatabasePath
+
+        return await Task.detached(priority: .userInitiated) {
+            do {
+                let sourceDb = try Connection(sourceURL.path, readonly: true)
+                let destDb = try Connection(destPath)
+
+                let sourceTable = Table("Clip")
+                let destTable = Table("Clip")
+                let rows = try sourceDb.prepare(sourceTable)
+
+                var importedCount = 0
+                var skippedCount = 0
+
+                try destDb.transaction {
+                    for row in rows {
+                        guard !Task.isCancelled else {
+                            throw NSError(
+                                domain: "ImportCancelled",
+                                code: -1,
+                                userInfo: [NSLocalizedDescriptionKey: "导入被取消"]
+                            )
+                        }
+
+                        let uniqueId = try row.get(Col.uniqueId)
+
+                        // uniqueId 去重
+                        let existingQuery = destTable.filter(Col.uniqueId == uniqueId)
+                        let existingCount = try destDb.scalar(existingQuery.count)
+
+                        if existingCount > 0 {
+                            skippedCount += 1
+                            continue
+                        }
+
+                        let insert = try destTable.insert(
+                            Col.uniqueId <- uniqueId,
+                            Col.type <- row.get(Col.type),
+                            Col.data <- row.get(Col.data),
+                            Col.showData <- row.get(Col.showData),
+                            Col.ts <- row.get(Col.ts),
+                            Col.appPath <- row.get(Col.appPath),
+                            Col.appName <- row.get(Col.appName),
+                            Col.searchText <- row.get(Col.searchText),
+                            Col.length <- row.get(Col.length),
+                            Col.group <- (try? row.get(Col.group)) ?? -1,
+                            Col.tag <- try? row.get(Col.tag)
+                        )
+
+                        try destDb.run(insert)
+                        importedCount += 1
+                    }
+                }
+
+                let message = "成功导入 \(importedCount) 条记录" +
+                    (skippedCount > 0 ? "，跳过 \(skippedCount) 条重复记录" : "")
+
+                return ImportExportResult(success: true, message: message)
+            } catch {
+                return ImportExportResult(
+                    success: false,
+                    message: "导入失败：\(error.localizedDescription)"
+                )
+            }
+        }.value
+    }
+
+    /// 验证导入的数据库文件格式
+    private nonisolated func validateImportDatabase(at url: URL) async -> ImportExportResult {
+        await Task.detached(priority: .userInitiated) {
+            guard FileManager.default.fileExists(atPath: url.path) else {
+                return ImportExportResult(success: false, message: "文件不存在")
+            }
+
+            do {
+                let sourceDb = try Connection(url.path, readonly: true)
+
+                let tableExists = try sourceDb.scalar(
+                    "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='Clip'"
+                ) as? Int64 ?? 0
+
+                guard tableExists > 0 else {
+                    return ImportExportResult(
+                        success: false,
+                        message: "无效的备份文件：缺少 Clip 表"
+                    )
+                }
+
+                let requiredColumns = [
+                    "unique_id", "type", "data", "timestamp",
+                    "app_path", "app_name", "search_text", "length",
+                ]
+
+                let tableInfo = try sourceDb.prepare("PRAGMA table_info(Clip)")
+                var existingColumns: Set<String> = []
+
+                for row in tableInfo {
+                    if let columnName = row[1] as? String {
+                        existingColumns.insert(columnName)
+                    }
+                }
+
+                for column in requiredColumns {
+                    guard existingColumns.contains(column) else {
+                        return ImportExportResult(
+                            success: false,
+                            message: "无效的备份文件：缺少必要的列 \(column)"
+                        )
+                    }
+                }
+
+                let sampleQuery = "SELECT unique_id, type, data, timestamp FROM Clip LIMIT 1"
+                if let row = try sourceDb.prepare(sampleQuery).makeIterator().next() {
+                    guard row[0] is String else {
+                        return ImportExportResult(
+                            success: false,
+                            message: "无效的备份文件：unique_id 字段类型错误"
+                        )
+                    }
+
+                    guard row[1] is String else {
+                        return ImportExportResult(
+                            success: false,
+                            message: "无效的备份文件：type 字段类型错误"
+                        )
+                    }
+
+                    guard row[2] is SQLite.Blob else {
+                        return ImportExportResult(
+                            success: false,
+                            message: "无效的备份文件：data 字段类型错误"
+                        )
+                    }
+
+                    guard row[3] is Int64 else {
+                        return ImportExportResult(
+                            success: false,
+                            message: "无效的备份文件：timestamp 字段类型错误"
+                        )
+                    }
+                }
+
+                return ImportExportResult(success: true, message: "验证通过")
+            } catch {
+                return ImportExportResult(
+                    success: false,
+                    message: "无效的备份文件：无法读取数据库"
+                )
+            }
+        }.value
+    }
 }
 
 // MARK: - 数据迁移
@@ -379,6 +593,7 @@ extension PasteSQLManager {
             try db.run("ALTER TABLE Clip ADD COLUMN tag TEXT")
         } catch {
             log.warn("新增 tag 字段失败: \(error)")
+            return
         }
 
         let batchSize = 500

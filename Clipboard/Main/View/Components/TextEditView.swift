@@ -91,7 +91,7 @@ struct EditToolbar: View {
                     .padding(.horizontal, Const.space10)
                     .padding(.vertical, Const.space4)
                     .background(Color.accentColor)
-                    .clipShape(.capsule)
+                    .clipShape(.rect(cornerRadius: Const.settingsRadius))
             }
             .buttonStyle(.plain)
             .focusable(false)

@@ -18,6 +18,7 @@ final class ClipMainViewController: NSViewController {
         let v = NSView()
         v.translatesAutoresizingMaskIntoConstraints = false
         v.wantsLayer = true
+        v.layer?.backgroundColor = NSColor.clear.cgColor
         return v
     }()
 
@@ -25,7 +26,7 @@ final class ClipMainViewController: NSViewController {
 
     private lazy var hostingView: NSHostingView<some View> = {
         let contentView = ContentView()
-            .environmentObject(env)
+            .environment(env)
         let v = NSHostingView(rootView: contentView)
         v.translatesAutoresizingMaskIntoConstraints = false
         v.wantsLayer = true
@@ -132,7 +133,7 @@ final class ClipMainViewController: NSViewController {
         anim.fromValue = from
         anim.toValue = to
         anim.duration = duration
-        anim.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        anim.timingFunction = CAMediaTimingFunction(name: .easeOut)
         anim.fillMode = .forwards
         anim.isRemovedOnCompletion = false
 

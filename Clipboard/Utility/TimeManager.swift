@@ -7,8 +7,9 @@
 
 import Foundation
 
+@MainActor
 @Observable
-class TimeManager {
+final class TimeManager {
     var currentTime = Date()
     private var timer: Timer?
 
@@ -24,5 +25,6 @@ class TimeManager {
                 self.currentTime = Date()
             }
         }
+        RunLoop.main.add(timer!, forMode: .common)
     }
 }

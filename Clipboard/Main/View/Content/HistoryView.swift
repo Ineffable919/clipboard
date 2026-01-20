@@ -12,7 +12,7 @@ import SwiftUI
 struct HistoryView: View {
     // MARK: - Properties
 
-    @EnvironmentObject private var env: AppEnvironment
+    @Environment(AppEnvironment.self) private var env
     @State private var historyVM = HistoryViewModel()
     @FocusState private var isFocused: Bool
     @AppStorage(PrefKey.enableLinkPreview.rawValue)
@@ -45,6 +45,9 @@ struct HistoryView: View {
                 EmptyView()
                     .onChange(of: pd.dataList) {
                         historyVM.reset(proxy: proxy)
+                    }
+                    .onChange(of: env.quickPasteResetTrigger) {
+                        historyVM.isQuickPastePressed = false
                     }
             }
             .onAppear {
@@ -227,6 +230,9 @@ struct HistoryView: View {
         }
 
         historyVM.setSelection(id: pd.dataList[newIndex].id, index: newIndex)
+        if historyVM.showPreviewId != nil {
+            historyVM.showPreviewId = nil
+        }
 
         if offset > 0, historyVM.shouldLoadNextPage(at: newIndex) {
             Task.detached(priority: .userInitiated) { [weak historyVM] in
@@ -261,10 +267,12 @@ struct HistoryView: View {
     }
 
     private func flagsChangedEvent(_ event: NSEvent) -> NSEvent? {
-        guard event.window == ClipMainWindowController.shared.window
+        guard event.window == ClipMainWindowController.shared.window,
+              ClipMainWindowController.shared.isVisible
         else {
             return event
         }
+
         historyVM.isQuickPastePressed = KeyCode.isQuickPasteModifierPressed()
         return event
     }
@@ -280,6 +288,10 @@ struct HistoryView: View {
         }
 
         if event.keyCode == KeyCode.escape {
+            if case .some(_?) = historyVM.showPreviewId {
+                historyVM.showPreviewId = nil
+                return nil
+            }
             if ClipMainWindowController.shared.isVisible {
                 ClipMainWindowController.shared.toggleWindow()
                 return nil
@@ -296,11 +308,20 @@ struct HistoryView: View {
             return handleCommandKeyEvent(event)
         }
 
+        // 检查是否有修饰键（用于 tab 切换功能）
+        let hasModifiers = !event.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty
+
         switch event.keyCode {
         case UInt16(kVK_LeftArrow):
+            if hasModifiers {
+                return event
+            }
             return moveSelection(offset: -1, event: event)
 
         case UInt16(kVK_RightArrow):
+            if hasModifiers {
+                return event
+            }
             return moveSelection(offset: 1, event: event)
 
         case UInt16(kVK_Space):
@@ -339,15 +360,20 @@ struct HistoryView: View {
     }
 
     private func handleCommandKeyEvent(_ event: NSEvent) -> NSEvent? {
+        let hasModifiers = !event.modifierFlags.intersection([.option, .control, .shift]).isEmpty
+        guard !hasModifiers else {
+            return event
+        }
+
         switch event.keyCode {
         case UInt16(kVK_ANSI_C):
-            handleCopy()
+            return handleCopy()
 
         case UInt16(kVK_ANSI_E):
-            handleEdit()
+            return handleEdit()
 
         default:
-            event
+            return event
         }
     }
 

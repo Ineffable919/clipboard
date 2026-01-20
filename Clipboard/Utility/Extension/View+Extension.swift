@@ -15,6 +15,7 @@ struct SettingsStyleModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
+            .frame(maxWidth: .infinity)
             .background(
                 RoundedRectangle(cornerRadius: Const.settingsRadius)
                     .fill(
@@ -24,7 +25,7 @@ struct SettingsStyleModifier: ViewModifier {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: Const.settingsRadius)
-                    .stroke(Color.gray.opacity(0.2), lineWidth: 1),
+                    .stroke(Color.gray.opacity(0.1), lineWidth: 1),
             )
     }
 }
