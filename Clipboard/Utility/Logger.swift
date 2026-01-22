@@ -82,25 +82,25 @@ final class AppLogger: @unchecked Sendable {
     }
 
     func debug(
-        _ message: String, file: String = #file, function: String = #function, line: Int = #line,
+        _ message: String, file: String = #file, function: String = #function, line: Int = #line
     ) {
         log(message, level: .debug, file: file, function: function, line: line)
     }
 
     func info(
-        _ message: String, file: String = #file, function: String = #function, line: Int = #line,
+        _ message: String, file: String = #file, function: String = #function, line: Int = #line
     ) {
         log(message, level: .info, file: file, function: function, line: line)
     }
 
     func warn(
-        _ message: String, file: String = #file, function: String = #function, line: Int = #line,
+        _ message: String, file: String = #file, function: String = #function, line: Int = #line
     ) {
         log(message, level: .warning, file: file, function: function, line: line)
     }
 
     func error(
-        _ message: String, file: String = #file, function: String = #function, line: Int = #line,
+        _ message: String, file: String = #file, function: String = #function, line: Int = #line
     ) {
         log(message, level: .error, file: file, function: function, line: line)
     }
@@ -132,7 +132,7 @@ final class AppLogger: @unchecked Sendable {
     private func createLogFileURL() {
         guard
             let appSupport = FileManager.default.urls(
-                for: .applicationSupportDirectory, in: .userDomainMask,
+                for: .applicationSupportDirectory, in: .userDomainMask
             ).first
         else {
             return
@@ -143,7 +143,7 @@ final class AppLogger: @unchecked Sendable {
 
         do {
             try FileManager.default.createDirectory(
-                at: logsDir, withIntermediateDirectories: true, attributes: nil,
+                at: logsDir, withIntermediateDirectories: true, attributes: nil
             )
         } catch {
             osLogger.error("Failed to create logs directory: \(error.localizedDescription)")
@@ -193,7 +193,7 @@ final class AppLogger: @unchecked Sendable {
     private func cleanOldLogFiles(in directory: URL) {
         do {
             let files = try FileManager.default.contentsOfDirectory(
-                at: directory, includingPropertiesForKeys: [.creationDateKey], options: [],
+                at: directory, includingPropertiesForKeys: [.creationDateKey], options: []
             )
             let logFiles = files.filter { $0.pathExtension == "log" }
 
@@ -229,7 +229,7 @@ final class AppLogger: @unchecked Sendable {
     static func getAllLogFiles() -> [URL] {
         guard
             let appSupport = FileManager.default.urls(
-                for: .applicationSupportDirectory, in: .userDomainMask,
+                for: .applicationSupportDirectory, in: .userDomainMask
             ).first
         else {
             return []
@@ -239,7 +239,7 @@ final class AppLogger: @unchecked Sendable {
 
         do {
             let files = try FileManager.default.contentsOfDirectory(
-                at: logsDir, includingPropertiesForKeys: nil, options: [],
+                at: logsDir, includingPropertiesForKeys: nil, options: []
             )
             return files.filter { $0.pathExtension == "log" }.sorted {
                 $0.lastPathComponent > $1.lastPathComponent

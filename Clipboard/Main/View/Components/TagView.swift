@@ -33,7 +33,7 @@ struct TagView: View {
         .frame(height: 20.0)
         .background(
             RoundedRectangle(cornerRadius: Const.radius * 2)
-                .fill(Color.secondary.opacity(0.2)),
+                .fill(Color.secondary.opacity(0.2))
         )
     }
 }

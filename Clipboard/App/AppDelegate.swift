@@ -198,7 +198,7 @@ extension AppDelegate: NSApplicationDelegate {
 
     private func applyAppearanceSettings() {
         let appearanceMode = AppearanceMode(
-            rawValue: PasteUserDefaults.appearance,
+            rawValue: PasteUserDefaults.appearance
         ) ?? .system
 
         switch appearanceMode {
@@ -239,7 +239,7 @@ extension AppDelegate {
 
     private func initStatus() {
         menuBarItem = NSStatusBar.system.statusItem(
-            withLength: NSStatusItem.squareLength,
+            withLength: NSStatusItem.squareLength
         )
 
         guard let menuBarItem else { return }

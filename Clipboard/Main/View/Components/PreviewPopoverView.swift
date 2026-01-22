@@ -156,7 +156,7 @@ struct PreviewPopoverView: View {
                     .padding(.bottom, Const.space4)
                     .frame(
                         maxWidth: Const.maxPreviewWidth - 128,
-                        alignment: .topLeading,
+                        alignment: .topLeading
                     )
             }
             Spacer()
@@ -244,7 +244,7 @@ struct PreviewPopoverView: View {
             .frame(
                 maxWidth: Const.maxPreviewWidth,
                 maxHeight: Const.maxPreviewHeight,
-                alignment: .center,
+                alignment: .center
             )
             .background(Color(nsColor: NSColor(hex: hex)))
         }
@@ -256,7 +256,7 @@ struct PreviewPopoverView: View {
             LargeTextView(model: model)
                 .frame(
                     width: Const.maxPreviewWidth - 32,
-                    height: Const.maxContentHeight,
+                    height: Const.maxContentHeight
                 )
         } else {
             ZStack {
@@ -280,7 +280,7 @@ struct PreviewPopoverView: View {
             LargeTextView(model: model)
                 .frame(
                     width: Const.maxPreviewWidth - 32,
-                    height: Const.maxContentHeight,
+                    height: Const.maxContentHeight
                 )
         } else {
             ZStack {
@@ -333,7 +333,7 @@ struct PreviewPopoverView: View {
                 QuickLookPreview(
                     url: URL(fileURLWithPath: firstPath),
                     maxWidth: Const.maxPreviewWidth - 32,
-                    maxHeight: Const.maxContentHeight,
+                    maxHeight: Const.maxContentHeight
                 )
             } else {
                 Image(systemName: "folder")
@@ -344,7 +344,7 @@ struct PreviewPopoverView: View {
         }
         .frame(
             width: Const.maxPreviewWidth - 32,
-            height: Const.maxContentHeight,
+            height: Const.maxContentHeight
         )
     }
 
@@ -355,7 +355,7 @@ struct PreviewPopoverView: View {
             .frame(
                 width: PreviewPopoverView.defaultWidth,
                 height: PreviewPopoverView.defaultHeight,
-                alignment: .center,
+                alignment: .center
             )
     }
 }
@@ -377,7 +377,7 @@ struct FocusableContainer<Content: View>: NSViewRepresentable {
     func makeNSView(context _: Context) -> NSHostingView<Content> {
         let hostingView = InterceptingHostingView(
             rootView: content,
-            onInteraction: onInteraction,
+            onInteraction: onInteraction
         )
         return hostingView
     }
@@ -418,7 +418,7 @@ class InterceptingHostingView<Content: View>: NSHostingView<Content> {
 #Preview {
     let data = "https://www.apple.com.cn"
         .data(
-            using: .utf8,
+            using: .utf8
         )!
 
     PreviewPopoverView(
@@ -432,8 +432,8 @@ class InterceptingHostingView<Content: View>: NSHostingView<Content> {
             searchText: "",
             length: 0,
             group: -1,
-            tag: "string",
-        ),
+            tag: "string"
+        )
     )
     .frame(width: 800, height: 600)
 }

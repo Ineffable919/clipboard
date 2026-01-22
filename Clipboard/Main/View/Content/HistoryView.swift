@@ -144,7 +144,7 @@ struct HistoryView: View {
     private func handleDoubleTap(on item: PasteboardModel) {
         env.actions.paste(
             item,
-            isAttribute: true,
+            isAttribute: true
         )
     }
 
@@ -246,7 +246,7 @@ struct HistoryView: View {
         EventDispatcher.shared.registerHandler(
             matching: .keyDown,
             key: "history",
-            handler: keyDownEvent(_:),
+            handler: keyDownEvent(_:)
         )
 
         flagsMonitorToken = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { event in
@@ -348,14 +348,14 @@ struct HistoryView: View {
         historyVM.setSelection(id: item.id, index: index)
         env.actions.paste(
             item,
-            isAttribute: true,
+            isAttribute: true
         )
     }
 
     private func hasPlainTextModifier(_ event: NSEvent) -> Bool {
         KeyCode.hasModifier(
             event,
-            modifierIndex: PasteUserDefaults.plainTextModifier,
+            modifierIndex: PasteUserDefaults.plainTextModifier
         )
     }
 
@@ -415,7 +415,7 @@ struct HistoryView: View {
         }
         env.actions.paste(
             pd.dataList[index],
-            isAttribute: !hasPlainTextModifier(event),
+            isAttribute: !hasPlainTextModifier(event)
         )
         return nil
     }
@@ -469,7 +469,7 @@ struct HistoryView: View {
             if let window = NSApp.keyWindow {
                 alert.beginSheetModal(
                     for: window,
-                    completionHandler: handleResponse,
+                    completionHandler: handleResponse
                 )
             }
         } else {

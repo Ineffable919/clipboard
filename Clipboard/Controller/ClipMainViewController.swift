@@ -48,10 +48,10 @@ final class ClipMainViewController: NSViewController {
         view.addSubview(slideContainer)
         NSLayoutConstraint.activate([
             slideContainer.leadingAnchor.constraint(
-                equalTo: view.leadingAnchor,
+                equalTo: view.leadingAnchor
             ),
             slideContainer.trailingAnchor.constraint(
-                equalTo: view.trailingAnchor,
+                equalTo: view.trailingAnchor
             ),
             slideContainer.topAnchor.constraint(equalTo: view.topAnchor),
             slideContainer.bottomAnchor.constraint(equalTo: view.bottomAnchor),
@@ -71,7 +71,7 @@ final class ClipMainViewController: NSViewController {
     func setPresented(
         _ presented: Bool,
         animated: Bool,
-        completion: (() -> Void)? = nil,
+        completion: (() -> Void)? = nil
     ) {
         guard presented != isPresented else {
             completion?()
@@ -82,16 +82,16 @@ final class ClipMainViewController: NSViewController {
             slideContainer.addSubview(hostingView)
             NSLayoutConstraint.activate([
                 hostingView.leadingAnchor.constraint(
-                    equalTo: slideContainer.leadingAnchor,
+                    equalTo: slideContainer.leadingAnchor
                 ),
                 hostingView.trailingAnchor.constraint(
-                    equalTo: slideContainer.trailingAnchor,
+                    equalTo: slideContainer.trailingAnchor
                 ),
                 hostingView.topAnchor.constraint(
-                    equalTo: slideContainer.topAnchor,
+                    equalTo: slideContainer.topAnchor
                 ),
                 hostingView.bottomAnchor.constraint(
-                    equalTo: slideContainer.bottomAnchor,
+                    equalTo: slideContainer.bottomAnchor
                 ),
             ])
         }
@@ -100,7 +100,7 @@ final class ClipMainViewController: NSViewController {
         animateSlide(
             presented: presented,
             duration: animated ? (presented ? showDuration : hideDuration) : 0,
-            completion: completion,
+            completion: completion
         )
     }
 

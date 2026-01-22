@@ -49,13 +49,13 @@ final class PasteSQLManager: NSObject {
         var isDir = ObjCBool(false)
         let filExist = FileManager.default.fileExists(
             atPath: path,
-            isDirectory: &isDir,
+            isDirectory: &isDir
         )
         if !filExist || !isDir.boolValue {
             do {
                 try FileManager.default.createDirectory(
                     atPath: path,
-                    withIntermediateDirectories: true,
+                    withIntermediateDirectories: true
                 )
             } catch {
                 log.debug(error.localizedDescription)
@@ -147,7 +147,7 @@ extension PasteSQLManager {
             Col.searchText <- item.searchText,
             Col.length <- item.length,
             Col.group <- item.group,
-            Col.tag <- item.tag,
+            Col.tag <- item.tag
         )
         do {
             let rowId = try db?.run(insert)
@@ -190,7 +190,7 @@ extension PasteSQLManager {
             Col.searchText <- item.searchText,
             Col.length <- item.length,
             Col.group <- item.group,
-            Col.tag <- item.tag,
+            Col.tag <- item.tag
         )
         do {
             let count = try db?.run(update)
@@ -245,7 +245,7 @@ extension PasteSQLManager {
         select: [Expressible]? = nil,
         order: [Expressible]? = nil,
         limit: Int? = nil,
-        offset: Int? = nil,
+        offset: Int? = nil
     ) async -> [Row] {
         guard !Task.isCancelled else { return [] }
 
@@ -627,7 +627,7 @@ extension PasteSQLManager {
                             let pasteboardType = PasteboardType(typeStr)
                             let tagValue = PasteboardModel.calculateTag(
                                 type: pasteboardType,
-                                content: data,
+                                content: data
                             )
 
                             let update = table.filter(Col.id == id)

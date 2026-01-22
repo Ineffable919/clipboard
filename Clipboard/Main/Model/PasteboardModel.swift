@@ -28,12 +28,12 @@ final class PasteboardModel: Identifiable {
     @ObservationIgnored
     private(set) lazy var writeItem = PasteboardWritingItem(
         data: data,
-        type: pasteboardType,
+        type: pasteboardType
     )
     @ObservationIgnored
     private(set) lazy var type = PasteModelType(
         with: pasteboardType,
-        model: self,
+        model: self
     )
 
     private(set) var group: Int
@@ -85,12 +85,12 @@ final class PasteboardModel: Identifiable {
         attributeString =
             NSAttributedString(
                 with: showData,
-                type: pasteboardType,
+                type: pasteboardType
             ) ?? NSAttributedString()
 
         uniqueId = Self.generateUniqueId(
             for: pasteboardType,
-            data: data,
+            data: data
         )
 
         let (bg, fg, hasBg) = computeColors()
@@ -119,7 +119,7 @@ final class PasteboardModel: Identifiable {
             let properties = CGImageSourceCopyPropertiesAtIndex(
                 source,
                 0,
-                options,
+                options
             ) as? [CFString: Any]
         else {
             return nil
@@ -166,7 +166,7 @@ final class PasteboardModel: Identifiable {
         if type.isFile() {
             guard let fileURLs = pasteboard.readObjects(
                 forClasses: [NSURL.self],
-                options: nil,
+                options: nil
             ) as? [URL]
             else { return nil }
 
@@ -175,7 +175,7 @@ final class PasteboardModel: Identifiable {
 
             Task.detached(priority: .utility) {
                 await FileAccessHelper.shared.saveSecurityBookmarks(
-                    for: filePaths!,
+                    for: filePaths!
                 )
             }
 
@@ -205,7 +205,7 @@ final class PasteboardModel: Identifiable {
 
         let calculatedTag = Self.calculateTag(
             type: type,
-            content: content ?? Data(),
+            content: content ?? Data()
         )
 
         let app = NSWorkspace.shared.frontmostApplication
@@ -220,7 +220,7 @@ final class PasteboardModel: Identifiable {
             searchText: searchText,
             length: length,
             group: -1,
-            tag: calculatedTag,
+            tag: calculatedTag
         )
     }
 
@@ -360,7 +360,7 @@ extension PasteboardModel {
     func colors() -> (Color, Color) {
         (
             cachedBackgroundColor ?? Color(.controlBackgroundColor),
-            cachedForegroundColor ?? .secondary,
+            cachedForegroundColor ?? .secondary
         )
     }
 
@@ -382,7 +382,7 @@ extension PasteboardModel {
            let bg = attributeString.attribute(
                .backgroundColor,
                at: 0,
-               effectiveRange: nil,
+               effectiveRange: nil
            ) as? NSColor
         {
             return (Color(bg), getContrastingColor(baseNS: bg), true)
@@ -452,7 +452,7 @@ extension PasteboardModel {
                   of: trimmedKeyword,
                   options: options,
                   range: searchStart ..< source.endIndex,
-                  locale: .current,
+                  locale: .current
               )
         {
             if let attributedRange = Range(range, in: attributed) {
@@ -494,7 +494,7 @@ extension PasteboardModel {
                 of: trimmedKeyword,
                 options: options,
                 range: searchRange,
-                locale: .current,
+                locale: .current
             )
 
             if found.location == NSNotFound {
@@ -504,14 +504,14 @@ extension PasteboardModel {
             mutable.addAttribute(
                 .backgroundColor,
                 value: NSColor.systemYellow.withAlphaComponent(0.65),
-                range: found,
+                range: found
             )
 
             let nextLocation = found.location + found.length
             guard nextLocation < string.length else { break }
             searchRange = NSRange(
                 location: nextLocation,
-                length: string.length - nextLocation,
+                length: string.length - nextLocation
             )
         }
 
@@ -630,7 +630,7 @@ extension PasteboardModel {
 
     private static func generateUniqueId(
         for type: PasteboardType,
-        data: Data,
+        data: Data
     ) -> String {
         switch type {
         case .png, .tiff:

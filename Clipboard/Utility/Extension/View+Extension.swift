@@ -20,12 +20,12 @@ struct SettingsStyleModifier: ViewModifier {
                 RoundedRectangle(cornerRadius: Const.settingsRadius)
                     .fill(
                         colorScheme == .light
-                            ? Const.lightBackground : Const.darkBackground,
-                    ),
+                            ? Const.lightBackground : Const.darkBackground
+                    )
             )
             .overlay(
                 RoundedRectangle(cornerRadius: Const.settingsRadius)
-                    .stroke(Color.gray.opacity(0.1), lineWidth: 1),
+                    .stroke(Color.gray.opacity(0.1), lineWidth: 1)
             )
     }
 }
@@ -41,13 +41,13 @@ struct TextCardStyleModifier: ViewModifier {
                     top: Const.space8,
                     leading: Const.space10,
                     bottom: 0.0,
-                    trailing: Const.space8,
-                ),
+                    trailing: Const.space8
+                )
             )
             .frame(
                 maxWidth: Const.cardSize,
                 maxHeight: Const.cntSize,
-                alignment: .topLeading,
+                alignment: .topLeading
             )
     }
 }
@@ -57,7 +57,7 @@ struct AutoScrollOnIMEInputModifier: ViewModifier {
 
     private let imePublisher =
         NotificationCenter.default.publisher(
-            for: NSTextView.didChangeSelectionNotification,
+            for: NSTextView.didChangeSelectionNotification
         )
         .compactMap { notification -> NSTextView? in
             notification.object as? NSTextView
@@ -69,7 +69,7 @@ struct AutoScrollOnIMEInputModifier: ViewModifier {
         .throttle(
             for: .milliseconds(50),
             scheduler: RunLoop.main,
-            latest: true,
+            latest: true
         )
 
     func body(content: Content) -> some View {
@@ -91,7 +91,7 @@ extension View {
 
     @ViewBuilder
     func autoScrollOnIMEInput(
-        perform action: @escaping () -> Void,
+        perform action: @escaping () -> Void
     ) -> some View {
         modifier(AutoScrollOnIMEInputModifier(onIMEInput: action))
     }

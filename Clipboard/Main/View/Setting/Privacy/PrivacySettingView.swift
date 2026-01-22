@@ -16,14 +16,10 @@ struct PrivacySettingView: View {
     @State private var selectedApp: String? = nil
     @State private var ignoredApps: [IgnoredAppInfo] = PasteUserDefaults
         .ignoredApps
-    @AppStorage(PrefKey.showDuringScreenShare.rawValue) private
-    var showDuringScreenShare = true
-    @AppStorage(PrefKey.enableLinkPreview.rawValue) private
-    var enableLinkPreview = true
-    @AppStorage(PrefKey.ignoreSensitiveContent.rawValue) private
-    var ignoreSensitiveContent = true
-    @AppStorage(PrefKey.ignoreEphemeralContent.rawValue) private
-    var ignoreEphemeralContent = true
+    @AppStorage(PrefKey.showDuringScreenShare.rawValue) private var showDuringScreenShare = true
+    @AppStorage(PrefKey.enableLinkPreview.rawValue) private var enableLinkPreview = true
+    @AppStorage(PrefKey.ignoreSensitiveContent.rawValue) private var ignoreSensitiveContent = true
+    @AppStorage(PrefKey.ignoreEphemeralContent.rawValue) private var ignoreEphemeralContent = true
     @AppStorage(PrefKey.delConfirm.rawValue) private var delConfirm = false
     @State private var hasAccessibilityPermission: Bool = AXIsProcessTrusted()
     @State private var permissionTimer: Timer?
@@ -37,37 +33,37 @@ struct PrivacySettingView: View {
                             title: "允许在屏幕共享中显示",
                             subtitle:
                             "关闭后，在屏幕共享、录屏或演示时，窗口不会被捕获，保护您的隐私。",
-                            isOn: $showDuringScreenShare,
+                            isOn: $showDuringScreenShare
                         )
                         Divider()
                         PrivacyToggleRow(
                             title: "生成链接预览",
                             subtitle: "开启后对链接生成预览，可能会影响一次性和敏感链接。",
-                            isOn: $enableLinkPreview,
+                            isOn: $enableLinkPreview
                         )
                         Divider()
                         PrivacyToggleRow(
                             title: "忽略机密内容",
                             subtitle: "检测到密码和敏感数据时不保存。",
-                            isOn: $ignoreSensitiveContent,
+                            isOn: $ignoreSensitiveContent
                         )
                         Divider()
                         PrivacyToggleRow(
                             title: "忽略瞬时内容",
                             subtitle: "不要保存其它应用程序生成的临时数据。",
-                            isOn: $ignoreEphemeralContent,
+                            isOn: $ignoreEphemeralContent
                         )
                         Divider()
                         PrivacyToggleRow(
                             title: "删除确认",
                             subtitle: "删除记录时是否弹窗确认。",
-                            isOn: $delConfirm,
+                            isOn: $delConfirm
                         )
                         Divider()
                         AccessibilityPermissionRow(
                             hasPermission: $hasAccessibilityPermission,
                             onOpenSettings: openAccessibilitySettings,
-                            onRefresh: refreshPermissionStatus,
+                            onRefresh: refreshPermissionStatus
                         )
                     }
                     .padding(.horizontal, Const.space16)
@@ -95,7 +91,7 @@ struct PrivacySettingView: View {
                                         } else {
                                             selectedApp = app.id
                                         }
-                                    },
+                                    }
                                 )
                             }
                         }
@@ -104,12 +100,12 @@ struct PrivacySettingView: View {
                                 .fill(
                                     colorScheme == .light
                                         ? Const.lightBackground
-                                        : Const.darkBackground,
-                                ),
+                                        : Const.darkBackground
+                                )
                         )
                         .overlay(
                             Const.headShape
-                                .stroke(Color.gray.opacity(0.2), lineWidth: 1),
+                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
                         )
                         .clipShape(Const.headShape)
 
@@ -139,12 +135,12 @@ struct PrivacySettingView: View {
                                 .fill(
                                     colorScheme == .light
                                         ? Const.lightToolColor
-                                        : Const.darkToolColor,
-                                ),
+                                        : Const.darkToolColor
+                                )
                         )
                         .overlay(
                             Const.contentShape
-                                .stroke(Color.gray.opacity(0.2), lineWidth: 1),
+                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
                         )
                         .clipShape(Const.contentShape)
                     }
@@ -166,15 +162,15 @@ struct PrivacySettingView: View {
         }
         .onReceive(
             NotificationCenter.default.publisher(
-                for: NSWindow.didBecomeKeyNotification,
-            ),
+                for: NSWindow.didBecomeKeyNotification
+            )
         ) { _ in
             startPermissionTimer()
         }
         .onReceive(
             NotificationCenter.default.publisher(
-                for: NSWindow.didResignKeyNotification,
-            ),
+                for: NSWindow.didResignKeyNotification
+            )
         ) { _ in
             stopPermissionTimer()
         }
@@ -209,7 +205,7 @@ struct PrivacySettingView: View {
                 let appInfo = IgnoredAppInfo(
                     name: appName,
                     bundleIdentifier: bundleIdentifier,
-                    path: appPath,
+                    path: appPath
                 )
                 ignoredApps.insert(appInfo, at: 0)
                 PasteUserDefaults.ignoredApps = ignoredApps
@@ -232,7 +228,7 @@ struct PrivacySettingView: View {
     private func openAccessibilitySettings() {
         if let url = URL(
             string:
-            "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
+            "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
         ) {
             NSWorkspace.shared.open(url)
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
@@ -251,7 +247,7 @@ struct PrivacySettingView: View {
         stopPermissionTimer()
         permissionTimer = Timer.scheduledTimer(
             withTimeInterval: 2.0,
-            repeats: true,
+            repeats: true
         ) { _ in
             Task { @MainActor in
                 refreshPermissionStatus()
@@ -340,7 +336,7 @@ struct IgnoredAppRow: View {
 
         if let bundleId = appInfo.bundleIdentifier,
            let appURL = NSWorkspace.shared.urlForApplication(
-               withBundleIdentifier: bundleId,
+               withBundleIdentifier: bundleId
            )
         {
             return NSWorkspace.shared.icon(forFile: appURL.path)
@@ -379,7 +375,7 @@ struct AccessibilityPermissionRow: View {
                 Text(
                     hasPermission
                         ? "已授权，可以直接粘贴内容到其它应用"
-                        : "未授权，仅能复制内容到剪贴板，若已存在，请删除后重新添加",
+                        : "未授权，仅能复制内容到剪贴板，若已存在，请删除后重新添加"
                 )
                 .font(.caption2)
                 .foregroundColor(.secondary)
@@ -390,7 +386,7 @@ struct AccessibilityPermissionRow: View {
             HStack(spacing: 8) {
                 if hasPermission {
                     Image(
-                        systemName: "checkmark.circle.fill",
+                        systemName: "checkmark.circle.fill"
                     )
                     .font(.system(size: Const.iconSize18))
                     .foregroundColor(.green)

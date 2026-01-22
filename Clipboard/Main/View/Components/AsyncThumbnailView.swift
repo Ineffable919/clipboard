@@ -28,7 +28,7 @@ struct AsyncThumbnailView: View {
                     .scaledToFit()
                     .frame(
                         maxWidth: maxSize,
-                        maxHeight: maxSize,
+                        maxHeight: maxSize
                     )
             } else {
                 Image(nsImage: ThumbnailView.shared.getSystemIcon(for: fileURL))
@@ -101,23 +101,23 @@ struct MultipleFilesView: View {
         ZStack {
             ForEach(
                 Array(fileURLs.prefix(4).enumerated().reversed()),
-                id: \.offset,
+                id: \.offset
             ) { index, urlString in
                 FileThumbnailView(
                     fileURLString: urlString,
-                    maxSize: maxSize * 0.5,
+                    maxSize: maxSize * 0.5
                 )
                 .clipShape(RoundedRectangle(cornerRadius: Const.radius))
                 .offset(
                     x: CGFloat(index * 20),
-                    y: CGFloat(-index * 10),
+                    y: CGFloat(-index * 10)
                 )
             }
         }
         .frame(width: maxSize, height: maxSize)
         .offset(
             x: -Const.space32,
-            y: Const.space32,
+            y: Const.space32
         )
     }
 }
@@ -130,13 +130,13 @@ struct MultipleFilesView: View {
             Group {
                 AsyncThumbnailView(
                     fileURL: URL(fileURLWithPath: "/Applications/Safari.app"),
-                    maxSize: 128,
+                    maxSize: 128
                 )
                 .previewDisplayName("Single File")
 
                 FileThumbnailView(
                     fileURLString: "/Users/Shared",
-                    maxSize: 128,
+                    maxSize: 128
                 )
                 .previewDisplayName("Folder")
 
@@ -147,7 +147,7 @@ struct MultipleFilesView: View {
                         "/Applications/企业微信.app",
                         "/Applications/Clipboard.app",
                     ],
-                    maxSize: 128,
+                    maxSize: 128
                 )
                 .previewDisplayName("Four Files")
 
@@ -159,7 +159,7 @@ struct MultipleFilesView: View {
                         "/Applications/Microsoft Word.app",
                         "/Applications/Clipboard.app",
                     ],
-                    maxSize: 128,
+                    maxSize: 128
                 )
                 .previewDisplayName("Multiple Files")
             }

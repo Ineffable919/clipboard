@@ -31,7 +31,7 @@ final class ThumbnailView {
 extension ThumbnailView {
     func generateFinderStyleThumbnail(
         for fileURL: URL,
-        completion: @escaping @Sendable (NSImage?) -> Void,
+        completion: @escaping @Sendable (NSImage?) -> Void
     ) {
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
             DispatchQueue.main.async {
@@ -41,7 +41,7 @@ extension ThumbnailView {
         }
 
         if let cachedImage = memoryCache.object(
-            forKey: fileURL.absoluteString as NSString,
+            forKey: fileURL.absoluteString as NSString
         ) {
             completion(cachedImage)
             return
@@ -52,7 +52,7 @@ extension ThumbnailView {
             fileAt: fileURL,
             size: NSSize(width: maxThumbnailSize, height: maxThumbnailSize),
             scale: scale,
-            representationTypes: getRepresentationTypes(for: fileURL),
+            representationTypes: getRepresentationTypes(for: fileURL)
         )
         request.iconMode = true
 
@@ -67,7 +67,7 @@ extension ThumbnailView {
                     self.memoryCache.setObject(
                         nsImage,
                         forKey: fileURL.absoluteString as NSString,
-                        cost: Int(nsImage.size.width * nsImage.size.height * 4), // 估算内存占用
+                        cost: Int(nsImage.size.width * nsImage.size.height * 4) // 估算内存占用
                     )
                     completion(nsImage)
                 } else {
@@ -122,7 +122,7 @@ extension ThumbnailView {
             || icon.size.height != maxThumbnailSize
         {
             let resizedIcon = NSImage(
-                size: NSSize(width: maxThumbnailSize, height: maxThumbnailSize),
+                size: NSSize(width: maxThumbnailSize, height: maxThumbnailSize)
             )
             resizedIcon.lockFocus()
             icon.draw(
@@ -130,8 +130,8 @@ extension ThumbnailView {
                     x: 0,
                     y: 0,
                     width: maxThumbnailSize,
-                    height: maxThumbnailSize,
-                ),
+                    height: maxThumbnailSize
+                )
             )
             resizedIcon.unlockFocus()
             return resizedIcon

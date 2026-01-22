@@ -66,7 +66,7 @@ final class ClipMainWindowController: NSWindowController {
             x: f.minX,
             y: f.minY,
             width: f.width,
-            height: viewHeight,
+            height: viewHeight
         )
         window?.setFrame(rect, display: true)
     }
@@ -78,7 +78,7 @@ final class ClipMainWindowController: NSWindowController {
     func setPresented(
         _ presented: Bool,
         animated: Bool,
-        _ completionHandler: (() -> Void)? = nil,
+        _ completionHandler: (() -> Void)? = nil
     ) {
         guard let win = window else { return }
 

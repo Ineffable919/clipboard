@@ -33,11 +33,11 @@ struct GeneralSettingView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     SettingToggleRow(
                         title: "登录时打开",
-                        isOn: $launchAtLogin,
+                        isOn: $launchAtLogin
                     )
                     .onChange(of: launchAtLogin) { _, newValue in
                         let success = LaunchAtLoginHelper.shared.setEnabled(
-                            newValue,
+                            newValue
                         )
                         if success {
                             PasteUserDefaults.onStart = newValue
@@ -53,7 +53,7 @@ struct GeneralSettingView: View {
 
                     SettingToggleRow(
                         title: "音效",
-                        isOn: $soundEnabled,
+                        isOn: $soundEnabled
                     )
                 }
                 .padding(.horizontal, Const.space16)
@@ -70,7 +70,7 @@ struct GeneralSettingView: View {
                             PasteTargetModeRow(
                                 mode: mode,
                                 isSelected: selectedPasteTarget == mode,
-                                onSelect: { selectedPasteTarget = mode },
+                                onSelect: { selectedPasteTarget = mode }
                             )
                         }
                     }
@@ -84,7 +84,7 @@ struct GeneralSettingView: View {
 
                     ToggleRow(
                         isEnabled: $removeTailingNewline,
-                        title: "粘贴时去掉末尾的换行符",
+                        title: "粘贴时去掉末尾的换行符"
                     )
                 }
                 .padding(Const.space8)
@@ -100,7 +100,7 @@ struct GeneralSettingView: View {
 
                 VStack(alignment: .leading, spacing: Const.space8) {
                     HistoryTimeSlider(
-                        selectedTimeUnit: $selectedHistoryTimeUnit,
+                        selectedTimeUnit: $selectedHistoryTimeUnit
                     )
                     .onChange(of: selectedHistoryTimeUnit) { _, newValue in
                         PasteUserDefaults.historyTime = newValue.rawValue
@@ -144,15 +144,15 @@ struct GeneralSettingView: View {
         }
         .onReceive(
             NotificationCenter.default.publisher(
-                for: NSWindow.didBecomeKeyNotification,
-            ),
+                for: NSWindow.didBecomeKeyNotification
+            )
         ) { _ in
             startLaunchAtLoginTimer()
         }
         .onReceive(
             NotificationCenter.default.publisher(
-                for: NSWindow.didResignKeyNotification,
-            ),
+                for: NSWindow.didResignKeyNotification
+            )
         ) { _ in
             stopLaunchAtLoginTimer()
         }
@@ -169,7 +169,7 @@ struct GeneralSettingView: View {
         stopLaunchAtLoginTimer()
         launchAtLoginTimer = Timer.scheduledTimer(
             withTimeInterval: 2.0,
-            repeats: true,
+            repeats: true
         ) { _ in
             Task { @MainActor in
                 refreshLaunchAtLoginStatus()
@@ -291,7 +291,7 @@ struct ThinSlider: View {
                     .fill(Color.accentColor)
                     .frame(
                         width: geometry.size.width * normalizedValue,
-                        height: 4,
+                        height: 4
                     )
                     .cornerRadius(2)
 
@@ -302,7 +302,7 @@ struct ThinSlider: View {
                         color: Color.black.opacity(0.2),
                         radius: 2,
                         x: 0,
-                        y: 1,
+                        y: 1
                     )
                     .offset(x: geometry.size.width * normalizedValue - 2)
                     .gesture(
@@ -316,9 +316,9 @@ struct ThinSlider: View {
                                     max(
                                         0,
                                         dragValue.location.x
-                                            / geometry.size.width,
+                                            / geometry.size.width
                                     ),
-                                    1,
+                                    1
                                 )
                                 value =
                                     bounds.lowerBound
@@ -328,7 +328,7 @@ struct ThinSlider: View {
                             .onEnded { _ in
                                 isDragging = false
                                 onEditingChanged(false)
-                            },
+                            }
                     )
             }
             .frame(height: Const.space24)
@@ -362,7 +362,7 @@ struct HistoryTimeSlider: View {
                         ZStack(alignment: .leading) {
                             ForEach(
                                 Array(milestones.enumerated()),
-                                id: \.offset,
+                                id: \.offset
                             ) { index, label in
                                 Text(label)
                                     .font(.system(size: 12))
@@ -371,9 +371,9 @@ struct HistoryTimeSlider: View {
                                     .offset(
                                         x: tickPosition(
                                             for: index,
-                                            in: geometry.size.width,
+                                            in: geometry.size.width
                                         )
-                                            - labelOffset(label: label),
+                                            - labelOffset(label: label)
                                     )
                             }
                         }
@@ -402,9 +402,9 @@ struct HistoryTimeSlider: View {
                                 .offset(
                                     x: tickPosition(
                                         for: index,
-                                        in: geometry.size.width,
+                                        in: geometry.size.width
                                     ),
-                                    y: 0.0,
+                                    y: 0.0
                                 )
                         }
                     }
@@ -416,7 +416,7 @@ struct HistoryTimeSlider: View {
                         get: { sliderValue },
                         set: { newValue in
                             sliderValue = snapToStep(newValue)
-                        },
+                        }
                     ),
                     in: 0 ... 4,
                     onEditingChanged: { editing in
@@ -424,7 +424,7 @@ struct HistoryTimeSlider: View {
                         if !editing {
                             saveCurrentValue()
                         }
-                    },
+                    }
                 )
             }
         }

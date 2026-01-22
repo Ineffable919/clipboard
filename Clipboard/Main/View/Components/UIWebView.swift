@@ -23,7 +23,7 @@ struct UIWebView: View {
         }
         .frame(
             width: Const.maxPreviewWidth - 36,
-            height: Const.maxContentHeight,
+            height: Const.maxContentHeight
         )
     }
 }
@@ -53,7 +53,7 @@ private struct WebViewRepresentable: NSViewRepresentable {
             let request = URLRequest(
                 url: url,
                 cachePolicy: .reloadIgnoringLocalCacheData,
-                timeoutInterval: 5,
+                timeoutInterval: 5
             )
             nsView.load(request)
         }
