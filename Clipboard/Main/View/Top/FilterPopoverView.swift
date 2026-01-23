@@ -121,7 +121,7 @@ struct FilterPopoverView: View {
                         .resizable()
                         .scaledToFit()
                 } else {
-                    Image(systemName: "questionmark.app")
+                    Image(systemName: "questionmark.app.dashed")
                         .font(.system(size: Const.space16))
                         .foregroundStyle(.secondary)
                 }
