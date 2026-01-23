@@ -355,7 +355,7 @@ struct IgnoredAppRow: View {
         {
             "key.icloud.fill"
         } else {
-            "app.fill"
+            "questionmark.app"
         }
     }
 }
