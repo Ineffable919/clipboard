@@ -6,6 +6,44 @@
         <language>zh-CN</language>
 
         <item>
+            <title>Version 0.3.1 (Apple Silicon (arm64))</title>
+            <sparkle:releaseNotesLink>
+                https://ineffable919.github.io/clipboard/scripts/release-note.html
+            </sparkle:releaseNotesLink>
+            <pubDate>Fri, 23 Jan 2026 17:12:41 +0800</pubDate>
+            <sparkle:version>96</sparkle:version>
+            <sparkle:shortVersionString>0.3.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:tags>
+                <sparkle:criticalUpdate sparkle:osType="arm64" />
+            </sparkle:tags>
+            <enclosure
+                url="https://github.com/Ineffable919/clipboard/releases/download/0.3.1/Clipboard-0.3.1-arm64.zip"
+                sparkle:edSignature="KZu096IqDaXe9MllMd/f9kqkOa2Ag/F/MF9FVJRMtIo8+kE5g872bDhtTKAGemBQgycsnbpgQbu0O9Bl83YbAQ=="
+                length="3150054"
+                type="application/octet-stream" />
+        </item>
+
+        <item>
+            <title>Version 0.3.1 (Intel (x86_64))</title>
+            <sparkle:releaseNotesLink>
+                https://ineffable919.github.io/clipboard/scripts/release-note.html
+            </sparkle:releaseNotesLink>
+            <pubDate>Fri, 23 Jan 2026 17:14:16 +0800</pubDate>
+            <sparkle:version>96</sparkle:version>
+            <sparkle:shortVersionString>0.3.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:tags>
+                <sparkle:criticalUpdate sparkle:osType="x86_64" />
+            </sparkle:tags>
+            <enclosure
+                url="https://github.com/Ineffable919/clipboard/releases/download/0.3.1/Clipboard-0.3.1-x86_64.zip"
+                sparkle:edSignature="b9NBTqIcgPZ5ZG18DP6BIZ7jnPiosUqY88rbjQ/M4dg3d3UNh42fTIBfE3YNEjPmjy/Vg/WeilyGjmY/Awg6DQ=="
+                length="3265400"
+                type="application/octet-stream" />
+        </item>
+
+        <item>
             <title>Version 0.3.0 (Apple Silicon (arm64))</title>
             <sparkle:releaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
