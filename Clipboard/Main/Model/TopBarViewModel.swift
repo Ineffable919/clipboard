@@ -570,7 +570,7 @@ final class TopBarViewModel {
                 )
             } else {
                 AnyView(
-                    Image(systemName: "questionmark.app")
+                    Image(systemName: "questionmark.app.dashed")
                         .resizable()
                         .scaledToFit()
                 )

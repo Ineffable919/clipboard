@@ -73,7 +73,7 @@ private struct AppIconView: View {
                     .resizable()
                     .scaledToFill()
             } else {
-                Image(systemName: "questionmark.app")
+                Image(systemName: "questionmark.app.dashed")
                     .resizable()
                     .scaledToFill()
             }
