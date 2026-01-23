@@ -486,7 +486,7 @@ final class TopBarViewModel {
         performSearch()
     }
 
-    func toggleApp(_ appName: String) {
+    func toggleApp(_ appName: String, appPath: String? = nil) {
         if selectedAppNames.contains(appName) {
             selectedAppNames.remove(appName)
             tags.removeAll {
@@ -494,6 +494,9 @@ final class TopBarViewModel {
             }
         } else {
             selectedAppNames.insert(appName)
+            if let path = appPath, !path.isEmpty {
+                appPathCache[appName] = path
+            }
             addTagForApp(appName)
         }
         performSearch()
@@ -527,7 +530,6 @@ final class TopBarViewModel {
         performSearch()
     }
 
-    @ObservationIgnored
     private let textTagAssociatedValue = "text"
 
     private func addTagForType(_ type: PasteModelType) {
@@ -595,7 +597,7 @@ final class TopBarViewModel {
                 )
             } else {
                 AnyView(
-                    Image(systemName: "app.fill")
+                    Image(systemName: "questionmark.app")
                         .resizable()
                         .scaledToFit()
                 )
