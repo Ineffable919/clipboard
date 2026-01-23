@@ -245,7 +245,7 @@ if command -v create-dmg &> /dev/null; then
     mkdir -p "$DMG_DIR"
     
     # create-dmg 格式: create-dmg [options] <app> [destination]
-    create-dmg --overwrite --skip-jenkins --dmg-title="$DISPLAY_NAME $VERSION" "$APP_PATH" . 2>&1 | grep -v "Code signing failed" || true
+    create-dmg --overwrite --skip-jenkins --no-code-sign --dmg-title="$DISPLAY_NAME $VERSION" "$APP_PATH" . 2>&1 | grep -v "Code signing failed" || true
     
     GENERATED_DMG=$(ls -t ${DISPLAY_NAME}*.dmg 2>/dev/null | head -n 1)
     if [ -n "$GENERATED_DMG" ] && [ "$GENERATED_DMG" != "$DMG_NAME" ]; then
