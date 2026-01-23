@@ -18,13 +18,13 @@ class SettingWindowController: NSWindowController {
                 x: 0,
                 y: 0,
                 width: Const.settingWidth,
-                height: Const.settingHeight,
+                height: Const.settingHeight
             ),
             styleMask: [
                 .titled, .closable, .miniaturizable, .fullSizeContentView,
             ],
             backing: .buffered,
-            defer: false,
+            defer: false
         )
 
         window.level = .normal

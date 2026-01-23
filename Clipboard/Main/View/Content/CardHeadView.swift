@@ -10,14 +10,14 @@ import SwiftUI
 struct CardHeadView: View {
     let model: PasteboardModel
 
-    private var isSystem: Bool { model.group == -1 }
+    private var isDefault: Bool { model.group == -1 }
 
     var body: some View {
         HStack(spacing: 0) {
-            CardHeadTitleView(model: model, isSystem: isSystem)
+            CardHeadTitleView(model: model, isDefault: isDefault)
                 .padding(.horizontal, 10)
 
-            if isSystem {
+            if isDefault {
                 AppIconView(appPath: model.appPath)
                     .offset(x: 15)
             }
@@ -32,16 +32,16 @@ struct CardHeadView: View {
 
 private struct CardHeadTitleView: View {
     let model: PasteboardModel
-    let isSystem: Bool
+    let isDefault: Bool
 
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(model.type.string)
-                    .font(isSystem ? .headline : .title3)
+                    .font(isDefault ? .headline : .title3)
                     .foregroundStyle(.white)
 
-                if isSystem {
+                if isDefault {
                     CardHeadTimestampView(timestamp: model.timestamp)
                 }
             }
@@ -62,7 +62,6 @@ private struct CardHeadTimestampView: View {
     }
 }
 
-/// 缓存 app icon 的视图
 private struct AppIconView: View {
     let appPath: String
     @State private var icon: NSImage?
@@ -74,7 +73,9 @@ private struct AppIconView: View {
                     .resizable()
                     .scaledToFill()
             } else {
-                Color.clear
+                Image(systemName: "questionmark.app.dashed")
+                    .resizable()
+                    .scaledToFill()
             }
         }
         .frame(width: Const.iconSize, height: Const.iconSize)
@@ -97,8 +98,9 @@ private struct AppIconView: View {
             searchText: "",
             length: 9,
             group: -1,
-            tag: "string",
-        ),
+            tag: "string"
+        )
     )
+    .frame(width: 330.0)
     .padding()
 }

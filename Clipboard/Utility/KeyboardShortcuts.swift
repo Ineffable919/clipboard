@@ -15,7 +15,7 @@ enum KeyboardShortcuts {
         let cgEvent = CGEvent(
             keyboardEventSource: source,
             virtualKey: CGKeyCode(kVK_ANSI_V),
-            keyDown: true,
+            keyDown: true
         )
         cgEvent?.flags = .maskCommand
         cgEvent?.post(tap: .cghidEventTap)

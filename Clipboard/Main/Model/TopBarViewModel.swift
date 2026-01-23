@@ -168,7 +168,7 @@ final class TopBarViewModel {
             chipGroup: -1,
             selectedTypes: [],
             selectedAppNames: [],
-            selectedDateFilter: nil,
+            selectedDateFilter: nil
         )
 
         var isEmpty: Bool {
@@ -217,10 +217,10 @@ final class TopBarViewModel {
                     calendar.date(
                         byAdding: .day,
                         value: 1,
-                        to: startOfYesterday,
+                        to: startOfYesterday
                     ) ?? now
                 let startTimestamp = Int64(
-                    startOfYesterday.timeIntervalSince1970,
+                    startOfYesterday.timeIntervalSince1970
                 )
                 let endTimestamp = Int64(endOfYesterday.timeIntervalSince1970)
                 return (startTimestamp, endTimestamp)
@@ -230,8 +230,8 @@ final class TopBarViewModel {
                     calendar.date(
                         from: calendar.dateComponents(
                             [.yearForWeekOfYear, .weekOfYear],
-                            from: now,
-                        ),
+                            from: now
+                        )
                     ) ?? now
                 let startTimestamp = Int64(startOfWeek.timeIntervalSince1970)
                 return (startTimestamp, nil)
@@ -241,14 +241,14 @@ final class TopBarViewModel {
                     calendar.date(
                         from: calendar.dateComponents(
                             [.yearForWeekOfYear, .weekOfYear],
-                            from: now,
-                        ),
+                            from: now
+                        )
                     ) ?? now
                 let lastWeekStart =
                     calendar.date(
                         byAdding: .weekOfYear,
                         value: -1,
-                        to: thisWeekStart,
+                        to: thisWeekStart
                     ) ?? now
                 let endOfLastWeek = thisWeekStart
                 let startTimestamp = Int64(lastWeekStart.timeIntervalSince1970)
@@ -260,8 +260,8 @@ final class TopBarViewModel {
                     calendar.date(
                         from: calendar.dateComponents(
                             [.year, .month],
-                            from: now,
-                        ),
+                            from: now
+                        )
                     ) ?? now
                 let startTimestamp = Int64(startOfMonth.timeIntervalSince1970)
                 return (startTimestamp, nil)
@@ -365,7 +365,7 @@ final class TopBarViewModel {
             id: newId,
             name: name,
             color: color,
-            isSystem: false,
+            isSystem: false
         )
         chips.append(new)
         saveUserCategories()
@@ -374,7 +374,7 @@ final class TopBarViewModel {
     func updateChip(
         _ chip: CategoryChip,
         name: String? = nil,
-        color: Color? = nil,
+        color: Color? = nil
     ) {
         guard !chip.isSystem,
               let index = chips.firstIndex(where: { $0.id == chip.id })
@@ -408,7 +408,7 @@ final class TopBarViewModel {
 
     func commitNewChipOrCancel(commitIfNonEmpty: Bool) {
         let trimmed = newChipName.trimmingCharacters(
-            in: .whitespacesAndNewlines,
+            in: .whitespacesAndNewlines
         )
 
         if commitIfNonEmpty, !trimmed.isEmpty {
@@ -443,7 +443,7 @@ final class TopBarViewModel {
         }
 
         let trimmed = editingChipName.trimmingCharacters(
-            in: .whitespacesAndNewlines,
+            in: .whitespacesAndNewlines
         )
         if !trimmed.isEmpty {
             updateChip(chip, name: trimmed, color: editingChipColor)
@@ -486,7 +486,7 @@ final class TopBarViewModel {
         performSearch()
     }
 
-    func toggleApp(_ appName: String) {
+    func toggleApp(_ appName: String, appPath: String? = nil) {
         if selectedAppNames.contains(appName) {
             selectedAppNames.remove(appName)
             tags.removeAll {
@@ -494,6 +494,9 @@ final class TopBarViewModel {
             }
         } else {
             selectedAppNames.insert(appName)
+            if let path = appPath, !path.isEmpty {
+                appPathCache[appName] = path
+            }
             addTagForApp(appName)
         }
         performSearch()
@@ -512,7 +515,7 @@ final class TopBarViewModel {
                 ),
                 label: dateFilter.displayName,
                 type: .filterDate,
-                associatedValue: dateFilter.rawValue,
+                associatedValue: dateFilter.rawValue
             )
             tags.append(tag)
         }
@@ -527,7 +530,6 @@ final class TopBarViewModel {
         performSearch()
     }
 
-    @ObservationIgnored
     private let textTagAssociatedValue = "text"
 
     private func addTagForType(_ type: PasteModelType) {
@@ -546,7 +548,7 @@ final class TopBarViewModel {
                     ),
                     label: "文本",
                     type: .filterType,
-                    associatedValue: textTagAssociatedValue,
+                    associatedValue: textTagAssociatedValue
                 )
                 tags.append(tag)
             }
@@ -561,7 +563,7 @@ final class TopBarViewModel {
                 ),
                 label: label,
                 type: .filterType,
-                associatedValue: type.rawValue,
+                associatedValue: type.rawValue
             )
             tags.append(tag)
         }
@@ -591,11 +593,11 @@ final class TopBarViewModel {
                 AnyView(
                     Image(nsImage: NSWorkspace.shared.icon(forFile: appPath))
                         .resizable()
-                        .scaledToFit(),
+                        .scaledToFit()
                 )
             } else {
                 AnyView(
-                    Image(systemName: "app.fill")
+                    Image(systemName: "questionmark.app.dashed")
                         .resizable()
                         .scaledToFit()
                 )
@@ -605,7 +607,7 @@ final class TopBarViewModel {
             label: appName,
             type: .filterApp,
             associatedValue: appName,
-            appPath: appPath,
+            appPath: appPath
         )
         tags.append(tag)
     }
@@ -620,7 +622,7 @@ final class TopBarViewModel {
         let appInfo = await dataStore.getAllAppInfo()
         await MainActor.run {
             appPathCache = Dictionary(
-                uniqueKeysWithValues: appInfo.map { ($0.name, $0.path) },
+                uniqueKeysWithValues: appInfo.map { ($0.name, $0.path) }
             )
             isLoadingAppPathCache = false
         }
@@ -674,7 +676,7 @@ final class TopBarViewModel {
                     ),
                     label: "文本",
                     type: .filterType,
-                    associatedValue: textTagAssociatedValue,
+                    associatedValue: textTagAssociatedValue
                 )
                 tags.append(tag)
             }
@@ -707,7 +709,7 @@ final class TopBarViewModel {
             chipGroup: getGroupFilterForCurrentChip(),
             selectedTypes: selectedTypes,
             selectedAppNames: selectedAppNames,
-            selectedDateFilter: selectedDateFilter,
+            selectedDateFilter: selectedDateFilter
         )
     }
 

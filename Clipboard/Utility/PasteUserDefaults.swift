@@ -97,7 +97,7 @@ enum PasteUserDefaults {
                 IgnoredAppInfo(
                     name: "钥匙串访问",
                     bundleIdentifier: "com.apple.keychainaccess",
-                    path: "/System/Applications/Utilities/Keychain Access.app",
+                    path: "/System/Applications/Utilities/Keychain Access.app"
                 ),
             ]
             if #available(macOS 15.0, *) {
@@ -105,13 +105,13 @@ enum PasteUserDefaults {
                     IgnoredAppInfo(
                         name: "密码",
                         bundleIdentifier: "com.apple.Passwords",
-                        path: "/System/Applications/Passwords.app",
+                        path: "/System/Applications/Passwords.app"
                     ),
-                    at: 0,
+                    at: 0
                 )
             }
             return apps
-        }(),
+        }()
     )
     static var ignoredApps
 

@@ -55,7 +55,7 @@ struct LargeTextView: NSViewRepresentable {
                     textView.backgroundColor = bgColor
                     if let attributedString = NSAttributedString(
                         with: model.data,
-                        type: model.pasteboardType,
+                        type: model.pasteboardType
                     ) {
                         textView.textStorage?.setAttributedString(attributedString)
                     }
@@ -63,7 +63,7 @@ struct LargeTextView: NSViewRepresentable {
                     textView.backgroundColor = .controlBackgroundColor
                     if let attributedString = NSAttributedString(
                         with: model.data,
-                        type: model.pasteboardType,
+                        type: model.pasteboardType
                     ) {
                         textView.string = attributedString.string
                         textView.font = .systemFont(ofSize: NSFont.systemFontSize)
@@ -88,7 +88,7 @@ struct LargeTextView: NSViewRepresentable {
         searchText: "",
         length: 1000,
         group: -1,
-        tag: "string",
+        tag: "string"
     )
 
     LargeTextView(model: testModel)

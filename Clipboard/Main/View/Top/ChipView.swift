@@ -77,7 +77,7 @@ struct ChipView: View {
         .help(helpText)
         .onDrop(
             of: ChipView.dropTypes,
-            isTargeted: $isDropTargeted,
+            isTargeted: $isDropTargeted
         ) { _ in
             handleDrop()
         }
@@ -89,7 +89,7 @@ struct ChipView: View {
                 if #available(macOS 15.0, *) {
                     Image(
                         systemName:
-                        "clock.arrow.trianglehead.counterclockwise.rotate.90",
+                        "clock.arrow.trianglehead.counterclockwise.rotate.90"
                     )
                 } else {
                     Image("clock.arrow.trianglehead.counterclockwise.rotate.90")
@@ -109,8 +109,8 @@ struct ChipView: View {
                 top: Const.space6,
                 leading: Const.space10,
                 bottom: Const.space6,
-                trailing: Const.space10,
-            ),
+                trailing: Const.space10
+            )
         )
         .background {
             overlayColor()
@@ -166,7 +166,7 @@ struct ChipView: View {
             },
             onCycleColor: {
                 topBarVM.cycleEditingChipColor()
-            },
+            }
         )
         .onChange(of: env.focusView) {
             if env.focusView != .editChip {
@@ -249,7 +249,7 @@ struct ChipView: View {
         do {
             try PasteDataStore.main.updateItemGroup(
                 itemId: draggingId,
-                groupId: chip.id,
+                groupId: chip.id
             )
         } catch {
             log.error("更新卡片 group 失败: \(error)")
@@ -294,7 +294,7 @@ struct ChipView: View {
             if let window = NSApp.keyWindow {
                 alert.beginSheetModal(
                     for: window,
-                    completionHandler: handleResponse,
+                    completionHandler: handleResponse
                 )
             }
         } else {
@@ -321,7 +321,7 @@ private struct ChipViewPreviewWrapper: View {
             isSelected: true,
             chip: topBarVM.chips[2],
             focus: $focus,
-            topBarVM: topBarVM,
+            topBarVM: topBarVM
         )
         .environment(env)
         .frame(width: 128, height: 32)

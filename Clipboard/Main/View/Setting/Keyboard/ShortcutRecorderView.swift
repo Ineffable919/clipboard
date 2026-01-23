@@ -141,7 +141,7 @@ struct ShortcutRecorder: View {
     private func installEventHandle() {
         EventDispatcher.shared.registerHandler(
             matching: .keyDown,
-            key: "shortcutRecorder",
+            key: "shortcutRecorder"
         ) { [self] event in
             return handleKeyEvent(event)
         }
@@ -280,13 +280,13 @@ struct ShortcutRecorder: View {
                 HotKeyManager.shared.updateHotKey(
                     key: hotKeyId,
                     shortcut: shortcut,
-                    isEnabled: true,
+                    isEnabled: true
                 )
             } else {
                 HotKeyManager.shared.addHotKey(
                     key: hotKeyId,
                     shortcut: shortcut,
-                    isGlobal: hotKeyId == "app_launch",
+                    isGlobal: hotKeyId == "app_launch"
                 )
             }
             onShortcutChanged?()
@@ -310,7 +310,7 @@ struct ShortcutRecorder: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             ShortcutRecorder(
-                "app_launch",
+                "app_launch"
             )
         }
     }

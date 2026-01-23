@@ -121,7 +121,7 @@ struct FilterPopoverView: View {
                         .resizable()
                         .scaledToFit()
                 } else {
-                    Image(systemName: "app.fill")
+                    Image(systemName: "questionmark.app.dashed")
                         .font(.system(size: Const.space16))
                         .foregroundStyle(.secondary)
                 }
@@ -129,7 +129,7 @@ struct FilterPopoverView: View {
             label: appInfo.name,
             isSelected: topBarVM.selectedAppNames.contains(appInfo.name),
             action: {
-                topBarVM.toggleApp(appInfo.name)
+                topBarVM.toggleApp(appInfo.name, appPath: appInfo.path)
             }
         )
     }

@@ -13,7 +13,7 @@ extension NSImage {
     static func checkerboard(
         squareSize: CGFloat = 8,
         light: NSColor = .white,
-        dark: NSColor = NSColor(white: 0.9, alpha: 1),
+        dark: NSColor = NSColor(white: 0.9, alpha: 1)
     ) -> NSImage {
         if let cached = cachedCheckerboard {
             return cached
@@ -28,10 +28,10 @@ extension NSImage {
 
         dark.setFill()
         NSBezierPath(
-            rect: CGRect(x: 0, y: squareSize, width: squareSize, height: squareSize),
+            rect: CGRect(x: 0, y: squareSize, width: squareSize, height: squareSize)
         ).fill()
         NSBezierPath(
-            rect: CGRect(x: squareSize, y: 0, width: squareSize, height: squareSize),
+            rect: CGRect(x: squareSize, y: 0, width: squareSize, height: squareSize)
         ).fill()
 
         image.unlockFocus()
