@@ -10,7 +10,7 @@
             <sparkle:releaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
             </sparkle:releaseNotesLink>
-            <pubDate>Sat, 24 Jan 2026 14:40:46 +0800</pubDate>
+            <pubDate>Sat, 24 Jan 2026 14:59:59 +0800</pubDate>
             <sparkle:version>97</sparkle:version>
             <sparkle:shortVersionString>0.3.1</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
@@ -19,8 +19,8 @@
             </sparkle:tags>
             <enclosure
                 url="https://github.com/Ineffable919/clipboard/releases/download/0.3.1/Clipboard-0.3.1-arm64.zip"
-                sparkle:edSignature="A4VSFlPQWr9yGg1CggR2OpLgBg1QW/HFjF1wuxwlTfJInZhkRWXf+n9Ia1qrCzSPGwudQLD0wJynPiCAaefsCA=="
-                length="3150226"
+                sparkle:edSignature="gqk3tlIkYyamWho6bFTu2gc/MgrRYq2O1bs3ZhaaeeXD3HnirMtv3rC20mvrGuX0mpnDGZIhokrO9QjEQpVwDw=="
+                length="3150320"
                 type="application/octet-stream" />
         </item>
 

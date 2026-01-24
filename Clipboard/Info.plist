@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 	<dict>
+        <key>NSAppleEventsUsageDescription</key>
+        <string>Clip 需要访问辅助功能以监听和管理剪贴板内容</string>
 		<key>SUFeedURL</key>
 		<string>https://raw.githubusercontent.com/Ineffable919/clipboard/master/appcast.xml</string>
 		<key>SUEnableAutomaticChecks</key>
