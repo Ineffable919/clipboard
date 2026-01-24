@@ -4,6 +4,26 @@
         <title>Clipboard 更新</title>
         <description>Clipboard 应用更新源</description>
         <language>zh-CN</language>
+
+        <item>
+            <title>Version 0.3.1 (Apple Silicon (arm64))</title>
+            <sparkle:releaseNotesLink>
+                https://ineffable919.github.io/clipboard/scripts/release-note.html
+            </sparkle:releaseNotesLink>
+            <pubDate>Sat, 24 Jan 2026 15:39:33 +0800</pubDate>
+            <sparkle:version>97</sparkle:version>
+            <sparkle:shortVersionString>0.3.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:tags>
+                <sparkle:criticalUpdate sparkle:osType="arm64" />
+            </sparkle:tags>
+            <enclosure
+                url="https://github.com/Ineffable919/clipboard/releases/download/0.3.1/Clipboard-0.3.1-arm64.zip"
+                sparkle:edSignature="FZ2iRo78wCC6yflsicCGrkDGSZ2QzOVodJnzTN++G7C31tZKsev0LST8NVPwqhLQhqCB43438XrCCL316XZMDQ=="
+                length="3150076"
+                type="application/octet-stream" />
+        </item>
+
         <item>
             <title>Version 0.3.0 (Apple Silicon (arm64))</title>
             <sparkle:releaseNotesLink>
