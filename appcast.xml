@@ -10,7 +10,7 @@
             <sparkle:releaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
             </sparkle:releaseNotesLink>
-            <pubDate>Sat, 24 Jan 2026 12:17:34 +0800</pubDate>
+            <pubDate>Sat, 24 Jan 2026 12:24:39 +0800</pubDate>
             <sparkle:version>97</sparkle:version>
             <sparkle:shortVersionString>0.3.1</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
@@ -19,7 +19,7 @@
             </sparkle:tags>
             <enclosure
                 url="https://github.com/Ineffable919/clipboard/releases/download/0.3.1/Clipboard-0.3.1-arm64.zip"
-                sparkle:edSignature="T4of+wHB5M2lcu0WIkFcwQCLdX6asQWXh/MZEAGoPiIjErsVU9P8OA72+Cc2FvYhlWFXSxPv7gNjxfZhgBclDg=="
+                sparkle:edSignature="Q5NEKsKfr5U54A8aReWrBWXYeOIsPkQPpSI700O9Pohlw/xLWSKQ8KN4NAtgkqD8AAtR46JWIoAQ01XOMMMWCg=="
                 length="3183612"
                 type="application/octet-stream" />
         </item>
@@ -29,7 +29,7 @@
             <sparkle:releaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
             </sparkle:releaseNotesLink>
-            <pubDate>Sat, 24 Jan 2026 12:18:42 +0800</pubDate>
+            <pubDate>Sat, 24 Jan 2026 12:26:05 +0800</pubDate>
             <sparkle:version>97</sparkle:version>
             <sparkle:shortVersionString>0.3.1</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
@@ -38,7 +38,7 @@
             </sparkle:tags>
             <enclosure
                 url="https://github.com/Ineffable919/clipboard/releases/download/0.3.1/Clipboard-0.3.1-x86_64.zip"
-                sparkle:edSignature="DQCNYlA2Gl5H17aOni5q1n17M4guZJCS+nI6qlDO9AMxZmEuWa6PnW8nTDeczalw4X0O0vQ1q0fC6OWMKjd8Ag=="
+                sparkle:edSignature="Y3g3J43l3BFHxgUdRavzMCdlflupJP3kaa02F6NEidZaTQaojbCP19MnK+E9Fq0iyaJ6aq4mCwqYoJlg/3r8DA=="
                 length="3267900"
                 type="application/octet-stream" />
         </item>
