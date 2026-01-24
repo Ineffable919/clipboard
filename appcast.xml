@@ -10,7 +10,7 @@
             <sparkle:releaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
             </sparkle:releaseNotesLink>
-            <pubDate>Sat, 24 Jan 2026 12:24:39 +0800</pubDate>
+            <pubDate>Sat, 24 Jan 2026 14:21:21 +0800</pubDate>
             <sparkle:version>97</sparkle:version>
             <sparkle:shortVersionString>0.3.1</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
@@ -19,8 +19,8 @@
             </sparkle:tags>
             <enclosure
                 url="https://github.com/Ineffable919/clipboard/releases/download/0.3.1/Clipboard-0.3.1-arm64.zip"
-                sparkle:edSignature="Q5NEKsKfr5U54A8aReWrBWXYeOIsPkQPpSI700O9Pohlw/xLWSKQ8KN4NAtgkqD8AAtR46JWIoAQ01XOMMMWCg=="
-                length="3183612"
+                sparkle:edSignature="1PNJjlECFZdBMf3f/9cUdHYoRDp/Q//jDEa/puH3TWrKzyAarKOJlACStkxjX8LX3DApT0r3sfKzdaiReKv1Cw=="
+                length="3149982"
                 type="application/octet-stream" />
         </item>
 
@@ -29,7 +29,7 @@
             <sparkle:releaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
             </sparkle:releaseNotesLink>
-            <pubDate>Sat, 24 Jan 2026 12:26:05 +0800</pubDate>
+            <pubDate>Sat, 24 Jan 2026 14:23:32 +0800</pubDate>
             <sparkle:version>97</sparkle:version>
             <sparkle:shortVersionString>0.3.1</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
@@ -38,8 +38,8 @@
             </sparkle:tags>
             <enclosure
                 url="https://github.com/Ineffable919/clipboard/releases/download/0.3.1/Clipboard-0.3.1-x86_64.zip"
-                sparkle:edSignature="Y3g3J43l3BFHxgUdRavzMCdlflupJP3kaa02F6NEidZaTQaojbCP19MnK+E9Fq0iyaJ6aq4mCwqYoJlg/3r8DA=="
-                length="3267900"
+                sparkle:edSignature="aqWICQRwl3VltISV/8ak3R2zemq0n7GVGiwgmDUtCJtW6RsyWdkih6VhwEmjG44PndfmoaUynshIg2VD6EzyBA=="
+                length="3265196"
                 type="application/octet-stream" />
         </item>
 
