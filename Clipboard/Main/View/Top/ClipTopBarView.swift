@@ -482,7 +482,7 @@ struct SettingsMenu: View {
 
             if updateManager.hasUpdate {
                 Circle()
-                    .fill(.red)
+                    .fill(Color.red)
                     .frame(width: 6.0, height: 6.0)
                     .offset(x: -Const.space4, y: Const.space4)
             }
@@ -507,8 +507,6 @@ struct SettingsMenu: View {
     }
 
     private func showNativeMenu() {
-        silentCheckForUpdates()
-
         let menu = NSMenu()
 
         if updateManager.hasUpdate {
@@ -531,6 +529,8 @@ struct SettingsMenu: View {
             }
             menu.addItem(newVersionItem)
             menu.addItem(NSMenuItem.separator())
+        } else {
+            AppDelegate.shared?.updaterController.updater.checkForUpdatesInBackground()
         }
 
         let settingsItem = NSMenuItem(
@@ -677,10 +677,6 @@ struct SettingsMenu: View {
             systemSymbolName: "\(number).circle",
             accessibilityDescription: nil
         )
-    }
-
-    private func silentCheckForUpdates() {
-        AppDelegate.shared?.updaterController.updater.checkForUpdatesInBackground()
     }
 }
 
