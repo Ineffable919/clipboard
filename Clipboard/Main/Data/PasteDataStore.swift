@@ -538,7 +538,7 @@ extension PasteDataStore {
         }) {
             cachedAppInfo?[index].path = model.appPath
         } else {
-            cachedAppInfo?.append((name: model.appName, path: model.appPath))
+            cachedAppInfo?.insert((name: model.appName, path: model.appPath), at: 0)
         }
     }
 

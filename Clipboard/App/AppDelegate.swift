@@ -227,6 +227,7 @@ extension AppDelegate {
         Task.detached(priority: .utility) {
             await FileAccessHelper.shared.restoreAllAccesses()
         }
+        updaterController.updater.checkForUpdatesInBackground()
     }
 
     private func syncLaunchAtLoginStatus() {
@@ -271,7 +272,9 @@ extension AppDelegate {
         if event.type == .leftMouseUp {
             windowManager.toggleWindow()
         } else if event.type == .rightMouseUp {
-            updaterController.updater.checkForUpdatesInBackground()
+            if !UpdateManager.shared.hasUpdate {
+                updaterController.updater.checkForUpdatesInBackground()
+            }
             menuBarItem?.menu = rMenu
             sender.performClick(nil)
             menuBarItem?.menu = nil

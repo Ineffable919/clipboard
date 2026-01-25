@@ -72,9 +72,9 @@ struct ChipView: View {
                         }
                     }
                 )
-                .help(helpText)
             }
         }
+        .help(helpText)
         .onDrop(
             of: ChipView.dropTypes,
             isTargeted: $isDropTargeted
@@ -126,7 +126,6 @@ struct ChipView: View {
                 }
             }
         }
-        .help(chip.isSystem ? helpText : "")
     }
 
     private func updateHelpText() async {

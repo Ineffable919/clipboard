@@ -7,11 +7,11 @@
 		<key>SUFeedURL</key>
 		<string>https://raw.githubusercontent.com/Ineffable919/clipboard/master/appcast.xml</string>
 		<key>SUEnableAutomaticChecks</key>
-		<true />
+		<true/>
 		<key>SUScheduledCheckInterval</key>
 		<integer>43200</integer>
 		<key>SUAllowsAutomaticUpdates</key>
-		<true />
+		<true/>
 		<key>SUPublicEDKey</key>
 		<string>blW5K9TjhxvURPS+S9fxAyDcIp+QZYaxw2NqTagdiYU=</string>
 		<key>SUEnableInstallerLauncherService</key>

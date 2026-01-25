@@ -9,8 +9,8 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             line-height: 1.6;
-            margin: 30px auto;
-            padding: 30px;
+            margin: 10px auto;
+            padding: 20px;
             color: #333;
             max-width: 600px;
             background-color: #fff;
@@ -21,8 +21,8 @@
 
         h5 {
             color: #2c3e50;
-            margin-top: 28px;
-            margin-bottom: 10px;
+            margin-top: 20px;
+            margin-bottom: 8px;
             font-size: 13px;
             font-weight: 600;
             letter-spacing: 0.2px;
@@ -107,10 +107,11 @@
             justify-content: space-between;
             align-items: baseline;
             box-sizing: border-box;
-            /* padding: 20px 0; */
             width: 100%;
             border-bottom: 1px solid #eee;
             margin-left: 0;
+            margin-top: 0;
+            margin-bottom: 15px;
         }
 
         .release-version {
@@ -133,6 +134,28 @@
 </head>
 
 <body>
+    <!-- 0.3.1 -->
+    <div class="release-header">
+        <span class="release-version"><span class="emoji">🎉</span>0.3.1</span>
+        <span class="release-date">2026-01-23</span>
+    </div>
+    <div
+        style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 12px 15px; margin: 15px 0; border-radius: 4px; font-size: 13px; color: #856404;">
+        <strong>⚠️ 重要提示：</strong>
+        本版本包含应用沙盒迁移更新，避免频繁权限弹窗。
+        1. 首次启动时，应用将提示导入旧的偏好与设置，请按照提示选择com.crown.clipboard文件后可完成配置迁移（新用户可跳过）。
+        2. 应用启动后可到设置页面存储栏目点击导入按钮选择Clip/Clip.sqlite3进行旧数据导入，否则数据可能会丢失。
+    </div>
+    <h5 class="feature">What's new</h5>
+    <ul>
+        <li>图片内容支持搜索（仅限于新的图片历史内容），预览支持OCR</li>
+        <li>设置页面新增数据备份、导入，日志查看</li>
+    </ul>
+    <h5 class="bug-fixes">Bug Fixes</h5>
+    <ul>
+        <li>修复了一些已知问题</li>
+    </ul>
+
     <!-- 0.3.0 -->
     <div class="release-header">
         <span class="release-version"><span class="emoji">🎉</span>0.3.0</span>
