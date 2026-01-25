@@ -11,7 +11,7 @@ typealias PasteboardType = NSPasteboard.PasteboardType
 
 extension PasteboardType {
     static var supportTypes: [PasteboardType] = [
-        .rtf, .rtfd, .png, .tiff, .fileURL, .string,
+        .rtf, .rtfd, .fileURL, .png, .tiff, .string,
     ]
 
     func isImage() -> Bool {

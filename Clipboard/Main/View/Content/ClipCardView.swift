@@ -136,10 +136,10 @@ struct ClipCardView: View {
         var body: some View {
             let (_, textColor) = model.colors()
             Text(index, format: .number)
-                .font(.system(size: 10, weight: .regular, design: .rounded))
+                .font(.system(size: 12, weight: .regular, design: .rounded))
                 .foregroundStyle(textColor)
                 .padding(.bottom, Const.space4)
-                .padding(.trailing, Const.space2)
+                .padding(.trailing, Const.space4)
                 .transition(.scale.combined(with: .opacity))
         }
     }
