@@ -364,15 +364,6 @@ final class TopBarViewModel {
 
     func addChip(name: String, color: Color) {
         chipStore.addChip(name: name, color: color)
-        let newId = (chips.last?.id ?? 0) + 1
-        let new = CategoryChip(
-            id: newId,
-            name: name,
-            color: color,
-            isSystem: false
-        )
-        chips.append(new)
-        saveUserCategories()
     }
 
     func updateChip(

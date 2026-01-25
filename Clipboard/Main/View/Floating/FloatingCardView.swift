@@ -55,9 +55,8 @@ struct FloatingCardView: View {
     }
 
     private var cardContent: some View {
-        HStack(alignment: .center, spacing: Const.space4) {
-            appIconView
-                .frame(width: 24, height: 24)
+        HStack(alignment: .center, spacing: Const.space10) {
+            AppIconImageView(appPath: model.appPath)
                 .padding(.leading, Const.space6)
 
             FloatContentView
@@ -93,12 +92,6 @@ struct FloatingCardView: View {
             }
         }
         .clipShape(.rect(cornerRadius: Const.radius))
-    }
-
-    @ViewBuilder
-    private var appIconView: some View {
-        AppIconImageView(appPath: model.appPath)
-            .clipShape(.rect(cornerRadius: Const.radius))
     }
 
     @ViewBuilder
@@ -226,11 +219,13 @@ private struct AppIconImageView: View {
                 Image(nsImage: icon)
                     .resizable()
                     .scaledToFit()
+                    .frame(width: 28, height: 28)
             } else {
-                Image(systemName: "app.fill")
+                Image(systemName: "questionmark.app.dashed")
                     .resizable()
                     .scaledToFit()
                     .foregroundStyle(.secondary)
+                    .frame(width: 28, height: 28)
             }
         }
         .task(id: appPath) {
@@ -285,7 +280,7 @@ private struct FloatingImageThumbnailView: View {
             data: data,
             showData: data,
             timestamp: Int64(Date().timeIntervalSince1970),
-            appPath: "/Applications/Wechat.app",
+            appPath: "/Applications/Google Chrome.app",
             appName: "微信",
             searchText: "你好",
             length: 2,
