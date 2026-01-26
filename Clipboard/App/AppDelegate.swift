@@ -176,7 +176,7 @@ extension AppDelegate: NSApplicationDelegate {
     func applicationDidFinishLaunching(_: Notification) {
         Self.shared = self
 
-        LegacyConfigMigrator.shared.startMigrationIfNeeded()
+        //LegacyConfigMigrator.shared.startMigrationIfNeeded()
 
         initStatus()
 
@@ -193,7 +193,6 @@ extension AppDelegate: NSApplicationDelegate {
 
     func applicationWillTerminate(_: Notification) {
         EventDispatcher.shared.stop()
-        FileAccessHelper.shared.stopAccessingSecurityScopedResources()
     }
 
     private func applyAppearanceSettings() {
@@ -224,9 +223,6 @@ extension AppDelegate {
 
         syncLaunchAtLoginStatus()
 
-        Task.detached(priority: .utility) {
-            await FileAccessHelper.shared.restoreAllAccesses()
-        }
         updaterController.updater.checkForUpdatesInBackground()
     }
 

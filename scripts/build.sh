@@ -181,98 +181,91 @@ else
 fi
 echo ""
 
-echo -e "${BLUE}🔐 步骤 4/5: 重新签名应用...${NC}"
+echo -e "${BLUE}🔐 步骤 4/5: 重新签名应用（非沙盒）...${NC}"
 
 xattr -cr "$APP_PATH" 2>/dev/null || true
 
 ENTITLEMENTS_PATH=""
 for path in "./Clipboard/Clipboard.entitlements" "./Clipboard.entitlements" "./entitlements.plist"; do
     if [ -f "$path" ]; then
-        if grep -q "com.apple.security.app-sandbox" "$path"; then
-            ENTITLEMENTS_PATH="$path"
-            echo "使用本地 entitlements: $ENTITLEMENTS_PATH"
-            break
-        else
-            echo -e "${YELLOW}⚠️  $path 缺少沙盒配置，跳过${NC}"
-        fi
+        ENTITLEMENTS_PATH="$path"
+        echo "找到 entitlements 文件: $ENTITLEMENTS_PATH"
+        break
     fi
 done
 
 if [ -z "$ENTITLEMENTS_PATH" ]; then
     EXTRACTED_ENTITLEMENTS="/tmp/${APP_NAME}_entitlements.plist"
     if codesign -d --entitlements :"$EXTRACTED_ENTITLEMENTS" "$APP_PATH" 2>/dev/null; then
-        if [ -s "$EXTRACTED_ENTITLEMENTS" ] && grep -q "com.apple.security.app-sandbox" "$EXTRACTED_ENTITLEMENTS" 2>/dev/null; then
+        if [ -s "$EXTRACTED_ENTITLEMENTS" ]; then
             echo "从构建产物提取 entitlements 成功"
             ENTITLEMENTS_PATH="$EXTRACTED_ENTITLEMENTS"
-        else
-            echo -e "${YELLOW}⚠️  提取的 entitlements 不包含沙盒配置${NC}"
         fi
-    else
-        echo -e "${YELLOW}⚠️  无法从构建产物提取 entitlements${NC}"
     fi
 fi
 
-if [ -n "$ENTITLEMENTS_PATH" ] && [ -f "$ENTITLEMENTS_PATH" ]; then
-    echo "使用 ad-hoc 签名重新签名整个应用包..."
+echo "使用 ad-hoc 签名重新签名整个应用包（非沙盒模式）..."
+
+SPARKLE_FRAMEWORK="$APP_PATH/Contents/Frameworks/Sparkle.framework"
+
+if [ -d "$SPARKLE_FRAMEWORK" ]; then
+    echo "  - 签名 Sparkle XPC Services..."
     
-    SPARKLE_FRAMEWORK="$APP_PATH/Contents/Frameworks/Sparkle.framework"
-    
-    if [ -d "$SPARKLE_FRAMEWORK" ]; then
-        echo "  - 签名 Sparkle XPC Services..."
-        
-        for xpc in "$SPARKLE_FRAMEWORK"/Versions/B/XPCServices/*.xpc; do
-            if [ -d "$xpc" ]; then
-                echo "    签名: $(basename "$xpc")"
-                codesign --force --sign - \
-                    --timestamp=none \
-                    "$xpc" 2>&1 | grep -v "replacing existing signature" || true
-            fi
-        done
-        
-        echo "  - 签名 Sparkle.framework..."
-        codesign --force --sign - \
-            --timestamp=none \
-            "$SPARKLE_FRAMEWORK" 2>&1 | grep -v "replacing existing signature" || true
-    fi
-    
-    echo "  - 签名其他框架..."
-    for framework in "$APP_PATH"/Contents/Frameworks/*.framework; do
-        if [ -d "$framework" ] && [ "$framework" != "$SPARKLE_FRAMEWORK" ]; then
-            echo "    签名: $(basename "$framework")"
+    for xpc in "$SPARKLE_FRAMEWORK"/Versions/B/XPCServices/*.xpc; do
+        if [ -d "$xpc" ]; then
+            echo "    签名: $(basename "$xpc")"
             codesign --force --sign - \
                 --timestamp=none \
-                "$framework" 2>&1 | grep -v "replacing existing signature" || true
+                "$xpc" 2>&1 | grep -v "replacing existing signature" || true
         fi
     done
     
-    echo "  - 签名应用..."
+    echo "  - 签名 Sparkle.framework..."
+    codesign --force --sign - \
+        --timestamp=none \
+        "$SPARKLE_FRAMEWORK" 2>&1 | grep -v "replacing existing signature" || true
+fi
+
+echo "  - 签名其他框架..."
+for framework in "$APP_PATH"/Contents/Frameworks/*.framework; do
+    if [ -d "$framework" ] && [ "$framework" != "$SPARKLE_FRAMEWORK" ]; then
+        echo "    签名: $(basename "$framework")"
+        codesign --force --sign - \
+            --timestamp=none \
+            "$framework" 2>&1 | grep -v "replacing existing signature" || true
+    fi
+done
+
+echo "  - 签名应用..."
+if [ -n "$ENTITLEMENTS_PATH" ] && [ -f "$ENTITLEMENTS_PATH" ]; then
     codesign --force --sign - \
         --entitlements "$ENTITLEMENTS_PATH" \
         --timestamp=none \
         "$APP_PATH" 2>&1 | grep -v "replacing existing signature" || true
-    
-    echo -e "${GREEN}✅ 应用重新签名完成${NC}"
-    
-    echo ""
-    if codesign --verify --deep --strict "$APP_PATH" 2>&1; then
-        echo -e "${GREEN}✅ 签名验证通过${NC}"
-    else
-        echo -e "${YELLOW}⚠️  签名验证有警告（ad-hoc 签名正常）${NC}"
-    fi
-    
-    echo ""
-    echo "应用签名信息："
-    codesign -dvvv "$APP_PATH" 2>&1 | grep -E "(Identifier|TeamIdentifier|Authority|Signature)" | head -5 || true
-    
-    if [ -d "$SPARKLE_FRAMEWORK" ]; then
-        echo ""
-        echo "Sparkle 框架签名信息："
-        codesign -dvvv "$SPARKLE_FRAMEWORK" 2>&1 | grep -E "(Identifier|TeamIdentifier|Authority|Signature)" | head -5 || true
-    fi
 else
-    echo -e "${RED}❌ 错误: 未找到有效的 entitlements 文件${NC}"
-    echo "请确保 Clipboard/Clipboard.entitlements 文件存在且包含 com.apple.security.app-sandbox"
-    exit 1
+    echo "    未找到 entitlements 文件，使用默认签名"
+    codesign --force --sign - \
+        --timestamp=none \
+        "$APP_PATH" 2>&1 | grep -v "replacing existing signature" || true
+fi
+
+echo -e "${GREEN}✅ 应用重新签名完成${NC}"
+
+echo ""
+if codesign --verify --deep --strict "$APP_PATH" 2>&1; then
+    echo -e "${GREEN}✅ 签名验证通过${NC}"
+else
+    echo -e "${YELLOW}⚠️  签名验证有警告（ad-hoc 签名正常）${NC}"
+fi
+
+echo ""
+echo "应用签名信息："
+codesign -dvvv "$APP_PATH" 2>&1 | grep -E "(Identifier|TeamIdentifier|Authority|Signature)" | head -5 || true
+
+if [ -d "$SPARKLE_FRAMEWORK" ]; then
+    echo ""
+    echo "Sparkle 框架签名信息："
+    codesign -dvvv "$SPARKLE_FRAMEWORK" 2>&1 | grep -E "(Identifier|TeamIdentifier|Authority|Signature)" | head -5 || true
 fi
 
 rm -f "/tmp/${APP_NAME}_entitlements.plist" 2>/dev/null

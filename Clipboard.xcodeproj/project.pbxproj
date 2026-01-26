@@ -75,7 +75,6 @@
 				B1FADD3C2E7E92B3005CEFCF /* Sources */,
 				B1FADD3D2E7E92B3005CEFCF /* Frameworks */,
 				B1FADD3E2E7E92B3005CEFCF /* Resources */,
-				B134FF112F10F82500AE4A07 /* Run Script */,
 			);
 			buildRules = (
 			);
@@ -140,28 +139,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		B134FF112F10F82500AE4A07 /* Run Script */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 8;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Run Script";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(TARGET_BUILD_DIR)/$(WRAPPER_NAME)/Contents/Frameworks/Sparkle.framework/XPCServices-cleaned",
-			);
-			runOnlyForDeploymentPostprocessing = 1;
-			shellPath = /bin/sh;
-			shellScript = "#!/bin/bash\n\nif [ \"$ACTION\" != \"install\" ]; then\n    exit 0\nfi\n\nif [ \"$ENABLE_APP_SANDBOX\" != \"YES\" ]; then\n    echo \"未启用沙盒，跳过 XPC 服务移除\"\n    exit 0\nfi\n\necho \"沙盒应用：移除不需要的 Downloader XPC Service\"\n\nAPP_PATH=\"${TARGET_BUILD_DIR}/${WRAPPER_NAME}\"\nSPARKLE_FRAMEWORK=\"${APP_PATH}/Contents/Frameworks/Sparkle.framework\"\n\nDOWNLOADER_XPC=\"${SPARKLE_FRAMEWORK}/Versions/B/XPCServices/Downloader.xpc\"\n\nif [ -e \"$DOWNLOADER_XPC\" ]; then\n    echo \"移除 Downloader XPC Service: $DOWNLOADER_XPC\"\n    rm -rf \"$DOWNLOADER_XPC\"\n    echo \"Downloader XPC Service 已移除\"\nelse\n    echo \"Downloader XPC Service 不存在，跳过\"\nfi\n\nif [ -n \"$EXPANDED_CODE_SIGN_IDENTITY\" ] && [ \"$EXPANDED_CODE_SIGN_IDENTITY\" != \"-\" ]; then\n    echo \"重新签名 Sparkle framework\"\n    codesign --force --sign \"$EXPANDED_CODE_SIGN_IDENTITY\" --preserve-metadata=identifier,entitlements,flags,runtime \"$SPARKLE_FRAMEWORK\"\nelse\n    echo \"跳过代码签名（开发构建）\"\nfi\n\ntouch \"${SPARKLE_FRAMEWORK}/XPCServices-cleaned\"\n\nexit 0\n";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		B1FADD3C2E7E92B3005CEFCF /* Sources */ = {
@@ -304,33 +281,18 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				AUTOMATION_APPLE_EVENTS = NO;
-				CODE_SIGN_ENTITLEMENTS = Clipboard/Clipboard.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 97;
+				CURRENT_PROJECT_VERSION = 95;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_FILE_ACCESS_DOWNLOADS_FOLDER = readwrite;
-				ENABLE_FILE_ACCESS_MOVIES_FOLDER = readonly;
-				ENABLE_FILE_ACCESS_MUSIC_FOLDER = readonly;
-				ENABLE_FILE_ACCESS_PICTURE_FOLDER = readonly;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
-				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
-				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
-				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
-				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
-				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
-				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
 				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = NO;
-				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
-				ENABLE_RESOURCE_ACCESS_USB = NO;
-				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Clipboard/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Clip;
@@ -368,33 +330,18 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				AUTOMATION_APPLE_EVENTS = NO;
-				CODE_SIGN_ENTITLEMENTS = Clipboard/Clipboard.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 97;
+				CURRENT_PROJECT_VERSION = 95;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
-				ENABLE_APP_SANDBOX = YES;
-				ENABLE_FILE_ACCESS_DOWNLOADS_FOLDER = readwrite;
-				ENABLE_FILE_ACCESS_MOVIES_FOLDER = readonly;
-				ENABLE_FILE_ACCESS_MUSIC_FOLDER = readonly;
-				ENABLE_FILE_ACCESS_PICTURE_FOLDER = readonly;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
-				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
-				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
-				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
-				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
-				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
-				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
 				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = NO;
-				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
-				ENABLE_RESOURCE_ACCESS_USB = NO;
-				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Clipboard/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Clip;
