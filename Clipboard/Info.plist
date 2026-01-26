@@ -1,20 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-	<dict>
-		<key>NSAppleEventsUsageDescription</key>
-		<string>Clip 需要访问辅助功能以监听和管理剪贴板内容</string>
-		<key>SUFeedURL</key>
-		<string>https://raw.githubusercontent.com/Ineffable919/clipboard/master/appcast.xml</string>
-		<key>SUEnableAutomaticChecks</key>
-		<true/>
-		<key>SUScheduledCheckInterval</key>
-		<integer>43200</integer>
-		<key>SUAllowsAutomaticUpdates</key>
-		<true/>
-		<key>SUPublicEDKey</key>
-		<string>blW5K9TjhxvURPS+S9fxAyDcIp+QZYaxw2NqTagdiYU=</string>
-		<key>SUEnableInstallerLauncherService</key>
-		<string>YES</string>
-	</dict>
+<dict>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Clip 需要访问辅助功能以监听和管理剪贴板内容</string>
+	<key>SUFeedURL</key>
+	<string>https://raw.githubusercontent.com/Ineffable919/clipboard/master/appcast.xml</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUScheduledCheckInterval</key>
+	<integer>43200</integer>
+	<key>SUAllowsAutomaticUpdates</key>
+	<true/>
+	<key>SUPublicEDKey</key>
+	<string>blW5K9TjhxvURPS+S9fxAyDcIp+QZYaxw2NqTagdiYU=</string>
+    <key>NSDesktopFolderUsageDescription</key>
+    <string>需要访问桌面文件夹以保存剪贴板内容</string>
+    <key>NSDocumentsFolderUsageDescription</key>
+    <string>需要访问文档文件夹以保存剪贴板内容</string>
+    <key>NSDownloadsFolderUsageDescription</key>
+    <string>需要访问下载文件夹以保存剪贴板内容</string>
+</dict>
 </plist>

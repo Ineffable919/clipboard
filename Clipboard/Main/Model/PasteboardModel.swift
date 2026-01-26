@@ -173,12 +173,6 @@ final class PasteboardModel: Identifiable {
             filePaths = fileURLs.map(\.path)
             searchText = filePaths!.joined(separator: "")
 
-            Task.detached(priority: .utility) {
-                await FileAccessHelper.shared.saveSecurityBookmarks(
-                    for: filePaths!
-                )
-            }
-
             let filePathsString = filePaths!.joined(separator: "\n")
             content = filePathsString.data(using: .utf8) ?? Data()
         } else {
