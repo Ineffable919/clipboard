@@ -1,75 +1,76 @@
 <p align="center">
     <div align="center"><img src=Clipboard/Resource/Assets.xcassets/AppIcon.appiconset/icon-256.png width=135  /></div>
     <h2 align="center">Clipboard</h2>
-    <div align="center">一款 macOS 剪贴板管理工具，帮助您更高效地管理和使用剪贴板历史记录。
+    <div align="center">A macOS clipboard manager that helps you manage and use your clipboard history more efficiently.
 </div>
-    <div align="center"><a href="https://github.com/Ineffable919/clipboard/blob/master/README_EN.md">English</a> | <strong>中文</strong></div>
+    <div align="center"><strong>English</strong> | <a href="https://github.com/Ineffable919/clipboard/blob/master/README.md">中文</a></div>
 </p>
 
 <img src="temp.png">
 
-## 下载
+## Download
 
-下载最新版本 [releases](https://github.com/Ineffable919/clipboard/releases/latest)
+Download the latest version [releases](https://github.com/Ineffable919/clipboard/releases/latest)
 
-## 功能特性
 
-- **实时监控剪贴板**：自动捕获并保存您复制的文本、图片和文件
-- **智能分类**：按文本、图片、文件类型自动分类管理
-- **历史记录**：保存您的剪贴板历史记录，方便随时查看
-- **自定义设置**：支持自定义分类，设置保存历史时长等
-- **快速搜索**：通过关键词快速查找历史记录
-- **直观界面**：现代化的卡片式界面设计，操作简单直观，适配浅深色外观
-- **快捷操作**：
-  - 双击直接粘贴
-  - shift + 鼠标滚动
-  - 空格键预览内容
-  - 支持键盘导航选择
-  - 右键菜单提供更多操作选项
-- **安全删除**：支持确认删除避免误操作
-- **拖拽支持**：可将内容拖拽到其他应用中使用
+## Features
 
-## 系统要求
+- **Real-time Clipboard Monitoring**: Automatically captures and saves text, images, and files you copy
+- **Smart Categorization**: Automatically organizes content by text, images, and file types
+- **History Records**: Saves your clipboard history for easy access anytime
+- **Customizable Settings**: Supports custom categories and configurable history retention periods
+- **Quick Search**: Quickly find history records using keywords
+- **Intuitive Interface**: Modern card-based UI design with simple and intuitive operations, supports both light and dark modes
+- **Quick Operations**:
+  - Double-click to paste directly
+  - Shift + mouse scroll
+  - Spacebar to preview content
+  - Keyboard navigation support
+  - Right-click menu for more options
+- **Safe Deletion**: Confirmation required to avoid accidental deletions
+- **Drag & Drop Support**: Drag content to other applications
 
-- macOS 14.0 或更高版本 （已适配macOS 26）
-- 支持 Apple Silicon (arm64) 和 Intel (x86_64) 架构
+## System Requirements
 
-## 使用方法
+- macOS 14.0 or later (Compatible with macOS 26)
+- Supports Apple Silicon (arm64) and Intel (x86_64) architectures
 
-1. 正常复制任何内容（文本、图片或文件）
-2. 打开 Clipboard 应用查看历史记录
-3. 通过以下方式操作历史记录：
-   - 双击项目直接粘贴
-   - 单击选中后按回车键粘贴
-   - 使用空格键预览内容
-   - 使用左右箭头键导航选择
-   - 右键点击项目打开上下文菜单进行更多操作
+## How to Use
 
-## 键盘快捷键
+1. Copy any content normally (text, images, or files)
+2. Open the Clipboard app to view history
+3. Interact with history records using:
+   - Double-click an item to paste directly
+   - Single-click to select, then press Enter to paste
+   - Press Spacebar to preview content
+   - Use left/right arrow keys to navigate
+   - Right-click an item to open context menu for more actions
 
-- `ESC`：关闭应用窗口
-- `← →`：在历史记录间导航
-- `空格`：预览选中的项目
-- `↩`：粘贴选中的项目
-- `Shift + ⏎`：粘贴为纯文本
-- `⌘ + C`：复制选中的项目到剪贴板
-- `Delete`：删除选中的项目
+## Keyboard Shortcuts
+
+- `ESC`: Close the app window
+- `← →`: Navigate between history records
+- `Space`: Preview selected item
+- `↩`: Paste selected item
+- `Shift + ⏎`: Paste as plain text
+- `⌘ + C`: Copy selected item to clipboard
+- `Delete`: Delete selected item
 
 ## FAQ
 
-### 应用打不开?
+### App won't open?
 
-1. 检查系统设置 -> 隐私与安全性 -> 允许以下来源程序.
-2. 试试以下命令
+1. Check System Settings -> Privacy & Security -> Allow applications from the following sources.
+2. Try the following commands:
 ``` sh
 sudo xattr -r -d com.apple.quarantine /Applications/Clipboard.app 
 sudo codesign --force --deep --sign - /Applications/Clipboard.app
 ```
 
-### 应用更新后辅助权限丢失？
-  - 目前没有好的办法处理，请删除后重新添加。
+### Accessibility permissions lost after app update?
+  - Please use version 0.3.1, as the subsequent versions have resolved this issue.
 
 
-## 许可证
+## License
 
-Creative Commons Attribution-NonCommercial 4.0 International Public License [LICENSE](LICENSE)
+This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International Public License. See the [LICENSE](LICENSE) file for details.
