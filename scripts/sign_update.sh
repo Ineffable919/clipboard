@@ -5,14 +5,12 @@
 
 set -e
 
-# 颜色输出
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# 配置
 APP_NAME="Clipboard"
 SCHEME="Clipboard"
 CONFIGURATION="Release"
@@ -23,7 +21,6 @@ echo -e "${BLUE}║    Sparkle 更新包签名工具              ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════╝${NC}"
 echo ""
 
-# 检查参数
 if [ $# -lt 1 ]; then
     echo -e "${YELLOW}使用方法:${NC}"
     echo "  $0 <版本号> [构建号] [架构]"
@@ -91,17 +88,9 @@ fi
 echo -e "${GREEN}✅ 找到私钥文件${NC}"
 echo ""
 
-echo -e "${BLUE}🔍 步骤 1/4: 查找并准备构建产物...${NC}"
+echo -e "${BLUE}🔍 步骤 1/3: 查找构建产物...${NC}"
 
-DERIVED_DATA=$(xcodebuild -scheme "$SCHEME" -destination "$DESTINATION" -configuration "$CONFIGURATION" -showBuildSettings 2>/dev/null | grep " BUILT_PRODUCTS_DIR" | sed 's/.*= //')
-
-if [ -z "$DERIVED_DATA" ]; then
-    echo -e "${RED}❌ 错误: 未找到构建目录${NC}"
-    echo "请先运行 ./scripts/build.sh $VERSION 构建应用"
-    exit 1
-fi
-
-SOURCE_APP="$DERIVED_DATA/$APP_NAME.app"
+SOURCE_APP="./build/Build/Products/$CONFIGURATION/$APP_NAME.app"
 
 if [ ! -d "$SOURCE_APP" ]; then
     echo -e "${RED}❌ 错误: 未找到应用: $SOURCE_APP${NC}"
@@ -111,96 +100,28 @@ fi
 
 echo -e "${GREEN}✅ 找到应用: $SOURCE_APP${NC}"
 
-WORK_DIR="./sign_temp"
-rm -rf "$WORK_DIR"
-mkdir -p "$WORK_DIR"
+if [ -f "$SOURCE_APP/Contents/MacOS/$APP_NAME" ]; then
+    BUILT_ARCHS=$(lipo -archs "$SOURCE_APP/Contents/MacOS/$APP_NAME" 2>/dev/null || echo "未知")
+    echo "   架构: $BUILT_ARCHS"
+fi
 
-echo "复制应用到工作目录..."
-cp -R "$SOURCE_APP" "$WORK_DIR/"
-APP_PATH="$WORK_DIR/$APP_NAME.app"
-
-echo -e "${GREEN}✅ 应用已复制到: $APP_PATH${NC}"
-echo ""
-
-echo -e "${BLUE}�️  步骤 2/4: 移除不需要的 Sparkle XPC Service...${NC}"
-SPARKLE_FRAMEWORK="$APP_PATH/Contents/Frameworks/Sparkle.framework"
-DOWNLOADER_XPC="$SPARKLE_FRAMEWORK/Versions/B/XPCServices/Downloader.xpc"
-
-if [ -d "$SPARKLE_FRAMEWORK" ]; then
-    if [ -e "$DOWNLOADER_XPC" ]; then
-        echo "移除 Downloader.xpc（应用有网络权限，不需要此服务）"
-        rm -rf "$DOWNLOADER_XPC"
-        echo -e "${GREEN}✅ Downloader.xpc 已移除${NC}"
-    else
-        echo "Downloader.xpc 不存在，跳过"
-    fi
+echo "   验证签名..."
+if codesign -v "$SOURCE_APP" 2>/dev/null; then
+    SIGNING_INFO=$(codesign -dvvv "$SOURCE_APP" 2>&1 | grep "Authority" | head -1)
+    echo "   签名: ${SIGNING_INFO#*Authority=}"
 else
-    echo -e "${YELLOW}⚠️  未找到 Sparkle.framework${NC}"
+    echo -e "${YELLOW}   ⚠️  签名验证失败，但继续打包${NC}"
 fi
 echo ""
 
-echo -e "${BLUE}🔐 步骤 3/4: 重新签名应用（非沙盒）...${NC}"
-
-xattr -cr "$APP_PATH" 2>/dev/null || true
-
-ENTITLEMENTS_PATH=""
-for path in "./Clipboard/Clipboard.entitlements" "./Clipboard.entitlements" "./entitlements.plist"; do
-    if [ -f "$path" ]; then
-        ENTITLEMENTS_PATH="$path"
-        echo "找到 entitlements 文件: $ENTITLEMENTS_PATH"
-        break
-    fi
-done
-
-if [ -z "$ENTITLEMENTS_PATH" ]; then
-    EXTRACTED_ENTITLEMENTS="/tmp/${APP_NAME}_entitlements.plist"
-    if codesign -d --entitlements :"$EXTRACTED_ENTITLEMENTS" "$APP_PATH" 2>/dev/null; then
-        if [ -s "$EXTRACTED_ENTITLEMENTS" ]; then
-            ENTITLEMENTS_PATH="$EXTRACTED_ENTITLEMENTS"
-        fi
-    fi
-fi
-
-echo "使用 ad-hoc 签名重新签名整个应用包（非沙盒模式）..."
-
-if [ -d "$SPARKLE_FRAMEWORK" ]; then
-    # 签名所有 XPC Services
-    for xpc in "$SPARKLE_FRAMEWORK"/Versions/B/XPCServices/*.xpc; do
-        if [ -d "$xpc" ]; then
-            codesign --force --sign - --timestamp=none "$xpc" 2>&1 | grep -v "replacing existing signature" || true
-        fi
-    done
-    
-    # 签名 Sparkle 框架
-    codesign --force --sign - --timestamp=none "$SPARKLE_FRAMEWORK" 2>&1 | grep -v "replacing existing signature" || true
-fi
-
-for framework in "$APP_PATH"/Contents/Frameworks/*.framework; do
-    if [ -d "$framework" ] && [ "$framework" != "$SPARKLE_FRAMEWORK" ]; then
-        codesign --force --sign - --timestamp=none "$framework" 2>&1 | grep -v "replacing existing signature" || true
-    fi
-done
-
-if [ -n "$ENTITLEMENTS_PATH" ] && [ -f "$ENTITLEMENTS_PATH" ]; then
-    codesign --force --sign - --entitlements "$ENTITLEMENTS_PATH" --timestamp=none "$APP_PATH" 2>&1 | grep -v "replacing existing signature" || true
-else
-    echo "未找到 entitlements 文件，使用默认签名"
-    codesign --force --sign - --timestamp=none "$APP_PATH" 2>&1 | grep -v "replacing existing signature" || true
-fi
-
-echo -e "${GREEN}✅ 应用重新签名完成${NC}"
-
-rm -f "/tmp/${APP_NAME}_entitlements.plist" 2>/dev/null
-echo ""
-
-echo -e "${BLUE}📦 步骤 4/4: 打包 ZIP 更新包...${NC}"
+echo -e "${BLUE}� 步骤 2/3: 打包 ZIP 更新包...${NC}"
 
 ZIP_NAME="$APP_NAME-$VERSION$ARCH_SUFFIX.zip"
 ZIP_PATH="./$ZIP_NAME"
 
 rm -f "$ZIP_PATH"
 
-ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$ZIP_PATH"
+ditto -c -k --sequesterRsrc --keepParent "$SOURCE_APP" "$ZIP_PATH"
 
 ZIP_SIZE=$(ls -l "$ZIP_PATH" | awk '{print $5}')
 
@@ -208,12 +129,7 @@ echo -e "${GREEN}✅ ZIP 打包完成: $ZIP_NAME${NC}"
 echo "   大小: $ZIP_SIZE 字节 ($(numfmt --to=iec-i --suffix=B $ZIP_SIZE 2>/dev/null || echo 'N/A'))"
 echo ""
 
-echo -e "${BLUE}🧹 清理临时文件...${NC}"
-rm -rf "$WORK_DIR"
-echo -e "${GREEN}✅ 清理完成${NC}"
-echo ""
-
-echo -e "${BLUE}🔐 步骤 5/5: 签名更新包...${NC}"
+echo -e "${BLUE}🔐 步骤 3/3: 生成 Sparkle 签名...${NC}"
 
 SIGN_UPDATE_TOOL=""
 
@@ -221,7 +137,7 @@ SPARKLE_BIN=$(find ~/Library/Developer/Xcode/DerivedData -path "*/SourcePackages
 
 if [ -n "$SPARKLE_BIN" ] && [ -x "$SPARKLE_BIN" ]; then
     SIGN_UPDATE_TOOL="$SPARKLE_BIN"
-    echo -e "${GREEN}✅ 找到 Sparkle artifacts 中的 sign_update${NC}"
+    echo -e "${GREEN}✅ 找到 Sparkle sign_update 工具${NC}"
     echo "   路径: $SPARKLE_BIN"
 else
     echo -e "${RED}❌ 错误: 无法找到签名工具${NC}"
