@@ -9,19 +9,21 @@ import AppKit
 import Foundation
 import SQLite
 
-enum Col: Sendable {
-    nonisolated(unsafe) static let id = Expression<Int64>("id")
-    nonisolated(unsafe) static let uniqueId = Expression<String>("unique_id")
-    nonisolated(unsafe) static let type = Expression<String>("type")
-    nonisolated(unsafe) static let data = Expression<Data>("data")
-    nonisolated(unsafe) static let showData = Expression<Data?>("show_data")
-    nonisolated(unsafe) static let ts = Expression<Int64>("timestamp")
-    nonisolated(unsafe) static let appPath = Expression<String>("app_path")
-    nonisolated(unsafe) static let appName = Expression<String>("app_name")
-    nonisolated(unsafe) static let searchText = Expression<String>("search_text")
-    nonisolated(unsafe) static let length = Expression<Int>("length")
-    nonisolated(unsafe) static let group = Expression<Int>("group")
-    nonisolated(unsafe) static let tag = Expression<String?>("tag")
+struct Col: Sendable {
+    nonisolated static let id = Expression<Int64>("id")
+    nonisolated static let uniqueId = Expression<String>("unique_id")
+    nonisolated static let type = Expression<String>("type")
+    nonisolated static let data = Expression<Data>("data")
+    nonisolated static let showData = Expression<Data?>("show_data")
+    nonisolated static let ts = Expression<Int64>("timestamp")
+    nonisolated static let appPath = Expression<String>("app_path")
+    nonisolated static let appName = Expression<String>("app_name")
+    nonisolated static let searchText = Expression<String>("search_text")
+    nonisolated static let length = Expression<Int>("length")
+    nonisolated static let group = Expression<Int>("group")
+    nonisolated static let tag = Expression<String?>("tag")
+
+    private init() {}
 }
 
 final class PasteSQLManager: NSObject {
@@ -200,7 +202,7 @@ extension PasteSQLManager {
         }
     }
 
-    // 更新项目分组
+    /// 更新项目分组
     func updateItemGroup(id: Int64, groupId: Int) async {
         let query = table.filter(Col.id == id)
         let update = query.update(Col.group <- groupId)
@@ -239,7 +241,7 @@ extension PasteSQLManager {
         }
     }
 
-    // 查
+    /// 查
     func search(
         filter: Expression<Bool>? = nil,
         select: [Expressible]? = nil,

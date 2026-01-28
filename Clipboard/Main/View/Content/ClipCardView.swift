@@ -202,13 +202,22 @@ struct ClipCardView: View {
 
     // MARK: - Actions
 
-    private func pasteToCode() { env.actions.paste(model) }
+    private func pasteToCode() {
+        env.actions.paste(model)
+    }
+
     private func pasteAsPlainText() {
         env.actions.paste(model, isAttribute: false)
     }
 
-    private func copyToClipboard() { env.actions.copy(model) }
-    private func deleteItem() { onRequestDelete?() }
+    private func copyToClipboard() {
+        env.actions.copy(model)
+    }
+
+    private func deleteItem() {
+        onRequestDelete?()
+    }
+
     private func togglePreview() {
         showPreviewId = showPreviewId == model.id ? nil : model.id
     }

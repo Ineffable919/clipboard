@@ -22,7 +22,7 @@ final class PasteboardModel: Identifiable {
     let appName: String
     private(set) var searchText: String
     let length: Int
-    // 截取后的富文本
+    /// 截取后的富文本
     let attributeString: NSAttributedString
 
     @ObservationIgnored
@@ -393,7 +393,7 @@ extension PasteboardModel {
         return brightness > 0.5 ? .black.opacity(0.8) : .white.opacity(0.8)
     }
 
-    // 在 sRGB 空间基于亮度粗分（用于富文本背景）
+    /// 在 sRGB 空间基于亮度粗分（用于富文本背景）
     private func getRTFColor(baseNS: NSColor) -> Color {
         let c = baseNS.usingColorSpace(.sRGB) ?? baseNS
         var r: CGFloat = 0

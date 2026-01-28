@@ -196,10 +196,9 @@ struct HistoryTapHandler {
 
 // MARK: - Enumerated ForEach
 
-struct EnumeratedForEach<Data, Content>: View
-    where Data: RandomAccessCollection,
-    Data.Element: Identifiable,
-    Content: View
+struct EnumeratedForEach<Data: RandomAccessCollection, Content: View>: View
+    where Data.Element: Identifiable
+
 {
     let data: Data
     let content: (Int, Data.Element) -> Content

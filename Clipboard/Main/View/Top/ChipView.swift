@@ -34,7 +34,9 @@ struct ChipView: View {
     @State private var isDropTargeted: Bool = false
     @State private var helpText: String = ""
 
-    private var pd: PasteDataStore { PasteDataStore.main }
+    private var pd: PasteDataStore {
+        PasteDataStore.main
+    }
 
     private var isEditing: Bool {
         topBarVM.editingChipId == chip.id

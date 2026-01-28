@@ -125,7 +125,7 @@ struct AboutSettingView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    // 检查更新
+    /// 检查更新
     private func checkForUpdates() {
         AppDelegate.shared?.updaterController.checkForUpdates(nil)
     }

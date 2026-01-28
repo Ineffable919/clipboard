@@ -451,7 +451,7 @@ struct HistoryTimeSlider: View {
         }
     }
 
-    // 计算主刻度线位置（等分，但第一个刻度线对应2天的位置）
+    /// 计算主刻度线位置（等分，但第一个刻度线对应2天的位置）
     private func tickPosition(for index: Int, in width: CGFloat) -> CGFloat {
         if index == 0 {
             let oneDaySliderValue = internalValueToSliderValue(2)
@@ -465,7 +465,7 @@ struct HistoryTimeSlider: View {
         }
     }
 
-    // 获取刻度线对应的滑块值
+    /// 获取刻度线对应的滑块值
     private func tickSliderValue(for index: Int) -> Double {
         if index == 0 {
             internalValueToSliderValue(1) // 1天
@@ -474,7 +474,7 @@ struct HistoryTimeSlider: View {
         }
     }
 
-    // 将内部值(1-22)转换为滑块值(0-4)
+    /// 将内部值(1-22)转换为滑块值(0-4)
     private func internalValueToSliderValue(_ value: Int) -> Double {
         switch value {
         case 1 ... 6:
@@ -497,7 +497,7 @@ struct HistoryTimeSlider: View {
         }
     }
 
-    // 将滑块值(0-4)转换为内部值(1-22)
+    /// 将滑块值(0-4)转换为内部值(1-22)
     private func sliderValueToInternalValue(_ value: Double) -> Int {
         switch value {
         case 0 ..< 1.0:
@@ -521,7 +521,7 @@ struct HistoryTimeSlider: View {
         }
     }
 
-    // 根据所在区间应用不同的步长
+    /// 根据所在区间应用不同的步长
     private func snapToStep(_ value: Double) -> Double {
         let step: Double
         switch value {

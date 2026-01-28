@@ -10,7 +10,9 @@ import SwiftUI
 struct CardHeadView: View {
     let model: PasteboardModel
 
-    private var isDefault: Bool { model.group == -1 }
+    private var isDefault: Bool {
+        model.group == -1
+    }
 
     var body: some View {
         HStack(spacing: 0) {

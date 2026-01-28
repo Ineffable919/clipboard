@@ -36,7 +36,9 @@ final class ClipFloatingViewController: NSViewController {
 
     private var currentAnimDelegate: CAAnimationDelegate?
 
-    override func loadView() { view = NSView() }
+    override func loadView() {
+        view = NSView()
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -125,7 +127,10 @@ final class ClipFloatingViewController: NSViewController {
 
         class AnimDelegate: NSObject, CAAnimationDelegate {
             var onStop: (() -> Void)?
-            init(_ onStop: @escaping () -> Void) { self.onStop = onStop }
+            init(_ onStop: @escaping () -> Void) {
+                self.onStop = onStop
+            }
+
             func animationDidStop(_: CAAnimation, finished flag: Bool) {
                 if flag { onStop?() }
                 onStop = nil

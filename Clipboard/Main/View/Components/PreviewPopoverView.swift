@@ -107,7 +107,7 @@ struct PreviewPopoverView: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            
+
             if let appIcon {
                 Image(nsImage: appIcon)
                     .resizable()
@@ -325,7 +325,6 @@ struct PreviewPopoverView: View {
         }
     }
 
-    @ViewBuilder
     private var imagePreview: some View {
         ZStack {
             CheckerboardBackground()
@@ -337,7 +336,6 @@ struct PreviewPopoverView: View {
         }
     }
 
-    @ViewBuilder
     private var filePreview: some View {
         Group {
             if let paths = model.cachedFilePaths, paths.count == 1, let firstPath = paths.first {
@@ -386,11 +384,10 @@ struct FocusableContainer<Content: View>: NSViewRepresentable {
     }
 
     func makeNSView(context _: Context) -> NSHostingView<Content> {
-        let hostingView = InterceptingHostingView(
+        InterceptingHostingView(
             rootView: content,
             onInteraction: onInteraction
         )
-        return hostingView
     }
 
     func updateNSView(_ nsView: NSHostingView<Content>, context _: Context) {

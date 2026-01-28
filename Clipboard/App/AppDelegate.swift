@@ -13,7 +13,7 @@ import Sparkle
 class AppDelegate: NSObject {
     static var shared: AppDelegate?
 
-    // Sparkle
+    /// Sparkle
     lazy var updaterController: SPUStandardUpdaterController = .init(
         startingUpdater: true,
         updaterDelegate: self,
@@ -176,7 +176,7 @@ extension AppDelegate: NSApplicationDelegate {
     func applicationDidFinishLaunching(_: Notification) {
         Self.shared = self
 
-        //LegacyConfigMigrator.shared.startMigrationIfNeeded()
+        // LegacyConfigMigrator.shared.startMigrationIfNeeded()
 
         initStatus()
 

@@ -15,7 +15,9 @@ enum SettingPage: String, CaseIterable, Identifiable {
     case storage = "存储"
     case about = "关于"
 
-    var id: String { rawValue }
+    var id: String {
+        rawValue
+    }
 
     var icon: String {
         switch self {

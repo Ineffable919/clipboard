@@ -178,7 +178,8 @@ final class AppLogger: @unchecked Sendable {
                     fileHandle.write(data)
                 } catch {
                     osLogger.error(
-                        "Failed to write to log file: \(error.localizedDescription)")
+                        "Failed to write to log file: \(error.localizedDescription)"
+                    )
                 }
             } else {
                 do {

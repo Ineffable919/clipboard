@@ -12,7 +12,9 @@ final class ClipMainWindowController: NSWindowController {
     private let viewHeight: CGFloat = 330.0
 
     static let shared = ClipMainWindowController()
-    var isVisible: Bool { window?.isVisible ?? false }
+    var isVisible: Bool {
+        window?.isVisible ?? false
+    }
 
     private let clipVC = ClipMainViewController()
     private let db = PasteDataStore.main

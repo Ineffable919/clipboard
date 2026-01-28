@@ -89,7 +89,6 @@ extension View {
         modifier(TextCardStyleModifier())
     }
 
-    @ViewBuilder
     func autoScrollOnIMEInput(
         perform action: @escaping () -> Void
     ) -> some View {
@@ -108,17 +107,20 @@ extension View {
 
 struct WindowDragArea: NSViewRepresentable {
     func makeNSView(context _: Context) -> WindowDragView {
-        let view = WindowDragView()
-        return view
+        WindowDragView()
     }
 
     func updateNSView(_: WindowDragView, context _: Context) {}
 }
 
 final class WindowDragView: NSView {
-    override var mouseDownCanMoveWindow: Bool { true }
+    override var mouseDownCanMoveWindow: Bool {
+        true
+    }
 
-    override var acceptsFirstResponder: Bool { true }
+    override var acceptsFirstResponder: Bool {
+        true
+    }
 
     override func acceptsFirstMouse(for _: NSEvent?) -> Bool {
         true

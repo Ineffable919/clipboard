@@ -10,7 +10,9 @@ import Combine
 
 final class ClipFloatingWindowController: NSWindowController {
     static let shared = ClipFloatingWindowController()
-    var isVisible: Bool { window?.isVisible ?? false }
+    var isVisible: Bool {
+        window?.isVisible ?? false
+    }
 
     private let clipVC = ClipFloatingViewController()
     private let db = PasteDataStore.main

@@ -22,7 +22,9 @@ struct KeyboardShortcut: Codable, Equatable, Hashable {
         set { modifiersRawValue = newValue.rawValue }
     }
 
-    var isEmpty: Bool { displayKey.isEmpty && modifiersRawValue == 0 }
+    var isEmpty: Bool {
+        displayKey.isEmpty && modifiersRawValue == 0
+    }
 
     var displayString: String {
         guard !isEmpty else { return "" }
@@ -51,7 +53,9 @@ struct HotKeyInfo: Codable, Identifiable, Equatable {
     let isEnabled: Bool
     let isGlobal: Bool
 
-    var id: String { key }
+    var id: String {
+        key
+    }
 
     init(
         key: String,

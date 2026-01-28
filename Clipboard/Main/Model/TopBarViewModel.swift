@@ -50,13 +50,13 @@ final class TopBarViewModel {
 
     // MARK: - Filter Properties
 
-    // 类型筛选：支持多选
+    /// 类型筛选：支持多选
     private(set) var selectedTypes: Set<PasteModelType> = []
 
-    // 应用筛选：支持多选
+    /// 应用筛选：支持多选
     private(set) var selectedAppNames: Set<String> = []
 
-    // 日期筛选：单选
+    /// 日期筛选：单选
     private(set) var selectedDateFilter: DateFilterOption?
 
     var hasInput: Bool {

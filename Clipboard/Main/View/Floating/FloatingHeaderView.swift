@@ -169,6 +169,10 @@ struct FloatingHeaderView: View {
 
         let isInInputMode = env.focusView == .search
 
+        if !isInInputMode, EventDispatcher.shared.handleTabNavigationShortcut(event, viewModel: topBarVM) {
+            return nil
+        }
+
         if isInInputMode {
             if EventDispatcher.shared.handleSystemEditingCommand(event) {
                 return nil
