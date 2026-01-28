@@ -5,25 +5,22 @@
 
 set -e
 
-# 颜色输出
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$PROJECT_ROOT"
 
-echo -e "${BLUE}📂 项目根目录: $PROJECT_ROOT${NC}"
-echo ""
-
-# 配置
-APP_NAME="Clipboard"      # 项目/Target 名称（.app 文件名）
-DISPLAY_NAME="Clip"       # 显示名称（DMG 文件名使用）
+APP_NAME="Clipboard"
+DISPLAY_NAME="Clip"
 SCHEME="Clipboard"
 CONFIGURATION="Release"
+SIGNING_IDENTITY="1986443F6E94033C4968037932632037E550B7C2"
+DEVELOPMENT_TEAM="40AB2EC9-58FF-4F06-B2AC-2DC16049A5B7"
 
 echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║      应用构建和打包工具                ║${NC}"
@@ -69,40 +66,17 @@ case "$ARCH" in
     ;;
 "universal")
     BUILD_ARCHS="arm64 x86_64"
-    DESTINATION="platform=macOS,name=Any Mac"
+    DESTINATION="generic/platform=macOS"
     ARCH_DESC="Universal (arm64 + x86_64)"
     ;;
 esac
 
 echo -e "${GREEN}📦 构建配置${NC}"
 echo "----------------------------------------"
-echo "应用名称: $APP_NAME"
 echo "版本号:   $VERSION"
 echo "构建号:   $BUILD"
 echo "架构:     $ARCH_DESC"
-echo "配置:     $CONFIGURATION"
 echo ""
-
-if [ ! -f "$APP_NAME.xcodeproj/project.pbxproj" ]; then
-    echo -e "${RED}❌ 错误: 未找到 Xcode 项目${NC}"
-    exit 1
-fi
-
-XCODE_PATH=$(xcode-select -p 2>/dev/null || echo "")
-if [[ "$XCODE_PATH" == *"CommandLineTools"* ]] || [ -z "$XCODE_PATH" ]; then
-    echo -e "${YELLOW}⚠️  检测到使用命令行工具,尝试切换到 Xcode.app...${NC}"
-
-    if [ -d "/Applications/Xcode.app" ]; then
-        echo "找到 Xcode.app,正在切换..."
-        sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
-        echo -e "${GREEN}✅ 已切换到 Xcode.app${NC}"
-        echo ""
-    else
-        echo -e "${RED}❌ 错误: 未找到 Xcode.app${NC}"
-        echo "请安装 Xcode 或在 Xcode 中手动构建项目"
-        exit 1
-    fi
-fi
 
 echo -e "${BLUE}🧹 步骤 1/5: 清理构建目录...${NC}"
 xcodebuild clean -scheme "$SCHEME" -configuration "$CONFIGURATION" >/dev/null 2>&1 || true
@@ -110,19 +84,22 @@ echo -e "${GREEN}✅ 清理完成${NC}"
 echo ""
 
 echo -e "${BLUE}🔨 步骤 2/5: 构建应用 ($ARCH_DESC)...${NC}"
-echo "这可能需要几分钟..."
 
-xcodebuild \
+xcodebuild -project "$APP_NAME.xcodeproj" \
     -scheme "$SCHEME" \
     -configuration "$CONFIGURATION" \
     -destination "$DESTINATION" \
+    -derivedDataPath build \
     MARKETING_VERSION="$VERSION" \
     CURRENT_PROJECT_VERSION="$BUILD" \
     ARCHS="$BUILD_ARCHS" \
     ONLY_ACTIVE_ARCH=NO \
-    clean build | grep -E '^(Build|=|❌|⚠️)' || true
+    CODE_SIGN_STYLE=Manual \
+    DEVELOPMENT_TEAM="$DEVELOPMENT_TEAM" \
+    CODE_SIGN_IDENTITY="$SIGNING_IDENTITY" \
+    clean build
 
-if [ ${PIPESTATUS[0]} -ne 0 ]; then
+if [ $? -ne 0 ]; then
     echo -e "${RED}❌ 构建失败${NC}"
     exit 1
 fi
@@ -130,148 +107,35 @@ fi
 echo -e "${GREEN}✅ 构建完成${NC}"
 echo ""
 
-echo -e "${BLUE}🔍 步骤 3/5: 查找并复制构建产物...${NC}"
+APP_PATH="build/Build/Products/$CONFIGURATION/$APP_NAME.app"
 
-DERIVED_DATA=$(xcodebuild -scheme "$SCHEME" -configuration "$CONFIGURATION" -destination "$DESTINATION" -showBuildSettings | grep " BUILT_PRODUCTS_DIR" | sed 's/.*= //')
+echo -e "${BLUE}🔐 步骤 3/5: 重新签名嵌入框架...${NC}"
 
-if [ -z "$DERIVED_DATA" ]; then
-    echo -e "${RED}❌ 错误: 未找到构建目录${NC}"
-    exit 1
-fi
-
-SOURCE_APP="$DERIVED_DATA/$APP_NAME.app"
-
-if [ ! -d "$SOURCE_APP" ]; then
-    echo -e "${RED}❌ 错误: 未找到应用: $SOURCE_APP${NC}"
-    exit 1
-fi
-
-echo -e "${GREEN}✅ 找到应用: $SOURCE_APP${NC}"
-
-if [ -f "$SOURCE_APP/Contents/MacOS/$APP_NAME" ]; then
-    BUILT_ARCHS=$(lipo -archs "$SOURCE_APP/Contents/MacOS/$APP_NAME" 2>/dev/null || echo "未知")
-    echo "构建架构: $BUILT_ARCHS"
-fi
-
-WORK_DIR="./build_temp"
-rm -rf "$WORK_DIR"
-mkdir -p "$WORK_DIR"
-
-echo "复制应用到工作目录..."
-cp -R "$SOURCE_APP" "$WORK_DIR/"
-APP_PATH="$WORK_DIR/$APP_NAME.app"
-
-echo -e "${GREEN}✅ 应用已复制到: $APP_PATH${NC}"
-echo ""
-
-echo -e "${BLUE}🗑️  移除不需要的 Sparkle XPC Service...${NC}"
 SPARKLE_FRAMEWORK="$APP_PATH/Contents/Frameworks/Sparkle.framework"
-DOWNLOADER_XPC="$SPARKLE_FRAMEWORK/Versions/B/XPCServices/Downloader.xpc"
-
 if [ -d "$SPARKLE_FRAMEWORK" ]; then
-    if [ -e "$DOWNLOADER_XPC" ]; then
-        echo "移除 Downloader.xpc"
+    echo "移除不需要的 Sparkle XPC Service..."
+    DOWNLOADER_XPC="$SPARKLE_FRAMEWORK/Versions/B/XPCServices/Downloader.xpc"
+    if [ -d "$DOWNLOADER_XPC" ]; then
         rm -rf "$DOWNLOADER_XPC"
-        echo -e "${GREEN}✅ Downloader.xpc 已移除${NC}"
-    else
-        echo "Downloader.xpc 不存在，跳过"
+        echo "已移除 Downloader.xpc"
     fi
-else
-    echo -e "${YELLOW}⚠️  未找到 Sparkle.framework${NC}"
-fi
-echo ""
-
-echo -e "${BLUE}🔐 步骤 4/5: 重新签名应用（非沙盒）...${NC}"
-
-xattr -cr "$APP_PATH" 2>/dev/null || true
-
-ENTITLEMENTS_PATH=""
-for path in "./Clipboard/Clipboard.entitlements" "./Clipboard.entitlements" "./entitlements.plist"; do
-    if [ -f "$path" ]; then
-        ENTITLEMENTS_PATH="$path"
-        echo "找到 entitlements 文件: $ENTITLEMENTS_PATH"
-        break
-    fi
-done
-
-if [ -z "$ENTITLEMENTS_PATH" ]; then
-    EXTRACTED_ENTITLEMENTS="/tmp/${APP_NAME}_entitlements.plist"
-    if codesign -d --entitlements :"$EXTRACTED_ENTITLEMENTS" "$APP_PATH" 2>/dev/null; then
-        if [ -s "$EXTRACTED_ENTITLEMENTS" ]; then
-            echo "从构建产物提取 entitlements 成功"
-            ENTITLEMENTS_PATH="$EXTRACTED_ENTITLEMENTS"
-        fi
-    fi
-fi
-
-echo "使用 ad-hoc 签名重新签名整个应用包（非沙盒模式）..."
-
-SPARKLE_FRAMEWORK="$APP_PATH/Contents/Frameworks/Sparkle.framework"
-
-if [ -d "$SPARKLE_FRAMEWORK" ]; then
-    echo "  - 签名 Sparkle XPC Services..."
     
-    for xpc in "$SPARKLE_FRAMEWORK"/Versions/B/XPCServices/*.xpc; do
-        if [ -d "$xpc" ]; then
-            echo "    签名: $(basename "$xpc")"
-            codesign --force --sign - \
-                --timestamp=none \
-                "$xpc" 2>&1 | grep -v "replacing existing signature" || true
-        fi
-    done
-    
-    echo "  - 签名 Sparkle.framework..."
-    codesign --force --sign - \
-        --timestamp=none \
-        "$SPARKLE_FRAMEWORK" 2>&1 | grep -v "replacing existing signature" || true
+    echo "重新签名 Sparkle.framework..."
+    codesign --force --deep --sign "$SIGNING_IDENTITY" "$SPARKLE_FRAMEWORK"
 fi
 
-echo "  - 签名其他框架..."
-for framework in "$APP_PATH"/Contents/Frameworks/*.framework; do
-    if [ -d "$framework" ] && [ "$framework" != "$SPARKLE_FRAMEWORK" ]; then
-        echo "    签名: $(basename "$framework")"
-        codesign --force --sign - \
-            --timestamp=none \
-            "$framework" 2>&1 | grep -v "replacing existing signature" || true
-    fi
-done
+echo "重新签名应用..."
+codesign --force --deep --sign "$SIGNING_IDENTITY" "$APP_PATH"
 
-echo "  - 签名应用..."
-if [ -n "$ENTITLEMENTS_PATH" ] && [ -f "$ENTITLEMENTS_PATH" ]; then
-    codesign --force --sign - \
-        --entitlements "$ENTITLEMENTS_PATH" \
-        --timestamp=none \
-        "$APP_PATH" 2>&1 | grep -v "replacing existing signature" || true
-else
-    echo "    未找到 entitlements 文件，使用默认签名"
-    codesign --force --sign - \
-        --timestamp=none \
-        "$APP_PATH" 2>&1 | grep -v "replacing existing signature" || true
+echo "验证签名..."
+if ! codesign -v "$APP_PATH"; then
+    echo -e "${RED}❌ 签名验证失败${NC}"
+    exit 1
 fi
-
-echo -e "${GREEN}✅ 应用重新签名完成${NC}"
-
-echo ""
-if codesign --verify --deep --strict "$APP_PATH" 2>&1; then
-    echo -e "${GREEN}✅ 签名验证通过${NC}"
-else
-    echo -e "${YELLOW}⚠️  签名验证有警告（ad-hoc 签名正常）${NC}"
-fi
-
-echo ""
-echo "应用签名信息："
-codesign -dvvv "$APP_PATH" 2>&1 | grep -E "(Identifier|TeamIdentifier|Authority|Signature)" | head -5 || true
-
-if [ -d "$SPARKLE_FRAMEWORK" ]; then
-    echo ""
-    echo "Sparkle 框架签名信息："
-    codesign -dvvv "$SPARKLE_FRAMEWORK" 2>&1 | grep -E "(Identifier|TeamIdentifier|Authority|Signature)" | head -5 || true
-fi
-
-rm -f "/tmp/${APP_NAME}_entitlements.plist" 2>/dev/null
+echo -e "${GREEN}✅ 签名完成${NC}"
 echo ""
 
-echo -e "${BLUE}💿 步骤 5/5: 创建 DMG 安装包...${NC}"
+echo -e "${BLUE}💿 步骤 4/5: 创建 DMG 安装包...${NC}"
 
 if [ "$ARCH" = "universal" ]; then
     DMG_NAME="$DISPLAY_NAME-$VERSION.dmg"
@@ -316,14 +180,14 @@ else
     rm -rf "$DMG_TEMP_DIR"
 fi
 
-DMG_SIZE=$(ls -l "$DMG_PATH" | awk '{print $5}')
+FILE_SIZE=$(ls -l "$DMG_PATH" | awk '{print $5}')
 
 echo -e "${GREEN}✅ DMG 创建完成: $DMG_NAME${NC}"
-echo "   大小: $DMG_SIZE 字节 ($(numfmt --to=iec-i --suffix=B $DMG_SIZE 2>/dev/null || echo 'N/A'))"
+echo "   大小: $FILE_SIZE 字节 ($(numfmt --to=iec-i --suffix=B $FILE_SIZE 2>/dev/null || echo 'N/A'))"
 echo ""
 
-echo -e "${BLUE}🧹 清理临时文件...${NC}"
-rm -rf "$WORK_DIR"
+echo -e "${BLUE}🧹 步骤 5/5: 清理临时文件...${NC}"
+rm -rf ./dmg_temp
 echo -e "${GREEN}✅ 清理完成${NC}"
 echo ""
 
