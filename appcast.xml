@@ -25,6 +25,25 @@
         </item>
 
         <item>
+            <title>Version 0.3.1 (Intel (x86_64))</title>
+            <sparkle:releaseNotesLink>
+                https://ineffable919.github.io/clipboard/scripts/release-note.html
+            </sparkle:releaseNotesLink>
+            <pubDate>Wed, 28 Jan 2026 14:23:01 +0800</pubDate>
+            <sparkle:version>96</sparkle:version>
+            <sparkle:shortVersionString>0.3.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:tags>
+                <sparkle:criticalUpdate sparkle:osType="x86_64" />
+            </sparkle:tags>
+            <enclosure
+                url="https://github.com/Ineffable919/clipboard/releases/download/0.3.1/Clipboard-0.3.1-x86_64.zip"
+                sparkle:edSignature="pBvGtmLFc/p2IU1BR9tHqFKyhRV/+DvmhOhlzHBEMN7Cck+7IJmOHnTGswxJxIESFNZnZ7ybOuQArAKV0D/yBA=="
+                length="3253761"
+                type="application/octet-stream" />
+        </item>
+
+        <item>
             <title>Version 0.3.0 (Apple Silicon (arm64))</title>
             <sparkle:releaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
