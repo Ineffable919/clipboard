@@ -88,11 +88,9 @@ struct FilterPopoverView: View {
 
     private func textTypeButton() -> some View {
         let isSelected = topBarVM.isTextTypeSelected()
-        let iconName =
-            if #available(macOS 15.0, *) { "text.document" } else { "doc.text" }
 
         return FilterButton(
-            systemImage: iconName,
+            systemImage: "doc.text",
             label: "文本",
             isSelected: isSelected,
             action: { topBarVM.toggleTextType() }

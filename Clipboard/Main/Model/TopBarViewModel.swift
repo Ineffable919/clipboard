@@ -514,7 +514,7 @@ final class TopBarViewModel {
             if !hasTextTag {
                 let tag = InputTag(
                     icon: AnyView(
-                        Image(systemName: "text.document")
+                        Image(systemName: "doc.text")
                             .resizable()
                             .scaledToFit()
                             .scaleEffect(0.8)
@@ -643,7 +643,7 @@ final class TopBarViewModel {
             if needAddTag {
                 let tag = InputTag(
                     icon: AnyView(
-                        Image(systemName: "text.document")
+                        Image(systemName: "doc.text")
                             .resizable()
                             .scaledToFit()
                     ),

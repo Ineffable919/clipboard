@@ -1,11 +1,13 @@
 //
-//  ChipEditingView.swift
+//  ChipComponents.swift
 //  Clipboard
 //
-//  Created by crown on 2025/12/14.
+//  Created by crown on 2026/1/29.
 //
 
 import SwiftUI
+
+// MARK: - 分类标签编辑器视图
 
 struct ChipEditorView: View {
     @Binding var name: String
@@ -27,20 +29,12 @@ struct ChipEditorView: View {
 
             TextField("", text: $name)
                 .textFieldStyle(.plain)
-                .font(.body)
                 .focused($focus, equals: focusValue)
                 .onSubmit {
                     onSubmit()
                 }
         }
-        .padding(
-            EdgeInsets(
-                top: Const.space6,
-                leading: Const.space10,
-                bottom: Const.space6,
-                trailing: Const.space10
-            )
-        )
+        .padding(Const.chipPadding)
         .overlay(
             RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
                 .stroke(

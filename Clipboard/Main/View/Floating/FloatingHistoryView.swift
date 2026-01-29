@@ -22,9 +22,10 @@ struct FloatingHistoryView: View {
             if pd.dataList.isEmpty {
                 ClipboardEmptyStateView(style: .floating)
             } else {
-                ScrollView(showsIndicators: false) {
+                ScrollView {
                     contentView()
                 }
+                .scrollIndicators(.automatic)
                 .contentMargins(.top, FloatConst.headerHeight, for: .scrollContent)
                 .contentMargins(.top, FloatConst.headerHeight, for: .scrollIndicators)
                 .contentMargins(.bottom, FloatConst.footerHeight, for: .scrollContent)
@@ -85,6 +86,8 @@ struct FloatingHistoryView: View {
             env.draggingItemId = item.id
             historyVM.setSelection(id: item.id, index: index)
             return item.itemProvider()
+        } preview: {
+            DragPreviewView(model: item)
         }
         .task(id: item.id) {
             guard historyVM.shouldLoadNextPage(at: index) else { return }
@@ -363,6 +366,36 @@ private struct BottomMarginsModifier: ViewModifier {
                 .contentMargins(.bottom, height, for: .scrollIndicators)
         } else {
             content
+        }
+    }
+}
+
+// MARK: - Drag Preview View
+
+private struct DragPreviewView: View {
+    let model: PasteboardModel
+
+    var body: some View {
+        Image(systemName: iconName)
+            .font(.system(size: 32, weight: .regular))
+            .foregroundStyle(.tint.opacity(0.8))
+            .frame(width: 48, height: 48)
+    }
+
+    private var iconName: String {
+        switch model.type {
+        case .image:
+            "photo"
+        case .string, .rich:
+            "doc.text"
+        case .file:
+            "folder"
+        case .link:
+            "link"
+        case .color:
+            "paintpalette"
+        case .none:
+            "doc"
         }
     }
 }

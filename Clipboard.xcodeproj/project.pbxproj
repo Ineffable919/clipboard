@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		B166C0812ECB2A330068A689 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = B166C0802ECB2A330068A689 /* Sparkle */; settings = {ATTRIBUTES = (Required, ); }; };
-		B1FADD912E7E937A005CEFCF /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = B1FADD902E7E937A005CEFCF /* SQLite */; };
+		B1B4ECAF2F2AFBAD00AFE657 /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = B1B4ECAE2F2AFBAD00AFE657 /* SQLite */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -41,8 +41,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B1B4ECAF2F2AFBAD00AFE657 /* SQLite in Frameworks */,
 				B166C0812ECB2A330068A689 /* Sparkle in Frameworks */,
-				B1FADD912E7E937A005CEFCF /* SQLite in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -85,8 +85,8 @@
 			);
 			name = Clipboard;
 			packageProductDependencies = (
-				B1FADD902E7E937A005CEFCF /* SQLite */,
 				B166C0802ECB2A330068A689 /* Sparkle */,
+				B1B4ECAE2F2AFBAD00AFE657 /* SQLite */,
 			);
 			productName = Clipboard;
 			productReference = B1FADD402E7E92B3005CEFCF /* Clipboard.app */;
@@ -117,8 +117,8 @@
 			mainGroup = B1FADD372E7E92B3005CEFCF;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				B1FADD8F2E7E937A005CEFCF /* XCRemoteSwiftPackageReference "SQLite" */,
 				B166C07F2ECB2A330068A689 /* XCRemoteSwiftPackageReference "Sparkle" */,
+				B1B4ECAD2F2AFBAD00AFE657 /* XCRemoteSwiftPackageReference "SQLite" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B1FADD412E7E92B3005CEFCF /* Products */;
@@ -405,12 +405,12 @@
 				minimumVersion = 2.8.1;
 			};
 		};
-		B1FADD8F2E7E937A005CEFCF /* XCRemoteSwiftPackageReference "SQLite" */ = {
+		B1B4ECAD2F2AFBAD00AFE657 /* XCRemoteSwiftPackageReference "SQLite" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/stephencelis/SQLite.swift";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 0.15.4;
+				minimumVersion = 0.15.5;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -421,9 +421,9 @@
 			package = B166C07F2ECB2A330068A689 /* XCRemoteSwiftPackageReference "Sparkle" */;
 			productName = Sparkle;
 		};
-		B1FADD902E7E937A005CEFCF /* SQLite */ = {
+		B1B4ECAE2F2AFBAD00AFE657 /* SQLite */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = B1FADD8F2E7E937A005CEFCF /* XCRemoteSwiftPackageReference "SQLite" */;
+			package = B1B4ECAD2F2AFBAD00AFE657 /* XCRemoteSwiftPackageReference "SQLite" */;
 			productName = SQLite;
 		};
 /* End XCSwiftPackageProductDependency section */

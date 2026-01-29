@@ -95,7 +95,6 @@ extension View {
         modifier(AutoScrollOnIMEInputModifier(onIMEInput: action))
     }
 
-    /// 为视图添加窗口拖拽功能
     func windowDraggable() -> some View {
         overlay {
             WindowDragArea()

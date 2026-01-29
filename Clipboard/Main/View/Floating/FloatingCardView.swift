@@ -15,7 +15,6 @@ struct FloatingCardView: View {
     let searchKeyword: String
     var onRequestDelete: (() -> Void)?
 
-    @Environment(\.colorScheme) private var colorScheme
     @Environment(AppEnvironment.self) private var env
 
     var body: some View {
@@ -68,7 +67,7 @@ struct FloatingCardView: View {
                 )
 
             VStack(alignment: .trailing, spacing: Const.space4) {
-                Text(model.timestamp.timeAgo)
+                Text(model.timestamp.timeAgo(relativeTo: TimeManager.shared.currentTime))
                     .font(.system(size: 10))
                     .foregroundStyle(model.colors().1)
                 Spacer()

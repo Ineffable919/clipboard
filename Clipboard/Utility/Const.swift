@@ -102,4 +102,11 @@ class Const {
     static let space4: CGFloat = 4.0
     static let space2: CGFloat = 2.0
     static let iconSize18: CGFloat = 18.0
+
+    static let chipPadding = EdgeInsets(
+        top: space6,
+        leading: space10,
+        bottom: space6,
+        trailing: space10
+    )
 }

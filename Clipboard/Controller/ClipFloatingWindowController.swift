@@ -42,6 +42,16 @@ final class ClipFloatingWindowController: NSWindowController {
         win.isReleasedWhenClosed = false
         win.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
 
+        if #available(macOS 26.0, *) {
+            win.contentView?.wantsLayer = true
+            win.contentView?.layer?.cornerRadius = Const.radius
+            win.contentView?.layer?.masksToBounds = true
+        } else {
+            win.contentView?.wantsLayer = true
+            win.contentView?.layer?.cornerRadius = Const.radius
+            win.contentView?.layer?.masksToBounds = true
+        }
+
         win.delegate = self
 
         configureWindowSharing()
