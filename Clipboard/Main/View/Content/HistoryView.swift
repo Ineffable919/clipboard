@@ -104,7 +104,10 @@ struct HistoryView: View {
     }
 
     private func quickPasteIndex(for index: Int) -> Int? {
-        HistoryHelpers.quickPasteIndex(for: index, isPressed: historyVM.isQuickPastePressed)
+        HistoryHelpers.quickPasteIndex(
+            for: index,
+            isPressed: historyVM.isQuickPastePressed
+        )
     }
 
     private func handleDoubleTap(on item: PasteboardModel) {
@@ -165,7 +168,9 @@ struct HistoryView: View {
             handler: keyDownEvent(_:)
         )
 
-        flagsMonitorToken = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { event in
+        flagsMonitorToken = NSEvent.addLocalMonitorForEvents(
+            matching: .flagsChanged
+        ) { event in
             flagsChangedEvent(event)
         }
 
@@ -224,8 +229,9 @@ struct HistoryView: View {
             return handleCommandKeyEvent(event)
         }
 
-        // 检查是否有修饰键（用于 tab 切换功能）
-        let hasModifiers = !event.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty
+        let hasModifiers = !event.modifierFlags
+            .intersection([.command, .option, .control, .shift])
+            .isEmpty
 
         switch event.keyCode {
         case UInt16(kVK_LeftArrow):
@@ -276,7 +282,9 @@ struct HistoryView: View {
     }
 
     private func handleCommandKeyEvent(_ event: NSEvent) -> NSEvent? {
-        let hasModifiers = !event.modifierFlags.intersection([.option, .control, .shift]).isEmpty
+        let hasModifiers = !event.modifierFlags.intersection([
+            .option, .control, .shift,
+        ]).isEmpty
         guard !hasModifiers else {
             return event
         }

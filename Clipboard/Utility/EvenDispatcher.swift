@@ -120,7 +120,7 @@ final class EventDispatcher {
 
     // MARK: - Tab Navigation
 
-    func handleTabNavigationShortcut(_ event: NSEvent, viewModel: TopBarViewModel) -> Bool {
+    func handleTab(_ event: NSEvent, viewModel: TopBarViewModel) -> Bool {
         guard let previousTabInfo = HotKeyManager.shared.getHotKey(key: "previous_tab"),
               let nextTabInfo = HotKeyManager.shared.getHotKey(key: "next_tab")
         else {

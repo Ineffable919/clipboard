@@ -24,7 +24,9 @@ struct ClipTopBarView: View {
         HStack(alignment: .center, spacing: Const.space4) {
             Color.clear
                 .containerRelativeFrame(.horizontal) { width, _ in
-                    let hasInput = env.focusView == .search || env.focusView == .filter || topBarVM.hasInput
+                    let hasInput =
+                        env.focusView == .search || env.focusView == .filter
+                            || topBarVM.hasInput
                     return max(0, floor(width / 2 - (hasInput ? 200 : 120)))
                 }
                 .contentShape(Rectangle())
@@ -283,22 +285,20 @@ struct ClipTopBarView: View {
         }
     }
 
-    private func handleTabNavigationShortcut(_ event: NSEvent) -> Bool {
-        EventDispatcher.shared.handleTabNavigationShortcut(event, viewModel: topBarVM)
-    }
-
     private func topKeyDownEvent(_ event: NSEvent) -> NSEvent? {
         guard event.window === ClipMainWindowController.shared.window
         else {
             return event
         }
 
-        let isInInputMode = env.focusView == .search
-            || env.focusView == .newChip
-            || env.focusView == .editChip
-            || env.focusView == .popover
+        let isInInputMode = env.isInInputMode()
 
-        if !isInInputMode, handleTabNavigationShortcut(event) {
+        if !isInInputMode,
+           EventDispatcher.shared.handleTab(
+               event,
+               viewModel: topBarVM
+           )
+        {
             return nil
         }
 

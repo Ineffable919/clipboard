@@ -25,13 +25,7 @@ struct FloatingHeaderView: View {
                 searchField
                 settingsButton
             }
-            .padding(.top, Const.space6)
             .padding(.horizontal, FloatConst.horizontalPadding)
-
-            Spacer()
-                .frame(maxWidth: .infinity)
-                .contentShape(.rect)
-                .windowDraggable()
 
             chipScrollView
                 .frame(height: 42)
@@ -60,12 +54,12 @@ struct FloatingHeaderView: View {
             Spacer()
                 .frame(height: Const.space6)
 
-            RoundedRectangle(cornerRadius: 2)
+            RoundedRectangle(cornerRadius: 2.0)
                 .fill(Color.secondary.opacity(0.3))
                 .frame(width: 36.0, height: 4.0)
 
             Spacer()
-                .frame(height: Const.space4)
+                .frame(height: Const.space6)
         }
         .frame(maxWidth: .infinity)
         .contentShape(.rect)
@@ -207,11 +201,10 @@ struct FloatingHeaderView: View {
             return event
         }
 
-        let isInInputMode =
-            env.focusView == .search || env.focusView == .newChip || env.focusView == .editChip
+        let isInInputMode = env.isInInputMode()
 
         if !isInInputMode,
-           EventDispatcher.shared.handleTabNavigationShortcut(
+           EventDispatcher.shared.handleTab(
                event,
                viewModel: topBarVM
            )
@@ -248,7 +241,6 @@ struct FloatingHeaderView: View {
         }
 
         if KeyCode.shouldTriggerSearch(for: event) {
-            env.focusView = .search
             focus = .search
             return nil
         }
@@ -368,7 +360,8 @@ struct FloatingChipView: View {
             return false
         }
 
-        guard let item = pd.dataList.first(where: { $0.id == draggingId }) else {
+        guard let item = pd.dataList.first(where: { $0.id == draggingId })
+        else {
             return false
         }
 
@@ -376,8 +369,10 @@ struct FloatingChipView: View {
             return true
         }
 
-        if let selectedChip = topBarVM.chips.first(where: { $0.id == topBarVM.selectedChipId }),
-           !selectedChip.isSystem
+        if let selectedChip = topBarVM.chips.first(where: {
+            $0.id == topBarVM.selectedChipId
+        }),
+            !selectedChip.isSystem
         {
             var list = pd.dataList
             list.removeAll(where: { $0.id == item.id })

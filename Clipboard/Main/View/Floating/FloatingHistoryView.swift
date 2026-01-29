@@ -26,10 +26,26 @@ struct FloatingHistoryView: View {
                     contentView()
                 }
                 .scrollIndicators(.automatic)
-                .contentMargins(.top, FloatConst.headerHeight, for: .scrollContent)
-                .contentMargins(.top, FloatConst.headerHeight, for: .scrollIndicators)
-                .contentMargins(.bottom, FloatConst.footerHeight, for: .scrollContent)
-                .contentMargins(.bottom, FloatConst.footerHeight, for: .scrollIndicators)
+                .contentMargins(
+                    .top,
+                    FloatConst.headerHeight,
+                    for: .scrollContent
+                )
+                .contentMargins(
+                    .top,
+                    FloatConst.headerHeight,
+                    for: .scrollIndicators
+                )
+                .contentMargins(
+                    .bottom,
+                    FloatConst.footerHeight,
+                    for: .scrollContent
+                )
+                .contentMargins(
+                    .bottom,
+                    FloatConst.footerHeight,
+                    for: .scrollIndicators
+                )
                 .onChange(of: env.focusView) {
                     isFocused = (env.focusView == .history)
                 }
@@ -145,7 +161,9 @@ struct FloatingHistoryView: View {
             handler: keyDownEvent(_:)
         )
 
-        flagsMonitorToken = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) { event in
+        flagsMonitorToken = NSEvent.addLocalMonitorForEvents(
+            matching: .flagsChanged
+        ) { event in
             flagsChangedEvent(event)
         }
 
@@ -204,7 +222,9 @@ struct FloatingHistoryView: View {
             return handleCommandKeyEvent(event)
         }
 
-        let hasModifiers = !event.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty
+        let hasModifiers = !event.modifierFlags
+            .intersection([.command, .option, .control, .shift])
+            .isEmpty
 
         switch event.keyCode {
         case UInt16(kVK_UpArrow):
@@ -277,7 +297,9 @@ struct FloatingHistoryView: View {
     }
 
     private func handleCommandKeyEvent(_ event: NSEvent) -> NSEvent? {
-        let hasModifiers = !event.modifierFlags.intersection([.option, .control, .shift]).isEmpty
+        let hasModifiers = !event.modifierFlags.intersection([
+            .option, .control, .shift,
+        ]).isEmpty
         guard !hasModifiers else {
             return event
         }

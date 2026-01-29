@@ -17,4 +17,11 @@ final class AppEnvironment {
     func resetQuickPasteState() {
         quickPasteResetTrigger.toggle()
     }
+
+    func isInInputMode() -> Bool {
+        focusView == .search
+            || focusView == .newChip
+            || focusView == .editChip
+            || focusView == .popover
+    }
 }
