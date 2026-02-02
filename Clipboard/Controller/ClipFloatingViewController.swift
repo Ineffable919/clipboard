@@ -9,8 +9,8 @@ import AppKit
 import SwiftUI
 
 final class ClipFloatingViewController: NSViewController {
-    private let showDuration: CFTimeInterval = 0.2
-    private let hideDuration: CFTimeInterval = 0.15
+    private let showDuration: CFTimeInterval = 0.15
+    private let hideDuration: CFTimeInterval = 0.2
     private(set) var isPresented: Bool = false
 
     private let fadeContainer: NSView = {

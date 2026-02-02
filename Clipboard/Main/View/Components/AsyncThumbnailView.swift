@@ -39,26 +39,26 @@ struct AsyncThumbnailView: View {
         }
         .animation(.easeInOut(duration: 0.3), value: thumbnail)
         .animation(.easeInOut(duration: 0.2), value: isLoading)
-        .onAppear {
-            loadThumbnail()
-        }
-        .onChange(of: fileURL) {
-            loadThumbnail()
+        .task(id: fileURL) {
+            await loadThumbnail()
         }
     }
 
-    private func loadThumbnail() {
+    private func loadThumbnail() async {
         isLoading = true
         thumbnail = nil
         loadingFailed = false
 
-        ThumbnailView.shared.generateFinderStyleThumbnail(for: fileURL) {
-            nsImage in
-            Task { @MainActor in
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    thumbnail = nsImage
-                    isLoading = false
-                    loadingFailed = nsImage == nil
+        await withCheckedContinuation { continuation in
+            ThumbnailView.shared.generateFinderStyleThumbnail(for: fileURL) {
+                nsImage in
+                Task { @MainActor in
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        thumbnail = nsImage
+                        isLoading = false
+                        loadingFailed = nsImage == nil
+                    }
+                    continuation.resume()
                 }
             }
         }

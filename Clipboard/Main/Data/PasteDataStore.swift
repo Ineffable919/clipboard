@@ -332,7 +332,7 @@ extension PasteDataStore {
     func addNewItem(_ item: NSPasteboard) {
         guard let model = PasteboardModel(with: item) else { return }
         insertModel(model)
-        Task {
+        Task(priority: .userInitiated) {
             await updateColor(model)
         }
         Task {
@@ -340,6 +340,9 @@ extension PasteDataStore {
                 let searchText = await OCRViewModel.shared.recognizeText(
                     from: model.data
                 )
+
+                guard !Task.isCancelled, !searchText.isEmpty else { return }
+
                 model.updateSearchText(val: searchText)
                 await sqlManager.update(id: id, item: model)
             }
@@ -349,9 +352,8 @@ extension PasteDataStore {
     }
 
     func insertModel(_ model: PasteboardModel) {
-        Task {
-            let itemId: Int64
-            await itemId = sqlManager.insert(item: model)
+        Task(priority: .userInitiated) {
+            let itemId = await sqlManager.insert(item: model)
             model.id = itemId
             await updateTotalCount()
             if lastDataChangeType == .searchFilter {

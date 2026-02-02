@@ -49,7 +49,7 @@ final class PasteboardModel: Identifiable {
     private var cachedForegroundColor: Color?
     var cachedFilePaths: [String]?
     private var cachedHasBackgroundColor: Bool = false
-    private var isThumbnailLoading: Bool = false
+    private var thumbnailLoadTask: Task<NSImage?, Never>?
 
     var isLink: Bool {
         attributeString.string.isLink()
@@ -293,18 +293,25 @@ final class PasteboardModel: Identifiable {
 
     func loadThumbnail() async -> NSImage? {
         if let cachedThumbnail { return cachedThumbnail }
-        guard !isThumbnailLoading else { return nil }
 
-        isThumbnailLoading = true
-        let imageData = data
+        if let existingTask = thumbnailLoadTask {
+            return await existingTask.value
+        }
 
-        let image = await Task.detached(priority: .utility) {
-            NSImage(data: imageData)
-        }.value
+        let task = Task<NSImage?, Never> { @MainActor in
+            let imageData = data
 
-        cachedThumbnail = image
-        isThumbnailLoading = false
-        return image
+            let image = await Task.detached(priority: .userInitiated) {
+                NSImage(data: imageData)
+            }.value
+
+            cachedThumbnail = image
+            thumbnailLoadTask = nil
+            return image
+        }
+
+        thumbnailLoadTask = task
+        return await task.value
     }
 
     func updateGroup(val: Int) {

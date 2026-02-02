@@ -81,12 +81,13 @@ class SettingWindowController: NSWindowController {
     func toggleWindow() {
         guard let window else { return }
 
-        if window.isVisible {
-            window.orderOut(nil)
-        } else {
-            NSApp.activate(ignoringOtherApps: true)
-            window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+
+        if window.isMiniaturized {
+            window.deminiaturize(nil)
         }
+
+        window.makeKeyAndOrderFront(nil)
     }
 
     func hideWindow() {

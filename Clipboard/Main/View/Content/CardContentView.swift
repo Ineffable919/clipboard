@@ -129,6 +129,7 @@ struct ImageContentView: View {
     @State private var isLoading = false
     @State private var loadingTask: Task<Void, Never>?
     @State private var cachedContentMode: ContentMode = .fit
+    @State private var currentModelId: String = ""
 
     private static let containerSize = CGSize(width: Const.cardSize, height: Const.cntSize)
     private static let containerRatio = Const.cardSize / Const.cntSize
@@ -156,16 +157,23 @@ struct ImageContentView: View {
         }
         .frame(width: Self.containerSize.width, height: Self.containerSize.height)
         .clipShape(Const.contentShape)
-        .onAppear(perform: loadImage)
+        .task(id: model.uniqueId) {
+            await loadImage()
+        }
         .onDisappear {
             loadingTask?.cancel()
             loadingTask = nil
         }
     }
 
-    private func loadImage() {
-        guard thumbnail == nil, !isLoading else { return }
+    private func loadImage() async {
+        guard currentModelId != model.uniqueId else { return }
+
+        loadingTask?.cancel()
+
+        currentModelId = model.uniqueId
         isLoading = true
+        thumbnail = nil
 
         loadingTask = Task {
             guard !Task.isCancelled else { return }
@@ -188,6 +196,8 @@ struct ImageContentView: View {
                 isLoading = false
             }
         }
+
+        await loadingTask?.value
     }
 }
 

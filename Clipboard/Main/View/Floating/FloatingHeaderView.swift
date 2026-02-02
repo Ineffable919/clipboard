@@ -137,9 +137,7 @@ struct FloatingHeaderView: View {
 
                 if topBarVM.editingNewChip {
                     addChipEditorView
-                }
-
-                if !topBarVM.editingNewChip {
+                } else {
                     addChipButton
                 }
             }

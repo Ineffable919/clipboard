@@ -21,23 +21,18 @@ struct ClipboardEmptyStateView: View {
         style == .main ? 64 : 48
     }
 
-    private var iconOpacity: Double {
-        style == .main ? 0.8 : 0.6
-    }
-
     var body: some View {
         VStack(spacing: Const.space12) {
             clipboardIcon
                 .font(.system(size: iconSize))
-                .foregroundStyle(Color.accentColor.opacity(iconOpacity))
+                .foregroundStyle(Color.accentColor.opacity(0.8))
 
             Text("没有剪贴板历史")
-                .font(style == .floating ? .system(size: 15, weight: .medium) : .body)
                 .foregroundStyle(.secondary)
 
             Text("复制内容后将显示在这里")
                 .font(style == .floating ? .system(size: 13) : .callout)
-                .foregroundStyle(style == .floating ? .tertiary : .secondary)
+                .foregroundStyle(.secondary)
         }
         .padding(style == .main ? .all : [])
         .frame(maxWidth: .infinity, maxHeight: .infinity)

@@ -17,9 +17,22 @@ struct FloatingCardView: View {
 
     @Environment(AppEnvironment.self) private var env
 
-    var body: some View {
-        let showPreview = showPreviewId == model.id
+    private var modelColors: (Color, Color) {
+        model.colors()
+    }
 
+    private var isTextType: Bool {
+        model.pasteboardType.isText()
+    }
+
+    private var showPreview: Binding<Bool> {
+        Binding(
+            get: { showPreviewId == model.id },
+            set: { showPreviewId = $0 ? model.id : nil }
+        )
+    }
+
+    var body: some View {
         cardContent
             .overlay {
                 if isSelected {
@@ -39,13 +52,7 @@ struct FloatingCardView: View {
             )
             .padding(Const.space2)
             .contextMenu { contextMenuContent }
-            .popover(
-                isPresented: Binding(
-                    get: { showPreview },
-                    set: { showPreviewId = $0 ? model.id : nil }
-                ),
-                arrowEdge: .leading
-            ) {
+            .popover(isPresented: showPreview, arrowEdge: .leading) {
                 PreviewPopoverView(
                     model: model,
                     onClose: { showPreviewId = nil }
@@ -58,18 +65,23 @@ struct FloatingCardView: View {
             AppIconImageView(appPath: model.appPath)
                 .padding(.leading, Const.space6)
 
-            FloatContentView
+            floatContentView
                 .padding(.vertical, Const.space4)
                 .frame(
                     maxWidth: .infinity,
                     maxHeight: .infinity,
-                    alignment: model.pasteboardType.isText() ? .leading : .center
+                    alignment: isTextType || model.pasteboardType.isFile()
+                        ? .leading : .center
                 )
 
             VStack(alignment: .trailing, spacing: Const.space4) {
-                Text(model.timestamp.timeAgo(relativeTo: TimeManager.shared.currentTime))
-                    .font(.system(size: 10))
-                    .foregroundStyle(model.colors().1)
+                Text(
+                    model.timestamp.timeAgo(
+                        relativeTo: TimeManager.shared.currentTime
+                    )
+                )
+                .font(.system(size: 10))
+                .foregroundStyle(modelColors.1)
                 Spacer()
                 if let index = quickPasteIndex {
                     quickPasteBadge(index: index)
@@ -94,7 +106,7 @@ struct FloatingCardView: View {
     }
 
     @ViewBuilder
-    private var FloatContentView: some View {
+    private var floatContentView: some View {
         switch model.type {
         case .image:
             FloatingImageThumbnailView(model: model)
@@ -102,43 +114,54 @@ struct FloatingCardView: View {
         case .color:
             Text(model.attributeString.string)
                 .font(.system(size: 14.0, weight: .medium, design: .monospaced))
-                .foregroundStyle(model.colors().1)
+                .foregroundStyle(modelColors.1)
         case .file:
-            if let paths = model.cachedFilePaths {
-                if paths.count > 1 {
-                    Text("\(paths.count) 个文件")
-                } else if let firstPath = paths.first {
-                    Text(firstPath)
-                        .truncationMode(.head)
-                }
-            }
+            fileContentView
         case .rich:
-            if model.hasBgColor {
-                if searchKeyword.isEmpty {
-                    Text(model.attributed())
-                } else {
-                    Text(model.highlightedRichText(keyword: searchKeyword))
-                }
-            } else {
-                if searchKeyword.isEmpty {
-                    Text(model.attributeString.string)
-                } else {
-                    Text(model.highlightedPlainText(keyword: searchKeyword))
-                }
-            }
+            richTextContentView
         default:
-            if searchKeyword.isEmpty {
-                Text(model.attributeString.string)
-            } else {
-                Text(model.highlightedPlainText(keyword: searchKeyword))
+            plainTextContentView
+        }
+    }
+
+    @ViewBuilder
+    private var fileContentView: some View {
+        if let paths = model.cachedFilePaths {
+            if paths.count > 1 {
+                Text("\(paths.count) 个文件")
+            } else if let firstPath = paths.first {
+                Text(firstPath)
+                    .truncationMode(.head)
             }
+        }
+    }
+
+    @ViewBuilder
+    private var richTextContentView: some View {
+        if model.hasBgColor {
+            if searchKeyword.isEmpty {
+                Text(model.attributed())
+            } else {
+                Text(model.highlightedRichText(keyword: searchKeyword))
+            }
+        } else {
+            plainTextContentView
+        }
+    }
+
+    @ViewBuilder
+    private var plainTextContentView: some View {
+        if searchKeyword.isEmpty {
+            Text(model.attributeString.string)
+        } else {
+            Text(model.highlightedPlainText(keyword: searchKeyword))
         }
     }
 
     private func quickPasteBadge(index: Int) -> some View {
         Text(index, format: .number)
             .font(.system(size: 10, weight: .regular, design: .rounded))
-            .foregroundStyle(model.colors().1)
+            .foregroundStyle(modelColors.1)
     }
 
     private var selectionColor: Color {
@@ -152,7 +175,7 @@ struct FloatingCardView: View {
         Button("粘贴", systemImage: "doc.on.clipboard", action: pasteToApp)
             .keyboardShortcut(.return, modifiers: [])
 
-        if model.pasteboardType.isText() {
+        if isTextType {
             Button(
                 "以纯文本粘贴",
                 systemImage: "text.alignleft",
@@ -165,7 +188,7 @@ struct FloatingCardView: View {
 
         Divider()
 
-        if model.pasteboardType.isText() {
+        if isTextType {
             Button("编辑", systemImage: "pencil", action: openEditWindow)
                 .keyboardShortcut("e", modifiers: [.command])
         }
@@ -240,6 +263,7 @@ private struct FloatingImageThumbnailView: View {
     let model: PasteboardModel
     @State private var thumbnail: NSImage?
     @State private var isLoading = false
+    @State private var loadingTask: Task<Void, Never>?
 
     var body: some View {
         Group {
@@ -260,12 +284,33 @@ private struct FloatingImageThumbnailView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipped()
-        .task {
-            guard thumbnail == nil, !isLoading else { return }
-            isLoading = true
-            thumbnail = await model.loadThumbnail()
+        .task(id: model.uniqueId) {
+            await loadImage()
+        }
+        .onDisappear {
+            loadingTask?.cancel()
+        }
+    }
+
+    private func loadImage() async {
+        loadingTask?.cancel()
+
+        isLoading = true
+        thumbnail = nil
+
+        loadingTask = Task {
+            let loadedImage = await model.loadThumbnail()
+
+            guard !Task.isCancelled else {
+                isLoading = false
+                return
+            }
+
+            thumbnail = loadedImage
             isLoading = false
         }
+
+        await loadingTask?.value
     }
 }
 

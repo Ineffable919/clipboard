@@ -400,7 +400,7 @@ private struct DragPreviewView: View {
     var body: some View {
         Image(systemName: iconName)
             .font(.system(size: 32, weight: .regular))
-            .foregroundStyle(.tint.opacity(0.8))
+            // .foregroundStyle(.tint.opacity(0.8))
             .frame(width: 48, height: 48)
     }
 

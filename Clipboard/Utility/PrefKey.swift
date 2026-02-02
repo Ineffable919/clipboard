@@ -170,8 +170,8 @@ enum DisplayMode: Int, CaseIterable {
 
     var title: String {
         switch self {
-        case .drawer: "抽屉式"
-        case .floating: "窗口式"
+        case .drawer: "抽屉"
+        case .floating: "窗口"
         }
     }
 }

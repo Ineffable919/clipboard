@@ -373,15 +373,7 @@ struct PreviewPopoverView: View {
 
 struct FocusableContainer<Content: View>: NSViewRepresentable {
     let onInteraction: () -> Void
-    let content: Content
-
-    init(
-        onInteraction: @escaping () -> Void,
-        @ViewBuilder content: () -> Content
-    ) {
-        self.onInteraction = onInteraction
-        self.content = content()
-    }
+    @ViewBuilder let content: Content
 
     func makeNSView(context _: Context) -> NSHostingView<Content> {
         InterceptingHostingView(

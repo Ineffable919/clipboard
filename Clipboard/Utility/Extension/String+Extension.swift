@@ -112,6 +112,8 @@ extension String {
 
     private static let hexCharacters = CharacterSet(charactersIn: "0123456789abcdef")
 
+    private static let hexDigitsOnly = CharacterSet(charactersIn: "0123456789")
+
     private static let rgbRegex = try? NSRegularExpression(
         pattern: #"^rgba?\((\d+),(\d+),(\d+)(,(0|1|0?\.\d+))?\)$"#
     )
@@ -123,7 +125,13 @@ extension String {
     private func isValidHexColor(_ str: String) -> Bool {
         let hex = str.hasPrefix("#") ? str.dropFirst() : str[...]
         guard [3, 4, 6, 8].contains(hex.count) else { return false }
-        return hex.unicodeScalars.allSatisfy { Self.hexCharacters.contains($0) }
+        guard hex.unicodeScalars.allSatisfy({ Self.hexCharacters.contains($0) }) else { return false }
+        if hex.count != 6,
+           hex.unicodeScalars.allSatisfy({ Self.hexDigitsOnly.contains($0) })
+        {
+            return false
+        }
+        return true
     }
 
     private func isValidRGBColor(_ str: String) -> Bool {
