@@ -14,6 +14,8 @@ final class ClipFloatingWindowController: NSWindowController {
         window?.isVisible ?? false
     }
 
+    var isPinned = false
+
     private let clipVC = ClipFloatingViewController()
     private let db = PasteDataStore.main
 
@@ -32,7 +34,7 @@ final class ClipFloatingWindowController: NSWindowController {
         guard let win = window as? NSPanel else { return }
 
         win.styleMask = [.nonactivatingPanel, .resizable]
-        win.level = .floating
+        win.level = .statusBar
 
         win.backgroundColor = .clear
         win.hasShadow = false
@@ -237,7 +239,7 @@ final class ClipFloatingWindowController: NSWindowController {
 
 extension ClipFloatingWindowController: NSWindowDelegate {
     func windowDidResignKey(_: Notification) {
-        if clipVC.env.isShowDel {
+        if clipVC.env.isShowDel || isPinned {
             return
         }
         setPresented(false, animated: true)

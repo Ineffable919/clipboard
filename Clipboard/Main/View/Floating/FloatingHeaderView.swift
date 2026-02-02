@@ -16,12 +16,14 @@ struct FloatingHeaderView: View {
     @FocusState private var focus: FocusField?
     @State private var topBarVM = TopBarViewModel()
     @State private var showFilter = false
+    @State private var isPinned = false
 
     var body: some View {
         VStack(spacing: 0) {
             topDragArea
 
             HStack(spacing: Const.space12) {
+                pinButton
                 searchField
                 settingsButton
             }
@@ -99,6 +101,19 @@ struct FloatingHeaderView: View {
                 )
                 .padding(-3)
         }
+    }
+
+    private var pinButton: some View {
+        Button {
+            isPinned.toggle()
+            ClipFloatingWindowController.shared.isPinned = isPinned
+        } label: {
+            Image(systemName: isPinned ? "pin.fill" : "pin")
+                .font(.system(size: 14.0, weight: .regular))
+                .foregroundStyle(isPinned ? Color.accentColor : .secondary)
+        }
+        .buttonStyle(.plain)
+        .help(isPinned ? "取消置顶" : "置顶")
     }
 
     private var searchFieldBackground: some ShapeStyle {

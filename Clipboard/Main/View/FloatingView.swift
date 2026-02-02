@@ -79,7 +79,7 @@ private extension View {
             shadow(color: Const.cardShadowColor, radius: 8.0, x: 0, y: 2)
                 .overlay {
                     RoundedRectangle(cornerRadius: Const.radius)
-                        .stroke(.separator, lineWidth: 1.0)
+                        .stroke(.separator, lineWidth: 2.0)
                 }
         } else {
             self

@@ -28,7 +28,7 @@ struct FloatingHistoryView: View {
                 .scrollIndicators(.automatic)
                 .contentMargins(
                     .top,
-                    FloatConst.headerHeight,
+                    FloatConst.headerHeight + FloatConst.cardSpacing,
                     for: .scrollContent
                 )
                 .contentMargins(
@@ -38,7 +38,7 @@ struct FloatingHistoryView: View {
                 )
                 .contentMargins(
                     .bottom,
-                    FloatConst.footerHeight,
+                    FloatConst.footerHeight + FloatConst.cardSpacing,
                     for: .scrollContent
                 )
                 .contentMargins(
@@ -82,7 +82,6 @@ struct FloatingHistoryView: View {
             }
         }
         .padding(.horizontal, FloatConst.horizontalPadding)
-        .padding(.vertical, FloatConst.cardSpacing)
     }
 
     private func cardItem(item: PasteboardModel, index: Int) -> some View {
@@ -102,8 +101,6 @@ struct FloatingHistoryView: View {
             env.draggingItemId = item.id
             historyVM.setSelection(id: item.id, index: index)
             return item.itemProvider()
-        } preview: {
-            DragPreviewView(model: item)
         }
         .task(id: item.id) {
             guard historyVM.shouldLoadNextPage(at: index) else { return }
@@ -400,7 +397,6 @@ private struct DragPreviewView: View {
     var body: some View {
         Image(systemName: iconName)
             .font(.system(size: 32, weight: .regular))
-            // .foregroundStyle(.tint.opacity(0.8))
             .frame(width: 48, height: 48)
     }
 
