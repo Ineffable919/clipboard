@@ -30,6 +30,11 @@ struct HistoryView: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         contentView()
                     }
+                    .contentMargins(
+                        .trailing,
+                        Const.cardSpace,
+                        for: .scrollContent
+                    )
                     .focusable()
                     .focused($isFocused)
                     .focusEffectDisabled()
@@ -70,7 +75,7 @@ struct HistoryView: View {
                 cardViewItem(for: item, at: index)
             }
         }
-        .padding(.horizontal, Const.cardSpace)
+         .padding(.leading, Const.cardSpace)
         .padding(.vertical, Const.space4)
     }
 
