@@ -80,7 +80,6 @@ struct HistoryView: View {
                 cardViewItem(for: item, at: index)
             }
         }
-        //.padding(.leading, Const.cardSpace)
         .padding(.vertical, Const.space4)
     }
 

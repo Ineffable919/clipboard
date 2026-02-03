@@ -75,7 +75,7 @@ final class PasteSQLManager: NSObject, @unchecked Sendable {
         return tab
     }()
 
-    private override init() {
+    override private init() {
         super.init()
         Self.initLock.lock()
         defer { Self.initLock.unlock() }

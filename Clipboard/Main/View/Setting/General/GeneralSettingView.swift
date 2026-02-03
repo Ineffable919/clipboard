@@ -13,6 +13,8 @@ import SwiftUI
 struct GeneralSettingView: View {
     @State private var launchAtLogin: Bool = LaunchAtLoginHelper.shared
         .isEnabled
+    @AppStorage(PrefKey.showMenuBarIcon.rawValue)
+    private var showMenuBarIcon = true
     @AppStorage(PrefKey.soundEnabled.rawValue)
     private var soundEnabled = true
     @State private var selectedPasteTarget: PasteTargetMode =
@@ -47,6 +49,19 @@ struct GeneralSettingView: View {
                                     LaunchAtLoginHelper.shared.isEnabled
                             }
                         }
+                    }
+
+                    Divider()
+
+                    SettingToggleRow(
+                        title: "状态栏图标",
+                        isOn: $showMenuBarIcon
+                    )
+                    .onChange(of: showMenuBarIcon) { _, newValue in
+                        NotificationCenter.default.post(
+                            name: .menuBarIconVisibilityChanged,
+                            object: newValue
+                        )
                     }
 
                     Divider()

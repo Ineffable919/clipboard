@@ -61,6 +61,8 @@ enum PrefKey: String, CaseIterable {
     case windowPosition
     /// 上次窗口位置和大小
     case lastWindowFrame
+    /// 显示状态栏图标
+    case showMenuBarIcon
 }
 
 enum AppearanceMode: Int, CaseIterable {

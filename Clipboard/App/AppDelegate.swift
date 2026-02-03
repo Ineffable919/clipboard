@@ -21,6 +21,7 @@ class AppDelegate: NSObject {
     )
 
     private var menuBarItem: NSStatusItem?
+    private var menuBarIconObserver: NSObjectProtocol?
 
     private lazy var rMenu: NSMenu = {
         let menu = NSMenu(title: "设置")
@@ -182,6 +183,8 @@ extension AppDelegate: NSApplicationDelegate {
 
         applyAppearanceSettings()
 
+        observeMenuBarIconVisibility()
+
         Task {
             await initClipboardAsync()
         }
@@ -192,6 +195,11 @@ extension AppDelegate: NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_: Notification) {
+        if let observer = menuBarIconObserver {
+            NotificationCenter.default.removeObserver(observer)
+            menuBarIconObserver = nil
+        }
+        
         EventDispatcher.shared.stop()
     }
 
@@ -208,6 +216,34 @@ extension AppDelegate: NSApplicationDelegate {
         case .dark:
             NSApp.appearance = NSAppearance(named: .darkAqua)
         }
+    }
+
+    private func observeMenuBarIconVisibility() {
+        menuBarIconObserver = NotificationCenter.default.addObserver(
+            forName: .menuBarIconVisibilityChanged,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            guard let shouldShow = notification.object as? Bool else { return }
+            Task { @MainActor in
+                self?.updateMenuBarIconVisibility(shouldShow)
+            }
+        }
+    }
+
+    @MainActor
+    private func updateMenuBarIconVisibility(_ shouldShow: Bool) {
+        if shouldShow {
+            if menuBarItem == nil {
+                initStatus()
+            } else {
+                menuBarItem?.isVisible = true
+                configureMenuBarButton()
+            }
+        } else {
+            menuBarItem?.isVisible = false
+        }
+        PasteUserDefaults.showMenuBarIcon = shouldShow
     }
 }
 
@@ -239,9 +275,17 @@ extension AppDelegate {
             withLength: NSStatusItem.squareLength
         )
 
-        guard let menuBarItem else { return }
+        guard menuBarItem != nil else { return }
 
-        menuBarItem.isVisible = true
+        let shouldShow = PasteUserDefaults.showMenuBarIcon
+        menuBarItem?.isVisible = shouldShow
+
+        configureMenuBarButton()
+    }
+
+    private func configureMenuBarButton() {
+        guard let button = menuBarItem?.button else { return }
+
         let config = NSImage.SymbolConfiguration(
             pointSize: 15,
             weight: .semibold
@@ -254,10 +298,10 @@ extension AppDelegate {
             NSImage(named: iconName)
         }
 
-        menuBarItem.button?.image = icon?.withSymbolConfiguration(config)
-        menuBarItem.button?.target = self
-        menuBarItem.button?.action = #selector(statusBarClick)
-        menuBarItem.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
+        button.image = icon?.withSymbolConfiguration(config)
+        button.target = self
+        button.action = #selector(statusBarClick)
+        button.sendAction(on: [.leftMouseUp, .rightMouseUp])
     }
 }
 
@@ -411,4 +455,10 @@ extension AppDelegate: SPUUpdaterDelegate {
             }
         }
     }
+}
+
+// MARK: - Notification.Name
+
+extension Notification.Name {
+    static let menuBarIconVisibilityChanged = Notification.Name("menuBarIconVisibilityChanged")
 }
