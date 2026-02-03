@@ -38,17 +38,31 @@ final class PasteboardModel: Identifiable {
 
     private(set) var group: Int
     let tag: String
+    @ObservationIgnored
     private var cachedAttributed: AttributedString?
+    @ObservationIgnored
     private var cachedHighlightedPlainKeyword: String?
+    @ObservationIgnored
     private var cachedHighlightedPlainText: AttributedString?
+    @ObservationIgnored
     private var cachedHighlightedRichKeyword: String?
+    @ObservationIgnored
     private var cachedHighlightedRichText: AttributedString?
+    @ObservationIgnored
     private var cachedThumbnail: NSImage?
+    @ObservationIgnored
     private var cachedImageSize: CGSize?
+    @ObservationIgnored
     private var cachedBackgroundColor: Color?
+    @ObservationIgnored
     private var cachedForegroundColor: Color?
+    @ObservationIgnored
     var cachedFilePaths: [String]?
+    @ObservationIgnored
     private var cachedHasBackgroundColor: Bool = false
+    @ObservationIgnored
+    private var cachedNeedsBottomMask: Bool?
+    @ObservationIgnored
     private var thumbnailLoadTask: Task<NSImage?, Never>?
 
     var isLink: Bool {
@@ -518,6 +532,15 @@ extension PasteboardModel {
         cachedHighlightedRichKeyword = trimmedKeyword
         cachedHighlightedRichText = highlighted
         return highlighted
+    }
+
+    func needsBottomMask(compute: () -> Bool) -> Bool {
+        if let cachedNeedsBottomMask {
+            return cachedNeedsBottomMask
+        }
+        let value = compute()
+        cachedNeedsBottomMask = value
+        return value
     }
 
     private static let formatter: NumberFormatter = {

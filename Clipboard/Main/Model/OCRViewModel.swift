@@ -20,21 +20,22 @@ class OCRViewModel {
               )
         else { return "" }
 
-        let request = VNRecognizeTextRequest()
-        request.recognitionLevel = .accurate
-        request.recognitionLanguages = ["zh-Hans", "zh-Hant", "en-US"]
-        request.usesLanguageCorrection = true
+        return await Task.detached {
+            let request = VNRecognizeTextRequest()
+            request.recognitionLevel = .accurate
+            request.recognitionLanguages = ["zh-Hans", "zh-Hant", "en-US"]
+            request.usesLanguageCorrection = true
 
-        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+            let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
 
-        do {
-            try handler.perform([request])
-            return (request.results ?? [])
-                .compactMap { $0.topCandidates(1).first?.string }
-                .joined(separator: "\n")
-        } catch {
-            log.warn("OCR 失败: \(error.localizedDescription)")
-        }
-        return ""
+            do {
+                try handler.perform([request])
+                return (request.results ?? [])
+                    .compactMap { $0.topCandidates(1).first?.string }
+                    .joined(separator: "\n")
+            } catch {
+                return ""
+            }
+        }.value
     }
 }

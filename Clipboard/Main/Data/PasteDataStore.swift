@@ -11,6 +11,7 @@ import SwiftUI
 
 typealias Expression = SQLite.Expression
 
+@MainActor
 @Observable
 final class PasteDataStore {
     static let main = PasteDataStore()
@@ -42,7 +43,7 @@ final class PasteDataStore {
     private var currentFilter: Expression<Bool>?
     private(set) var isInFilterMode: Bool = false
 
-    private var sqlManager = PasteSQLManager.manager
+    private let sqlManager = PasteSQLManager.manager
     private var searchTask: Task<Void, Error>?
     private var loadPageTask: Task<Void, Never>?
     private var colorDict = [String: String]()
@@ -74,12 +75,10 @@ final class PasteDataStore {
         }
     }
 
-    @MainActor
     func notifyCategoryChipsChanged() {
         chipsVersion &+= 1
     }
 
-    @MainActor
     func updateData(
         with list: [PasteboardModel],
         changeType: DataChangeType = .reset
@@ -331,44 +330,54 @@ extension PasteDataStore {
 
     func addNewItem(_ item: NSPasteboard) {
         guard let model = PasteboardModel(with: item) else { return }
+
         insertModel(model)
-        Task(priority: .userInitiated) {
+
+        Task {
             await updateColor(model)
         }
+
         Task {
-            if model.type == .image, let id = model.id {
-                let searchText = await OCRViewModel.shared.recognizeText(
-                    from: model.data
-                )
-
-                guard !Task.isCancelled, !searchText.isEmpty else { return }
-
-                model.updateSearchText(val: searchText)
-                await sqlManager.update(id: id, item: model)
-            }
+            await runOCRIfNeeded(model)
         }
+
         invalidateAppInfoCache(model)
         invalidateTagTypesCache(model)
     }
 
+    func runOCRIfNeeded(_ model: PasteboardModel) async {
+        guard model.type == .image, let id = model.id else { return }
+
+        let searchText = await OCRViewModel.shared.recognizeText(
+            from: model.data
+        )
+
+        guard !searchText.isEmpty else { return }
+
+        model.updateSearchText(val: searchText)
+        await sqlManager.update(id: id, item: model)
+    }
+
     func insertModel(_ model: PasteboardModel) {
-        Task(priority: .userInitiated) {
+        Task {
             let itemId = await sqlManager.insert(item: model)
+            let count = await sqlManager.getTotalCount()
+
             model.id = itemId
-            await updateTotalCount()
+            totalCount = count
+
             if lastDataChangeType == .searchFilter {
                 return
             }
+
             var list = dataList
             list.removeAll(where: { $0.uniqueId == model.uniqueId })
             list.insert(model, at: 0)
             hasMoreData = list.count >= pageSize
-            list = Array(list.prefix(pageSize))
-            updateData(with: list)
+            updateData(with: Array(list.prefix(pageSize)))
         }
     }
 
-    @MainActor
     func moveItemToFirst(_ model: PasteboardModel) {
         var list = dataList
 
@@ -395,7 +404,8 @@ extension PasteDataStore {
     func deleteItems(filter: Expression<Bool>) {
         Task {
             await sqlManager.delete(filter: filter)
-            await updateTotalCount()
+            let count = await sqlManager.getTotalCount()
+            totalCount = count
             invalidateTagTypesCache()
         }
     }
@@ -457,8 +467,8 @@ extension PasteDataStore {
         if response == .alertFirstButtonReturn {
             Task {
                 await sqlManager.dropTable()
+                NSApplication.shared.terminate(nil)
             }
-            NSApplication.shared.terminate(self)
         }
     }
 
@@ -514,8 +524,7 @@ extension PasteDataStore {
                 id: itemId,
                 groupId: groupId
             )
-        }
-        Task { @MainActor in
+
             if let model = dataList.first(where: { $0.id == itemId }),
                groupId != model.group
             {
@@ -639,12 +648,11 @@ extension PasteDataStore {
 
 extension PasteDataStore {
     func updateColor(_ model: PasteboardModel) async {
-        if colorDict[model.appName] == nil {
-            let iconImage = NSWorkspace.shared.icon(forFile: model.appPath)
-            let hex = getAppThemeColor(for: model.appName, appIcon: iconImage)
-            colorDict[model.appName] = hex
-            PasteUserDefaults.appColorData = colorDict
-        }
+        guard colorDict[model.appName] == nil else { return }
+        let iconImage = NSWorkspace.shared.icon(forFile: model.appPath)
+        let hex = await getAppThemeColor(appIcon: iconImage)
+        colorDict[model.appName] = hex
+        PasteUserDefaults.appColorData = colorDict
     }
 
     func colorWith(_ model: PasteboardModel) -> Color {
@@ -660,7 +668,7 @@ extension PasteDataStore {
         return Color(hex: "#1765D9").opacity(0.85)
     }
 
-    private func getAppThemeColor(for _: String, appIcon: NSImage?) -> String {
+    private func getAppThemeColor(appIcon: NSImage?) async -> String {
         guard let icon = appIcon else {
             return "#1765D9"
         }

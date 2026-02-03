@@ -93,7 +93,9 @@ struct CommonBottomView: View {
         self.model = model
         colors = model.colors()
         introString = model.introString()
-        needsMask = ContentMaskCalculator.needsMask(for: model)
+        needsMask = model.needsBottomMask {
+            ContentMaskCalculator.needsMask(for: model)
+        }
     }
 
     var body: some View {

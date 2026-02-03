@@ -31,6 +31,11 @@ struct HistoryView: View {
                         contentView()
                     }
                     .contentMargins(
+                        .leading,
+                        Const.cardSpace,
+                        for: .scrollContent
+                    )
+                    .contentMargins(
                         .trailing,
                         Const.cardSpace,
                         for: .scrollContent
@@ -75,12 +80,8 @@ struct HistoryView: View {
                 cardViewItem(for: item, at: index)
             }
         }
-         .padding(.leading, Const.cardSpace)
+        //.padding(.leading, Const.cardSpace)
         .padding(.vertical, Const.space4)
-    }
-
-    private var searchKeyword: String {
-        HistoryHelpers.searchKeyword(from: pd)
     }
 
     private func cardViewItem(for item: PasteboardModel, at index: Int)
@@ -92,7 +93,7 @@ struct HistoryView: View {
             showPreviewId: $historyVM.showPreviewId,
             quickPasteIndex: quickPasteIndex(for: index),
             enableLinkPreview: enableLinkPreview,
-            searchKeyword: searchKeyword,
+            searchKeyword: HistoryHelpers.searchKeyword(from: pd),
             onRequestDelete: { requestDel(index: index) }
         )
         .contentShape(Rectangle())

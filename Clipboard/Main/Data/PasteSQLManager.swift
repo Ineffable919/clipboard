@@ -26,7 +26,7 @@ struct Col: Sendable {
     private init() {}
 }
 
-final class PasteSQLManager: NSObject {
+final class PasteSQLManager: NSObject, @unchecked Sendable {
     static let manager = PasteSQLManager()
     private static var isInitialized = false
     private nonisolated static let initLock = NSLock()
@@ -39,41 +39,12 @@ final class PasteSQLManager: NSObject {
         "\(sandboxDatabaseDirectory)/Clip.sqlite3"
     }
 
-    private lazy var db: Connection? = {
-        Self.initLock.lock()
-        defer { Self.initLock.unlock() }
+    private let dbLock = NSLock()
+    private var _db: Connection?
 
-        if Self.isInitialized {
-            return nil
-        }
-
-        let path = Self.sandboxDatabaseDirectory
-        var isDir = ObjCBool(false)
-        let filExist = FileManager.default.fileExists(
-            atPath: path,
-            isDirectory: &isDir
-        )
-        if !filExist || !isDir.boolValue {
-            do {
-                try FileManager.default.createDirectory(
-                    atPath: path,
-                    withIntermediateDirectories: true
-                )
-            } catch {
-                log.debug(error.localizedDescription)
-            }
-        }
-        do {
-            let db = try Connection("\(path)/Clip.sqlite3")
-            log.info("数据库初始化 - 路径：\(path)/Clip.sqlite3")
-            db.busyTimeout = 5.0
-            Self.isInitialized = true
-            return db
-        } catch {
-            log.error("Connection Error\(error)")
-        }
-        return nil
-    }()
+    private var db: Connection? {
+        dbLock.withLock { _db }
+    }
 
     private lazy var table: Table = {
         let tab = Table("Clip")
@@ -93,7 +64,9 @@ final class PasteSQLManager: NSObject {
             t.column(Col.tag)
         }
         do {
-            try db?.run(stateMent)
+            _ = try dbLock.withLock {
+                try _db?.run(stateMent)
+            }
             createIndexesAsync()
             migrateTagFieldAsync()
         } catch {
@@ -101,6 +74,44 @@ final class PasteSQLManager: NSObject {
         }
         return tab
     }()
+
+    private override init() {
+        super.init()
+        Self.initLock.lock()
+        defer { Self.initLock.unlock() }
+
+        if Self.isInitialized {
+            return
+        }
+
+        let path = Self.sandboxDatabaseDirectory
+        var isDir = ObjCBool(false)
+        let filExist = FileManager.default.fileExists(
+            atPath: path,
+            isDirectory: &isDir
+        )
+        if !filExist || !isDir.boolValue {
+            do {
+                try FileManager.default.createDirectory(
+                    atPath: path,
+                    withIntermediateDirectories: true
+                )
+            } catch {
+                log.debug(error.localizedDescription)
+            }
+        }
+        do {
+            let connection = try Connection("\(path)/Clip.sqlite3")
+            log.info("数据库初始化 - 路径：\(path)/Clip.sqlite3")
+            connection.busyTimeout = 5.0
+            dbLock.withLock {
+                _db = connection
+            }
+            Self.isInitialized = true
+        } catch {
+            log.error("Connection Error\(error)")
+        }
+    }
 
     private func createIndexesAsync() {
         Task.detached(priority: .background) { [weak self] in
