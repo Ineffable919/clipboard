@@ -662,43 +662,41 @@ final class TopBarViewModel {
     }
 
     // MARK: - Search Methods
-    
+
     /// 处理查询变化，支持快捷指令（如 @img, @text 等）
     private func handleQueryChange() {
         let trimmedQuery = query.trimmingCharacters(in: .whitespaces)
-        
-        // 检查是否是快捷指令
+
         if trimmedQuery.hasPrefix("@") {
             let command = String(trimmedQuery.dropFirst()).lowercased()
             if let type = parseShortcutCommand(command) {
-                // 清空输入
-                query = ""
-                // 添加对应类型的过滤
+                Task { @MainActor in
+                    self.query = ""
+                }
                 toggleType(type)
                 return
             }
         }
-        
+
         performSearch()
     }
-    
-    /// 解析快捷指令
+
     private func parseShortcutCommand(_ command: String) -> PasteModelType? {
         switch command {
         case "img", "image", "图片":
-            return .image
+            .image
         case "text", "txt", "文本":
-            return .string
+            .string
         case "file", "文件":
-            return .file
+            .file
         case "link", "链接":
-            return .link
+            .link
         case "color", "颜色":
-            return .color
+            .color
         case "rich", "富文本":
-            return .rich
+            .rich
         default:
-            return nil
+            nil
         }
     }
 

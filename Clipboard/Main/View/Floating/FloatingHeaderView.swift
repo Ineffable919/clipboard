@@ -28,7 +28,7 @@ struct FloatingHeaderView: View {
                 settingsButton
             }
             .padding(.horizontal, FloatConst.horizontalPadding)
-            
+
             chipScrollView
                 .frame(height: 42)
         }

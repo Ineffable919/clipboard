@@ -110,8 +110,8 @@ struct TokenSearchField: NSViewRepresentable {
     @available(macOS 14.0, *)
     func sizeThatFits(
         _ proposal: ProposedViewSize,
-        nsView: NSScrollView,
-        context: Context
+        nsView _: NSScrollView,
+        context _: Context
     ) -> CGSize? {
         let width = proposal.width ?? 200
         return CGSize(width: width, height: 24)
@@ -183,7 +183,7 @@ final class TokenSearchFieldCoordinator: NSObject, NSTextViewDelegate {
     func syncFromSwiftUI(tokens: [TokenItem], query: String, force: Bool) {
         guard let textView else { return }
 
-        let tokenIDs = tokens.map { $0.id }
+        let tokenIDs = tokens.map(\.id)
         guard force || tokenIDs != lastKnownTokenIDs || query != lastKnownQuery else {
             return
         }
@@ -210,7 +210,7 @@ final class TokenSearchFieldCoordinator: NSObject, NSTextViewDelegate {
         isSyncingFromSwiftUI = false
     }
 
-    func textDidChange(_ notification: Notification) {
+    func textDidChange(_: Notification) {
         guard let textView, !isSyncingFromSwiftUI else { return }
 
         let tokenIDs = extractTokenIDs(from: textView)
@@ -237,17 +237,17 @@ final class TokenSearchFieldCoordinator: NSObject, NSTextViewDelegate {
         showCompletionsIfNeeded(in: textView)
     }
 
-    func textDidBeginEditing(_ notification: Notification) {
+    func textDidBeginEditing(_: Notification) {
         onFocusChange(true)
     }
 
-    func textDidEndEditing(_ notification: Notification) {
+    func textDidEndEditing(_: Notification) {
         onFocusChange(false)
     }
 
     func textView(
-        _ textView: NSTextView,
-        shouldChangeTextIn affectedCharRange: NSRange,
+        _: NSTextView,
+        shouldChangeTextIn _: NSRange,
         replacementString: String?
     ) -> Bool {
         if let replacementString, replacementString.contains("\n") {
@@ -276,7 +276,7 @@ final class TokenSearchFieldCoordinator: NSObject, NSTextViewDelegate {
 
     func textView(
         _ textView: NSTextView,
-        completions words: [String],
+        completions _: [String],
         forPartialWordRange charRange: NSRange,
         indexOfSelectedItem index: UnsafeMutablePointer<Int>?
     ) -> [String] {
@@ -288,7 +288,7 @@ final class TokenSearchFieldCoordinator: NSObject, NSTextViewDelegate {
         }
 
         index?.pointee = 0
-        return matching.map { $0.label }
+        return matching.map(\.label)
     }
 
     private func handleInsertTokenIfNeeded(in textView: NSTextView) -> Bool {
@@ -477,21 +477,21 @@ private final class TokenAttachment: NSTextAttachment {
         attachmentCell = TokenAttachmentCell(label: label, icon: icon)
     }
 
-    nonisolated override init(data: Data?, ofType uti: String?) {
-        self.tokenID = UUID()
+    override nonisolated init(data: Data?, ofType uti: String?) {
+        tokenID = UUID()
         super.init(data: data, ofType: uti)
     }
 
     @available(*, unavailable)
-    required nonisolated init?(coder: NSCoder) {
+    required nonisolated init?(coder _: NSCoder) {
         nil
     }
 
-    nonisolated override func attachmentBounds(
-        for textContainer: NSTextContainer?,
+    override nonisolated func attachmentBounds(
+        for _: NSTextContainer?,
         proposedLineFragment lineFrag: NSRect,
-        glyphPosition position: CGPoint,
-        characterIndex charIndex: Int
+        glyphPosition _: CGPoint,
+        characterIndex _: Int
     ) -> NSRect {
         guard let cell = attachmentCell else { return .zero }
         let size = cell.cellSize()
@@ -517,13 +517,13 @@ private final class TokenAttachmentCell: NSTextAttachmentCell {
 
     @available(*, unavailable)
     required init(coder: NSCoder) {
-        self.label = ""
-        self.icon = NSImage()
+        label = ""
+        icon = NSImage()
         super.init(coder: coder)
         fatalError("init(coder:) is not supported")
     }
 
-    nonisolated override func cellSize() -> NSSize {
+    override nonisolated func cellSize() -> NSSize {
         MainActor.assumeIsolated {
             let textSize = labelSize()
             let width = paddingX * 2 + iconSize + 4 + textSize.width
@@ -532,7 +532,7 @@ private final class TokenAttachmentCell: NSTextAttachmentCell {
         }
     }
 
-    override func draw(withFrame cellFrame: NSRect, in controlView: NSView?) {
+    override func draw(withFrame cellFrame: NSRect, in _: NSView?) {
         let path = NSBezierPath(
             roundedRect: cellFrame,
             xRadius: cornerRadius,

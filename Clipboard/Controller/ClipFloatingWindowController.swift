@@ -37,7 +37,7 @@ final class ClipFloatingWindowController: NSWindowController {
         win.level = .floating
 
         win.backgroundColor = .clear
-        win.hasShadow = true
+        win.hasShadow = false
         win.titleVisibility = .hidden
         win.titlebarAppearsTransparent = true
         win.hidesOnDeactivate = false
@@ -218,7 +218,8 @@ final class ClipFloatingWindowController: NSWindowController {
             clipVC.setPresented(true, animated: animated, completion: nil)
         } else {
             clipVC.setPresented(false, animated: animated) { [weak self] in
-                self?.window?.orderOut(nil)
+                guard let self, let win = window else { return }
+                win.orderOut(nil)
                 completionHandler?()
                 Task { [weak self] in
                     self?.db.clearExpiredData()

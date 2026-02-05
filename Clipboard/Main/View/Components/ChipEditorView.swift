@@ -1,5 +1,5 @@
 //
-//  ChipComponents.swift
+//  ChipEditorView.swift
 //  Clipboard
 //
 //  Created by crown on 2026/1/29.

@@ -199,7 +199,7 @@ extension AppDelegate: NSApplicationDelegate {
             NotificationCenter.default.removeObserver(observer)
             menuBarIconObserver = nil
         }
-        
+
         EventDispatcher.shared.stop()
     }
 

@@ -25,7 +25,7 @@ struct TokenSearchFieldView: View {
             )
             .frame(width: 420)
             .padding(.top, 12)
- 
+
             Spacer()
         }
         .padding(.horizontal, 48)
@@ -109,7 +109,7 @@ private struct TokenSearchFieldBar: View {
                 .frame(maxWidth: .infinity, minHeight: 22)
                 .layoutPriority(1)
                 .overlay(alignment: .leading) {
-                    if tokens.isEmpty && query.isEmpty {
+                    if tokens.isEmpty, query.isEmpty {
                         Text("Search")
                             .font(.callout)
                             .foregroundStyle(.secondary)
@@ -222,7 +222,7 @@ private struct TokenSearchFieldBar: View {
             suggestion.label.localizedStandardContains(trimmed)
         }
         .prefix(6)
-        .map { $0 }
+        .map(\.self)
     }
 
     private var shouldShowSuggestions: Bool {
