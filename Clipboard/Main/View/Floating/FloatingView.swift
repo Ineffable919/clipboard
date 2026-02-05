@@ -25,7 +25,6 @@ struct FloatingView: View {
         contentStack
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .clipShape(.rect(cornerRadius: Const.radius))
-            .conditionalShadow()
     }
 
     private var contentStack: some View {
@@ -68,23 +67,6 @@ enum FloatConst {
     static let horizontalPadding: CGFloat = 16.0
     static let floatWindowWidth: CGFloat = 320.0
     static let floatWindowHeight: CGFloat = 650.0
-}
-
-// MARK: - View Extension
-
-private extension View {
-    @ViewBuilder
-    func conditionalShadow() -> some View {
-        if #available(macOS 26.0, *) {
-            shadow(color: Const.cardShadowColor, radius: 8.0, x: 0, y: 2)
-                .overlay {
-                    RoundedRectangle(cornerRadius: Const.radius)
-                        .stroke(.separator, lineWidth: 2.0)
-                }
-        } else {
-            self
-        }
-    }
 }
 
 #Preview {

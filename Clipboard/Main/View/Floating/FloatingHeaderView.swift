@@ -28,14 +28,9 @@ struct FloatingHeaderView: View {
                 settingsButton
             }
             .padding(.horizontal, FloatConst.horizontalPadding)
-
+            
             chipScrollView
                 .frame(height: 42)
-
-            Spacer()
-                .frame(maxWidth: .infinity)
-                .contentShape(.rect)
-                .windowDraggable()
         }
         .frame(maxWidth: .infinity)
         .frame(height: FloatConst.headerHeight)
@@ -134,7 +129,7 @@ struct FloatingHeaderView: View {
 
     private var chipScrollView: some View {
         ScrollView(.horizontal) {
-            HStack(spacing: Const.space8) {
+            HStack(spacing: Const.space6) {
                 ForEach(topBarVM.chips) { chip in
                     FloatingChipView(
                         chip: chip,
@@ -329,6 +324,8 @@ struct FloatingChipView: View {
         Button(action: onTap) {
             HStack(spacing: Const.space4) {
                 Text(chip.name)
+                    .font(.system(size: 12))
+                    .lineLimit(1)
                     .foregroundStyle(
                         isSelected ? .white : .primary.opacity(0.8)
                     )
@@ -449,5 +446,6 @@ struct FloatingChipView: View {
     let env = AppEnvironment()
     FloatingHeaderView()
         .environment(env)
-        .frame(width: 370, height: 90)
+        .frame(width: 370, height: FloatConst.headerHeight)
+        .padding()
 }
