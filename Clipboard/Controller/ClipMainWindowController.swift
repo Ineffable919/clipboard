@@ -20,10 +20,15 @@ final class ClipMainWindowController: NSWindowController {
     private let db = PasteDataStore.main
 
     init() {
-        let panel = ClipWindowView(contentViewController: clipVC)
+        let panel = ClipWindowView(
+            contentRect: NSRect(x: 0, y: 0, width: 0, height: viewHeight),
+            styleMask: [.borderless, .nonactivatingPanel],
+            backing: .buffered,
+            defer: false
+        )
+        panel.contentViewController = clipVC
         super.init(window: panel)
         setupWindow()
-        layoutToBottom()
     }
 
     @available(*, unavailable)
@@ -32,33 +37,24 @@ final class ClipMainWindowController: NSWindowController {
     }
 
     private func setupWindow() {
-        guard let win = window as? NSPanel else { return }
+        guard let win = window as? ClipWindowView else { return }
 
-        win.styleMask = [.borderless, .nonactivatingPanel]
+        win.configureCommonSettings()
+
         win.level = .statusBar
-
         win.isOpaque = false
-        win.backgroundColor = .clear
-        win.hasShadow = false
-        win.titleVisibility = .hidden
-        win.titlebarAppearsTransparent = true
         win.isMovable = false
         win.isMovableByWindowBackground = false
-        win.hidesOnDeactivate = false
-        win.isReleasedWhenClosed = false
-        win.collectionBehavior = [.canJoinAllSpaces]
+        win.collectionBehavior = [.canJoinAllSpaces, .stationary]
 
-        win.ignoresMouseEvents = true
         win.delegate = self
-
-        configureWindowSharing()
     }
 
     func configureWindowSharing() {
-        guard let win = window else { return }
-
-        let shouldShow = PasteUserDefaults.showDuringScreenShare
-        win.sharingType = shouldShow ? .readOnly : .none
+        guard let win = window as? ClipWindowView else { return }
+        win.configureWindowSharing(
+            showDuringScreenShare: PasteUserDefaults.showDuringScreenShare
+        )
     }
 
     func layoutToBottom(screen: NSScreen? = NSScreen.main) {
@@ -88,16 +84,14 @@ final class ClipMainWindowController: NSWindowController {
             if !win.isVisible {
                 clipVC.env.preApp = NSWorkspace.shared.frontmostApplication
                 layoutToBottom()
-                win.orderFront(nil)
+                win.orderFrontRegardless()
             }
-            win.ignoresMouseEvents = false
             win.makeKey()
 
             clipVC.env.resetQuickPasteState()
 
             clipVC.setPresented(true, animated: animated, completion: nil)
         } else {
-            win.ignoresMouseEvents = true
             clipVC.setPresented(false, animated: animated) { [weak self] in
                 self?.window?.orderOut(nil)
                 completionHandler?()

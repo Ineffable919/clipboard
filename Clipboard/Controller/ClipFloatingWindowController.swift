@@ -20,7 +20,21 @@ final class ClipFloatingWindowController: NSWindowController {
     private let db = PasteDataStore.main
 
     init() {
-        let panel = ClipWindowView(contentViewController: clipVC)
+        let panel = ClipWindowView(
+            contentRect: NSRect(
+                x: 0,
+                y: 0,
+                width: FloatConst.floatWindowWidth,
+                height: FloatConst.floatWindowHeight
+            ),
+            styleMask: [
+                .nonactivatingPanel, .resizable, .closable,
+                .fullSizeContentView,
+            ],
+            backing: .buffered,
+            defer: false
+        )
+        panel.contentViewController = clipVC
         super.init(window: panel)
         setupWindow()
     }
@@ -31,33 +45,28 @@ final class ClipFloatingWindowController: NSWindowController {
     }
 
     private func setupWindow() {
-        guard let win = window as? NSPanel else { return }
+        guard let win = window as? ClipWindowView else { return }
 
-        win.styleMask = [.nonactivatingPanel, .resizable]
-        win.level = .floating
+        win.configureCommonSettings()
 
-        win.backgroundColor = .clear
-        win.hasShadow = false
-        win.titleVisibility = .hidden
-        win.titlebarAppearsTransparent = true
-        win.hidesOnDeactivate = false
-        win.isReleasedWhenClosed = false
-        win.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        win.level = .statusBar
+        win.isMovableByWindowBackground = true
+        win.collectionBehavior = [
+            .canJoinAllSpaces, .fullScreenAuxiliary, .stationary,
+        ]
 
         win.contentView?.wantsLayer = true
         win.contentView?.layer?.cornerRadius = Const.radius
         win.contentView?.layer?.masksToBounds = true
 
         win.delegate = self
-
-        configureWindowSharing()
     }
 
     func configureWindowSharing() {
-        guard let win = window else { return }
-
-        let shouldShow = PasteUserDefaults.showDuringScreenShare
-        win.sharingType = shouldShow ? .readOnly : .none
+        guard let win = window as? ClipWindowView else { return }
+        win.configureWindowSharing(
+            showDuringScreenShare: PasteUserDefaults.showDuringScreenShare
+        )
     }
 
     private func calculateWindowPosition(windowSize: NSSize) -> NSPoint {
@@ -108,7 +117,10 @@ final class ClipFloatingWindowController: NSWindowController {
             screen.frame.contains(mouseLocation)
         }
 
-        guard let screen = screenWithMouse ?? NSScreen.main ?? NSScreen.screens.first else {
+        guard
+            let screen = screenWithMouse ?? NSScreen.main
+                ?? NSScreen.screens.first
+        else {
             return mouseLocation
         }
 
@@ -117,8 +129,10 @@ final class ClipFloatingWindowController: NSWindowController {
         let gap: CGFloat = 16
 
         // 计算鼠标在屏幕中的相对位置，决定窗口放置方向
-        let mouseRelativeX = (mouseLocation.x - visibleFrame.minX) / visibleFrame.width
-        let mouseRelativeY = (mouseLocation.y - visibleFrame.minY) / visibleFrame.height
+        let mouseRelativeX =
+            (mouseLocation.x - visibleFrame.minX) / visibleFrame.width
+        let mouseRelativeY =
+            (mouseLocation.y - visibleFrame.minY) / visibleFrame.height
 
         var x: CGFloat
         var y: CGFloat
@@ -142,7 +156,10 @@ final class ClipFloatingWindowController: NSWindowController {
         }
 
         x = max(visibleFrame.minX, min(x, visibleFrame.maxX - windowSize.width))
-        y = max(visibleFrame.minY, min(y, visibleFrame.maxY - windowSize.height))
+        y = max(
+            visibleFrame.minY,
+            min(y, visibleFrame.maxY - windowSize.height)
+        )
 
         return NSPoint(x: x, y: y)
     }
@@ -185,7 +202,10 @@ final class ClipFloatingWindowController: NSWindowController {
 
         let finalSize: NSSize =
             if size.width < 100 || size.height < 100 {
-                NSSize(width: FloatConst.floatWindowWidth, height: FloatConst.floatWindowHeight)
+                NSSize(
+                    width: FloatConst.floatWindowWidth,
+                    height: FloatConst.floatWindowHeight
+                )
             } else {
                 size
             }
@@ -209,7 +229,7 @@ final class ClipFloatingWindowController: NSWindowController {
             if !win.isVisible {
                 clipVC.env.preApp = NSWorkspace.shared.frontmostApplication
                 positionWindow()
-                win.orderFront(nil)
+                win.orderFrontRegardless()
             }
             win.makeKey()
 
