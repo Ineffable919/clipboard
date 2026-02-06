@@ -43,8 +43,6 @@ final class ClipMainWindowController: NSWindowController {
 
         win.level = .statusBar
         win.isOpaque = false
-        win.isMovable = false
-        win.isMovableByWindowBackground = false
         win.collectionBehavior = [.canJoinAllSpaces, .stationary]
 
         win.delegate = self

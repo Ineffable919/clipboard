@@ -50,7 +50,6 @@ final class ClipFloatingWindowController: NSWindowController {
         win.configureCommonSettings()
 
         win.level = .statusBar
-        win.isMovableByWindowBackground = true
         win.collectionBehavior = [
             .canJoinAllSpaces, .fullScreenAuxiliary, .stationary,
         ]
