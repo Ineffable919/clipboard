@@ -36,16 +36,20 @@ struct AppearanceSettingsView: View {
                 .settingsStyle()
 
             VStack(spacing: 0) {
-                DisplayModeRow(displayMode: Binding(
-                    get: { displayMode },
-                    set: { displayMode = $0 }
-                ))
+                DisplayModeRow(
+                    displayMode: Binding(
+                        get: { displayMode },
+                        set: { displayMode = $0 }
+                    )
+                )
 
                 if displayMode == .floating {
-                    WindowPositionRow(windowPosition: Binding(
-                        get: { windowPosition },
-                        set: { windowPosition = $0 }
-                    ))
+                    WindowPositionRow(
+                        windowPosition: Binding(
+                            get: { windowPosition },
+                            set: { windowPosition = $0 }
+                        )
+                    )
                 }
             }
             .settingsStyle()
@@ -191,7 +195,6 @@ struct AppearanceSettingsRow: View {
     var body: some View {
         HStack {
             Text("外观")
-                .font(.body)
             Spacer()
             Picker(
                 "",
@@ -222,7 +225,7 @@ struct AppearanceSettingsRow: View {
     }
 
     private func applyAppearance(_ mode: AppearanceMode) {
-        DispatchQueue.main.async {
+        Task { @MainActor in
             let targetAppearance: NSAppearance? =
                 switch mode {
                 case .system:

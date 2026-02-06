@@ -119,7 +119,7 @@ final class ClipFloatingWindowController: NSWindowController {
 
         guard
             let screen = screenWithMouse ?? NSScreen.main
-                ?? NSScreen.screens.first
+            ?? NSScreen.screens.first
         else {
             return mouseLocation
         }

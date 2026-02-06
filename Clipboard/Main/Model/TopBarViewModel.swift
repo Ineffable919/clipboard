@@ -9,9 +9,11 @@ import Foundation
 import SQLite
 import SwiftUI
 
-@Observable
 @MainActor
-final class TopBarViewModel {
+@Observable final class TopBarViewModel {
+    @ObservationIgnored
+    @AppStorage(PrefKey.displayMode.rawValue) private var displayModeRaw: Int = 0
+
     // MARK: - Search Properties
 
     var query: String = "" {
@@ -667,7 +669,7 @@ final class TopBarViewModel {
     private func handleQueryChange() {
         let trimmedQuery = query.trimmingCharacters(in: .whitespaces)
 
-        if trimmedQuery.hasPrefix("@") {
+        if trimmedQuery.hasPrefix("@"), displayModeRaw == 0 {
             let command = String(trimmedQuery.dropFirst()).lowercased()
             if let type = parseShortcutCommand(command) {
                 Task { @MainActor in

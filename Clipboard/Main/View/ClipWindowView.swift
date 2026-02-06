@@ -8,7 +8,6 @@
 import Cocoa
 
 final class ClipWindowView: NSPanel {
-
     func configureCommonSettings() {
         backgroundColor = .clear
         hasShadow = false
