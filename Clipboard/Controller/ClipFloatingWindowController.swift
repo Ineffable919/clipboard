@@ -259,10 +259,27 @@ final class ClipFloatingWindowController: NSWindowController {
 
 extension ClipFloatingWindowController: NSWindowDelegate {
     func windowDidResignKey(_: Notification) {
-        if clipVC.env.isShowDel || isPinned {
-            return
+        guard let window else { return }
+        if #available(macOS 26.0, *) {
+            if NSApplication.shared.modalWindow != nil {
+                window.level = .normal
+                return
+            } else {
+                if isPinned || clipVC.env.isShowDel {
+                    return
+                }
+            }
+        } else {
+            if isPinned || clipVC.env.isShowDel {
+                window.level = .normal
+                return
+            }
         }
         setPresented(false, animated: true)
+    }
+
+    func windowDidBecomeKey(_: Notification) {
+        window?.level = .statusBar
     }
 
     func windowDidMove(_: Notification) {
