@@ -40,10 +40,10 @@ struct ClipboardActionService {
     }
 
     func delete(_ item: PasteboardModel) {
-        if item.group != -1 {
+        if item.group != -1, let id = item.id {
             do {
                 try dataStore.updateItemGroup(
-                    itemId: item.id!,
+                    itemId: id,
                     groupId: -1
                 )
             } catch {
