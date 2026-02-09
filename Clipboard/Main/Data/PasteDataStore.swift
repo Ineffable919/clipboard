@@ -366,6 +366,12 @@ extension PasteDataStore {
             model.id = itemId
             totalCount = count
 
+            if isInFilterMode, let filter = currentFilter {
+                filteredCount = await sqlManager.getCount(filter: filter)
+            } else {
+                filteredCount = count
+            }
+
             if lastDataChangeType == .searchFilter {
                 return
             }
@@ -406,6 +412,13 @@ extension PasteDataStore {
             await sqlManager.delete(filter: filter)
             let count = await sqlManager.getTotalCount()
             totalCount = count
+
+            if isInFilterMode, let currentFilter {
+                filteredCount = await sqlManager.getCount(filter: currentFilter)
+            } else {
+                filteredCount = count
+            }
+
             invalidateTagTypesCache()
         }
     }
