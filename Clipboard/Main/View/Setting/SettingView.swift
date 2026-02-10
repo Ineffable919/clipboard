@@ -89,7 +89,6 @@ struct SettingToggleRow: View {
     var body: some View {
         HStack {
             Text(title)
-                .font(.body)
             Spacer()
             Toggle("", isOn: $isOn)
                 .toggleStyle(.switch)

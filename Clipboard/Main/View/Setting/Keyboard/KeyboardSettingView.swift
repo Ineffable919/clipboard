@@ -175,7 +175,6 @@ struct PlainTextModifierView: View {
     var body: some View {
         HStack {
             Text("粘贴为纯文本")
-                .font(.body)
             Spacer()
             Picker("", selection: $selectedModifier) {
                 ForEach(modifiers, id: \.id) { modifier in

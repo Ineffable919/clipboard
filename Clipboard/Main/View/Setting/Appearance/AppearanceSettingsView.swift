@@ -140,7 +140,6 @@ struct GlassMaterialSlider: View {
     var body: some View {
         HStack {
             Text("玻璃材质")
-                .font(.body)
             Spacer()
             HStack(spacing: Const.space8) {
                 Text("透明")
@@ -285,7 +284,6 @@ struct WindowPositionRow: View {
     var body: some View {
         HStack {
             Text("窗口位置")
-                .font(.body)
             Spacer()
             Picker(
                 "",

@@ -236,7 +236,6 @@ struct PasteTargetModeRow: View {
 
             VStack(alignment: .leading, spacing: Const.space4) {
                 Text(mode.title)
-                    .font(.body)
 
                 if !mode.description.isEmpty {
                     Text(mode.description)
@@ -272,7 +271,6 @@ struct ToggleRow: View {
                 }
 
             Text(title)
-                .font(.body)
 
             Spacer()
         }
