@@ -59,15 +59,11 @@ final class ClipMainViewController: NSViewController {
             slideContainer.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
 
-        Task { @MainActor in
-            self.view.layoutSubtreeIfNeeded()
-            let h = max(self.view.bounds.height, self.defaultHeight)
-            self.slideContainer.layer?.transform = CATransform3DMakeTranslation(
-                0,
-                -h,
-                0
-            )
-        }
+        slideContainer.layer?.transform = CATransform3DMakeTranslation(
+            0,
+            -defaultHeight,
+            0
+        )
     }
 
     func setPresented(
@@ -116,7 +112,8 @@ final class ClipMainViewController: NSViewController {
             return
         }
 
-        view.layoutSubtreeIfNeeded()
+        view.needsLayout = true
+        view.displayIfNeeded()
         let h = max(view.bounds.height, defaultHeight)
 
         let from = layer.presentation()?.transform ?? layer.transform

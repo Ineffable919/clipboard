@@ -127,7 +127,7 @@ final class PasteSQLManager: NSObject, @unchecked Sendable {
             try db.run("CREATE INDEX IF NOT EXISTS idx_tag ON Clip(tag)")
             try db.run("CREATE INDEX IF NOT EXISTS idx_ts ON Clip(timestamp DESC)")
             try db.run("CREATE INDEX IF NOT EXISTS idx_group ON Clip(\"group\")")
-            log.info("索引初始化成功")
+            log.debug("索引初始化成功")
         } catch {
             log.debug("索引已存在或创建失败: \(error)")
         }

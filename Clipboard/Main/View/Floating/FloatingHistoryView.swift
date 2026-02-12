@@ -89,8 +89,8 @@ struct FloatingHistoryView: View {
             model: item,
             isSelected: historyVM.selectedId == item.id,
             showPreviewId: $historyVM.showPreviewId,
-            quickPasteIndex: quickPasteIndex(for: index),
-            searchKeyword: searchKeyword,
+            quickPasteIndex: historyVM.quickPasteIndex(for: index),
+            searchKeyword: historyVM.searchKeyword,
             onRequestDelete: { requestDelete(index: index) }
         )
         .contentShape(Rectangle())
@@ -108,50 +108,27 @@ struct FloatingHistoryView: View {
         }
     }
 
-    private var searchKeyword: String {
-        HistoryHelpers.searchKeyword(from: pd)
-    }
-
-    private func quickPasteIndex(for index: Int) -> Int? {
-        HistoryHelpers.quickPasteIndex(
-            for: index,
-            isPressed: historyVM.isQuickPastePressed
-        )
-    }
-
     private func handleTap(on item: PasteboardModel, index: Int) {
-        let handler = HistoryTapHandler(env: env, historyVM: historyVM)
-        handler.handleTap(on: item, index: index) {
+        historyVM.handleTap(on: item, index: index) {
             env.actions.paste(item, isAttribute: true)
         }
     }
 
     private func requestDelete(index: Int) {
         guard PasteUserDefaults.delConfirm else {
-            deleteItem(for: index)
+            historyVM.deleteItem(at: index)
             return
         }
         env.isShowDel = true
-        HistoryHelpers.showDeleteConfirmAlert(
-            for: index,
-            historyVM: historyVM,
-            env: env
-        ) { [self] in
-            deleteItem(for: index)
+        historyVM.showDeleteConfirmAlert(for: index) { [self] in
+            historyVM.deleteItem(at: index)
         }
-    }
-
-    private func deleteItem(for index: Int) {
-        HistoryHelpers.deleteItem(
-            at: index,
-            historyVM: historyVM,
-            env: env
-        )
     }
 
     // MARK: - Event Handlers
 
     private func appear() {
+        historyVM.configure(env: env)
         EventDispatcher.shared.registerHandler(
             matching: .keyDown,
             key: "floating",

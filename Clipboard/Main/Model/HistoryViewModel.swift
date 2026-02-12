@@ -6,6 +6,7 @@ import SwiftUI
 @MainActor
 @Observable final class HistoryViewModel {
     private let pd = PasteDataStore.main
+    @ObservationIgnored private weak var env: AppEnvironment?
 
     var selectedId: PasteboardModel.ID?
     var showPreviewId: PasteboardModel.ID?
@@ -16,6 +17,25 @@ import SwiftUI
     @ObservationIgnored var lastTapTime: TimeInterval = 0
     @ObservationIgnored var isDel: Bool = false
     @ObservationIgnored var lastLoadTriggerIndex: Int = -1
+
+    // MARK: - Configuration
+
+    func configure(env: AppEnvironment) {
+        self.env = env
+    }
+
+    // MARK: - Search Keyword
+
+    var searchKeyword: String {
+        pd.lastDataChangeType == .searchFilter ? pd.currentSearchKeyword : ""
+    }
+
+    // MARK: - Quick Paste Index
+
+    func quickPasteIndex(for index: Int) -> Int? {
+        guard isQuickPastePressed, index < 9 else { return nil }
+        return index + 1
+    }
 
     // MARK: - Tap Handling
 
@@ -38,9 +58,126 @@ import SwiftUI
         lastTapTime = time
     }
 
-    func setSelection(id: PasteboardModel.ID, index: Int) {
+    func setSelection(id: PasteboardModel.ID?, index: Int) {
         selectedId = id
         selectedIndex = index
+    }
+
+    func handleTap(
+        on item: PasteboardModel,
+        index: Int,
+        doubleTapAction: () -> Void
+    ) {
+        guard let env else { return }
+
+        if env.focusView != .history {
+            env.focusView = .history
+        }
+
+        let now = ProcessInfo.processInfo.systemUptime
+        let isSameItem = selectedId == item.id
+
+        if isSameItem,
+           shouldHandleDoubleTap(
+               for: item.id,
+               currentTime: now,
+               interval: 0.3
+           )
+        {
+            doubleTapAction()
+            resetTapState()
+            return
+        }
+
+        if !isSameItem {
+            setSelection(id: item.id, index: index)
+        }
+        updateTapState(id: item.id, time: now)
+    }
+
+    // MARK: - Delete Operations
+
+    func deleteItem(at index: Int) {
+        guard let env, index < pd.dataList.count else { return }
+        let item = pd.dataList[index]
+
+        isDel = true
+
+        _ = withAnimation(.easeInOut(duration: 0.2)) {
+            pd.dataList.remove(at: index)
+        }
+
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(200))
+            updateSelectionAfterDeletion(at: index)
+            isDel = false
+        }
+
+        env.actions.delete(item)
+
+        if pd.dataList.count < 50,
+           pd.hasMoreData,
+           !pd.isLoadingPage
+        {
+            pd.loadNextPage()
+        }
+    }
+
+    private func updateSelectionAfterDeletion(at index: Int) {
+        if pd.dataList.isEmpty {
+            setSelection(id: nil, index: 0)
+        } else {
+            let newIndex = min(index, pd.dataList.count - 1)
+            setSelection(
+                id: pd.dataList[newIndex].id,
+                index: newIndex
+            )
+        }
+    }
+
+    func showDeleteConfirmAlert(
+        for index: Int,
+        onConfirm: @escaping () -> Void
+    ) {
+        guard let env else { return }
+
+        let alert = NSAlert()
+        alert.messageText = "确认删除吗？"
+        alert.informativeText = "删除后无法恢复"
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: "删除")
+        alert.addButton(withTitle: "取消")
+
+        let handleResponse: (NSApplication.ModalResponse) -> Void = { [weak self] response in
+            defer {
+                env.isShowDel = false
+            }
+
+            guard response == .alertFirstButtonReturn,
+                  self?.selectedIndex == index
+            else {
+                return
+            }
+
+            onConfirm()
+        }
+
+        let shouldUseSheet: Bool = {
+            if #available(macOS 26.0, *) {
+                return true
+            }
+            return WindowManager.shared.getCurrentDisplayMode() == .floating
+        }()
+
+        if shouldUseSheet, let window = NSApp.keyWindow {
+            alert.beginSheetModal(
+                for: window,
+                completionHandler: handleResponse
+            )
+        } else {
+            let response = alert.runModal()
+            handleResponse(response)
+        }
     }
 
     // MARK: - Pagination

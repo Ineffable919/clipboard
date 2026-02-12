@@ -90,9 +90,9 @@ struct HistoryView: View {
             model: item,
             isSelected: historyVM.selectedId == item.id,
             showPreviewId: $historyVM.showPreviewId,
-            quickPasteIndex: quickPasteIndex(for: index),
+            quickPasteIndex: historyVM.quickPasteIndex(for: index),
             enableLinkPreview: enableLinkPreview,
-            searchKeyword: HistoryHelpers.searchKeyword(from: pd),
+            searchKeyword: historyVM.searchKeyword,
             onRequestDelete: { requestDel(index: index) }
         )
         .contentShape(Rectangle())
@@ -108,33 +108,13 @@ struct HistoryView: View {
         }
     }
 
-    private func quickPasteIndex(for index: Int) -> Int? {
-        HistoryHelpers.quickPasteIndex(
-            for: index,
-            isPressed: historyVM.isQuickPastePressed
-        )
-    }
-
-    private func handleDoubleTap(on item: PasteboardModel) {
-        env.actions.paste(
-            item,
-            isAttribute: true
-        )
-    }
-
     private func handleOptimisticTap(on item: PasteboardModel, index: Int) {
-        let handler = HistoryTapHandler(env: env, historyVM: historyVM)
-        handler.handleTap(on: item, index: index) {
-            handleDoubleTap(on: item)
+        historyVM.handleTap(on: item, index: index) {
+            env.actions.paste(
+                item,
+                isAttribute: true
+            )
         }
-    }
-
-    private func deleteItem(for index: Int) {
-        HistoryHelpers.deleteItem(
-            at: index,
-            historyVM: historyVM,
-            env: env
-        )
     }
 
     private func moveSelection(offset: Int, event _: NSEvent) -> NSEvent? {
@@ -167,6 +147,7 @@ struct HistoryView: View {
     }
 
     private func appear() {
+        historyVM.configure(env: env)
         EventDispatcher.shared.registerHandler(
             matching: .keyDown,
             key: "history",
@@ -360,16 +341,12 @@ struct HistoryView: View {
 
     private func requestDel(index: Int) {
         guard PasteUserDefaults.delConfirm else {
-            deleteItem(for: index)
+            historyVM.deleteItem(at: index)
             return
         }
         env.isShowDel = true
-        HistoryHelpers.showDeleteConfirmAlert(
-            for: index,
-            historyVM: historyVM,
-            env: env
-        ) { [self] in
-            deleteItem(for: index)
+        historyVM.showDeleteConfirmAlert(for: index) { [self] in
+            historyVM.deleteItem(at: index)
         }
     }
 }
