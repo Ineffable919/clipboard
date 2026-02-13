@@ -128,37 +128,54 @@ struct FloatingHeaderView: View {
     // MARK: - 分类标签
 
     private var chipScrollView: some View {
-        ScrollView(.horizontal) {
-            HStack(spacing: Const.space6) {
-                ForEach(topBarVM.chips) { chip in
-                    FloatingChipView(
-                        chip: chip,
-                        isSelected: topBarVM.selectedChipId == chip.id,
-                        topBarVM: topBarVM,
-                        focus: $focus,
-                        onTap: {
-                            topBarVM.toggleChip(chip)
-                            guard env.focusView != .history else { return }
-                            focus = nil
-                            env.focusView = .history
+        HStack(spacing: 0) {
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal) {
+                    HStack(spacing: Const.space6) {
+                        ForEach(topBarVM.chips) { chip in
+                            FloatingChipView(
+                                chip: chip,
+                                isSelected: topBarVM.selectedChipId == chip.id,
+                                topBarVM: topBarVM,
+                                focus: $focus,
+                                onTap: {
+                                    topBarVM.toggleChip(chip)
+                                    guard env.focusView != .history else { return }
+                                    focus = nil
+                                    env.focusView = .history
+                                }
+                            )
                         }
-                    )
-                }
 
-                if topBarVM.editingNewChip {
-                    addChipEditorView
-                } else {
-                    addChipButton
+                        if topBarVM.editingNewChip {
+                            addChipEditorView
+                                .id("newChipEditor")
+                        }
+                    }
+                    .padding(.leading, FloatConst.horizontalPadding)
+                    .padding(.trailing, Const.space6)
+                    .padding(.vertical, Const.space6)
+                }
+                .scrollIndicators(.hidden)
+                .onTapGesture {
+                    guard env.focusView != .history else { return }
+                    focus = nil
+                    env.focusView = .history
+                }
+                .onChange(of: topBarVM.editingNewChip) {
+                    if topBarVM.editingNewChip {
+                        withAnimation {
+                            proxy.scrollTo("newChipEditor", anchor: .trailing)
+                        }
+                    }
                 }
             }
-            .padding(.horizontal, FloatConst.horizontalPadding)
-            .padding(.vertical, Const.space6)
-        }
-        .scrollIndicators(.hidden)
-        .onTapGesture {
-            guard env.focusView != .history else { return }
-            focus = nil
-            env.focusView = .history
+
+            if !topBarVM.editingNewChip {
+                addChipButton
+                    .padding(.trailing, FloatConst.horizontalPadding)
+                    .padding(.leading, Const.space6)
+            }
         }
     }
 
