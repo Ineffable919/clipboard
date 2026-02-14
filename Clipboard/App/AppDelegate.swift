@@ -17,7 +17,7 @@ class AppDelegate: NSObject {
     lazy var updaterController: SPUStandardUpdaterController = .init(
         startingUpdater: true,
         updaterDelegate: self,
-        userDriverDelegate: nil
+        userDriverDelegate: self
     )
 
     private var menuBarItem: NSStatusItem?
@@ -429,7 +429,7 @@ extension AppDelegate: NSMenuDelegate {
 
 // MARK: - SPUUpdaterDelegate
 
-extension AppDelegate: SPUUpdaterDelegate {
+extension AppDelegate: SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
     nonisolated func updater(_: SPUUpdater, didFindValidUpdate item: SUAppcastItem) {
         let version = item.displayVersionString
         Task { @MainActor in
@@ -454,6 +454,35 @@ extension AppDelegate: SPUUpdaterDelegate {
                 UpdateManager.shared.clearUpdate()
             }
         }
+    }
+
+    var supportsGentleScheduledUpdateReminders: Bool {
+        return true
+    }
+
+    func standardUserDriverShouldHandleShowingScheduledUpdate(
+        _: SUAppcastItem,
+        andInImmediateFocus immediateFocus: Bool
+    ) -> Bool {
+        return immediateFocus
+    }
+
+    func standardUserDriverWillHandleShowingUpdate(
+        _ willHandle: Bool,
+        forUpdate update: SUAppcastItem,
+        state _: SPUUserUpdateState
+    ) {
+        guard !willHandle else { return }
+        log.info("发现更新：\(update.displayVersionString)")
+        UpdateManager.shared.setUpdateAvailable(version: update.versionString)
+    }
+
+    func standardUserDriverDidReceiveUserAttention(forUpdate _: SUAppcastItem) {
+        updaterController.checkForUpdates(nil)
+    }
+
+    func standardUserDriverWillFinishUpdateSession() {
+        UpdateManager.shared.clearUpdate()
     }
 }
 
