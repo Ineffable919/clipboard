@@ -457,14 +457,14 @@ extension AppDelegate: SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
     }
 
     var supportsGentleScheduledUpdateReminders: Bool {
-        return true
+        true
     }
 
     func standardUserDriverShouldHandleShowingScheduledUpdate(
         _: SUAppcastItem,
         andInImmediateFocus immediateFocus: Bool
     ) -> Bool {
-        return immediateFocus
+        immediateFocus
     }
 
     func standardUserDriverWillHandleShowingUpdate(
