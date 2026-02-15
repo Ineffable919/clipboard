@@ -99,6 +99,9 @@ struct FloatingHistoryView: View {
         }
         .onDrag {
             env.draggingItemId = item.id
+            if env.focusView != .history {
+                env.focusView = .history
+            }
             historyVM.setSelection(id: item.id, index: index)
             return item.itemProvider()
         }

@@ -61,6 +61,20 @@ struct PreviewPopoverView: View {
             ?? bundle.object(forInfoDictionaryKey: "CFBundleName") as? String
     }
 
+    private var fileSizeString: String? {
+        guard model.type == .file,
+              model.fileSize() == 1,
+              let filePath = model.cachedFilePaths?.first
+        else { return nil }
+
+        let fileURL = URL(fileURLWithPath: filePath)
+        guard let attributes = try? FileManager.default.attributesOfItem(atPath: fileURL.path),
+              let fileSize = attributes[.size] as? Int64
+        else { return nil }
+
+        return ByteCountFormatter.string(fromByteCount: fileSize, countStyle: .file)
+    }
+
     var body: some View {
         FocusableContainer(onInteraction: {
             Task { @MainActor in
@@ -154,7 +168,7 @@ struct PreviewPopoverView: View {
     }
 
     private var footerView: some View {
-        HStack {
+        HStack(spacing: Const.space4) {
             if shouldShowStatistics {
                 Text(textStatistics.displayString)
                     .font(.callout)
@@ -173,7 +187,13 @@ struct PreviewPopoverView: View {
             Spacer()
 
             if model.type == .file, model.fileSize() == 1 {
-                BorderedButton(title: "在访达中显示", action: openInFinder)
+                HStack {
+                    if let fileSize = fileSizeString {
+                        Text(fileSize)
+                            .foregroundStyle(.secondary)
+                    }
+                    BorderedButton(title: "在访达中显示", action: openInFinder)
+                }
             }
 
             if model.type == .link,
