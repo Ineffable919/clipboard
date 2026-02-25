@@ -74,7 +74,7 @@ struct FloatingHeaderView: View {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
                 .font(.system(size: 12, weight: .medium))
-            
+
             TextField("搜索", text: $topBarVM.query)
                 .textFieldStyle(.plain)
                 .focused($focus, equals: .search)
@@ -83,7 +83,7 @@ struct FloatingHeaderView: View {
                         env.focusView = .search
                     }
                 }
-            
+
             if !topBarVM.query.isEmpty {
                 Button {
                     topBarVM.query = ""
@@ -101,16 +101,16 @@ struct FloatingHeaderView: View {
         .background {
             Capsule()
                 .fill(
-                    colorScheme == .dark 
+                    colorScheme == .dark
                         ? Color(nsColor: .controlBackgroundColor)
-                    : .black.opacity(0.08)
+                        : .black.opacity(0.08)
                 )
         }
         .overlay {
             Capsule()
                 .strokeBorder(
-                    focus == .search 
-                    ? Color.accentColor.opacity(0.45)
+                    focus == .search
+                        ? Color.accentColor.opacity(0.45)
                         : Color.clear,
                     lineWidth: 3.0
                 )
@@ -118,7 +118,6 @@ struct FloatingHeaderView: View {
         .animation(.easeInOut(duration: 0.2), value: focus)
         .animation(.easeInOut(duration: 0.15), value: topBarVM.query.isEmpty)
     }
-
 
     private var pinButton: some View {
         Button {
