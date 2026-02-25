@@ -25,9 +25,10 @@ struct FloatingHeaderView: View {
             HStack(spacing: Const.space12) {
                 pinButton
                 searchField
-                settingsButton
+                SettingsMenuView(topBarVM: topBarVM)
             }
-            .padding(.horizontal, FloatConst.horizontalPadding)
+            .padding(.horizontal, Const.space16)
+            .padding(.vertical, Const.space4)
 
             chipScrollView
                 .frame(height: 42)
@@ -61,17 +62,20 @@ struct FloatingHeaderView: View {
         .frame(maxWidth: .infinity)
         .contentShape(.rect)
         .windowDraggable()
+        .onTapGesture {
+            env.focusView = .history
+        }
     }
 
     // MARK: - 搜索框
 
     private var searchField: some View {
-        HStack(spacing: Const.space6) {
+        HStack(spacing: 4) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 14.0, weight: .regular))
                 .foregroundStyle(.secondary)
-
-            TextField("搜索...", text: $topBarVM.query)
+                .font(.system(size: 12, weight: .medium))
+            
+            TextField("搜索", text: $topBarVM.query)
                 .textFieldStyle(.plain)
                 .focused($focus, equals: .search)
                 .onChange(of: focus) {
@@ -79,24 +83,42 @@ struct FloatingHeaderView: View {
                         env.focusView = .search
                     }
                 }
+            
+            if !topBarVM.query.isEmpty {
+                Button {
+                    topBarVM.query = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                        .font(.system(size: 12))
+                }
+                .buttonStyle(.plain)
+                .transition(.scale.combined(with: .opacity))
+            }
         }
         .padding(.horizontal, Const.space10)
         .padding(.vertical, Const.space6)
         .background {
-            RoundedRectangle(cornerRadius: Const.radius)
-                .fill(searchFieldBackground)
+            Capsule()
+                .fill(
+                    colorScheme == .dark 
+                        ? Color(nsColor: .controlBackgroundColor)
+                    : .black.opacity(0.08)
+                )
         }
         .overlay {
-            RoundedRectangle(cornerRadius: Const.radius + 3)
+            Capsule()
                 .strokeBorder(
-                    focus == .search
-                        ? Color.accentColor.opacity(0.45)
+                    focus == .search 
+                    ? Color.accentColor.opacity(0.45)
                         : Color.clear,
-                    lineWidth: 3
+                    lineWidth: 3.0
                 )
-                .padding(-3)
         }
+        .animation(.easeInOut(duration: 0.2), value: focus)
+        .animation(.easeInOut(duration: 0.15), value: topBarVM.query.isEmpty)
     }
+
 
     private var pinButton: some View {
         Button {
@@ -109,20 +131,6 @@ struct FloatingHeaderView: View {
         }
         .buttonStyle(.plain)
         .help(isPinned ? "取消置顶" : "置顶")
-    }
-
-    private var searchFieldBackground: some ShapeStyle {
-        if colorScheme == .dark {
-            AnyShapeStyle(Color.white.opacity(0.1))
-        } else {
-            AnyShapeStyle(Color.black.opacity(0.05))
-        }
-    }
-
-    // MARK: - 设置按钮
-
-    private var settingsButton: some View {
-        SettingsMenuView(topBarVM: topBarVM)
     }
 
     // MARK: - 分类标签
@@ -152,7 +160,7 @@ struct FloatingHeaderView: View {
                                 .id("newChipEditor")
                         }
                     }
-                    .padding(.leading, FloatConst.horizontalPadding)
+                    .padding(.leading, Const.space16)
                     .padding(.trailing, Const.space6)
                     .padding(.vertical, Const.space6)
                 }
@@ -173,7 +181,7 @@ struct FloatingHeaderView: View {
 
             if !topBarVM.editingNewChip {
                 addChipButton
-                    .padding(.trailing, FloatConst.horizontalPadding)
+                    .padding(.trailing, Const.space16)
                     .padding(.leading, Const.space6)
             }
         }

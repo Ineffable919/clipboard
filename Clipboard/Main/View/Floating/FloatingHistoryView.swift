@@ -81,7 +81,7 @@ struct FloatingHistoryView: View {
                 cardItem(item: item, index: index)
             }
         }
-        .padding(.horizontal, FloatConst.horizontalPadding)
+        .padding(.horizontal, Const.space16)
     }
 
     private func cardItem(item: PasteboardModel, index: Int) -> some View {

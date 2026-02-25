@@ -31,7 +31,7 @@ struct FloatingFooterView: View {
                 CompactPauseIndicator(topBarVM: topBarVM)
             }
         }
-        .padding(.horizontal, FloatConst.horizontalPadding)
+        .padding(.horizontal, Const.space16)
         .frame(height: FloatConst.footerHeight)
         .frame(maxWidth: .infinity)
         .onAppear {

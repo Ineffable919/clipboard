@@ -64,7 +64,6 @@ enum FloatConst {
     static let cardWidth: CGFloat = 330.0
     static let cardHeight: CGFloat = 60.0
     static let cardSpacing: CGFloat = 10.0
-    static let horizontalPadding: CGFloat = 16.0
     static let floatWindowWidth: CGFloat = 320.0
     static let floatWindowHeight: CGFloat = 650.0
 }
