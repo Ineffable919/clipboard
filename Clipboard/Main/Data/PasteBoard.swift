@@ -239,18 +239,15 @@ final class PasteBoard {
     private func writeToPasteboard(_ data: PasteboardModel, isAttribute: Bool) -> Bool {
         let shouldPasteAsPlainText = !isAttribute || PasteUserDefaults.pasteOnlyText
 
-        switch data.type {
-        case .string where shouldPasteAsPlainText, .rich where shouldPasteAsPlainText:
+        if data.pasteboardType.isText(), shouldPasteAsPlainText {
             writePlainText(data)
             return true
-
-        case .file:
-            return writeFileURLs(data)
-
-        default:
-            writeRawData(data)
-            return true
         }
+        if data.type == .file {
+            return writeFileURLs(data)
+        }
+        writeRawData(data)
+        return true
     }
 
     /// 写入纯文本

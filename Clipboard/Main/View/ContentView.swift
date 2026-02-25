@@ -37,8 +37,13 @@ struct ContentView: View {
                         in: .rect(cornerRadius: Const.radius)
                     )
             } else {
-                RoundedRectangle(cornerRadius: Const.radius)
-                    .fill(glassMaterial.material)
+                if #available(macOS 26.0, *) {
+                    RoundedRectangle(cornerRadius: Const.radius)
+                        .fill(glassMaterial.material)
+                } else {
+                    Rectangle()
+                        .fill(glassMaterial.material)
+                }
             }
         }
     }
