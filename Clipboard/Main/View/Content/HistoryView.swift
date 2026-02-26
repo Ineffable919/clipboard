@@ -113,7 +113,7 @@ struct HistoryView: View {
 
     private func handleOptimisticTap(on item: PasteboardModel, index: Int) {
         historyVM.handleTap(on: item, index: index) {
-            env.actions.paste(
+            ClipActionService.shared.paste(
                 item,
                 isAttribute: true
             )
@@ -257,7 +257,7 @@ struct HistoryView: View {
 
         let item = pd.dataList[index]
         historyVM.setSelection(id: item.id, index: index)
-        env.actions.paste(
+        ClipActionService.shared.paste(
             item,
             isAttribute: true
         )
@@ -306,7 +306,7 @@ struct HistoryView: View {
             NSSound.beep()
             return nil
         }
-        env.actions.copy(pd.dataList[index])
+        ClipActionService.shared.copy(pd.dataList[index])
         return nil
     }
 
@@ -326,7 +326,7 @@ struct HistoryView: View {
         else {
             return event
         }
-        env.actions.paste(
+        ClipActionService.shared.paste(
             pd.dataList[index],
             isAttribute: !hasPlainTextModifier(event)
         )

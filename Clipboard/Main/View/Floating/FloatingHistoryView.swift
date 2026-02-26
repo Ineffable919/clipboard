@@ -113,7 +113,7 @@ struct FloatingHistoryView: View {
 
     private func handleTap(on item: PasteboardModel, index: Int) {
         historyVM.handleTap(on: item, index: index) {
-            env.actions.paste(item, isAttribute: true)
+            ClipActionService.shared.paste(item, isAttribute: true)
         }
     }
 
@@ -267,7 +267,7 @@ struct FloatingHistoryView: View {
 
         let item = pd.dataList[index]
         historyVM.setSelection(id: item.id, index: index)
-        env.actions.paste(
+        ClipActionService.shared.paste(
             item,
             isAttribute: true
         )
@@ -309,7 +309,7 @@ struct FloatingHistoryView: View {
             NSSound.beep()
             return nil
         }
-        env.actions.copy(pd.dataList[index])
+        ClipActionService.shared.copy(pd.dataList[index])
         return nil
     }
 
@@ -329,7 +329,7 @@ struct FloatingHistoryView: View {
         else {
             return event
         }
-        env.actions.paste(
+        ClipActionService.shared.paste(
             pd.dataList[index],
             isAttribute: !hasPlainTextModifier(event)
         )

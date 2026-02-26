@@ -113,7 +113,7 @@ import SwiftUI
             isDel = false
         }
 
-        env.actions.delete(item)
+        ClipActionService.shared.delete(item)
 
         if pd.dataList.count < 50,
            pd.hasMoreData,

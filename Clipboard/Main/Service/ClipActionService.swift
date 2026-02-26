@@ -1,10 +1,15 @@
 import AppKit
 import Foundation
 
-struct ClipboardActionService {
+@MainActor
+final class ClipActionService {
+    static let shared = ClipActionService()
+
     private let pasteBoard = PasteBoard.main
     private let userDefaults = PasteUserDefaults.self
     private let dataStore = PasteDataStore.main
+
+    private init() {}
 
     func paste(
         _ item: PasteboardModel,
@@ -16,7 +21,7 @@ struct ClipboardActionService {
             log.debug(
                 "Accessibility permission not granted, cannot send keyboard events"
             )
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 requestAccessibilityPermission(
                     item: item,
                     isAttribute: isAttribute

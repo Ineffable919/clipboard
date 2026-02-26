@@ -205,15 +205,15 @@ struct FloatingCardView: View {
     // MARK: - Actions
 
     private func pasteToApp() {
-        env.actions.paste(model)
+        ClipActionService.shared.paste(model)
     }
 
     private func pasteAsPlainText() {
-        env.actions.paste(model, isAttribute: false)
+        ClipActionService.shared.paste(model, isAttribute: false)
     }
 
     private func copyToClipboard() {
-        env.actions.copy(model)
+        ClipActionService.shared.copy(model)
     }
 
     private func deleteItem() {
