@@ -98,7 +98,7 @@ import SwiftUI
     // MARK: - Delete Operations
 
     func deleteItem(at index: Int) {
-        guard let env, index < pd.dataList.count else { return }
+        guard index < pd.dataList.count else { return }
         let item = pd.dataList[index]
 
         isDel = true
