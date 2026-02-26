@@ -188,7 +188,6 @@ echo ""
 
 echo -e "${BLUE}🧹 步骤 5/5: 清理临时文件...${NC}"
 rm -rf ./dmg_temp
-rm -rf ./build
 echo -e "${GREEN}✅ 清理完成${NC}"
 echo ""
 

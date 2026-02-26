@@ -222,3 +222,4 @@ echo -e "${BLUE}📝 下一步:${NC}"
 echo "   1. 更新 appcast.xml（复制上面的 <item> 内容）"
 echo "   2. 上传 $ZIP_NAME 到 GitHub Releases"
 echo ""
+rm -rf ./build
