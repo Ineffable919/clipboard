@@ -17,18 +17,9 @@ struct StorageSettingView: View {
 
     @State private var isExporting = false
     @State private var isImporting = false
-    @State private var isExportingLog = false
     @State private var showAlert = false
     @State private var alertTitle = ""
     @State private var alertMessage = ""
-
-    private var logFilePath: String {
-        AppLogger.getLogFileURL()?.path ?? "未找到日志文件"
-    }
-
-    private var canExportLog: Bool {
-        AppLogger.getLogFileURL() != nil
-    }
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
@@ -38,22 +29,6 @@ struct StorageSettingView: View {
                         title: "剪贴板记录数",
                         value: "\(db.totalCount) 条"
                     )
-                }
-                .padding(.horizontal, Const.space16)
-                .settingsStyle()
-
-                Text("应用日志")
-                    .font(.headline)
-                    .bold()
-
-                VStack(alignment: .leading, spacing: 0) {
-                    LogFileRow(
-                        logFilePath: logFilePath,
-                        isExporting: isExportingLog,
-                        canExport: canExportLog
-                    ) {
-                        exportLog()
-                    }
                 }
                 .padding(.horizontal, Const.space16)
                 .settingsStyle()
@@ -179,8 +154,7 @@ struct StorageSettingView: View {
 
                     Task {
                         await db.resetDefaultList()
-                        let count = await PasteSQLManager.manager
-                            .getTotalCount()
+                        let count = await PasteSQLManager.manager.getTotalCount()
                         db.totalCount = count
                         db.invalidateTagTypesCache()
                         db.notifyCategoryChipsChanged()
@@ -189,57 +163,6 @@ struct StorageSettingView: View {
                     log.error("数据库导入失败: \(result.message)")
                     alertTitle = "导入失败"
                     alertMessage = "数据导入失败，请检查文件格式"
-                }
-                showAlert = true
-            }
-        }
-    }
-
-    // MARK: - 导出日志
-
-    private func exportLog() {
-        guard let sourceURL = AppLogger.getLogFileURL() else {
-            alertTitle = "导出失败"
-            alertMessage = "日志文件未找到"
-            showAlert = true
-            return
-        }
-
-        let panel = NSSavePanel()
-        panel.title = "导出日志"
-        panel.nameFieldLabel = "文件名："
-        panel.nameFieldStringValue = sourceURL.lastPathComponent
-        panel.allowedContentTypes = [UTType.log, UTType.plainText]
-        panel.canCreateDirectories = true
-
-        guard panel.runModal() == .OK, let destURL = panel.url else {
-            return
-        }
-
-        isExportingLog = true
-
-        Task.detached(priority: .userInitiated) {
-            var success = false
-
-            do {
-                if FileManager.default.fileExists(atPath: destURL.path) {
-                    try FileManager.default.removeItem(at: destURL)
-                }
-                try FileManager.default.copyItem(at: sourceURL, to: destURL)
-                success = true
-            } catch {
-                await log.error("日志导出失败: \(error.localizedDescription)")
-            }
-
-            await MainActor.run {
-                isExportingLog = false
-                if success {
-                    log.info("日志导出成功: \(destURL.lastPathComponent)")
-                    alertTitle = "导出成功"
-                    alertMessage = "日志已成功导出"
-                } else {
-                    alertTitle = "导出失败"
-                    alertMessage = "日志导出失败，请重试"
                 }
                 showAlert = true
             }
@@ -301,50 +224,6 @@ struct DataActionRow: View {
             }
         }
         .padding(.vertical, Const.space12)
-    }
-}
-
-// MARK: - 日志文件行
-
-struct LogFileRow: View {
-    let logFilePath: String
-    let isExporting: Bool
-    let canExport: Bool
-    let action: () -> Void
-
-    var body: some View {
-        HStack(alignment: .center, spacing: Const.space12) {
-            VStack(alignment: .leading, spacing: Const.space4) {
-                Text("存储路径")
-                    .font(.callout)
-                Button(logFilePath) {
-                    showLogFileInFinder()
-                }
-                .buttonStyle(.plain)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .truncationMode(.middle)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-
-            Spacer()
-
-            if canExport {
-                if isExporting {
-                    ProgressView()
-                        .controlSize(.small)
-                } else {
-                    BorderedButton(title: "导出...", action: action)
-                }
-            }
-        }
-        .padding(.vertical, Const.space12)
-    }
-
-    private func showLogFileInFinder() {
-        guard let logURL = AppLogger.getLogFileURL() else { return }
-        NSWorkspace.shared.selectFile(logURL.path, inFileViewerRootedAtPath: "")
     }
 }
 

@@ -193,7 +193,7 @@ final class PasteBoard {
         PasteDataStore.main.addNewItem(pasteboard)
         changeCount = pasteboard.changeCount
 
-        AppDelegate.shared?.triggerStatusBarPulse()
+        StatusBarController.shared.triggerPulseAnimation()
         SoundManager.shared.play(.copy)
     }
 
