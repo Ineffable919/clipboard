@@ -99,7 +99,7 @@ struct FloatingHeaderView: View {
         .padding(.horizontal, Const.space10)
         .padding(.vertical, Const.space6)
         .background {
-            Capsule()
+            RoundedRectangle(cornerRadius: Const.radius)
                 .fill(
                     colorScheme == .dark
                         ? Color(nsColor: .controlBackgroundColor)
@@ -107,7 +107,7 @@ struct FloatingHeaderView: View {
                 )
         }
         .overlay {
-            Capsule()
+            RoundedRectangle(cornerRadius: Const.radius)
                 .strokeBorder(
                     focus == .search
                         ? Color.accentColor.opacity(0.45)
