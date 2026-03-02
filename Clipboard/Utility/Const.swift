@@ -14,6 +14,7 @@ class Const {
     static let iconSize: CGFloat = 80.0
 
     static let cardSpace: CGFloat = 16.0
+    static let cardLeadingSpace: CGFloat = 20.0
     static let bottomSize: CGFloat = 40.0
 
     static let radius: CGFloat =

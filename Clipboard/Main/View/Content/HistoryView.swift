@@ -22,55 +22,49 @@ struct HistoryView: View {
     @State private var flagsMonitorToken: Any?
 
     var body: some View {
-        ZStack {
-            ScrollViewReader { proxy in
-                if pd.dataList.isEmpty {
-                    ClipboardEmptyStateView(style: .main)
-                } else {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        contentView()
-                    }
-                    .contentMargins(
-                        .leading,
-                        Const.cardSpace,
-                        for: .scrollContent
-                    )
-                    .contentMargins(
-                        .trailing,
-                        Const.cardSpace,
-                        for: .scrollContent
-                    )
-                    .focusable()
-                    .focused($isFocused)
-                    .focusEffectDisabled()
-                    .onChange(of: env.focusView) {
-                        isFocused = (env.focusView == .history)
-                    }
-                    .onChange(of: historyVM.selectedId) { _, newId in
-                        if let id = newId {
-                            proxy.scrollTo(id, anchor: historyVM.scrollAnchor())
-                        }
+        ScrollViewReader { proxy in
+            if pd.dataList.isEmpty {
+                ClipboardEmptyStateView(style: .main)
+            } else {
+                ScrollView(.horizontal) {
+                    contentView()
+                }
+                .scrollIndicators(.never)
+                .contentMargins(
+                    .leading,
+                    Const.cardLeadingSpace,
+                    for: .scrollContent
+                )
+                .contentMargins(
+                    .trailing,
+                    Const.cardSpace,
+                    for: .scrollContent
+                )
+                .focusable()
+                .focused($isFocused)
+                .focusEffectDisabled()
+                .onChange(of: env.focusView) {
+                    isFocused = (env.focusView == .history)
+                }
+                .onChange(of: historyVM.selectedId) { _, newId in
+                    if let id = newId {
+                        proxy.scrollTo(id, anchor: historyVM.scrollAnchor())
                     }
                 }
-                EmptyView()
-                    .onChange(of: pd.dataList) {
-                        historyVM.reset(proxy: proxy)
-                    }
-                    .onChange(of: env.quickPasteResetTrigger) {
-                        historyVM.isQuickPastePressed = false
-                    }
             }
-            .onAppear {
-                appear()
-            }
-            .onDisappear {
-                disappear()
-            }
+            EmptyView()
+                .onChange(of: pd.dataList) {
+                    historyVM.reset(proxy: proxy)
+                }
+                .onChange(of: env.quickPasteResetTrigger) {
+                    historyVM.isQuickPastePressed = false
+                }
         }
-        .contentShape(Rectangle())
-        .onTapGesture {
-            guard env.focusView != .history else { return }
-            env.focusView = .history
+        .onAppear {
+            appear()
+        }
+        .onDisappear {
+            disappear()
         }
     }
 
