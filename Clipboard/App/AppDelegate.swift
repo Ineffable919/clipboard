@@ -170,7 +170,7 @@ extension AppDelegate: SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
     ) {
         guard !willHandle else { return }
         log.info("发现更新：\(update.displayVersionString)")
-        UpdateManager.shared.setUpdateAvailable(version: update.versionString)
+        UpdateManager.shared.setUpdateAvailable(version: update.displayVersionString)
     }
 
     func standardUserDriverDidReceiveUserAttention(forUpdate _: SUAppcastItem) {
