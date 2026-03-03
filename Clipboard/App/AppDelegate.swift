@@ -44,6 +44,7 @@ extension AppDelegate: NSApplicationDelegate {
     func applicationWillTerminate(_: Notification) {
         StatusBarController.shared.cleanup()
         EventDispatcher.shared.stop()
+        AppIconCache.shared.clearCache()
     }
 
     private func applyAppearanceSettings() {

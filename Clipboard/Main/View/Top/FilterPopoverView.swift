@@ -200,16 +200,20 @@ struct FilterPopoverView: View {
 
         let (rawAppInfo, tagTypeList) = await (info, types)
 
-        let appInfoWithIcons = await Task.detached(priority: .userInitiated) {
-            rawAppInfo.map { info -> AppInfo in
-                let icon: NSImage? = if FileManager.default.fileExists(atPath: info.path) {
-                    NSWorkspace.shared.icon(forFile: info.path)
-                } else {
-                    nil
+        let appInfoWithIcons = await withTaskGroup(of: (Int, AppInfo).self) { group in
+            for (index, info) in rawAppInfo.enumerated() {
+                group.addTask {
+                    let icon = await AppIconCache.shared.loadIcon(forPath: info.path)
+                    return (index, AppInfo(name: info.name, path: info.path, icon: icon))
                 }
-                return AppInfo(name: info.name, path: info.path, icon: icon)
             }
-        }.value
+
+            var results: [(Int, AppInfo)] = []
+            for await result in group {
+                results.append(result)
+            }
+            return results.sorted(by: { $0.0 < $1.0 }).map(\.1)
+        }
 
         appInfoList = appInfoWithIcons
         tagTypes = tagTypeList

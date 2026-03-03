@@ -75,14 +75,12 @@ private struct AppIconView: View {
                     .resizable()
                     .scaledToFill()
             } else {
-                Image(systemName: "questionmark.app.dashed")
-                    .resizable()
-                    .scaledToFill()
+                Color.clear
             }
         }
         .frame(width: Const.iconSize, height: Const.iconSize)
         .task(id: appPath) {
-            icon = NSWorkspace.shared.icon(forFile: appPath)
+            icon = await AppIconCache.shared.loadIcon(forPath: appPath)
         }
     }
 }
