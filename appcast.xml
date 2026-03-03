@@ -6,6 +6,44 @@
         <language>zh-CN</language>
 
         <item>
+            <title>Version 0.5.1 (Apple Silicon (arm64))</title>
+            <sparkle:releaseNotesLink>
+                https://ineffable919.github.io/clipboard/scripts/release-note.html
+            </sparkle:releaseNotesLink>
+            <pubDate>Tue, 03 Mar 2026 11:27:22 +0800</pubDate>
+            <sparkle:version>106</sparkle:version>
+            <sparkle:shortVersionString>0.5.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:tags>
+                <sparkle:criticalUpdate sparkle:osType="arm64" />
+            </sparkle:tags>
+            <enclosure
+                url="https://github.com/Ineffable919/clipboard/releases/download/0.5.1/Clipboard-0.5.1-arm64.zip"
+                sparkle:edSignature="+10RT2oh0xUi8a6CLDsb8dTw3bWIBwa8y1Joe7bTDfG2W0e5DajTfTHP7EIeanCptHEVIkNTNS+McEmqVk/vAg=="
+                length="3339886"
+                type="application/octet-stream" />
+        </item>
+
+        <item>
+            <title>Version 0.5.1 (Intel (x86_64))</title>
+            <sparkle:releaseNotesLink>
+                https://ineffable919.github.io/clipboard/scripts/release-note.html
+            </sparkle:releaseNotesLink>
+            <pubDate>Tue, 03 Mar 2026 11:29:42 +0800</pubDate>
+            <sparkle:version>106</sparkle:version>
+            <sparkle:shortVersionString>0.5.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:tags>
+                <sparkle:criticalUpdate sparkle:osType="x86_64" />
+            </sparkle:tags>
+            <enclosure
+                url="https://github.com/Ineffable919/clipboard/releases/download/0.5.1/Clipboard-0.5.1-x86_64.zip"
+                sparkle:edSignature="J5om+B4gW4JInVzqluYCsqRbz+p6SbPZ/L3BfL/7rAZZdH3mHflYskMwXhwkAdkGbn7O4epePlxritw2ECbZAQ=="
+                length="3469733"
+                type="application/octet-stream" />
+        </item>
+
+        <item>
             <title>Version 0.5.0 (Apple Silicon (arm64))</title>
             <sparkle:releaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
@@ -116,44 +154,6 @@
                 url="https://github.com/Ineffable919/clipboard/releases/download/0.3.0/Clipboard-0.3.0-x86_64.zip"
                 sparkle:edSignature="hBqA9SBxkwD4/OI2ofNGb4wBnzcLNIlsktjpCbLtn6p9OXu1mwf/JnNIt3PL2Fk3lamEm00Ec4poYi9wcDpoAA=="
                 length="3138964"
-                type="application/octet-stream" />
-        </item>
-
-        <item>
-            <title>Version 0.2.5 (Apple Silicon (arm64))</title>
-            <sparkle:releaseNotesLink>
-                https://ineffable919.github.io/clipboard/scripts/release-note.html
-            </sparkle:releaseNotesLink>
-            <pubDate>Wed, 10 Dec 2025 21:40:06 +0800</pubDate>
-            <sparkle:version>54</sparkle:version>
-            <sparkle:shortVersionString>0.2.5</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <sparkle:tags>
-                <sparkle:criticalUpdate sparkle:osType="arm64" />
-            </sparkle:tags>
-            <enclosure
-                url="https://github.com/Ineffable919/clipboard/releases/download/0.2.5/Clipboard-0.2.5-arm64.zip"
-                sparkle:edSignature="A5YxRACpAfmnz4AuRPWSuXOjmD8xYUI8NiNdUuj4hiVnavWIfDCyDeruasnIRxOq2sBLqdmkO8HzSBnVsuWyAQ=="
-                length="2844923"
-                type="application/octet-stream" />
-        </item>
-
-        <item>
-            <title>Version 0.2.5 (Intel (x86_64))</title>
-            <sparkle:releaseNotesLink>
-                https://ineffable919.github.io/clipboard/scripts/release-note.html
-            </sparkle:releaseNotesLink>
-            <pubDate>Wed, 10 Dec 2025 21:45:59 +0800</pubDate>
-            <sparkle:version>54</sparkle:version>
-            <sparkle:shortVersionString>0.2.5</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <sparkle:tags>
-                <sparkle:criticalUpdate sparkle:osType="x86_64" />
-            </sparkle:tags>
-            <enclosure
-                url="https://github.com/Ineffable919/clipboard/releases/download/0.2.5/Clipboard-0.2.5-x86_64.zip"
-                sparkle:edSignature="ymuzrsvLahQJyXodIe1YgwajSrk89063C8wnW5JYfHmCx/EWbQPSN+550WO7SJwQ6H/WTZq6uyEYoamhEopRAA=="
-                length="2906890"
                 type="application/octet-stream" />
         </item>
 
