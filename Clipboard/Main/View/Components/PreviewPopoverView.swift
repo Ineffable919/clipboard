@@ -408,7 +408,7 @@ struct FocusableContainer<Content: View>: NSViewRepresentable {
 }
 
 class InterceptingHostingView<Content: View>: NSHostingView<Content> {
-    let onInteraction: () -> Void
+    private let onInteraction: () -> Void
 
     init(rootView: Content, onInteraction: @escaping () -> Void) {
         self.onInteraction = onInteraction
@@ -420,6 +420,7 @@ class InterceptingHostingView<Content: View>: NSHostingView<Content> {
         fatalError("init(coder:) has not been implemented")
     }
 
+    @available(*, unavailable)
     required init(rootView _: Content) {
         fatalError("init(rootView:) has not been implemented")
     }
@@ -431,6 +432,8 @@ class InterceptingHostingView<Content: View>: NSHostingView<Content> {
         }
         return hitView
     }
+
+    deinit {}
 }
 
 // MARK: - Preview
