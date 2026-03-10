@@ -222,7 +222,7 @@ struct FilterPopoverView: View {
 
 // MARK: - AppInfo Model
 
-struct AppInfo: Identifiable, Sendable {
+struct AppInfo: Identifiable {
     let id: String
     let name: String
     let path: String

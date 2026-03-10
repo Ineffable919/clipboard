@@ -70,53 +70,20 @@ struct FloatingHeaderView: View {
     // MARK: - 搜索框
 
     private var searchField: some View {
-        HStack(spacing: 4) {
-            Image(systemName: "magnifyingglass")
-                .foregroundStyle(.secondary)
-                .font(.system(size: 12, weight: .medium))
-
-            TextField("搜索", text: $topBarVM.query)
-                .textFieldStyle(.plain)
-                .focused($focus, equals: .search)
-                .onChange(of: focus) {
-                    if focus == .search, env.focusView != .search {
-                        env.focusView = .search
-                    }
+        SearchFieldRepresentable(
+            text: $topBarVM.query,
+            isFocused: env.focusView == .search,
+            onFocusGained: {
+                if env.focusView != .search {
+                    env.focusView = .search
                 }
-
-            if !topBarVM.query.isEmpty {
-                Button {
-                    topBarVM.query = ""
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.secondary)
-                        .font(.system(size: 12))
+            },
+            onFocusLost: {
+                if env.focusView == .search {
+                    env.focusView = .history
                 }
-                .buttonStyle(.plain)
-                .transition(.scale.combined(with: .opacity))
             }
-        }
-        .padding(.horizontal, Const.space10)
-        .padding(.vertical, Const.space6)
-        .background {
-            RoundedRectangle(cornerRadius: Const.radius)
-                .fill(
-                    colorScheme == .dark
-                        ? Color(nsColor: .controlBackgroundColor)
-                        : .black.opacity(0.08)
-                )
-        }
-        .overlay {
-            RoundedRectangle(cornerRadius: Const.radius)
-                .strokeBorder(
-                    focus == .search
-                        ? Color.accentColor.opacity(0.45)
-                        : Color.clear,
-                    lineWidth: 3.0
-                )
-        }
-        .animation(.easeInOut(duration: 0.2), value: focus)
-        .animation(.easeInOut(duration: 0.15), value: topBarVM.query.isEmpty)
+        )
     }
 
     private var pinButton: some View {
@@ -263,7 +230,6 @@ struct FloatingHeaderView: View {
                 if topBarVM.hasInput {
                     topBarVM.clearInput()
                 } else {
-                    focus = nil
                     env.focusView = .history
                 }
                 return nil
@@ -273,7 +239,7 @@ struct FloatingHeaderView: View {
         }
 
         if KeyCode.shouldTriggerSearch(for: event) {
-            focus = .search
+            env.focusView = .search
             return nil
         }
 

@@ -201,7 +201,7 @@ extension String {
 
         tokenizer.enumerateTokens(in: startIndex ..< endIndex) {
             range,
-                _ in
+            _ in
             let token = self[range]
 
             // CJK：逐字符

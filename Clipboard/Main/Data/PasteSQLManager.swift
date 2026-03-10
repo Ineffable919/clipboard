@@ -9,7 +9,7 @@ import AppKit
 import Foundation
 import SQLite
 
-struct Col: Sendable {
+struct Col {
     nonisolated static let id = Expression<Int64>("id")
     nonisolated static let uniqueId = Expression<String>("unique_id")
     nonisolated static let type = Expression<String>("type")
@@ -390,7 +390,7 @@ extension PasteSQLManager {
 // MARK: - 数据导入导出
 
 extension PasteSQLManager {
-    struct ImportExportResult: Sendable {
+    struct ImportExportResult {
         let success: Bool
         let message: String
     }

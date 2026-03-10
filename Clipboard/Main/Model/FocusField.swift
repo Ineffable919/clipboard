@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum FocusField: Hashable, Sendable {
+enum FocusField: Hashable {
     case search
     case newChip
     case editChip
