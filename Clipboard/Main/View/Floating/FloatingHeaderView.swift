@@ -24,7 +24,7 @@ struct FloatingHeaderView: View {
 
             HStack(spacing: Const.space12) {
                 pinButton
-                searchField
+                searchFieldUI
                 SettingsMenuView(topBarVM: topBarVM)
             }
             .padding(.horizontal, Const.space16)
@@ -84,6 +84,54 @@ struct FloatingHeaderView: View {
                 }
             }
         )
+    }
+
+    private var searchFieldUI: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(.secondary)
+                .font(.system(size: 12, weight: .medium))
+
+            TextField("搜索", text: $topBarVM.query)
+                .textFieldStyle(.plain)
+                .focused($focus, equals: .search)
+                .onChange(of: focus) {
+                    if focus == .search, env.focusView != .search {
+                        env.focusView = .search
+                    }
+                }
+
+            if !topBarVM.query.isEmpty {
+                Button {
+                    topBarVM.query = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                        .font(.system(size: 12))
+                }
+                .buttonStyle(.plain)
+                .transition(.scale.combined(with: .opacity))
+            }
+        }
+        .padding(.horizontal, Const.space10)
+        .padding(.vertical, Const.space6)
+        .background {
+            RoundedRectangle(cornerRadius: Const.radius)
+                .fill(
+                    colorScheme == .dark
+                        ? Color(nsColor: .controlBackgroundColor)
+                        : .black.opacity(0.08)
+                )
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: Const.radius)
+                .strokeBorder(
+                    focus == .search
+                        ? Color.accentColor.opacity(0.45)
+                        : Color.clear,
+                    lineWidth: 3.0
+                )
+        }
     }
 
     private var pinButton: some View {
@@ -239,7 +287,7 @@ struct FloatingHeaderView: View {
         }
 
         if KeyCode.shouldTriggerSearch(for: event) {
-            env.focusView = .search
+            focus = .search
             return nil
         }
 

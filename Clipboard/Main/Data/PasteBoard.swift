@@ -186,8 +186,17 @@ final class PasteBoard {
 
         #if DEBUG
             guard let item = pasteboard.pasteboardItems?.first else { return }
-            let debugTypes = item.types.map(\.rawValue)
-            log.debug("可用类型 \(debugTypes)")
+            log.debug("可用类型 \(item.types)")
+            for t in item.types {
+                if let plist = item.propertyList(forType: t) {
+                    log.debug("  [\(t.rawValue)] propertyList = \(plist)")
+                } else if let str = item.string(forType: t) {
+                    let preview = str.count > 200 ? String(str.prefix(200)) + "..." : str
+                    log.debug("  [\(t.rawValue)] string = \(preview)")
+                } else if let data = item.data(forType: t) {
+                    log.debug("  [\(t.rawValue)] data(\(data.count) bytes)")
+                }
+            }
         #endif
 
         PasteDataStore.main.addNewItem(pasteboard)

@@ -18,7 +18,6 @@ struct SearchFieldRepresentable: NSViewRepresentable {
         let field = NSSearchField()
         field.placeholderString = "搜索"
         field.delegate = context.coordinator
-        field.bezelStyle = .roundedBezel
         field.cell?.sendsActionOnEndEditing = false
         context.coordinator.field = field
         context.coordinator.startObservingFocus()

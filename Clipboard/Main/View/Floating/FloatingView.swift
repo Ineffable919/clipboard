@@ -29,13 +29,17 @@ struct FloatingView: View {
 
     private var contentStack: some View {
         ZStack(alignment: .top) {
-            FloatingHistoryView()
-                .background(mainBackground)
-
-            FloatingHeaderView()
-                .background(mainBackground)
+            if #available(macOS 26.0, *) {
+                FloatingHistoryView()
+                    .background(mainBackground)
+            } else {
+                FloatingHistoryView()
+                    .background(.ultraThickMaterial)
+            }
 
             VStack {
+                FloatingHeaderView()
+                    .background(mainBackground)
                 Spacer()
                 FloatingFooterView()
                     .background(mainBackground)
