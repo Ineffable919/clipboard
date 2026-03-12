@@ -15,19 +15,21 @@ final class ClipActionService {
         _ item: PasteboardModel,
         isAttribute: Bool = true
     ) {
-        let hasPermission = AXIsProcessTrusted()
+        if PasteUserDefaults.pasteDirect {
+            let hasPermission = AXIsProcessTrusted()
 
-        if !hasPermission {
-            log.debug(
-                "Accessibility permission not granted, cannot send keyboard events"
-            )
-            Task { @MainActor in
-                requestAccessibilityPermission(
-                    item: item,
-                    isAttribute: isAttribute
+            if !hasPermission {
+                log.debug(
+                    "Accessibility permission not granted, cannot send keyboard events"
                 )
+                Task { @MainActor in
+                    requestAccessibilityPermission(
+                        item: item,
+                        isAttribute: isAttribute
+                    )
+                }
+                return
             }
-            return
         }
 
         pasteBoard.pasteData(item, isAttribute)
