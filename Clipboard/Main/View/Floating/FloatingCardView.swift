@@ -89,7 +89,6 @@ struct FloatingCardView: View {
             }
             .padding(.vertical, Const.space4)
             .padding(.trailing, Const.space4)
-            .frame(width: 54.0)
         }
         .frame(
             maxWidth: .infinity,
