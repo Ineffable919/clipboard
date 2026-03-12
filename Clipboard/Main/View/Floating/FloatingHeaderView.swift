@@ -11,10 +11,10 @@ import UniformTypeIdentifiers
 struct FloatingHeaderView: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(AppEnvironment.self) private var env
+    @Environment(TopBarViewModel.self) private var topBarVM
     @AppStorage(PrefKey.backgroundType.rawValue) private var backgroundTypeRaw:
         Int = 0
     @FocusState private var focus: FocusField?
-    @State private var topBarVM = TopBarViewModel()
     @State private var showFilter = false
     @State private var isPinned = false
 
@@ -70,8 +70,9 @@ struct FloatingHeaderView: View {
     // MARK: - 搜索框
 
     private var searchField: some View {
-        SearchFieldRepresentable(
-            text: $topBarVM.query,
+        @Bindable var vm = topBarVM
+        return SearchFieldRepresentable(
+            text: $vm.query,
             isFocused: env.focusView == .search,
             onFocusGained: {
                 if env.focusView != .search {
@@ -87,12 +88,14 @@ struct FloatingHeaderView: View {
     }
 
     private var searchFieldUI: some View {
-        HStack(spacing: 4) {
+        @Bindable var vm = topBarVM
+
+        return HStack(spacing: 4) {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
                 .font(.system(size: 12, weight: .medium))
 
-            TextField("搜索", text: $topBarVM.query)
+            TextField("搜索", text: $vm.query)
                 .textFieldStyle(.plain)
                 .focused($focus, equals: .search)
                 .onChange(of: focus) {
@@ -202,9 +205,10 @@ struct FloatingHeaderView: View {
     }
 
     private var addChipEditorView: some View {
-        ChipEditorView(
-            name: $topBarVM.newChipName,
-            color: $topBarVM.newChipColor,
+        @Bindable var vm = topBarVM
+        return ChipEditorView(
+            name: $vm.newChipName,
+            color: $vm.newChipColor,
             focus: $focus,
             focusValue: .newChip,
             onSubmit: {
@@ -482,8 +486,10 @@ struct FloatingChipView: View {
 
 #Preview {
     let env = AppEnvironment()
+    let topBarVM = TopBarViewModel()
     FloatingHeaderView()
         .environment(env)
+        .environment(topBarVM)
         .frame(width: 370, height: FloatConst.headerHeight)
         .padding()
 }

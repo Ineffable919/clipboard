@@ -12,6 +12,7 @@ struct FloatingView: View {
     @Environment(AppEnvironment.self) private var env
     @AppStorage(PrefKey.backgroundType.rawValue) private var backgroundTypeRaw = 0
     @AppStorage(PrefKey.glassMaterial.rawValue) private var glassMaterialRaw = 2
+    @State private var topBarVM = TopBarViewModel()
 
     private var backgroundType: BackgroundType {
         .init(rawValue: backgroundTypeRaw) ?? .liquid
@@ -25,6 +26,7 @@ struct FloatingView: View {
         contentStack
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .clipShape(.rect(cornerRadius: Const.radius))
+            .environment(topBarVM)
     }
 
     private var contentStack: some View {

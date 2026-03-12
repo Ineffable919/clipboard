@@ -236,7 +236,7 @@ final class AppLogger: @unchecked Sendable {
             return []
         }
 
-        let logsDir = appSupport.appendingPathComponent("com.crown.clipboard/Logs")
+        let logsDir = appSupport.appendingPathComponent("com.crown.clipboard/logs")
 
         do {
             let files = try FileManager.default.contentsOfDirectory(

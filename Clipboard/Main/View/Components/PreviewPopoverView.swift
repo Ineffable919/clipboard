@@ -22,57 +22,18 @@ struct PreviewPopoverView: View {
     @AppStorage(PrefKey.enableLinkPreview.rawValue)
     private var enableLinkPreview: Bool = PasteUserDefaults.enableLinkPreview
 
-    private var appIcon: NSImage? {
-        guard !model.appPath.isEmpty else { return nil }
-        return NSWorkspace.shared.icon(forFile: model.appPath)
+    @State private var defaultBrowserName: String?
+    @State private var defaultAppForFile: String?
+    @State private var fileSize: String?
+    @State private var cachedTextStatistics: TextStatistics?
+    @State private var appIcon: NSImage?
+
+    private var isSingleFile: Bool {
+        model.type == .file && model.fileSize() == 1
     }
 
-    private var cachedDataString: String? {
-        if let attr = NSAttributedString(
-            with: model.data,
-            type: model.pasteboardType
-        ) {
-            attr.string
-        } else {
-            String(data: model.data, encoding: .utf8)
-        }
-    }
-
-    private var cachedDefaultBrowserName: String? {
-        guard let appURL = NSWorkspace.shared.urlForApplication(toOpen: .html),
-              let bundle = Bundle(url: appURL)
-        else { return nil }
-        return bundle.object(forInfoDictionaryKey: "CFBundleDisplayName")
-            as? String
-            ?? bundle.object(forInfoDictionaryKey: "CFBundleName") as? String
-    }
-
-    private var cachedDefaultAppForFile: String? {
-        guard model.type == .file,
-              model.fileSize() == 1,
-              let fileUrl = model.cachedFilePaths?.first
-        else { return nil }
-        let url = URL(fileURLWithPath: fileUrl)
-        guard let appURL = NSWorkspace.shared.urlForApplication(toOpen: url),
-              let bundle = Bundle(url: appURL)
-        else { return nil }
-        return bundle.object(forInfoDictionaryKey: "CFBundleDisplayName")
-            as? String
-            ?? bundle.object(forInfoDictionaryKey: "CFBundleName") as? String
-    }
-
-    private var fileSizeString: String? {
-        guard model.type == .file,
-              model.fileSize() == 1,
-              let filePath = model.cachedFilePaths?.first
-        else { return nil }
-
-        let fileURL = URL(fileURLWithPath: filePath)
-        guard let attributes = try? FileManager.default.attributesOfItem(atPath: fileURL.path),
-              let fileSize = attributes[.size] as? Int64
-        else { return nil }
-
-        return ByteCountFormatter.string(fromByteCount: fileSize, countStyle: .file)
+    private var extractedText: String {
+        model.attributeString.string
     }
 
     var body: some View {
@@ -81,11 +42,44 @@ struct PreviewPopoverView: View {
                 env.focusView = .popover
             }
         }) { contentView }
+            .task {
+                await loadMetadata()
+            }
             .onDisappear {
                 if env.focusView != .search {
                     env.focusView = .history
                 }
             }
+    }
+
+    private func loadMetadata() async {
+        if !model.appPath.isEmpty {
+            appIcon = NSWorkspace.shared.icon(forFile: model.appPath)
+        }
+
+        defaultBrowserName = bundleDisplayName(for: NSWorkspace.shared.urlForApplication(toOpen: .html))
+
+        if isSingleFile, let fileUrl = model.cachedFilePaths?.first {
+            let url = URL(fileURLWithPath: fileUrl)
+
+            defaultAppForFile = bundleDisplayName(for: NSWorkspace.shared.urlForApplication(toOpen: url))
+
+            if let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
+               let size = attributes[.size] as? Int64
+            {
+                fileSize = ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
+            }
+        }
+
+        if model.pasteboardType.isText() {
+            cachedTextStatistics = TextStatistics(from: model.attributeString.string)
+        }
+    }
+
+    private func bundleDisplayName(for appURL: URL?) -> String? {
+        guard let appURL, let bundle = Bundle(url: appURL) else { return nil }
+        return bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
+            ?? bundle.object(forInfoDictionaryKey: "CFBundleName") as? String
     }
 
     private var contentView: some View {
@@ -137,8 +131,9 @@ struct PreviewPopoverView: View {
                 BorderedButton(title: "编辑", action: openEditWindow)
             }
 
-            if let fileUrl = model.cachedFilePaths?.first,
-               let defaultApp = cachedDefaultAppForFile
+            if isSingleFile,
+               let fileUrl = model.cachedFilePaths?.first,
+               let defaultApp = defaultAppForFile
             {
                 BorderedButton(title: "通过 \(defaultApp) 打开") {
                     NSWorkspace.shared.open(URL(fileURLWithPath: fileUrl))
@@ -155,16 +150,7 @@ struct PreviewPopoverView: View {
     }
 
     private var textStatistics: TextStatistics {
-        let fullText: String =
-            if let attr = NSAttributedString(
-                with: model.data,
-                type: model.pasteboardType
-            ) {
-                attr.string
-            } else {
-                String(data: model.data, encoding: .utf8) ?? ""
-            }
-        return TextStatistics(from: fullText)
+        cachedTextStatistics ?? TextStatistics(from: model.attributeString.string)
     }
 
     private var footerView: some View {
@@ -186,9 +172,9 @@ struct PreviewPopoverView: View {
             }
             Spacer()
 
-            if model.type == .file, model.fileSize() == 1 {
+            if isSingleFile {
                 HStack {
-                    if let fileSize = fileSizeString {
+                    if let fileSize {
                         Text(fileSize)
                             .foregroundStyle(.secondary)
                     }
@@ -198,7 +184,7 @@ struct PreviewPopoverView: View {
 
             if model.type == .link,
                enableLinkPreview,
-               let browserName = cachedDefaultBrowserName
+               let browserName = defaultBrowserName
             {
                 BorderedButton(
                     title: "使用 \(browserName) 打开",
@@ -211,7 +197,7 @@ struct PreviewPopoverView: View {
     // MARK: - Actions
 
     private func openInFinder() {
-        guard let filePath = cachedDataString else { return }
+        guard let filePath = model.cachedFilePaths?.first else { return }
         NSWorkspace.shared.selectFile(filePath, inFileViewerRootedAtPath: "")
     }
 
@@ -266,9 +252,9 @@ struct PreviewPopoverView: View {
     @ViewBuilder
     private var colorPreview: some View {
         let (_, textColor) = model.colors()
-        if let hex = cachedDataString {
+        if !extractedText.isEmpty {
             VStack(alignment: .center) {
-                Text(hex)
+                Text(extractedText)
                     .font(.title2)
                     .foregroundStyle(textColor)
             }
@@ -277,7 +263,7 @@ struct PreviewPopoverView: View {
                 maxHeight: Const.maxPreviewHeight,
                 alignment: .center
             )
-            .background(Color(nsColor: NSColor(hex: hex)))
+            .background(Color(nsColor: NSColor(hex: extractedText)))
         }
     }
 
@@ -293,7 +279,7 @@ struct PreviewPopoverView: View {
             ZStack {
                 Color(nsColor: .controlBackgroundColor)
                 ScrollView(.vertical) {
-                    Text(cachedDataString ?? "")
+                    Text(extractedText)
                         .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(Const.space8)

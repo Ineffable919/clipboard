@@ -14,24 +14,23 @@ struct SearchFieldRepresentable: NSViewRepresentable {
     var onFocusGained: () -> Void
     var onFocusLost: () -> Void
 
-    func makeNSView(context: Context) -> NSSearchField {
-        let field = NSSearchField()
+    func makeNSView(context: Context) -> PasteSearchField {
+        let field = PasteSearchField()
         field.placeholderString = "搜索"
         field.delegate = context.coordinator
         field.cell?.sendsActionOnEndEditing = false
         context.coordinator.field = field
-        context.coordinator.startObservingFocus()
         return field
     }
 
-    func updateNSView(_ nsView: NSSearchField, context: Context) {
+    func updateNSView(_ nsView: PasteSearchField, context: Context) {
         if nsView.stringValue != text {
             nsView.stringValue = text
         }
 
         let isEditing = nsView.currentEditor() != nil
 
-        if isFocused, !isEditing {
+        if isFocused, !isEditing, !context.coordinator.focusSetByExternal {
             context.coordinator.focusSetByExternal = true
             Task { @MainActor in
                 nsView.window?.makeFirstResponder(nsView)
@@ -53,37 +52,31 @@ struct SearchFieldRepresentable: NSViewRepresentable {
     @MainActor
     final class Coordinator: NSObject, NSSearchFieldDelegate {
         var parent: SearchFieldRepresentable
-        weak var field: NSSearchField?
+        weak var field: PasteSearchField?
         var focusSetByExternal = false
 
         private var wasFocused = false
-        private nonisolated(unsafe) var windowObserver: Any?
+        private var windowObservation: NSKeyValueObservation?
 
         init(_ parent: SearchFieldRepresentable) {
             self.parent = parent
         }
 
-        deinit {
-            if let observer = windowObserver {
-                NotificationCenter.default.removeObserver(observer)
-            }
-        }
-
-        func startObservingFocus() {
-            windowObserver = NotificationCenter.default.addObserver(
-                forName: NSWindow.didUpdateNotification,
-                object: nil,
-                queue: .main
-            ) { [weak self] _ in
-                Task { @MainActor [weak self] in
-                    self?.checkFocusState()
+        func startObserving(window: NSWindow?) {
+            windowObservation = nil
+            guard let window else { return }
+            windowObservation = window.observe(\.firstResponder, options: [.new]) { [weak self] win, _ in
+                MainActor.assumeIsolated {
+                    self?.checkFocus(in: win)
                 }
             }
+            checkFocus(in: window)
         }
 
-        private func checkFocusState() {
+        private func checkFocus(in window: NSWindow) {
             guard let field else { return }
-            let isFocusedNow = field.currentEditor() != nil
+            let responder = window.firstResponder
+            let isFocusedNow = responder === field || responder === field.currentEditor()
 
             if isFocusedNow, !wasFocused {
                 wasFocused = true
@@ -99,5 +92,22 @@ struct SearchFieldRepresentable: NSViewRepresentable {
             guard let field = obj.object as? NSSearchField else { return }
             parent.text = field.stringValue
         }
+    }
+}
+
+final class PasteSearchField: NSSearchField {
+    var onMovedToWindow: ((NSWindow?) -> Void)?
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        onMovedToWindow?(window)
+    }
+
+    override var canBecomeKeyView: Bool {
+        true
+    }
+
+    override var acceptsFirstResponder: Bool {
+        true
     }
 }

@@ -77,11 +77,7 @@ struct ClipCardView: View {
                 )
             }
             .background {
-                if model.type == .color {
-                    Color(hex: model.attributeString.string)
-                } else if !model.isLink || !enableLinkPreview {
-                    model.backgroundColor
-                }
+                model.backgroundColor
             }
             .clipShape(Const.contentShape)
         }

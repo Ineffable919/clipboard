@@ -34,10 +34,15 @@ extension PasteboardModel {
 
         if type == .color {
             let colorNS = NSColor(hex: attributeString.string)
-            return (Color(hex: attributeString.string), getContrastingColor(baseNS: colorNS), true)
+            return (
+                Color(hex: attributeString.string),
+                getContrastingColor(baseNS: colorNS), true
+            )
         }
 
-        if pasteboardType == .string {
+        if pasteboardType == .string
+            || (type == .link && !PasteUserDefaults.enableLinkPreview)
+        {
             return (fallbackBG, .secondary, false)
         }
         if attributeString.length > 0,
@@ -84,7 +89,9 @@ extension PasteboardModel {
     }
 
     func highlightedPlainText(keyword: String) -> AttributedString {
-        let trimmedKeyword = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedKeyword = keyword.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
         guard !trimmedKeyword.isEmpty else {
             return AttributedString(attributeString.string)
         }
@@ -95,11 +102,12 @@ extension PasteboardModel {
             return cachedHighlightedPlainText
         }
 
-        let source: String = if pasteboardType.isFile() {
-            searchText
-        } else {
-            attributeString.string
-        }
+        let source: String =
+            if pasteboardType.isFile() {
+                searchText
+            } else {
+                attributeString.string
+            }
         var attributed = AttributedString(source)
 
         let options: String.CompareOptions = [
@@ -130,7 +138,9 @@ extension PasteboardModel {
     }
 
     func highlightedRichText(keyword: String) -> AttributedString {
-        let trimmedKeyword = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedKeyword = keyword.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
         guard !trimmedKeyword.isEmpty else {
             return attributed()
         }
@@ -141,7 +151,9 @@ extension PasteboardModel {
             return cachedHighlightedRichText
         }
 
-        let mutable = NSMutableAttributedString(attributedString: attributeString)
+        let mutable = NSMutableAttributedString(
+            attributedString: attributeString
+        )
         let string = mutable.string as NSString
 
         let options: NSString.CompareOptions = [

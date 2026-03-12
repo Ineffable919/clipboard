@@ -308,7 +308,7 @@ import SwiftUI
             withTimeInterval: 1,
             repeats: true
         ) { [weak self] _ in
-            Task { @MainActor in
+            MainActor.assumeIsolated {
                 self?.updatePauseState()
             }
         }

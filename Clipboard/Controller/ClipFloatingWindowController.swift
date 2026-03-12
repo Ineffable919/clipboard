@@ -166,10 +166,9 @@ final class ClipFloatingWindowController: NSWindowController {
     private func calculateLastPosition(visibleFrame: NSRect, windowSize: NSSize)
         -> NSPoint
     {
-        guard
-            let frameString = UserDefaults.standard.string(
-                forKey: PrefKey.lastWindowFrame.rawValue
-            )
+        guard let frameString = UserDefaults.standard.string(
+            forKey: PrefKey.lastWindowFrame.rawValue
+        )
         else {
             return calculateCenterPosition(
                 visibleFrame: visibleFrame,

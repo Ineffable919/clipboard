@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct FloatingFooterView: View {
-    @State private var topBarVM = TopBarViewModel()
+    @Environment(TopBarViewModel.self) private var topBarVM
     private let pd = PasteDataStore.main
 
     private var formattedCount: String {
@@ -34,9 +34,6 @@ struct FloatingFooterView: View {
         .padding(.horizontal, Const.space16)
         .frame(height: FloatConst.footerHeight)
         .frame(maxWidth: .infinity)
-        .onAppear {
-            topBarVM.startPauseDisplayTimer()
-        }
     }
 }
 
@@ -72,7 +69,9 @@ private struct CompactPauseIndicator: View {
 }
 
 #Preview {
+    let topBarVM = TopBarViewModel()
     FloatingFooterView()
+        .environment(topBarVM)
         .frame(width: 350, height: 32)
         .background(Color.gray.opacity(0.1))
 }
