@@ -331,7 +331,8 @@ struct FloatingHistoryView: View {
         }
         ClipActionService.shared.paste(
             pd.dataList[index],
-            isAttribute: !hasPlainTextModifier(event)
+            isAttribute: !hasPlainTextModifier(event),
+            checkPermissions: true
         )
         return nil
     }

@@ -202,7 +202,7 @@ struct FloatingCardView: View {
     // MARK: - Actions
 
     private func pasteToApp() {
-        ClipActionService.shared.paste(model)
+        ClipActionService.shared.paste(model, checkPermissions: true)
     }
 
     private func pasteAsPlainText() {

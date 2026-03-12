@@ -13,28 +13,26 @@ final class ClipActionService {
 
     func paste(
         _ item: PasteboardModel,
-        isAttribute: Bool = true
+        isAttribute: Bool = true,
+        checkPermissions: Bool = false
     ) {
-        if PasteUserDefaults.pasteDirect {
-            let hasPermission = AXIsProcessTrusted()
-
-            if !hasPermission {
-                log.debug(
-                    "Accessibility permission not granted, cannot send keyboard events"
-                )
-                Task { @MainActor in
-                    requestAccessibilityPermission(
-                        item: item,
-                        isAttribute: isAttribute
-                    )
-                }
-                return
-            }
-        }
-
-        pasteBoard.pasteData(item, isAttribute)
-        guard userDefaults.pasteDirect else {
+        guard userDefaults.pasteDirect, checkPermissions else {
+            pasteBoard.pasteData(item, isAttribute)
             WindowManager.shared.toggleWindow()
+            return
+        }
+        let hasPermission = AXIsProcessTrusted()
+
+        if !hasPermission {
+            log.debug(
+                "Accessibility permission not granted, cannot send keyboard events"
+            )
+            Task { @MainActor in
+                requestAccessibilityPermission(
+                    item: item,
+                    isAttribute: isAttribute
+                )
+            }
             return
         }
         WindowManager.shared.toggleWindow {

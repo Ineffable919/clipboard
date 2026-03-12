@@ -160,7 +160,7 @@ struct ClipCardView: View {
         Button(
             pasteButtonTitle,
             systemImage: "doc.on.clipboard",
-            action: pasteToCode
+            action: pasteToApp
         )
         .keyboardShortcut(.return, modifiers: [])
 
@@ -198,8 +198,8 @@ struct ClipCardView: View {
 
     // MARK: - Actions
 
-    private func pasteToCode() {
-        ClipActionService.shared.paste(model)
+    private func pasteToApp() {
+        ClipActionService.shared.paste(model, checkPermissions: true)
     }
 
     private func pasteAsPlainText() {
