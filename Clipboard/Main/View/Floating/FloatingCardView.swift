@@ -87,9 +87,9 @@ struct FloatingCardView: View {
                     quickPasteBadge(index: index)
                 }
             }
-            .padding(.vertical, Const.space6)
-            .padding(.trailing, Const.space6)
-            .frame(width: 48.0)
+            .padding(.vertical, Const.space4)
+            .padding(.trailing, Const.space4)
+            .frame(width: 54.0)
         }
         .frame(
             maxWidth: .infinity,
@@ -123,12 +123,11 @@ struct FloatingCardView: View {
 
     @ViewBuilder
     private var fileContentView: some View {
-        if let paths = model.cachedFilePaths {
+        if let paths = model.cachedFilePaths, !paths.isEmpty {
             if paths.count > 1 {
-                Text("\(paths.count) 个文件")
+                FloatingMultipleFilesView(paths: paths)
             } else if let firstPath = paths.first {
-                Text(firstPath)
-                    .truncationMode(.head)
+                FloatingSingleFileView(path: firstPath)
             }
         }
     }
@@ -223,6 +222,51 @@ struct FloatingCardView: View {
 
     private func openEditWindow() {
         EditWindowController.shared.openWindow(with: model)
+    }
+}
+
+// MARK: - File Content Views
+
+private struct FloatingSingleFileView: View {
+    let path: String
+
+    private var fileURL: URL {
+        URL(fileURLWithPath: path)
+    }
+
+    private var fileName: String {
+        fileURL.lastPathComponent
+    }
+
+    var body: some View {
+        HStack(spacing: Const.space8) {
+            FileThumbnailView(fileURLString: path, maxSize: 32)
+                .frame(width: 32, height: 32)
+
+            Text(fileName)
+                .font(.system(size: 12))
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .foregroundStyle(.primary)
+        }
+    }
+}
+
+private struct FloatingMultipleFilesView: View {
+    let paths: [String]
+
+    var body: some View {
+        HStack(spacing: Const.space8) {
+            Image(systemName: "folder.fill")
+                .resizable()
+                .scaledToFit()
+                .foregroundStyle(Color.accentColor.opacity(0.6))
+                .frame(width: 24, height: 24)
+
+            Text("\(paths.count) 个文件")
+                .font(.system(size: 12))
+                .foregroundStyle(.primary)
+        }
     }
 }
 
