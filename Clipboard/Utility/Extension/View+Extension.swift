@@ -80,6 +80,23 @@ struct AutoScrollOnIMEInputModifier: ViewModifier {
     }
 }
 
+struct FloatingTextStyleModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .font(.system(size: 12))
+            .lineLimit(nil)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(
+                .init(
+                    top: Const.space4,
+                    leading: 0.0,
+                    bottom: Const.space4,
+                    trailing: 0.0
+                )
+            )
+    }
+}
+
 extension View {
     func settingsStyle() -> some View {
         modifier(SettingsStyleModifier())
@@ -87,6 +104,10 @@ extension View {
 
     func textCardStyle() -> some View {
         modifier(TextCardStyleModifier())
+    }
+
+    func floatingTextStyle() -> some View {
+        modifier(FloatingTextStyleModifier())
     }
 
     func autoScrollOnIMEInput(

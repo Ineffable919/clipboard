@@ -113,7 +113,11 @@ struct FloatingHistoryView: View {
 
     private func handleTap(on item: PasteboardModel, index: Int) {
         historyVM.handleTap(on: item, index: index) {
-            ClipActionService.shared.paste(item, isAttribute: true)
+            ClipActionService.shared.paste(
+                item,
+                isAttribute: true,
+                checkPermissions: PasteUserDefaults.pasteDirect
+            )
         }
     }
 

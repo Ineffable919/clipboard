@@ -35,6 +35,7 @@ final class ClipActionService {
             }
             return
         }
+        pasteBoard.pasteData(item, isAttribute)
         WindowManager.shared.toggleWindow {
             KeyboardShortcuts.postCmdVEvent()
         }

@@ -115,6 +115,8 @@ struct FloatingCardView: View {
             fileContentView
         case .rich:
             richTextContentView
+        case .link:
+            plainTextContentView
         default:
             plainTextContentView
         }
@@ -148,6 +150,7 @@ struct FloatingCardView: View {
     private var plainTextContentView: some View {
         if searchKeyword.isEmpty {
             Text(model.attributeString.string)
+                .floatingTextStyle()
         } else {
             Text(model.highlightedPlainText(keyword: searchKeyword))
         }

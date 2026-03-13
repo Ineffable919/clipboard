@@ -109,7 +109,8 @@ struct HistoryView: View {
         historyVM.handleTap(on: item, index: index) {
             ClipActionService.shared.paste(
                 item,
-                isAttribute: true
+                isAttribute: true,
+                checkPermissions: PasteUserDefaults.pasteDirect
             )
         }
     }

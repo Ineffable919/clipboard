@@ -12,12 +12,21 @@ import Foundation
 enum KeyboardShortcuts {
     static func postCmdVEvent() {
         let source = CGEventSource(stateID: .combinedSessionState)
-        let cgEvent = CGEvent(
+
+        let keyDown = CGEvent(
             keyboardEventSource: source,
             virtualKey: CGKeyCode(kVK_ANSI_V),
             keyDown: true
         )
-        cgEvent?.flags = .maskCommand
-        cgEvent?.post(tap: .cghidEventTap)
+        keyDown?.flags = .maskCommand
+        keyDown?.post(tap: .cghidEventTap)
+
+        let keyUp = CGEvent(
+            keyboardEventSource: source,
+            virtualKey: CGKeyCode(kVK_ANSI_V),
+            keyDown: false
+        )
+        keyUp?.flags = .maskCommand
+        keyUp?.post(tap: .cghidEventTap)
     }
 }
