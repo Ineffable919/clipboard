@@ -158,7 +158,6 @@ struct FloatingCardView: View {
     private var plainTextContentView: some View {
         if searchKeyword.isEmpty {
             Text(model.attributeString.string)
-                .floatingTextStyle()
         } else {
             Text(model.highlightedPlainText(keyword: searchKeyword))
         }
