@@ -14,6 +14,8 @@ struct FloatingHistoryView: View {
     @State private var historyVM = HistoryViewModel()
     @FocusState private var isFocused: Bool
     @State private var flagsMonitorToken: Any?
+    @AppStorage(PrefKey.enableLinkPreview.rawValue)
+    private var enableLinkPreview: Bool = PasteUserDefaults.enableLinkPreview
 
     private let pd = PasteDataStore.main
 
@@ -90,6 +92,7 @@ struct FloatingHistoryView: View {
             isSelected: historyVM.selectedId == item.id,
             showPreviewId: $historyVM.showPreviewId,
             quickPasteIndex: historyVM.quickPasteIndex(for: index),
+            enableLinkPreview: enableLinkPreview,
             searchKeyword: historyVM.searchKeyword,
             onRequestDelete: { requestDelete(index: index) }
         )

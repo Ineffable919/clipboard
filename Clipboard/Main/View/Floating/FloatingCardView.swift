@@ -12,6 +12,7 @@ struct FloatingCardView: View {
     let isSelected: Bool
     @Binding var showPreviewId: PasteboardModel.ID?
     let quickPasteIndex: Int?
+    let enableLinkPreview: Bool
     let searchKeyword: String
     var onRequestDelete: (() -> Void)?
 
@@ -116,7 +117,14 @@ struct FloatingCardView: View {
         case .rich:
             richTextContentView
         case .link:
-            plainTextContentView
+            if enableLinkPreview {
+                FloatingLinkPreviewView(
+                    model: model,
+                    searchKeyword: searchKeyword
+                )
+            } else {
+                plainTextContentView
+            }
         default:
             plainTextContentView
         }
@@ -373,6 +381,7 @@ private struct FloatingImageThumbnailView: View {
         isSelected: false,
         showPreviewId: $previewId,
         quickPasteIndex: 1,
+        enableLinkPreview: true,
         searchKeyword: ""
     )
     .environment(env)

@@ -40,9 +40,7 @@ extension PasteboardModel {
             )
         }
 
-        if pasteboardType == .string
-            || (type == .link && !PasteUserDefaults.enableLinkPreview)
-        {
+        if pasteboardType == .string || type == .link {
             return (fallbackBG, .secondary, false)
         }
         if attributeString.length > 0,
