@@ -5,8 +5,9 @@
 </div>
     <div align="center"><strong>English</strong> | <a href="https://github.com/Ineffable919/clipboard/blob/master/README.md">中文</a></div>
 </p>
-
 <img src="temp.png">
+
+<img src="float.png">
 
 ## Download
 
@@ -73,4 +74,4 @@ sudo codesign --force --deep --sign - /Applications/Clipboard.app
 
 ## License
 
-This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International Public License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International Public License. See the [LICENSE](LICENSE) file for details. 

@@ -8,6 +8,8 @@
 
 <img src="temp.png">
 
+<img src="float.png">
+
 ## 下载
 
 下载最新版本 [releases](https://github.com/Ineffable919/clipboard/releases/latest)
