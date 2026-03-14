@@ -8,15 +8,24 @@ import SwiftUI
     private let pd = PasteDataStore.main
     @ObservationIgnored private weak var env: AppEnvironment?
 
-    var selectedId: PasteboardModel.ID?
+    var selectedIds: Set<PasteboardModel.ID> = []
+    var activeId: PasteboardModel.ID?
     var showPreviewId: PasteboardModel.ID?
     var isQuickPastePressed: Bool = false
 
-    @ObservationIgnored var selectedIndex: Int?
     @ObservationIgnored var lastTapId: PasteboardModel.ID?
     @ObservationIgnored var lastTapTime: TimeInterval = 0
     @ObservationIgnored var isDel: Bool = false
     @ObservationIgnored var lastLoadTriggerIndex: Int = -1
+
+    var isMultiSelectMode: Bool {
+        selectedIds.count > 1
+    }
+
+    func isItemSelected(_ id: PasteboardModel.ID?) -> Bool {
+        guard let id else { return false }
+        return selectedIds.contains(id)
+    }
 
     // MARK: - Configuration
 
@@ -35,6 +44,58 @@ import SwiftUI
     func quickPasteIndex(for index: Int) -> Int? {
         guard isQuickPastePressed, index < 9 else { return nil }
         return index + 1
+    }
+
+    // MARK: - Selection
+
+    /// 单选：清除旧选中，选中指定项
+    func selectSingle(id: PasteboardModel.ID?) {
+        selectedIds.removeAll()
+        activeId = id
+        if let id {
+            selectedIds.insert(id)
+        }
+    }
+
+    /// 切换某项的选中状态（Cmd+点击）
+    func toggleSelection(id: PasteboardModel.ID?) {
+        guard let id else { return }
+
+        if selectedIds.contains(id) {
+            selectedIds.remove(id)
+            if activeId == id {
+                activeId = selectedIds.first
+            }
+        } else {
+            selectedIds.insert(id)
+            activeId = id
+        }
+    }
+
+    /// 选中前 9 个项目（Cmd+A）
+    func selectFirstNine() {
+        let count = min(9, pd.dataList.count)
+        guard count > 0 else { return }
+
+        selectedIds.removeAll()
+        for i in 0 ..< count {
+            if let id = pd.dataList[i].id {
+                selectedIds.insert(id)
+            }
+        }
+        activeId = pd.dataList[0].id
+    }
+
+    var activeIndex: Int? {
+        guard let activeId else { return nil }
+        return pd.dataList.firstIndex { $0.id == activeId }
+    }
+
+    func selectedItems() -> [PasteboardModel] {
+        pd.dataList.filter { item in
+            guard let id = item.id else { return false }
+            return selectedIds.contains(id)
+        }
     }
 
     // MARK: - Tap Handling
@@ -58,14 +119,10 @@ import SwiftUI
         lastTapTime = time
     }
 
-    func setSelection(id: PasteboardModel.ID?, index: Int) {
-        selectedId = id
-        selectedIndex = index
-    }
-
     func handleTap(
         on item: PasteboardModel,
-        index: Int,
+        index _: Int,
+        isCommandHeld: Bool = false,
         doubleTapAction: () -> Void
     ) {
         guard let env else { return }
@@ -74,8 +131,14 @@ import SwiftUI
             env.focusView = .history
         }
 
+        // Cmd+点击：多选切换
+        if isCommandHeld {
+            toggleSelection(id: item.id)
+            return
+        }
+
         let now = ProcessInfo.processInfo.systemUptime
-        let isSameItem = selectedId == item.id
+        let isSameItem = activeId == item.id
 
         if isSameItem,
            shouldHandleDoubleTap(
@@ -84,22 +147,69 @@ import SwiftUI
                interval: 0.3
            )
         {
-            doubleTapAction()
+            if isMultiSelectMode {
+                pasteSelectedItems()
+            } else {
+                doubleTapAction()
+            }
             resetTapState()
             return
         }
 
         if !isSameItem {
-            setSelection(id: item.id, index: index)
+            selectSingle(id: item.id)
         }
         updateTapState(id: item.id, time: now)
     }
 
+    // MARK: - Paste / Copy
+
+    /// 粘贴
+    func pasteSelectedItems(isAttribute: Bool = true, checkPermissions: Bool = false) {
+        let items = selectedItems()
+        guard !items.isEmpty else { return }
+
+        if items.count == 1 {
+            ClipActionService.shared.paste(
+                items[0],
+                isAttribute: isAttribute,
+                checkPermissions: checkPermissions
+            )
+        } else {
+            ClipActionService.shared.pasteMultiple(
+                items,
+                isAttribute: isAttribute,
+                checkPermissions: checkPermissions
+            )
+        }
+    }
+
+    /// 复制
+    func copySelectedItems(isAttribute: Bool = true) {
+        let items = selectedItems()
+        guard !items.isEmpty else { return }
+
+        if items.count == 1 {
+            ClipActionService.shared.copy(items[0], isAttribute: isAttribute)
+        } else {
+            ClipActionService.shared.copyMultiple(items, isAttribute: isAttribute)
+        }
+    }
+
     // MARK: - Delete Operations
+
+    func deleteActiveItem() {
+        guard let index = activeIndex else { return }
+        deleteItem(at: index)
+    }
 
     func deleteItem(at index: Int) {
         guard index < pd.dataList.count else { return }
         let item = pd.dataList[index]
+
+        if let id = item.id {
+            selectedIds.remove(id)
+        }
 
         isDel = true
 
@@ -125,18 +235,14 @@ import SwiftUI
 
     private func updateSelectionAfterDeletion(at index: Int) {
         if pd.dataList.isEmpty {
-            setSelection(id: nil, index: 0)
+            selectSingle(id: nil)
         } else {
             let newIndex = min(index, pd.dataList.count - 1)
-            setSelection(
-                id: pd.dataList[newIndex].id,
-                index: newIndex
-            )
+            selectSingle(id: pd.dataList[newIndex].id)
         }
     }
 
     func showDeleteConfirmAlert(
-        for index: Int,
         onConfirm: @escaping () -> Void
     ) {
         guard let env else { return }
@@ -148,13 +254,15 @@ import SwiftUI
         alert.addButton(withTitle: "删除")
         alert.addButton(withTitle: "取消")
 
+        let currentActiveId = activeId
+
         let handleResponse: (NSApplication.ModalResponse) -> Void = { [weak self] response in
             defer {
                 env.isShowDel = false
             }
 
             guard response == .alertFirstButtonReturn,
-                  self?.selectedIndex == index
+                  self?.activeId == currentActiveId
             else {
                 return
             }
@@ -182,9 +290,7 @@ import SwiftUI
 
     // MARK: - Pagination
 
-    func shouldLoadNextPage(at index: Int)
-        -> Bool
-    {
+    func shouldLoadNextPage(at index: Int) -> Bool {
         guard pd.hasMoreData else { return false }
         let triggerIndex = pd.dataList.count - 5
         return index >= triggerIndex
@@ -222,7 +328,7 @@ import SwiftUI
     func scrollAnchor() -> UnitPoint? {
         guard let first = pd.dataList.first?.id,
               let last = pd.dataList.last?.id,
-              let id = selectedId
+              let id = activeId
         else {
             return .none
         }
@@ -242,21 +348,42 @@ import SwiftUI
         let changeType = pd.lastDataChangeType
         if changeType == .searchFilter || changeType == .reset {
             if pd.dataList.isEmpty {
-                selectedId = nil
-                selectedIndex = nil
+                selectedIds.removeAll()
+                activeId = nil
                 showPreviewId = nil
                 return
             }
 
             let firstId = pd.dataList.first?.id
-            let needsScrolling = selectedId != firstId
-            selectedId = firstId
-            selectedIndex = 0
+
+            if isMultiSelectMode {
+                let currentIds = Set(pd.dataList.compactMap(\.id))
+                let validIds = selectedIds.filter { id in
+                    guard let id else { return false }
+                    return currentIds.contains(id)
+                }
+                if !validIds.isEmpty {
+                    selectedIds = validIds
+                    activeId = firstId
+                    showPreviewId = nil
+                    Task { @MainActor in
+                        withAnimation(.easeInOut(duration: 0.25)) {
+                            proxy.scrollTo(firstId, anchor: .trailing)
+                        }
+                    }
+                    return
+                }
+            }
+
+            let needsScrolling = activeId != firstId
+            selectSingle(id: firstId)
             showPreviewId = nil
 
             if !needsScrolling {
                 Task { @MainActor in
-                    proxy.scrollTo(firstId, anchor: .trailing)
+                    withAnimation(.easeInOut(duration: 0.25)) {
+                        proxy.scrollTo(firstId, anchor: .trailing)
+                    }
                 }
             }
         }
@@ -303,6 +430,7 @@ import SwiftUI
         isDel = false
         isQuickPastePressed = false
         showPreviewId = nil
-        selectedIndex = nil
+        selectedIds.removeAll()
+        activeId = nil
     }
 }

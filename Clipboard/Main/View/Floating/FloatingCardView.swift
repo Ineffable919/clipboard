@@ -15,6 +15,9 @@ struct FloatingCardView: View {
     let enableLinkPreview: Bool
     let searchKeyword: String
     var onRequestDelete: (() -> Void)?
+    var onPaste: (() -> Void)?
+    var onPastePlainText: (() -> Void)?
+    var onCopy: (() -> Void)?
 
     @Environment(AppEnvironment.self) private var env
 
@@ -210,15 +213,15 @@ struct FloatingCardView: View {
     // MARK: - Actions
 
     private func pasteToApp() {
-        ClipActionService.shared.paste(model, checkPermissions: true)
+        onPaste?()
     }
 
     private func pasteAsPlainText() {
-        ClipActionService.shared.paste(model, isAttribute: false)
+        onPastePlainText?()
     }
 
     private func copyToClipboard() {
-        ClipActionService.shared.copy(model)
+        onCopy?()
     }
 
     private func deleteItem() {

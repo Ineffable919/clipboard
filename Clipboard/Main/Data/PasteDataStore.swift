@@ -384,15 +384,16 @@ extension PasteDataStore {
         }
     }
 
-    func moveItemToFirst(_ model: PasteboardModel) {
-        var list = dataList
+    func moveItemsToFirst(_ models: [PasteboardModel]) {
+        guard !models.isEmpty else { return }
 
-        if let index = list.firstIndex(where: { $0.id == model.id }) {
-            guard index != 0 else { return }
-            list.remove(at: index)
+        let movedIds = Set(models.compactMap(\.id))
+        var list = dataList.filter { item in
+            guard let id = item.id else { return true }
+            return !movedIds.contains(id)
         }
 
-        list.insert(model, at: 0)
+        list.insert(contentsOf: models, at: 0)
 
         if list.count > pageSize {
             list = Array(list.prefix(pageSize))

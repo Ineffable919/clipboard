@@ -17,7 +17,7 @@ final class ClipActionService {
         checkPermissions: Bool = false
     ) {
         guard userDefaults.pasteDirect, checkPermissions else {
-            pasteBoard.pasteData(item, isAttribute)
+            pasteBoard.pasteMultipleData([item], isAttribute)
             WindowManager.shared.toggleWindow()
             return
         }
@@ -35,14 +35,58 @@ final class ClipActionService {
             }
             return
         }
-        pasteBoard.pasteData(item, isAttribute)
+        pasteBoard.pasteMultipleData([item], isAttribute)
         WindowManager.shared.toggleWindow {
             KeyboardShortcuts.postCmdVEvent()
         }
     }
 
     func copy(_ item: PasteboardModel, isAttribute: Bool = true) {
-        pasteBoard.pasteData(item, isAttribute)
+        pasteBoard.pasteMultipleData([item], isAttribute)
+    }
+
+    /// 将多个项目合并写入剪贴板
+    func copyMultiple(_ items: [PasteboardModel], isAttribute: Bool = true) {
+        pasteBoard.pasteMultipleData(items, isAttribute)
+    }
+
+    /// 将多个项目合并写入剪贴板并粘贴
+    func pasteMultiple(
+        _ items: [PasteboardModel],
+        isAttribute: Bool = true,
+        checkPermissions: Bool = false
+    ) {
+        guard !items.isEmpty else { return }
+
+        if items.count == 1 {
+            paste(
+                items[0],
+                isAttribute: isAttribute,
+                checkPermissions: checkPermissions
+            )
+            return
+        }
+
+        guard userDefaults.pasteDirect, checkPermissions else {
+            pasteBoard.pasteMultipleData(items, isAttribute)
+            WindowManager.shared.toggleWindow()
+            return
+        }
+
+        let hasPermission = AXIsProcessTrusted()
+        guard hasPermission else {
+            log.debug(
+                "Accessibility permission not granted, cannot send keyboard events"
+            )
+            pasteBoard.pasteMultipleData(items, isAttribute)
+            WindowManager.shared.toggleWindow()
+            return
+        }
+
+        pasteBoard.pasteMultipleData(items, isAttribute)
+        WindowManager.shared.toggleWindow {
+            KeyboardShortcuts.postCmdVEvent()
+        }
     }
 
     func delete(_ item: PasteboardModel) {
@@ -85,7 +129,7 @@ final class ClipActionService {
                 NSWorkspace.shared.open(url)
             }
         case .alertSecondButtonReturn:
-            pasteBoard.pasteData(item, isAttribute)
+            pasteBoard.pasteMultipleData([item], isAttribute)
         default:
             break
         }
