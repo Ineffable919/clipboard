@@ -43,7 +43,7 @@ struct KeyboardSettingView: View {
 
                 HStack {
                     Spacer()
-                    BorderedButton(title: "重置快键方式为默认...") {
+                    SystemButton(title: "重置快键方式为默认...") {
                         resetIsPresented = true
                     }
                     .confirmationDialog("您确定将所有的快键方式重置为默认值吗？", isPresented: $resetIsPresented) {

@@ -1,13 +1,13 @@
 //
-//  BorderedButton.swift
+//  CommonButton.swift
 //  Clipboard
 //
-//  Created by crown on 2026/1/5.
+//  Created by crown on 2026/3/14.
 //
 
 import SwiftUI
 
-struct BorderedButton: View {
+struct CommonButton: View {
     let title: String
     let action: () -> Void
     @State private var isHovered = false
@@ -30,6 +30,6 @@ struct BorderedButton: View {
 }
 
 #Preview {
-    BorderedButton(title: "重置快捷方式为默认...") {}
+    CommonButton(title: "重置快捷方式为默认") {}
         .padding()
 }

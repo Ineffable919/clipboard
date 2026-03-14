@@ -220,7 +220,7 @@ struct DataActionRow: View {
                 ProgressView()
                     .controlSize(.small)
             } else {
-                BorderedButton(title: buttonTitle, action: action)
+                SystemButton(title: buttonTitle, action: action)
             }
         }
         .padding(.vertical, Const.space12)

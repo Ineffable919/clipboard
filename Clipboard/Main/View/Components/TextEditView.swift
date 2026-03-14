@@ -65,7 +65,7 @@ struct EditToolbar: View {
 
     var body: some View {
         HStack(spacing: Const.space16) {
-            BorderedButton(title: "取消", action: onCancel)
+            SystemButton(title: "取消", action: onCancel)
 
             Spacer()
 

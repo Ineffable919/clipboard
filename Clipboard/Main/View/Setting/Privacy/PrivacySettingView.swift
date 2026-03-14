@@ -393,7 +393,7 @@ struct AccessibilityPermissionRow: View {
                 }
 
                 if !hasPermission {
-                    BorderedButton(title: "去设置", action: onOpenSettings)
+                    SystemButton(title: "去设置...", action: onOpenSettings)
                 }
             }
         }

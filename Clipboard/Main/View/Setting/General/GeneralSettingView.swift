@@ -124,13 +124,9 @@ struct GeneralSettingView: View {
                     HStack {
                         Spacer()
                         if #available(macOS 26.0, *) {
-                            Button {
+                            SystemButton(title: "删除历史...") {
                                 db.clearAllData()
-                            } label: {
-                                Text("删除历史...")
-                                    .font(.callout)
                             }
-                            .buttonStyle(.glass)
                         } else {
                             Button {
                                 db.clearAllData()

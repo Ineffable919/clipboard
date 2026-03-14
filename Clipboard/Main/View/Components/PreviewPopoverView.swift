@@ -128,14 +128,14 @@ struct PreviewPopoverView: View {
             Spacer()
 
             if model.pasteboardType.isText() {
-                BorderedButton(title: "编辑", action: openEditWindow)
+                CommonButton(title: "编辑", action: openEditWindow)
             }
 
             if isSingleFile,
                let fileUrl = model.cachedFilePaths?.first,
                let defaultApp = defaultAppForFile
             {
-                BorderedButton(title: "通过 \(defaultApp) 打开") {
+                CommonButton(title: "通过 \(defaultApp) 打开") {
                     NSWorkspace.shared.open(URL(fileURLWithPath: fileUrl))
                 }
             }
@@ -178,7 +178,7 @@ struct PreviewPopoverView: View {
                         Text(fileSize)
                             .foregroundStyle(.secondary)
                     }
-                    BorderedButton(title: "在访达中显示", action: openInFinder)
+                    CommonButton(title: "在访达中显示", action: openInFinder)
                 }
             }
 
@@ -186,7 +186,7 @@ struct PreviewPopoverView: View {
                enableLinkPreview,
                let browserName = defaultBrowserName
             {
-                BorderedButton(
+                CommonButton(
                     title: "使用 \(browserName) 打开",
                     action: openInBrowser
                 )
