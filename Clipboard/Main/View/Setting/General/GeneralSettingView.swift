@@ -15,6 +15,8 @@ struct GeneralSettingView: View {
         .isEnabled
     @AppStorage(PrefKey.showMenuBarIcon.rawValue)
     private var showMenuBarIcon = true
+    @AppStorage(PrefKey.showDockIcon.rawValue)
+    private var showDockIcon = false
     @AppStorage(PrefKey.soundEnabled.rawValue)
     private var soundEnabled = true
     @State private var selectedPasteTarget: PasteTargetMode =
@@ -62,6 +64,16 @@ struct GeneralSettingView: View {
                             name: .menuBarIconVisibilityChanged,
                             object: newValue
                         )
+                    }
+
+                    Divider()
+
+                    SettingToggleRow(
+                        title: "Dock 图标",
+                        isOn: $showDockIcon
+                    )
+                    .onChange(of: showDockIcon) { _, newValue in
+                        NSApp.setActivationPolicy(newValue ? .regular : .accessory)
                     }
 
                     Divider()

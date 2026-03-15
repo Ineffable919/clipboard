@@ -63,6 +63,8 @@ enum PrefKey: String, CaseIterable {
     case lastWindowFrame
     /// 显示状态栏图标
     case showMenuBarIcon
+    /// 显示 Dock 图标
+    case showDockIcon
 }
 
 enum AppearanceMode: Int, CaseIterable {

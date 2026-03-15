@@ -32,6 +32,8 @@ extension AppDelegate: NSApplicationDelegate {
 
         applyAppearanceSettings()
 
+        applyDockIconPolicy()
+
         Task {
             await initClipboardAsync()
         }
@@ -45,6 +47,18 @@ extension AppDelegate: NSApplicationDelegate {
         StatusBarController.shared.cleanup()
         EventDispatcher.shared.stop()
         AppIconCache.shared.clearCache()
+    }
+
+    func applicationShouldHandleReopen(_: NSApplication, hasVisibleWindows _: Bool) -> Bool {
+        if !windowManager.isVisible {
+            toggleWindow()
+        }
+        return true
+    }
+
+    private func applyDockIconPolicy() {
+        let showDockIcon = PasteUserDefaults.showDockIcon
+        NSApp.setActivationPolicy(showDockIcon ? .regular : .accessory)
     }
 
     private func applyAppearanceSettings() {

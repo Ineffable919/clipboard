@@ -158,6 +158,9 @@ enum PasteUserDefaults {
     /// 状态栏图标
     @UserDefaultsWrapper(.showMenuBarIcon, defaultValue: true)
     static var showMenuBarIcon
+    /// Dock 图标
+    @UserDefaultsWrapper(.showDockIcon, defaultValue: true)
+    static var showDockIcon
 }
 
 @propertyWrapper
