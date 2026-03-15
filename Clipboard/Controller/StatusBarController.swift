@@ -134,30 +134,63 @@ final class StatusBarController: NSObject {
         }
     }
 
+    private static let appName: String = Bundle.main.object(
+        forInfoDictionaryKey: "CFBundleName"
+    ) as? String ?? "Clipboard"
+
+    private func setMenuItemImage(
+        _ item: NSMenuItem,
+        symbolName: String
+    ) {
+        if #available(macOS 26.0, *) {
+            item.image = NSImage(
+                systemSymbolName: symbolName,
+                accessibilityDescription: nil
+            )
+        }
+    }
+
     private func createMenu() -> NSMenu {
         let menu = NSMenu(title: "设置")
 
+        let aboutItem = NSMenuItem(
+            title: "关于 \(Self.appName)",
+            action: #selector(aboutAction),
+            keyEquivalent: ""
+        )
+        setMenuItemImage(aboutItem, symbolName: "info.circle")
+        aboutItem.target = self
+        menu.addItem(aboutItem)
+
+        menu.addItem(NSMenuItem.separator())
+
+        let newTextItem = NSMenuItem(
+            title: "新文本项",
+            action: #selector(newTextItemAction),
+            keyEquivalent: "t"
+        )
+        newTextItem.keyEquivalentModifierMask = .command
+        setMenuItemImage(newTextItem, symbolName: "square.and.pencil")
+        newTextItem.target = self
+        menu.addItem(newTextItem)
+
         let item1 = NSMenuItem(
-            title: "偏好设置",
+            title: "设置...",
             action: #selector(settingsAction),
             keyEquivalent: ","
         )
-        item1.image = NSImage(
-            systemSymbolName: "gearshape",
-            accessibilityDescription: nil
-        )
+        setMenuItemImage(item1, symbolName: "gearshape")
         item1.target = self
         menu.addItem(item1)
+
+        menu.addItem(NSMenuItem.separator())
 
         let item2 = NSMenuItem(
             title: "检查更新",
             action: #selector(checkUpdateAction),
             keyEquivalent: ""
         )
-        item2.image = NSImage(
-            systemSymbolName: "arrow.clockwise",
-            accessibilityDescription: nil
-        )
+        setMenuItemImage(item2, symbolName: "arrow.clockwise")
         item2.target = self
         menu.addItem(item2)
 
@@ -168,10 +201,7 @@ final class StatusBarController: NSObject {
             action: nil,
             keyEquivalent: ""
         )
-        pauseItem.image = NSImage(
-            systemSymbolName: "pause.circle",
-            accessibilityDescription: nil
-        )
+        setMenuItemImage(pauseItem, symbolName: "pause.circle")
         pauseItem.submenu = createPauseSubmenu()
         menu.addItem(pauseItem)
 
@@ -197,10 +227,7 @@ final class StatusBarController: NSObject {
                 action: #selector(resumePasteboard),
                 keyEquivalent: ""
             )
-            resumeItem.image = NSImage(
-                systemSymbolName: "play.circle",
-                accessibilityDescription: nil
-            )
+            setMenuItemImage(resumeItem, symbolName: "play.circle")
             resumeItem.target = self
             submenu.addItem(resumeItem)
             submenu.addItem(NSMenuItem.separator())
@@ -210,10 +237,7 @@ final class StatusBarController: NSObject {
                 action: #selector(pauseIndefinitely),
                 keyEquivalent: ""
             )
-            pauseIndefinite.image = NSImage(
-                systemSymbolName: "pause.circle",
-                accessibilityDescription: nil
-            )
+            setMenuItemImage(pauseIndefinite, symbolName: "pause.circle")
             pauseIndefinite.target = self
             submenu.addItem(pauseIndefinite)
 
@@ -225,10 +249,7 @@ final class StatusBarController: NSObject {
             action: #selector(pause15Minutes),
             keyEquivalent: ""
         )
-        pause15.image = NSImage(
-            systemSymbolName: "15.circle",
-            accessibilityDescription: nil
-        )
+        setMenuItemImage(pause15, symbolName: "15.circle")
         pause15.target = self
         submenu.addItem(pause15)
 
@@ -237,10 +258,7 @@ final class StatusBarController: NSObject {
             action: #selector(pause30Minutes),
             keyEquivalent: ""
         )
-        pause30.image = NSImage(
-            systemSymbolName: "30.circle",
-            accessibilityDescription: nil
-        )
+        setMenuItemImage(pause30, symbolName: "30.circle")
         pause30.target = self
         submenu.addItem(pause30)
 
@@ -249,10 +267,7 @@ final class StatusBarController: NSObject {
             action: #selector(pause1Hour),
             keyEquivalent: ""
         )
-        pause1h.image = NSImage(
-            systemSymbolName: "1.circle",
-            accessibilityDescription: nil
-        )
+        setMenuItemImage(pause1h, symbolName: "1.circle")
         pause1h.target = self
         submenu.addItem(pause1h)
 
@@ -261,10 +276,7 @@ final class StatusBarController: NSObject {
             action: #selector(pause3Hours),
             keyEquivalent: ""
         )
-        pause3h.image = NSImage(
-            systemSymbolName: "3.circle",
-            accessibilityDescription: nil
-        )
+        setMenuItemImage(pause3h, symbolName: "3.circle")
         pause3h.target = self
         submenu.addItem(pause3h)
 
@@ -273,10 +285,7 @@ final class StatusBarController: NSObject {
             action: #selector(pause8Hours),
             keyEquivalent: ""
         )
-        pause8h.image = NSImage(
-            systemSymbolName: "8.circle",
-            accessibilityDescription: nil
-        )
+        setMenuItemImage(pause8h, symbolName: "8.circle")
         pause8h.target = self
         submenu.addItem(pause8h)
 
@@ -301,6 +310,14 @@ final class StatusBarController: NSObject {
 
     @objc private func checkUpdateAction() {
         onCheckUpdateClick?()
+    }
+
+    @objc private func newTextItemAction() {
+        EditWindowController.shared.openNewWindow()
+    }
+
+    @objc private func aboutAction() {
+        SettingWindowController.shared.toggleWindow(page: .about)
     }
 
     @objc private func resumePasteboard() {

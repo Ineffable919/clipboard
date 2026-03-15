@@ -90,6 +90,17 @@ class SettingWindowController: NSWindowController {
         window.makeKeyAndOrderFront(nil)
     }
 
+    func toggleWindow(page: SettingPage) {
+        toggleWindow()
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(50))
+            NotificationCenter.default.post(
+                name: .navigateToSettingPage,
+                object: page
+            )
+        }
+    }
+
     func hideWindow() {
         window?.orderOut(nil)
     }

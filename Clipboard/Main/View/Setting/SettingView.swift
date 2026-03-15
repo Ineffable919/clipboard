@@ -77,6 +77,11 @@ struct SettingView: View {
         .onAppear {
             isSidebarFocused = true
         }
+        .onReceive(NotificationCenter.default.publisher(for: .navigateToSettingPage)) { notification in
+            if let page = notification.object as? SettingPage {
+                selectedPage = page
+            }
+        }
     }
 }
 

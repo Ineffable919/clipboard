@@ -131,6 +131,10 @@ extension AppDelegate {
                     NSApplication.shared.terminate(nil)
                     return nil
                 }
+                if modifiers == "t" || modifiers == "T" {
+                    EditWindowController.shared.openNewWindow()
+                    return nil
+                }
             }
             return event
         }
@@ -200,4 +204,5 @@ extension AppDelegate: SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
 
 extension Notification.Name {
     static let menuBarIconVisibilityChanged = Notification.Name("menuBarIconVisibilityChanged")
+    static let navigateToSettingPage = Notification.Name("navigateToSettingPage")
 }
