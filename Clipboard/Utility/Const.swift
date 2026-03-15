@@ -17,9 +17,10 @@ class Const {
     static let cardLeadingSpace: CGFloat = 20.0
     static let bottomSize: CGFloat = 40.0
 
+    static let windowRadis: CGFloat = 24.0
     static let radius: CGFloat =
         if #available(macOS 26.0, *) {
-            14.0
+            16.0
         } else {
             8.0
         }
@@ -36,7 +37,6 @@ class Const {
     static let topBarHeight: CGFloat = 54.0
     static let topBarWidth: CGFloat = 450.0
     static let cardBottomPadding: CGFloat = 16.0
-    static let iconHdSize: CGFloat = 14.0
 
     static let hoverDarkColor: Color = .init(NSColor(hex: "#171D38"))
         .opacity(0.6)
@@ -103,6 +103,8 @@ class Const {
     static let space4: CGFloat = 4.0
     static let space2: CGFloat = 2.0
     static let iconSize18: CGFloat = 18.0
+    static let iconSize16: CGFloat = 16.0
+    static let iconSize14: CGFloat = 14.0
 
     static let chipPadding = EdgeInsets(
         top: space6,

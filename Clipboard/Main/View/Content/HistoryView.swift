@@ -103,9 +103,7 @@ struct HistoryView: View {
         }
         .onDrag {
             env.draggingItemId = item.id
-            if env.focusView != .history {
-                env.focusView = .history
-            }
+            env.focusView = .history
             historyVM.selectSingle(id: item.id)
             return item.itemProvider()
         }

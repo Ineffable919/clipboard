@@ -23,28 +23,46 @@ struct ContentView: View {
     }
 
     var body: some View {
+        mainContent
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .modifier(BackgroundModifier(
+                backgroundType: backgroundType,
+                glassMaterial: glassMaterial
+            ))
+    }
+
+    private var mainContent: some View {
         VStack(spacing: 0) {
             ClipTopBarView()
             HistoryView()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background {
-            if #available(macOS 26.0, *), backgroundType == .liquid {
-                RoundedRectangle(cornerRadius: Const.radius)
-                    .fill(.clear)
-                    .glassEffect(
-                        .regular,
-                        in: .rect(cornerRadius: Const.radius)
-                    )
-            } else {
-                if #available(macOS 26.0, *) {
-                    RoundedRectangle(cornerRadius: Const.radius)
-                        .fill(glassMaterial.material)
-                } else {
-                    Rectangle()
-                        .fill(glassMaterial.material)
-                }
-            }
+    }
+}
+
+// MARK: - BackgroundModifier
+
+private struct BackgroundModifier: ViewModifier {
+    let backgroundType: BackgroundType
+    let glassMaterial: GlassMaterial
+
+    func body(content: Content) -> some View {
+        if #available(macOS 26.0, *), backgroundType == .liquid {
+            content
+                .background(
+                    RoundedRectangle(cornerRadius: Const.windowRadis)
+                        .fill(.clear)
+                        .glassEffect(
+                            .regular,
+                            in: .rect(cornerRadius: Const.windowRadis)
+                        )
+                )
+        } else if #available(macOS 26.0, *) {
+            content
+                .background(glassMaterial.material)
+                .clipShape(.rect(cornerRadius: Const.windowRadis))
+        } else {
+            content
+                .background(glassMaterial.material)
         }
     }
 }

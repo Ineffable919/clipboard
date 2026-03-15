@@ -20,7 +20,7 @@ struct SettingsMenuView: View {
     var body: some View {
         ZStack(alignment: .topTrailing) {
             Image(systemName: "ellipsis")
-                .font(.system(size: Const.iconHdSize, weight: .regular))
+                .font(.system(size: Const.iconSize14, weight: .regular))
                 .padding(.horizontal, Const.space6)
                 .padding(.vertical, Const.space10)
                 .background(

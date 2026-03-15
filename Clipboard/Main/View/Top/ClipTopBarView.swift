@@ -21,21 +21,16 @@ struct ClipTopBarView: View {
     @State private var showFilter: Bool = false
 
     var body: some View {
-        HStack(alignment: .center, spacing: Const.space4) {
+        HStack(alignment: .center, spacing: Const.space12) {
             Color.clear
                 .containerRelativeFrame(.horizontal) { width, _ in
-                    let hasInput =
-                        env.focusView == .search || env.focusView == .filter
-                            || topBarVM.hasInput
-                    return max(0, floor(width / 2 - (hasInput ? 200 : 120)))
+                    max(0, floor(width / 2 - (inSearch ? 225 : 130)))
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
                     focusHistory()
                 }
-            if env.focusView == .search || env.focusView == .filter
-                || topBarVM.hasInput
-            {
+            if inSearch {
                 searchField
             } else {
                 searchIcon
@@ -68,7 +63,7 @@ struct ClipTopBarView: View {
     private var searchField: some View {
         HStack(spacing: 0) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: Const.iconHdSize, weight: .regular))
+                .font(.system(size: Const.iconSize14, weight: .regular))
                 .foregroundStyle(.primary.opacity(0.8))
                 .padding(.horizontal, Const.space6)
 
@@ -79,7 +74,7 @@ struct ClipTopBarView: View {
                     topBarVM.clearInput()
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: Const.iconHdSize, weight: .regular))
+                        .font(.system(size: Const.iconSize14, weight: .regular))
                         .foregroundStyle(.primary.opacity(0.8))
                 }
                 .buttonStyle(.plain)
@@ -159,7 +154,7 @@ struct ClipTopBarView: View {
             toggleFilterPopover()
         } label: {
             Image(systemName: "line.3.horizontal.decrease")
-                .font(.system(size: Const.iconHdSize, weight: .regular))
+                .font(.system(size: Const.iconSize14, weight: .regular))
                 .foregroundStyle(.primary.opacity(0.8))
                 .frame(width: 24, height: 32)
                 .contentShape(Rectangle())
@@ -175,7 +170,7 @@ struct ClipTopBarView: View {
 
     private var searchIcon: some View {
         Image(systemName: "magnifyingglass")
-            .font(.system(size: Const.iconHdSize, weight: .regular))
+            .font(.system(size: Const.iconSize18, weight: .regular))
             .padding(Const.space6)
             .background(
                 RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
@@ -250,7 +245,7 @@ struct ClipTopBarView: View {
 
     private var plusIcon: some View {
         Image(systemName: "plus")
-            .font(.system(size: Const.iconHdSize, weight: .regular))
+            .font(.system(size: Const.iconSize18, weight: .regular))
             .padding(Const.space6)
             .background(
                 RoundedRectangle(cornerRadius: Const.radius, style: .continuous)
@@ -361,6 +356,11 @@ struct ClipTopBarView: View {
     private var isFocusHistory: Bool {
         !topBarVM.hasInput && env.focusView != .search
             && env.focusView != .filter
+    }
+
+    private var inSearch: Bool {
+        env.focusView == .search || env.focusView == .filter
+            || topBarVM.hasInput
     }
 
     private func focusHistory() {

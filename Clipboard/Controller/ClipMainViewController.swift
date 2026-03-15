@@ -78,18 +78,26 @@ final class ClipMainViewController: NSViewController {
 
         if presented, !isPresented, hostingView.superview == nil {
             slideContainer.addSubview(hostingView)
+            let inset: CGFloat = if #available(macOS 26, *) {
+                8.0
+            } else {
+                0
+            }
             NSLayoutConstraint.activate([
                 hostingView.leadingAnchor.constraint(
-                    equalTo: slideContainer.leadingAnchor
+                    equalTo: slideContainer.leadingAnchor,
+                    constant: inset
                 ),
                 hostingView.trailingAnchor.constraint(
-                    equalTo: slideContainer.trailingAnchor
+                    equalTo: slideContainer.trailingAnchor,
+                    constant: -inset
                 ),
                 hostingView.topAnchor.constraint(
                     equalTo: slideContainer.topAnchor
                 ),
                 hostingView.bottomAnchor.constraint(
-                    equalTo: slideContainer.bottomAnchor
+                    equalTo: slideContainer.bottomAnchor,
+                    constant: -inset
                 ),
             ])
         }
