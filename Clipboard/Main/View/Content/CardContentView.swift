@@ -35,7 +35,7 @@ struct CardContentView: View {
         case .file:
             FileContentView(model: model)
         case .image:
-            ImageContentView(model: model)
+            ImageContentView(model: model, keyword: keyword)
         default:
             EmptyView()
         }
@@ -125,11 +125,13 @@ private struct FileIconPlaceholder: View {
 
 struct ImageContentView: View {
     var model: PasteboardModel
+    var keyword: String = ""
     @State private var thumbnail: NSImage?
     @State private var isLoading = false
     @State private var loadingTask: Task<Void, Never>?
     @State private var cachedContentMode: ContentMode = .fit
     @State private var currentModelId: String = ""
+    @State private var ocrRegions: [OCRTextRegion] = []
 
     private static let containerSize = CGSize(width: Const.cardSize, height: Const.cntSize)
     private static let containerRatio = Const.cardSize / Const.cntSize
@@ -144,6 +146,16 @@ struct ImageContentView: View {
                     .aspectRatio(contentMode: cachedContentMode)
                     .frame(width: Self.containerSize.width, height: Self.containerSize.height)
                     .clipped()
+                    .overlay {
+                        if !keyword.isEmpty, !ocrRegions.isEmpty, let imageSize = model.cachedImageSize {
+                            OCRHighlightOverlay(
+                                regions: ocrRegions,
+                                imageSize: imageSize,
+                                containerSize: Self.containerSize,
+                                contentMode: cachedContentMode
+                            )
+                        }
+                    }
             } else if isLoading {
                 ProgressView()
                     .controlSize(.small)
@@ -160,10 +172,22 @@ struct ImageContentView: View {
         .task(id: model.uniqueId) {
             await loadImage()
         }
+        .task(id: keyword) {
+            await loadOCRIfNeeded()
+        }
         .onDisappear {
             loadingTask?.cancel()
             loadingTask = nil
         }
+    }
+
+    private func loadOCRIfNeeded() async {
+        let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, model.type == .image else {
+            ocrRegions = []
+            return
+        }
+        ocrRegions = await model.loadOCRHighlightRegions(keyword: trimmed)
     }
 
     private func loadImage() async {
@@ -198,6 +222,75 @@ struct ImageContentView: View {
         }
 
         await loadingTask?.value
+    }
+}
+
+/// 图片 OCR 关键字高亮
+private struct OCRHighlightOverlay: View {
+    let regions: [OCRTextRegion]
+    let imageSize: CGSize
+    let containerSize: CGSize
+    let contentMode: ContentMode
+
+    var body: some View {
+        GeometryReader { _ in
+            let layout = computeImageLayout()
+
+            ForEach(regions.indices, id: \.self) { index in
+                let rect = convertToContainerRect(
+                    normalizedBox: regions[index].boundingBox,
+                    imageLayout: layout
+                )
+                RoundedRectangle(cornerRadius: 2, style: .continuous)
+                    .fill(Color.yellow.opacity(0.45))
+                    .frame(width: rect.width, height: rect.height)
+                    .position(x: rect.midX, y: rect.midY)
+            }
+        }
+    }
+
+    private func computeImageLayout() -> CGRect {
+        let imageRatio = imageSize.width / imageSize.height
+        let containerRatio = containerSize.width / containerSize.height
+
+        let renderSize: CGSize
+        if contentMode == .fill {
+            if imageRatio > containerRatio {
+                let h = containerSize.height
+                let w = h * imageRatio
+                renderSize = CGSize(width: w, height: h)
+            } else {
+                let w = containerSize.width
+                let h = w / imageRatio
+                renderSize = CGSize(width: w, height: h)
+            }
+        } else {
+            if imageRatio > containerRatio {
+                let w = containerSize.width
+                let h = w / imageRatio
+                renderSize = CGSize(width: w, height: h)
+            } else {
+                let h = containerSize.height
+                let w = h * imageRatio
+                renderSize = CGSize(width: w, height: h)
+            }
+        }
+
+        let x = (containerSize.width - renderSize.width) / 2
+        let y = (containerSize.height - renderSize.height) / 2
+        return CGRect(origin: CGPoint(x: x, y: y), size: renderSize)
+    }
+
+    /// Vision 归一化坐标 → 容器坐标
+    private func convertToContainerRect(
+        normalizedBox: CGRect,
+        imageLayout: CGRect
+    ) -> CGRect {
+        let x = imageLayout.origin.x + normalizedBox.origin.x * imageLayout.width
+        let y = imageLayout.origin.y + (1 - normalizedBox.origin.y - normalizedBox.height) * imageLayout.height
+        let w = normalizedBox.width * imageLayout.width
+        let h = normalizedBox.height * imageLayout.height
+        return CGRect(x: x, y: y, width: w, height: h)
     }
 }
 

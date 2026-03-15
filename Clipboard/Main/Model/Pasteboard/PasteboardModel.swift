@@ -59,6 +59,10 @@ final class PasteboardModel: Identifiable {
     @ObservationIgnored
     var cachedFilePaths: [String]?
     @ObservationIgnored
+    var cachedOCRRegions: [OCRTextRegion]?
+    @ObservationIgnored
+    var cachedOCRKeyword: String?
+    @ObservationIgnored
     var cachedHasBackgroundColor: Bool = false
     @ObservationIgnored
     var cachedNeedsBottomMask: Bool?
@@ -164,7 +168,7 @@ final class PasteboardModel: Identifiable {
         return CGSize(width: width / scale, height: height / scale)
     }
 
-    // MARK: - 展示辅助
+    // MARK: - 辅助
 
     static let formatter: NumberFormatter = {
         let formatter = NumberFormatter()
@@ -230,6 +234,24 @@ final class PasteboardModel: Identifiable {
 
         thumbnailLoadTask = task
         return await task.value
+    }
+
+    /// 加载匹配关键字的 OCR 高亮区域
+    func loadOCRHighlightRegions(keyword: String) async -> [OCRTextRegion] {
+        let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return [] }
+
+        if cachedOCRKeyword == trimmed, let cachedOCRRegions {
+            return cachedOCRRegions
+        }
+
+        let regions = await OCRViewModel.shared.recognizeHighlightRegions(
+            from: data,
+            keyword: trimmed
+        )
+        cachedOCRKeyword = trimmed
+        cachedOCRRegions = regions
+        return regions
     }
 
     // MARK: - 状态更新

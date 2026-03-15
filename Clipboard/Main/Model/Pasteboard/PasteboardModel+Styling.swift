@@ -101,7 +101,7 @@ extension PasteboardModel {
         }
 
         let source: String =
-            if pasteboardType.isFile() {
+            if pasteboardType.isFile() || pasteboardType.isImage() {
                 searchText
             } else {
                 attributeString.string
