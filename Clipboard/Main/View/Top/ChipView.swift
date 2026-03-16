@@ -99,7 +99,7 @@ struct ChipView: View {
         .background {
             overlayColor()
         }
-        .cornerRadius(Const.radius)
+        .clipShape(.rect(cornerRadius: Const.radius))
         .onHover { hovering in
             if chip.isSystem {
                 isTypeHovered = hovering
@@ -182,28 +182,32 @@ struct ChipView: View {
     }
 
     private func selectedColor(backgroundType: BackgroundType) -> Color {
+        if #available(macOS 26.0, *), backgroundType == .liquid {
+            return Const.chooseLightColorLiquid
+        }
+
         if colorScheme == .dark {
             return Const.chooseDarkColor
         }
 
         if #available(macOS 26.0, *) {
-            return backgroundType == .liquid
-                ? Const.chooseLightColorLiquid
-                : Const.chooseLightColorFrosted
+            return Const.chooseLightColorFrosted
         } else {
             return Const.chooseLightColorFrostedLow
         }
     }
 
     private func hoverColor(backgroundType: BackgroundType) -> Color {
+        if #available(macOS 26.0, *), backgroundType == .liquid {
+            return Const.hoverLightColorLiquid
+        }
+
         if colorScheme == .dark {
             return Const.hoverDarkColor
         }
 
         if #available(macOS 26.0, *) {
-            return backgroundType == .liquid
-                ? Const.hoverLightColorLiquid
-                : Const.hoverLightColorFrosted
+            return Const.hoverLightColorFrosted
         } else {
             return Const.hoverLightColorFrostedLow
         }
@@ -303,7 +307,7 @@ private struct ChipViewPreviewWrapper: View {
     var body: some View {
         ChipView(
             isSelected: true,
-            chip: topBarVM.chips[2],
+            chip: topBarVM.chips[0],
             focus: $focus,
             topBarVM: topBarVM
         )

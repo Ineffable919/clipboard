@@ -40,16 +40,15 @@ class Const {
 
     static let hoverDarkColor: Color = .init(NSColor(hex: "#171D38"))
         .opacity(0.6)
-    static let hoverLightColorLiquid: Color = .init(NSColor(hex: "#E1E4E7"))
-        .opacity(0.6)
-    static let hoverLightColorFrosted: Color = .white.opacity(0.6)
+    static let hoverLightColorLiquid: Color = .primary.opacity(0.06)
+    static let hoverLightColorFrosted: Color = .primary.opacity(0.08)
     static let hoverLightColorFrostedLow: Color = .init(
         nsColor: NSColor(hex: "#D0D0CF")
     ).opacity(0.6)
 
     static let chooseDarkColor: Color = .init(NSColor(hex: "#171D38"))
-    static let chooseLightColorLiquid: Color = .init(NSColor(hex: "#E1E4E7"))
-    static let chooseLightColorFrosted: Color = .white.opacity(0.8)
+    static let chooseLightColorLiquid: Color = .primary.opacity(0.1)
+    static let chooseLightColorFrosted: Color = .primary.opacity(0.12)
     static let chooseLightColorFrostedLow: Color = .init(
         nsColor: NSColor(hex: "#D0D0CF")
     )
