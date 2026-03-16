@@ -44,10 +44,16 @@ struct CardContentView: View {
 
 struct CSSView: View {
     var model: PasteboardModel
+
+    private var displayText: String {
+        let raw = model.attributeString.string
+        return raw.hasPrefix("#") ? raw : "#\(raw)"
+    }
+
     var body: some View {
         let (_, textColor) = model.colors()
         VStack(alignment: .center) {
-            Text(model.attributeString.string)
+            Text(displayText)
                 .font(.title2)
                 .foregroundStyle(textColor)
         }

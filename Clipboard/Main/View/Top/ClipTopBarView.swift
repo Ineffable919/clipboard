@@ -84,6 +84,14 @@ struct ClipTopBarView: View {
         }
         .padding(Const.space4)
         .frame(width: Const.topBarWidth, height: 32.0)
+        .background {
+            RoundedRectangle(cornerRadius: Const.topRadius, style: .continuous)
+                .fill(
+                    colorScheme == .dark
+                        ? Color(nsColor: .controlBackgroundColor)
+                        : .black.opacity(0.08)
+                )
+        }
         .overlay(
             RoundedRectangle(cornerRadius: Const.topRadius, style: .continuous)
                 .stroke(

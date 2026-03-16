@@ -706,7 +706,7 @@ import SwiftUI
         searchTask?.cancel()
 
         searchTask = Task {
-            try? await Task.sleep(for: .milliseconds(600))
+            try? await Task.sleep(for: .milliseconds(400))
 
             guard !Task.isCancelled else { return }
             await executeSearch()
