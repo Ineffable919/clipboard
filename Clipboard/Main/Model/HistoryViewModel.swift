@@ -213,7 +213,7 @@ import SwiftUI
 
         isDel = true
 
-        _ = withAnimation(.easeInOut(duration: 0.2)) {
+        withAnimation(.easeInOut(duration: 0.2)) {
             pd.dataList.remove(at: index)
             updateSelectionAfterDeletion(at: index)
         }
