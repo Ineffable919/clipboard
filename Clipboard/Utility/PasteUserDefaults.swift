@@ -155,6 +155,9 @@ enum PasteUserDefaults {
     /// tag 字段迁移标记
     @UserDefaultsWrapper(.tagFieldMigrated, defaultValue: false)
     static var tagFieldMigrated
+    /// hidden 字段新增标记
+    @UserDefaultsWrapper(.hiddenFieldMigrated, defaultValue: false)
+    static var hiddenFieldMigrated
     /// 状态栏图标
     @UserDefaultsWrapper(.showMenuBarIcon, defaultValue: true)
     static var showMenuBarIcon

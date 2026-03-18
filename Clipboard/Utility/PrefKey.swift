@@ -55,6 +55,8 @@ enum PrefKey: String, CaseIterable {
     case glassMaterial
     /// tag 字段迁移标记
     case tagFieldMigrated
+    /// hidden 字段新增标记
+    case hiddenFieldMigrated
     /// 显示模式（抽屉式/窗口式）
     case displayMode
     /// 窗口位置模式（中心/鼠标/上次位置）

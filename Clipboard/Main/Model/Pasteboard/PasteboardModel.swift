@@ -38,6 +38,7 @@ final class PasteboardModel: Identifiable {
 
     private(set) var group: Int
     let tag: String
+    private(set) var hidden: Bool
     @ObservationIgnored
     var cachedAttributed: AttributedString?
     @ObservationIgnored
@@ -87,7 +88,8 @@ final class PasteboardModel: Identifiable {
         searchText: String,
         length: Int,
         group: Int,
-        tag: String
+        tag: String,
+        hidden: Bool = false
     ) {
         self.pasteboardType = pasteboardType
         self.data = data
@@ -99,6 +101,7 @@ final class PasteboardModel: Identifiable {
         self.length = length
         self.group = group
         self.tag = tag
+        self.hidden = hidden
 
         attributeString =
             NSAttributedString(
@@ -258,6 +261,10 @@ final class PasteboardModel: Identifiable {
 
     func updateGroup(val: Int) {
         group = val
+    }
+
+    func updateHidden(val: Bool) {
+        hidden = val
     }
 
     func updateDate() {

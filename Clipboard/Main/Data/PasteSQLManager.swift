@@ -22,6 +22,7 @@ struct Col {
     nonisolated static let length = Expression<Int>("length")
     nonisolated static let group = Expression<Int>("group")
     nonisolated static let tag = Expression<String?>("tag")
+    nonisolated static let hidden = Expression<Int>("hidden")
 
     private init() {}
 }
@@ -62,6 +63,7 @@ final class PasteSQLManager: NSObject, @unchecked Sendable {
             t.column(Col.length)
             t.column(Col.group, defaultValue: -1)
             t.column(Col.tag)
+            t.column(Col.hidden, defaultValue: 0)
         }
         do {
             _ = try dbLock.withLock {
@@ -69,6 +71,7 @@ final class PasteSQLManager: NSObject, @unchecked Sendable {
             }
             createIndexesAsync()
             migrateTagFieldAsync()
+            migrateHiddenFieldAsync()
         } catch {
             log.error("Create Table Error: \(error)")
         }
@@ -160,7 +163,8 @@ extension PasteSQLManager {
             Col.searchText <- item.searchText,
             Col.length <- item.length,
             Col.group <- item.group,
-            Col.tag <- item.tag
+            Col.tag <- item.tag,
+            Col.hidden <- item.hidden ? 1 : 0
         )
         do {
             let rowId = try db?.run(insert)
@@ -203,7 +207,8 @@ extension PasteSQLManager {
             Col.searchText <- item.searchText,
             Col.length <- item.length,
             Col.group <- item.group,
-            Col.tag <- item.tag
+            Col.tag <- item.tag,
+            Col.hidden <- item.hidden ? 1 : 0
         )
         do {
             let count = try db?.run(update)
@@ -222,6 +227,17 @@ extension PasteSQLManager {
             log.debug("更新项目分组成功，影响行数：\(String(describing: count))")
         } catch {
             log.error("更新项目分组失败：\(error)")
+        }
+    }
+
+    func updateItemHidden(id: Int64, hidden: Bool) async {
+        let query = table.filter(Col.id == id)
+        let update = query.update(Col.hidden <- hidden ? 1 : 0)
+        do {
+            let count = try db?.run(update)
+            log.debug("更新项目 hidden 成功，影响行数：\(String(describing: count))")
+        } catch {
+            log.error("更新项目 hidden 失败：\(error)")
         }
     }
 
@@ -267,7 +283,7 @@ extension PasteSQLManager {
                 Col.id, Col.type, Col.data, Col.ts,
                 Col.appPath, Col.appName, Col.searchText,
                 Col.showData, Col.length, Col.group,
-                Col.tag,
+                Col.tag, Col.hidden,
             ]
         let ord = order ?? [Col.ts.desc]
 
@@ -681,5 +697,34 @@ extension PasteSQLManager {
         }
 
         log.info("tag 字段数据迁移完成，共迁移 \(totalMigrated) 条记录")
+    }
+}
+
+// MARK: - hidden 字段迁移
+
+extension PasteSQLManager {
+    func migrateHiddenFieldAsync() {
+        guard !PasteUserDefaults.hiddenFieldMigrated else {
+            log.debug("hidden 字段已增加，跳过")
+            return
+        }
+
+        Task.detached(priority: .background) { [weak self] in
+            guard let self else { return }
+            await performHiddenFieldMigration()
+            await MainActor.run {
+                PasteUserDefaults.hiddenFieldMigrated = true
+                log.info("新增hidden字段完成")
+            }
+        }
+    }
+
+    private func performHiddenFieldMigration() async {
+        guard let db else { return }
+        do {
+            try db.run("ALTER TABLE Clip ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0")
+        } catch {
+            log.warn("新增 hidden 字段失败（可能已存在）: \(error)")
+        }
     }
 }

@@ -215,21 +215,23 @@ import SwiftUI
 
         _ = withAnimation(.easeInOut(duration: 0.2)) {
             pd.dataList.remove(at: index)
-        }
-
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(200))
             updateSelectionAfterDeletion(at: index)
-            isDel = false
         }
 
         ClipActionService.shared.delete(item)
 
-        if pd.dataList.count < 50,
-           pd.hasMoreData,
-           !pd.isLoadingPage
-        {
-            pd.loadNextPage()
+        Task { @MainActor in
+        }
+
+        let needsMore = pd.dataList.count < 50 && pd.hasMoreData && !pd.isLoadingPage
+
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(250))
+            isDel = false
+
+            if needsMore {
+                pd.loadNextPage()
+            }
         }
     }
 

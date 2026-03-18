@@ -98,7 +98,11 @@ extension PasteDataStore {
     private func getItems(limit: Int = 50, offset: Int? = nil) async
         -> [PasteboardModel]
     {
-        let rows = await sqlManager.search(limit: limit, offset: offset)
+        let rows = await sqlManager.search(
+            filter: Col.hidden == 0,
+            limit: limit,
+            offset: offset
+        )
         return await getItems(rows: rows)
     }
 
@@ -116,6 +120,7 @@ extension PasteDataStore {
                 let length = try? row.get(Col.length)
                 let group = try? row.get(Col.group)
                 let tag = try? row.get(Col.tag)
+                let hidden = ((try? row.get(Col.hidden)) ?? 0) != 0
 
                 let pType = PasteboardType(type)
 
@@ -137,7 +142,8 @@ extension PasteDataStore {
                     searchText: searchText ?? "",
                     length: length ?? 0,
                     group: group ?? -1,
-                    tag: tag ?? ""
+                    tag: tag ?? "",
+                    hidden: hidden
                 )
                 pasteModel.id = id
                 return pasteModel
@@ -181,6 +187,8 @@ extension PasteDataStore {
         // 分组筛选
         if criteria.chipGroup != -1 {
             clauses.append(Col.group == criteria.chipGroup)
+        } else {
+            clauses.append(Col.hidden == 0)
         }
 
         // 类型筛选
@@ -409,18 +417,26 @@ extension PasteDataStore {
     }
 
     func deleteItems(filter: Expression<Bool>) {
-        Task {
+        let inFilter = isInFilterMode
+        let activeFilter = currentFilter
+
+        Task.detached(priority: .utility) { [sqlManager] in
             await sqlManager.delete(filter: filter)
             let count = await sqlManager.getTotalCount()
-            totalCount = count
 
-            if isInFilterMode, let currentFilter {
-                filteredCount = await sqlManager.getCount(filter: currentFilter)
+            let filtered: Int
+            if inFilter, let activeFilter {
+                filtered = await sqlManager.getCount(filter: activeFilter)
             } else {
-                filteredCount = count
+                filtered = count
             }
 
-            invalidateTagTypesCache()
+            await MainActor.run { [weak self] in
+                guard let self else { return }
+                totalCount = count
+                filteredCount = filtered
+                invalidateTagTypesCache()
+            }
         }
     }
 
@@ -543,6 +559,18 @@ extension PasteDataStore {
                groupId != model.group
             {
                 model.updateGroup(val: groupId)
+            }
+        }
+    }
+
+    func updateItemHidden(itemId: Int64, hidden: Bool) {
+        Task {
+            await sqlManager.updateItemHidden(id: itemId, hidden: hidden)
+
+            if let model = dataList.first(where: { $0.id == itemId }),
+               hidden != model.hidden
+            {
+                model.updateHidden(val: hidden)
             }
         }
     }

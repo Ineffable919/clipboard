@@ -90,18 +90,13 @@ final class ClipActionService {
     }
 
     func delete(_ item: PasteboardModel) {
-        if item.group != -1, let id = item.id {
-            do {
-                try dataStore.updateItemGroup(
-                    itemId: id,
-                    groupId: -1
-                )
-            } catch {
-                log.error("更新卡片 group 失败: \(error)")
-            }
-            return
+        guard let id = item.id else { return }
+
+        if item.group != -1 {
+            dataStore.updateItemHidden(itemId: id, hidden: true)
+        } else {
+            dataStore.deleteItems(item)
         }
-        dataStore.deleteItems(item)
     }
 
     private func requestAccessibilityPermission(
