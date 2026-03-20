@@ -263,7 +263,11 @@ struct HistoryView: View {
 
         let item = pd.dataList[index]
         historyVM.selectSingle(id: item.id)
-        ClipActionService.shared.paste(item, isAttribute: true)
+        ClipActionService.shared.paste(
+            item,
+            isAttribute: true,
+            checkPermissions: PasteUserDefaults.pasteDirect
+        )
     }
 
     private func hasPlainTextModifier(_ event: NSEvent) -> Bool {

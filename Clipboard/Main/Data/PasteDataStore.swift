@@ -424,11 +424,10 @@ extension PasteDataStore {
             await sqlManager.delete(filter: filter)
             let count = await sqlManager.getTotalCount()
 
-            let filtered: Int
-            if inFilter, let activeFilter {
-                filtered = await sqlManager.getCount(filter: activeFilter)
+            let filtered: Int = if inFilter, let activeFilter {
+                await sqlManager.getCount(filter: activeFilter)
             } else {
-                filtered = count
+                count
             }
 
             await MainActor.run { [weak self] in

@@ -220,9 +220,6 @@ import SwiftUI
 
         ClipActionService.shared.delete(item)
 
-        Task { @MainActor in
-        }
-
         let needsMore = pd.dataList.count < 50 && pd.hasMoreData && !pd.isLoadingPage
 
         Task { @MainActor in
