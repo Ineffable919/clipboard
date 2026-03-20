@@ -29,6 +29,7 @@ struct HistoryView: View {
                 ScrollView(.horizontal) {
                     contentView()
                 }
+                .horizontalMouseWheelScroll()
                 .scrollIndicators(.never)
                 .contentMargins(
                     .leading,
