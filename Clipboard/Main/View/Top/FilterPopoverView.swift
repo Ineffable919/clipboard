@@ -69,7 +69,7 @@ struct FilterPopoverView: View {
     // MARK: - Type Section
 
     private var typeSection: some View {
-        filterSection(title: "类型") {
+        filterSection(title: String(localized: .type)) {
             ForEach(tagTypes, id: \.self) { type in
                 if type == .string {
                     textTypeButton()
@@ -91,7 +91,7 @@ struct FilterPopoverView: View {
 
         return FilterButton(
             systemImage: "doc.text",
-            label: "文本",
+            label: String(localized: .text),
             isSelected: isSelected,
             action: { topBarVM.toggleTextType() }
         )
@@ -100,7 +100,7 @@ struct FilterPopoverView: View {
     // MARK: - App Section
 
     private var appSection: some View {
-        filterSection(title: "应用") {
+        filterSection(title: String(localized: .app)) {
             ForEach(displayedAppInfo) { appInfo in
                 appButton(appInfo: appInfo)
             }
@@ -136,7 +136,7 @@ struct FilterPopoverView: View {
         FilterButton(
             systemImage: showAllApps
                 ? "chevron.up.circle" : "chevron.down.circle",
-            label: showAllApps ? "收起" : "更多",
+            label: String(localized: showAllApps ? .collapse : .more),
             isSelected: false,
             action: { showAllApps.toggle() }
         )
@@ -145,7 +145,7 @@ struct FilterPopoverView: View {
     // MARK: - Date Section
 
     private var dateSection: some View {
-        filterSection(title: "日期") {
+        filterSection(title: String(localized: .date)) {
             ForEach(TopBarViewModel.DateFilterOption.allCases, id: \.self) {
                 option in
                 let isSelected = topBarVM.selectedDateFilter == option
@@ -166,7 +166,7 @@ struct FilterPopoverView: View {
     private var clearFiltersButton: some View {
         FilterButton(
             systemImage: "xmark.circle",
-            label: "清除筛选",
+            label: String(localized: .clearFilters),
             isSelected: false,
             action: { topBarVM.clearAllFilters() }
         )

@@ -485,12 +485,9 @@ extension PasteDataStore {
 
     func clearAllData() {
         let alert = NSAlert()
-        alert.informativeText = """
-                清空数据后无法恢复
-                清空后会退出应用，请重新打开。
-        """
-        alert.addButton(withTitle: "确定")
-        alert.addButton(withTitle: "取消")
+        alert.informativeText = String(localized: .clearDataMessage)
+        alert.addButton(withTitle: String(localized: .commonConfirm))
+        alert.addButton(withTitle: String(localized: .commonCancel))
         let response = alert.runModal()
 
         if response == .alertFirstButtonReturn {

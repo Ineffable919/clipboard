@@ -180,33 +180,33 @@ struct FloatingCardView: View {
 
     @ViewBuilder
     private var contextMenuContent: some View {
-        Button("粘贴", systemImage: "doc.on.clipboard", action: pasteToApp)
+        Button(String(localized: .paste), systemImage: "doc.on.clipboard", action: pasteToApp)
             .keyboardShortcut(.return, modifiers: [])
 
         if isTextType {
             Button(
-                "以纯文本粘贴",
+                String(localized: .pastePlain),
                 systemImage: "text.alignleft",
                 action: pasteAsPlainText
             )
         }
 
-        Button("复制", systemImage: "doc.on.doc", action: copyToClipboard)
+        Button(String(localized: .copy), systemImage: "doc.on.doc", action: copyToClipboard)
             .keyboardShortcut("c", modifiers: [.command])
 
         Divider()
 
         if isTextType {
-            Button("编辑", systemImage: "pencil", action: openEditWindow)
+            Button(String(localized: .edit), systemImage: "pencil", action: openEditWindow)
                 .keyboardShortcut("e", modifiers: [.command])
         }
 
-        Button("删除", systemImage: "trash", action: deleteItem)
+        Button(String(localized: .deleteTitle), systemImage: "trash", action: deleteItem)
             .keyboardShortcut(.delete, modifiers: [])
 
         Divider()
 
-        Button("预览", systemImage: "eye", action: togglePreview)
+        Button(String(localized: .preview), systemImage: "eye", action: togglePreview)
             .keyboardShortcut(.space, modifiers: [])
     }
 
@@ -275,7 +275,7 @@ private struct FloatingMultipleFilesView: View {
                 .foregroundStyle(Color.accentColor.opacity(0.6))
                 .frame(width: 24, height: 24)
 
-            Text("\(paths.count) 个文件")
+            Text(.fileCount(paths.count))
                 .font(.system(size: 12))
                 .foregroundStyle(.primary)
         }
@@ -366,7 +366,7 @@ private struct FloatingImageThumbnailView: View {
 #Preview {
     @Previewable @State var previewId: PasteboardModel.ID? = nil
     let env = AppEnvironment()
-    let data = "你好".data(using: .utf8) ?? Data()
+    let data = "Hello".data(using: .utf8) ?? Data()
     FloatingCardView(
         model: PasteboardModel(
             pasteboardType: .string,
@@ -374,8 +374,8 @@ private struct FloatingImageThumbnailView: View {
             showData: data,
             timestamp: Int64(Date().timeIntervalSince1970),
             appPath: "/Applications/Google Chrome.app",
-            appName: "微信",
-            searchText: "你好",
+            appName: "Preview",
+            searchText: "Hello",
             length: 2,
             group: -1,
             tag: "string"

@@ -153,9 +153,9 @@ struct ClipCardView: View {
 
     private var pasteButtonTitle: String {
         if let appName = env.preApp?.localizedName {
-            return "粘贴到 " + appName
+            return String(localized: .pasteToApp(appName))
         }
-        return "粘贴"
+        return String(localized: .paste)
     }
 
     @ViewBuilder
@@ -169,29 +169,29 @@ struct ClipCardView: View {
 
         if model.pasteboardType.isText() {
             Button(
-                "以纯文本粘贴",
+                String(localized: .pastePlain),
                 systemImage: "text.alignleft",
                 action: pasteAsPlainText
             )
             .keyboardShortcut(.return, modifiers: plainTextModifiers)
         }
 
-        Button("复制", systemImage: "doc.on.doc", action: copyToClipboard)
+        Button(String(localized: .copy), systemImage: "doc.on.doc", action: copyToClipboard)
             .keyboardShortcut("c", modifiers: [.command])
 
         Divider()
 
         if model.pasteboardType.isText() {
-            Button("编辑", systemImage: "pencil", action: openEditWindow)
+            Button(String(localized: .edit), systemImage: "pencil", action: openEditWindow)
                 .keyboardShortcut("e", modifiers: [.command])
         }
 
-        Button("删除", systemImage: "trash", action: deleteItem)
+        Button(String(localized: .deleteTitle), systemImage: "trash", action: deleteItem)
             .keyboardShortcut(.delete, modifiers: [])
 
         Divider()
 
-        Button("预览", systemImage: "eye", action: togglePreview)
+        Button(String(localized: .preview), systemImage: "eye", action: togglePreview)
             .keyboardShortcut(.space, modifiers: [])
     }
 
@@ -237,7 +237,7 @@ struct ClipCardView: View {
             showData: data,
             timestamp: 1_728_878_384,
             appPath: "/Applications/WeChat.app",
-            appName: "微信",
+            appName: "Preview",
             searchText: "",
             length: 9,
             group: -1,

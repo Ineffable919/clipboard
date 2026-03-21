@@ -128,14 +128,19 @@ struct PreviewPopoverView: View {
             Spacer()
 
             if model.pasteboardType.isText() {
-                CommonButton(title: "编辑", action: openEditWindow)
+                CommonButton(
+                    title: String(localized: .edit),
+                    action: openEditWindow
+                )
             }
 
             if isSingleFile,
                let fileUrl = model.cachedFilePaths?.first,
                let defaultApp = defaultAppForFile
             {
-                CommonButton(title: "通过 \(defaultApp) 打开") {
+                CommonButton(
+                    title: String(localized: .openWithApp(defaultApp))
+                ) {
                     NSWorkspace.shared.open(URL(fileURLWithPath: fileUrl))
                 }
             }
@@ -178,7 +183,10 @@ struct PreviewPopoverView: View {
                         Text(fileSize)
                             .foregroundStyle(.secondary)
                     }
-                    CommonButton(title: "在访达中显示", action: openInFinder)
+                    CommonButton(
+                        title: String(localized: .showInFinder),
+                        action: openInFinder
+                    )
                 }
             }
 
@@ -187,7 +195,7 @@ struct PreviewPopoverView: View {
                let browserName = defaultBrowserName
             {
                 CommonButton(
-                    title: "使用 \(browserName) 打开",
+                    title: String(localized: .openInApp(browserName)),
                     action: openInBrowser
                 )
             }
@@ -364,7 +372,7 @@ struct PreviewPopoverView: View {
     }
 
     private var emptyPreview: some View {
-        Text("无预览内容")
+        Text(.noPreview)
             .font(.callout)
             .foregroundStyle(.secondary)
             .frame(
@@ -438,7 +446,7 @@ class InterceptingHostingView<Content: View>: NSHostingView<Content> {
             showData: data,
             timestamp: Int64(Date().timeIntervalSince1970),
             appPath: "/Applications/WeChat.app",
-            appName: "微信",
+            appName: "Preview",
             searchText: "",
             length: 0,
             group: -1,

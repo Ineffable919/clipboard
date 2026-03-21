@@ -119,11 +119,6 @@ struct ChipView: View {
             await pd.getCountByGroup(groupId: chip.id)
         }
 
-        let formattedCount = NumberFormatter.localizedString(
-            from: NSNumber(value: count),
-            number: .decimal
-        )
-
         var shortcutText = ""
         if let prevInfo = HotKeyManager.shared.getHotKey(key: "previous_tab"),
            let nextInfo = HotKeyManager.shared.getHotKey(key: "next_tab"),
@@ -132,10 +127,10 @@ struct ChipView: View {
         {
             let prevDisplay = prevInfo.shortcut.displayString
             let nextDisplay = nextInfo.shortcut.displayString
-            shortcutText = "（\(prevDisplay)，\(nextDisplay)切换Tab）"
+            shortcutText = String(localized: .chipTabs(prevDisplay, nextDisplay))
         }
 
-        helpText = "\(formattedCount)条\(shortcutText)"
+        helpText = String(localized: .chipHelp(count, shortcutText))
     }
 
     private var editingView: some View {
@@ -258,11 +253,11 @@ struct ChipView: View {
 
     private func showDelAlert(_ chip: CategoryChip) {
         let alert = NSAlert()
-        alert.messageText = "删除『\(chip.name)』？"
-        alert.informativeText = "删除『\(chip.name)』及其所属内容将无法恢复。"
+        alert.messageText = String(localized: .deleteChipTitle(chip.name))
+        alert.informativeText = String(localized: .deleteChipMessage(chip.name))
         alert.alertStyle = .warning
-        alert.addButton(withTitle: "确定")
-        alert.addButton(withTitle: "取消")
+        alert.addButton(withTitle: String(localized: .commonConfirm))
+        alert.addButton(withTitle: String(localized: .commonCancel))
 
         let handleResponse: (NSApplication.ModalResponse) -> Void = {
             [self] response in

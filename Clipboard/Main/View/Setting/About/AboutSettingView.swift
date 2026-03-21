@@ -37,7 +37,7 @@ struct AboutSettingView: View {
                     Image(nsImage: appIcon)
                         .resizable()
                         .frame(width: 120, height: 120)
-                        .cornerRadius(Const.radius)
+                        .clipShape(.rect(cornerRadius: Const.radius))
                         .shadow(
                             color: Color.accentColor.opacity(0.15),
                             radius: Const.radius,
@@ -65,7 +65,7 @@ struct AboutSettingView: View {
 
                 Text("\(appVersion) (\(buildNumber))")
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
             .padding(.top, Const.space16)
 
@@ -75,16 +75,18 @@ struct AboutSettingView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "arrow.down.circle")
                         .font(.system(size: 14))
-                    Text("检查更新")
+                    Text(.settingAboutCheckForUpdates)
                         .font(.system(size: 14, weight: .regular))
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
                 }
-                .frame(width: 120)
+                .padding(.horizontal, Const.space16)
                 .padding(.vertical, 6)
                 .background(
                     RoundedRectangle(cornerRadius: Const.radius)
                         .fill(Color.accentColor)
                 )
-                .foregroundColor(.white)
+                .foregroundStyle(.white)
             }
             .buttonStyle(.plain)
             .shadow(
@@ -103,21 +105,28 @@ struct AboutSettingView: View {
                 }
                 HStack(spacing: 20) {
                     if let github = URL(string: "https://github.com/Ineffable919/clipboard") {
-                        Link("Github", destination: github)
+                        Link(String(localized: .settingAboutGithub), destination: github)
                     }
                     if let issues = URL(string: "https://github.com/Ineffable919/clipboard/issues") {
-                        Link("反馈建议", destination: issues)
+                        Link(String(localized: .settingAboutFeedback), destination: issues)
                     }
                 }
                 VStack(spacing: Const.space4) {
-                    Text("Made with ❤️ for macOS")
+                    Text(.settingAboutMadeForMac)
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                     Text(
-                        "Copyright © \(currentYear) Crown. All rights reserved."
+                        String.localizedStringWithFormat(
+                            String(
+                                localized: "settingAboutCopyrightFormat",
+                                defaultValue: "Copyright © %lld Crown. All rights reserved.",
+                                table: "Localizable"
+                            ),
+                            currentYear
+                        )
                     )
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                 }
                 .padding(.bottom, Const.space16)
             }
@@ -128,47 +137,6 @@ struct AboutSettingView: View {
     /// 检查更新
     private func checkForUpdates() {
         AppDelegate.shared?.updaterController.checkForUpdates(nil)
-    }
-}
-
-// MARK: - 链接按钮组件
-
-struct LinkButton: View {
-    let title: String
-    let icon: String
-    let action: () -> Void
-
-    @State private var isHovered = false
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 6) {
-                Image(systemName: icon)
-                    .font(.system(size: Const.space12))
-                Text(title)
-                    .font(.system(size: 13))
-            }
-            .padding(.horizontal, Const.space12)
-            .padding(.vertical, 6)
-            .background(
-                RoundedRectangle(cornerRadius: Const.radius)
-                    .fill(
-                        isHovered
-                            ? Color.accentColor.opacity(0.1) : Color.clear
-                    )
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: Const.radius)
-                    .stroke(
-                        isHovered ? Color.accentColor : Color.gray.opacity(0.3),
-                        lineWidth: 1
-                    )
-            )
-        }
-        .buttonStyle(.plain)
-        .onHover { hovering in
-            isHovered = hovering
-        }
     }
 }
 

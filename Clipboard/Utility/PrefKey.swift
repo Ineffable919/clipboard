@@ -67,6 +67,31 @@ enum PrefKey: String, CaseIterable {
     case showMenuBarIcon
     /// 显示 Dock 图标
     case showDockIcon
+    /// 应用语言
+    case appLanguage
+}
+
+/// 应用语言
+enum AppLanguage: String, CaseIterable, Identifiable {
+    case zhHans = "zh-Hans"
+    case english = "en"
+
+    var id: String {
+        rawValue
+    }
+
+    var title: LocalizedStringResource {
+        switch self {
+        case .zhHans: .settingLanguageOptionSimplifiedChinese
+        case .english: .settingLanguageOptionEnglish
+        }
+    }
+
+    func apply() -> Bool {
+        UserDefaults.standard.set([rawValue], forKey: "AppleLanguages")
+        UserDefaults.standard.synchronize()
+        return true
+    }
 }
 
 enum AppearanceMode: Int, CaseIterable {
@@ -74,11 +99,11 @@ enum AppearanceMode: Int, CaseIterable {
     case light = 1
     case dark = 2
 
-    var title: String {
+    var title: LocalizedStringResource {
         switch self {
-        case .system: "跟随系统"
-        case .light: "浅色"
-        case .dark: "深色"
+        case .system: .settingAppearanceModeSystem
+        case .light: .settingAppearanceModeLight
+        case .dark: .settingAppearanceModeDark
         }
     }
 }
@@ -124,15 +149,15 @@ enum HistoryTimeUnit: Equatable {
     var displayText: String {
         switch self {
         case let .days(n):
-            "\(n)天"
+            String.localizedStringWithFormat(String(localized: "historyTimeDisplayDays", defaultValue: "%lld days", table: "Localizable"), n)
         case let .weeks(n):
-            "\(n)周"
+            String.localizedStringWithFormat(String(localized: "historyTimeDisplayWeeks", defaultValue: "%lld weeks", table: "Localizable"), n)
         case let .months(n):
-            "\(n)个月"
+            String.localizedStringWithFormat(String(localized: "historyTimeDisplayMonths", defaultValue: "%lld months", table: "Localizable"), n)
         case .year:
-            "1年"
+            String(localized: .historyTimeDisplayYear)
         case .forever:
-            "永久"
+            String(localized: .historyTimeDisplayForever)
         }
     }
 }
@@ -142,10 +167,10 @@ enum BackgroundType: Int, CaseIterable {
     case liquid = 0
     case frosted = 1
 
-    var title: String {
+    var title: LocalizedStringResource {
         switch self {
-        case .liquid: "液态玻璃"
-        case .frosted: "毛玻璃"
+        case .liquid: .settingAppearanceBackgroundTypeLiquid
+        case .frosted: .settingAppearanceBackgroundTypeFrosted
         }
     }
 }
@@ -174,10 +199,10 @@ enum DisplayMode: Int, CaseIterable {
     case drawer = 0
     case floating = 1
 
-    var title: String {
+    var title: LocalizedStringResource {
         switch self {
-        case .drawer: "抽屉"
-        case .floating: "窗口"
+        case .drawer: .settingAppearanceDisplayModeDrawer
+        case .floating: .settingAppearanceDisplayModeWindow
         }
     }
 }
@@ -188,11 +213,11 @@ enum WindowPositionMode: Int, CaseIterable {
     case mouse = 1
     case lastPosition = 2
 
-    var title: String {
+    var title: LocalizedStringResource {
         switch self {
-        case .center: "屏幕中心"
-        case .mouse: "鼠标位置"
-        case .lastPosition: "上次位置"
+        case .center: .settingAppearanceWindowPositionCenter
+        case .mouse: .settingAppearanceWindowPositionMouse
+        case .lastPosition: .settingAppearanceWindowPositionLast
         }
     }
 }

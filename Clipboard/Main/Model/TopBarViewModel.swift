@@ -42,7 +42,7 @@ import SwiftUI
 
     // New Chip State
     var editingNewChip: Bool = false
-    var newChipName: String = "未命名"
+    var newChipName: String = .init(localized: .untitled)
     var newChipColorIndex: Int = 1
 
     // Edit Chip State
@@ -135,23 +135,29 @@ import SwiftUI
     @ObservationIgnored
     private var pauseDisplayTimer: Timer?
 
+    private func pauseTimeString(from date: Date) -> String {
+        date.formatted(
+            .dateTime.hour(.twoDigits(amPM: .omitted)).minute(.twoDigits)
+        )
+    }
+
     var pauseMenuTitle: String {
         guard isPaused else {
-            return "暂停"
+            return String(localized: .pause)
         }
 
         if let endTime = PasteBoard.main.pauseEndTime {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "HH:mm"
-            return "暂停到 \(formatter.string(from: endTime))"
+            return String(
+                localized: .pauseUntil(pauseTimeString(from: endTime))
+            )
         }
 
-        return "已暂停"
+        return String(localized: .paused)
     }
 
     var formattedRemainingTime: String {
         if remainingTime <= 0 {
-            return "已暂停"
+            return String(localized: .paused)
         }
         let hours = Int(remainingTime) / 3600
         let minutes = (Int(remainingTime) % 3600) / 60
@@ -200,11 +206,11 @@ import SwiftUI
 
         var displayName: String {
             switch self {
-            case .today: "今天"
-            case .yesterday: "昨天"
-            case .thisWeek: "本周"
-            case .lastWeek: "上周"
-            case .thisMonth: "近一个月"
+            case .today: String(localized: .today)
+            case .yesterday: String(localized: .yesterday)
+            case .thisWeek: String(localized: .thisWeek)
+            case .lastWeek: String(localized: .lastWeek)
+            case .thisMonth: String(localized: .thisMonth)
             }
         }
 
@@ -396,7 +402,7 @@ import SwiftUI
 
     private func resetNewChipState() {
         editingNewChip = false
-        newChipName = "未命名"
+        newChipName = String(localized: .untitled)
         newChipColorIndex = cycleColorIndex(newChipColorIndex)
     }
 
@@ -521,7 +527,7 @@ import SwiftUI
                             .scaledToFit()
                             .scaleEffect(0.8)
                     ),
-                    label: "文本",
+                    label: String(localized: .text),
                     type: .filterType,
                     associatedValue: textTagAssociatedValue
                 )
@@ -649,7 +655,7 @@ import SwiftUI
                             .resizable()
                             .scaledToFit()
                     ),
-                    label: "文本",
+                    label: String(localized: .text),
                     type: .filterType,
                     associatedValue: textTagAssociatedValue
                 )

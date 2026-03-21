@@ -95,14 +95,16 @@ struct FloatingHeaderView: View {
                 .foregroundStyle(.secondary)
                 .font(.system(size: 12, weight: .medium))
 
-            TextField("搜索", text: $vm.query)
-                .textFieldStyle(.plain)
-                .focused($focus, equals: .search)
-                .onChange(of: focus) {
-                    if focus == .search, env.focusView != .search {
-                        env.focusView = .search
-                    }
+            TextField(text: $vm.query) {
+                Text(.search)
+            }
+            .textFieldStyle(.plain)
+            .focused($focus, equals: .search)
+            .onChange(of: focus) {
+                if focus == .search, env.focusView != .search {
+                    env.focusView = .search
                 }
+            }
 
             if !topBarVM.query.isEmpty {
                 Button {
@@ -147,7 +149,11 @@ struct FloatingHeaderView: View {
                 .foregroundStyle(isPinned ? Color.accentColor : .secondary)
         }
         .buttonStyle(.plain)
-        .help(isPinned ? "取消置顶" : "置顶")
+        .help(
+            String(
+                localized: isPinned ? .unpin : .pin
+            )
+        )
     }
 
     // MARK: - 分类标签
@@ -182,6 +188,7 @@ struct FloatingHeaderView: View {
                     .padding(.vertical, Const.space6)
                 }
                 .scrollIndicators(.hidden)
+                .horizontalMouseWheelScroll()
                 .onTapGesture {
                     guard env.focusView != .history else { return }
                     focus = nil
@@ -450,11 +457,11 @@ struct FloatingChipView: View {
 
     private func showDelAlert(_ chip: CategoryChip) {
         let alert = NSAlert()
-        alert.messageText = "删除『\(chip.name)』？"
-        alert.informativeText = "删除『\(chip.name)』及其所属内容将无法恢复。"
+        alert.messageText = String(localized: .deleteChipTitle(chip.name))
+        alert.informativeText = String(localized: .deleteChipMessage(chip.name))
         alert.alertStyle = .warning
-        alert.addButton(withTitle: "确定")
-        alert.addButton(withTitle: "取消")
+        alert.addButton(withTitle: String(localized: .commonConfirm))
+        alert.addButton(withTitle: String(localized: .commonCancel))
 
         let handleResponse: (NSApplication.ModalResponse) -> Void = {
             [self] response in

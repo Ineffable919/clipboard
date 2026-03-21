@@ -65,7 +65,10 @@ struct EditToolbar: View {
 
     var body: some View {
         HStack(spacing: Const.space16) {
-            SystemButton(title: "取消", action: onCancel)
+            SystemButton(
+                title: String(localized: .commonCancel),
+                action: onCancel
+            )
 
             Spacer()
 
@@ -85,7 +88,7 @@ struct EditToolbar: View {
             Spacer()
 
             Button(action: onSave) {
-                Text("保存")
+                Text(.save)
                     .font(.system(size: Const.space12, weight: .light))
                     .foregroundStyle(.white)
                     .padding(.horizontal, Const.space10)

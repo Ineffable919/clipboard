@@ -104,14 +104,11 @@ final class ClipActionService {
         isAttribute: Bool = true
     ) {
         let alert = NSAlert()
-        alert.messageText = "需要辅助功能权限"
-        alert.informativeText = """
-        Clipboard 需要获取辅助功能权限
-        才能直接粘贴到其它应用
-        """
+        alert.messageText = String(localized: .accessTitle)
+        alert.informativeText = String(localized: .accessMessage)
         alert.alertStyle = .informational
-        alert.addButton(withTitle: "设置")
-        alert.addButton(withTitle: "稍后设置，复制到剪贴板")
+        alert.addButton(withTitle: String(localized: .openSettings))
+        alert.addButton(withTitle: String(localized: .copyLater))
 
         let response = alert.runModal()
 

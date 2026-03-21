@@ -24,6 +24,6 @@ struct SystemButton: View {
 }
 
 #Preview {
-    SystemButton(title: "重置快捷方式为默认...") {}
+    SystemButton(title: String(localized: .settingKeyboardResetMore)) {}
         .padding()
 }

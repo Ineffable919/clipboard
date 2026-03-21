@@ -36,6 +36,6 @@ struct PauseIndicatorView: View {
             )
         }
         .buttonStyle(.plain)
-        .help("点击恢复记录")
+        .help(String(localized: .resumeHint))
     }
 }

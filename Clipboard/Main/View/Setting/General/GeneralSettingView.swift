@@ -11,20 +11,14 @@ import SwiftUI
 // MARK: - 通用设置视图
 
 struct GeneralSettingView: View {
-    @State private var launchAtLogin: Bool = LaunchAtLoginHelper.shared
-        .isEnabled
-    @AppStorage(PrefKey.showMenuBarIcon.rawValue)
-    private var showMenuBarIcon = true
-    @AppStorage(PrefKey.showDockIcon.rawValue)
-    private var showDockIcon = false
-    @AppStorage(PrefKey.soundEnabled.rawValue)
-    private var soundEnabled = true
+    @State private var launchAtLogin: Bool = LaunchAtLoginHelper.shared.isEnabled
+    @AppStorage(PrefKey.showMenuBarIcon.rawValue) private var showMenuBarIcon = true
+    @AppStorage(PrefKey.showDockIcon.rawValue) private var showDockIcon = false
+    @AppStorage(PrefKey.soundEnabled.rawValue) private var soundEnabled = true
     @State private var selectedPasteTarget: PasteTargetMode =
         PasteUserDefaults.pasteDirect ? .toApp : .toClipboard
-    @AppStorage(PrefKey.pasteOnlyText.rawValue)
-    private var pasteAsPlainText = false
-    @AppStorage(PrefKey.removeTailingNewline.rawValue)
-    private var removeTailingNewline = false
+    @AppStorage(PrefKey.pasteOnlyText.rawValue) private var pasteAsPlainText = false
+    @AppStorage(PrefKey.removeTailingNewline.rawValue) private var removeTailingNewline = false
     @State private var selectedHistoryTimeUnit: HistoryTimeUnit =
         .init(rawValue: PasteUserDefaults.historyTime)
     @State private var launchAtLoginTimer: Timer?
@@ -32,68 +26,52 @@ struct GeneralSettingView: View {
     private var db: PasteDataStore = .main
 
     var body: some View {
-        ScrollView(.vertical, showsIndicators: false) {
+        ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 4) {
-                    SettingToggleRow(
-                        title: "登录时打开",
-                        isOn: $launchAtLogin
-                    )
-                    .onChange(of: launchAtLogin) { _, newValue in
-                        let success = LaunchAtLoginHelper.shared.setEnabled(
-                            newValue
-                        )
-                        if success {
-                            PasteUserDefaults.onStart = newValue
-                        } else {
-                            Task { @MainActor in
-                                launchAtLogin =
-                                    LaunchAtLoginHelper.shared.isEnabled
+                    SettingToggleRow(title: String(localized: .settingGeneralLaunchAtLogin), isOn: $launchAtLogin)
+                        .onChange(of: launchAtLogin) { _, newValue in
+                            let success = LaunchAtLoginHelper.shared.setEnabled(newValue)
+                            if success {
+                                PasteUserDefaults.onStart = newValue
+                            } else {
+                                Task { @MainActor in
+                                    launchAtLogin = LaunchAtLoginHelper.shared.isEnabled
+                                }
                             }
                         }
-                    }
 
                     Divider()
 
-                    SettingToggleRow(
-                        title: "状态栏图标",
-                        isOn: $showMenuBarIcon
-                    )
-                    .onChange(of: showMenuBarIcon) { _, newValue in
-                        NotificationCenter.default.post(
-                            name: .menuBarIconVisibilityChanged,
-                            object: newValue
-                        )
-                    }
+                    SettingToggleRow(title: String(localized: .settingGeneralMenuBarIcon), isOn: $showMenuBarIcon)
+                        .onChange(of: showMenuBarIcon) { _, newValue in
+                            NotificationCenter.default.post(
+                                name: .menuBarIconVisibilityChanged,
+                                object: newValue
+                            )
+                        }
 
                     Divider()
 
-                    SettingToggleRow(
-                        title: "Dock 图标",
-                        isOn: $showDockIcon
-                    )
-                    .onChange(of: showDockIcon) { _, newValue in
-                        NSApp.setActivationPolicy(newValue ? .regular : .accessory)
-                    }
+                    SettingToggleRow(title: String(localized: .settingGeneralDockIcon), isOn: $showDockIcon)
+                        .onChange(of: showDockIcon) { _, newValue in
+                            NSApp.setActivationPolicy(newValue ? .regular : .accessory)
+                        }
 
                     Divider()
 
-                    SettingToggleRow(
-                        title: "音效",
-                        isOn: $soundEnabled
-                    )
+                    SettingToggleRow(title: String(localized: .settingGeneralSound), isOn: $soundEnabled)
                 }
                 .padding(.horizontal, Const.space16)
                 .settingsStyle()
 
-                Text("粘贴项目")
+                Text(.settingGeneralPasteItemsSectionTitle)
                     .font(.headline)
-                    .fontWeight(.medium)
+                    .bold()
 
                 VStack(alignment: .leading, spacing: 12) {
                     VStack(spacing: 4) {
-                        ForEach(PasteTargetMode.allCases, id: \.rawValue) {
-                            mode in
+                        ForEach(PasteTargetMode.allCases, id: \.rawValue) { mode in
                             PasteTargetModeRow(
                                 mode: mode,
                                 isSelected: selectedPasteTarget == mode,
@@ -107,43 +85,37 @@ struct GeneralSettingView: View {
 
                     Divider()
 
-                    ToggleRow(isEnabled: $pasteAsPlainText, title: "始终以纯文本粘贴")
-
-                    ToggleRow(
-                        isEnabled: $removeTailingNewline,
-                        title: "粘贴时去掉末尾的换行符"
-                    )
+                    ToggleRow(isEnabled: $pasteAsPlainText, title: String(localized: .settingGeneralPasteAsPlainText))
+                    ToggleRow(isEnabled: $removeTailingNewline, title: String(localized: .settingGeneralRemoveTailingNewline))
                 }
                 .padding(Const.space8)
                 .settingsStyle()
 
                 HStack {
-                    Text("保留历史")
+                    Text(.settingGeneralHistorySectionTitle)
                         .font(.headline)
-                        .fontWeight(.medium)
+                        .bold()
                     Image(systemName: "exclamationmark.circle")
-                        .help("每天仅删除一次")
+                        .help(Text(.settingGeneralHistoryCleanupHint))
                 }
 
                 VStack(alignment: .leading, spacing: Const.space8) {
-                    HistoryTimeSlider(
-                        selectedTimeUnit: $selectedHistoryTimeUnit
-                    )
-                    .onChange(of: selectedHistoryTimeUnit) { _, newValue in
-                        PasteUserDefaults.historyTime = newValue.rawValue
-                    }
+                    HistoryTimeSlider(selectedTimeUnit: $selectedHistoryTimeUnit)
+                        .onChange(of: selectedHistoryTimeUnit) { _, newValue in
+                            PasteUserDefaults.historyTime = newValue.rawValue
+                        }
 
                     HStack {
                         Spacer()
                         if #available(macOS 26.0, *) {
-                            SystemButton(title: "删除历史...") {
+                            SystemButton(title: String(localized: .settingGeneralClearHistory)) {
                                 db.clearAllData()
                             }
                         } else {
                             Button {
                                 db.clearAllData()
                             } label: {
-                                Text("删除历史...")
+                                Text(.settingGeneralClearHistory)
                                     .font(.callout)
                             }
                             .buttonStyle(.bordered)
@@ -157,6 +129,7 @@ struct GeneralSettingView: View {
             }
             .padding(Const.space24)
         }
+        .scrollIndicators(.hidden)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
             refreshLaunchAtLoginStatus()
@@ -165,18 +138,10 @@ struct GeneralSettingView: View {
         .onDisappear {
             stopLaunchAtLoginTimer()
         }
-        .onReceive(
-            NotificationCenter.default.publisher(
-                for: NSWindow.didBecomeKeyNotification
-            )
-        ) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { _ in
             startLaunchAtLoginTimer()
         }
-        .onReceive(
-            NotificationCenter.default.publisher(
-                for: NSWindow.didResignKeyNotification
-            )
-        ) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didResignKeyNotification)) { _ in
             stopLaunchAtLoginTimer()
         }
     }
@@ -190,10 +155,7 @@ struct GeneralSettingView: View {
 
     private func startLaunchAtLoginTimer() {
         stopLaunchAtLoginTimer()
-        launchAtLoginTimer = Timer.scheduledTimer(
-            withTimeInterval: 2.0,
-            repeats: true
-        ) { _ in
+        launchAtLoginTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
             Task { @MainActor in
                 refreshLaunchAtLoginStatus()
             }
@@ -203,376 +165,6 @@ struct GeneralSettingView: View {
     private func stopLaunchAtLoginTimer() {
         launchAtLoginTimer?.invalidate()
         launchAtLoginTimer = nil
-    }
-}
-
-/// 粘贴目标模式（单选）
-enum PasteTargetMode: Int, CaseIterable {
-    case toApp = 0
-    case toClipboard = 1
-
-    var title: String {
-        switch self {
-        case .toApp: "到当前活动应用"
-        case .toClipboard: "到剪贴板"
-        }
-    }
-
-    var description: String {
-        switch self {
-        case .toApp: "将选定的项目直接粘贴到您当前正在使用的应用程序中。"
-        case .toClipboard: "将选定的项目复制到系统剪贴板，以便随后手动粘贴。"
-        }
-    }
-}
-
-// MARK: - 粘贴目标模式行（单选）
-
-struct PasteTargetModeRow: View {
-    let mode: PasteTargetMode
-    let isSelected: Bool
-    let onSelect: () -> Void
-
-    var body: some View {
-        HStack(alignment: .top, spacing: Const.space12) {
-            Image(systemName: isSelected ? "record.circle.fill" : "circle")
-                .foregroundColor(isSelected ? .accentColor : .secondary)
-                .font(.system(size: Const.space16))
-                .onTapGesture {
-                    onSelect()
-                }
-
-            VStack(alignment: .leading, spacing: Const.space4) {
-                Text(mode.title)
-
-                if !mode.description.isEmpty {
-                    Text(mode.description)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-
-            Spacer()
-        }
-        .padding(Const.space4)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            onSelect()
-        }
-    }
-}
-
-// MARK: - 通用开关行组件
-
-struct ToggleRow: View {
-    @Binding var isEnabled: Bool
-    let title: String
-
-    var body: some View {
-        HStack(alignment: .center, spacing: Const.space12) {
-            Image(systemName: isEnabled ? "checkmark.circle.fill" : "circle")
-                .foregroundColor(isEnabled ? .accentColor : .secondary)
-                .font(.system(size: Const.space16))
-                .onTapGesture {
-                    isEnabled.toggle()
-                }
-
-            Text(title)
-
-            Spacer()
-        }
-        .padding(Const.space4)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            isEnabled.toggle()
-        }
-    }
-}
-
-// MARK: - 自定义Slider
-
-@available(macOS, deprecated: 26)
-struct ThinSlider: View {
-    @Binding var value: Double
-    let bounds: ClosedRange<Double>
-    let onEditingChanged: (Bool) -> Void
-
-    @State private var isDragging = false
-
-    var body: some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .leading) {
-                Rectangle()
-                    .fill(Color.gray.opacity(0.2))
-                    .frame(height: 4)
-                    .cornerRadius(2)
-
-                Rectangle()
-                    .fill(Color.accentColor)
-                    .frame(
-                        width: geometry.size.width * normalizedValue,
-                        height: 4
-                    )
-                    .cornerRadius(2)
-
-                Capsule()
-                    .fill(Color.white)
-                    .frame(width: Const.space8, height: 20)
-                    .shadow(
-                        color: Color.black.opacity(0.2),
-                        radius: 2,
-                        x: 0,
-                        y: 1
-                    )
-                    .offset(x: geometry.size.width * normalizedValue - 2)
-                    .gesture(
-                        DragGesture(minimumDistance: 0)
-                            .onChanged { dragValue in
-                                if !isDragging {
-                                    isDragging = true
-                                    onEditingChanged(true)
-                                }
-                                let newNormalized = min(
-                                    max(
-                                        0,
-                                        dragValue.location.x
-                                            / geometry.size.width
-                                    ),
-                                    1
-                                )
-                                value =
-                                    bounds.lowerBound
-                                        + (bounds.upperBound - bounds.lowerBound)
-                                        * newNormalized
-                            }
-                            .onEnded { _ in
-                                isDragging = false
-                                onEditingChanged(false)
-                            }
-                    )
-            }
-            .frame(height: Const.space24)
-        }
-        .frame(height: Const.space24)
-    }
-
-    private var normalizedValue: Double {
-        (value - bounds.lowerBound) / (bounds.upperBound - bounds.lowerBound)
-    }
-}
-
-// MARK: - 历史时间滑块
-
-struct HistoryTimeSlider: View {
-    @Binding var selectedTimeUnit: HistoryTimeUnit
-    @State private var sliderValue: Double = 0.0 // 范围 0-4，对应4个区间
-    @State private var isEditing: Bool = false
-
-    // 4个等长区间：
-    // 区间0 (0.0-1.0): 1-6天 (6个细分)
-    // 区间1 (1.0-2.0): 1-3周 (3个细分)
-    // 区间2 (2.0-3.0): 1-11月 (11个细分)
-    // 区间3 (3.0-4.0): 1年-永久 (2个细分)
-
-    var body: some View {
-        VStack(spacing: Const.space8) {
-            ZStack {
-                if !isEditing {
-                    GeometryReader { geometry in
-                        ZStack(alignment: .leading) {
-                            ForEach(
-                                Array(milestones.enumerated()),
-                                id: \.offset
-                            ) { index, label in
-                                Text(label)
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.secondary)
-                                    .frame(width: 30)
-                                    .offset(
-                                        x: tickPosition(
-                                            for: index,
-                                            in: geometry.size.width
-                                        )
-                                            - labelOffset(label: label)
-                                    )
-                            }
-                        }
-                    }
-                }
-
-                if isEditing {
-                    Text(currentTimeUnit.displayText)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.secondary)
-                }
-            }
-            .frame(height: Const.space16)
-            .animation(.easeInOut(duration: 0.2), value: isEditing)
-
-            ZStack {
-                GeometryReader { geometry in
-                    ForEach(0 ..< 5, id: \.self) { index in
-                        let tickValue = tickSliderValue(for: index)
-                        let isSelected =
-                            !isEditing && abs(sliderValue - tickValue) < 0.01
-                        if !isSelected {
-                            Rectangle()
-                                .fill(Color.gray.opacity(0.5))
-                                .frame(width: 2.5, height: 3)
-                                .offset(
-                                    x: tickPosition(
-                                        for: index,
-                                        in: geometry.size.width
-                                    ),
-                                    y: 0.0
-                                )
-                        }
-                    }
-                }
-                .allowsHitTesting(false)
-
-                Slider(
-                    value: Binding(
-                        get: { sliderValue },
-                        set: { newValue in
-                            sliderValue = snapToStep(newValue)
-                        }
-                    ),
-                    in: 0 ... 4,
-                    onEditingChanged: { editing in
-                        isEditing = editing
-                        if !editing {
-                            saveCurrentValue()
-                        }
-                    }
-                )
-            }
-        }
-        .onAppear {
-            sliderValue = internalValueToSliderValue(selectedTimeUnit.rawValue)
-        }
-    }
-
-    private var milestones: [String] {
-        ["天", "周", "月", "年", "永久"]
-    }
-
-    private var currentTimeUnit: HistoryTimeUnit {
-        HistoryTimeUnit(rawValue: sliderValueToInternalValue(sliderValue))
-    }
-
-    private func labelOffset(label: String) -> CGFloat {
-        if label == "天" {
-            25.0
-        } else if label == "永久" {
-            25.0
-        } else {
-            15.0
-        }
-    }
-
-    /// 计算主刻度线位置（等分，但第一个刻度线对应2天的位置）
-    private func tickPosition(for index: Int, in width: CGFloat) -> CGFloat {
-        if index == 0 {
-            let oneDaySliderValue = internalValueToSliderValue(2)
-            return oneDaySliderValue * width / 4.0 + 8.5
-        } else if index == 1 {
-            return (CGFloat(1) * width / 4.0) + 3.5
-        } else if index == 3 {
-            return (CGFloat(3) * width / 4.0) - 5.0
-        } else {
-            return CGFloat(index) * width / 4.0 - 2.0
-        }
-    }
-
-    /// 获取刻度线对应的滑块值
-    private func tickSliderValue(for index: Int) -> Double {
-        if index == 0 {
-            internalValueToSliderValue(1) // 1天
-        } else {
-            Double(index) // 1, 2, 3, 4 对应周、月、年、永久
-        }
-    }
-
-    /// 将内部值(1-22)转换为滑块值(0-4)
-    private func internalValueToSliderValue(_ value: Int) -> Double {
-        switch value {
-        case 1 ... 6:
-            // 天区间：1-6 映射到 0.0-1.0
-            Double(value - 1) / 6.0
-        case 7 ... 9:
-            // 周区间：7-9 映射到 1.0-2.0
-            1.0 + Double(value - 7) / 3.0
-        case 10 ... 20:
-            // 月区间：10-20 映射到 2.0-3.0
-            2.0 + Double(value - 10) / 11.0
-        case 21:
-            // 年：21 映射到 3.0
-            3.0
-        case 22:
-            // 永久：22 映射到 4.0
-            4.0
-        default:
-            0.0
-        }
-    }
-
-    /// 将滑块值(0-4)转换为内部值(1-22)
-    private func sliderValueToInternalValue(_ value: Double) -> Int {
-        switch value {
-        case 0 ..< 1.0:
-            // 天区间：6个档位，对应 1-6
-            let index = Int((value * 6.0).rounded())
-            return max(1, min(6, index + 1))
-        case 1.0 ..< 2.0:
-            // 周区间：3个档位，对应 7-9
-            let index = Int(((value - 1.0) * 3.0).rounded())
-            return max(7, min(9, index + 7))
-        case 2.0 ..< 3.0:
-            // 月区间：11个档位，对应 10-20
-            let index = Int(((value - 2.0) * 11.0).rounded())
-            return max(10, min(20, index + 10))
-        case 3.0 ..< 3.5:
-            // 年
-            return 21
-        default:
-            // 永久
-            return 22
-        }
-    }
-
-    /// 根据所在区间应用不同的步长
-    private func snapToStep(_ value: Double) -> Double {
-        let step: Double
-        switch value {
-        case 0 ..< 1.0:
-            // 天区间：6个步长
-            step = 1.0 / 6.0
-        case 1.0 ..< 2.0:
-            // 周区间：3个步长
-            step = 1.0 / 3.0
-        case 2.0 ..< 3.0:
-            // 月区间：11个步长
-            step = 1.0 / 11.0
-        case 3.0 ..< 4.0:
-            // 年-永久区间：只有2个值，3.0是年，4.0是永久
-            return value < 3.5 ? 3.0 : 4.0
-        default:
-            step = 1.0
-        }
-
-        let sectionStart = floor(value)
-        let offsetInSection = value - sectionStart
-
-        let snappedOffset = round(offsetInSection / step) * step
-        return sectionStart + snappedOffset
-    }
-
-    private func saveCurrentValue() {
-        let timeUnit = currentTimeUnit
-        selectedTimeUnit = timeUnit
-        PasteUserDefaults.historyTime = timeUnit.rawValue
     }
 }
 

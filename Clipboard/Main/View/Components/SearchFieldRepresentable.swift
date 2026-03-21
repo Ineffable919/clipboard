@@ -16,7 +16,7 @@ struct SearchFieldRepresentable: NSViewRepresentable {
 
     func makeNSView(context: Context) -> PasteSearchField {
         let field = PasteSearchField()
-        field.placeholderString = "搜索"
+        field.placeholderString = String(localized: .search)
         field.delegate = context.coordinator
         field.cell?.sendsActionOnEndEditing = false
         context.coordinator.field = field

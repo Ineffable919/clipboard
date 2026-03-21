@@ -140,7 +140,7 @@ struct ClipTopBarView: View {
                 }
             }
             TextField(
-                topBarVM.hasInput ? "" : "搜索",
+                topBarVM.hasInput ? "" : String(localized: .search),
                 text: $topBarVM.query
             )
             .textFieldStyle(.plain)

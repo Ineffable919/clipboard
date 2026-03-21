@@ -43,22 +43,25 @@ struct KeyboardSettingView: View {
 
                 HStack {
                     Spacer()
-                    SystemButton(title: "重置快键方式为默认...") {
+                    SystemButton(title: String(localized: .settingKeyboardResetShortcuts)) {
                         resetIsPresented = true
                     }
-                    .confirmationDialog("您确定将所有的快键方式重置为默认值吗？", isPresented: $resetIsPresented) {
+                    .confirmationDialog(
+                        String(localized: .settingKeyboardResetConfirmationMessage),
+                        isPresented: $resetIsPresented
+                    ) {
                         if #available(macOS 26.0, *) {
-                            Button("重置", role: .confirm) {
+                            Button(.settingKeyboardResetButton, role: .confirm) {
                                 HotKeyManager.shared.resetToDefaults()
                                 refreshID = UUID()
                             }
                         } else {
-                            Button("重置") {
+                            Button(.settingKeyboardResetButton) {
                                 HotKeyManager.shared.resetToDefaults()
                                 refreshID = UUID()
                             }
                         }
-                        Button("取消", role: .cancel) {
+                        Button(.commonCancel, role: .cancel) {
                             resetIsPresented = false
                         }
                     }
@@ -82,7 +85,16 @@ struct StartupShortcutsView: View {
 
     var body: some View {
         HStack {
-            Text("启动 \(appName)")
+            Text(
+                String.localizedStringWithFormat(
+                    String(
+                        localized: "settingKeyboardLaunchApp",
+                        defaultValue: "Launch %@",
+                        table: "Localizable"
+                    ),
+                    appName
+                )
+            )
             Spacer()
             ShortcutRecorder("app_launch") {
                 WindowManager.shared.toggleWindow()
@@ -97,7 +109,7 @@ struct StartupShortcutsView: View {
 struct PreviousTabView: View {
     var body: some View {
         HStack {
-            Text("显示上一个 Tab")
+            Text(.settingKeyboardPreviousTab)
             Spacer()
             ShortcutRecorder("previous_tab")
         }
@@ -110,7 +122,7 @@ struct PreviousTabView: View {
 struct NextTabView: View {
     var body: some View {
         HStack {
-            Text("显示下一个 Tab")
+            Text(.settingKeyboardNextTab)
             Spacer()
             ShortcutRecorder("next_tab")
         }
@@ -134,7 +146,7 @@ struct QuickPasteModifierView: View {
 
     var body: some View {
         HStack {
-            Text("快速粘贴")
+            Text(.settingKeyboardQuickPaste)
             Spacer()
             HStack(spacing: Const.space4) {
                 Picker("", selection: $selectedModifier) {
@@ -145,15 +157,15 @@ struct QuickPasteModifierView: View {
                 }
                 .pickerStyle(.menu)
                 .buttonStyle(.borderless)
-                .onChange(of: selectedModifier) {
+                .onChange(of: selectedModifier) { _, _ in
                     PasteUserDefaults.quickPasteModifier = selectedModifier
                 }
-                .onChange(of: refreshID) {
+                .onChange(of: refreshID) { _, _ in
                     selectedModifier = PasteUserDefaults.quickPasteModifier
                 }
 
-                Text("+ 1...9")
-                    .foregroundColor(.primary)
+                Text(.settingKeyboardQuickPasteSuffix)
+                    .foregroundStyle(.primary)
             }
         }
     }
@@ -174,7 +186,7 @@ struct PlainTextModifierView: View {
 
     var body: some View {
         HStack {
-            Text("粘贴为纯文本")
+            Text(.settingKeyboardPasteAsPlainText)
             Spacer()
             Picker("", selection: $selectedModifier) {
                 ForEach(modifiers, id: \.id) { modifier in
@@ -184,10 +196,10 @@ struct PlainTextModifierView: View {
             }
             .pickerStyle(.menu)
             .buttonStyle(.borderless)
-            .onChange(of: selectedModifier) {
+            .onChange(of: selectedModifier) { _, _ in
                 PasteUserDefaults.plainTextModifier = selectedModifier
             }
-            .onChange(of: refreshID) {
+            .onChange(of: refreshID) { _, _ in
                 selectedModifier = PasteUserDefaults.plainTextModifier
             }
         }

@@ -81,7 +81,11 @@ struct SettingsMenuView: View {
 
         if updateManager.hasUpdate {
             let newVersionItem = NSMenuItem(
-                title: "检测到新版本 \(updateManager.availableVersion ?? "")",
+                title: String(
+                    localized: .updateAvailable(
+                        updateManager.availableVersion ?? ""
+                    )
+                ),
                 action: #selector(MenuActions.checkForUpdates),
                 keyEquivalent: ""
             )
@@ -106,7 +110,7 @@ struct SettingsMenuView: View {
         }
 
         let aboutItem = NSMenuItem(
-            title: "关于 \(Self.appName)",
+            title: String(localized: .aboutApp(Self.appName)),
             action: #selector(MenuActions.openAbout),
             keyEquivalent: ""
         )
@@ -117,7 +121,7 @@ struct SettingsMenuView: View {
         menu.addItem(NSMenuItem.separator())
 
         let newTextItem = NSMenuItem(
-            title: "新文本项",
+            title: String(localized: .newText),
             action: #selector(MenuActions.openNewTextItem),
             keyEquivalent: "t"
         )
@@ -127,7 +131,7 @@ struct SettingsMenuView: View {
         menu.addItem(newTextItem)
 
         let settingsItem = NSMenuItem(
-            title: "设置...",
+            title: String(localized: .settings),
             action: #selector(MenuActions.openSettings),
             keyEquivalent: ","
         )
@@ -138,7 +142,7 @@ struct SettingsMenuView: View {
         menu.addItem(NSMenuItem.separator())
 
         let updateItem = NSMenuItem(
-            title: "检查更新",
+            title: String(localized: .checkUpdates),
             action: #selector(MenuActions.checkForUpdates),
             keyEquivalent: ""
         )
@@ -147,7 +151,7 @@ struct SettingsMenuView: View {
         menu.addItem(updateItem)
 
         let helpItem = NSMenuItem(
-            title: "帮助",
+            title: String(localized: .menuHelp),
             action: #selector(MenuActions.invokeHelp),
             keyEquivalent: ""
         )
@@ -168,7 +172,7 @@ struct SettingsMenuView: View {
 
         if topBarVM.isPaused {
             let resumeItem = NSMenuItem(
-                title: "恢复",
+                title: String(localized: .resume),
                 action: #selector(MenuActions.resumePasteboard),
                 keyEquivalent: ""
             )
@@ -178,7 +182,7 @@ struct SettingsMenuView: View {
             pauseSubmenu.addItem(NSMenuItem.separator())
         } else {
             let pauseIndefiniteItem = NSMenuItem(
-                title: "暂停",
+                title: String(localized: .pause),
                 action: #selector(MenuActions.pauseIndefinitely),
                 keyEquivalent: ""
             )
@@ -190,7 +194,7 @@ struct SettingsMenuView: View {
         }
 
         let pause15Item = NSMenuItem(
-            title: "暂停 15 分钟",
+            title: String(localized: .pauseFifteen),
             action: #selector(MenuActions.pause15Minutes),
             keyEquivalent: ""
         )
@@ -199,7 +203,7 @@ struct SettingsMenuView: View {
         pauseSubmenu.addItem(pause15Item)
 
         let pause30Item = NSMenuItem(
-            title: "暂停 30 分钟",
+            title: String(localized: .pauseThirty),
             action: #selector(MenuActions.pause30Minutes),
             keyEquivalent: ""
         )
@@ -208,7 +212,7 @@ struct SettingsMenuView: View {
         pauseSubmenu.addItem(pause30Item)
 
         let pause1hItem = NSMenuItem(
-            title: "暂停 1 小时",
+            title: String(localized: .pauseOneHour),
             action: #selector(MenuActions.pause1Hour),
             keyEquivalent: ""
         )
@@ -217,7 +221,7 @@ struct SettingsMenuView: View {
         pauseSubmenu.addItem(pause1hItem)
 
         let pause3hItem = NSMenuItem(
-            title: "暂停 3 小时",
+            title: String(localized: .pauseThreeHours),
             action: #selector(MenuActions.pause3Hours),
             keyEquivalent: ""
         )
@@ -226,7 +230,7 @@ struct SettingsMenuView: View {
         pauseSubmenu.addItem(pause3hItem)
 
         let pause8hItem = NSMenuItem(
-            title: "暂停 8 小时",
+            title: String(localized: .pauseEightHours),
             action: #selector(MenuActions.pause8Hours),
             keyEquivalent: ""
         )
@@ -238,7 +242,7 @@ struct SettingsMenuView: View {
         menu.addItem(pauseItem)
 
         let quitItem = NSMenuItem(
-            title: "退出",
+            title: String(localized: .quit),
             action: #selector(NSApplication.shared.terminate),
             keyEquivalent: "q"
         )

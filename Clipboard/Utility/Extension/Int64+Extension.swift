@@ -22,18 +22,18 @@ extension Int64 {
             Date(timeIntervalSince1970: TimeInterval(self))
         )
         if seconds >= 30, seconds < 60 {
-            return "30秒前"
+            return String(localized: .recentHalfMinute)
         }
         if let month = diffDate.month, month > 0 {
-            return "\(month)月前"
+            return String(localized: .monthAgo(month))
         } else if let day = diffDate.day, day > 0 {
-            return "\(day)天前"
+            return String(localized: .dayAgo(day))
         } else if let hour = diffDate.hour, hour > 0 {
-            return "\(hour)小时前"
+            return String(localized: .hourAgo(hour))
         } else if let minute = diffDate.minute, minute > 0 {
-            return "\(minute)分钟前"
+            return String(localized: .minuteAgo(minute))
         } else {
-            return "现在"
+            return String(localized: .currentTime)
         }
     }
 

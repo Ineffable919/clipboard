@@ -22,26 +22,33 @@ struct StorageSettingView: View {
     @State private var alertMessage = ""
 
     var body: some View {
-        ScrollView(.vertical, showsIndicators: false) {
+        ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: Const.space16) {
                 VStack(alignment: .leading, spacing: 0) {
                     DataStatRow(
-                        title: "剪贴板记录数",
-                        value: "\(db.totalCount) 条"
+                        title: String(localized: .settingStorageClipboardItemCount),
+                        value: String.localizedStringWithFormat(
+                            String(
+                                localized: "settingStorageClipboardItemCountValue",
+                                defaultValue: "%lld items",
+                                table: "Localizable"
+                            ),
+                            db.totalCount
+                        )
                     )
                 }
                 .padding(.horizontal, Const.space16)
                 .settingsStyle()
 
-                Text("数据备份")
+                Text(.settingStorageBackupSectionTitle)
                     .font(.headline)
                     .bold()
 
                 VStack(alignment: .leading, spacing: 0) {
                     DataActionRow(
-                        title: "备份数据",
-                        subtitle: "将所有剪贴板数据导出到文件，可用于迁移或恢复。",
-                        buttonTitle: "备份...",
+                        title: String(localized: .settingStorageExportTitle),
+                        subtitle: String(localized: .settingStorageExportDescription),
+                        buttonTitle: String(localized: .settingStorageExportButton),
                         isLoading: isExporting
                     ) {
                         exportDatabase()
@@ -50,9 +57,9 @@ struct StorageSettingView: View {
                     Divider()
 
                     DataActionRow(
-                        title: "导入数据",
-                        subtitle: "从备份文件导入数据，相同记录会自动去重。",
-                        buttonTitle: "导入...",
+                        title: String(localized: .settingStorageImportTitle),
+                        subtitle: String(localized: .settingStorageImportDescription),
+                        buttonTitle: String(localized: .settingStorageImportButton),
                         isLoading: isImporting
                     ) {
                         importDatabase()
@@ -61,14 +68,14 @@ struct StorageSettingView: View {
                 .padding(.horizontal, Const.space16)
                 .settingsStyle()
 
-                Text("注意事项")
+                Text(.settingStorageNotesTitle)
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
                 VStack(alignment: .leading, spacing: Const.space4) {
-                    Text("• 导入时会根据记录唯一标识自动去重")
-                    Text("• 导入的数据不会覆盖现有数据")
-                    Text("• 建议定期备份重要数据")
+                    Text(.settingStorageNoteDeduplicate)
+                    Text(.settingStorageNotePreserveExistingData)
+                    Text(.settingStorageNoteBackupRegularly)
                 }
                 .font(.caption2)
                 .foregroundStyle(.secondary)
@@ -77,9 +84,10 @@ struct StorageSettingView: View {
             }
             .padding(Const.space24)
         }
+        .scrollIndicators(.hidden)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .alert(alertTitle, isPresented: $showAlert) {
-            Button("确定", role: .cancel) {}
+            Button(.commonConfirm, role: .cancel) {}
         } message: {
             Text(alertMessage)
         }
@@ -89,8 +97,8 @@ struct StorageSettingView: View {
 
     private func exportDatabase() {
         let panel = NSSavePanel()
-        panel.title = "导出剪贴板数据"
-        panel.nameFieldLabel = "文件名："
+        panel.title = String(localized: .settingStorageExportPanelTitle)
+        panel.nameFieldLabel = String(localized: .settingStorageFileNameLabel)
         panel.nameFieldStringValue = "Clip_Backup_\(formattedDate()).sqlite3"
         panel.allowedContentTypes = [
             UTType(filenameExtension: "sqlite3") ?? .database,
@@ -108,12 +116,12 @@ struct StorageSettingView: View {
                 isExporting = false
                 if result.success {
                     log.info("数据库导出成功: \(url.lastPathComponent)")
-                    alertTitle = "导出成功"
-                    alertMessage = "数据已成功导出"
+                    alertTitle = String(localized: .settingStorageExportSuccessTitle)
+                    alertMessage = result.message
                 } else {
                     log.error("数据库导出失败: \(result.message)")
-                    alertTitle = "导出失败"
-                    alertMessage = "数据导出失败，请重试"
+                    alertTitle = String(localized: .settingStorageExportFailureTitle)
+                    alertMessage = result.message
                 }
                 showAlert = true
             }
@@ -124,7 +132,7 @@ struct StorageSettingView: View {
 
     private func importDatabase() {
         let panel = NSOpenPanel()
-        panel.title = "导入剪贴板数据"
+        panel.title = String(localized: .settingStorageImportPanelTitle)
         panel.canChooseFiles = true
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = false
@@ -149,7 +157,7 @@ struct StorageSettingView: View {
 
                 if result.success {
                     log.info("数据库导入成功: \(result.message)")
-                    alertTitle = "导入成功"
+                    alertTitle = String(localized: .settingStorageImportSuccessTitle)
                     alertMessage = result.message
 
                     Task {
@@ -161,8 +169,12 @@ struct StorageSettingView: View {
                     }
                 } else {
                     log.error("数据库导入失败: \(result.message)")
-                    alertTitle = "导入失败"
-                    alertMessage = "数据导入失败，请检查文件格式"
+                    alertTitle = String(localized: .settingStorageImportFailureTitle)
+                    alertMessage = result.message.contains(
+                        String(localized: .importCancelled)
+                    )
+                        ? String(localized: .settingStorageImportCancelled)
+                        : result.message
                 }
                 showAlert = true
             }
@@ -170,9 +182,18 @@ struct StorageSettingView: View {
     }
 
     private func formattedDate() -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyyMMdd"
-        return formatter.string(from: Date())
+        let components = Calendar.current.dateComponents(
+            [.year, .month, .day],
+            from: Date()
+        )
+        let year = components.year ?? 0
+        let month = (components.month ?? 0).formatted(
+            .number.precision(.integerLength(2))
+        )
+        let day = (components.day ?? 0).formatted(
+            .number.precision(.integerLength(2))
+        )
+        return "\(year)\(month)\(day)"
     }
 }
 

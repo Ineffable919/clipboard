@@ -95,7 +95,7 @@ enum PasteUserDefaults {
         defaultValue: {
             var apps: [IgnoredAppInfo] = [
                 IgnoredAppInfo(
-                    name: "钥匙串访问",
+                    name: String(localized: .keychain),
                     bundleIdentifier: "com.apple.keychainaccess",
                     path: "/System/Applications/Utilities/Keychain Access.app"
                 ),
@@ -103,7 +103,7 @@ enum PasteUserDefaults {
             if #available(macOS 15.0, *) {
                 apps.insert(
                     IgnoredAppInfo(
-                        name: "密码",
+                        name: String(localized: .passwords),
                         bundleIdentifier: "com.apple.Passwords",
                         path: "/System/Applications/Passwords.app"
                     ),

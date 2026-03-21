@@ -18,14 +18,16 @@ final class StatusBarController: NSObject {
     private var onCheckUpdateClick: (() -> Void)?
     private var menu: NSMenu?
 
-    private lazy var timeFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm"
-        return formatter
-    }()
-
     override private init() {
         super.init()
+    }
+
+    private static let pauseMenuTag = 919
+
+    private func pauseTimeString(from date: Date) -> String {
+        date.formatted(
+            .dateTime.hour(.twoDigits(amPM: .omitted)).minute(.twoDigits)
+        )
     }
 
     func setup(
@@ -151,10 +153,10 @@ final class StatusBarController: NSObject {
     }
 
     private func createMenu() -> NSMenu {
-        let menu = NSMenu(title: "设置")
+        let menu = NSMenu(title: String(localized: .settings))
 
         let aboutItem = NSMenuItem(
-            title: "关于 \(Self.appName)",
+            title: String(localized: .aboutApp(Self.appName)),
             action: #selector(aboutAction),
             keyEquivalent: ""
         )
@@ -165,7 +167,7 @@ final class StatusBarController: NSObject {
         menu.addItem(NSMenuItem.separator())
 
         let newTextItem = NSMenuItem(
-            title: "新文本项",
+            title: String(localized: .newText),
             action: #selector(newTextItemAction),
             keyEquivalent: "t"
         )
@@ -175,7 +177,7 @@ final class StatusBarController: NSObject {
         menu.addItem(newTextItem)
 
         let item1 = NSMenuItem(
-            title: "设置...",
+            title: String(localized: .settings),
             action: #selector(settingsAction),
             keyEquivalent: ","
         )
@@ -186,7 +188,7 @@ final class StatusBarController: NSObject {
         menu.addItem(NSMenuItem.separator())
 
         let item2 = NSMenuItem(
-            title: "检查更新",
+            title: String(localized: .checkUpdates),
             action: #selector(checkUpdateAction),
             keyEquivalent: ""
         )
@@ -197,16 +199,17 @@ final class StatusBarController: NSObject {
         menu.addItem(NSMenuItem.separator())
 
         let pauseItem = NSMenuItem(
-            title: "暂停",
+            title: String(localized: .pause),
             action: nil,
             keyEquivalent: ""
         )
+        pauseItem.tag = Self.pauseMenuTag
         setMenuItemImage(pauseItem, symbolName: "pause.circle")
         pauseItem.submenu = createPauseSubmenu()
         menu.addItem(pauseItem)
 
         let item3 = NSMenuItem(
-            title: "退出",
+            title: String(localized: .quit),
             action: #selector(NSApplication.shared.terminate),
             keyEquivalent: "q"
         )
@@ -223,7 +226,7 @@ final class StatusBarController: NSObject {
 
         if isPaused {
             let resumeItem = NSMenuItem(
-                title: "恢复",
+                title: String(localized: .resume),
                 action: #selector(resumePasteboard),
                 keyEquivalent: ""
             )
@@ -233,7 +236,7 @@ final class StatusBarController: NSObject {
             submenu.addItem(NSMenuItem.separator())
         } else {
             let pauseIndefinite = NSMenuItem(
-                title: "暂停",
+                title: String(localized: .pause),
                 action: #selector(pauseIndefinitely),
                 keyEquivalent: ""
             )
@@ -245,7 +248,7 @@ final class StatusBarController: NSObject {
         }
 
         let pause15 = NSMenuItem(
-            title: "暂停 15 分钟",
+            title: String(localized: .pauseFifteen),
             action: #selector(pause15Minutes),
             keyEquivalent: ""
         )
@@ -254,7 +257,7 @@ final class StatusBarController: NSObject {
         submenu.addItem(pause15)
 
         let pause30 = NSMenuItem(
-            title: "暂停 30 分钟",
+            title: String(localized: .pauseThirty),
             action: #selector(pause30Minutes),
             keyEquivalent: ""
         )
@@ -263,7 +266,7 @@ final class StatusBarController: NSObject {
         submenu.addItem(pause30)
 
         let pause1h = NSMenuItem(
-            title: "暂停 1 小时",
+            title: String(localized: .pauseOneHour),
             action: #selector(pause1Hour),
             keyEquivalent: ""
         )
@@ -272,7 +275,7 @@ final class StatusBarController: NSObject {
         submenu.addItem(pause1h)
 
         let pause3h = NSMenuItem(
-            title: "暂停 3 小时",
+            title: String(localized: .pauseThreeHours),
             action: #selector(pause3Hours),
             keyEquivalent: ""
         )
@@ -281,7 +284,7 @@ final class StatusBarController: NSObject {
         submenu.addItem(pause3h)
 
         let pause8h = NSMenuItem(
-            title: "暂停 8 小时",
+            title: String(localized: .pauseEightHours),
             action: #selector(pause8Hours),
             keyEquivalent: ""
         )
@@ -294,14 +297,16 @@ final class StatusBarController: NSObject {
 
     private func pauseMenuTitle() -> String {
         guard PasteBoard.main.isPaused else {
-            return "暂停"
+            return String(localized: .pause)
         }
 
         if let endTime = PasteBoard.main.pauseEndTime {
-            return "暂停到 \(timeFormatter.string(from: endTime))"
+            return String(
+                localized: .pauseUntil(pauseTimeString(from: endTime))
+            )
         }
 
-        return "已暂停"
+        return String(localized: .paused)
     }
 
     @objc private func settingsAction() {
@@ -353,10 +358,7 @@ final class StatusBarController: NSObject {
 
 extension StatusBarController: NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
-        if let pauseItem = menu.item(withTitle: "暂停")
-            ?? menu.item(withTitle: "已暂停")
-            ?? menu.items.first(where: { $0.title.hasPrefix("暂停到") })
-        {
+        if let pauseItem = menu.items.first(where: { $0.tag == Self.pauseMenuTag }) {
             pauseItem.title = pauseMenuTitle()
             pauseItem.submenu = createPauseSubmenu()
         }

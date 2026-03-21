@@ -26,7 +26,7 @@ struct TextStatistics: Equatable {
     }
 
     var displayString: String {
-        "\(characterCount) 个字符 · \(wordCount) 单词 · \(lineCount) 行"
+        String(localized: .textStats(characterCount, wordCount, lineCount))
     }
 }
 

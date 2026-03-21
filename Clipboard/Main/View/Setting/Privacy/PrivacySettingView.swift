@@ -30,52 +30,50 @@ struct PrivacySettingView: View {
                 VStack(spacing: Const.space16) {
                     VStack(spacing: 0) {
                         PrivacyToggleRow(
-                            title: "允许在屏幕共享中显示",
-                            subtitle:
-                            "关闭后，在屏幕共享、录屏或演示时，窗口不会被捕获，保护您的隐私。",
+                            title: String(localized: .settingPrivacyShowDuringScreenShare),
+                            subtitle: String(localized: .settingPrivacyShowDuringScreenShareDescription),
                             isOn: $showDuringScreenShare
                         )
                         Divider()
                         PrivacyToggleRow(
-                            title: "生成链接预览",
-                            subtitle: "开启后对链接生成预览，可能会影响一次性和敏感链接。",
+                            title: String(localized: .settingPrivacyLinkPreview),
+                            subtitle: String(localized: .settingPrivacyLinkPreviewDescription),
                             isOn: $enableLinkPreview
                         )
                         Divider()
                         PrivacyToggleRow(
-                            title: "忽略机密内容",
-                            subtitle: "检测到密码和敏感数据时不保存。",
+                            title: String(localized: .settingPrivacyIgnoreSensitiveContent),
+                            subtitle: String(localized: .settingPrivacyIgnoreSensitiveContentDescription),
                             isOn: $ignoreSensitiveContent
                         )
                         Divider()
                         PrivacyToggleRow(
-                            title: "忽略瞬时内容",
-                            subtitle: "不要保存其它应用程序生成的临时数据。",
+                            title: String(localized: .settingPrivacyIgnoreEphemeralContent),
+                            subtitle: String(localized: .settingPrivacyIgnoreEphemeralContentDescription),
                             isOn: $ignoreEphemeralContent
                         )
                         Divider()
                         PrivacyToggleRow(
-                            title: "删除确认",
-                            subtitle: "删除记录时是否弹窗确认。",
+                            title: String(localized: .settingPrivacyDeleteConfirmation),
+                            subtitle: String(localized: .settingPrivacyDeleteConfirmationDescription),
                             isOn: $delConfirm
                         )
                         Divider()
                         AccessibilityPermissionRow(
                             hasPermission: $hasAccessibilityPermission,
-                            onOpenSettings: openAccessibilitySettings,
-                            onRefresh: refreshPermissionStatus
+                            onOpenSettings: openAccessibilitySettings
                         )
                     }
                     .padding(.horizontal, Const.space16)
                     .settingsStyle()
 
                     VStack(alignment: .leading, spacing: Const.space4) {
-                        Text("忽略应用程序")
+                        Text(.settingPrivacyIgnoredAppsTitle)
                             .font(.headline)
-                            .fontWeight(.medium)
-                        Text("不要保存从以下应用程序复制的内容。")
+                            .bold()
+                        Text(.settingPrivacyIgnoredAppsDescription)
                             .font(.caption2)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -150,7 +148,7 @@ struct PrivacySettingView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .onChange(of: showDuringScreenShare) {
+        .onChange(of: showDuringScreenShare) { _, _ in
             WindowManager.shared.configureWindowSharing()
         }
         .onAppear {
@@ -231,8 +229,11 @@ struct PrivacySettingView: View {
             "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
         ) {
             NSWorkspace.shared.open(url)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                refreshPermissionStatus()
+            Task {
+                try? await Task.sleep(for: .seconds(2))
+                await MainActor.run {
+                    refreshPermissionStatus()
+                }
             }
         }
     }
@@ -275,7 +276,7 @@ struct PrivacyToggleRow: View {
                     .font(.callout)
                 Text(subtitle)
                     .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer()
@@ -307,7 +308,7 @@ struct IgnoredAppRow: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 28, height: 28)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
 
             Text(appInfo.name)
@@ -365,20 +366,19 @@ struct IgnoredAppRow: View {
 struct AccessibilityPermissionRow: View {
     @Binding var hasPermission: Bool
     let onOpenSettings: () -> Void
-    let onRefresh: () -> Void
 
     var body: some View {
         HStack(alignment: .center, spacing: Const.space12) {
             VStack(alignment: .leading, spacing: Const.space4) {
-                Text("辅助功能权限")
+                Text(.settingPrivacyAccessibilityPermissionTitle)
                     .font(.callout)
                 Text(
                     hasPermission
-                        ? "已授权，可以直接粘贴内容到其它应用"
-                        : "未授权，仅能复制内容到剪贴板，若已存在，请删除后重新添加"
+                        ? String(localized: .settingPrivacyAccessibilityPermissionGranted)
+                        : String(localized: .settingPrivacyAccessibilityPermissionDenied)
                 )
                 .font(.caption2)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
             }
 
             Spacer()
@@ -389,11 +389,11 @@ struct AccessibilityPermissionRow: View {
                         systemName: "checkmark.circle.fill"
                     )
                     .font(.system(size: Const.iconSize18))
-                    .foregroundColor(.green)
+                    .foregroundStyle(.green)
                 }
 
                 if !hasPermission {
-                    SystemButton(title: "去设置...", action: onOpenSettings)
+                    SystemButton(title: String(localized: .settingPrivacyOpenSettings), action: onOpenSettings)
                 }
             }
         }

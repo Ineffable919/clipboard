@@ -7,16 +7,16 @@
 
 import SwiftUI
 
-enum SettingPage: String, CaseIterable, Identifiable {
-    case general = "通用"
-    case appearance = "外观"
-    case privacy = "隐私"
-    case keyboard = "快捷键"
-    case storage = "存储"
-    case about = "关于"
+enum SettingPage: CaseIterable, Identifiable {
+    case general
+    case appearance
+    case privacy
+    case keyboard
+    case storage
+    case about
 
-    var id: String {
-        rawValue
+    var id: Self {
+        self
     }
 
     var icon: String {
@@ -27,6 +27,17 @@ enum SettingPage: String, CaseIterable, Identifiable {
         case .keyboard: "command"
         case .storage: "externaldrive"
         case .about: "info.circle"
+        }
+    }
+
+    var title: LocalizedStringResource {
+        switch self {
+        case .general: .settingPageGeneral
+        case .appearance: .settingPageAppearance
+        case .privacy: .settingPagePrivacy
+        case .keyboard: .settingPageKeyboard
+        case .storage: .settingPageStorage
+        case .about: .settingPageAbout
         }
     }
 }
@@ -41,7 +52,11 @@ struct SettingView: View {
                 List(selection: $selectedPage) {
                     ForEach(SettingPage.allCases) { page in
                         NavigationLink(value: page) {
-                            Label(page.rawValue, systemImage: page.icon)
+                            Label {
+                                Text(page.title)
+                            } icon: {
+                                Image(systemName: page.icon)
+                            }
                         }
                     }
                 }
@@ -72,7 +87,7 @@ struct SettingView: View {
                     AboutSettingView()
                 }
             }
-            .navigationTitle(selectedPage.rawValue)
+            .navigationTitle(Text(selectedPage.title))
         }
         .onAppear {
             isSidebarFocused = true
@@ -118,7 +133,7 @@ struct HelpCenterButton: View {
         }) {
             HStack {
                 Image(systemName: "questionmark.circle")
-                Text("帮助中心")
+                Text(.settingHelpCenter)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, Const.space8)

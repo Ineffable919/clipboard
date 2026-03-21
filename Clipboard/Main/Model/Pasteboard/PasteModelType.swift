@@ -45,11 +45,11 @@ enum PasteModelType: String {
 
     var string: String {
         switch self {
-        case .image: "图片"
-        case .string, .rich: "文本"
-        case .color: "颜色"
-        case .link: "链接"
-        case .file: "文件"
+        case .image: String(localized: .image)
+        case .string, .rich: String(localized: .text)
+        case .color: String(localized: .color)
+        case .link: String(localized: .link)
+        case .file: String(localized: .file)
         default: ""
         }
     }
@@ -69,15 +69,15 @@ enum PasteModelType: String {
     var iconAndLabel: (icon: String, label: String) {
         switch self {
         case .image:
-            ("photo", "图片")
+            ("photo", String(localized: .image))
         case .string, .rich:
-            ("text.document", "文本")
+            ("text.document", String(localized: .text))
         case .file:
-            ("folder", "文件")
+            ("folder", String(localized: .file))
         case .link:
-            ("link", "链接")
+            ("link", String(localized: .link))
         case .color:
-            ("paintpalette", "颜色")
+            ("paintpalette", String(localized: .color))
         case .none:
             ("", "")
         }

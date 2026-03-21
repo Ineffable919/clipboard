@@ -80,7 +80,7 @@ struct LargeTextView: NSViewRepresentable {
 #Preview {
     let testModel = PasteboardModel(
         pasteboardType: .string,
-        data: String(repeating: "这是测试文本内容。\n", count: 100).data(using: .utf8) ?? Data(),
+        data: String(repeating: "This is test content.\n", count: 100).data(using: .utf8) ?? Data(),
         showData: nil,
         timestamp: Int64(Date().timeIntervalSince1970),
         appPath: "",

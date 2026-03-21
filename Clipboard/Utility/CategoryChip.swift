@@ -43,19 +43,21 @@ struct CategoryChip: Identifiable, Equatable, Codable {
     var typeFilter: [String]? {
         guard isSystem else { return nil }
 
-        switch name {
-        case "文本":
+        switch id {
+        case -1:
+            return nil
+        case -2:
             return [
                 PasteboardType.string.rawValue,
                 PasteboardType.rtf.rawValue,
                 PasteboardType.rtfd.rawValue,
             ]
-        case "图片":
+        case -3:
             return [
                 PasteboardType.png.rawValue,
                 PasteboardType.tiff.rawValue,
             ]
-        case "文件":
+        case -4:
             return [PasteboardType.fileURL.rawValue]
         default:
             return nil
@@ -75,6 +77,11 @@ struct CategoryChip: Identifiable, Equatable, Codable {
     }
 
     static let systemChips: [CategoryChip] = [
-        .init(id: -1, name: "剪贴板", color: .gray, isSystem: true),
+        .init(
+            id: -1,
+            name: String(localized: .clipboard),
+            color: .gray,
+            isSystem: true
+        ),
     ]
 }

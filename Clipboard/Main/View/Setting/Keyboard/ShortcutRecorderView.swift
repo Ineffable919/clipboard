@@ -53,7 +53,7 @@ struct ShortcutRecorder: View {
             if !shortcut.isEmpty, !isRecording {
                 Button {
                     shortcut = KeyboardShortcut.empty
-                    displayText = "请录入快捷键…"
+                    displayText = String(localized: .settingKeyboardShortcutPlaceholder)
                     save()
                 } label: {
                     Image(systemName: "xmark")
@@ -93,13 +93,13 @@ struct ShortcutRecorder: View {
         .onAppear {
             value = shortcut
             if shortcut.isEmpty {
-                displayText = "请录入快捷键…"
+                displayText = String(localized: .settingKeyboardShortcutPlaceholder)
             }
         }
         .onDisappear {
             stopRecording()
         }
-        .onChange(of: shortcut) {
+        .onChange(of: shortcut) { _, _ in
             value = shortcut
         }
     }
@@ -122,14 +122,14 @@ struct ShortcutRecorder: View {
 
     private func startRecording() {
         isRecording = true
-        displayText = "按下快捷键"
+        displayText = String(localized: .settingKeyboardShortcutPrompt)
         installEventHandle()
     }
 
     private func stopRecording() {
         isRecording = false
         if shortcut.isEmpty {
-            displayText = "请录入快捷键…"
+            displayText = String(localized: .settingKeyboardShortcutPlaceholder)
         } else {
             displayText = shortcut.displayString
         }
@@ -296,17 +296,17 @@ struct ShortcutRecorder: View {
 
 // MARK: - Preview
 
-#Preview("快捷键录入") {
+#Preview("Shortcut Recorder") {
     VStack(spacing: 20) {
         VStack(alignment: .leading, spacing: 8) {
-            Text("空状态")
+            Text(.previewEmpty)
                 .font(.caption)
                 .foregroundStyle(.secondary)
             ShortcutRecorder("preview_empty")
         }
 
         VStack(alignment: .leading, spacing: 8) {
-            Text("预设快捷键")
+            Text(.previewPreset)
                 .font(.caption)
                 .foregroundStyle(.secondary)
             ShortcutRecorder(

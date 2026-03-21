@@ -411,13 +411,29 @@ extension PasteSQLManager {
         let message: String
     }
 
+    private nonisolated static func localize(
+        _ key: String,
+        _ arguments: CVarArg...
+    ) -> String {
+        let format = Bundle.main.localizedString(
+            forKey: key,
+            value: key,
+            table: "Localizable"
+        )
+        guard !arguments.isEmpty else { return format }
+        return String(format: format, locale: .current, arguments: arguments)
+    }
+
     /// 导出数据库到指定路径
     nonisolated func exportDatabase(to destinationURL: URL) async -> ImportExportResult {
         let sourcePath = await Self.sandboxDatabasePath
 
         return await Task.detached(priority: .userInitiated) {
             guard FileManager.default.fileExists(atPath: sourcePath) else {
-                return ImportExportResult(success: false, message: "源数据库文件不存在")
+                return ImportExportResult(
+                    success: false,
+                    message: Self.localize("noSourceDb")
+                )
             }
 
             do {
@@ -433,11 +449,17 @@ extension PasteSQLManager {
                     toPath: destinationURL.path
                 )
 
-                return ImportExportResult(success: true, message: "导出成功")
+                return ImportExportResult(
+                    success: true,
+                    message: Self.localize("exportSuccess")
+                )
             } catch {
                 return ImportExportResult(
                     success: false,
-                    message: "导出失败：\(error.localizedDescription)"
+                    message: Self.localize(
+                        "exportFail",
+                        error.localizedDescription
+                    )
                 )
             }
         }.value
@@ -470,7 +492,11 @@ extension PasteSQLManager {
                             throw NSError(
                                 domain: "ImportCancelled",
                                 code: -1,
-                                userInfo: [NSLocalizedDescriptionKey: "导入被取消"]
+                                userInfo: [
+                                    NSLocalizedDescriptionKey: Self.localize(
+                                        "importCancelled"
+                                    ),
+                                ]
                             )
                         }
 
@@ -504,14 +530,23 @@ extension PasteSQLManager {
                     }
                 }
 
-                let message = "成功导入 \(importedCount) 条记录" +
-                    (skippedCount > 0 ? "，跳过 \(skippedCount) 条重复记录" : "")
+                let skippedText = skippedCount > 0
+                    ? Self.localize("importSkip", skippedCount)
+                    : ""
+                let message = Self.localize(
+                    "importResult",
+                    importedCount,
+                    skippedText
+                )
 
                 return ImportExportResult(success: true, message: message)
             } catch {
                 return ImportExportResult(
                     success: false,
-                    message: "导入失败：\(error.localizedDescription)"
+                    message: Self.localize(
+                        "importFailDetail",
+                        error.localizedDescription
+                    )
                 )
             }
         }.value
@@ -521,7 +556,10 @@ extension PasteSQLManager {
     private nonisolated func validateImportDatabase(at url: URL) async -> ImportExportResult {
         await Task.detached(priority: .userInitiated) {
             guard FileManager.default.fileExists(atPath: url.path) else {
-                return ImportExportResult(success: false, message: "文件不存在")
+                return ImportExportResult(
+                    success: false,
+                    message: Self.localize("noFile")
+                )
             }
 
             do {
@@ -534,7 +572,10 @@ extension PasteSQLManager {
                 guard tableExists > 0 else {
                     return ImportExportResult(
                         success: false,
-                        message: "无效的备份文件：缺少 Clip 表"
+                        message: Self.localize(
+                            "backupInvalid",
+                            Self.localize("missingTable")
+                        )
                     )
                 }
 
@@ -556,7 +597,10 @@ extension PasteSQLManager {
                     guard existingColumns.contains(column) else {
                         return ImportExportResult(
                             success: false,
-                            message: "无效的备份文件：缺少必要的列 \(column)"
+                            message: Self.localize(
+                                "backupInvalid",
+                                Self.localize("missingColumn", column)
+                            )
                         )
                     }
                 }
@@ -566,37 +610,55 @@ extension PasteSQLManager {
                     guard row[0] is String else {
                         return ImportExportResult(
                             success: false,
-                            message: "无效的备份文件：unique_id 字段类型错误"
+                            message: Self.localize(
+                                "backupInvalid",
+                                Self.localize("typeBlob", "unique_id")
+                            )
                         )
                     }
 
                     guard row[1] is String else {
                         return ImportExportResult(
                             success: false,
-                            message: "无效的备份文件：type 字段类型错误"
+                            message: Self.localize(
+                                "backupInvalid",
+                                Self.localize("typeBlob", "type")
+                            )
                         )
                     }
 
                     guard row[2] is SQLite.Blob else {
                         return ImportExportResult(
                             success: false,
-                            message: "无效的备份文件：data 字段类型错误"
+                            message: Self.localize(
+                                "backupInvalid",
+                                Self.localize("typeBlob", "data")
+                            )
                         )
                     }
 
                     guard row[3] is Int64 else {
                         return ImportExportResult(
                             success: false,
-                            message: "无效的备份文件：timestamp 字段类型错误"
+                            message: Self.localize(
+                                "backupInvalid",
+                                Self.localize("typeBlob", "timestamp")
+                            )
                         )
                     }
                 }
 
-                return ImportExportResult(success: true, message: "验证通过")
+                return ImportExportResult(
+                    success: true,
+                    message: Self.localize("backupValid")
+                )
             } catch {
                 return ImportExportResult(
                     success: false,
-                    message: "无效的备份文件：无法读取数据库"
+                    message: Self.localize(
+                        "backupInvalid",
+                        Self.localize("backupReadFail")
+                    )
                 )
             }
         }.value

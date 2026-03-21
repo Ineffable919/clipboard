@@ -11,17 +11,10 @@ struct FloatingFooterView: View {
     @Environment(TopBarViewModel.self) private var topBarVM
     private let pd = PasteDataStore.main
 
-    private var formattedCount: String {
-        NumberFormatter.localizedString(
-            from: NSNumber(value: pd.filteredCount),
-            number: .decimal
-        )
-    }
-
     var body: some View {
         HStack {
             Spacer()
-            Text("\(formattedCount) 个项目")
+            Text(.itemCount(pd.filteredCount))
                 .font(.system(size: 12.0, weight: .regular))
                 .foregroundStyle(.secondary)
             Spacer()
@@ -64,7 +57,7 @@ private struct CompactPauseIndicator: View {
             )
         }
         .buttonStyle(.plain)
-        .help("点击恢复记录")
+        .help(String(localized: .resumeHint))
     }
 }
 

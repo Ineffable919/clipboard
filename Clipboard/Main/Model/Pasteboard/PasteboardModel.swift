@@ -192,15 +192,14 @@ final class PasteboardModel: Identifiable {
             if PasteUserDefaults.enableLinkPreview {
                 return attributeString.string
             }
-            return
-                "\(PasteboardModel.formatter.string(from: NSNumber(value: length)) ?? "")个字符"
+            return String(localized: .textCount(length))
         case .string, .rich:
-            return
-                "\(PasteboardModel.formatter.string(from: NSNumber(value: length)) ?? "")个字符"
+            return String(localized: .textCount(length))
         case .file:
             guard let filePaths = cachedFilePaths else { return "" }
             return filePaths.count > 1
-                ? "\(filePaths.count) 个文件" : (filePaths.first ?? "")
+                ? String(localized: .fileCount(filePaths.count))
+                : (filePaths.first ?? "")
         }
     }
 

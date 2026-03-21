@@ -100,12 +100,20 @@ final class ChipContextMenuView: NSView {
 
         let menu = NSMenu()
 
-        let editItem = NSMenuItem(title: "编辑", action: #selector(editAction), keyEquivalent: "")
+        let editItem = NSMenuItem(
+            title: String(localized: .edit),
+            action: #selector(editAction),
+            keyEquivalent: ""
+        )
         editItem.target = self
         editItem.image = NSImage(systemSymbolName: "pencil", accessibilityDescription: nil)
         menu.addItem(editItem)
 
-        let deleteItem = NSMenuItem(title: "删除", action: #selector(deleteAction), keyEquivalent: "")
+        let deleteItem = NSMenuItem(
+            title: String(localized: .delete),
+            action: #selector(deleteAction),
+            keyEquivalent: ""
+        )
         deleteItem.target = self
         deleteItem.image = NSImage(systemSymbolName: "trash", accessibilityDescription: nil)
         menu.addItem(deleteItem)

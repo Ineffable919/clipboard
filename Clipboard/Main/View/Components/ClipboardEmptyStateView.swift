@@ -28,10 +28,10 @@ struct ClipboardEmptyStateView: View {
                 .font(.system(size: iconSize))
                 .foregroundStyle(Color.accentColor.opacity(0.8))
 
-            Text("没有剪贴板历史")
+            Text(.emptyHistory)
                 .foregroundStyle(.secondary)
 
-            Text("复制内容后将显示在这里")
+            Text(.emptyHint)
                 .font(style == .floating ? .system(size: 13) : .callout)
                 .foregroundStyle(.secondary)
         }

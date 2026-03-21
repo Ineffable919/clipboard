@@ -30,6 +30,6 @@ struct CommonButton: View {
 }
 
 #Preview {
-    CommonButton(title: "重置快捷方式为默认") {}
+    CommonButton(title: String(localized: .settingKeyboardReset)) {}
         .padding()
 }

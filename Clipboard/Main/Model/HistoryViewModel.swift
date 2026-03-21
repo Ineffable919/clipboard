@@ -247,11 +247,13 @@ import SwiftUI
         guard let env else { return }
 
         let alert = NSAlert()
-        alert.messageText = "确认删除吗？"
-        alert.informativeText = "删除后无法恢复"
+        alert.messageText = String(localized: .deleteTitle)
+        alert.informativeText = String(localized: .deleteMessage)
         alert.alertStyle = .warning
-        alert.addButton(withTitle: "删除")
-        alert.addButton(withTitle: "取消")
+        alert.addButton(
+            withTitle: String(localized: .deleteTitle)
+        )
+        alert.addButton(withTitle: String(localized: .commonCancel))
 
         let currentActiveId = activeId
 
