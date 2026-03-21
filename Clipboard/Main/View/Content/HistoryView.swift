@@ -98,7 +98,7 @@ struct HistoryView: View {
             },
             onCopy: { historyVM.copySelectedItems() }
         )
-        .contentShape(Rectangle())
+        .contentShape(.rect)
         .onTapGesture {
             handleOptimisticTap(on: item, index: index)
         }
@@ -149,8 +149,8 @@ struct HistoryView: View {
         }
 
         if offset > 0, historyVM.shouldLoadNextPage(at: newIndex) {
-            Task.detached(priority: .userInitiated) { [weak historyVM] in
-                await historyVM?.loadNextPageIfNeeded(at: newIndex)
+            Task(priority: .userInitiated) { [weak historyVM] in
+                historyVM?.loadNextPageIfNeeded(at: newIndex)
             }
         }
         return nil

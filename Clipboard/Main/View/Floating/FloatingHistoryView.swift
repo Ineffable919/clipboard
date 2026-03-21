@@ -48,8 +48,8 @@ struct FloatingHistoryView: View {
                     FloatConst.footerHeight,
                     for: .scrollIndicators
                 )
-                .onChange(of: env.focusView) {
-                    isFocused = (env.focusView == .history)
+                .onChange(of: env.focusView) { _, newValue in
+                    isFocused = (newValue == .history)
                 }
                 .onChange(of: historyVM.activeId) { _, newId in
                     if let id = newId {
@@ -104,7 +104,8 @@ struct FloatingHistoryView: View {
             },
             onCopy: { historyVM.copySelectedItems() }
         )
-        .contentShape(Rectangle())
+        .id(item.id)
+        .contentShape(.rect)
         .onTapGesture {
             handleTap(on: item, index: index)
         }
@@ -273,8 +274,8 @@ struct FloatingHistoryView: View {
         }
 
         if offset > 0, historyVM.shouldLoadNextPage(at: newIndex) {
-            Task.detached(priority: .userInitiated) { [weak historyVM] in
-                await historyVM?.loadNextPageIfNeeded(at: newIndex)
+            Task(priority: .userInitiated) { [weak historyVM] in
+                historyVM?.loadNextPageIfNeeded(at: newIndex)
             }
         }
         return nil
@@ -362,22 +363,6 @@ struct FloatingHistoryView: View {
     }
 }
 
-// MARK: - Bottom Margins Modifier
-
-private struct BottomMarginsModifier: ViewModifier {
-    let height: CGFloat
-
-    func body(content: Content) -> some View {
-        if #available(macOS 26, *) {
-            content
-                .contentMargins(.bottom, height, for: .scrollContent)
-                .contentMargins(.bottom, height, for: .scrollIndicators)
-        } else {
-            content
-        }
-    }
-}
-
 // MARK: - Drag Preview View
 
 private struct DragPreviewView: View {
@@ -385,7 +370,7 @@ private struct DragPreviewView: View {
 
     var body: some View {
         Image(systemName: iconName)
-            .font(.system(size: 32, weight: .regular))
+            .imageScale(.large)
             .frame(width: 48, height: 48)
     }
 

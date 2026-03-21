@@ -69,14 +69,18 @@ struct FloatingCardView: View {
             AppIconImageView(appPath: model.appPath)
                 .padding(.leading, Const.space6)
 
-            floatContentView
-                .padding(.vertical, Const.space4)
-                .frame(
-                    maxWidth: .infinity,
-                    maxHeight: .infinity,
-                    alignment: isTextType || model.pasteboardType.isFile()
-                        ? .leading : .center
-                )
+            FloatingCardContentView(
+                model: model,
+                enableLinkPreview: enableLinkPreview,
+                searchKeyword: searchKeyword
+            )
+            .padding(.vertical, Const.space4)
+            .frame(
+                maxWidth: .infinity,
+                maxHeight: .infinity,
+                alignment: isTextType || model.pasteboardType.isFile()
+                    ? .leading : .center
+            )
 
             VStack(alignment: .trailing, spacing: Const.space4) {
                 Text(
@@ -84,15 +88,15 @@ struct FloatingCardView: View {
                         relativeTo: TimeManager.shared.currentTime
                     )
                 )
-                .font(.system(size: 10))
+                .font(.caption2)
                 .foregroundStyle(modelColors.1)
                 Spacer()
                 if let index = quickPasteIndex {
-                    quickPasteBadge(index: index)
+                    QuickPasteBadgeView(index: index, color: modelColors.1)
                 }
             }
             .padding(.vertical, Const.space4)
-            .padding(.trailing, Const.space4)
+            .padding(.trailing, Const.space6)
         }
         .frame(
             maxWidth: .infinity,
@@ -103,73 +107,6 @@ struct FloatingCardView: View {
             model.backgroundColor
         }
         .clipShape(.rect(cornerRadius: Const.radius))
-    }
-
-    @ViewBuilder
-    private var floatContentView: some View {
-        switch model.type {
-        case .image:
-            FloatingImageThumbnailView(model: model)
-                .clipShape(.rect(cornerRadius: 6.0))
-        case .color:
-            Text(model.attributeString.string)
-                .font(.system(size: 14.0, weight: .medium, design: .monospaced))
-                .foregroundStyle(modelColors.1)
-        case .file:
-            fileContentView
-        case .rich:
-            richTextContentView
-        case .link:
-            if enableLinkPreview {
-                FloatingLinkPreviewView(
-                    model: model,
-                    searchKeyword: searchKeyword
-                )
-            } else {
-                plainTextContentView
-            }
-        default:
-            plainTextContentView
-        }
-    }
-
-    @ViewBuilder
-    private var fileContentView: some View {
-        if let paths = model.cachedFilePaths, !paths.isEmpty {
-            if paths.count > 1 {
-                FloatingMultipleFilesView(paths: paths)
-            } else if let firstPath = paths.first {
-                FloatingSingleFileView(path: firstPath)
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var richTextContentView: some View {
-        if model.hasBgColor {
-            if searchKeyword.isEmpty {
-                Text(model.attributed())
-            } else {
-                Text(model.highlightedRichText(keyword: searchKeyword))
-            }
-        } else {
-            plainTextContentView
-        }
-    }
-
-    @ViewBuilder
-    private var plainTextContentView: some View {
-        if searchKeyword.isEmpty {
-            Text(model.attributeString.string)
-        } else {
-            Text(model.highlightedPlainText(keyword: searchKeyword))
-        }
-    }
-
-    private func quickPasteBadge(index: Int) -> some View {
-        Text(index, format: .number)
-            .font(.system(size: 10, weight: .regular, design: .rounded))
-            .foregroundStyle(modelColors.1)
     }
 
     private var selectionColor: Color {
@@ -237,13 +174,115 @@ struct FloatingCardView: View {
     }
 }
 
+// MARK: - Floating Card Content View
+
+private struct FloatingCardContentView: View {
+    let model: PasteboardModel
+    let enableLinkPreview: Bool
+    let searchKeyword: String
+
+    private var modelColors: (Color, Color) {
+        model.colors()
+    }
+
+    var body: some View {
+        switch model.type {
+        case .image:
+            FloatingImageThumbnailView(model: model)
+                .clipShape(.rect(cornerRadius: 6.0))
+        case .color:
+            Text(model.attributeString.string)
+                .font(.system(.body, design: .monospaced).weight(.medium))
+                .foregroundStyle(modelColors.1)
+        case .file:
+            FloatingFileContentView(model: model)
+        case .rich:
+            FloatingRichTextContentView(model: model, searchKeyword: searchKeyword)
+        case .link:
+            if enableLinkPreview {
+                FloatingLinkPreviewView(
+                    model: model,
+                    searchKeyword: searchKeyword
+                )
+            } else {
+                FloatingPlainTextContentView(model: model, searchKeyword: searchKeyword)
+            }
+        default:
+            FloatingPlainTextContentView(model: model, searchKeyword: searchKeyword)
+        }
+    }
+}
+
+// MARK: - Floating File Content View
+
+private struct FloatingFileContentView: View {
+    let model: PasteboardModel
+
+    var body: some View {
+        if let paths = model.cachedFilePaths, !paths.isEmpty {
+            if paths.count > 1 {
+                FloatingMultipleFilesView(paths: paths)
+            } else if let firstPath = paths.first {
+                FloatingSingleFileView(path: firstPath)
+            }
+        }
+    }
+}
+
+// MARK: - Floating Rich Text Content View
+
+private struct FloatingRichTextContentView: View {
+    let model: PasteboardModel
+    let searchKeyword: String
+
+    var body: some View {
+        if model.hasBgColor {
+            if searchKeyword.isEmpty {
+                Text(model.attributed())
+            } else {
+                Text(model.highlightedRichText(keyword: searchKeyword))
+            }
+        } else {
+            FloatingPlainTextContentView(model: model, searchKeyword: searchKeyword)
+        }
+    }
+}
+
+// MARK: - Floating Plain Text Content View
+
+private struct FloatingPlainTextContentView: View {
+    let model: PasteboardModel
+    let searchKeyword: String
+
+    var body: some View {
+        if searchKeyword.isEmpty {
+            Text(model.attributeString.string)
+        } else {
+            Text(model.highlightedPlainText(keyword: searchKeyword))
+        }
+    }
+}
+
+// MARK: - Quick Paste Badge View
+
+private struct QuickPasteBadgeView: View {
+    let index: Int
+    let color: Color
+
+    var body: some View {
+        Text(index, format: .number)
+            .font(.system(.caption2, design: .rounded))
+            .foregroundStyle(color)
+    }
+}
+
 // MARK: - File Content Views
 
 private struct FloatingSingleFileView: View {
     let path: String
 
     private var fileURL: URL {
-        URL(fileURLWithPath: path)
+        URL(filePath: path)
     }
 
     private var fileName: String {
@@ -256,7 +295,7 @@ private struct FloatingSingleFileView: View {
                 .frame(width: 32, height: 32)
 
             Text(fileName)
-                .font(.system(size: 12))
+                .font(.caption)
                 .lineLimit(1)
                 .truncationMode(.middle)
                 .foregroundStyle(.primary)
@@ -276,7 +315,7 @@ private struct FloatingMultipleFilesView: View {
                 .frame(width: 24, height: 24)
 
             Text(.fileCount(paths.count))
-                .font(.system(size: 12))
+                .font(.caption)
                 .foregroundStyle(.primary)
         }
     }
