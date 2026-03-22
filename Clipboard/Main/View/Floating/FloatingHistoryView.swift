@@ -27,7 +27,6 @@ struct FloatingHistoryView: View {
                 ScrollView {
                     contentView()
                 }
-                .scrollIndicators(.automatic)
                 .contentMargins(
                     .top,
                     FloatConst.headerHeight + FloatConst.cardSpacing,

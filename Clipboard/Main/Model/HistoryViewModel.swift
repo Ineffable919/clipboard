@@ -165,7 +165,10 @@ import SwiftUI
     // MARK: - Paste / Copy
 
     /// 粘贴
-    func pasteSelectedItems(isAttribute: Bool = true, checkPermissions: Bool = false) {
+    func pasteSelectedItems(
+        isAttribute: Bool = true,
+        checkPermissions: Bool = false
+    ) {
         let items = selectedItems()
         guard !items.isEmpty else { return }
 
@@ -192,7 +195,10 @@ import SwiftUI
         if items.count == 1 {
             ClipActionService.shared.copy(items[0], isAttribute: isAttribute)
         } else {
-            ClipActionService.shared.copyMultiple(items, isAttribute: isAttribute)
+            ClipActionService.shared.copyMultiple(
+                items,
+                isAttribute: isAttribute
+            )
         }
     }
 
@@ -213,14 +219,14 @@ import SwiftUI
 
         isDel = true
 
-        withAnimation(.easeInOut(duration: 0.2)) {
+        _ = withAnimation(.easeInOut(duration: 0.2)) {
             pd.dataList.remove(at: index)
-            updateSelectionAfterDeletion(at: index)
         }
 
         ClipActionService.shared.delete(item)
 
-        let needsMore = pd.dataList.count < 50 && pd.hasMoreData && !pd.isLoadingPage
+        let needsMore =
+            pd.dataList.count < 50 && pd.hasMoreData && !pd.isLoadingPage
 
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(250))
@@ -230,6 +236,7 @@ import SwiftUI
                 pd.loadNextPage()
             }
         }
+        updateSelectionAfterDeletion(at: index)
     }
 
     private func updateSelectionAfterDeletion(at index: Int) {
@@ -257,7 +264,8 @@ import SwiftUI
 
         let currentActiveId = activeId
 
-        let handleResponse: (NSApplication.ModalResponse) -> Void = { [weak self] response in
+        let handleResponse: (NSApplication.ModalResponse) -> Void = {
+            [weak self] response in
             defer {
                 env.isShowDel = false
             }
@@ -335,9 +343,11 @@ import SwiftUI
         }
 
         if id == first {
-            return WindowManager.shared.getCurrentDisplayMode() == .drawer ? .trailing : .bottom
+            return WindowManager.shared.getCurrentDisplayMode() == .drawer
+                ? .trailing : .bottom
         } else if id == last {
-            return WindowManager.shared.getCurrentDisplayMode() == .drawer ? .leading : .top
+            return WindowManager.shared.getCurrentDisplayMode() == .drawer
+                ? .leading : .top
         } else {
             return .none
         }
