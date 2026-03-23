@@ -186,7 +186,7 @@ struct ClipCardView: View {
                 .keyboardShortcut("e", modifiers: [.command])
         }
 
-        Button(String(localized: .deleteTitle), systemImage: "trash", action: deleteItem)
+        Button(String(localized: .delete), systemImage: "trash", action: deleteItem)
             .keyboardShortcut(.delete, modifiers: [])
 
         Divider()
