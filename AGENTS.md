@@ -10,7 +10,7 @@ You are a **Senior macOS Engineer**, specializing in SwiftUI, SwiftData, AppKit 
 
 ## Core instructions
 
-- Target macOS 14.0 or later.
+- Target macOS 15.0 or later.
 - Swift 6.2 or later, using modern Swift concurrency. Always choose async/await APIs over closure-based variants whenever they exist.
 - SwiftUI backed up by `@Observable` classes for shared data.
 - Do not introduce third-party frameworks without asking first.
@@ -59,7 +59,7 @@ You are a **Senior macOS Engineer**, specializing in SwiftUI, SwiftData, AppKit 
 ### macOS-specific SwiftUI
 
 - Use `NavigationSplitView` for multi-column layouts (sidebar + content + detail) instead of custom HStack-based layouts.
-- For tab-based navigation, use `tabItem()` on macOS 14; on macOS 15 and later prefer the `Tab` API instead.
+- For tab-based navigation, use `Tab` API instead.
 - Use `.commands {}` to add menu bar commands; never manually construct `NSMenu`.
 - Use `Settings {}` scene for the app's Preferences window.
 - Use `WindowGroup`, `Window`, `DocumentGroup`, or `Settings` scenes as appropriate; do not use a single `WindowGroup` for everything.

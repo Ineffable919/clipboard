@@ -100,16 +100,14 @@ enum PasteUserDefaults {
                     path: "/System/Applications/Utilities/Keychain Access.app"
                 ),
             ]
-            if #available(macOS 15.0, *) {
-                apps.insert(
-                    IgnoredAppInfo(
-                        name: String(localized: .passwords),
-                        bundleIdentifier: "com.apple.Passwords",
-                        path: "/System/Applications/Passwords.app"
-                    ),
-                    at: 0
-                )
-            }
+            apps.insert(
+                IgnoredAppInfo(
+                    name: String(localized: .passwords),
+                    bundleIdentifier: "com.apple.Passwords",
+                    path: "/System/Applications/Passwords.app"
+                ),
+                at: 0
+            )
             return apps
         }()
     )

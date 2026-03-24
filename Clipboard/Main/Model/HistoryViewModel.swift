@@ -12,6 +12,7 @@ import SwiftUI
     var activeId: PasteboardModel.ID?
     var showPreviewId: PasteboardModel.ID?
     var isQuickPastePressed: Bool = false
+    var scrollPosition = ScrollPosition(idType: PasteboardModel.ID.self)
 
     @ObservationIgnored var lastTapId: PasteboardModel.ID?
     @ObservationIgnored var lastTapTime: TimeInterval = 0
@@ -92,7 +93,13 @@ import SwiftUI
     }
 
     func selectedItems() -> [PasteboardModel] {
-        pd.dataList.filter { item in
+        guard !selectedIds.isEmpty else { return [] }
+        if selectedIds.count == 1, let activeId,
+           let item = pd.dataList.first(where: { $0.id == activeId })
+        {
+            return [item]
+        }
+        return pd.dataList.filter { item in
             guard let id = item.id else { return false }
             return selectedIds.contains(id)
         }
@@ -264,21 +271,6 @@ import SwiftUI
 
         let currentActiveId = activeId
 
-        let handleResponse: (NSApplication.ModalResponse) -> Void = {
-            [weak self] response in
-            defer {
-                env.isShowDel = false
-            }
-
-            guard response == .alertFirstButtonReturn,
-                  self?.activeId == currentActiveId
-            else {
-                return
-            }
-
-            onConfirm()
-        }
-
         let shouldUseSheet: Bool = {
             if #available(macOS 26.0, *) {
                 return true
@@ -286,14 +278,22 @@ import SwiftUI
             return WindowManager.shared.getCurrentDisplayMode() == .floating
         }()
 
-        if shouldUseSheet, let window = NSApp.keyWindow {
-            alert.beginSheetModal(
-                for: window,
-                completionHandler: handleResponse
-            )
-        } else {
-            let response = alert.runModal()
-            handleResponse(response)
+        Task { @MainActor in
+            defer { env.isShowDel = false }
+
+            let response: NSApplication.ModalResponse = if shouldUseSheet, let window = NSApp.keyWindow {
+                await alert.beginSheetModal(for: window)
+            } else {
+                alert.runModal()
+            }
+
+            guard response == .alertFirstButtonReturn,
+                  activeId == currentActiveId
+            else {
+                return
+            }
+
+            onConfirm()
         }
     }
 
@@ -353,8 +353,9 @@ import SwiftUI
         }
     }
 
-    func reset(proxy: ScrollViewProxy) {
+    func reset() {
         guard !isDel else { return }
+
         lastLoadTriggerIndex = -1
         let changeType = pd.lastDataChangeType
         if changeType == .searchFilter || changeType == .reset {
@@ -379,7 +380,7 @@ import SwiftUI
                     showPreviewId = nil
                     Task { @MainActor in
                         withAnimation(.easeInOut(duration: 0.25)) {
-                            proxy.scrollTo(firstId, anchor: .trailing)
+                            scrollPosition.scrollTo(id: firstId, anchor: .trailing)
                         }
                     }
                     return
@@ -390,10 +391,10 @@ import SwiftUI
             selectSingle(id: firstId)
             showPreviewId = nil
 
-            if !needsScrolling {
+            if needsScrolling {
                 Task { @MainActor in
                     withAnimation(.easeInOut(duration: 0.25)) {
-                        proxy.scrollTo(firstId, anchor: .trailing)
+                        scrollPosition.scrollTo(id: firstId, anchor: .trailing)
                     }
                 }
             }

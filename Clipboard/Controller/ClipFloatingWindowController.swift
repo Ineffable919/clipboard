@@ -213,12 +213,11 @@ final class ClipFloatingWindowController: NSWindowController {
     }
 
     func toggleWindow(_ completionHandler: (() -> Void)? = nil) {
-        setPresented(!clipVC.isPresented, animated: true, completionHandler)
+        setPresented(!clipVC.isPresented, completionHandler)
     }
 
     func setPresented(
         _ presented: Bool,
-        animated: Bool,
         _ completionHandler: (() -> Void)? = nil
     ) {
         guard let win = window else { return }
@@ -233,9 +232,9 @@ final class ClipFloatingWindowController: NSWindowController {
 
             clipVC.env.resetQuickPasteState()
 
-            clipVC.setPresented(true, animated: animated, completion: nil)
+            clipVC.setPresented(true)
         } else {
-            clipVC.setPresented(false, animated: animated) { [weak self] in
+            clipVC.setPresented(false) { [weak self] in
                 guard let self, let win = window else { return }
                 win.orderOut(nil)
                 completionHandler?()
@@ -267,7 +266,7 @@ extension ClipFloatingWindowController: NSWindowDelegate {
                 return
             }
         }
-        setPresented(false, animated: true)
+        setPresented(false)
     }
 
     func windowDidBecomeKey(_: Notification) {

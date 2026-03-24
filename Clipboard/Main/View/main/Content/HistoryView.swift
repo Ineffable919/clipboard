@@ -22,7 +22,7 @@ struct HistoryView: View {
     @State private var flagsMonitorToken: Any?
 
     var body: some View {
-        ScrollViewReader { proxy in
+        VStack {
             if pd.dataList.isEmpty {
                 ClipboardEmptyStateView(style: .main)
             } else {
@@ -31,6 +31,7 @@ struct HistoryView: View {
                 }
                 .horizontalMouseWheelScroll()
                 .scrollIndicators(.never)
+                .scrollPosition($historyVM.scrollPosition)
                 .contentMargins(
                     .leading,
                     Const.cardLeadingSpace,
@@ -49,13 +50,13 @@ struct HistoryView: View {
                 }
                 .onChange(of: historyVM.activeId) { _, newId in
                     if let id = newId {
-                        proxy.scrollTo(id, anchor: historyVM.scrollAnchor())
+                        historyVM.scrollPosition.scrollTo(id: id, anchor: historyVM.scrollAnchor())
                     }
                 }
             }
             EmptyView()
                 .onChange(of: pd.dataList) {
-                    historyVM.reset(proxy: proxy)
+                    historyVM.reset()
                 }
                 .onChange(of: env.quickPasteResetTrigger) {
                     historyVM.isQuickPastePressed = false

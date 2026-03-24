@@ -27,7 +27,7 @@ final class WindowManager {
         switch mode {
         case .drawer:
             if floatingController.isVisible {
-                floatingController.setPresented(false, animated: false)
+                floatingController.setPresented(false)
             }
             drawerController.toggleWindow(completionHandler)
         case .floating:
@@ -48,14 +48,14 @@ final class WindowManager {
         switch mode {
         case .drawer:
             if floatingController.isVisible {
-                floatingController.setPresented(false, animated: false)
+                floatingController.setPresented(false)
             }
             drawerController.setPresented(presented, animated: animated, completionHandler)
         case .floating:
             if drawerController.isVisible {
                 drawerController.setPresented(false, animated: false)
             }
-            floatingController.setPresented(presented, animated: animated, completionHandler)
+            floatingController.setPresented(presented, completionHandler)
         }
     }
 

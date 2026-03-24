@@ -97,12 +97,8 @@ final class StatusBarController: NSObject {
         )
 
         let iconName = "heart.text.clipboard.fill"
-        let icon: NSImage? = if #available(macOS 15.0, *) {
+        let icon: NSImage? =
             NSImage(systemSymbolName: iconName, accessibilityDescription: nil)
-        } else {
-            NSImage(named: iconName)
-        }
-
         button.image = icon?.withSymbolConfiguration(config)
         button.target = self
         button.action = #selector(statusBarClick)

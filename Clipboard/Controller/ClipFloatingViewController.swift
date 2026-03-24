@@ -9,18 +9,7 @@ import AppKit
 import SwiftUI
 
 final class ClipFloatingViewController: NSViewController {
-    private let showDuration: CFTimeInterval = 0.15
-    private let hideDuration: CFTimeInterval = 0.2
     private(set) var isPresented: Bool = false
-
-    private let fadeContainer: NSView = {
-        let v = NSView()
-        v.translatesAutoresizingMaskIntoConstraints = false
-        v.wantsLayer = true
-        v.layer?.backgroundColor = NSColor.clear.cgColor
-        v.layer?.opacity = 0
-        return v
-    }()
 
     var env = AppEnvironment()
 
@@ -34,8 +23,6 @@ final class ClipFloatingViewController: NSViewController {
         return v
     }()
 
-    private var currentAnimDelegate: CAAnimationDelegate?
-
     override func loadView() {
         view = NSView()
     }
@@ -45,23 +32,10 @@ final class ClipFloatingViewController: NSViewController {
 
         view.wantsLayer = true
         view.layer?.backgroundColor = NSColor.clear.cgColor
-
-        view.addSubview(fadeContainer)
-        NSLayoutConstraint.activate([
-            fadeContainer.leadingAnchor.constraint(
-                equalTo: view.leadingAnchor
-            ),
-            fadeContainer.trailingAnchor.constraint(
-                equalTo: view.trailingAnchor
-            ),
-            fadeContainer.topAnchor.constraint(equalTo: view.topAnchor),
-            fadeContainer.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-        ])
     }
 
     func setPresented(
         _ presented: Bool,
-        animated: Bool,
         completion: (() -> Void)? = nil
     ) {
         guard presented != isPresented else {
@@ -70,86 +44,24 @@ final class ClipFloatingViewController: NSViewController {
         }
 
         if presented, !isPresented, hostingView.superview == nil {
-            fadeContainer.addSubview(hostingView)
+            view.addSubview(hostingView)
             NSLayoutConstraint.activate([
                 hostingView.leadingAnchor.constraint(
-                    equalTo: fadeContainer.leadingAnchor
+                    equalTo: view.leadingAnchor
                 ),
                 hostingView.trailingAnchor.constraint(
-                    equalTo: fadeContainer.trailingAnchor
+                    equalTo: view.trailingAnchor
                 ),
                 hostingView.topAnchor.constraint(
-                    equalTo: fadeContainer.topAnchor
+                    equalTo: view.topAnchor
                 ),
                 hostingView.bottomAnchor.constraint(
-                    equalTo: fadeContainer.bottomAnchor
+                    equalTo: view.bottomAnchor
                 ),
             ])
         }
 
         isPresented = presented
-        animateFade(
-            presented: presented,
-            duration: animated ? (presented ? showDuration : hideDuration) : 0,
-            completion: completion
-        )
-    }
-
-    private func animateFade(
-        presented: Bool,
-        duration: CFTimeInterval,
-        completion: (() -> Void)?
-    ) {
-        guard let layer = fadeContainer.layer else {
-            completion?()
-            return
-        }
-
-        let from = layer.presentation()?.opacity ?? layer.opacity
-        let to: Float = presented ? 1.0 : 0.0
-
-        layer.removeAnimation(forKey: "fade")
-        currentAnimDelegate = nil
-
-        if duration <= 0 {
-            layer.opacity = to
-            completion?()
-            return
-        }
-
-        let anim = CABasicAnimation(keyPath: "opacity")
-        anim.fromValue = from
-        anim.toValue = to
-        anim.duration = duration
-        anim.timingFunction = CAMediaTimingFunction(name: .easeOut)
-        anim.fillMode = .forwards
-        anim.isRemovedOnCompletion = false
-
-        class AnimDelegate: NSObject, CAAnimationDelegate {
-            var onStop: (() -> Void)?
-            init(_ onStop: @escaping () -> Void) {
-                self.onStop = onStop
-            }
-
-            func animationDidStop(_: CAAnimation, finished flag: Bool) {
-                if flag { onStop?() }
-                onStop = nil
-            }
-        }
-
-        let delegate = AnimDelegate { [weak self] in
-            CATransaction.begin()
-            CATransaction.setDisableActions(true)
-            layer.opacity = to
-            CATransaction.commit()
-            layer.removeAnimation(forKey: "fade")
-            self?.currentAnimDelegate = nil
-            completion?()
-        }
-
-        currentAnimDelegate = delegate
-        anim.delegate = delegate
-
-        layer.add(anim, forKey: "fade")
+        completion?()
     }
 }

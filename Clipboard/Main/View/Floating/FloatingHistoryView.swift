@@ -20,13 +20,14 @@ struct FloatingHistoryView: View {
     private let pd = PasteDataStore.main
 
     var body: some View {
-        ScrollViewReader { proxy in
+        VStack {
             if pd.dataList.isEmpty {
                 ClipboardEmptyStateView(style: .floating)
             } else {
                 ScrollView {
                     contentView()
                 }
+                .scrollPosition($historyVM.scrollPosition)
                 .contentMargins(
                     .top,
                     FloatConst.headerHeight + FloatConst.cardSpacing,
@@ -52,14 +53,14 @@ struct FloatingHistoryView: View {
                 }
                 .onChange(of: historyVM.activeId) { _, newId in
                     if let id = newId {
-                        proxy.scrollTo(id, anchor: historyVM.scrollAnchor())
+                        historyVM.scrollPosition.scrollTo(id: id, anchor: historyVM.scrollAnchor())
                     }
                 }
             }
 
             EmptyView()
                 .onChange(of: pd.dataList) {
-                    historyVM.reset(proxy: proxy)
+                    historyVM.reset()
                 }
                 .onChange(of: env.quickPasteResetTrigger) {
                     historyVM.isQuickPastePressed = false

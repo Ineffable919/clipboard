@@ -24,55 +24,31 @@ extension PasteboardModel {
         }
 
         if type == .rich {
-            if #available(macOS 15.0, *) {
-                let provider = NSItemProvider()
-                let dataCopy = data
-                let typeIdentifier = pasteboardType.rawValue
-                provider.registerDataRepresentation(
-                    forTypeIdentifier: typeIdentifier,
-                    visibility: .all
-                ) { completion in
-                    completion(dataCopy, nil)
-                    return nil
-                }
-                return provider
-            } else {
-                let provider = NSItemProvider(
-                    object: attributeString.string as NSString
-                )
-                let dataCopy = data
-                let typeIdentifier = pasteboardType.rawValue
-                provider.registerDataRepresentation(
-                    forTypeIdentifier: typeIdentifier,
-                    visibility: .all
-                ) { completion in
-                    completion(dataCopy, nil)
-                    return nil
-                }
-                return provider
+            let provider = NSItemProvider()
+            let dataCopy = data
+            let typeIdentifier = pasteboardType.rawValue
+            provider.registerDataRepresentation(
+                forTypeIdentifier: typeIdentifier,
+                visibility: .all
+            ) { completion in
+                completion(dataCopy, nil)
+                return nil
             }
+            return provider
         }
 
         if type == .image {
             let name = appName + "-" + timestamp.date()
-            if #available(macOS 15.0, *) {
-                let provider = NSItemProvider()
-                provider.registerDataRepresentation(
-                    forTypeIdentifier: pasteboardType.rawValue,
-                    visibility: .all
-                ) { [self] completion in
-                    completion(data, nil)
-                    return nil
-                }
-                provider.suggestedName = name
-                return provider
-            } else {
-                if let image = NSImage(data: data) {
-                    let provider = NSItemProvider(object: image)
-                    provider.suggestedName = name
-                    return provider
-                }
+            let provider = NSItemProvider()
+            provider.registerDataRepresentation(
+                forTypeIdentifier: pasteboardType.rawValue,
+                visibility: .all
+            ) { [self] completion in
+                completion(data, nil)
+                return nil
             }
+            provider.suggestedName = name
+            return provider
         }
 
         if type == .file {

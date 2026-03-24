@@ -190,31 +190,11 @@ private struct ChipScrollContentView: View {
     let onBackgroundTap: () -> Void
 
     var body: some View {
-        if #available(macOS 15.0, *) {
-            ChipScrollListWithPosition(
-                topBarVM: topBarVM,
-                focus: $focus,
-                onBackgroundTap: onBackgroundTap
-            )
-        } else {
-            ScrollViewReader { proxy in
-                ChipScrollList(
-                    topBarVM: topBarVM,
-                    focus: $focus,
-                    onBackgroundTap: onBackgroundTap
-                )
-                .onChange(of: topBarVM.editingNewChip) { _, isEditing in
-                    if isEditing {
-                        withAnimation {
-                            proxy.scrollTo("newChipEditor", anchor: .trailing)
-                        }
-                    }
-                }
-                .onChange(of: topBarVM.selectedChipId) { _, newId in
-                    proxy.scrollTo(newId, anchor: .center)
-                }
-            }
-        }
+        ChipScrollListWithPosition(
+            topBarVM: topBarVM,
+            focus: $focus,
+            onBackgroundTap: onBackgroundTap
+        )
     }
 }
 
