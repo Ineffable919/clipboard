@@ -79,7 +79,7 @@ import SwiftUI
         guard count > 0 else { return }
 
         selectedIds.removeAll()
-        for i in 0 ..< count {
+        for i in 0..<count {
             if let id = pd.dataList[i].id {
                 selectedIds.insert(id)
             }
@@ -95,7 +95,7 @@ import SwiftUI
     func selectedItems() -> [PasteboardModel] {
         guard !selectedIds.isEmpty else { return [] }
         if selectedIds.count == 1, let activeId,
-           let item = pd.dataList.first(where: { $0.id == activeId })
+            let item = pd.dataList.first(where: { $0.id == activeId })
         {
             return [item]
         }
@@ -148,11 +148,11 @@ import SwiftUI
         let isSameItem = activeId == item.id
 
         if isSameItem,
-           shouldHandleDoubleTap(
-               for: item.id,
-               currentTime: now,
-               interval: 0.3
-           )
+            shouldHandleDoubleTap(
+                for: item.id,
+                currentTime: now,
+                interval: 0.3
+            )
         {
             if isMultiSelectMode {
                 pasteSelectedItems()
@@ -226,8 +226,8 @@ import SwiftUI
 
         isDel = true
 
-        _ = withAnimation(.easeInOut(duration: 0.2)) {
-            pd.dataList.remove(at: index)
+        withAnimation(.easeInOut(duration: 0.18)) {
+            pd.remove(at: index)
         }
 
         ClipActionService.shared.delete(item)
@@ -236,13 +236,13 @@ import SwiftUI
             pd.dataList.count < 50 && pd.hasMoreData && !pd.isLoadingPage
 
         Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(250))
             isDel = false
 
             if needsMore {
                 pd.loadNextPage()
             }
         }
+
         updateSelectionAfterDeletion(at: index)
     }
 
@@ -281,14 +281,15 @@ import SwiftUI
         Task { @MainActor in
             defer { env.isShowDel = false }
 
-            let response: NSApplication.ModalResponse = if shouldUseSheet, let window = NSApp.keyWindow {
-                await alert.beginSheetModal(for: window)
-            } else {
-                alert.runModal()
-            }
+            let response: NSApplication.ModalResponse =
+                if shouldUseSheet, let window = NSApp.keyWindow {
+                    await alert.beginSheetModal(for: window)
+                } else {
+                    alert.runModal()
+                }
 
             guard response == .alertFirstButtonReturn,
-                  activeId == currentActiveId
+                activeId == currentActiveId
             else {
                 return
             }
@@ -336,8 +337,8 @@ import SwiftUI
 
     func scrollAnchor() -> UnitPoint? {
         guard let first = pd.dataList.first?.id,
-              let last = pd.dataList.last?.id,
-              let id = activeId
+            let last = pd.dataList.last?.id,
+            let id = activeId
         else {
             return .none
         }
@@ -380,7 +381,10 @@ import SwiftUI
                     showPreviewId = nil
                     Task { @MainActor in
                         withAnimation(.easeInOut(duration: 0.25)) {
-                            scrollPosition.scrollTo(id: firstId, anchor: .trailing)
+                            scrollPosition.scrollTo(
+                                id: firstId,
+                                anchor: .trailing
+                            )
                         }
                     }
                     return

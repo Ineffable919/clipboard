@@ -106,6 +106,12 @@ struct FloatingHistoryView: View {
         )
         .id(item.id)
         .contentShape(.rect)
+        .transition(
+            .asymmetric(
+                insertion: .identity,
+                removal: .opacity.combined(with: .scale(scale: 0.92))
+            )
+        )
         .onTapGesture {
             handleTap(on: item, index: index)
         }

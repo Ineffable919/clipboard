@@ -109,8 +109,8 @@ extension PasteDataStore {
     private func getItems(rows: [Row]) async -> [PasteboardModel] {
         rows.compactMap { row in
             if let type = try? row.get(Col.type),
-               let data = try? row.get(Col.data),
-               let timestamp = try? row.get(Col.ts)
+                let data = try? row.get(Col.data),
+                let timestamp = try? row.get(Col.ts)
             {
                 let id = try? row.get(Col.id)
                 let appName = try? row.get(Col.appName)
@@ -202,7 +202,9 @@ extension PasteDataStore {
             }
             if !tagValues.isEmpty {
                 let tagCondition = tagValues.map { (Col.tag ?? "") == $0 }
-                    .reduce(Expression<Bool>(value: false)) { result, condition in
+                    .reduce(Expression<Bool>(value: false)) {
+                        result,
+                        condition in
                         result || condition
                     }
                 clauses.append(tagCondition)
@@ -211,8 +213,10 @@ extension PasteDataStore {
 
         // 应用筛选
         if !criteria.selectedAppNames.isEmpty {
-            let appCondition = criteria.selectedAppNames.map { Col.appName == $0 }
-                .reduce(Expression<Bool>(value: false)) { $0 || $1 }
+            let appCondition = criteria.selectedAppNames.map {
+                Col.appName == $0
+            }
+            .reduce(Expression<Bool>(value: false)) { $0 || $1 }
             clauses.append(appCondition)
         }
 
@@ -424,11 +428,12 @@ extension PasteDataStore {
             await sqlManager.delete(filter: filter)
             let count = await sqlManager.getTotalCount()
 
-            let filtered: Int = if inFilter, let activeFilter {
-                await sqlManager.getCount(filter: activeFilter)
-            } else {
-                count
-            }
+            let filtered: Int =
+                if inFilter, let activeFilter {
+                    await sqlManager.getCount(filter: activeFilter)
+                } else {
+                    count
+                }
 
             await MainActor.run { [weak self] in
                 guard let self else { return }
@@ -441,6 +446,10 @@ extension PasteDataStore {
 
     func deleteItemsByGroup(_ groupId: Int) {
         deleteItems(filter: Col.group == groupId)
+    }
+
+    func remove(at: Int) {
+        dataList.remove(at: at)
     }
 
     func clearExpiredData() {
@@ -458,13 +467,13 @@ extension PasteDataStore {
         var dateCom = DateComponents()
 
         switch timeUnit {
-        case let .days(n):
+        case .days(let n):
             // 1-6天
             dateCom = DateComponents(calendar: NSCalendar.current, day: -n)
-        case let .weeks(n):
+        case .weeks(let n):
             // 1-3周
             dateCom = DateComponents(calendar: NSCalendar.current, day: -n * 7)
-        case let .months(n):
+        case .months(let n):
             // 1-11月
             dateCom = DateComponents(calendar: NSCalendar.current, month: -n)
         case .year:
@@ -475,7 +484,8 @@ extension PasteDataStore {
             return
         }
 
-        if let deadDate = NSCalendar.current.date(byAdding: dateCom, to: Date()) {
+        if let deadDate = NSCalendar.current.date(byAdding: dateCom, to: Date())
+        {
             let deadTime = Int64(deadDate.timeIntervalSince1970)
             log.info("清理过期数据，截止时间戳：\(deadTime)")
             dataList = dataList.filter { $0.timestamp > deadTime }
@@ -552,7 +562,7 @@ extension PasteDataStore {
             )
 
             if let model = dataList.first(where: { $0.id == itemId }),
-               groupId != model.group
+                groupId != model.group
             {
                 model.updateGroup(val: groupId)
             }
@@ -564,7 +574,7 @@ extension PasteDataStore {
             await sqlManager.updateItemHidden(id: itemId, hidden: hidden)
 
             if let model = dataList.first(where: { $0.id == itemId }),
-               hidden != model.hidden
+                hidden != model.hidden
             {
                 model.updateHidden(val: hidden)
             }
@@ -587,7 +597,10 @@ extension PasteDataStore {
         }) {
             cachedAppInfo?[index].path = model.appPath
         } else {
-            cachedAppInfo?.insert((name: model.appName, path: model.appPath), at: 0)
+            cachedAppInfo?.insert(
+                (name: model.appName, path: model.appPath),
+                at: 0
+            )
         }
     }
 
@@ -721,11 +734,11 @@ extension PasteDataStore {
         let targetSize = CGSize(width: 32, height: 32)
 
         guard let resizedImage = resizeImage(image, to: targetSize),
-              let cgImage = resizedImage.cgImage(
-                  forProposedRect: nil,
-                  context: nil,
-                  hints: nil
-              )
+            let cgImage = resizedImage.cgImage(
+                forProposedRect: nil,
+                context: nil,
+                hints: nil
+            )
         else {
             return nil
         }
@@ -759,8 +772,8 @@ extension PasteDataStore {
         let width = Int(targetSize.width)
         let height = Int(targetSize.height)
 
-        for y in 0 ..< height {
-            for x in 0 ..< width {
+        for y in 0..<height {
+            for x in 0..<width {
                 let pixelIndex = (y * width + x) * 4
                 let alpha = Int(pixelData[pixelIndex + 3])
 
@@ -776,7 +789,7 @@ extension PasteDataStore {
 
                         let colorKey =
                             (UInt32(quantizedR) << 16)
-                                | (UInt32(quantizedG) << 8) | UInt32(quantizedB)
+                            | (UInt32(quantizedG) << 8) | UInt32(quantizedB)
 
                         // 计算位置权重
                         let weight = calculateSimpleWeight(
@@ -829,9 +842,9 @@ extension PasteDataStore {
                 let group = colorGroupCache[color] ?? .other
                 switch group {
                 case .red:
-                    score *= 0.1 // 红色优先级最低
+                    score *= 0.1  // 红色优先级最低
                 case .yellow:
-                    score *= 1.2 // 黄色第二低
+                    score *= 1.2  // 黄色第二低
                 default:
                     break
                 }
@@ -923,7 +936,7 @@ extension PasteDataStore {
         let minComponent = min(r, min(g, b))
         let saturation =
             maxComponent > 0
-                ? Float(maxComponent - minComponent) / Float(maxComponent) : 0
+            ? Float(maxComponent - minComponent) / Float(maxComponent) : 0
 
         if brightness < 50, saturation > 0.1 {
             return true
@@ -964,7 +977,7 @@ extension PasteDataStore {
         // 给四个角落额外权重
         let isNearCorner =
             (x < width / 4 || x >= width * 3 / 4)
-                && (y < height / 4 || y >= height * 3 / 4)
+            && (y < height / 4 || y >= height * 3 / 4)
         if isNearCorner {
             weight *= 1.3
         }
@@ -977,7 +990,7 @@ extension PasteDataStore {
         let minComponent = min(r, min(g, b))
         let saturation =
             maxComponent > 0
-                ? Float(maxComponent - minComponent) / Float(maxComponent) : 0
+            ? Float(maxComponent - minComponent) / Float(maxComponent) : 0
         let brightness = Float(r + g + b) / 3.0
 
         var score: Float = 1.0

@@ -100,6 +100,12 @@ struct HistoryView: View {
             onCopy: { historyVM.copySelectedItems() }
         )
         .contentShape(.rect)
+        .transition(
+            .asymmetric(
+                insertion: .identity,
+                removal: .opacity.combined(with: .scale(scale: 0.92))
+            )
+        )
         .onTapGesture {
             handleOptimisticTap(on: item, index: index)
         }
