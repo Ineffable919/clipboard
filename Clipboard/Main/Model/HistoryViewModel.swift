@@ -357,49 +357,51 @@ import SwiftUI
     func reset() {
         guard !isDel else { return }
 
-        lastLoadTriggerIndex = -1
         let changeType = pd.lastDataChangeType
-        if changeType == .searchFilter || changeType == .reset {
-            if pd.dataList.isEmpty {
-                selectedIds.removeAll()
-                activeId = nil
-                showPreviewId = nil
-                return
-            }
 
-            let firstId = pd.dataList.first?.id
+        guard changeType != .loadMore else { return }
 
-            if isMultiSelectMode {
-                let currentIds = Set(pd.dataList.compactMap(\.id))
-                let validIds = selectedIds.filter { id in
-                    guard let id else { return false }
-                    return currentIds.contains(id)
-                }
-                if !validIds.isEmpty {
-                    selectedIds = validIds
-                    activeId = firstId
-                    showPreviewId = nil
-                    Task { @MainActor in
-                        withAnimation(.easeInOut(duration: 0.25)) {
-                            scrollPosition.scrollTo(
-                                id: firstId,
-                                anchor: .trailing
-                            )
-                        }
-                    }
-                    return
-                }
-            }
+        lastLoadTriggerIndex = -1
 
-            let needsScrolling = activeId != firstId
-            selectSingle(id: firstId)
+        if pd.dataList.isEmpty {
+            selectedIds.removeAll()
+            activeId = nil
             showPreviewId = nil
+            return
+        }
 
-            if needsScrolling {
+        let firstId = pd.dataList.first?.id
+
+        if isMultiSelectMode {
+            let currentIds = Set(pd.dataList.compactMap(\.id))
+            let validIds = selectedIds.filter { id in
+                guard let id else { return false }
+                return currentIds.contains(id)
+            }
+            if !validIds.isEmpty {
+                selectedIds = validIds
+                activeId = firstId
+                showPreviewId = nil
                 Task { @MainActor in
                     withAnimation(.easeInOut(duration: 0.25)) {
-                        scrollPosition.scrollTo(id: firstId, anchor: .trailing)
+                        scrollPosition.scrollTo(
+                            id: firstId,
+                            anchor: .trailing
+                        )
                     }
+                }
+                return
+            }
+        }
+
+        let needsScrolling = activeId != firstId
+        selectSingle(id: firstId)
+        showPreviewId = nil
+
+        if needsScrolling {
+            Task { @MainActor in
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    scrollPosition.scrollTo(id: firstId, anchor: .trailing)
                 }
             }
         }
