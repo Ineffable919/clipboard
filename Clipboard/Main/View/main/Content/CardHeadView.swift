@@ -25,7 +25,7 @@ struct CardHeadView: View {
             }
         }
         .frame(height: Const.hdSize)
-        .background(PasteDataStore.main.colorWith(model))
+        .background(AppColorService.shared.color(for: model))
         .clipShape(Const.headShape)
     }
 }

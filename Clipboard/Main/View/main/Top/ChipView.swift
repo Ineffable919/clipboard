@@ -225,15 +225,10 @@ struct ChipView: View {
             pd.dataList = list
         }
 
-        do {
-            try PasteDataStore.main.updateItemGroup(
-                itemId: draggingId,
-                groupId: chip.id
-            )
-        } catch {
-            log.error("更新卡片 group 失败: \(error)")
-            return false
-        }
+        PasteDataStore.main.updateItemGroup(
+            itemId: draggingId,
+            groupId: chip.id
+        )
         return true
     }
 

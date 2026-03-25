@@ -164,7 +164,7 @@ struct StorageSettingView: View {
                         await db.resetDefaultList()
                         let count = await PasteSQLManager.manager.getTotalCount()
                         db.totalCount = count
-                        db.invalidateTagTypesCache()
+                        PasteMetadataCache.shared.invalidateTagTypesCache()
                         db.notifyCategoryChipsChanged()
                     }
                 } else {

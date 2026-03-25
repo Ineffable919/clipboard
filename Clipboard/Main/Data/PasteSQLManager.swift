@@ -126,10 +126,16 @@ final class PasteSQLManager: NSObject, @unchecked Sendable {
         guard let db else { return }
 
         do {
-            try db.run("CREATE INDEX IF NOT EXISTS idx_app_name ON Clip(app_name)")
+            try db.run(
+                "CREATE INDEX IF NOT EXISTS idx_app_name ON Clip(app_name)"
+            )
             try db.run("CREATE INDEX IF NOT EXISTS idx_tag ON Clip(tag)")
-            try db.run("CREATE INDEX IF NOT EXISTS idx_ts ON Clip(timestamp DESC)")
-            try db.run("CREATE INDEX IF NOT EXISTS idx_group ON Clip(\"group\")")
+            try db.run(
+                "CREATE INDEX IF NOT EXISTS idx_ts ON Clip(timestamp DESC)"
+            )
+            try db.run(
+                "CREATE INDEX IF NOT EXISTS idx_group ON Clip(\"group\")"
+            )
             log.debug("索引初始化成功")
         } catch {
             log.debug("索引已存在或创建失败: \(error)")
@@ -183,6 +189,15 @@ extension PasteSQLManager {
             log.debug("删除的条数为：\(String(describing: count))")
         } catch {
             log.error("删除失败：\(error)")
+        }
+    }
+
+    func delete(id: Int64) async {
+        let idFilter = table.filter(Col.id == id)
+        do {
+            try db?.run(idFilter.delete())
+        } catch {
+            log.error("删除失败：\(error)，id：\(id)")
         }
     }
 
@@ -425,7 +440,9 @@ extension PasteSQLManager {
     }
 
     /// 导出数据库到指定路径
-    nonisolated func exportDatabase(to destinationURL: URL) async -> ImportExportResult {
+    nonisolated func exportDatabase(to destinationURL: URL) async
+        -> ImportExportResult
+    {
         let sourcePath = await Self.sandboxDatabasePath
 
         return await Task.detached(priority: .userInitiated) {
@@ -466,7 +483,9 @@ extension PasteSQLManager {
     }
 
     /// 从指定路径导入数据库
-    nonisolated func importDatabase(from sourceURL: URL) async -> ImportExportResult {
+    nonisolated func importDatabase(from sourceURL: URL) async
+        -> ImportExportResult
+    {
         let validationResult = await validateImportDatabase(at: sourceURL)
         guard validationResult.success else {
             return validationResult
@@ -503,8 +522,12 @@ extension PasteSQLManager {
                         let uniqueId = try row.get(Col.uniqueId)
 
                         // uniqueId 去重
-                        let existingQuery = destTable.filter(Col.uniqueId == uniqueId)
-                        let existingCount = try destDb.scalar(existingQuery.count)
+                        let existingQuery = destTable.filter(
+                            Col.uniqueId == uniqueId
+                        )
+                        let existingCount = try destDb.scalar(
+                            existingQuery.count
+                        )
 
                         if existingCount > 0 {
                             skippedCount += 1
@@ -530,9 +553,10 @@ extension PasteSQLManager {
                     }
                 }
 
-                let skippedText = skippedCount > 0
-                    ? Self.localize("importSkip", skippedCount)
-                    : ""
+                let skippedText =
+                    skippedCount > 0
+                        ? Self.localize("importSkip", skippedCount)
+                        : ""
                 let message = Self.localize(
                     "importResult",
                     importedCount,
@@ -553,7 +577,9 @@ extension PasteSQLManager {
     }
 
     /// 验证导入的数据库文件格式
-    private nonisolated func validateImportDatabase(at url: URL) async -> ImportExportResult {
+    private nonisolated func validateImportDatabase(at url: URL) async
+        -> ImportExportResult
+    {
         await Task.detached(priority: .userInitiated) {
             guard FileManager.default.fileExists(atPath: url.path) else {
                 return ImportExportResult(
@@ -565,9 +591,10 @@ extension PasteSQLManager {
             do {
                 let sourceDb = try Connection(url.path, readonly: true)
 
-                let tableExists = try sourceDb.scalar(
-                    "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='Clip'"
-                ) as? Int64 ?? 0
+                let tableExists =
+                    try sourceDb.scalar(
+                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='Clip'"
+                    ) as? Int64 ?? 0
 
                 guard tableExists > 0 else {
                     return ImportExportResult(
@@ -605,8 +632,11 @@ extension PasteSQLManager {
                     }
                 }
 
-                let sampleQuery = "SELECT unique_id, type, data, timestamp FROM Clip LIMIT 1"
-                if let row = try sourceDb.prepare(sampleQuery).makeIterator().next() {
+                let sampleQuery =
+                    "SELECT unique_id, type, data, timestamp FROM Clip LIMIT 1"
+                if let row = try sourceDb.prepare(sampleQuery).makeIterator()
+                    .next()
+                {
                     guard row[0] is String else {
                         return ImportExportResult(
                             success: false,
@@ -710,9 +740,10 @@ extension PasteSQLManager {
                 break
             }
 
-            let query = table
-                .filter(Col.tag == nil)
-                .limit(batchSize, offset: 0)
+            let query =
+                table
+                    .filter(Col.tag == nil)
+                    .limit(batchSize, offset: 0)
 
             do {
                 let rows = try db.prepare(query)
@@ -784,7 +815,9 @@ extension PasteSQLManager {
     private func performHiddenFieldMigration() async {
         guard let db else { return }
         do {
-            try db.run("ALTER TABLE Clip ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0")
+            try db.run(
+                "ALTER TABLE Clip ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0"
+            )
         } catch {
             log.warn("新增 hidden 字段失败（可能已存在）: \(error)")
         }

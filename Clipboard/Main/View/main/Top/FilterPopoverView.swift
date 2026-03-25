@@ -195,8 +195,8 @@ struct FilterPopoverView: View {
     private func loadAppInfo() async {
         guard appInfoList.isEmpty else { return }
 
-        async let info = PasteDataStore.main.getAllAppInfo()
-        async let types = PasteDataStore.main.getAllTagTypes()
+        async let info = PasteMetadataCache.shared.getAllAppInfo()
+        async let types = PasteMetadataCache.shared.getAllTagTypes()
 
         let (rawAppInfo, tagTypeList) = await (info, types)
 

@@ -600,7 +600,7 @@ import SwiftUI
         guard !isLoadingAppPathCache, appPathCache.isEmpty else { return }
         isLoadingAppPathCache = true
 
-        let appInfo = await dataStore.getAllAppInfo()
+        let appInfo = await PasteMetadataCache.shared.getAllAppInfo()
         await MainActor.run {
             appPathCache = Dictionary(
                 uniqueKeysWithValues: appInfo.map { ($0.name, $0.path) }
