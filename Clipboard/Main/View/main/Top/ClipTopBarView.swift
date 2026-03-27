@@ -85,13 +85,11 @@ struct ClipTopBarView: View {
         .padding(Const.space4)
         .frame(width: Const.topBarWidth, height: 32.0)
         .background {
-            RoundedRectangle(cornerRadius: Const.topRadius, style: .continuous)
-                .fill(
-                    colorScheme == .dark
-                        ? Color(nsColor: .controlBackgroundColor)
-                        : .black.opacity(0.08)
-                )
+            colorScheme == .dark
+                ? Color(nsColor: .controlBackgroundColor)
+                : .black.opacity(0.1)
         }
+        .clipShape(.rect(cornerRadius: Const.topRadius))
         .overlay(
             RoundedRectangle(cornerRadius: Const.topRadius, style: .continuous)
                 .stroke(
@@ -102,7 +100,6 @@ struct ClipTopBarView: View {
                 )
                 .padding(-1)
         )
-        .contentShape(Rectangle())
         .onTapGesture {
             env.focusView = .search
         }
@@ -114,7 +111,7 @@ struct ClipTopBarView: View {
     private var inputTagView: some View {
         GeometryReader { geo in
             ScrollViewReader { proxy in
-                ScrollView(.horizontal, showsIndicators: false) {
+                ScrollView(.horizontal) {
                     inputContent(proxy: proxy)
                         .frame(
                             minWidth: geo.size.width,
@@ -122,6 +119,7 @@ struct ClipTopBarView: View {
                             alignment: .leading
                         )
                 }
+                .scrollIndicators(.never)
                 .onChange(of: topBarVM.tags.count) {
                     proxy.scrollTo("textfield", anchor: .trailing)
                 }

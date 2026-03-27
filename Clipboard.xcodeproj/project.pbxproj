@@ -286,7 +286,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 112;
+				CURRENT_PROJECT_VERSION = 113;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_APP_SANDBOX = NO;
@@ -298,9 +298,9 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Clip;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSDesktopFolderUsageDescription = "需要访问桌面文件夹以保存剪贴板内容";
-				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "需要访问文档文件夹以保存剪贴板内容";
-				INFOPLIST_KEY_NSDownloadsFolderUsageDescription = "需要访问下载文件夹以保存剪贴板内容";
+				INFOPLIST_KEY_NSDesktopFolderUsageDescription = "需要访问桌面文件以预览剪贴板内容";
+				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "需要访问文档文件以预览剪贴板内容";
+				INFOPLIST_KEY_NSDownloadsFolderUsageDescription = "需要访问下载文件以预览剪贴板内容";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -338,7 +338,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 112;
+				CURRENT_PROJECT_VERSION = 113;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_APP_SANDBOX = NO;
@@ -350,9 +350,9 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Clip;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSDesktopFolderUsageDescription = "需要访问桌面文件夹以保存剪贴板内容";
-				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "需要访问文档文件夹以保存剪贴板内容";
-				INFOPLIST_KEY_NSDownloadsFolderUsageDescription = "需要访问下载文件夹以保存剪贴板内容";
+				INFOPLIST_KEY_NSDesktopFolderUsageDescription = "需要访问桌面文件以预览剪贴板内容";
+				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "需要访问文档文件以预览剪贴板内容";
+				INFOPLIST_KEY_NSDownloadsFolderUsageDescription = "需要访问下载文件以预览剪贴板内容";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

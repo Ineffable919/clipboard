@@ -32,24 +32,57 @@ struct PreviewPopoverView: View {
         model.type == .file && model.fileSize() == 1
     }
 
-    private var extractedText: String {
-        model.attributeString.string
-    }
-
     var body: some View {
         FocusableContainer(onInteraction: {
             Task { @MainActor in
                 env.focusView = .popover
             }
-        }) { contentView }
-            .task {
-                await loadMetadata()
+        }) {
+            VStack(alignment: .leading, spacing: Const.space12) {
+                PreviewHeaderView(
+                    model: model,
+                    appIcon: appIcon,
+                    isSingleFile: isSingleFile,
+                    defaultAppForFile: defaultAppForFile,
+                    onClose: onClose,
+                    onEdit: { EditWindowController.shared.openWindow(with: model) }
+                )
+                .frame(height: 24)
+
+                PreviewContentSwitcher(
+                    model: model,
+                    enableLinkPreview: enableLinkPreview
+                )
+                .clipShape(.rect(cornerRadius: Const.radius))
+                .shadow(radius: 0.5)
+                .frame(maxHeight: .infinity)
+
+                PreviewFooterView(
+                    model: model,
+                    enableLinkPreview: enableLinkPreview,
+                    isSingleFile: isSingleFile,
+                    fileSize: fileSize,
+                    defaultBrowserName: defaultBrowserName,
+                    cachedTextStatistics: cachedTextStatistics
+                )
+                .frame(height: 24)
             }
-            .onDisappear {
-                if env.focusView != .search {
-                    env.focusView = .history
-                }
+            .padding(Const.space12)
+            .frame(
+                minWidth: Const.minPreviewWidth,
+                maxWidth: Const.maxPreviewWidth,
+                minHeight: Const.minPreviewHeight,
+                maxHeight: Const.maxPreviewHeight
+            )
+        }
+        .task {
+            await loadMetadata()
+        }
+        .onDisappear {
+            if env.focusView != .search {
+                env.focusView = .history
             }
+        }
     }
 
     private func loadMetadata() async {
@@ -60,14 +93,14 @@ struct PreviewPopoverView: View {
         defaultBrowserName = bundleDisplayName(for: NSWorkspace.shared.urlForApplication(toOpen: .html))
 
         if isSingleFile, let fileUrl = model.cachedFilePaths?.first {
-            let url = URL(fileURLWithPath: fileUrl)
+            let url = URL(filePath: fileUrl)
 
             defaultAppForFile = bundleDisplayName(for: NSWorkspace.shared.urlForApplication(toOpen: url))
 
-            if let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
+            if let attributes = try? FileManager.default.attributesOfItem(atPath: url.path()),
                let size = attributes[.size] as? Int64
             {
-                fileSize = ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
+                fileSize = size.formatted(.byteCount(style: .file))
             }
         }
 
@@ -81,38 +114,27 @@ struct PreviewPopoverView: View {
         return bundle.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
             ?? bundle.object(forInfoDictionaryKey: "CFBundleName") as? String
     }
+}
 
-    private var contentView: some View {
-        VStack(alignment: .leading, spacing: Const.space12) {
-            headerView
-                .frame(height: 24)
-            previewContent
-                .clipShape(.rect(cornerRadius: Const.radius))
-                .shadow(radius: 0.5)
-                .frame(maxHeight: .infinity)
-            footerView
-                .frame(height: 24)
-        }
-        .padding(Const.space12)
-        .frame(
-            minWidth: Const.minPreviewWidth,
-            maxWidth: Const.maxPreviewWidth,
-            minHeight: Const.minPreviewHeight,
-            maxHeight: Const.maxPreviewHeight
-        )
-    }
+// MARK: - PreviewHeaderView
 
-    // MARK: - 子视图
+private struct PreviewHeaderView: View {
+    let model: PasteboardModel
+    let appIcon: NSImage?
+    let isSingleFile: Bool
+    let defaultAppForFile: String?
+    var onClose: (() -> Void)?
+    var onEdit: (() -> Void)?
 
-    private var headerView: some View {
+    var body: some View {
         HStack {
             Button {
                 onClose?()
             } label: {
                 Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 14))
+                    .font(.subheadline)
                     .foregroundStyle(.secondary)
-                    .contentShape(Rectangle())
+                    .contentShape(.rect)
             }
             .buttonStyle(.plain)
 
@@ -130,7 +152,7 @@ struct PreviewPopoverView: View {
             if model.pasteboardType.isText() {
                 CommonButton(
                     title: String(localized: .edit),
-                    action: openEditWindow
+                    action: { onEdit?() }
                 )
             }
 
@@ -141,11 +163,22 @@ struct PreviewPopoverView: View {
                 CommonButton(
                     title: String(localized: .openWithApp(defaultApp))
                 ) {
-                    NSWorkspace.shared.open(URL(fileURLWithPath: fileUrl))
+                    NSWorkspace.shared.open(URL(filePath: fileUrl))
                 }
             }
         }
     }
+}
+
+// MARK: - PreviewFooterView
+
+private struct PreviewFooterView: View {
+    let model: PasteboardModel
+    let enableLinkPreview: Bool
+    let isSingleFile: Bool
+    let fileSize: String?
+    let defaultBrowserName: String?
+    let cachedTextStatistics: TextStatistics?
 
     private var shouldShowStatistics: Bool {
         if model.type == .link, enableLinkPreview, model.isLink {
@@ -158,7 +191,7 @@ struct PreviewPopoverView: View {
         cachedTextStatistics ?? TextStatistics(from: model.attributeString.string)
     }
 
-    private var footerView: some View {
+    var body: some View {
         HStack(spacing: Const.space4) {
             if shouldShowStatistics {
                 Text(textStatistics.displayString)
@@ -202,8 +235,6 @@ struct PreviewPopoverView: View {
         }
     }
 
-    // MARK: - Actions
-
     private func openInFinder() {
         guard let filePath = model.cachedFilePaths?.first else { return }
         NSWorkspace.shared.selectFile(filePath, inFileViewerRootedAtPath: "")
@@ -215,35 +246,41 @@ struct PreviewPopoverView: View {
         }
         NSWorkspace.shared.open(url)
     }
+}
 
-    private func openEditWindow() {
-        EditWindowController.shared.openWindow(with: model)
-    }
+// MARK: - PreviewContentSwitcher
 
-    // MARK: - Preview Content
+private struct PreviewContentSwitcher: View {
+    let model: PasteboardModel
+    let enableLinkPreview: Bool
 
-    @ViewBuilder
-    private var previewContent: some View {
+    var body: some View {
         switch model.type {
         case .link:
-            linkPreview
+            PreviewLinkView(model: model, enableLinkPreview: enableLinkPreview)
         case .color:
-            colorPreview
+            PreviewColorView(model: model)
         case .string:
-            textPreview
+            PreviewTextView(model: model)
         case .rich:
-            richTextPreview
+            PreviewRichTextView(model: model)
         case .image:
-            imagePreview
+            PreviewImageView(model: model)
         case .file:
-            filePreview
+            PreviewFileView(model: model)
         case .none:
-            emptyPreview
+            PreviewEmptyView()
         }
     }
+}
 
-    @ViewBuilder
-    private var linkPreview: some View {
+// MARK: - PreviewLinkView
+
+private struct PreviewLinkView: View {
+    let model: PasteboardModel
+    let enableLinkPreview: Bool
+
+    var body: some View {
         if enableLinkPreview, model.isLink,
            let url = model.attributeString.string.asCompleteURL()
         {
@@ -253,12 +290,21 @@ struct PreviewPopoverView: View {
                 UIWebView(url: url)
             }
         } else {
-            textPreview
+            PreviewTextView(model: model)
         }
     }
+}
 
-    @ViewBuilder
-    private var colorPreview: some View {
+// MARK: - PreviewColorView
+
+private struct PreviewColorView: View {
+    let model: PasteboardModel
+
+    private var extractedText: String {
+        model.attributeString.string
+    }
+
+    var body: some View {
         let (_, textColor) = model.colors()
         if !extractedText.isEmpty {
             VStack(alignment: .center) {
@@ -271,12 +317,21 @@ struct PreviewPopoverView: View {
                 maxHeight: Const.maxPreviewHeight,
                 alignment: .center
             )
-            .background(Color(nsColor: NSColor(hex: extractedText)))
+            .background(Color(NSColor(hex: extractedText)))
         }
     }
+}
 
-    @ViewBuilder
-    private var textPreview: some View {
+// MARK: - PreviewTextView
+
+private struct PreviewTextView: View {
+    let model: PasteboardModel
+
+    private var extractedText: String {
+        model.attributeString.string
+    }
+
+    var body: some View {
         if model.length > Const.maxTextSize {
             LargeTextView(model: model)
                 .frame(
@@ -285,7 +340,7 @@ struct PreviewPopoverView: View {
                 )
         } else {
             ZStack {
-                Color(nsColor: .controlBackgroundColor)
+                Color(.controlBackgroundColor)
                 ScrollView(.vertical) {
                     Text(extractedText)
                         .textSelection(.enabled)
@@ -298,9 +353,14 @@ struct PreviewPopoverView: View {
             .frame(maxWidth: Const.maxPreviewWidth, alignment: .topLeading)
         }
     }
+}
 
-    @ViewBuilder
-    private var richTextPreview: some View {
+// MARK: - PreviewRichTextView
+
+private struct PreviewRichTextView: View {
+    let model: PasteboardModel
+
+    var body: some View {
         if model.length > Const.maxRichTextSize {
             LargeTextView(model: model)
                 .frame(
@@ -311,7 +371,7 @@ struct PreviewPopoverView: View {
             ZStack {
                 model.backgroundColor
                 ScrollView(.vertical) {
-                    richTextContent
+                    PreviewRichTextContent(model: model)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(Const.space8)
                 }
@@ -321,9 +381,14 @@ struct PreviewPopoverView: View {
             .frame(maxWidth: Const.maxPreviewWidth, alignment: .topLeading)
         }
     }
+}
 
-    @ViewBuilder
-    private var richTextContent: some View {
+// MARK: - PreviewRichTextContent
+
+private struct PreviewRichTextContent: View {
+    let model: PasteboardModel
+
+    var body: some View {
         let attr =
             NSAttributedString(
                 with: model.data,
@@ -338,8 +403,14 @@ struct PreviewPopoverView: View {
                 .textSelection(.enabled)
         }
     }
+}
 
-    private var imagePreview: some View {
+// MARK: - PreviewImageView
+
+private struct PreviewImageView: View {
+    let model: PasteboardModel
+
+    var body: some View {
         ZStack {
             CheckerboardBackground()
             LiveTextImageView(imageData: model.data)
@@ -349,12 +420,18 @@ struct PreviewPopoverView: View {
                 )
         }
     }
+}
 
-    private var filePreview: some View {
+// MARK: - PreviewFileView
+
+private struct PreviewFileView: View {
+    let model: PasteboardModel
+
+    var body: some View {
         Group {
             if let paths = model.cachedFilePaths, paths.count == 1, let firstPath = paths.first {
                 QuickLookPreview(
-                    url: URL(fileURLWithPath: firstPath),
+                    url: URL(filePath: firstPath),
                     maxWidth: Const.maxPreviewWidth - 32,
                     maxHeight: Const.maxContentHeight
                 )
@@ -370,8 +447,12 @@ struct PreviewPopoverView: View {
             height: Const.maxContentHeight
         )
     }
+}
 
-    private var emptyPreview: some View {
+// MARK: - PreviewEmptyView
+
+private struct PreviewEmptyView: View {
+    var body: some View {
         Text(.noPreview)
             .font(.callout)
             .foregroundStyle(.secondary)
@@ -434,10 +515,7 @@ class InterceptingHostingView<Content: View>: NSHostingView<Content> {
 
 #Preview {
     let env = AppEnvironment()
-    let data = "https://www.apple.com.cn"
-        .data(
-            using: .utf8
-        )!
+    let data = Data("https://www.apple.com.cn".utf8)
 
     PreviewPopoverView(
         model: PasteboardModel(
