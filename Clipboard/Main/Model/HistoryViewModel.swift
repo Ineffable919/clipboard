@@ -394,15 +394,12 @@ import SwiftUI
             }
         }
 
-        let needsScrolling = activeId != firstId
         selectSingle(id: firstId)
         showPreviewId = nil
 
-        if needsScrolling {
-            Task { @MainActor in
-                withAnimation(.easeInOut(duration: 0.25)) {
-                    scrollPosition.scrollTo(id: firstId, anchor: .trailing)
-                }
+        Task { @MainActor in
+            withAnimation(.easeInOut(duration: 0.25)) {
+                scrollPosition.scrollTo(id: firstId, anchor: .trailing)
             }
         }
     }

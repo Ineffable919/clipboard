@@ -8,22 +8,6 @@
 import Foundation
 import os.log
 
-extension DateFormatter {
-    nonisolated static let logFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
-        formatter.timeZone = .current
-        return formatter
-    }()
-
-    static let fileFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        formatter.timeZone = .current
-        return formatter
-    }()
-}
-
 enum LogLevel: String, CaseIterable, Comparable {
     case debug = "DEBUG"
     case info = "INFO"
@@ -32,18 +16,14 @@ enum LogLevel: String, CaseIterable, Comparable {
 
     var osLogType: OSLogType {
         switch self {
-        case .debug:
-            .debug
-        case .info:
-            .info
-        case .warning:
-            .default
-        case .error:
-            .error
+        case .debug: .debug
+        case .info: .info
+        case .warning: .default
+        case .error: .error
         }
     }
 
-    var priority: Int {
+    nonisolated var priority: Int {
         switch self {
         case .debug: 0
         case .info: 1
@@ -52,203 +32,107 @@ enum LogLevel: String, CaseIterable, Comparable {
         }
     }
 
-    static func < (lhs: LogLevel, rhs: LogLevel) -> Bool {
+    nonisolated static func < (lhs: LogLevel, rhs: LogLevel) -> Bool {
         lhs.priority < rhs.priority
     }
 }
 
-final class AppLogger: @unchecked Sendable {
-    static let shared = AppLogger()
+/// Thread-safe logger. Public methods are nonisolated so callers need no `await`.
+/// File I/O is serialised inside the actor.
+final class AppLogger: Sendable {
+    nonisolated static let shared = AppLogger()
 
-    private let osLogger: os.Logger
-    private let logQueue = DispatchQueue(label: "com.crown.clipboard.logger", qos: .utility)
-    private var logFileURL: URL?
-    private let lock = NSLock()
+    private let osLogger = os.Logger(subsystem: "com.crown.clipboard", category: "AppLogger")
+    private let _state: LoggerState
 
-    #if DEBUG
-        private var _minimumLogLevel: LogLevel = .debug
-    #else
-        private var _minimumLogLevel: LogLevel = .info
-    #endif
-
-    var minimumLogLevel: LogLevel {
-        get { lock.withLock { _minimumLogLevel } }
-        set { lock.withLock { _minimumLogLevel = newValue } }
+    private nonisolated init() {
+        _state = LoggerState()
     }
 
-    private init() {
-        osLogger = os.Logger(subsystem: "com.crown.clipboard", category: "AppLogger")
-        setupLogFile()
+    // MARK: - Public API (nonisolated — safe to call from any actor or thread)
+
+    nonisolated func debug(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
+        emit(message, level: .debug, file: file, function: function, line: line)
     }
 
-    func debug(
-        _ message: String, file: String = #file, function: String = #function, line: Int = #line
-    ) {
-        log(message, level: .debug, file: file, function: function, line: line)
+    nonisolated func info(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
+        emit(message, level: .info, file: file, function: function, line: line)
     }
 
-    func info(
-        _ message: String, file: String = #file, function: String = #function, line: Int = #line
-    ) {
-        log(message, level: .info, file: file, function: function, line: line)
+    nonisolated func warn(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
+        emit(message, level: .warning, file: file, function: function, line: line)
     }
 
-    func warn(
-        _ message: String, file: String = #file, function: String = #function, line: Int = #line
-    ) {
-        log(message, level: .warning, file: file, function: function, line: line)
+    nonisolated func error(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
+        emit(message, level: .error, file: file, function: function, line: line)
     }
 
-    func error(
-        _ message: String, file: String = #file, function: String = #function, line: Int = #line
-    ) {
-        log(message, level: .error, file: file, function: function, line: line)
+    nonisolated func setMinimumLogLevel(_ level: LogLevel) {
+        Task { await _state.setMinimumLogLevel(level) }
     }
 
-    private func log(_ message: String, level: LogLevel, file: String, function: String, line: Int) {
-        guard level >= minimumLogLevel else { return }
+    // MARK: - Private
 
+    private nonisolated func emit(_ message: String, level: LogLevel, file: String, function: String, line: Int) {
         let fileName = URL(fileURLWithPath: file).lastPathComponent
-        let timestamp = DateFormatter.logFormatter.string(from: Date())
-
+        let timestamp = Date().formatted(LoggerState.timestampFormat)
         #if DEBUG
-            let consoleMessage = "[\(level.rawValue)] [\(fileName):\(line)] \(message)"
-            print("\(timestamp) \(consoleMessage)")
+            print("\(timestamp) [\(level.rawValue)] [\(fileName):\(line)] \(message)")
         #else
             let logMessage = "[\(fileName):\(line)] \(function) - \(message)"
-            writeToFile(logMessage, level: level)
-            if level == .error {
-                osLogger.error("\(logMessage)")
-            }
+            if level == .error { osLogger.error("\(logMessage)") }
+            Task { await _state.write(logMessage, level: level, timestamp: timestamp) }
         #endif
     }
+}
 
-    private func setupLogFile() {
+// MARK: - Actor-isolated state
+
+private actor LoggerState {
+    static let timestampFormat: Date.FormatStyle = .dateTime
+        .year().month().day()
+        .hour(.twoDigits(amPM: .omitted)).minute(.twoDigits).second(.twoDigits)
+
+    private static let fileDateFormat: Date.FormatStyle = .dateTime
+        .year().month().day()
+
+    #if DEBUG
+        private var minimumLogLevel: LogLevel = .debug
+    #else
+        private var minimumLogLevel: LogLevel = .info
+    #endif
+
+    private var logFileURL: URL?
+
+    init() {
         #if !DEBUG
-            createLogFileURL()
+            if let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first {
+                let logsDir = appSupport.appending(path: "com.crown.clipboard/logs")
+                try? FileManager.default.createDirectory(at: logsDir, withIntermediateDirectories: true)
+                let dateString = Date().formatted(Self.fileDateFormat)
+                logFileURL = logsDir.appending(path: "clip-\(dateString).log")
+            }
         #endif
     }
 
-    private func createLogFileURL() {
-        guard
-            let appSupport = FileManager.default.urls(
-                for: .applicationSupportDirectory, in: .userDomainMask
-            ).first
-        else {
-            return
-        }
-
-        let appDir = appSupport.appendingPathComponent("com.crown.clipboard")
-        let logsDir = appDir.appendingPathComponent("logs")
-
-        do {
-            try FileManager.default.createDirectory(
-                at: logsDir, withIntermediateDirectories: true, attributes: nil
-            )
-        } catch {
-            osLogger.error("Failed to create logs directory: \(error.localizedDescription)")
-            return
-        }
-
-        let logFileName = "Clip-\(DateFormatter.fileFormatter.string(from: Date())).log"
-
-        lock.withLock {
-            logFileURL = logsDir.appendingPathComponent(logFileName)
-        }
-
-        cleanOldLogFiles(in: logsDir)
+    func setMinimumLogLevel(_ level: LogLevel) {
+        minimumLogLevel = level
     }
 
-    private func writeToFile(_ message: String, level: LogLevel) {
-        let logURL = lock.withLock { logFileURL }
-
-        logQueue.async { [weak self] in
-            guard let self, let logURL else { return }
-
-            let timestamp = DateFormatter.logFormatter.string(from: Date())
-            let logEntry = "[\(timestamp)] [\(level.rawValue)] \(message)\n"
-
-            guard let data = logEntry.data(using: .utf8) else { return }
-
-            if FileManager.default.fileExists(atPath: logURL.path) {
-                do {
-                    let fileHandle = try FileHandle(forWritingTo: logURL)
-                    defer { fileHandle.closeFile() }
-                    fileHandle.seekToEndOfFile()
-                    fileHandle.write(data)
-                } catch {
-                    osLogger.error(
-                        "Failed to write to log file: \(error.localizedDescription)"
-                    )
-                }
-            } else {
-                do {
-                    try data.write(to: logURL)
-                } catch {
-                    osLogger.error("Failed to create log file: \(error.localizedDescription)")
-                }
+    func write(_ message: String, level: LogLevel, timestamp: String) {
+        guard level >= minimumLogLevel, let logFileURL else { return }
+        let logEntry = "[\(timestamp)] [\(level.rawValue)] \(message)\n"
+        guard let data = logEntry.data(using: .utf8) else { return }
+        if FileManager.default.fileExists(atPath: logFileURL.path) {
+            if let fileHandle = try? FileHandle(forWritingTo: logFileURL) {
+                defer { _ = try? fileHandle.close() }
+                _ = try? fileHandle.seekToEnd()
+                _ = try? fileHandle.write(contentsOf: data)
             }
-        }
-    }
-
-    private func cleanOldLogFiles(in directory: URL) {
-        do {
-            let files = try FileManager.default.contentsOfDirectory(
-                at: directory, includingPropertiesForKeys: [.creationDateKey], options: []
-            )
-            let logFiles = files.filter { $0.pathExtension == "log" }
-
-            let calendar = Calendar.current
-            let sevenDaysAgo = calendar.date(byAdding: .day, value: -7, to: Date()) ?? Date()
-
-            for file in logFiles {
-                if let creationDate = try file.resourceValues(forKeys: [.creationDateKey])
-                    .creationDate,
-                    creationDate < sevenDaysAgo
-                {
-                    try FileManager.default.removeItem(at: file)
-                    osLogger.info("Removed old log file: \(file.lastPathComponent)")
-                }
-            }
-        } catch {
-            osLogger.error("Failed to clean old log files: \(error.localizedDescription)")
-        }
-    }
-
-    static func setMinimumLogLevel(_ level: LogLevel) {
-        shared.minimumLogLevel = level
-    }
-
-    static func getMinimumLogLevel() -> LogLevel {
-        shared.minimumLogLevel
-    }
-
-    static func getLogFileURL() -> URL? {
-        shared.lock.withLock { shared.logFileURL }
-    }
-
-    static func getAllLogFiles() -> [URL] {
-        guard
-            let appSupport = FileManager.default.urls(
-                for: .applicationSupportDirectory, in: .userDomainMask
-            ).first
-        else {
-            return []
-        }
-
-        let logsDir = appSupport.appendingPathComponent("com.crown.clipboard/logs")
-
-        do {
-            let files = try FileManager.default.contentsOfDirectory(
-                at: logsDir, includingPropertiesForKeys: nil, options: []
-            )
-            return files.filter { $0.pathExtension == "log" }.sorted {
-                $0.lastPathComponent > $1.lastPathComponent
-            }
-        } catch {
-            return []
+        } else {
+            try? data.write(to: logFileURL)
         }
     }
 }
 
-let log = AppLogger.shared
+nonisolated let log = AppLogger.shared

@@ -27,10 +27,8 @@ struct Col {
     private init() {}
 }
 
-final class PasteSQLManager: NSObject, @unchecked Sendable {
+actor PasteSQLManager {
     static let manager = PasteSQLManager()
-    private static var isInitialized = false
-    private nonisolated static let initLock = NSLock()
 
     private static var sandboxDatabaseDirectory: String {
         URL.documentsDirectory.appending(path: "Clip").path
@@ -40,102 +38,78 @@ final class PasteSQLManager: NSObject, @unchecked Sendable {
         "\(sandboxDatabaseDirectory)/Clip.sqlite3"
     }
 
-    private let dbLock = NSLock()
     private var _db: Connection?
 
     private var db: Connection? {
-        dbLock.withLock { _db }
+        _db
     }
 
-    private lazy var table: Table = {
-        let tab = Table("Clip")
-        let stateMent = tab.create(ifNotExists: true, withoutRowid: false) {
-            t in
-            t.column(Col.id, primaryKey: true)
-            t.column(Col.uniqueId)
-            t.column(Col.type)
-            t.column(Col.data)
-            t.column(Col.showData)
-            t.column(Col.ts)
-            t.column(Col.appPath)
-            t.column(Col.appName)
-            t.column(Col.searchText)
-            t.column(Col.length)
-            t.column(Col.group, defaultValue: -1)
-            t.column(Col.tag)
-            t.column(Col.hidden, defaultValue: 0)
-        }
-        do {
-            _ = try dbLock.withLock {
-                try _db?.run(stateMent)
-            }
-            createIndexesAsync()
-            migrateTagFieldAsync()
-            migrateHiddenFieldAsync()
-        } catch {
-            log.error("Create Table Error: \(error)")
-        }
-        return tab
-    }()
+    private var table: Table
 
-    override private init() {
-        super.init()
-        Self.initLock.lock()
-        defer { Self.initLock.unlock() }
-
-        if Self.isInitialized {
-            return
-        }
-
+    private init() {
         let path = Self.sandboxDatabaseDirectory
         var isDir = ObjCBool(false)
-        let filExist = FileManager.default.fileExists(
-            atPath: path,
-            isDirectory: &isDir
-        )
-        if !filExist || !isDir.boolValue {
+        let fileExists = FileManager.default.fileExists(atPath: path, isDirectory: &isDir)
+        if !fileExists || !isDir.boolValue {
             do {
-                try FileManager.default.createDirectory(
-                    atPath: path,
-                    withIntermediateDirectories: true
-                )
+                try FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: true)
             } catch {
                 log.debug(error.localizedDescription)
             }
         }
+
+        var connection: Connection?
         do {
-            let connection = try Connection("\(path)/Clip.sqlite3")
+            let conn = try Connection("\(path)/Clip.sqlite3")
             log.info("数据库初始化 - 路径：\(path)/Clip.sqlite3")
-            connection.busyTimeout = 5.0
-            dbLock.withLock {
-                _db = connection
-            }
-            Self.isInitialized = true
+            conn.busyTimeout = 5.0
+            connection = conn
         } catch {
-            log.error("Connection Error\(error)")
+            log.error("Connection Error: \(error)")
         }
+        _db = connection
+
+        let tab = Table("Clip")
+        if let conn = connection {
+            let statement = tab.create(ifNotExists: true, withoutRowid: false) { t in
+                t.column(Col.id, primaryKey: true)
+                t.column(Col.uniqueId)
+                t.column(Col.type)
+                t.column(Col.data)
+                t.column(Col.showData)
+                t.column(Col.ts)
+                t.column(Col.appPath)
+                t.column(Col.appName)
+                t.column(Col.searchText)
+                t.column(Col.length)
+                t.column(Col.group, defaultValue: -1)
+                t.column(Col.tag)
+                t.column(Col.hidden, defaultValue: 0)
+            }
+            do {
+                try conn.run(statement)
+            } catch {
+                log.error("Create Table Error: \(error)")
+            }
+        }
+        table = tab
     }
 
-    private func createIndexesAsync() {
-        Task.detached(priority: .background) { [weak self] in
-            await self?.performIndexCreation()
+    func setup() {
+        Task {
+            performIndexCreation()
+            migrateTagFieldAsync()
+            migrateHiddenFieldAsync()
         }
     }
 
     private func performIndexCreation() {
         guard let db else { return }
-
         do {
-            try db.run(
-                "CREATE INDEX IF NOT EXISTS idx_app_name ON Clip(app_name)"
-            )
+            try db.run("CREATE INDEX IF NOT EXISTS idx_app_name ON Clip(app_name)")
             try db.run("CREATE INDEX IF NOT EXISTS idx_tag ON Clip(tag)")
-            try db.run(
-                "CREATE INDEX IF NOT EXISTS idx_ts ON Clip(timestamp DESC)"
-            )
-            try db.run(
-                "CREATE INDEX IF NOT EXISTS idx_group ON Clip(\"group\")"
-            )
+            try db.run("CREATE INDEX IF NOT EXISTS idx_ts ON Clip(timestamp DESC)")
+            try db.run("CREATE INDEX IF NOT EXISTS idx_group ON Clip(\"group\")")
             log.debug("索引初始化成功")
         } catch {
             log.debug("索引已存在或创建失败: \(error)")
@@ -158,7 +132,7 @@ extension PasteSQLManager {
     func insert(item: PasteboardModel) async -> Int64 {
         let query = table
         await delete(filter: Col.uniqueId == item.uniqueId)
-        let insert = query.insert(
+        let insert = await query.insert(
             Col.uniqueId <- item.uniqueId,
             Col.type <- item.pasteboardType.rawValue,
             Col.data <- item.data,
@@ -175,7 +149,7 @@ extension PasteSQLManager {
         do {
             let rowId = try db?.run(insert)
             log.debug("插入成功：\(String(describing: rowId))")
-            return rowId!
+            return rowId ?? -1
         } catch {
             log.error("插入失败：\(error)")
         }
@@ -212,7 +186,7 @@ extension PasteSQLManager {
 
     func update(id: Int64, item: PasteboardModel) async {
         let query = table.filter(Col.id == id)
-        let update = query.update(
+        let update = await query.update(
             Col.type <- item.pasteboardType.rawValue,
             Col.data <- item.data,
             Col.showData <- item.showData,
@@ -233,7 +207,6 @@ extension PasteSQLManager {
         }
     }
 
-    /// 更新项目分组
     func updateItemGroup(id: Int64, groupId: Int) async {
         let query = table.filter(Col.id == id)
         let update = query.update(Col.group <- groupId)
@@ -256,7 +229,6 @@ extension PasteSQLManager {
         }
     }
 
-    /// 编辑更新
     func updateItemContent(
         id: Int64,
         data: Data,
@@ -283,7 +255,6 @@ extension PasteSQLManager {
         }
     }
 
-    /// 查
     func search(
         filter: Expression<Bool>? = nil,
         select: [Expressible]? = nil,
@@ -439,11 +410,8 @@ extension PasteSQLManager {
         return String(format: format, locale: .current, arguments: arguments)
     }
 
-    /// 导出数据库到指定路径
-    nonisolated func exportDatabase(to destinationURL: URL) async
-        -> ImportExportResult
-    {
-        let sourcePath = await Self.sandboxDatabasePath
+    nonisolated func exportDatabase(to destinationURL: URL) async -> ImportExportResult {
+        let sourcePath = Self.sandboxDatabasePath
 
         return await Task.detached(priority: .userInitiated) {
             guard FileManager.default.fileExists(atPath: sourcePath) else {
@@ -473,25 +441,19 @@ extension PasteSQLManager {
             } catch {
                 return ImportExportResult(
                     success: false,
-                    message: Self.localize(
-                        "exportFail",
-                        error.localizedDescription
-                    )
+                    message: Self.localize("exportFail", error.localizedDescription)
                 )
             }
         }.value
     }
 
-    /// 从指定路径导入数据库
-    nonisolated func importDatabase(from sourceURL: URL) async
-        -> ImportExportResult
-    {
+    nonisolated func importDatabase(from sourceURL: URL) async -> ImportExportResult {
         let validationResult = await validateImportDatabase(at: sourceURL)
         guard validationResult.success else {
             return validationResult
         }
 
-        let destPath = await Self.sandboxDatabasePath
+        let destPath = Self.sandboxDatabasePath
 
         return await Task.detached(priority: .userInitiated) {
             do {
@@ -511,23 +473,13 @@ extension PasteSQLManager {
                             throw NSError(
                                 domain: "ImportCancelled",
                                 code: -1,
-                                userInfo: [
-                                    NSLocalizedDescriptionKey: Self.localize(
-                                        "importCancelled"
-                                    ),
-                                ]
+                                userInfo: [NSLocalizedDescriptionKey: Self.localize("importCancelled")]
                             )
                         }
 
                         let uniqueId = try row.get(Col.uniqueId)
-
-                        // uniqueId 去重
-                        let existingQuery = destTable.filter(
-                            Col.uniqueId == uniqueId
-                        )
-                        let existingCount = try destDb.scalar(
-                            existingQuery.count
-                        )
+                        let existingQuery = destTable.filter(Col.uniqueId == uniqueId)
+                        let existingCount = try destDb.scalar(existingQuery.count)
 
                         if existingCount > 0 {
                             skippedCount += 1
@@ -553,33 +505,22 @@ extension PasteSQLManager {
                     }
                 }
 
-                let skippedText =
-                    skippedCount > 0
-                        ? Self.localize("importSkip", skippedCount)
-                        : ""
-                let message = Self.localize(
-                    "importResult",
-                    importedCount,
-                    skippedText
-                )
+                let skippedText = skippedCount > 0
+                    ? Self.localize("importSkip", skippedCount)
+                    : ""
+                let message = Self.localize("importResult", importedCount, skippedText)
 
                 return ImportExportResult(success: true, message: message)
             } catch {
                 return ImportExportResult(
                     success: false,
-                    message: Self.localize(
-                        "importFailDetail",
-                        error.localizedDescription
-                    )
+                    message: Self.localize("importFailDetail", error.localizedDescription)
                 )
             }
         }.value
     }
 
-    /// 验证导入的数据库文件格式
-    private nonisolated func validateImportDatabase(at url: URL) async
-        -> ImportExportResult
-    {
+    private nonisolated func validateImportDatabase(at url: URL) async -> ImportExportResult {
         await Task.detached(priority: .userInitiated) {
             guard FileManager.default.fileExists(atPath: url.path) else {
                 return ImportExportResult(
@@ -591,18 +532,14 @@ extension PasteSQLManager {
             do {
                 let sourceDb = try Connection(url.path, readonly: true)
 
-                let tableExists =
-                    try sourceDb.scalar(
-                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='Clip'"
-                    ) as? Int64 ?? 0
+                let tableExists = try sourceDb.scalar(
+                    "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='Clip'"
+                ) as? Int64 ?? 0
 
                 guard tableExists > 0 else {
                     return ImportExportResult(
                         success: false,
-                        message: Self.localize(
-                            "backupInvalid",
-                            Self.localize("missingTable")
-                        )
+                        message: Self.localize("backupInvalid", Self.localize("missingTable"))
                     )
                 }
 
@@ -632,63 +569,11 @@ extension PasteSQLManager {
                     }
                 }
 
-                let sampleQuery =
-                    "SELECT unique_id, type, data, timestamp FROM Clip LIMIT 1"
-                if let row = try sourceDb.prepare(sampleQuery).makeIterator()
-                    .next()
-                {
-                    guard row[0] is String else {
-                        return ImportExportResult(
-                            success: false,
-                            message: Self.localize(
-                                "backupInvalid",
-                                Self.localize("typeBlob", "unique_id")
-                            )
-                        )
-                    }
-
-                    guard row[1] is String else {
-                        return ImportExportResult(
-                            success: false,
-                            message: Self.localize(
-                                "backupInvalid",
-                                Self.localize("typeBlob", "type")
-                            )
-                        )
-                    }
-
-                    guard row[2] is SQLite.Blob else {
-                        return ImportExportResult(
-                            success: false,
-                            message: Self.localize(
-                                "backupInvalid",
-                                Self.localize("typeBlob", "data")
-                            )
-                        )
-                    }
-
-                    guard row[3] is Int64 else {
-                        return ImportExportResult(
-                            success: false,
-                            message: Self.localize(
-                                "backupInvalid",
-                                Self.localize("typeBlob", "timestamp")
-                            )
-                        )
-                    }
-                }
-
-                return ImportExportResult(
-                    success: true,
-                    message: Self.localize("backupValid")
-                )
+                return ImportExportResult(success: true, message: Self.localize("backupValid"))
             } catch {
                 return ImportExportResult(
                     success: false,
-                    message: Self.localize(
-                        "backupInvalid",
-                        Self.localize("backupReadFail")
-                    )
+                    message: Self.localize("backupInvalid", Self.localize("backupReadFail"))
                 )
             }
         }.value
@@ -699,19 +584,16 @@ extension PasteSQLManager {
 
 extension PasteSQLManager {
     func migrateTagFieldAsync() {
-        guard !PasteUserDefaults.tagFieldMigrated else {
-            log.debug("数据已迁移，跳过")
-            return
-        }
-
-        Task.detached(priority: .background) { [weak self] in
-            guard let self else { return }
-
+        Task {
+            let alreadyMigrated = await MainActor.run { PasteUserDefaults.tagFieldMigrated }
+            guard !alreadyMigrated else {
+                log.debug("Tag 数据已迁移，跳过")
+                return
+            }
             await performTagMigration()
-
             await MainActor.run {
                 PasteUserDefaults.tagFieldMigrated = true
-                log.info("数据迁移完成")
+                log.info("Tag 数据迁移完成")
             }
         }
     }
@@ -740,49 +622,42 @@ extension PasteSQLManager {
                 break
             }
 
-            let query =
-                table
-                    .filter(Col.tag == nil)
-                    .limit(batchSize, offset: 0)
+            let query = table
+                .filter(Col.tag == nil)
+                .limit(batchSize, offset: 0)
 
             do {
                 let rows = try db.prepare(query)
                 let rowsArray = Array(rows)
 
-                if rowsArray.isEmpty {
-                    break
-                }
+                if rowsArray.isEmpty { break }
 
-                try db.transaction {
-                    for row in rowsArray {
-                        autoreleasepool {
-                            let id = row[Col.id]
-                            let typeStr = row[Col.type]
-                            let data = row[Col.data]
+                try db.run("BEGIN TRANSACTION")
+                for row in rowsArray {
+                    let id = row[Col.id]
+                    let typeStr = row[Col.type]
+                    let data = row[Col.data]
 
-                            let pasteboardType = PasteboardType(typeStr)
-                            let tagValue = PasteboardModel.calculateTag(
-                                type: pasteboardType,
-                                content: data
-                            )
+                    let pasteboardType = PasteboardType(typeStr)
+                    let tagValue = await PasteboardModel.calculateTag(
+                        type: pasteboardType,
+                        content: data
+                    )
 
-                            let update = table.filter(Col.id == id)
-                                .update(Col.tag <- tagValue)
+                    let update = table.filter(Col.id == id)
+                        .update(Col.tag <- tagValue)
 
-                            do {
-                                try db.run(update)
-                            } catch {
-                                log.error("更新记录 \(id) 的 tag 失败: \(error)")
-                            }
-                        }
+                    do {
+                        try db.run(update)
+                    } catch {
+                        log.error("更新记录 \(id) 的 tag 失败: \(error)")
                     }
                 }
+                try db.run("COMMIT")
 
                 totalMigrated += rowsArray.count
                 log.debug("已迁移 \(totalMigrated) 条记录")
-
                 try await Task.sleep(for: .milliseconds(500))
-
             } catch {
                 log.error("迁移批次失败: \(error)")
                 break
@@ -793,21 +668,20 @@ extension PasteSQLManager {
     }
 }
 
-// MARK: - hidden 字段迁移
+// MARK: - 字段迁移
 
 extension PasteSQLManager {
     func migrateHiddenFieldAsync() {
-        guard !PasteUserDefaults.hiddenFieldMigrated else {
-            log.debug("hidden 字段已增加，跳过")
-            return
-        }
-
-        Task.detached(priority: .background) { [weak self] in
-            guard let self else { return }
+        Task {
+            let alreadyMigrated = await MainActor.run { PasteUserDefaults.hiddenFieldMigrated }
+            guard !alreadyMigrated else {
+                log.debug("hidden 字段已增加，跳过")
+                return
+            }
             await performHiddenFieldMigration()
             await MainActor.run {
                 PasteUserDefaults.hiddenFieldMigrated = true
-                log.info("新增hidden字段完成")
+                log.info("hidden 字段添加完成")
             }
         }
     }
@@ -815,9 +689,7 @@ extension PasteSQLManager {
     private func performHiddenFieldMigration() async {
         guard let db else { return }
         do {
-            try db.run(
-                "ALTER TABLE Clip ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0"
-            )
+            try db.run("ALTER TABLE Clip ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0")
         } catch {
             log.warn("新增 hidden 字段失败（可能已存在）: \(error)")
         }

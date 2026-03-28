@@ -51,10 +51,8 @@ final class PasteDataStore {
         Task {
             await resetDefaultList()
             let count = await sqlManager.getTotalCount()
-            await MainActor.run {
-                totalCount = count
-                filteredCount = count
-            }
+            totalCount = count
+            filteredCount = count
         }
         setupChipObserver()
     }
@@ -188,20 +186,18 @@ extension PasteDataStore {
 
             guard !Task.isCancelled else { return }
 
-            await MainActor.run {
-                guard !newItems.isEmpty else {
-                    hasMoreData = false
-                    isLoadingPage = false
-                    return
-                }
-
-                var list = dataList
-                list += newItems
-
-                updateData(with: list, changeType: .loadMore)
-                hasMoreData = (newItems.count == pageSize)
+            guard !newItems.isEmpty else {
+                hasMoreData = false
                 isLoadingPage = false
+                return
             }
+
+            var list = dataList
+            list += newItems
+
+            updateData(with: list, changeType: .loadMore)
+            hasMoreData = (newItems.count == pageSize)
+            isLoadingPage = false
         }
     }
 
@@ -435,25 +431,23 @@ extension PasteDataStore {
             tag: newTag
         )
 
-        await MainActor.run {
-            if let index = dataList.firstIndex(where: { $0.id == id }) {
-                let oldModel = dataList[index]
-                let newModel = PasteboardModel(
-                    pasteboardType: oldModel.pasteboardType,
-                    data: newData,
-                    showData: newShowData,
-                    timestamp: Int64(Date().timeIntervalSince1970),
-                    appPath: oldModel.appPath,
-                    appName: oldModel.appName,
-                    searchText: newSearchText,
-                    length: newLength,
-                    group: oldModel.group,
-                    tag: newTag
-                )
-                newModel.id = id
-                dataList.remove(at: index)
-                dataList.insert(newModel, at: 0)
-            }
+        if let index = dataList.firstIndex(where: { $0.id == id }) {
+            let oldModel = dataList[index]
+            let newModel = PasteboardModel(
+                pasteboardType: oldModel.pasteboardType,
+                data: newData,
+                showData: newShowData,
+                timestamp: Int64(Date().timeIntervalSince1970),
+                appPath: oldModel.appPath,
+                appName: oldModel.appName,
+                searchText: newSearchText,
+                length: newLength,
+                group: oldModel.group,
+                tag: newTag
+            )
+            newModel.id = id
+            dataList.remove(at: index)
+            dataList.insert(newModel, at: 0)
         }
     }
 

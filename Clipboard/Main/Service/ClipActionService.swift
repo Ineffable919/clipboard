@@ -116,7 +116,7 @@ final class ClipActionService {
         case .alertFirstButtonReturn:
             if let url = URL(
                 string:
-                    "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
+                "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
             ) {
                 NSWorkspace.shared.open(url)
             }
