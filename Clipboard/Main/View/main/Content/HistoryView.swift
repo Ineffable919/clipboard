@@ -5,13 +5,9 @@
 //  Created by crown on 2025/9/13.
 //
 
-import AppKit
-import Carbon
 import SwiftUI
 
 struct HistoryView: View {
-    // MARK: - Properties
-
     @Environment(AppEnvironment.self) private var env
     @State private var historyVM = HistoryViewModel()
     @FocusState private var isFocused: Bool
@@ -19,78 +15,94 @@ struct HistoryView: View {
     private var enableLinkPreview: Bool = PasteUserDefaults.enableLinkPreview
     private let pd = PasteDataStore.main
 
-    @State private var flagsMonitorToken: Any?
-
     var body: some View {
         VStack {
             if pd.dataList.isEmpty {
                 ClipboardEmptyStateView(style: .main)
             } else {
-                ScrollView(.horizontal) {
-                    contentView()
-                }
-                .horizontalMouseWheelScroll()
-                .scrollIndicators(.never)
-                .scrollPosition($historyVM.scrollPosition)
-                .contentMargins(
-                    .leading,
-                    Const.cardLeadingSpace,
-                    for: .scrollContent
-                )
-                .contentMargins(
-                    .trailing,
-                    Const.cardSpace,
-                    for: .scrollContent
-                )
-                .focusable()
-                .focused($isFocused)
-                .focusEffectDisabled()
-                .onChange(of: env.focusView) {
-                    isFocused = (env.focusView == .history)
-                }
-                .onChange(of: historyVM.activeId) { _, newId in
-                    if let id = newId {
-                        historyVM.scrollPosition.scrollTo(id: id, anchor: historyVM.scrollAnchor())
-                    }
-                }
+                scrollContent
             }
-            EmptyView()
-                .onChange(of: pd.dataList) {
-                    historyVM.reset()
-                }
-                .onChange(of: env.quickPasteResetTrigger) {
-                    historyVM.isQuickPastePressed = false
-                }
+        }
+        .onChange(of: pd.dataList) {
+            historyVM.reset()
+        }
+        .onChange(of: env.quickPasteResetTrigger) {
+            historyVM.isQuickPastePressed = false
         }
         .onAppear {
-            appear()
+            historyVM.onAppear(env: env)
         }
         .onDisappear {
-            disappear()
+            historyVM.onDisappear()
         }
     }
 
-    private func contentView() -> some View {
-        LazyHStack(alignment: .top, spacing: Const.cardSpace) {
-            EnumeratedForEach(pd.dataList) { index, item in
-                cardViewItem(for: item, at: index)
+    private var scrollContent: some View {
+        ScrollView(.horizontal) {
+            LazyHStack(alignment: .top, spacing: Const.cardSpace) {
+                EnumeratedForEach(pd.dataList) { index, item in
+                    HistoryCardItemView(
+                        item: item,
+                        index: index,
+                        historyVM: historyVM,
+                        enableLinkPreview: enableLinkPreview
+                    )
+                }
+            }
+            .padding(.vertical, Const.space4)
+        }
+        .horizontalMouseWheelScroll()
+        .scrollIndicators(.never)
+        .scrollPosition($historyVM.scrollPosition)
+        .contentMargins(
+            .leading,
+            Const.cardLeadingSpace,
+            for: .scrollContent
+        )
+        .contentMargins(
+            .trailing,
+            Const.cardSpace,
+            for: .scrollContent
+        )
+        .focusable()
+        .focused($isFocused)
+        .focusEffectDisabled()
+        .onChange(of: env.focusView) {
+            isFocused = (env.focusView == .history)
+        }
+        .onChange(of: historyVM.activeId) { _, newId in
+            if let id = newId {
+                historyVM.scrollPosition.scrollTo(
+                    id: id,
+                    anchor: historyVM.scrollAnchor()
+                )
             }
         }
-        .padding(.vertical, Const.space4)
     }
+}
 
-    private func cardViewItem(for item: PasteboardModel, at index: Int)
-        -> some View
-    {
+// MARK: - Card Item View
+
+private struct HistoryCardItemView: View {
+    let item: PasteboardModel
+    let index: Int
+    let historyVM: HistoryViewModel
+    let enableLinkPreview: Bool
+
+    @Environment(AppEnvironment.self) private var env
+
+    var body: some View {
         ClipCardView(
             model: item,
             isSelected: historyVM.isItemSelected(item.id),
-            showPreviewId: $historyVM.showPreviewId,
+            showPreviewId: Bindable(historyVM).showPreviewId,
             quickPasteIndex: historyVM.quickPasteIndex(for: index),
             enableLinkPreview: enableLinkPreview,
             searchKeyword: historyVM.searchKeyword,
-            onRequestDelete: { requestDel(index: index) },
-            onPaste: { historyVM.pasteSelectedItems(checkPermissions: true) },
+            onRequestDelete: { historyVM.requestDelete(at: index) },
+            onPaste: {
+                historyVM.pasteSelectedItems(checkPermissions: true)
+            },
             onPastePlainText: {
                 historyVM.pasteSelectedItems(
                     isAttribute: false,
@@ -107,7 +119,7 @@ struct HistoryView: View {
             )
         )
         .onTapGesture {
-            handleOptimisticTap(on: item, index: index)
+            historyVM.handleOptimisticTap(on: item, index: index)
         }
         .onDrag {
             env.draggingItemId = item.id
@@ -118,247 +130,6 @@ struct HistoryView: View {
         .task(id: item.id) {
             guard historyVM.shouldLoadNextPage(at: index) else { return }
             historyVM.loadNextPageIfNeeded(at: index)
-        }
-    }
-
-    private func handleOptimisticTap(on item: PasteboardModel, index: Int) {
-        let isCommandHeld = NSEvent.modifierFlags.contains(.command)
-        historyVM.handleTap(
-            on: item,
-            index: index,
-            isCommandHeld: isCommandHeld
-        ) {
-            historyVM.pasteSelectedItems(
-                checkPermissions: PasteUserDefaults.pasteDirect
-            )
-        }
-    }
-
-    private func moveSelection(offset: Int, event _: NSEvent) -> NSEvent? {
-        guard !pd.dataList.isEmpty else {
-            historyVM.showPreviewId = nil
-            historyVM.selectSingle(id: nil)
-            NSSound.beep()
-            return nil
-        }
-
-        let currentIndex = historyVM.activeIndex ?? 0
-        let newIndex = max(0, min(currentIndex + offset, pd.dataList.count - 1))
-
-        guard newIndex != currentIndex else {
-            NSSound.beep()
-            return nil
-        }
-
-        historyVM.selectSingle(id: pd.dataList[newIndex].id)
-        if historyVM.showPreviewId != nil {
-            historyVM.showPreviewId = nil
-        }
-
-        if offset > 0, historyVM.shouldLoadNextPage(at: newIndex) {
-            Task(priority: .userInitiated) { [weak historyVM] in
-                historyVM?.loadNextPageIfNeeded(at: newIndex)
-            }
-        }
-        return nil
-    }
-
-    private func appear() {
-        historyVM.configure(env: env)
-        EventDispatcher.shared.registerHandler(
-            matching: .keyDown,
-            key: "history",
-            handler: keyDownEvent(_:)
-        )
-
-        flagsMonitorToken = NSEvent.addLocalMonitorForEvents(
-            matching: .flagsChanged
-        ) { event in
-            flagsChangedEvent(event)
-        }
-
-        if historyVM.activeId == nil {
-            historyVM.selectSingle(id: pd.dataList.first?.id)
-        }
-    }
-
-    private func disappear() {
-        if let token = flagsMonitorToken {
-            NSEvent.removeMonitor(token)
-            flagsMonitorToken = nil
-        }
-        historyVM.cleanup()
-    }
-
-    private func flagsChangedEvent(_ event: NSEvent) -> NSEvent? {
-        guard event.window == ClipMainWindowController.shared.window,
-              ClipMainWindowController.shared.isVisible
-        else {
-            return event
-        }
-
-        historyVM.isQuickPastePressed = KeyCode.isQuickPasteModifierPressed()
-        return event
-    }
-
-    private func keyDownEvent(_ event: NSEvent) -> NSEvent? {
-        guard event.window == ClipMainWindowController.shared.window
-        else {
-            return event
-        }
-
-        guard env.focusView == .history else {
-            return event
-        }
-
-        if event.keyCode == KeyCode.escape {
-            if case .some(_?) = historyVM.showPreviewId {
-                historyVM.showPreviewId = nil
-                return nil
-            }
-            if ClipMainWindowController.shared.isVisible {
-                ClipMainWindowController.shared.toggleWindow()
-                return nil
-            }
-            return event
-        }
-
-        if let index = HistoryViewModel.handleQuickPasteShortcut(event) {
-            performQuickPaste(at: index)
-            return nil
-        }
-
-        if event.modifierFlags.contains(.command) {
-            return handleCommandKeyEvent(event)
-        }
-
-        let hasModifiers = !event.modifierFlags
-            .intersection([.command, .option, .control, .shift])
-            .isEmpty
-
-        switch event.keyCode {
-        case UInt16(kVK_LeftArrow):
-            if hasModifiers {
-                return event
-            }
-            return moveSelection(offset: -1, event: event)
-
-        case UInt16(kVK_RightArrow):
-            if hasModifiers {
-                return event
-            }
-            return moveSelection(offset: 1, event: event)
-
-        case UInt16(kVK_Space):
-            return handleSpace(event)
-
-        case UInt16(kVK_Return):
-            return handleReturnKey(event)
-
-        case UInt16(kVK_Delete), UInt16(kVK_ForwardDelete):
-            return deleteKeyDown(event)
-
-        default:
-            return event
-        }
-    }
-
-    private func performQuickPaste(at index: Int) {
-        guard index >= 0, index < pd.dataList.count else {
-            NSSound.beep()
-            return
-        }
-
-        let item = pd.dataList[index]
-        historyVM.selectSingle(id: item.id)
-        ClipActionService.shared.paste(
-            item,
-            isAttribute: true,
-            checkPermissions: PasteUserDefaults.pasteDirect
-        )
-    }
-
-    private func hasPlainTextModifier(_ event: NSEvent) -> Bool {
-        KeyCode.hasModifier(
-            event,
-            modifierIndex: PasteUserDefaults.plainTextModifier
-        )
-    }
-
-    private func handleCommandKeyEvent(_ event: NSEvent) -> NSEvent? {
-        let hasModifiers = !event.modifierFlags.intersection([
-            .option, .control, .shift,
-        ]).isEmpty
-        guard !hasModifiers else {
-            return event
-        }
-
-        switch event.keyCode {
-        case UInt16(kVK_ANSI_C):
-            historyVM.copySelectedItems()
-            return nil
-
-        case UInt16(kVK_ANSI_E):
-            return handleEdit()
-
-        case UInt16(kVK_ANSI_A):
-            historyVM.selectFirstNine()
-            return nil
-
-        default:
-            return event
-        }
-    }
-
-    private func handleEdit() -> NSEvent? {
-        guard let index = historyVM.activeIndex else {
-            NSSound.beep()
-            return nil
-        }
-        EditWindowController.shared.openWindow(with: pd.dataList[index])
-        return nil
-    }
-
-    private func handleSpace(_: NSEvent) -> NSEvent? {
-        if let id = historyVM.activeId {
-            if historyVM.showPreviewId == id {
-                historyVM.showPreviewId = nil
-            } else {
-                historyVM.showPreviewId = id
-            }
-        }
-        return nil
-    }
-
-    private func handleReturnKey(_ event: NSEvent) -> NSEvent? {
-        guard !historyVM.selectedIds.isEmpty else { return event }
-        historyVM.pasteSelectedItems(
-            isAttribute: !hasPlainTextModifier(event),
-            checkPermissions: true
-        )
-        return nil
-    }
-
-    private func deleteKeyDown(_: NSEvent) -> NSEvent? {
-        guard historyVM.activeIndex != nil else {
-            NSSound.beep()
-            return nil
-        }
-        requestDel()
-        return nil
-    }
-
-    private func requestDel(index: Int? = nil) {
-        let targetIndex = index ?? historyVM.activeIndex
-        guard let targetIndex else { return }
-
-        guard PasteUserDefaults.delConfirm else {
-            historyVM.deleteItem(at: targetIndex)
-            return
-        }
-        env.isShowDel = true
-        historyVM.showDeleteConfirmAlert { [self] in
-            historyVM.deleteItem(at: targetIndex)
         }
     }
 }

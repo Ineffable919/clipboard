@@ -17,7 +17,7 @@ class Const {
     static let cardLeadingSpace: CGFloat = 20.0
     static let bottomSize: CGFloat = 40.0
 
-    static let windowRadis: CGFloat = 24.0
+    static let windowRadis: CGFloat = 23.0
     static let radius: CGFloat =
         if #available(macOS 26.0, *) {
             16.0
@@ -27,7 +27,7 @@ class Const {
 
     static let topRadius: CGFloat =
         if #available(macOS 26.0, *) {
-            28.0
+            23.0
         } else {
             8.0
         }

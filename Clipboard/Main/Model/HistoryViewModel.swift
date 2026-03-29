@@ -18,6 +18,7 @@ import SwiftUI
     @ObservationIgnored var lastTapTime: TimeInterval = 0
     @ObservationIgnored var isDel: Bool = false
     @ObservationIgnored var lastLoadTriggerIndex: Int = -1
+    @ObservationIgnored private var flagsMonitorToken: Any?
 
     var isMultiSelectMode: Bool {
         selectedIds.count > 1
@@ -169,6 +170,20 @@ import SwiftUI
         updateTapState(id: item.id, time: now)
     }
 
+    /// 卡片点击
+    func handleOptimisticTap(on item: PasteboardModel, index: Int) {
+        let isCommandHeld = NSEvent.modifierFlags.contains(.command)
+        handleTap(
+            on: item,
+            index: index,
+            isCommandHeld: isCommandHeld
+        ) {
+            self.pasteSelectedItems(
+                checkPermissions: PasteUserDefaults.pasteDirect
+            )
+        }
+    }
+
     // MARK: - Paste / Copy
 
     /// 粘贴
@@ -295,6 +310,20 @@ import SwiftUI
             }
 
             onConfirm()
+        }
+    }
+
+    func requestDelete(at index: Int? = nil) {
+        let targetIndex = index ?? activeIndex
+        guard let targetIndex else { return }
+
+        guard PasteUserDefaults.delConfirm else {
+            deleteItem(at: targetIndex)
+            return
+        }
+        env?.isShowDel = true
+        showDeleteConfirmAlert {
+            self.deleteItem(at: targetIndex)
         }
     }
 
@@ -441,11 +470,230 @@ import SwiftUI
         return numberKeyCodes[event.keyCode]
     }
 
+    // MARK: - Lifecycle
+
+    func onAppear(env: AppEnvironment) {
+        configure(env: env)
+        registerKeyHandler()
+        startFlagsMonitor()
+
+        if activeId == nil {
+            selectSingle(id: pd.dataList.first?.id)
+        }
+    }
+
+    func onDisappear() {
+        stopFlagsMonitor()
+        cleanup()
+    }
+
     func cleanup() {
         isDel = false
         isQuickPastePressed = false
         showPreviewId = nil
         selectedIds.removeAll()
         activeId = nil
+    }
+
+    // MARK: - Event Monitor Management
+
+    private func registerKeyHandler() {
+        EventDispatcher.shared.registerHandler(
+            matching: .keyDown,
+            key: "history",
+            handler: handleKeyDown(_:)
+        )
+    }
+
+    private func startFlagsMonitor() {
+        flagsMonitorToken = NSEvent.addLocalMonitorForEvents(
+            matching: .flagsChanged
+        ) { [weak self] event in
+            self?.handleFlagsChanged(event) ?? event
+        }
+    }
+
+    private func stopFlagsMonitor() {
+        if let token = flagsMonitorToken {
+            NSEvent.removeMonitor(token)
+            flagsMonitorToken = nil
+        }
+    }
+
+    // MARK: - Keyboard Event Handling
+
+    private func handleFlagsChanged(_ event: NSEvent) -> NSEvent? {
+        guard event.window == ClipMainWindowController.shared.window,
+              ClipMainWindowController.shared.isVisible
+        else {
+            return event
+        }
+
+        isQuickPastePressed = KeyCode.isQuickPasteModifierPressed()
+        return event
+    }
+
+    private func handleKeyDown(_ event: NSEvent) -> NSEvent? {
+        guard event.window == ClipMainWindowController.shared.window else {
+            return event
+        }
+
+        guard env?.focusView == .history else {
+            return event
+        }
+
+        if event.keyCode == KeyCode.escape {
+            return handleEscape(event)
+        }
+
+        if let index = Self.handleQuickPasteShortcut(event) {
+            performQuickPaste(at: index)
+            return nil
+        }
+
+        if event.modifierFlags.contains(.command) {
+            return handleCommandKey(event)
+        }
+
+        let hasModifiers = !event.modifierFlags
+            .intersection([.command, .option, .control, .shift])
+            .isEmpty
+
+        switch event.keyCode {
+        case KeyCode.leftArrow:
+            return hasModifiers ? event : moveSelection(offset: -1)
+
+        case KeyCode.rightArrow:
+            return hasModifiers ? event : moveSelection(offset: 1)
+
+        case KeyCode.space:
+            return handleSpace()
+
+        case KeyCode.return:
+            return handleReturn(event)
+
+        case KeyCode.delete, UInt16(kVK_ForwardDelete):
+            return handleDelete()
+
+        default:
+            return event
+        }
+    }
+
+    private func handleEscape(_ event: NSEvent) -> NSEvent? {
+        if case .some(_?) = showPreviewId {
+            showPreviewId = nil
+            return nil
+        }
+        if ClipMainWindowController.shared.isVisible {
+            ClipMainWindowController.shared.toggleWindow()
+            return nil
+        }
+        return event
+    }
+
+    private func handleCommandKey(_ event: NSEvent) -> NSEvent? {
+        let hasOtherModifiers = !event.modifierFlags
+            .intersection([.option, .control, .shift])
+            .isEmpty
+        guard !hasOtherModifiers else { return event }
+
+        switch event.keyCode {
+        case KeyCode.c:
+            copySelectedItems()
+            return nil
+
+        case KeyCode.e:
+            openEditWindow()
+            return nil
+
+        case KeyCode.a:
+            selectFirstNine()
+            return nil
+
+        default:
+            return event
+        }
+    }
+
+    private func moveSelection(offset: Int) -> NSEvent? {
+        guard !pd.dataList.isEmpty else {
+            showPreviewId = nil
+            selectSingle(id: nil)
+            NSSound.beep()
+            return nil
+        }
+
+        let currentIndex = activeIndex ?? 0
+        let newIndex = max(0, min(currentIndex + offset, pd.dataList.count - 1))
+
+        guard newIndex != currentIndex else {
+            NSSound.beep()
+            return nil
+        }
+
+        selectSingle(id: pd.dataList[newIndex].id)
+        if showPreviewId != nil {
+            showPreviewId = nil
+        }
+
+        if offset > 0, shouldLoadNextPage(at: newIndex) {
+            Task(priority: .userInitiated) { [weak self] in
+                self?.loadNextPageIfNeeded(at: newIndex)
+            }
+        }
+        return nil
+    }
+
+    private func handleSpace() -> NSEvent? {
+        if let id = activeId {
+            showPreviewId = (showPreviewId == id) ? nil : id
+        }
+        return nil
+    }
+
+    private func handleReturn(_ event: NSEvent) -> NSEvent? {
+        guard !selectedIds.isEmpty else { return event }
+        let isPlainText = KeyCode.hasModifier(
+            event,
+            modifierIndex: PasteUserDefaults.plainTextModifier
+        )
+        pasteSelectedItems(
+            isAttribute: !isPlainText,
+            checkPermissions: true
+        )
+        return nil
+    }
+
+    private func handleDelete() -> NSEvent? {
+        guard activeIndex != nil else {
+            NSSound.beep()
+            return nil
+        }
+        requestDelete()
+        return nil
+    }
+
+    private func performQuickPaste(at index: Int) {
+        guard index >= 0, index < pd.dataList.count else {
+            NSSound.beep()
+            return
+        }
+
+        let item = pd.dataList[index]
+        selectSingle(id: item.id)
+        ClipActionService.shared.paste(
+            item,
+            isAttribute: true,
+            checkPermissions: PasteUserDefaults.pasteDirect
+        )
+    }
+
+    private func openEditWindow() {
+        guard let index = activeIndex else {
+            NSSound.beep()
+            return
+        }
+        EditWindowController.shared.openWindow(with: pd.dataList[index])
     }
 }
