@@ -11,13 +11,16 @@ import SwiftUI
 // MARK: - 通用设置视图
 
 struct GeneralSettingView: View {
-    @State private var launchAtLogin: Bool = LaunchAtLoginHelper.shared.isEnabled
-    @AppStorage(PrefKey.showMenuBarIcon.rawValue) private var showMenuBarIcon = true
+    @State private var launchAtLogin: Bool = LaunchAtLoginHelper.shared
+        .isEnabled
+    @AppStorage(PrefKey.showMenuBarIcon.rawValue) private var showMenuBarIcon =
+        true
     @AppStorage(PrefKey.showDockIcon.rawValue) private var showDockIcon = false
     @AppStorage(PrefKey.soundEnabled.rawValue) private var soundEnabled = true
     @State private var selectedPasteTarget: PasteTargetMode =
         PasteUserDefaults.pasteDirect ? .toApp : .toClipboard
-    @AppStorage(PrefKey.pasteOnlyText.rawValue) private var pasteAsPlainText = false
+    @AppStorage(PrefKey.pasteOnlyText.rawValue) private var pasteAsPlainText =
+        false
     @AppStorage(PrefKey.removeTailingNewline.rawValue) private var removeTailingNewline = false
     @State private var selectedHistoryTimeUnit: HistoryTimeUnit =
         .init(rawValue: PasteUserDefaults.historyTime)
@@ -29,38 +32,55 @@ struct GeneralSettingView: View {
         ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 4) {
-                    SettingToggleRow(title: String(localized: .settingGeneralLaunchAtLogin), isOn: $launchAtLogin)
-                        .onChange(of: launchAtLogin) { _, newValue in
-                            let success = LaunchAtLoginHelper.shared.setEnabled(newValue)
-                            if success {
-                                PasteUserDefaults.onStart = newValue
-                            } else {
-                                Task { @MainActor in
-                                    launchAtLogin = LaunchAtLoginHelper.shared.isEnabled
-                                }
+                    SettingToggleRow(
+                        title: String(localized: .settingGeneralLaunchAtLogin),
+                        isOn: $launchAtLogin
+                    )
+                    .onChange(of: launchAtLogin) { _, newValue in
+                        let success = LaunchAtLoginHelper.shared.setEnabled(
+                            newValue
+                        )
+                        if success {
+                            PasteUserDefaults.onStart = newValue
+                        } else {
+                            Task { @MainActor in
+                                launchAtLogin =
+                                    LaunchAtLoginHelper.shared.isEnabled
                             }
                         }
+                    }
 
                     Divider()
 
-                    SettingToggleRow(title: String(localized: .settingGeneralMenuBarIcon), isOn: $showMenuBarIcon)
-                        .onChange(of: showMenuBarIcon) { _, newValue in
-                            NotificationCenter.default.post(
-                                name: .menuBarIconVisibilityChanged,
-                                object: newValue
-                            )
-                        }
+                    SettingToggleRow(
+                        title: String(localized: .settingGeneralMenuBarIcon),
+                        isOn: $showMenuBarIcon
+                    )
+                    .onChange(of: showMenuBarIcon) { _, newValue in
+                        NotificationCenter.default.post(
+                            name: .menuBarIconVisibilityChanged,
+                            object: newValue
+                        )
+                    }
 
                     Divider()
 
-                    SettingToggleRow(title: String(localized: .settingGeneralDockIcon), isOn: $showDockIcon)
-                        .onChange(of: showDockIcon) { _, newValue in
-                            NSApp.setActivationPolicy(newValue ? .regular : .accessory)
-                        }
+                    SettingToggleRow(
+                        title: String(localized: .settingGeneralDockIcon),
+                        isOn: $showDockIcon
+                    )
+                    .onChange(of: showDockIcon) { _, newValue in
+                        NSApp.setActivationPolicy(
+                            newValue ? .regular : .accessory
+                        )
+                    }
 
                     Divider()
 
-                    SettingToggleRow(title: String(localized: .settingGeneralSound), isOn: $soundEnabled)
+                    SettingToggleRow(
+                        title: String(localized: .settingGeneralSound),
+                        isOn: $soundEnabled
+                    )
                 }
                 .padding(.horizontal, Const.space16)
                 .settingsStyle()
@@ -71,7 +91,8 @@ struct GeneralSettingView: View {
 
                 VStack(alignment: .leading, spacing: 12) {
                     VStack(spacing: 4) {
-                        ForEach(PasteTargetMode.allCases, id: \.rawValue) { mode in
+                        ForEach(PasteTargetMode.allCases, id: \.rawValue) {
+                            mode in
                             PasteTargetModeRow(
                                 mode: mode,
                                 isSelected: selectedPasteTarget == mode,
@@ -85,8 +106,18 @@ struct GeneralSettingView: View {
 
                     Divider()
 
-                    ToggleRow(isEnabled: $pasteAsPlainText, title: String(localized: .settingGeneralPasteAsPlainText))
-                    ToggleRow(isEnabled: $removeTailingNewline, title: String(localized: .settingGeneralRemoveTailingNewline))
+                    ToggleRow(
+                        isEnabled: $pasteAsPlainText,
+                        title: String(
+                            localized: .settingGeneralPasteAsPlainText
+                        )
+                    )
+                    ToggleRow(
+                        isEnabled: $removeTailingNewline,
+                        title: String(
+                            localized: .settingGeneralRemoveTailingNewline
+                        )
+                    )
                 }
                 .padding(Const.space8)
                 .settingsStyle()
@@ -100,26 +131,21 @@ struct GeneralSettingView: View {
                 }
 
                 VStack(alignment: .leading, spacing: Const.space8) {
-                    HistoryTimeSlider(selectedTimeUnit: $selectedHistoryTimeUnit)
-                        .onChange(of: selectedHistoryTimeUnit) { _, newValue in
-                            PasteUserDefaults.historyTime = newValue.rawValue
-                        }
+                    HistoryTimeSlider(
+                        selectedTimeUnit: $selectedHistoryTimeUnit
+                    )
+                    .onChange(of: selectedHistoryTimeUnit) { _, newValue in
+                        PasteUserDefaults.historyTime = newValue.rawValue
+                    }
 
                     HStack {
                         Spacer()
-                        if #available(macOS 26.0, *) {
-                            SystemButton(title: String(localized: .settingGeneralClearHistory)) {
-                                db.clearAllData()
-                            }
-                        } else {
-                            Button {
-                                db.clearAllData()
-                            } label: {
-                                Text(.settingGeneralClearHistory)
-                                    .font(.callout)
-                            }
-                            .buttonStyle(.bordered)
-                        }
+                        SystemButton(
+                            title: String(
+                                localized: .settingGeneralClearHistory
+                            ),
+                            action: db.clearAllData
+                        )
                     }
                 }
                 .padding(Const.space12)
@@ -138,10 +164,18 @@ struct GeneralSettingView: View {
         .onDisappear {
             stopLaunchAtLoginTimer()
         }
-        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didBecomeKeyNotification)) { _ in
+        .onReceive(
+            NotificationCenter.default.publisher(
+                for: NSWindow.didBecomeKeyNotification
+            )
+        ) { _ in
             startLaunchAtLoginTimer()
         }
-        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didResignKeyNotification)) { _ in
+        .onReceive(
+            NotificationCenter.default.publisher(
+                for: NSWindow.didResignKeyNotification
+            )
+        ) { _ in
             stopLaunchAtLoginTimer()
         }
     }
@@ -155,7 +189,10 @@ struct GeneralSettingView: View {
 
     private func startLaunchAtLoginTimer() {
         stopLaunchAtLoginTimer()
-        launchAtLoginTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
+        launchAtLoginTimer = Timer.scheduledTimer(
+            withTimeInterval: 2.0,
+            repeats: true
+        ) { _ in
             Task { @MainActor in
                 refreshLaunchAtLoginStatus()
             }
