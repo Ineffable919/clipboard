@@ -131,7 +131,7 @@ extension PasteSQLManager {
 
     func insert(item: PasteboardModel) async -> Int64 {
         let query = table
-        await delete(filter: Col.uniqueId == item.uniqueId)
+        await delete(filter: Col.uniqueId == item.uniqueId && Col.group == -1)
         let insert = await query.insert(
             Col.uniqueId <- item.uniqueId,
             Col.type <- item.pasteboardType.rawValue,
