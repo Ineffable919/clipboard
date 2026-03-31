@@ -45,15 +45,10 @@ struct CardContentView: View {
 struct CSSView: View {
     var model: PasteboardModel
 
-    private var displayText: String {
-        let raw = model.attributeString.string
-        return raw.hasPrefix("#") ? raw : "#\(raw)"
-    }
-
     var body: some View {
         let (_, textColor) = model.colors()
         VStack(alignment: .center) {
-            Text(displayText)
+            Text(model.colorDisplayText)
                 .font(.title2)
                 .foregroundStyle(textColor)
         }
@@ -70,13 +65,12 @@ struct StringContentView: View {
     var keyword: String
 
     var body: some View {
-        if keyword.isEmpty {
-            Text(model.attributeString.string)
-                .textCardStyle()
-        } else {
-            Text(model.highlightedPlainText(keyword: keyword))
-                .textCardStyle()
-        }
+        CardTextView(
+            attributedString: model.plainDisplayAttributedString(
+                keyword: keyword
+            )
+        )
+        .textCardStyle()
     }
 }
 
@@ -86,13 +80,12 @@ struct RichContentView: View {
 
     var body: some View {
         if model.hasBgColor {
-            if keyword.isEmpty {
-                Text(model.attributed())
-                    .textCardStyle()
-            } else {
-                Text(model.highlightedRichText(keyword: keyword))
-                    .textCardStyle()
-            }
+            CardTextView(
+                attributedString: model.richDisplayAttributedString(
+                    keyword: keyword
+                )
+            )
+            .textCardStyle()
         } else {
             StringContentView(model: model, keyword: keyword)
         }

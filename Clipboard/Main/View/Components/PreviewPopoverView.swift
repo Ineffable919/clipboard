@@ -388,17 +388,18 @@ private struct PreviewRichTextView: View {
 private struct PreviewRichTextContent: View {
     let model: PasteboardModel
 
+    private var extractedText: String {
+        model.attributeString.string
+    }
+
     var body: some View {
-        let attr =
-            NSAttributedString(
-                with: model.data,
-                type: model.pasteboardType
-            ) ?? NSAttributedString()
         if model.hasBgColor {
-            Text(AttributedString(attr))
-                .textSelection(.enabled)
+            CardTextView(
+                attributedString: model.richDisplayAttributedString(keyword: ""),
+                isSelectable: true
+            )
         } else {
-            Text(attr.string)
+            Text(extractedText)
                 .foregroundStyle(.primary)
                 .textSelection(.enabled)
         }

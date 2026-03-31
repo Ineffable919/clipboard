@@ -17,15 +17,44 @@ final class AppColorService {
     private var colorDict: [String: String]
 
     private init() {
-        colorDict = PasteUserDefaults.appColorData
+        var data = PasteUserDefaults.appColorData
+        let stale = data.filter { $0.value == Self.fallbackHex }
+        if !stale.isEmpty {
+            for key in stale.keys {
+                data.removeValue(forKey: key)
+            }
+            PasteUserDefaults.appColorData = data
+        }
+        colorDict = data
     }
 
     func updateColor(for model: PasteboardModel) {
         guard colorDict[model.appName] == nil else { return }
         let iconImage = NSWorkspace.shared.icon(forFile: model.appPath)
-        let hex = Self.extractHex(from: iconImage)
+        guard let hex = Self.extractDominantColor(from: iconImage) else { return }
         colorDict[model.appName] = hex
         PasteUserDefaults.appColorData = colorDict
+    }
+
+    /// 批量提取缺失的应用图标颜色
+    func extractMissingColors(appInfo: [(name: String, path: String)]) async {
+        let pending = appInfo.filter { !$0.path.isEmpty && colorDict[$0.name] == nil }
+        guard !pending.isEmpty else { return }
+
+        let icons: [(String, NSImage)] = await Task.detached(priority: .utility) {
+            pending.map { ($0.name, NSWorkspace.shared.icon(forFile: $0.path)) }
+        }.value
+
+        var changed = false
+        for (appName, icon) in icons {
+            if let hex = Self.extractDominantColor(from: icon) {
+                colorDict[appName] = hex
+                changed = true
+            }
+        }
+        if changed {
+            PasteUserDefaults.appColorData = colorDict
+        }
     }
 
     func color(for model: PasteboardModel) -> Color {
@@ -102,6 +131,28 @@ private extension AppColorService {
                     | (UInt32((g / 8) * 8) << 8)
                     | UInt32((b / 8) * 8)
                 colorCounts[key, default: 0] += pixelWeight(x: x, y: y, width: width, height: height)
+            }
+        }
+
+        if colorCounts.isEmpty {
+            for y in 0 ..< height {
+                for x in 0 ..< width {
+                    let pixelIndex = (y * width + x) * 4
+                    guard Int(pixelData[pixelIndex + 3]) > 128 else { continue }
+
+                    let r = Int(pixelData[pixelIndex])
+                    let g = Int(pixelData[pixelIndex + 1])
+                    let b = Int(pixelData[pixelIndex + 2])
+                    let brightness = (r + g + b) / 3
+
+                    // 排除纯白和纯黑，保留中间灰度
+                    guard brightness > 30, brightness < 230 else { continue }
+
+                    let key = (UInt32((r / 8) * 8) << 16)
+                        | (UInt32((g / 8) * 8) << 8)
+                        | UInt32((b / 8) * 8)
+                    colorCounts[key, default: 0] += pixelWeight(x: x, y: y, width: width, height: height)
+                }
             }
         }
 

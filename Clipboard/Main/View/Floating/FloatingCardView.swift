@@ -191,7 +191,7 @@ private struct FloatingCardContentView: View {
             FloatingImageThumbnailView(model: model)
                 .clipShape(.rect(cornerRadius: 6.0))
         case .color:
-            Text(model.attributeString.string)
+            Text(model.colorDisplayText)
                 .font(.system(.body, design: .monospaced).weight(.medium))
                 .foregroundStyle(modelColors.1)
         case .file:

@@ -294,24 +294,6 @@
         }
       }
     },
-    "currentTime" : {
-      "comment" : "Relative time label for now",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Now"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "现在"
-          }
-        }
-      }
-    },
     "collapse" : {
       "comment" : "Collapse action",
       "extractionState" : "manual",
@@ -420,6 +402,24 @@
         }
       }
     },
+    "currentTime" : {
+      "comment" : "Relative time label for now",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Now"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "现在"
+          }
+        }
+      }
+    },
     "date" : {
       "comment" : "Date filter section title",
       "extractionState" : "manual",
@@ -452,6 +452,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld天前"
+          }
+        }
+      }
+    },
+    "delete" : {
+      "comment" : "Delete",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "delete"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除"
           }
         }
       }
@@ -524,24 +542,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "确认删除吗？"
-          }
-        }
-      }
-    },
-      "delete" : {
-      "comment" : "Delete",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "delete"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "删除"
           }
         }
       }
@@ -762,24 +762,6 @@
         }
       }
     },
-    "hourAgo" : {
-      "comment" : "Relative time for hours ago",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld hour ago"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld小时前"
-          }
-        }
-      }
-    },
     "historyTimeSliderDay" : {
       "comment" : "History time slider milestone: day",
       "extractionState" : "manual",
@@ -870,6 +852,24 @@
         }
       }
     },
+    "hourAgo" : {
+      "comment" : "Relative time for hours ago",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld hour ago"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld小时前"
+          }
+        }
+      }
+    },
     "image" : {
       "comment" : "Image type label",
       "extractionState" : "manual",
@@ -906,24 +906,6 @@
         }
       }
     },
-    "importCancelled" : {
-      "comment" : "Import cancelled result message",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Import cancelled"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "导入被取消"
-          }
-        }
-      }
-    },
     "importAsk" : {
       "comment" : "Prompt asking whether to import legacy configuration",
       "extractionState" : "manual",
@@ -938,6 +920,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "导入旧版本配置？"
+          }
+        }
+      }
+    },
+    "importCancelled" : {
+      "comment" : "Import cancelled result message",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import cancelled"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入被取消"
           }
         }
       }
@@ -1122,42 +1122,6 @@
         }
       }
     },
-    "more" : {
-      "comment" : "More action",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "More"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "更多"
-          }
-        }
-      }
-    },
-    "monthAgo" : {
-      "comment" : "Relative time for months ago",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld month ago"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld月前"
-          }
-        }
-      }
-    },
     "minuteAgo" : {
       "comment" : "Relative time for minutes ago",
       "extractionState" : "manual",
@@ -1212,38 +1176,38 @@
         }
       }
     },
-    "noFile" : {
-      "comment" : "File does not exist",
+    "monthAgo" : {
+      "comment" : "Relative time for months ago",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "File does not exist"
+            "value" : "%lld month ago"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "文件不存在"
+            "value" : "%lld月前"
           }
         }
       }
     },
-    "noSourceDb" : {
-      "comment" : "Source database file does not exist",
+    "more" : {
+      "comment" : "More action",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Source database file does not exist"
+            "value" : "More"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "源数据库文件不存在"
+            "value" : "更多"
           }
         }
       }
@@ -1266,6 +1230,24 @@
         }
       }
     },
+    "noFile" : {
+      "comment" : "File does not exist",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File does not exist"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件不存在"
+          }
+        }
+      }
+    },
     "noPreview" : {
       "comment" : "Placeholder when preview content is unavailable",
       "extractionState" : "manual",
@@ -1280,6 +1262,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "无预览内容"
+          }
+        }
+      }
+    },
+    "noSourceDb" : {
+      "comment" : "Source database file does not exist",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Source database file does not exist"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "源数据库文件不存在"
           }
         }
       }
@@ -1320,24 +1320,6 @@
         }
       }
     },
-    "passwords" : {
-      "comment" : "Name of Passwords app",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Passwords"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "密码"
-          }
-        }
-      }
-    },
     "openWithApp" : {
       "comment" : "Action title to open content with a specific app",
       "extractionState" : "manual",
@@ -1352,6 +1334,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "通过 %@ 打开"
+          }
+        }
+      }
+    },
+    "passwords" : {
+      "comment" : "Name of Passwords app",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwords"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "密码"
           }
         }
       }
@@ -1626,24 +1626,6 @@
         }
       }
     },
-    "recentHalfMinute" : {
-      "comment" : "Relative time for around half a minute ago",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "30 seconds ago"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "30秒前"
-          }
-        }
-      }
-    },
     "quit" : {
       "comment" : "Menu item: quit app",
       "extractionState" : "manual",
@@ -1658,6 +1640,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "退出"
+          }
+        }
+      }
+    },
+    "recentHalfMinute" : {
+      "comment" : "Relative time for around half a minute ago",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "30 seconds ago"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "30秒前"
           }
         }
       }
@@ -1730,42 +1730,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "搜索"
-          }
-        }
-      }
-    },
-    "settingKeyboardReset" : {
-      "comment" : "Preview title for reset shortcuts button",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reset shortcuts to default"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "重置快捷方式为默认"
-          }
-        }
-      }
-    },
-    "settingKeyboardResetMore" : {
-      "comment" : "Preview title for reset shortcuts button with ellipsis",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reset shortcuts to default..."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "重置快捷方式为默认..."
           }
         }
       }
@@ -2526,6 +2490,24 @@
         }
       }
     },
+    "settingKeyboardReset" : {
+      "comment" : "Preview title for reset shortcuts button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset shortcuts to default"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置快捷方式为默认"
+          }
+        }
+      }
+    },
     "settingKeyboardResetButton" : {
       "comment" : "Confirmation button: reset shortcuts",
       "extractionState" : "manual",
@@ -2558,6 +2540,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "您确定将所有的快键方式重置为默认值吗？"
+          }
+        }
+      }
+    },
+    "settingKeyboardResetMore" : {
+      "comment" : "Preview title for reset shortcuts button with ellipsis",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset shortcuts to default..."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置快捷方式为默认..."
           }
         }
       }
@@ -3354,24 +3354,6 @@
         }
       }
     },
-    "settingStorageExportSuccessTitle" : {
-      "comment" : "Alert title when export succeeds",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Export Successful"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "导出成功"
-          }
-        }
-      }
-    },
     "settingStorageExportTitle" : {
       "comment" : "Title for exporting clipboard data",
       "extractionState" : "manual",
@@ -3426,6 +3408,24 @@
         }
       }
     },
+    "settingStorageImportCancelled" : {
+      "comment" : "Alert message when import is cancelled",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import was cancelled."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "导入已取消"
+          }
+        }
+      }
+    },
     "settingStorageImportDescription" : {
       "comment" : "Description for importing clipboard data",
       "extractionState" : "manual",
@@ -3458,24 +3458,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "数据导入失败，请检查文件格式"
-          }
-        }
-      }
-    },
-    "settingStorageImportCancelled" : {
-      "comment" : "Alert message when import is cancelled",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Import was cancelled."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "导入已取消"
           }
         }
       }
@@ -3893,7 +3875,7 @@
           }
         }
       }
-    },
+    }
   },
   "version" : "1.0"
 }

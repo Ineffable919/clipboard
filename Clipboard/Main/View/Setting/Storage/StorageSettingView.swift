@@ -116,8 +116,7 @@ struct StorageSettingView: View {
                 isExporting = false
                 if result.success {
                     log.info("数据库导出成功: \(url.lastPathComponent)")
-                    alertTitle = String(localized: .settingStorageExportSuccessTitle)
-                    alertMessage = result.message
+                    alertTitle = result.message
                 } else {
                     log.error("数据库导出失败: \(result.message)")
                     alertTitle = String(localized: .settingStorageExportFailureTitle)
@@ -161,6 +160,8 @@ struct StorageSettingView: View {
                     alertMessage = result.message
 
                     Task {
+                        await AppColorService.shared.extractMissingColors(appInfo: result.importedAppInfo)
+
                         await db.resetDefaultList()
                         let count = await PasteSQLManager.manager.getTotalCount()
                         db.totalCount = count

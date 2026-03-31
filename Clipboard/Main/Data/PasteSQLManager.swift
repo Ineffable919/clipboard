@@ -395,6 +395,7 @@ extension PasteSQLManager {
     struct ImportExportResult {
         let success: Bool
         let message: String
+        var importedAppInfo: [(name: String, path: String)] = []
     }
 
     private nonisolated static func localize(
@@ -466,6 +467,7 @@ extension PasteSQLManager {
 
                 var importedCount = 0
                 var skippedCount = 0
+                var appInfoDict: [String: String] = [:]
 
                 try destDb.transaction {
                     for row in rows {
@@ -486,14 +488,17 @@ extension PasteSQLManager {
                             continue
                         }
 
+                        let appPath = try row.get(Col.appPath)
+                        let appName = try row.get(Col.appName)
+
                         let insert = try destTable.insert(
                             Col.uniqueId <- uniqueId,
                             Col.type <- row.get(Col.type),
                             Col.data <- row.get(Col.data),
                             Col.showData <- row.get(Col.showData),
                             Col.ts <- row.get(Col.ts),
-                            Col.appPath <- row.get(Col.appPath),
-                            Col.appName <- row.get(Col.appName),
+                            Col.appPath <- appPath,
+                            Col.appName <- appName,
                             Col.searchText <- row.get(Col.searchText),
                             Col.length <- row.get(Col.length),
                             Col.group <- (try? row.get(Col.group)) ?? -1,
@@ -502,6 +507,10 @@ extension PasteSQLManager {
 
                         try destDb.run(insert)
                         importedCount += 1
+
+                        if !appName.isEmpty, appInfoDict[appName] == nil {
+                            appInfoDict[appName] = appPath
+                        }
                     }
                 }
 
@@ -510,7 +519,8 @@ extension PasteSQLManager {
                     : ""
                 let message = Self.localize("importResult", importedCount, skippedText)
 
-                return ImportExportResult(success: true, message: message)
+                let appInfo = appInfoDict.map { (name: $0.key, path: $0.value) }
+                return ImportExportResult(success: true, message: message, importedAppInfo: appInfo)
             } catch {
                 return ImportExportResult(
                     success: false,
