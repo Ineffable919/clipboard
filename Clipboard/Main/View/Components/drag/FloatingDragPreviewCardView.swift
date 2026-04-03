@@ -56,11 +56,8 @@ struct FloatingDragPreviewCardView: View {
             }
         case .rich:
             if model.hasBgColor {
-                CardTextView(
-                    attributedString: model.richDisplayAttributedString(
-                        keyword: keyword
-                    )
-                )
+                Image(nsImage: model.richDragPreviewImage(keyword: keyword))
+                    .frame(width: Const.cardSize, height: Const.cntSize)
             } else {
                 plainTextContent
             }
@@ -91,8 +88,13 @@ struct FloatingDragPreviewCardView: View {
 private struct FloatingPreviewSingleFileView: View {
     let path: String
 
-    private var fileURL: URL { URL(filePath: path) }
-    private var fileName: String { fileURL.lastPathComponent }
+    private var fileURL: URL {
+        URL(filePath: path)
+    }
+
+    private var fileName: String {
+        fileURL.lastPathComponent
+    }
 
     var body: some View {
         HStack(spacing: Const.space8) {

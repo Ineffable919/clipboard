@@ -38,7 +38,7 @@ import SwiftUI
     // MARK: - Search Keyword
 
     var searchKeyword: String {
-        pd.lastDataChangeType == .searchFilter ? pd.currentSearchKeyword : ""
+        pd.currentSearchKeyword
     }
 
     // MARK: - Quick Paste Index

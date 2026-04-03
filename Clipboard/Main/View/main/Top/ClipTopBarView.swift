@@ -24,7 +24,7 @@ struct ClipTopBarView: View {
         HStack(alignment: .center, spacing: Const.space12) {
             Color.clear
                 .containerRelativeFrame(.horizontal) { width, _ in
-                    max(0, floor(width / 2 - (inSearch ? 225 : 130)))
+                    max(0, floor(width / 2 - (inSearch ? 225 : 115)))
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -32,14 +32,17 @@ struct ClipTopBarView: View {
                 }
             if inSearch {
                 searchField
+                    .transition(.identity)
             } else {
                 searchIcon
+                    .transition(.identity)
             }
             typeView
             Spacer()
             SettingsMenuView(topBarVM: topBarVM)
                 .padding(.trailing)
         }
+        .animation(nil, value: inSearch)
         .overlay(alignment: .leading) {
             if topBarVM.isPaused {
                 PauseIndicatorView(topBarVM: topBarVM)

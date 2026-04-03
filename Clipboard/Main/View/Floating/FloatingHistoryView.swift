@@ -122,12 +122,6 @@ struct FloatingHistoryView: View {
             }
             historyVM.selectSingle(id: item.id)
             return item.itemProvider()
-        } preview: {
-            FloatingDragPreviewCardView(
-                model: item,
-                enableLinkPreview: enableLinkPreview,
-                keyword: historyVM.searchKeyword
-            )
         }
         .task(id: item.id) {
             guard historyVM.shouldLoadNextPage(at: index) else { return }

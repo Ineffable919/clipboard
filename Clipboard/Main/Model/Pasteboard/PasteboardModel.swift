@@ -40,15 +40,9 @@ final class PasteboardModel: Identifiable {
     let tag: String
     private(set) var hidden: Bool
     @ObservationIgnored
-    var cachedAttributed: AttributedString?
-    @ObservationIgnored
-    var cachedHighlightedPlainKeyword: String?
-    @ObservationIgnored
     var cachedHighlightedPlainText: AttributedString?
     @ObservationIgnored
-    var cachedHighlightedRichKeyword: String?
-    @ObservationIgnored
-    var cachedHighlightedRichText: AttributedString?
+    var cachedHighlightedRichText: NSAttributedString?
     @ObservationIgnored
     var cachedThumbnail: NSImage?
     @ObservationIgnored
@@ -67,6 +61,8 @@ final class PasteboardModel: Identifiable {
     var cachedHasBackgroundColor: Bool = false
     @ObservationIgnored
     var cachedNeedsBottomMask: Bool?
+    @ObservationIgnored
+    var cachedDragPreviewRichImage: NSImage?
     @ObservationIgnored
     var thumbnailLoadTask: Task<NSImage?, Never>?
 

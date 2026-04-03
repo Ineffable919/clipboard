@@ -84,13 +84,6 @@ extension PasteboardModel {
             ? Color.black.opacity(0.5) : Color.white.opacity(0.5)
     }
 
-    func attributed() -> AttributedString {
-        if let cachedAttributed { return cachedAttributed }
-        let attr = AttributedString(sanitizedDisplayAttributedString())
-        cachedAttributed = attr
-        return attr
-    }
-
     func highlightedPlainText(keyword: String) -> AttributedString {
         let trimmedKeyword = keyword.trimmingCharacters(
             in: .whitespacesAndNewlines
@@ -99,9 +92,7 @@ extension PasteboardModel {
             return AttributedString(attributeString.string)
         }
 
-        if cachedHighlightedPlainKeyword == trimmedKeyword,
-           let cachedHighlightedPlainText
-        {
+        if let cachedHighlightedPlainText {
             return cachedHighlightedPlainText
         }
 
@@ -135,124 +126,24 @@ extension PasteboardModel {
             searchStart = range.upperBound
         }
 
-        cachedHighlightedPlainKeyword = trimmedKeyword
         cachedHighlightedPlainText = attributed
         return attributed
     }
 
-    func plainDisplayAttributedString(keyword: String) -> NSAttributedString {
-        let source = normalizedDisplayString(attributeString.string)
-        let mutable = NSMutableAttributedString(string: source)
-        let trimmedKeyword = keyword.trimmingCharacters(
-            in: .whitespacesAndNewlines
-        )
-
-        guard !trimmedKeyword.isEmpty else {
-            return mutable
-        }
-
-        let string = source as NSString
-        let options: NSString.CompareOptions = [
-            .caseInsensitive,
-            .diacriticInsensitive,
-            .widthInsensitive,
-        ]
-
-        var searchRange = NSRange(location: 0, length: string.length)
-        while searchRange.length > 0 {
-            let found = string.range(
-                of: trimmedKeyword,
-                options: options,
-                range: searchRange,
-                locale: .current
-            )
-
-            if found.location == NSNotFound {
-                break
-            }
-
-            mutable.addAttribute(
-                .backgroundColor,
-                value: NSColor.systemYellow.withAlphaComponent(0.65),
-                range: found
-            )
-
-            let nextLocation = found.location + found.length
-            guard nextLocation < string.length else { break }
-            searchRange = NSRange(
-                location: nextLocation,
-                length: string.length - nextLocation
-            )
-        }
-
-        return mutable
-    }
-
-    func richDisplayAttributedString(keyword: String) -> NSAttributedString {
-        let mutable = NSMutableAttributedString(
-            attributedString: sanitizedDisplayAttributedString()
-        )
-        let trimmedKeyword = keyword.trimmingCharacters(
-            in: .whitespacesAndNewlines
-        )
-
-        guard !trimmedKeyword.isEmpty else {
-            return mutable
-        }
-
-        let string = mutable.string as NSString
-        let options: NSString.CompareOptions = [
-            .caseInsensitive,
-            .diacriticInsensitive,
-            .widthInsensitive,
-        ]
-
-        var searchRange = NSRange(location: 0, length: string.length)
-        while searchRange.length > 0 {
-            let found = string.range(
-                of: trimmedKeyword,
-                options: options,
-                range: searchRange,
-                locale: .current
-            )
-
-            if found.location == NSNotFound {
-                break
-            }
-
-            mutable.addAttribute(
-                .backgroundColor,
-                value: NSColor.systemYellow.withAlphaComponent(0.65),
-                range: found
-            )
-
-            let nextLocation = found.location + found.length
-            guard nextLocation < string.length else { break }
-            searchRange = NSRange(
-                location: nextLocation,
-                length: string.length - nextLocation
-            )
-        }
-
-        return mutable
-    }
-
-    func highlightedRichText(keyword: String) -> AttributedString {
+    func highlightedRichText(keyword: String) -> NSAttributedString {
         let trimmedKeyword = keyword.trimmingCharacters(
             in: .whitespacesAndNewlines
         )
         guard !trimmedKeyword.isEmpty else {
-            return attributed()
+            return attributeString
         }
 
-        if cachedHighlightedRichKeyword == trimmedKeyword,
-           let cachedHighlightedRichText
-        {
+        if let cachedHighlightedRichText {
             return cachedHighlightedRichText
         }
 
         let mutable = NSMutableAttributedString(
-            attributedString: sanitizedDisplayAttributedString()
+            attributedString: attributeString
         )
         let string = mutable.string as NSString
 
@@ -289,8 +180,7 @@ extension PasteboardModel {
             )
         }
 
-        let highlighted = AttributedString(mutable)
-        cachedHighlightedRichKeyword = trimmedKeyword
+        let highlighted = mutable
         cachedHighlightedRichText = highlighted
         return highlighted
     }
@@ -304,39 +194,29 @@ extension PasteboardModel {
         return value
     }
 
-    private func sanitizedDisplayAttributedString() -> NSAttributedString {
-        let mutable = NSMutableAttributedString(attributedString: attributeString)
-        let fullRange = NSRange(location: 0, length: mutable.length)
-
-        guard fullRange.length > 0 else {
-            return mutable
+    /// 将富文本渲染为固定尺寸的 NSImage，供拖拽预览使用。
+    func richDragPreviewImage(keyword: String = "") -> NSImage {
+        let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty, let cachedDragPreviewRichImage {
+            return cachedDragPreviewRichImage
         }
 
-        if mutable.string.contains("\r") {
-            let normalized = normalizedDisplayString(mutable.string)
-            mutable.mutableString.setString(normalized)
+        let drawingSize = CGSize(width: Const.cardSize, height: Const.cntSize)
+        let drawingRect = CGRect(origin: .zero, size: drawingSize)
+        let insetRect = drawingRect.insetBy(dx: Const.space10, dy: Const.space8)
+        let source = trimmed.isEmpty ? attributeString : highlightedRichText(keyword: trimmed)
+
+        let image = NSImage(size: drawingSize)
+        image.lockFocus()
+        NSColor.clear.setFill()
+        NSBezierPath.fill(drawingRect)
+        source.draw(in: insetRect)
+        image.unlockFocus()
+
+        if trimmed.isEmpty {
+            cachedDragPreviewRichImage = image
         }
-
-        mutable.enumerateAttribute(
-            .paragraphStyle,
-            in: fullRange
-        ) { value, range, _ in
-            let style = (value as? NSParagraphStyle)?.mutableCopy()
-                as? NSMutableParagraphStyle ?? NSMutableParagraphStyle()
-            style.minimumLineHeight = 0
-            style.maximumLineHeight = 0
-            style.lineHeightMultiple = 0
-            style.lineBreakMode = .byWordWrapping
-            mutable.addAttribute(
-                .paragraphStyle,
-                value: style,
-                range: range
-            )
-        }
-
-        mutable.removeAttribute(.baselineOffset, range: fullRange)
-
-        return mutable
+        return image
     }
 
     private func normalizedDisplayString(_ string: String) -> String {

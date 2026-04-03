@@ -395,7 +395,7 @@ private struct PreviewRichTextContent: View {
     var body: some View {
         if model.hasBgColor {
             CardTextView(
-                attributedString: model.richDisplayAttributedString(keyword: ""),
+                attributedString: model.highlightedRichText(keyword: ""),
                 isSelectable: true
             )
         } else {

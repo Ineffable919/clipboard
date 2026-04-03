@@ -26,12 +26,19 @@ struct HistoryDragPreviewCardView: View {
                             keyword: keyword
                         )
                     } else {
-                        textContent
+                        plainTextContent
                     }
                 case .color:
                     HistoryDragColorPreviewView(model: model)
-                case .string, .rich:
-                    textContent
+                case .rich:
+                    if model.hasBgColor {
+                        Image(nsImage: model.richDragPreviewImage(keyword: keyword))
+                            .frame(width: Const.cardSize, height: Const.cntSize)
+                    } else {
+                        plainTextContent
+                    }
+                case .string:
+                    plainTextContent
                 case .file:
                     HistoryDragFilePreviewView(model: model)
                 case .image:
@@ -51,15 +58,9 @@ struct HistoryDragPreviewCardView: View {
         .frame(width: Const.cardSize, height: Const.cardSize)
     }
 
-    private var textContent: some View {
-        Group {
-            if model.type == .rich, model.hasBgColor {
-                Text(model.highlightedRichText(keyword: keyword))
-            } else {
-                Text(model.highlightedPlainText(keyword: keyword))
-            }
-        }
-        .textCardStyle()
+    private var plainTextContent: some View {
+        Text(model.highlightedPlainText(keyword: keyword))
+            .textCardStyle()
     }
 }
 
@@ -79,9 +80,13 @@ private struct HistoryDragCardHeadView: View {
                         .foregroundStyle(.white)
 
                     if isDefault {
-                        Text(model.timestamp.timeAgo(relativeTo: TimeManager.shared.currentTime))
-                            .font(.caption2)
-                            .foregroundStyle(.white.opacity(0.85))
+                        Text(
+                            model.timestamp.timeAgo(
+                                relativeTo: TimeManager.shared.currentTime
+                            )
+                        )
+                        .font(.caption2)
+                        .foregroundStyle(.white.opacity(0.85))
                     }
                 }
                 Spacer()
@@ -162,10 +167,12 @@ private struct HistoryDragFilePreviewView: View {
                     }
                 } else if let firstPath = fileURLs.first {
                     VStack(spacing: Const.space8) {
-                        Image(nsImage: NSWorkspace.shared.icon(forFile: firstPath))
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 48, height: 48)
+                        Image(
+                            nsImage: NSWorkspace.shared.icon(forFile: firstPath)
+                        )
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 48, height: 48)
 
                         Text(URL(filePath: firstPath).lastPathComponent)
                             .foregroundStyle(.primary)
@@ -179,7 +186,11 @@ private struct HistoryDragFilePreviewView: View {
                     .resizable()
                     .foregroundStyle(Color.accentColor.opacity(0.8))
                     .frame(width: 48, height: 48)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                    .frame(
+                        maxWidth: .infinity,
+                        maxHeight: .infinity,
+                        alignment: .center
+                    )
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

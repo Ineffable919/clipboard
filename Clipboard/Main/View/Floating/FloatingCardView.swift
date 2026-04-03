@@ -237,11 +237,12 @@ private struct FloatingRichTextContentView: View {
 
     var body: some View {
         if model.hasBgColor {
-            if searchKeyword.isEmpty {
-                Text(model.attributed())
-            } else {
-                Text(model.highlightedRichText(keyword: searchKeyword))
-            }
+            CardTextView(
+                attributedString: model.highlightedRichText(keyword: searchKeyword),
+                inset: .zero
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .clipped()
         } else {
             FloatingPlainTextContentView(model: model, searchKeyword: searchKeyword)
         }

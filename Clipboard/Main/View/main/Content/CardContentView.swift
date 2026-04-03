@@ -12,7 +12,11 @@ struct CardContentView: View {
     let keyword: String
     let enableLinkPreview: Bool
 
-    init(model: PasteboardModel, keyword: String = "", enableLinkPreview: Bool = false) {
+    init(
+        model: PasteboardModel,
+        keyword: String = "",
+        enableLinkPreview: Bool = false
+    ) {
         self.model = model
         self.keyword = keyword
         self.enableLinkPreview = enableLinkPreview
@@ -65,12 +69,13 @@ struct StringContentView: View {
     var keyword: String
 
     var body: some View {
-        CardTextView(
-            attributedString: model.plainDisplayAttributedString(
-                keyword: keyword
-            )
-        )
-        .textCardStyle()
+        if keyword.isEmpty {
+            Text(model.attributeString.string)
+                .textCardStyle()
+        } else {
+            Text(model.highlightedPlainText(keyword: keyword))
+                .textCardStyle()
+        }
     }
 }
 
@@ -81,11 +86,13 @@ struct RichContentView: View {
     var body: some View {
         if model.hasBgColor {
             CardTextView(
-                attributedString: model.richDisplayAttributedString(
-                    keyword: keyword
-                )
+                attributedString: model.highlightedRichText(keyword: keyword)
             )
-            .textCardStyle()
+            .frame(
+                maxWidth: Const.cardSize,
+                maxHeight: Const.cntSize,
+                alignment: .topLeading
+            )
         } else {
             StringContentView(model: model, keyword: keyword)
         }
@@ -103,7 +110,11 @@ struct FileContentView: View {
                 } else {
                     FileThumbnailView(fileURLString: fileUrls[0])
                         .padding(Const.space12)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                        .frame(
+                            maxWidth: .infinity,
+                            maxHeight: .infinity,
+                            alignment: .top
+                        )
                 }
             } else {
                 FileIconPlaceholder()
@@ -118,7 +129,11 @@ private struct FileIconPlaceholder: View {
             .resizable()
             .foregroundStyle(Color.accentColor.opacity(0.8))
             .frame(width: 48, height: 48)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            .frame(
+                maxWidth: .infinity,
+                maxHeight: .infinity,
+                alignment: .center
+            )
     }
 }
 
@@ -132,7 +147,10 @@ struct ImageContentView: View {
     @State private var currentModelId: String = ""
     @State private var ocrRegions: [OCRTextRegion] = []
 
-    private static let containerSize = CGSize(width: Const.cardSize, height: Const.cntSize)
+    private static let containerSize = CGSize(
+        width: Const.cardSize,
+        height: Const.cntSize
+    )
     private static let containerRatio = Const.cardSize / Const.cntSize
 
     var body: some View {
@@ -143,10 +161,15 @@ struct ImageContentView: View {
                     .resizable()
                     .interpolation(.medium)
                     .aspectRatio(contentMode: cachedContentMode)
-                    .frame(width: Self.containerSize.width, height: Self.containerSize.height)
+                    .frame(
+                        width: Self.containerSize.width,
+                        height: Self.containerSize.height
+                    )
                     .clipped()
                     .overlay {
-                        if !keyword.isEmpty, !ocrRegions.isEmpty, let imageSize = model.cachedImageSize {
+                        if !keyword.isEmpty, !ocrRegions.isEmpty,
+                           let imageSize = model.cachedImageSize
+                        {
                             OCRHighlightOverlay(
                                 regions: ocrRegions,
                                 imageSize: imageSize,
@@ -166,7 +189,10 @@ struct ImageContentView: View {
                     .frame(width: 48, height: 48)
             }
         }
-        .frame(width: Self.containerSize.width, height: Self.containerSize.height)
+        .frame(
+            width: Self.containerSize.width,
+            height: Self.containerSize.height
+        )
         .clipShape(Const.contentShape)
         .task(id: model.uniqueId) {
             await loadImage()
@@ -285,8 +311,12 @@ private struct OCRHighlightOverlay: View {
         normalizedBox: CGRect,
         imageLayout: CGRect
     ) -> CGRect {
-        let x = imageLayout.origin.x + normalizedBox.origin.x * imageLayout.width
-        let y = imageLayout.origin.y + (1 - normalizedBox.origin.y - normalizedBox.height) * imageLayout.height
+        let x =
+            imageLayout.origin.x + normalizedBox.origin.x * imageLayout.width
+        let y =
+            imageLayout.origin.y
+                + (1 - normalizedBox.origin.y - normalizedBox.height)
+                * imageLayout.height
         let w = normalizedBox.width * imageLayout.width
         let h = normalizedBox.height * imageLayout.height
         return CGRect(x: x, y: y, width: w, height: h)
@@ -344,11 +374,18 @@ private final class CheckerboardCache: @unchecked Sendable {
 
         light.setFill()
         NSRect(x: 0, y: 0, width: squareSize, height: squareSize).fill()
-        NSRect(x: squareSize, y: squareSize, width: squareSize, height: squareSize).fill()
+        NSRect(
+            x: squareSize,
+            y: squareSize,
+            width: squareSize,
+            height: squareSize
+        ).fill()
 
         dark.setFill()
-        NSRect(x: squareSize, y: 0, width: squareSize, height: squareSize).fill()
-        NSRect(x: 0, y: squareSize, width: squareSize, height: squareSize).fill()
+        NSRect(x: squareSize, y: 0, width: squareSize, height: squareSize)
+            .fill()
+        NSRect(x: 0, y: squareSize, width: squareSize, height: squareSize)
+            .fill()
 
         image.unlockFocus()
         return image
