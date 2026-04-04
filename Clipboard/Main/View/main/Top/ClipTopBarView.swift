@@ -14,6 +14,7 @@ struct ClipTopBarView: View {
     @Environment(AppEnvironment.self) private var env
     @AppStorage(PrefKey.backgroundType.rawValue)
     private var backgroundTypeRaw: Int = 0
+    @AppStorage(PrefKey.displayMode.rawValue) private var displayModeRaw: Int = 0
     @FocusState private var focus: FocusField?
     @State private var topBarVM = TopBarViewModel()
     @State private var isIconHovered: Bool = false
@@ -52,6 +53,9 @@ struct ClipTopBarView: View {
         .frame(height: Const.topBarHeight)
         .onChange(of: env.focusView) {
             syncFocusFromEnv()
+        }
+        .onChange(of: displayModeRaw) {
+            topBarVM.resetFilterState()
         }
         .onAppear {
             EventDispatcher.shared.registerHandler(

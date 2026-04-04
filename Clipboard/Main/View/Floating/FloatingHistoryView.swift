@@ -16,6 +16,7 @@ struct FloatingHistoryView: View {
     @State private var flagsMonitorToken: Any?
     @AppStorage(PrefKey.enableLinkPreview.rawValue)
     private var enableLinkPreview: Bool = PasteUserDefaults.enableLinkPreview
+    @AppStorage(PrefKey.displayMode.rawValue) private var displayModeRaw: Int = 0
 
     private let pd = PasteDataStore.main
 
@@ -57,18 +58,19 @@ struct FloatingHistoryView: View {
                     }
                 }
             }
-
-            EmptyView()
-                .onChange(of: pd.dataList) {
-                    historyVM.reset()
-                }
-                .onChange(of: env.quickPasteResetTrigger) {
-                    historyVM.isQuickPastePressed = false
-                }
         }
         .focusable()
         .focused($isFocused)
         .focusEffectDisabled()
+        .onChange(of: displayModeRaw) {
+            historyVM.handleModeSwitch()
+        }
+        .onChange(of: pd.dataList) {
+            historyVM.reset()
+        }
+        .onChange(of: env.quickPasteResetTrigger) {
+            historyVM.isQuickPastePressed = false
+        }
         .onAppear {
             appear()
         }

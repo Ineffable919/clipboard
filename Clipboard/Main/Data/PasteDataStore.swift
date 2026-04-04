@@ -99,8 +99,8 @@ extension PasteDataStore {
     private func mapRows(_ rows: [Row]) -> [PasteboardModel] {
         rows.compactMap { row in
             if let type = try? row.get(Col.type),
-               let data = try? row.get(Col.data),
-               let timestamp = try? row.get(Col.ts)
+                let data = try? row.get(Col.data),
+                let timestamp = try? row.get(Col.ts)
             {
                 let id = try? row.get(Col.id)
                 let appName = try? row.get(Col.appName)
@@ -210,6 +210,16 @@ extension PasteDataStore {
         filteredCount = totalCount
         updateData(with: list)
         hasMoreData = list.count == pageSize
+    }
+
+    func resetToDefault() {
+        searchTask?.cancel()
+        loadPageTask?.cancel()
+        isLoadingPage = false
+        lastRequestedPage = 0
+        Task {
+            await resetDefaultList()
+        }
     }
 
     /// 数据搜索（关键词 + 自定义分组 + 过滤视图）
@@ -372,11 +382,11 @@ extension PasteDataStore {
         var dateCom = DateComponents()
 
         switch timeUnit {
-        case let .days(n):
+        case .days(let n):
             dateCom = DateComponents(calendar: Calendar.current, day: -n)
-        case let .weeks(n):
+        case .weeks(let n):
             dateCom = DateComponents(calendar: Calendar.current, day: -n * 7)
-        case let .months(n):
+        case .months(let n):
             dateCom = DateComponents(calendar: Calendar.current, month: -n)
         case .year:
             dateCom = DateComponents(calendar: Calendar.current, year: -1)
@@ -459,7 +469,7 @@ extension PasteDataStore {
             )
 
             if let model = dataList.first(where: { $0.id == itemId }),
-               groupId != model.group
+                groupId != model.group
             {
                 model.updateGroup(val: groupId)
             }
@@ -471,7 +481,7 @@ extension PasteDataStore {
             await sqlManager.updateItemHidden(id: itemId, hidden: hidden)
 
             if let model = dataList.first(where: { $0.id == itemId }),
-               hidden != model.hidden
+                hidden != model.hidden
             {
                 model.updateHidden(val: hidden)
             }

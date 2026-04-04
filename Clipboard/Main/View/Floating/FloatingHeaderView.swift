@@ -13,6 +13,7 @@ struct FloatingHeaderView: View {
     @Environment(TopBarViewModel.self) private var topBarVM
     @AppStorage(PrefKey.backgroundType.rawValue) private var backgroundTypeRaw:
         Int = 0
+    @AppStorage(PrefKey.displayMode.rawValue) private var displayModeRaw: Int = 0
     @FocusState private var focus: FocusField?
 
     var body: some View {
@@ -32,6 +33,9 @@ struct FloatingHeaderView: View {
         }
         .frame(maxWidth: .infinity)
         .frame(height: FloatConst.headerHeight)
+        .onChange(of: displayModeRaw) {
+            topBarVM.resetFilterState()
+        }
         .onAppear {
             EventDispatcher.shared.registerHandler(
                 matching: .keyDown,

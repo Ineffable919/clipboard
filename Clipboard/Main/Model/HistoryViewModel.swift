@@ -38,7 +38,9 @@ import SwiftUI
     // MARK: - Search Keyword
 
     var searchKeyword: String {
-        pd.currentSearchKeyword
+        (pd.lastDataChangeType == .loadMore || pd.lastDataChangeType == .searchFilter)
+            ? pd.currentSearchKeyword
+            : ""
     }
 
     // MARK: - Quick Paste Index
@@ -493,6 +495,11 @@ import SwiftUI
         showPreviewId = nil
         selectedIds.removeAll()
         activeId = nil
+    }
+
+    func handleModeSwitch() {
+        cleanup()
+        pd.resetToDefault()
     }
 
     // MARK: - Event Monitor Management

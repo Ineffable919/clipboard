@@ -18,6 +18,7 @@ import SwiftUI
 
     var query: String = "" {
         didSet {
+            guard oldValue != query else { return }
             handleQueryChange()
         }
     }
@@ -123,6 +124,9 @@ import SwiftUI
 
     @ObservationIgnored
     private var lastSearchCriteria: SearchCriteria?
+
+    @ObservationIgnored
+    private var isModeResetting = false
 
     @ObservationIgnored
     private var appPathCache: [String: String] = [:]
@@ -708,7 +712,28 @@ import SwiftUI
         }
     }
 
+    func resetFilterState() {
+        isModeResetting = true
+        defer { isModeResetting = false }
+
+        searchTask?.cancel()
+        searchTask = nil
+
+        query = ""
+        tags.removeAll()
+        selectedTypes.removeAll()
+        selectedAppNames.removeAll()
+        selectedDateFilter = nil
+
+        if chipStore.selectedChipId != -1 {
+            chipStore.selectedChipId = -1
+        }
+
+        lastSearchCriteria = SearchCriteria.empty
+    }
+
     private func performSearch() {
+        guard !isModeResetting else { return }
         searchTask?.cancel()
 
         searchTask = Task {

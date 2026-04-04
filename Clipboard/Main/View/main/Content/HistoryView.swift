@@ -13,6 +13,7 @@ struct HistoryView: View {
     @FocusState private var isFocused: Bool
     @AppStorage(PrefKey.enableLinkPreview.rawValue)
     private var enableLinkPreview: Bool = PasteUserDefaults.enableLinkPreview
+    @AppStorage(PrefKey.displayMode.rawValue) private var displayModeRaw: Int = 0
     private let pd = PasteDataStore.main
 
     var body: some View {
@@ -22,6 +23,9 @@ struct HistoryView: View {
             } else {
                 scrollContent
             }
+        }
+        .onChange(of: displayModeRaw) {
+            historyVM.handleModeSwitch()
         }
         .onChange(of: pd.dataList) {
             historyVM.reset()

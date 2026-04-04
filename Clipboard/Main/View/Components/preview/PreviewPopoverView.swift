@@ -132,7 +132,7 @@ private struct PreviewHeaderView: View {
                 onClose?()
             } label: {
                 Image(systemName: "xmark.circle.fill")
-                    .font(.subheadline)
+                    .font(.headline)
                     .foregroundStyle(.secondary)
                     .contentShape(.rect)
             }
