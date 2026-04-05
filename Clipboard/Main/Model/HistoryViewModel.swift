@@ -29,6 +29,23 @@ import SwiftUI
         return selectedIds.contains(id)
     }
 
+    func isShowPreview(_ id: PasteboardModel.ID?) -> Bool {
+        guard let id else { return false }
+        return showPreviewId == id
+    }
+
+    func togglePreview(for id: PasteboardModel.ID?) {
+        if showPreviewId == id {
+            showPreviewId = nil
+        } else {
+            showPreviewId = id
+        }
+    }
+
+    func closePreview() {
+        showPreviewId = nil
+    }
+
     // MARK: - Configuration
 
     func configure(env: AppEnvironment) {
@@ -500,6 +517,7 @@ import SwiftUI
     func handleModeSwitch() {
         cleanup()
         pd.resetToDefault()
+        selectSingle(id: pd.dataList.first?.id)
     }
 
     // MARK: - Event Monitor Management

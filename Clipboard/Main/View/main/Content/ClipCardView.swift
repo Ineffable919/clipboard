@@ -11,7 +11,7 @@ import SwiftUI
 struct ClipCardView: View {
     let model: PasteboardModel
     let isSelected: Bool
-    @Binding var showPreviewId: PasteboardModel.ID?
+    let showPreview: Bool
     let quickPasteIndex: Int?
     let enableLinkPreview: Bool
     let searchKeyword: String
@@ -19,12 +19,12 @@ struct ClipCardView: View {
     var onPaste: (() -> Void)?
     var onPastePlainText: (() -> Void)?
     var onCopy: (() -> Void)?
+    var onTogglePreview: (() -> Void)?
+    var onClosePreview: (() -> Void)?
 
     @Environment(AppEnvironment.self) private var env
 
     var body: some View {
-        let showPreview = showPreviewId == model.id
-
         cardContent
             .overlay {
                 CardOverlayView(
@@ -46,12 +46,12 @@ struct ClipCardView: View {
             .popover(
                 isPresented: Binding(
                     get: { showPreview },
-                    set: { showPreviewId = $0 ? model.id : nil }
+                    set: { if !$0 { onClosePreview?() } }
                 )
             ) {
                 PreviewPopoverView(
                     model: model,
-                    onClose: { showPreviewId = nil }
+                    onClose: { onClosePreview?() }
                 )
             }
     }
@@ -218,7 +218,7 @@ struct ClipCardView: View {
     }
 
     private func togglePreview() {
-        showPreviewId = showPreviewId == model.id ? nil : model.id
+        onTogglePreview?()
     }
 
     private func openEditWindow() {
@@ -227,7 +227,6 @@ struct ClipCardView: View {
 }
 
 #Preview {
-    @Previewable @State var previewId: PasteboardModel.ID? = nil
     let env = AppEnvironment()
     let data = "Clipboard".data(using: .utf8) ?? Data()
     ClipCardView(
@@ -244,7 +243,7 @@ struct ClipCardView: View {
             tag: "string"
         ),
         isSelected: false,
-        showPreviewId: $previewId,
+        showPreview: false,
         quickPasteIndex: 1,
         enableLinkPreview: true,
         searchKeyword: ""

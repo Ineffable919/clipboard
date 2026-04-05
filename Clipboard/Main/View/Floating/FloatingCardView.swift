@@ -10,7 +10,7 @@ import SwiftUI
 struct FloatingCardView: View {
     let model: PasteboardModel
     let isSelected: Bool
-    @Binding var showPreviewId: PasteboardModel.ID?
+    let showPreview: Bool
     let quickPasteIndex: Int?
     let enableLinkPreview: Bool
     let searchKeyword: String
@@ -18,6 +18,8 @@ struct FloatingCardView: View {
     var onPaste: (() -> Void)?
     var onPastePlainText: (() -> Void)?
     var onCopy: (() -> Void)?
+    var onTogglePreview: (() -> Void)?
+    var onClosePreview: (() -> Void)?
 
     @Environment(AppEnvironment.self) private var env
 
@@ -27,13 +29,6 @@ struct FloatingCardView: View {
 
     private var isTextType: Bool {
         model.pasteboardType.isText()
-    }
-
-    private var showPreview: Binding<Bool> {
-        Binding(
-            get: { showPreviewId == model.id },
-            set: { showPreviewId = $0 ? model.id : nil }
-        )
     }
 
     var body: some View {
@@ -56,10 +51,16 @@ struct FloatingCardView: View {
             )
             .padding(Const.space2)
             .contextMenu { contextMenuContent }
-            .popover(isPresented: showPreview, arrowEdge: .leading) {
+            .popover(
+                isPresented: Binding(
+                    get: { showPreview },
+                    set: { if !$0 { onClosePreview?() } }
+                ),
+                arrowEdge: .leading
+            ) {
                 PreviewPopoverView(
                     model: model,
-                    onClose: { showPreviewId = nil }
+                    onClose: { onClosePreview?() }
                 )
             }
     }
@@ -138,7 +139,7 @@ struct FloatingCardView: View {
                 .keyboardShortcut("e", modifiers: [.command])
         }
 
-        Button(String(localized: .deleteTitle), systemImage: "trash", action: deleteItem)
+        Button(String(localized: .delete), systemImage: "trash", action: deleteItem)
             .keyboardShortcut(.delete, modifiers: [])
 
         Divider()
@@ -166,7 +167,7 @@ struct FloatingCardView: View {
     }
 
     private func togglePreview() {
-        showPreviewId = showPreviewId == model.id ? nil : model.id
+        onTogglePreview?()
     }
 
     private func openEditWindow() {
@@ -404,7 +405,6 @@ private struct FloatingImageThumbnailView: View {
 }
 
 #Preview {
-    @Previewable @State var previewId: PasteboardModel.ID? = nil
     let env = AppEnvironment()
     let data = "Hello".data(using: .utf8) ?? Data()
     FloatingCardView(
@@ -421,7 +421,7 @@ private struct FloatingImageThumbnailView: View {
             tag: "string"
         ),
         isSelected: false,
-        showPreviewId: $previewId,
+        showPreview: false,
         quickPasteIndex: 1,
         enableLinkPreview: true,
         searchKeyword: ""

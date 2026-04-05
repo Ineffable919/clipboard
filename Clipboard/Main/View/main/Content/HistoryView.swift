@@ -99,7 +99,7 @@ private struct HistoryCardItemView: View {
         ClipCardView(
             model: item,
             isSelected: historyVM.isItemSelected(item.id),
-            showPreviewId: Bindable(historyVM).showPreviewId,
+            showPreview: historyVM.isShowPreview(item.id),
             quickPasteIndex: historyVM.quickPasteIndex(for: index),
             enableLinkPreview: enableLinkPreview,
             searchKeyword: historyVM.searchKeyword,
@@ -113,7 +113,9 @@ private struct HistoryCardItemView: View {
                     checkPermissions: PasteUserDefaults.pasteDirect
                 )
             },
-            onCopy: { historyVM.copySelectedItems() }
+            onCopy: { historyVM.copySelectedItems() },
+            onTogglePreview: { historyVM.togglePreview(for: item.id) },
+            onClosePreview: { historyVM.closePreview() }
         )
         .contentShape(.rect)
         .transition(

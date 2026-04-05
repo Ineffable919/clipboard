@@ -92,7 +92,7 @@ struct FloatingHistoryView: View {
         FloatingCardView(
             model: item,
             isSelected: historyVM.isItemSelected(item.id),
-            showPreviewId: $historyVM.showPreviewId,
+            showPreview: historyVM.isShowPreview(item.id),
             quickPasteIndex: historyVM.quickPasteIndex(for: index),
             enableLinkPreview: enableLinkPreview,
             searchKeyword: historyVM.searchKeyword,
@@ -104,7 +104,9 @@ struct FloatingHistoryView: View {
                     checkPermissions: PasteUserDefaults.pasteDirect
                 )
             },
-            onCopy: { historyVM.copySelectedItems() }
+            onCopy: { historyVM.copySelectedItems() },
+            onTogglePreview: { historyVM.togglePreview(for: item.id) },
+            onClosePreview: { historyVM.closePreview() }
         )
         .id(item.id)
         .contentShape(.rect)
@@ -209,7 +211,7 @@ struct FloatingHistoryView: View {
         }
 
         if event.keyCode == KeyCode.escape {
-            if case .some(_?) = historyVM.showPreviewId {
+            if historyVM.showPreviewId != nil {
                 historyVM.showPreviewId = nil
                 return nil
             }
