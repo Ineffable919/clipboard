@@ -42,8 +42,6 @@ final class PasteboardModel: Identifiable {
     @ObservationIgnored
     var cachedHighlightedPlainText: AttributedString?
     @ObservationIgnored
-    var cachedHighlightedRichText: NSAttributedString?
-    @ObservationIgnored
     var cachedThumbnail: NSImage?
     @ObservationIgnored
     var cachedImageSize: CGSize?

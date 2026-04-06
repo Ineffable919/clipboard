@@ -56,6 +56,13 @@ struct ClipCardView: View {
             }
     }
 
+    private var cardBackgroundColor: Color {
+        if model.type == .rich, let nsColor = model.nsBackgroundColor {
+            return Color(nsColor)
+        }
+        return model.backgroundColor
+    }
+
     private var cardContent: some View {
         VStack(spacing: 0) {
             CardHeadView(model: model)
@@ -80,7 +87,7 @@ struct ClipCardView: View {
                 )
             }
             .background {
-                model.backgroundColor
+                cardBackgroundColor
             }
             .clipShape(Const.contentShape)
         }

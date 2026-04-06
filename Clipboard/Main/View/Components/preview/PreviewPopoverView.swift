@@ -396,11 +396,11 @@ private struct PreviewRichTextContent: View {
         if model.hasBgColor {
             CardTextView(
                 attributedString: model.highlightedRichText(keyword: ""),
-                isSelectable: true
+                isSelectable: true,
+                backgroundColor: model.nsBackgroundColor
             )
         } else {
             Text(extractedText)
-                .foregroundStyle(.primary)
                 .textSelection(.enabled)
         }
     }

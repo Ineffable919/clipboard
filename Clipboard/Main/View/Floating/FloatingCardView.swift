@@ -118,8 +118,12 @@ struct FloatingCardView: View {
 
     @ViewBuilder
     private var contextMenuContent: some View {
-        Button(String(localized: .paste), systemImage: "doc.on.clipboard", action: pasteToApp)
-            .keyboardShortcut(.return, modifiers: [])
+        Button(
+            String(localized: .paste),
+            systemImage: "doc.on.clipboard",
+            action: pasteToApp
+        )
+        .keyboardShortcut(.return, modifiers: [])
 
         if isTextType {
             Button(
@@ -129,23 +133,39 @@ struct FloatingCardView: View {
             )
         }
 
-        Button(String(localized: .copy), systemImage: "doc.on.doc", action: copyToClipboard)
-            .keyboardShortcut("c", modifiers: [.command])
+        Button(
+            String(localized: .copy),
+            systemImage: "doc.on.doc",
+            action: copyToClipboard
+        )
+        .keyboardShortcut("c", modifiers: [.command])
 
         Divider()
 
         if isTextType {
-            Button(String(localized: .edit), systemImage: "pencil", action: openEditWindow)
-                .keyboardShortcut("e", modifiers: [.command])
+            Button(
+                String(localized: .edit),
+                systemImage: "pencil",
+                action: openEditWindow
+            )
+            .keyboardShortcut("e", modifiers: [.command])
         }
 
-        Button(String(localized: .delete), systemImage: "trash", action: deleteItem)
-            .keyboardShortcut(.delete, modifiers: [])
+        Button(
+            String(localized: .delete),
+            systemImage: "trash",
+            action: deleteItem
+        )
+        .keyboardShortcut(.delete, modifiers: [])
 
         Divider()
 
-        Button(String(localized: .preview), systemImage: "eye", action: togglePreview)
-            .keyboardShortcut(.space, modifiers: [])
+        Button(
+            String(localized: .preview),
+            systemImage: "eye",
+            action: togglePreview
+        )
+        .keyboardShortcut(.space, modifiers: [])
     }
 
     // MARK: - Actions
@@ -182,10 +202,6 @@ private struct FloatingCardContentView: View {
     let enableLinkPreview: Bool
     let searchKeyword: String
 
-    private var modelColors: (Color, Color) {
-        model.colors()
-    }
-
     var body: some View {
         switch model.type {
         case .image:
@@ -194,11 +210,14 @@ private struct FloatingCardContentView: View {
         case .color:
             Text(model.colorDisplayText)
                 .font(.system(.body, design: .monospaced).weight(.medium))
-                .foregroundStyle(modelColors.1)
+                .foregroundStyle(model.colors().1)
         case .file:
             FloatingFileContentView(model: model)
         case .rich:
-            FloatingRichTextContentView(model: model, searchKeyword: searchKeyword)
+            FloatingRichTextContentView(
+                model: model,
+                searchKeyword: searchKeyword
+            )
         case .link:
             if enableLinkPreview {
                 FloatingLinkPreviewView(
@@ -206,10 +225,16 @@ private struct FloatingCardContentView: View {
                     searchKeyword: searchKeyword
                 )
             } else {
-                FloatingPlainTextContentView(model: model, searchKeyword: searchKeyword)
+                FloatingPlainTextContentView(
+                    model: model,
+                    searchKeyword: searchKeyword
+                )
             }
         default:
-            FloatingPlainTextContentView(model: model, searchKeyword: searchKeyword)
+            FloatingPlainTextContentView(
+                model: model,
+                searchKeyword: searchKeyword
+            )
         }
     }
 }
@@ -238,14 +263,16 @@ private struct FloatingRichTextContentView: View {
 
     var body: some View {
         if model.hasBgColor {
-            CardTextView(
-                attributedString: model.highlightedRichText(keyword: searchKeyword),
-                inset: .zero
+            Text(
+                AttributedString(
+                    model.highlightedRichText(keyword: searchKeyword)
+                )
             )
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .clipped()
         } else {
-            FloatingPlainTextContentView(model: model, searchKeyword: searchKeyword)
+            FloatingPlainTextContentView(
+                model: model,
+                searchKeyword: searchKeyword
+            )
         }
     }
 }

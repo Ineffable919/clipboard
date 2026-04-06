@@ -56,8 +56,15 @@ struct FloatingDragPreviewCardView: View {
             }
         case .rich:
             if model.hasBgColor {
-                Image(nsImage: model.richDragPreviewImage(keyword: keyword))
-                    .frame(width: Const.cardSize, height: Const.cntSize)
+                Image(nsImage: model.richDragPreviewImage(
+                    keyword: keyword,
+                    size: CGSize(
+                        width: Const.cardSize - 28 - Const.space10 - Const.space6,
+                        height: FloatConst.cardHeight
+                    ),
+                    inset: CGSize(width: Const.space6, height: Const.space2)
+                ))
+                .clipShape(.rect(cornerRadius: 4))
             } else {
                 plainTextContent
             }

@@ -17,6 +17,12 @@ extension PasteboardModel {
         cachedHasBackgroundColor
     }
 
+    /// 富文本背景色（NSColor）
+    var nsBackgroundColor: NSColor? {
+        guard hasBgColor, let cached = cachedBackgroundColor else { return nil }
+        return NSColor(cached)
+    }
+
     var colorDisplayText: String {
         let raw = attributeString.string
         return raw.hasPrefix("#") ? raw : "#\(raw)"
@@ -48,6 +54,7 @@ extension PasteboardModel {
         if pasteboardType == .string || type == .link {
             return (fallbackBG, .secondary, false)
         }
+        
         if attributeString.length > 0,
            let bg = attributeString.attribute(
                .backgroundColor,
@@ -138,10 +145,6 @@ extension PasteboardModel {
             return attributeString
         }
 
-        if let cachedHighlightedRichText {
-            return cachedHighlightedRichText
-        }
-
         let mutable = NSMutableAttributedString(
             attributedString: attributeString
         )
@@ -180,9 +183,7 @@ extension PasteboardModel {
             )
         }
 
-        let highlighted = mutable
-        cachedHighlightedRichText = highlighted
-        return highlighted
+        return mutable
     }
 
     func needsBottomMask(compute: () -> Bool) -> Bool {
@@ -195,25 +196,40 @@ extension PasteboardModel {
     }
 
     /// 将富文本渲染为固定尺寸的 NSImage，供拖拽预览使用。
-    func richDragPreviewImage(keyword: String = "") -> NSImage {
+    func richDragPreviewImage(
+        keyword: String = "",
+        size: CGSize? = nil,
+        inset: CGSize? = nil
+    ) -> NSImage {
         let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmed.isEmpty, let cachedDragPreviewRichImage {
+        let isDefaultSize = size == nil && inset == nil
+        if trimmed.isEmpty, isDefaultSize, let cachedDragPreviewRichImage {
             return cachedDragPreviewRichImage
         }
 
-        let drawingSize = CGSize(width: Const.cardSize, height: Const.cntSize)
+        let drawingSize = size ?? CGSize(width: Const.cardSize, height: Const.cntSize)
         let drawingRect = CGRect(origin: .zero, size: drawingSize)
-        let insetRect = drawingRect.insetBy(dx: Const.space10, dy: Const.space8)
+        let dx = inset?.width ?? Const.space10
+        let dy = inset?.height ?? Const.space8
+        let insetRect = drawingRect.insetBy(dx: dx, dy: dy)
         let source = trimmed.isEmpty ? attributeString : highlightedRichText(keyword: trimmed)
+
+        let bgColor: NSColor = if attributeString.length > 0,
+                                  let bg = attributeString.attribute(.backgroundColor, at: 0, effectiveRange: nil) as? NSColor
+        {
+            bg
+        } else {
+            .clear
+        }
 
         let image = NSImage(size: drawingSize)
         image.lockFocus()
-        NSColor.clear.setFill()
+        bgColor.setFill()
         NSBezierPath.fill(drawingRect)
         source.draw(in: insetRect)
         image.unlockFocus()
 
-        if trimmed.isEmpty {
+        if trimmed.isEmpty, isDefaultSize {
             cachedDragPreviewRichImage = image
         }
         return image
