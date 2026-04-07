@@ -117,13 +117,13 @@ private struct HistoryCardItemView: View {
             onTogglePreview: { historyVM.togglePreview(for: item.id) },
             onClosePreview: { historyVM.closePreview() }
         )
-        .contentShape(.rect)
         .transition(
             .asymmetric(
                 insertion: .identity,
                 removal: .opacity.combined(with: .scale(scale: 0.92))
             )
         )
+        .contentShape(.rect)
         .onTapGesture {
             historyVM.handleOptimisticTap(on: item, index: index)
         }
@@ -132,12 +132,6 @@ private struct HistoryCardItemView: View {
             env.focusView = .history
             historyVM.selectSingle(id: item.id)
             return item.itemProvider()
-        } preview: {
-            HistoryDragPreviewCardView(
-                model: item,
-                enableLinkPreview: enableLinkPreview,
-                keyword: historyVM.searchKeyword
-            )
         }
         .task(id: item.id) {
             guard historyVM.shouldLoadNextPage(at: index) else { return }

@@ -55,7 +55,8 @@ import SwiftUI
     // MARK: - Search Keyword
 
     var searchKeyword: String {
-        (pd.lastDataChangeType == .loadMore || pd.lastDataChangeType == .searchFilter)
+        (pd.lastDataChangeType == .loadMore
+            || pd.lastDataChangeType == .searchFilter)
             ? pd.currentSearchKeyword
             : ""
     }
@@ -264,7 +265,7 @@ import SwiftUI
             pd.remove(at: index)
         }
 
-        ClipActionService.shared.delete(item)
+        delete(item)
 
         let needsMore =
             pd.dataList.count < 50 && pd.hasMoreData && !pd.isLoadingPage
@@ -278,6 +279,24 @@ import SwiftUI
         }
 
         updateSelectionAfterDeletion(at: index)
+    }
+
+    private func delete(_ item: PasteboardModel) {
+        guard let id = item.id else { return }
+
+        let isInGroup = CategoryChipStore.shared.selectedChipId != -1
+
+        if isInGroup {
+            if item.hidden {
+                pd.delete(id: id)
+            } else {
+                pd.updateItemGroup(itemId: id, groupId: -1)
+            }
+        } else if item.group != -1 {
+            pd.updateItemHidden(itemId: id, hidden: true)
+        } else {
+            pd.delete(id: id)
+        }
     }
 
     private func updateSelectionAfterDeletion(at index: Int) {

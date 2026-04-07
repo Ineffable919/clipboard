@@ -462,29 +462,29 @@ extension PasteDataStore {
     }
 
     func updateItemGroup(itemId: Int64, groupId: Int) {
+        if let model = dataList.first(where: { $0.id == itemId }),
+           groupId != model.group
+        {
+            model.updateGroup(val: groupId)
+        }
+
         Task {
             await sqlManager.updateItemGroup(
                 id: itemId,
                 groupId: groupId
             )
-
-            if let model = dataList.first(where: { $0.id == itemId }),
-               groupId != model.group
-            {
-                model.updateGroup(val: groupId)
-            }
         }
     }
 
     func updateItemHidden(itemId: Int64, hidden: Bool) {
+        if let model = dataList.first(where: { $0.id == itemId }),
+           hidden != model.hidden
+        {
+            model.updateHidden(val: hidden)
+        }
+
         Task {
             await sqlManager.updateItemHidden(id: itemId, hidden: hidden)
-
-            if let model = dataList.first(where: { $0.id == itemId }),
-               hidden != model.hidden
-            {
-                model.updateHidden(val: hidden)
-            }
         }
     }
 

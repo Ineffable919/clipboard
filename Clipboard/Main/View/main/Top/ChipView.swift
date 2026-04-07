@@ -217,6 +217,11 @@ struct ChipView: View {
             return true
         }
 
+        PasteDataStore.main.updateItemGroup(
+            itemId: draggingId,
+            groupId: chip.id
+        )
+
         if let selectedChip = topBarVM.chips.first(where: { $0.id == topBarVM.selectedChipId }),
            !selectedChip.isSystem
         {
@@ -225,10 +230,6 @@ struct ChipView: View {
             pd.dataList = list
         }
 
-        PasteDataStore.main.updateItemGroup(
-            itemId: draggingId,
-            groupId: chip.id
-        )
         return true
     }
 

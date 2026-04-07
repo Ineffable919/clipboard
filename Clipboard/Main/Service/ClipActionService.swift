@@ -89,16 +89,6 @@ final class ClipActionService {
         }
     }
 
-    func delete(_ item: PasteboardModel) {
-        guard let id = item.id else { return }
-
-        if item.group != -1 {
-            dataStore.updateItemHidden(itemId: id, hidden: true)
-        } else {
-            dataStore.delete(id: id)
-        }
-    }
-
     private func requestAccessibilityPermission(
         item: PasteboardModel,
         isAttribute: Bool = true
