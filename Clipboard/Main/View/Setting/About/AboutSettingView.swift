@@ -44,12 +44,7 @@ struct AboutSettingView: View {
                             x: 0,
                             y: 6
                         )
-                        .onDrag {
-                            if let appURL = Bundle.main.bundleURL as NSURL? {
-                                return NSItemProvider(object: appURL)
-                            }
-                            return NSItemProvider()
-                        }
+                        .draggable(Bundle.main.bundleURL)
                         .onHover { isHovered in
                             if isHovered {
                                 NSCursor.openHand.set()
