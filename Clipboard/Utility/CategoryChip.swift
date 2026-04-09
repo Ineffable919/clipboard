@@ -76,6 +76,13 @@ struct CategoryChip: Identifiable, Equatable, Codable {
         }
     }
 
+    init(id: Int, name: String, colorIndex: Int, isSystem: Bool) {
+        self.id = id
+        self.name = name
+        self.colorIndex = colorIndex
+        self.isSystem = isSystem
+    }
+
     static let systemChips: [CategoryChip] = [
         .init(
             id: -1,

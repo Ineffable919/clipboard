@@ -7,7 +7,11 @@
 
 import SwiftUI
 
-class Const {
+enum Const {
+    static let defaultHeight: CGFloat = 330.0
+    static let showDuration: CFTimeInterval = 0.15
+    static let hideDuration: CFTimeInterval = 0.24
+
     static let cardSize: CGFloat = 235.0
     static let cntSize: CGFloat = 185.0
     static let hdSize: CGFloat = 50.0
@@ -20,7 +24,7 @@ class Const {
     static let windowRadis: CGFloat = 23.0
     static let radius: CGFloat =
         if #available(macOS 26.0, *) {
-            16.0
+            14.0
         } else {
             8.0
         }
@@ -111,4 +115,10 @@ class Const {
         bottom: space6,
         trailing: space10
     )
+}
+
+/// 浮动窗口尺寸常量
+enum FloatConst {
+    static let floatWindowWidth: CGFloat = 320.0
+    static let floatWindowHeight: CGFloat = 400.0
 }

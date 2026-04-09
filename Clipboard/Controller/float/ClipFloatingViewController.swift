@@ -6,22 +6,14 @@
 //
 
 import AppKit
-import SwiftUI
 
 final class ClipFloatingViewController: NSViewController {
     private(set) var isPresented: Bool = false
 
     var env = AppEnvironment()
 
-    private lazy var hostingView: NSHostingView<some View> = {
-        let contentView = FloatingView()
-            .environment(env)
-        let v = NSHostingView(rootView: contentView)
-        v.translatesAutoresizingMaskIntoConstraints = false
-        v.wantsLayer = true
-        v.layer?.backgroundColor = NSColor.clear.cgColor
-        return v
-    }()
+    /// AppKit 浮动内容视图，后续替换 SwiftUI NSHostingView
+    var contentView: NSView?
 
     override func loadView() {
         view = NSView()
@@ -43,21 +35,14 @@ final class ClipFloatingViewController: NSViewController {
             return
         }
 
-        if presented, !isPresented, hostingView.superview == nil {
-            view.addSubview(hostingView)
+        if presented, !isPresented, let cv = contentView, cv.superview == nil {
+            cv.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview(cv)
             NSLayoutConstraint.activate([
-                hostingView.leadingAnchor.constraint(
-                    equalTo: view.leadingAnchor
-                ),
-                hostingView.trailingAnchor.constraint(
-                    equalTo: view.trailingAnchor
-                ),
-                hostingView.topAnchor.constraint(
-                    equalTo: view.topAnchor
-                ),
-                hostingView.bottomAnchor.constraint(
-                    equalTo: view.bottomAnchor
-                ),
+                cv.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                cv.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                cv.topAnchor.constraint(equalTo: view.topAnchor),
+                cv.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             ])
         }
 

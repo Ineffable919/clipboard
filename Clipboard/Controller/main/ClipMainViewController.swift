@@ -6,169 +6,99 @@
 //
 
 import AppKit
-import SwiftUI
+import SnapKit
 
 final class ClipMainViewController: NSViewController {
-    private let defaultHeight: CGFloat = 330.0
-    private let showDuration: CFTimeInterval = 0.15
-    private let hideDuration: CFTimeInterval = 0.24
-    private(set) var isPresented: Bool = false
 
-    private let slideContainer: NSView = {
-        let v = NSView()
-        v.translatesAutoresizingMaskIntoConstraints = false
-        v.wantsLayer = true
-        v.layer?.backgroundColor = NSColor.clear.cgColor
-        return v
+    private let topBarViewModel = TopBarViewModel()
+
+    private lazy var effectView: NSView = {
+        if #available(macOS 26.0, *) {
+            let glassView = NSGlassEffectView()
+            glassView.frame = view.frame
+            glassView.cornerRadius = 34
+            glassView.contentView = contentView
+            return glassView
+        } else {
+            let effectView = NSVisualEffectView()
+            effectView.wantsLayer = true
+            effectView.frame = view.frame
+            effectView.state = .active
+            effectView.blendingMode = .behindWindow
+            return effectView
+        }
     }()
 
-    var env = AppEnvironment()
-
-    private lazy var hostingView: NSHostingView<some View> = {
-        let contentView = ContentView()
-            .environment(env)
-        let v = NSHostingView(rootView: contentView)
-        v.translatesAutoresizingMaskIntoConstraints = false
-        v.wantsLayer = true
-        v.layer?.backgroundColor = NSColor.clear.cgColor
-        return v
-    }()
-
-    private var currentAnimDelegate: CAAnimationDelegate?
-
-    override func loadView() {
-        view = NSView()
-    }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-
+    private lazy var contentView: NSView = {
+        let view = NSView()
         view.wantsLayer = true
         view.layer?.backgroundColor = NSColor.clear.cgColor
+        if #available(macOS 26.0, *) {
+            view.layer?.cornerRadius = 34
+        }
         view.layer?.masksToBounds = true
+        return view
+    }()
 
-        view.addSubview(slideContainer)
-        NSLayoutConstraint.activate([
-            slideContainer.leadingAnchor.constraint(
-                equalTo: view.leadingAnchor
-            ),
-            slideContainer.trailingAnchor.constraint(
-                equalTo: view.trailingAnchor
-            ),
-            slideContainer.topAnchor.constraint(equalTo: view.topAnchor),
-            slideContainer.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-        ])
+    private lazy var topBarView: TopBarView = {
+        let bar = TopBarView()
+        bar.configure(viewModel: topBarViewModel)
+        return bar
+    }()
 
-        slideContainer.layer?.transform = CATransform3DMakeTranslation(
-            0,
-            -defaultHeight,
-            0
-        )
+}
+
+extension ClipMainViewController {
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        initView()
     }
 
-    func setPresented(
-        _ presented: Bool,
-        animated: Bool,
-        completion: (() -> Void)? = nil
-    ) {
-        guard presented != isPresented else {
-            completion?()
-            return
-        }
-
-        if presented, !isPresented, hostingView.superview == nil {
-            slideContainer.addSubview(hostingView)
-            let inset: CGFloat = if #available(macOS 26, *) {
-                8.0
-            } else {
-                0
-            }
-            NSLayoutConstraint.activate([
-                hostingView.leadingAnchor.constraint(
-                    equalTo: slideContainer.leadingAnchor,
-                    constant: inset
-                ),
-                hostingView.trailingAnchor.constraint(
-                    equalTo: slideContainer.trailingAnchor,
-                    constant: -inset
-                ),
-                hostingView.topAnchor.constraint(
-                    equalTo: slideContainer.topAnchor
-                ),
-                hostingView.bottomAnchor.constraint(
-                    equalTo: slideContainer.bottomAnchor,
-                    constant: -inset
-                ),
-            ])
-        }
-
-        isPresented = presented
-        animateSlide(
-            presented: presented,
-            duration: animated ? (presented ? showDuration : hideDuration) : 0,
-            completion: completion
+    override func viewDidAppear() {
+        view.window?.makeFirstResponder(contentView)
+        view.frame = NSRect(
+            x: view.frame.origin.x,
+            y: -Const.defaultHeight,
+            width: view.frame.width,
+            height: Const.defaultHeight
         )
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.15
+            self.view.animator().setFrameOrigin(.zero)
+        }
     }
 
-    private func animateSlide(
-        presented: Bool,
-        duration: CFTimeInterval,
-        completion: (() -> Void)?
-    ) {
-        guard let layer = slideContainer.layer else {
-            completion?()
-            return
-        }
+    override func viewDidDisappear() {
+        super.viewDidDisappear()
+        PasteDataStore.main.clearExpiredData()
+    }
+}
 
-        view.needsLayout = true
-        view.displayIfNeeded()
-        let h = max(view.bounds.height, defaultHeight)
-
-        let from = layer.presentation()?.transform ?? layer.transform
-        let to = CATransform3DMakeTranslation(0, presented ? 0 : -h, 0)
-
-        layer.removeAnimation(forKey: "slide")
-        currentAnimDelegate = nil
-
-        if duration <= 0 {
-            layer.transform = to
-            completion?()
-            return
-        }
-
-        let anim = CABasicAnimation(keyPath: "transform")
-        anim.fromValue = from
-        anim.toValue = to
-        anim.duration = duration
-        anim.timingFunction = CAMediaTimingFunction(name: .easeOut)
-        anim.fillMode = .forwards
-        anim.isRemovedOnCompletion = false
-
-        class AnimDelegate: NSObject, CAAnimationDelegate {
-            var onStop: (() -> Void)?
-            init(_ onStop: @escaping () -> Void) {
-                self.onStop = onStop
-            }
-
-            func animationDidStop(_: CAAnimation, finished flag: Bool) {
-                if flag { onStop?() }
-                onStop = nil
+extension ClipMainViewController {
+    private func initView() {
+        view.wantsLayer = true
+        view.addSubview(effectView)
+        if effectView is NSVisualEffectView {
+            effectView.addSubview(contentView)
+            contentView.snp.makeConstraints { make in
+                make.edges.equalToSuperview()
             }
         }
 
-        let delegate = AnimDelegate { [weak self] in
-            CATransaction.begin()
-            CATransaction.setDisableActions(true)
-            layer.transform = to
-            CATransaction.commit()
-            layer.removeAnimation(forKey: "slide")
-            self?.currentAnimDelegate = nil
-            completion?()
+        contentView.addSubview(topBarView)
+
+        effectView.snp.makeConstraints { make in
+            make.leading.equalTo(8)
+            make.trailing.equalTo(-8)
+            make.top.equalToSuperview()
+            make.bottom.equalTo(-8)
         }
 
-        currentAnimDelegate = delegate
-        anim.delegate = delegate
-
-        layer.add(anim, forKey: "slide")
+        topBarView.snp.makeConstraints { make in
+            make.leading.equalTo(Const.space24)
+            make.trailing.equalTo(-Const.space24)
+            make.top.equalToSuperview()
+            make.height.equalTo(Const.topBarHeight)
+        }
     }
 }

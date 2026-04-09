@@ -5,22 +5,24 @@ This repository contains an Xcode project written with Swift and SwiftUI targeti
 
 ## Role
 
-You are a **Senior macOS Engineer**, specializing in SwiftUI, SwiftData, AppKit integration, and related frameworks. Your code must always adhere to Apple's Human Interface Guidelines and Mac App Store Review guidelines.
+You are a **Senior macOS Engineer**, specializing in AppKit, SwiftData, Swift concurrency, and related frameworks. Your code must always adhere to Apple's Human Interface Guidelines and Mac App Store Review guidelines.
 
 
 ## Core instructions
 
 - Target macOS 15.0 or later.
 - Swift 6.2 or later, using modern Swift concurrency. Always choose async/await APIs over closure-based variants whenever they exist.
-- SwiftUI backed up by `@Observable` classes for shared data.
+- **Default to AppKit** for all UI unless the task explicitly requests SwiftUI. Use `NSViewController`, `NSWindowController`, `NSView`, and related AppKit types as the primary building blocks.
+- Use `@Observable` classes (marked `@MainActor`) for shared data and view-model state, regardless of whether the UI layer is AppKit or SwiftUI.
+- SwiftUI may be used for isolated sub-views embedded via `NSHostingView` / `NSHostingController` only when explicitly requested.
 - Do not introduce third-party frameworks without asking first.
-- Avoid AppKit unless requested or when SwiftUI has no equivalent.
 
 
 ## Swift instructions
 
 - `@Observable` classes must be marked `@MainActor` unless the project has Main Actor default actor isolation. Flag any `@Observable` class missing this annotation.
-- All shared data should use `@Observable` classes with `@State` (for ownership) and `@Bindable` / `@Environment` (for passing).
+- All shared data should use `@Observable` classes. In AppKit contexts, pass view-model instances directly to view controllers via initializer injection or a dedicated `configure(_:)` method.
+- In the rare SwiftUI contexts, use `@State` for ownership and `@Bindable` / `@Environment` for passing.
 - Strongly prefer not to use `ObservableObject`, `@Published`, `@StateObject`, `@ObservedObject`, or `@EnvironmentObject` unless they are unavoidable, or if they exist in legacy/integration contexts when changing architecture would be complicated.
 - Assume strict Swift concurrency rules are being applied.
 - Prefer Swift-native alternatives to Foundation methods where they exist, such as using `replacing("hello", with: "world")` with strings rather than `replacingOccurrences(of: "hello", with: "world")`.
@@ -31,53 +33,6 @@ You are a **Senior macOS Engineer**, specializing in SwiftUI, SwiftData, AppKit 
 - Filtering text based on user-input must be done using `localizedStandardContains()` as opposed to `contains()`.
 - Avoid force unwraps and force `try` unless it is unrecoverable.
 - Never use legacy `Formatter` subclasses such as `DateFormatter`, `NumberFormatter`, or `MeasurementFormatter`. Always use the modern `FormatStyle` API instead. For example, to format a date, use `myDate.formatted(date: .abbreviated, time: .shortened)`. To parse a date from a string, use `Date(inputString, strategy: .iso8601)`. For numbers, use `myNumber.formatted(.number)` or custom format styles.
-
-
-## SwiftUI instructions
-
-- Always use `foregroundStyle()` instead of `foregroundColor()`.
-- Always use `clipShape(.rect(cornerRadius:))` instead of `cornerRadius()`.
-- Never use `ObservableObject`; always prefer `@Observable` classes instead.
-- Never use the `onChange()` modifier in its 1-parameter variant; either use the variant that accepts two parameters or accepts none.
-- Never use `onTapGesture()` unless you specifically need to know a tap's location or the number of taps. All other usages should use `Button`.
-- Never use `Task.sleep(nanoseconds:)`; always use `Task.sleep(for:)` instead.
-- Do not break views up using computed properties; place them into new `View` structs instead.
-- Do not force specific font sizes; prefer using Dynamic Type instead.
-- Use the `navigationDestination(for:)` modifier to specify navigation, and always use `NavigationStack` instead of the old `NavigationView`.
-- If using an image for a button label, always specify text alongside like this: `Button("Click me", systemImage: "plus", action: myButtonAction)`.
-- When rendering SwiftUI views, always prefer using `ImageRenderer` to `NSGraphicsImageRenderer`.
-- Don't apply the `fontWeight()` modifier unless there is good reason. If you want to make some text bold, always use `bold()` instead of `fontWeight(.bold)`.
-- Do not use `GeometryReader` if a newer alternative would work as well, such as `containerRelativeFrame()` or `visualEffect()`.
-- When making a `ForEach` out of an `enumerated` sequence, do not convert it to an array first. So, prefer `ForEach(x.enumerated(), id: \.element.id)` instead of `ForEach(Array(x.enumerated()), id: \.element.id)`.
-- When hiding scroll view indicators, use the `.scrollIndicators(.hidden)` modifier rather than using `showsIndicators: false` in the scroll view initializer.
-- Use the newest ScrollView APIs for item scrolling and positioning (e.g. `ScrollPosition` and `defaultScrollAnchor`); avoid older scrollView APIs like ScrollViewReader.
-- Place view logic into view models or similar, so it can be tested.
-- Avoid `AnyView` unless it is absolutely required.
-- Avoid specifying hard-coded values for padding and stack spacing unless requested.
-- Avoid using AppKit colors in SwiftUI code.
-
-### macOS-specific SwiftUI
-
-- Use `NavigationSplitView` for multi-column layouts (sidebar + content + detail) instead of custom HStack-based layouts.
-- For tab-based navigation, use `Tab` API instead.
-- Use `.commands {}` to add menu bar commands; never manually construct `NSMenu`.
-- Use `Settings {}` scene for the app's Preferences window.
-- Use `WindowGroup`, `Window`, `DocumentGroup`, or `Settings` scenes as appropriate; do not use a single `WindowGroup` for everything.
-- Use `focusedValue` / `focusedBinding` / `@FocusedValue` for passing focused state to commands and toolbars.
-- Prefer `.toolbar` with `ToolbarItem(placement: .primaryAction)` etc. over custom header views.
-- Use `Table` for multi-column data display instead of custom `List` + `HStack` rows.
-- Support keyboard shortcuts via `.keyboardShortcut()` for all primary actions.
-- Respect the macOS window resizing model; avoid fixed-size windows unless the content truly requires it.
-- Use `NSOpenPanel` / `NSSavePanel` only when SwiftUI's `fileImporter` / `fileExporter` / `fileMover` modifiers are insufficient.
-
-
-## SwiftData instructions
-
-If SwiftData is configured to use CloudKit:
-
-- Never use `@Attribute(.unique)`.
-- Model properties must always either have default values or be marked as optional.
-- All relationships must be marked optional.
 
 
 ## Project structure

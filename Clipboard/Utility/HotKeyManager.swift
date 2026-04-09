@@ -95,7 +95,7 @@ class HotKeyManager {
 
     private func registerBuiltInHandlers() {
         handlers["app_launch"] = {
-            WindowManager.shared.toggleWindow()
+            WindowManager.shared.toggleWindow(frame: NSScreen.main?.frame)
         }
     }
 
@@ -244,7 +244,9 @@ class HotKeyManager {
 
         var hotKeyList = getAllHotKeys()
 
-        if let conflict = hotKeyList.first(where: { $0.shortcut == shortcut || $0.key == key }) {
+        if let conflict = hotKeyList.first(where: {
+            $0.shortcut == shortcut || $0.key == key
+        }) {
             if conflict.key == key {
                 log.debug("快捷键 key 已存在: \(key)")
             } else {
@@ -323,7 +325,8 @@ class HotKeyManager {
     func deleteHotKey(key: String) -> Bool {
         var hotKeyList = getAllHotKeys()
 
-        if let info = hotKeyList.first(where: { $0.key == key }), info.isGlobal {
+        if let info = hotKeyList.first(where: { $0.key == key }), info.isGlobal
+        {
             unregisterSystemHotKey(key: key)
         }
 
@@ -405,7 +408,8 @@ class HotKeyManager {
             HotKeyInfo(
                 key: "app_launch",
                 shortcut: KeyboardShortcut(
-                    modifiersRawValue: NSEvent.ModifierFlags([.command, .shift]).rawValue,
+                    modifiersRawValue: NSEvent.ModifierFlags([.command, .shift])
+                        .rawValue,
                     keyCode: KeyCode.v,
                     displayKey: "V"
                 ),

@@ -9,24 +9,28 @@ import AppKit
 import Combine
 
 final class ClipMainWindowController: NSWindowController {
-    private let viewHeight: CGFloat = 330.0
-
     static let shared = ClipMainWindowController()
+
     var isVisible: Bool {
         window?.isVisible ?? false
     }
 
-    private let clipVC = ClipMainViewController()
     private let db = PasteDataStore.main
+    private var isAnimating = false
 
     init() {
         let panel = ClipWindowView(
-            contentRect: NSRect(x: 0, y: 0, width: 0, height: viewHeight),
+            contentRect: NSRect(
+                x: 0,
+                y: 0,
+                width: 0,
+                height: Const.defaultHeight
+            ),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
-        panel.contentViewController = clipVC
+        panel.contentViewController = ClipMainViewController()
         super.init(window: panel)
         setupWindow()
     }
@@ -55,57 +59,54 @@ final class ClipMainWindowController: NSWindowController {
         )
     }
 
-    func layoutToBottom(screen: NSScreen? = NSScreen.main) {
-        guard let screen else { return }
-        let f = screen.frame
-        let rect = NSRect(
-            x: f.minX,
-            y: f.minY,
-            width: f.width,
-            height: viewHeight
-        )
-        window?.setFrame(rect, display: true)
-    }
-
-    func toggleWindow(_ completionHandler: (() -> Void)? = nil) {
-        setPresented(!clipVC.isPresented, animated: true, completionHandler)
-    }
-
-    func setPresented(
-        _ presented: Bool,
-        animated: Bool,
-        _ completionHandler: (() -> Void)? = nil
+    func toggleWindow(
+        _ frame: NSRect? = nil,
+        _ completionHandler: (@MainActor () -> Void)? = nil
     ) {
-        guard let win = window else { return }
-
-        if presented {
-            if !win.isVisible {
-                clipVC.env.preApp = NSWorkspace.shared.frontmostApplication
-                layoutToBottom()
-                win.orderFrontRegardless()
-            }
-            win.makeKey()
-
-            clipVC.env.resetQuickPasteState()
-
-            clipVC.setPresented(true, animated: animated, completion: nil)
+        guard !isAnimating else { return }
+        if isVisible {
+            dismiss(completionHandler)
         } else {
-            clipVC.setPresented(false, animated: animated) { [weak self] in
-                self?.window?.orderOut(nil)
+            show(in: frame)
+        }
+    }
+}
+
+extension ClipMainWindowController {
+    func dismiss(_ completionHandler: (@MainActor () -> Void)? = nil) {
+        guard !isAnimating else { return }
+        isAnimating = true
+        let view = window?.contentViewController?.view
+        NSAnimationContext.runAnimationGroup({ context in
+            context.duration = Const.hideDuration
+            view?.animator().setFrameOrigin(
+                NSPoint(x: 0, y: -(view?.bounds.height ?? Const.defaultHeight))
+            )
+        }) {
+            Task { @MainActor in
+                self.window?.orderOut(nil)
+                self.window?.setIsVisible(false)
+                self.isAnimating = false
                 completionHandler?()
-                Task { [weak self] in
-                    self?.db.clearExpiredData()
-                }
             }
         }
+    }
+
+    func show(in frame: NSRect?) {
+        let frame = frame ?? .zero
+        window?.setFrame(frame, display: true)
+        window?.setIsVisible(true)
+        // window?.becomeFirstResponder()
+        window?.orderFrontRegardless()
+        window?.makeKey()
     }
 }
 
 extension ClipMainWindowController: NSWindowDelegate {
     func windowDidResignKey(_: Notification) {
-        if clipVC.env.isShowDel {
-            return
-        }
-        setPresented(false, animated: true)
+        // if clipVC.env.isShowDel {
+        //     return
+        // }
+        dismiss()
     }
 }

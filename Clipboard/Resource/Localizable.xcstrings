@@ -247,13 +247,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cleared data cannot be recovered.\nThe app will quit after clearing. Please reopen it."
+            "value" : "Can't recover after clearing data, confirm deletion?"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "清空数据后无法恢复\n清空后会退出应用，请重新打开。"
+            "value" : "清空数据后无法恢复，确认删除吗？"
           }
         }
       }

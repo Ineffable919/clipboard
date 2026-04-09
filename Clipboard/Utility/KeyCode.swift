@@ -59,6 +59,7 @@ enum KeyCode {
 
     static let escape: UInt16 = .init(kVK_Escape) // 0x35
     static let delete: UInt16 = .init(kVK_Delete) // 0x33
+    static let forwardDelete: UInt16 = .init(kVK_ForwardDelete) // 0x75
     static let tab: UInt16 = .init(kVK_Tab) // 0x30
     static let `return`: UInt16 = .init(kVK_Return) // 0x24
     static let space: UInt16 = .init(kVK_Space) // 0x31

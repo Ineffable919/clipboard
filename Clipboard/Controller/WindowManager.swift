@@ -17,11 +17,16 @@ final class WindowManager {
     private init() {}
 
     func getCurrentDisplayMode() -> DisplayMode {
-        let rawValue = UserDefaults.standard.integer(forKey: PrefKey.displayMode.rawValue)
+        let rawValue = UserDefaults.standard.integer(
+            forKey: PrefKey.displayMode.rawValue
+        )
         return DisplayMode(rawValue: rawValue) ?? .drawer
     }
 
-    func toggleWindow(_ completionHandler: (() -> Void)? = nil) {
+    func toggleWindow(
+        _ completionHandler: (() -> Void)? = nil,
+        frame: NSRect? = nil
+    ) {
         let mode = getCurrentDisplayMode()
 
         switch mode {
@@ -29,10 +34,10 @@ final class WindowManager {
             if floatingController.isVisible {
                 floatingController.setPresented(false)
             }
-            drawerController.toggleWindow(completionHandler)
+            drawerController.toggleWindow(frame, completionHandler)
         case .floating:
             if drawerController.isVisible {
-                drawerController.setPresented(false, animated: false)
+                drawerController.dismiss()
             }
             floatingController.toggleWindow(completionHandler)
         }
@@ -50,10 +55,10 @@ final class WindowManager {
             if floatingController.isVisible {
                 floatingController.setPresented(false)
             }
-            drawerController.setPresented(presented, animated: animated, completionHandler)
+            drawerController.show(in: NSScreen.main?.frame)
         case .floating:
             if drawerController.isVisible {
-                drawerController.setPresented(false, animated: false)
+                drawerController.dismiss()
             }
             floatingController.setPresented(presented, completionHandler)
         }
