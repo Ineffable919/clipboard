@@ -64,7 +64,7 @@ final class ChipButton: NSView {
         backgroundLayer.masksToBounds = true
         layer?.addSublayer(backgroundLayer)
 
-        label.font = .systemFont(ofSize: 14, weight: .regular)
+        label.font = .systemFont(ofSize: 13, weight: .regular)
         label.lineBreakMode = .byTruncatingTail
         label.setContentCompressionResistancePriority(
             .defaultLow,
@@ -147,7 +147,7 @@ final class ChipButton: NSView {
                     "clock.arrow.trianglehead.counterclockwise.rotate.90",
                     accessibilityDescription: nil
                 )?.withSymbolConfiguration(
-                    .init(pointSize: 16, weight: .medium)
+                    .init(pointSize: 16, weight: .regular)
                 )
                 iconImageView.imageScaling = .scaleProportionallyDown
                 iconImageView.snp.remakeConstraints { make in
