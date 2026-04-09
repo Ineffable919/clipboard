@@ -110,7 +110,7 @@ extension AppDelegate {
 }
 
 extension AppDelegate {
-    func toggleWindow(_ completionHandler: (() -> Void)? = nil) {
+    func toggleWindow(_ completionHandler: (@MainActor @Sendable () -> Void)? = nil) {
         windowManager.toggleWindow(completionHandler)
     }
 

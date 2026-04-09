@@ -212,13 +212,13 @@ final class ClipFloatingWindowController: NSWindowController {
         win.setFrame(NSRect(origin: origin, size: finalSize), display: true)
     }
 
-    func toggleWindow(_ completionHandler: (() -> Void)? = nil) {
+    func toggleWindow(_ completionHandler: (@MainActor @Sendable () -> Void)? = nil) {
         setPresented(!clipVC.isPresented, completionHandler)
     }
 
     func setPresented(
         _ presented: Bool,
-        _ completionHandler: (() -> Void)? = nil
+        _ completionHandler: (@MainActor @Sendable () -> Void)? = nil
     ) {
         guard let win = window else { return }
 

@@ -6,21 +6,16 @@
 //
 
 import AppKit
+import SnapKit
 
-/// 主窗口顶栏（AppKit）。
-///
-/// 默认模式：[🔍] [chip 列表] [+]
-/// 搜索模式：[SearchField] [● chip 圆点列表]
 final class TopBarView: NSView {
-
-    // MARK: - 始终可见
-
     private let settingBtn = TopBarIconButton(symbolName: "ellipsis")
 
-    // MARK: - 默认模式行
-
     private let defaultRow = NSStackView()
-    private let searchIconBtn = TopBarIconButton(symbolName: "magnifyingglass", pointSize: 18)
+    private let searchIconBtn = TopBarIconButton(
+        symbolName: "magnifyingglass",
+        pointSize: 18
+    )
     private let chipScrollView = ChipScrollView()
     private let addChipBtn = TopBarIconButton(symbolName: "plus")
 
@@ -44,7 +39,9 @@ final class TopBarView: NSView {
     }
 
     @available(*, unavailable)
-    required init?(coder: NSCoder) { fatalError() }
+    required init?(coder _: NSCoder) {
+        fatalError()
+    }
 
     deinit { observationTask?.cancel() }
 
@@ -80,73 +77,87 @@ final class TopBarView: NSView {
 
     private func setupDefaultRow() {
         defaultRow.orientation = .horizontal
-        defaultRow.spacing = Const.space8
+        defaultRow.spacing = Const.space12
         defaultRow.alignment = .centerY
-        defaultRow.translatesAutoresizingMaskIntoConstraints = false
+        defaultRow.distribution = .fill
+        defaultRow.setHuggingPriority(.required, for: .horizontal)
         addSubview(defaultRow)
 
         searchIconBtn.action = { [weak self] in self?.activateSearch() }
-        addChipBtn.action = { [weak self] in self?.viewModel?.editingNewChip = true }
+        addChipBtn.action = { [weak self] in
+            self?.viewModel?.editingNewChip = true
+        }
 
-        // chipScrollView 填满中间空间（scrollView 内部 contentStack 自然包裹内容）
-        chipScrollView.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        chipScrollView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        chipScrollView.setContentHuggingPriority(.required, for: .horizontal)
+        chipScrollView.setContentCompressionResistancePriority(
+            .defaultLow,
+            for: .horizontal
+        )
 
         defaultRow.addArrangedSubview(searchIconBtn)
         defaultRow.addArrangedSubview(chipScrollView)
         defaultRow.addArrangedSubview(addChipBtn)
-
-        defaultRow.heightAnchor.constraint(equalToConstant: 34).isActive = true
     }
 
     private func setupSearchRow() {
         searchRow.orientation = .horizontal
         searchRow.spacing = Const.space8
         searchRow.alignment = .centerY
-        searchRow.translatesAutoresizingMaskIntoConstraints = false
         addSubview(searchRow)
 
         searchField.cell?.controlSize = .large
-        searchField.translatesAutoresizingMaskIntoConstraints = false
-        searchField.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        searchField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        searchField.cell?.isScrollable = true
+        searchField.cell?.wraps = false
+        searchField.cell?.usesSingleLineMode = true
+        searchField.setContentHuggingPriority(.required, for: .horizontal)
+        searchField.setContentCompressionResistancePriority(
+            .required,
+            for: .horizontal
+        )
+        searchField.snp.makeConstraints { make in
+            make.width.equalTo(Const.topBarWidth)
+        }
 
         dotChipScrollView.setContentHuggingPriority(.required, for: .horizontal)
-        dotChipScrollView.setContentCompressionResistancePriority(.required, for: .horizontal)
-        dotChipScrollView.widthAnchor.constraint(lessThanOrEqualToConstant: 90).isActive = true
+        dotChipScrollView.setContentCompressionResistancePriority(
+            .required,
+            for: .horizontal
+        )
 
         searchRow.addArrangedSubview(searchField)
         searchRow.addArrangedSubview(dotChipScrollView)
 
-        searchRow.heightAnchor.constraint(equalToConstant: 34).isActive = true
+        searchRow.snp.makeConstraints { make in
+            make.top.equalToSuperview()
+        }
 
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(inputChanged),
-            name: NSControl.textDidChangeNotification,
-            object: searchField
-        )
+        searchField.delegate = self
     }
 
     private func setupSettingBtn() {
-        settingBtn.translatesAutoresizingMaskIntoConstraints = false
         settingBtn.action = { /* TODO: 展示设置菜单 */ }
         addSubview(settingBtn)
     }
 
     private func layoutRows() {
-        NSLayoutConstraint.activate([
-            settingBtn.trailingAnchor.constraint(equalTo: trailingAnchor),
-            settingBtn.centerYAnchor.constraint(equalTo: centerYAnchor),
+        settingBtn.snp.makeConstraints { make in
+            make.trailing.equalToSuperview().offset(-Const.space12)
+            make.centerY.equalToSuperview()
+        }
 
-            defaultRow.centerXAnchor.constraint(equalTo: centerXAnchor),
-            defaultRow.widthAnchor.constraint(equalToConstant: Const.topBarWidth),
-            defaultRow.centerYAnchor.constraint(equalTo: centerYAnchor),
+        defaultRow.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(100)
+            make.trailing.lessThanOrEqualTo(settingBtn.snp.leading).offset(
+                -Const.space12
+            )
+            make.centerY.equalToSuperview()
+        }
 
-            searchRow.centerXAnchor.constraint(equalTo: centerXAnchor),
-            searchRow.widthAnchor.constraint(equalToConstant: Const.topBarWidth),
-            searchRow.centerYAnchor.constraint(equalTo: centerYAnchor),
-        ])
+        searchRow.snp.makeConstraints { make in
+            make.leading.trailing.equalToSuperview()
+            make.top.bottom.equalToSuperview()
+            make.centerY.equalToSuperview()
+        }
     }
 
     // MARK: - ViewModel Observation
@@ -154,11 +165,25 @@ final class TopBarView: NSView {
     private func reloadChips() {
         guard let vm = viewModel else { return }
 
-        chipScrollView.reload(chips: vm.chips, selectedId: vm.selectedChipId, dotMode: false)
-        chipScrollView.onSelectionChanged = { [weak vm] id in vm?.selectedChipId = id }
+        chipScrollView.reload(
+            chips: vm.chips,
+            selectedId: vm.selectedChipId,
+            dotMode: false
+        )
+        chipScrollView.onSelectionChanged = { [weak self, weak vm] id in
+            vm?.selectedChipId = id
+            self?.deactivateSearch()
+        }
 
-        dotChipScrollView.reload(chips: vm.chips, selectedId: vm.selectedChipId, dotMode: true)
-        dotChipScrollView.onSelectionChanged = { [weak vm] id in vm?.selectedChipId = id }
+        dotChipScrollView.reload(
+            chips: vm.chips,
+            selectedId: vm.selectedChipId,
+            dotMode: true
+        )
+        dotChipScrollView.onSelectionChanged = { [weak self, weak vm] id in
+            vm?.selectedChipId = id
+            self?.deactivateSearch()
+        }
     }
 
     private func startObserving(viewModel: TopBarViewModel) {
@@ -169,12 +194,16 @@ final class TopBarView: NSView {
                     withObservationTracking {
                         _ = viewModel.chips
                         _ = viewModel.selectedChipId
+                        _ = viewModel.query
                     } onChange: {
                         continuation.resume()
                     }
                 }
                 guard !Task.isCancelled else { break }
                 self?.reloadChips()
+                if self?.searchField.stringValue != viewModel.query {
+                    self?.searchField.stringValue = viewModel.query
+                }
             }
         }
     }
@@ -187,7 +216,6 @@ final class TopBarView: NSView {
         applyMode()
     }
 
-    /// 直接切换两行的显隐，无动画。
     private func applyMode() {
         defaultRow.isHidden = isSearching
         searchRow.isHidden = !isSearching
@@ -196,10 +224,12 @@ final class TopBarView: NSView {
             window?.makeFirstResponder(searchField)
         }
     }
+}
 
-    // MARK: - Input
+// MARK: - NSSearchFieldDelegate
 
-    @objc private func inputChanged() {
+extension TopBarView: NSSearchFieldDelegate {
+    func controlTextDidChange(_: Notification) {
         viewModel?.query = searchField.stringValue
     }
 }

@@ -9,7 +9,6 @@ import AppKit
 import SnapKit
 
 final class ClipMainViewController: NSViewController {
-
     private let topBarViewModel = TopBarViewModel()
 
     private lazy var effectView: NSView = {
@@ -45,7 +44,6 @@ final class ClipMainViewController: NSViewController {
         bar.configure(viewModel: topBarViewModel)
         return bar
     }()
-
 }
 
 extension ClipMainViewController {
@@ -87,16 +85,21 @@ extension ClipMainViewController {
 
         contentView.addSubview(topBarView)
 
+        let inner: CGFloat =
+            if #available(macOS 26.0, *) {
+                8.0
+            } else { 0.0 }
+
         effectView.snp.makeConstraints { make in
-            make.leading.equalTo(8)
-            make.trailing.equalTo(-8)
+            make.leading.equalTo(inner)
+            make.trailing.equalTo(-inner)
             make.top.equalToSuperview()
-            make.bottom.equalTo(-8)
+            make.bottom.equalTo(-inner)
         }
 
         topBarView.snp.makeConstraints { make in
-            make.leading.equalTo(Const.space24)
-            make.trailing.equalTo(-Const.space24)
+            make.leading.equalTo(contentView.snp.centerX).offset(-200)
+            make.trailing.equalToSuperview()
             make.top.equalToSuperview()
             make.height.equalTo(Const.topBarHeight)
         }

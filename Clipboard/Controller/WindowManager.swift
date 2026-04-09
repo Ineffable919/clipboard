@@ -24,7 +24,7 @@ final class WindowManager {
     }
 
     func toggleWindow(
-        _ completionHandler: (() -> Void)? = nil,
+        _ completionHandler: (@MainActor @Sendable () -> Void)? = nil,
         frame: NSRect? = nil
     ) {
         let mode = getCurrentDisplayMode()
@@ -45,8 +45,8 @@ final class WindowManager {
 
     func setPresented(
         _ presented: Bool,
-        animated: Bool,
-        _ completionHandler: (() -> Void)? = nil
+        animated _: Bool,
+        _ completionHandler: (@MainActor @Sendable () -> Void)? = nil
     ) {
         let mode = getCurrentDisplayMode()
 

@@ -6,10 +6,10 @@
 //
 
 import AppKit
+import SnapKit
 import SwiftUI
 
 final class ChipButton: NSView {
-
     // MARK: - Config
 
     struct Config {
@@ -23,7 +23,7 @@ final class ChipButton: NSView {
 
     private let backgroundLayer = CALayer()
     private let iconImageView = NSImageView()
-    private let dotLayer = CALayer()
+    private let dotView = NSView()
     private let label = NSTextField(labelWithString: "")
     private let stack = NSStackView()
 
@@ -51,7 +51,9 @@ final class ChipButton: NSView {
     }
 
     @available(*, unavailable)
-    required init?(coder: NSCoder) { fatalError() }
+    required init?(coder _: NSCoder) {
+        fatalError()
+    }
 
     // MARK: - Setup
 
@@ -73,120 +75,100 @@ final class ChipButton: NSView {
         stack.orientation = .horizontal
         stack.spacing = Const.space6
         stack.alignment = .centerY
-        stack.translatesAutoresizingMaskIntoConstraints = false
         addSubview(stack)
 
-        let hPad = config.dotMode ? Const.space6 : Const.space10
-        NSLayoutConstraint.activate([
-            stack.leadingAnchor.constraint(
-                equalTo: leadingAnchor,
-                constant: hPad
-            ),
-            stack.trailingAnchor.constraint(
-                equalTo: trailingAnchor,
-                constant: -hPad
-            ),
-            stack.topAnchor.constraint(
-                equalTo: topAnchor,
-                constant: Const.space6
-            ),
-            stack.bottomAnchor.constraint(
-                equalTo: bottomAnchor,
-                constant: -Const.space6
-            ),
-        ])
+        let hPad: CGFloat = config.dotMode ? Const.space6 : Const.space10
+        stack.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(hPad)
+            make.trailing.equalToSuperview().offset(-hPad)
+            make.top.equalToSuperview().offset(Const.space6)
+            make.bottom.equalToSuperview().offset(-Const.space6)
+        }
 
-        let area = NSTrackingArea(
-            rect: .zero,
-            options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
-            owner: self,
-            userInfo: nil
+        addTrackingArea(
+            NSTrackingArea(
+                rect: .zero,
+                options: [
+                    .mouseEnteredAndExited, .activeAlways, .inVisibleRect,
+                ],
+                owner: self,
+                userInfo: nil
+            )
         )
-        addTrackingArea(area)
-
-        let click = NSClickGestureRecognizer(
-            target: self,
-            action: #selector(handleClick)
+        addGestureRecognizer(
+            NSClickGestureRecognizer(
+                target: self,
+                action: #selector(handleClick)
+            )
         )
-        addGestureRecognizer(click)
     }
 
     private func updateContent() {
-        stack.arrangedSubviews.forEach {
-            stack.removeArrangedSubview($0)
-            $0.removeFromSuperview()
+        for arrangedSubview in stack.arrangedSubviews {
+            stack.removeArrangedSubview(arrangedSubview)
+            arrangedSubview.removeFromSuperview()
         }
 
         if config.dotMode {
             if config.chip.isSystem {
-                let symConfig = NSImage.SymbolConfiguration(
-                    pointSize: 12,
-                    weight: .medium
-                )
                 iconImageView.image = NSImage(
                     systemSymbolName:
-                        "clock.arrow.trianglehead.counterclockwise.rotate.90",
+                    "clock.arrow.trianglehead.counterclockwise.rotate.90",
                     accessibilityDescription: nil
-                )?.withSymbolConfiguration(symConfig)
+                )?.withSymbolConfiguration(
+                    .init(pointSize: 12, weight: .medium)
+                )
                 iconImageView.imageScaling = .scaleProportionallyDown
-                iconImageView.translatesAutoresizingMaskIntoConstraints = false
-                iconImageView.widthAnchor.constraint(equalToConstant: 14)
-                    .isActive = true
-                iconImageView.heightAnchor.constraint(equalToConstant: 14)
-                    .isActive = true
+                iconImageView.snp.remakeConstraints { make in
+                    make.width.height.equalTo(16)
+                }
                 stack.addArrangedSubview(iconImageView)
             } else {
-                let dotSize: CGFloat = 12
                 let container = NSView()
                 container.wantsLayer = true
-                container.translatesAutoresizingMaskIntoConstraints = false
-                container.widthAnchor.constraint(equalToConstant: dotSize)
-                    .isActive = true
-                container.heightAnchor.constraint(equalToConstant: dotSize)
-                    .isActive = true
-                dotLayer.frame = CGRect(
-                    origin: .zero,
-                    size: CGSize(width: dotSize, height: dotSize)
-                )
-                dotLayer.cornerRadius = dotSize / 2
-                dotLayer.backgroundColor = NSColor(config.chip.color).cgColor
-                container.layer?.addSublayer(dotLayer)
+                container.snp.makeConstraints { make in
+                    make.width.height.equalTo(16)
+                }
+                dotView.wantsLayer = true
+                dotView.layer?.cornerRadius = 6
+                dotView.layer?.backgroundColor =
+                    NSColor(config.chip.color).cgColor
+                container.addSubview(dotView)
+                dotView.snp.makeConstraints { make in
+                    make.width.height.equalTo(12)
+                    make.center.equalToSuperview()
+                }
                 stack.addArrangedSubview(container)
             }
         } else {
             if config.chip.id == -1 {
-                let symConfig = NSImage.SymbolConfiguration(
-                    pointSize: 16,
-                    weight: .medium
-                )
                 iconImageView.image = NSImage(
                     systemSymbolName:
-                        "clock.arrow.trianglehead.counterclockwise.rotate.90",
+                    "clock.arrow.trianglehead.counterclockwise.rotate.90",
                     accessibilityDescription: nil
-                )?.withSymbolConfiguration(symConfig)
+                )?.withSymbolConfiguration(
+                    .init(pointSize: 16, weight: .medium)
+                )
                 iconImageView.imageScaling = .scaleProportionallyDown
-                iconImageView.translatesAutoresizingMaskIntoConstraints = false
-                iconImageView.widthAnchor.constraint(equalToConstant: 14)
-                    .isActive = true
-                iconImageView.heightAnchor.constraint(equalToConstant: 14)
-                    .isActive = true
+                iconImageView.snp.remakeConstraints { make in
+                    make.width.height.equalTo(16)
+                }
                 stack.addArrangedSubview(iconImageView)
             } else {
-                let dotSize: CGFloat = 12
                 let container = NSView()
                 container.wantsLayer = true
-                container.translatesAutoresizingMaskIntoConstraints = false
-                container.widthAnchor.constraint(equalToConstant: dotSize)
-                    .isActive = true
-                container.heightAnchor.constraint(equalToConstant: dotSize)
-                    .isActive = true
-                dotLayer.frame = CGRect(
-                    origin: .zero,
-                    size: CGSize(width: dotSize, height: dotSize)
-                )
-                dotLayer.cornerRadius = dotSize / 2
-                dotLayer.backgroundColor = NSColor(config.chip.color).cgColor
-                container.layer?.addSublayer(dotLayer)
+                container.snp.makeConstraints { make in
+                    make.width.height.equalTo(16)
+                }
+                dotView.wantsLayer = true
+                dotView.layer?.cornerRadius = 6
+                dotView.layer?.backgroundColor =
+                    NSColor(config.chip.color).cgColor
+                container.addSubview(dotView)
+                dotView.snp.makeConstraints { make in
+                    make.width.height.equalTo(12)
+                    make.center.equalToSuperview()
+                }
                 stack.addArrangedSubview(container)
             }
             label.stringValue = config.chip.name
@@ -200,36 +182,28 @@ final class ChipButton: NSView {
         let isDark =
             effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
 
-        let bgColor: NSColor
-
-        if config.dotMode {
-            if isHovering {
-                bgColor = isDark
+        let bgColor: NSColor = if config.dotMode {
+            isHovering
+                ? (isDark
                     ? NSColor(Const.hoverDarkColor)
-                    : NSColor(Const.hoverLightColorFrosted)
-            } else {
-                bgColor = .clear
-            }
+                    : NSColor(Const.hoverLightColorFrosted))
+                : .clear
         } else if config.isSelected {
-            bgColor =
-                isDark
+            isDark
                 ? NSColor(Const.chooseDarkColor)
                 : NSColor(Const.chooseLightColorFrosted)
         } else if isHovering {
-            bgColor =
-                isDark
+            isDark
                 ? NSColor(Const.hoverDarkColor)
                 : NSColor(Const.hoverLightColorFrosted)
         } else {
-            bgColor = .clear
+            .clear
         }
 
-        label.textColor = .labelColor
-        iconImageView.contentTintColor = .labelColor
+        label.textColor = isDark ? .white : .black
+        iconImageView.contentTintColor = isDark ? .white : .black
 
-        let apply = {
-            self.backgroundLayer.backgroundColor = bgColor.cgColor
-        }
+        let apply = { self.backgroundLayer.backgroundColor = bgColor.cgColor }
 
         if animated {
             NSAnimationContext.runAnimationGroup { ctx in
@@ -259,12 +233,12 @@ final class ChipButton: NSView {
 
     // MARK: - Mouse
 
-    override func mouseEntered(with event: NSEvent) {
+    override func mouseEntered(with _: NSEvent) {
         isHovering = true
         updateAppearance(animated: true)
     }
 
-    override func mouseExited(with event: NSEvent) {
+    override func mouseExited(with _: NSEvent) {
         isHovering = false
         updateAppearance(animated: true)
     }

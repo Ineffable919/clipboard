@@ -325,8 +325,7 @@ class HotKeyManager {
     func deleteHotKey(key: String) -> Bool {
         var hotKeyList = getAllHotKeys()
 
-        if let info = hotKeyList.first(where: { $0.key == key }), info.isGlobal
-        {
+        if let info = hotKeyList.first(where: { $0.key == key }), info.isGlobal {
             unregisterSystemHotKey(key: key)
         }
 

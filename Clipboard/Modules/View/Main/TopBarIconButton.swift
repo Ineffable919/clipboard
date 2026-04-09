@@ -6,10 +6,10 @@
 //
 
 import AppKit
+import SnapKit
 import SwiftUI
 
 final class TopBarIconButton: NSView {
-
     // MARK: - Properties
 
     private let backgroundLayer = CALayer()
@@ -30,13 +30,14 @@ final class TopBarIconButton: NSView {
     }
 
     @available(*, unavailable)
-    required init?(coder: NSCoder) { fatalError() }
+    required init?(coder _: NSCoder) {
+        fatalError()
+    }
 
     // MARK: - Setup
 
     private func setup(symbolName: String, pointSize: CGFloat) {
         wantsLayer = true
-        translatesAutoresizingMaskIntoConstraints = false
 
         backgroundLayer.cornerRadius = Const.radius
         backgroundLayer.masksToBounds = true
@@ -51,15 +52,14 @@ final class TopBarIconButton: NSView {
             accessibilityDescription: nil
         )?.withSymbolConfiguration(symConfig)
         imageView.imageScaling = .scaleProportionallyDown
-        imageView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(imageView)
 
-        NSLayoutConstraint.activate([
-            imageView.centerXAnchor.constraint(equalTo: centerXAnchor),
-            imageView.centerYAnchor.constraint(equalTo: centerYAnchor),
-            widthAnchor.constraint(equalToConstant: 28),
-            heightAnchor.constraint(equalToConstant: 28),
-        ])
+        imageView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+        }
+        snp.makeConstraints { make in
+            make.width.height.equalTo(28)
+        }
 
         let area = NSTrackingArea(
             rect: .zero,
@@ -88,10 +88,10 @@ final class TopBarIconButton: NSView {
 
         let bgColor: NSColor =
             isHovering
-            ? (isDark
-                ? NSColor(Const.hoverDarkColor)
-                : NSColor(Const.hoverLightColorFrosted))
-            : .clear
+                ? (isDark
+                    ? NSColor(Const.hoverDarkColor)
+                    : NSColor(Const.hoverLightColorFrosted))
+                : .clear
 
         if animated {
             NSAnimationContext.runAnimationGroup { ctx in
@@ -121,12 +121,12 @@ final class TopBarIconButton: NSView {
 
     // MARK: - Mouse
 
-    override func mouseEntered(with event: NSEvent) {
+    override func mouseEntered(with _: NSEvent) {
         isHovering = true
         updateAppearance(animated: true)
     }
 
-    override func mouseExited(with event: NSEvent) {
+    override func mouseExited(with _: NSEvent) {
         isHovering = false
         updateAppearance(animated: true)
     }

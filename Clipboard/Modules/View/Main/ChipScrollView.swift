@@ -6,9 +6,9 @@
 //
 
 import AppKit
+import SnapKit
 
 final class ChipScrollView: NSView {
-
     // MARK: - Properties
 
     private let scrollView = NSScrollView()
@@ -34,20 +34,20 @@ final class ChipScrollView: NSView {
     }
 
     @available(*, unavailable)
-    required init?(coder: NSCoder) { fatalError() }
+    required init?(coder _: NSCoder) {
+        fatalError()
+    }
 
     // MARK: - Setup
 
     private func setup() {
         wantsLayer = true
-        translatesAutoresizingMaskIntoConstraints = false
 
         scrollView.drawsBackground = false
         scrollView.hasHorizontalScroller = false
         scrollView.hasVerticalScroller = false
         scrollView.horizontalScrollElasticity = .allowed
         scrollView.verticalScrollElasticity = .none
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
 
         let clipView = NSClipView()
         clipView.drawsBackground = false
@@ -56,49 +56,58 @@ final class ChipScrollView: NSView {
         contentStack.orientation = .horizontal
         contentStack.spacing = Const.space6
         contentStack.alignment = .centerY
-        contentStack.translatesAutoresizingMaskIntoConstraints = false
         scrollView.documentView = contentStack
 
-        NSLayoutConstraint.activate([
-            contentStack.topAnchor.constraint(equalTo: clipView.topAnchor),
-            contentStack.bottomAnchor.constraint(equalTo: clipView.bottomAnchor),
-            contentStack.leadingAnchor.constraint(equalTo: clipView.leadingAnchor),
-        ])
+        contentStack.snp.makeConstraints { make in
+            make.top.bottom.leading.equalTo(clipView)
+        }
 
         addSubview(scrollView)
-        NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: topAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: bottomAnchor),
-            scrollView.leadingAnchor.constraint(equalTo: leadingAnchor),
-            scrollView.trailingAnchor.constraint(equalTo: trailingAnchor),
-        ])
+        scrollView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+    }
+
+    // MARK: - Intrinsic Content Size
+
+    override var intrinsicContentSize: NSSize {
+        let width = contentStack.fittingSize.width
+        return NSSize(width: width, height: NSView.noIntrinsicMetric)
+    }
+
+    private func invalidateWidth() {
+        invalidateIntrinsicContentSize()
     }
 
     // MARK: - Public API
 
-    /// - Parameters:
-    ///   - dotMode: `true` 时每个 chip 渲染为小圆点（搜索模式），`false` 为完整胶囊（默认模式）
     func reload(chips: [CategoryChip], selectedId: Int, dotMode: Bool = false) {
         self.chips = chips
-        self.selectedChipId = selectedId
+        selectedChipId = selectedId
 
         chipButtons.forEach { $0.removeFromSuperview() }
-        contentStack.arrangedSubviews.forEach {
-            contentStack.removeArrangedSubview($0)
-            $0.removeFromSuperview()
+        for arrangedSubview in contentStack.arrangedSubviews {
+            contentStack.removeArrangedSubview(arrangedSubview)
+            arrangedSubview.removeFromSuperview()
         }
         chipButtons = []
 
         for chip in chips {
-            let btn = ChipButton(config: .init(
-                chip: chip,
-                isSelected: chip.id == selectedId,
-                dotMode: dotMode,
-                action: { [weak self] in self?.select(id: chip.id) }
-            ))
+            let btn = ChipButton(
+                config: .init(
+                    chip: chip,
+                    isSelected: chip.id == selectedId,
+                    dotMode: dotMode,
+                    action: { [weak self] in
+                        self?.select(id: chip.id)
+                    }
+                )
+            )
             chipButtons.append(btn)
             contentStack.addArrangedSubview(btn)
         }
+
+        invalidateWidth()
     }
 
     // MARK: - Private
