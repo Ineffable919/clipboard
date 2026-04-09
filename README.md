@@ -33,7 +33,7 @@ Download the latest version [releases](https://github.com/Ineffable919/clipboard
 
 ## System Requirements
 
-- macOS 14.0 or later (Compatible with macOS 26)
+- macOS 15.0 or later (Compatible with macOS 26)
 - Supports Apple Silicon (arm64) and Intel (x86_64) architectures
 
 ## How to Use
