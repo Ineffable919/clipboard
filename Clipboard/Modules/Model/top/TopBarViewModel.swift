@@ -2,45 +2,36 @@
 //  TopBarViewModel.swift
 //  Clipboard
 //
-//  Created by crown
+//  Created by crown on 2026/4/9.
 //
 
 import AppKit
 import Foundation
 import SQLite
 
-@MainActor
-@Observable final class TopBarViewModel {
-    @ObservationIgnored
+final class TopBarViewModel {
     private var displayModeRaw: Int {
         UserDefaults.standard.integer(forKey: PrefKey.displayMode.rawValue)
     }
 
     // MARK: - Search Properties
 
-    var query: String = "" {
+    private(set) var query: String {
         didSet {
-            guard oldValue != query else { return }
             handleQueryChange()
         }
     }
 
-    var tags: [InputTag] = []
-
-    // MARK: - Chip Properties
-
-    private let chipStore = CategoryChipStore.shared
-
-    var chips: [CategoryChip] {
-        chipStore.chips
+    func setQuery(text: String) {
+        query = text
     }
 
-    var selectedChipId: Int {
-        get { chipStore.selectedChipId }
-        set {
-            chipStore.selectedChipId = newValue
-            performSearch()
-        }
+    var tags: [InputTag] = []
+
+    // MARK: - Chip Selection
+
+    func selectChip(id: Int) {
+        CategoryChipStore.shared.selectedChipId = id
     }
 
     // New Chip State
@@ -52,6 +43,13 @@ import SQLite
     var editingChipId: Int?
     var editingChipName: String = ""
     var editingChipColorIndex: Int = 0
+
+    // MARK: - State
+
+    private(set) var isPaused: Bool = false
+    private(set) var remainingTime: TimeInterval = 0
+
+    private var pauseDisplayTimer: Timer?
 
     // MARK: - Filter Properties
 
@@ -78,10 +76,6 @@ import SQLite
         editingChipId != nil
     }
 
-    var selectedChip: CategoryChip? {
-        chipStore.getSelectedChip()
-    }
-
     var hasActiveFilters: Bool {
         !selectedTypes.isEmpty || !selectedAppNames.isEmpty
             || selectedDateFilter != nil
@@ -89,254 +83,33 @@ import SQLite
 
     // MARK: - Private Properties
 
-    @ObservationIgnored
-    private let dataStore: PasteDataStore
+    private let db = PasteDataStore.main
+    private let chipStore = CategoryChipStore.shared
 
-    @ObservationIgnored
-    private var searchTask: Task<Void, Never>?
-
-    @ObservationIgnored
     private var lastSearchCriteria: SearchCriteria?
-
-    @ObservationIgnored
     private var isModeResetting = false
 
-    @ObservationIgnored
     private var appPathCache: [String: String] = [:]
-
-    // MARK: - Pause Properties
-
-    private(set) var isPaused: Bool = false
-    private(set) var remainingTime: TimeInterval = 0
-
-    @ObservationIgnored
-    private var pauseDisplayTimer: Timer?
-
-    private func pauseTimeString(from date: Date) -> String {
-        date.formatted(
-            .dateTime.hour(.twoDigits(amPM: .omitted)).minute(.twoDigits)
-        )
-    }
-
-    var pauseMenuTitle: String {
-        guard isPaused else {
-            return String(localized: .pause)
-        }
-
-        if let endTime = PasteBoard.main.pauseEndTime {
-            return String(
-                localized: .pauseUntil(pauseTimeString(from: endTime))
-            )
-        }
-
-        return String(localized: .paused)
-    }
-
-    var formattedRemainingTime: String {
-        if remainingTime <= 0 {
-            return String(localized: .paused)
-        }
-        let hours = Int(remainingTime) / 3600
-        let minutes = (Int(remainingTime) % 3600) / 60
-        let seconds = Int(remainingTime) % 60
-
-        if hours > 0 {
-            return String(format: "%d:%02d:%02d", hours, minutes, seconds)
-        } else {
-            return String(format: "%d:%02d", minutes, seconds)
-        }
-    }
-
-    /// 搜索条件：关键词 + 顶栏分组（自定义 chip）+ 原始筛选条件
-    struct SearchCriteria: Equatable {
-        var keyword: String
-        var chipGroup: Int
-        var selectedTypes: Set<PasteModelType>
-        var selectedAppNames: Set<String>
-        var selectedDateFilter: DateFilterOption?
-
-        static let empty = SearchCriteria(
-            keyword: "",
-            chipGroup: -1,
-            selectedTypes: [],
-            selectedAppNames: [],
-            selectedDateFilter: nil
-        )
-
-        var isEmpty: Bool {
-            keyword.isEmpty
-                && chipGroup == -1
-                && selectedTypes.isEmpty
-                && selectedAppNames.isEmpty
-                && selectedDateFilter == nil
-        }
-    }
-
-    // MARK: - DateFilterOption
-
-    enum DateFilterOption: String, CaseIterable, Equatable {
-        case today = "Today"
-        case yesterday = "Yesterday"
-        case thisWeek = "This week"
-        case lastWeek = "Last week"
-        case thisMonth = "This month"
-
-        var displayName: String {
-            switch self {
-            case .today: String(localized: .today)
-            case .yesterday: String(localized: .yesterday)
-            case .thisWeek: String(localized: .thisWeek)
-            case .lastWeek: String(localized: .lastWeek)
-            case .thisMonth: String(localized: .thisMonth)
-            }
-        }
-
-        func timestampRange() -> (start: Int64, end: Int64?) {
-            let calendar = Calendar.current
-            let now = Date()
-
-            switch self {
-            case .today:
-                let startOfDay = calendar.startOfDay(for: now)
-                let startTimestamp = Int64(startOfDay.timeIntervalSince1970)
-                return (startTimestamp, nil)
-
-            case .yesterday:
-                let yesterday =
-                    calendar.date(byAdding: .day, value: -1, to: now) ?? now
-                let startOfYesterday = calendar.startOfDay(for: yesterday)
-                let endOfYesterday =
-                    calendar.date(
-                        byAdding: .day,
-                        value: 1,
-                        to: startOfYesterday
-                    ) ?? now
-                let startTimestamp = Int64(
-                    startOfYesterday.timeIntervalSince1970
-                )
-                let endTimestamp = Int64(endOfYesterday.timeIntervalSince1970)
-                return (startTimestamp, endTimestamp)
-
-            case .thisWeek:
-                let startOfWeek =
-                    calendar.date(
-                        from: calendar.dateComponents(
-                            [.yearForWeekOfYear, .weekOfYear],
-                            from: now
-                        )
-                    ) ?? now
-                let startTimestamp = Int64(startOfWeek.timeIntervalSince1970)
-                return (startTimestamp, nil)
-
-            case .lastWeek:
-                let thisWeekStart =
-                    calendar.date(
-                        from: calendar.dateComponents(
-                            [.yearForWeekOfYear, .weekOfYear],
-                            from: now
-                        )
-                    ) ?? now
-                let lastWeekStart =
-                    calendar.date(
-                        byAdding: .weekOfYear,
-                        value: -1,
-                        to: thisWeekStart
-                    ) ?? now
-                let endOfLastWeek = thisWeekStart
-                let startTimestamp = Int64(lastWeekStart.timeIntervalSince1970)
-                let endTimestamp = Int64(endOfLastWeek.timeIntervalSince1970)
-                return (startTimestamp, endTimestamp)
-
-            case .thisMonth:
-                let startOfMonth =
-                    calendar.date(
-                        from: calendar.dateComponents(
-                            [.year, .month],
-                            from: now
-                        )
-                    ) ?? now
-                let startTimestamp = Int64(startOfMonth.timeIntervalSince1970)
-                return (startTimestamp, nil)
-            }
-        }
-    }
 
     // MARK: - Initialization
 
-    init(dataStore: PasteDataStore = .main) {
-        self.dataStore = dataStore
-        setupPauseObserver()
-        setupChipObserver()
-    }
-
-    // MARK: - Pause Methods
-
-    private func setupPauseObserver() {
-        NotificationCenter.default.addObserver(
-            forName: .pasteboardPauseStateChanged,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor in
-                self?.updatePauseState()
-            }
-        }
-    }
-
-    func startPauseDisplayTimer() {
-        stopPauseDisplayTimer()
-        updatePauseState()
-
-        pauseDisplayTimer = Timer.scheduledTimer(
-            withTimeInterval: 1,
-            repeats: true
-        ) { [weak self] _ in
-            MainActor.assumeIsolated {
-                self?.updatePauseState()
-            }
-        }
-        RunLoop.main.add(pauseDisplayTimer!, forMode: .common)
-    }
-
-    func stopPauseDisplayTimer() {
-        pauseDisplayTimer?.invalidate()
-        pauseDisplayTimer = nil
-    }
-
-    private func updatePauseState() {
-        isPaused = PasteBoard.main.isPaused
-        remainingTime = PasteBoard.main.remainingPauseTime ?? 0
-    }
-
-    func resumePasteboard() {
-        PasteBoard.main.resume()
-    }
-
-    func pauseIndefinitely() {
-        PasteBoard.main.pause()
-    }
-
-    func pause(for minutes: Int) {
-        PasteBoard.main.pause(for: TimeInterval(minutes * 60))
+    init() {
+        query = ""
+        setupObserver()
     }
 
     // MARK: - Category Management
 
-    private func setupChipObserver() {
-        NotificationCenter.default.addObserver(
-            forName: .categoryChipsDidChange,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                // Force UI update when chips change
-                self?.performSearch()
-            }
-        }
+    func chips() -> [CategoryChip] {
+        chipStore.chips
     }
 
-    func toggleChip(_ chip: CategoryChip) {
-        chipStore.toggleChip(chip)
+    func getSelectChipId() -> Int {
+        chipStore.selectedChipId
+    }
+
+    func setSelectChipId(chip: Int) {
+        chipStore.selectedChipId = chip
     }
 
     func selectPreviousChip() {
@@ -369,11 +142,9 @@ import SQLite
         let trimmed = newChipName.trimmingCharacters(
             in: .whitespacesAndNewlines
         )
-
         if commitIfNonEmpty, !trimmed.isEmpty {
             addChip(name: trimmed, colorIndex: newChipColorIndex)
         }
-
         resetNewChipState()
     }
 
@@ -387,7 +158,6 @@ import SQLite
 
     func startEditingChip(_ chip: CategoryChip) {
         guard !chip.isSystem else { return }
-
         editingChipId = chip.id
         editingChipName = chip.name
         editingChipColorIndex = chip.colorIndex
@@ -395,7 +165,7 @@ import SQLite
 
     func commitEditingChip() {
         guard let chipId = editingChipId,
-              let chip = chips.first(where: { $0.id == chipId })
+              let chip = chipStore.chips.first(where: { $0.id == chipId })
         else {
             cancelEditingChip()
             return
@@ -407,7 +177,6 @@ import SQLite
         if !trimmed.isEmpty {
             updateChip(chip, name: trimmed, colorIndex: editingChipColorIndex)
         }
-
         cancelEditingChip()
     }
 
@@ -427,7 +196,7 @@ import SQLite
         (currentIndex + 1) % CategoryChip.palette.count
     }
 
-    func getGroupFilterForCurrentChip() -> Int {
+    private func getGroupFilterForCurrentChip() -> Int {
         chipStore.getGroupFilterForCurrentChip()
     }
 
@@ -465,7 +234,10 @@ import SQLite
         selectedDateFilter = option
         if let dateFilter = option {
             let tag = InputTag(
-                icon: NSImage(systemSymbolName: "calendar", accessibilityDescription: nil),
+                icon: NSImage(
+                    systemSymbolName: "calendar",
+                    accessibilityDescription: nil
+                ),
                 label: dateFilter.displayName,
                 type: .filterDate,
                 associatedValue: dateFilter.rawValue
@@ -493,7 +265,10 @@ import SQLite
             }
             if !hasTextTag {
                 let tag = InputTag(
-                    icon: NSImage(systemSymbolName: "doc.text", accessibilityDescription: nil),
+                    icon: NSImage(
+                        systemSymbolName: "doc.text",
+                        accessibilityDescription: nil
+                    ),
                     label: String(localized: .text),
                     type: .filterType,
                     associatedValue: textTagAssociatedValue
@@ -503,7 +278,10 @@ import SQLite
         } else {
             let (icon, label) = type.iconAndLabel
             let tag = InputTag(
-                icon: NSImage(systemSymbolName: icon, accessibilityDescription: nil),
+                icon: NSImage(
+                    systemSymbolName: icon,
+                    accessibilityDescription: nil
+                ),
                 label: label,
                 type: .filterType,
                 associatedValue: type.rawValue
@@ -535,7 +313,10 @@ import SQLite
             if FileManager.default.fileExists(atPath: appPath) {
                 NSWorkspace.shared.icon(forFile: appPath)
             } else {
-                NSImage(systemSymbolName: "questionmark.app.dashed", accessibilityDescription: nil)
+                NSImage(
+                    systemSymbolName: "questionmark.app.dashed",
+                    accessibilityDescription: nil
+                )
             }
         let tag = InputTag(
             icon: appIcon,
@@ -547,7 +328,6 @@ import SQLite
         tags.append(tag)
     }
 
-    @ObservationIgnored
     private var isLoadingAppPathCache = false
 
     func loadAppPathCache() async {
@@ -604,7 +384,10 @@ import SQLite
             selectedTypes.insert(.rich)
             if needAddTag {
                 let tag = InputTag(
-                    icon: NSImage(systemSymbolName: "doc.text", accessibilityDescription: nil),
+                    icon: NSImage(
+                        systemSymbolName: "doc.text",
+                        accessibilityDescription: nil
+                    ),
                     label: String(localized: .text),
                     type: .filterType,
                     associatedValue: textTagAssociatedValue
@@ -641,29 +424,19 @@ import SQLite
 
     private func parseShortcutCommand(_ command: String) -> PasteModelType? {
         switch command {
-        case "img", "image", "图片":
-            .image
-        case "text", "txt", "文本":
-            .string
-        case "file", "文件":
-            .file
-        case "link", "链接":
-            .link
-        case "color", "颜色":
-            .color
-        case "rich", "富文本":
-            .rich
-        default:
-            nil
+        case "img", "image", "图片": .image
+        case "text", "txt", "文本": .string
+        case "file", "文件": .file
+        case "link", "链接": .link
+        case "color", "颜色": .color
+        case "rich", "富文本": .rich
+        default: nil
         }
     }
 
     func resetFilterState() {
         isModeResetting = true
         defer { isModeResetting = false }
-
-        searchTask?.cancel()
-        searchTask = nil
 
         query = ""
         tags.removeAll()
@@ -678,44 +451,102 @@ import SQLite
         lastSearchCriteria = SearchCriteria.empty
     }
 
-    private func performSearch() {
-        guard !isModeResetting else { return }
-        searchTask?.cancel()
+    func performSearch() {
+        let trimmedQuery = query.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
 
-        searchTask = Task {
-            try? await Task.sleep(for: .milliseconds(400))
-
-            guard !Task.isCancelled else { return }
-            await executeSearch()
-        }
-    }
-
-    private func makeSearchCriteria(from trimmedQuery: String)
-        -> SearchCriteria
-    {
-        SearchCriteria(
+        let criteria = SearchCriteria(
             keyword: trimmedQuery,
             chipGroup: getGroupFilterForCurrentChip(),
             selectedTypes: selectedTypes,
             selectedAppNames: selectedAppNames,
             selectedDateFilter: selectedDateFilter
         )
-    }
 
-    private func executeSearch() async {
-        let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        let criteria = makeSearchCriteria(from: trimmedQuery)
-
-        if criteria == lastSearchCriteria {
-            return
-        }
+        if criteria == lastSearchCriteria { return }
         lastSearchCriteria = criteria
 
-        if criteria.isEmpty, selectedChipId == -1 {
-            await dataStore.resetDefaultList()
+        if criteria.isEmpty, chipStore.selectedChipId == -1 {
+            db.resetToDefault()
         } else {
-            await dataStore.searchData(criteria)
+            db.searchData(criteria)
         }
+    }
+}
+
+extension TopBarViewModel {
+    // MARK: - Computed
+
+    var pauseMenuTitle: String {
+        guard isPaused else { return String(localized: .pause) }
+        guard let endTime = PasteBoard.main.pauseEndTime else { return String(localized: .paused) }
+        return String(localized: .pauseUntil(pauseTimeString(from: endTime)))
+    }
+
+    var formattedRemainingTime: String {
+        guard remainingTime > 0 else { return String(localized: .paused) }
+        return Duration.seconds(remainingTime).formatted(.time(pattern: .hourMinuteSecond))
+    }
+
+    // MARK: - Timer
+
+    func startDisplayTimer() {
+        stopDisplayTimer()
+        updateState()
+
+        pauseDisplayTimer = Timer.scheduledTimer(
+            withTimeInterval: 1,
+            repeats: true
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.updateState()
+            }
+        }
+        RunLoop.main.add(pauseDisplayTimer!, forMode: .common)
+    }
+
+    func stopDisplayTimer() {
+        pauseDisplayTimer?.invalidate()
+        pauseDisplayTimer = nil
+    }
+
+    // MARK: - Actions
+
+    func resume() {
+        PasteBoard.main.resume()
+    }
+
+    func pauseIndefinitely() {
+        PasteBoard.main.pause()
+    }
+
+    func pause(for minutes: Int) {
+        PasteBoard.main.pause(for: TimeInterval(minutes * 60))
+    }
+
+    // MARK: - Private
+
+    private func setupObserver() {
+        NotificationCenter.default.addObserver(
+            forName: .pasteboardPauseStateChanged,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.updateState()
+            }
+        }
+    }
+
+    private func updateState() {
+        isPaused = PasteBoard.main.isPaused
+        remainingTime = PasteBoard.main.remainingPauseTime ?? 0
+    }
+
+    private func pauseTimeString(from date: Date) -> String {
+        date.formatted(
+            .dateTime.hour(.twoDigits(amPM: .omitted)).minute(.twoDigits)
+        )
     }
 }

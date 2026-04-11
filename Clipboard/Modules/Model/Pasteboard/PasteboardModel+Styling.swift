@@ -9,20 +9,6 @@ import AppKit
 import SwiftUI
 
 extension PasteboardModel {
-    var backgroundColor: Color {
-        cachedBackgroundColor ?? .clear
-    }
-
-    var hasBgColor: Bool {
-        cachedHasBackgroundColor
-    }
-
-    /// 富文本背景色（NSColor）
-    var nsBackgroundColor: NSColor? {
-        guard hasBgColor, let cached = cachedBackgroundColor else { return nil }
-        return NSColor(cached)
-    }
-
     var colorDisplayText: String {
         let raw = attributeString.string
         return raw.hasPrefix("#") ? raw : "#\(raw)"
@@ -31,7 +17,8 @@ extension PasteboardModel {
     // MARK: - 纯函数：根据模型给出背景与前景色
 
     func colors() -> (Color, Color) {
-        (
+        ensureColorsComputed()
+        return (
             cachedBackgroundColor ?? Color(.controlBackgroundColor),
             cachedForegroundColor ?? .secondary
         )

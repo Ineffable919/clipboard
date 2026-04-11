@@ -9,7 +9,7 @@ import SQLite
 
 enum PasteFilterBuilder {
     static func buildFilter(
-        from criteria: TopBarViewModel.SearchCriteria
+        from criteria: SearchCriteria
     ) -> Expression<Bool>? {
         var clauses: [Expression<Bool>] = []
 

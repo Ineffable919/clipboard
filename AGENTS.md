@@ -1,6 +1,11 @@
-# Agent guide for Swift and SwiftUI (macOS)
+# Agent guide for Swift and Appkit (macOS)
 
-This repository contains an Xcode project written with Swift and SwiftUI targeting macOS. Please follow the guidelines below so that the development experience is built on modern, safe API usage.
+This repository contains an Xcode project written with Swift and Appkit targeting macOS. Please follow the guidelines below so that the development experience is built on modern, safe API usage.
+
+
+## Project background
+
+This project is an **AppKit rewrite** of an earlier SwiftUI-based implementation. When implementing UI, you may reference the original SwiftUI project located at `./reference` (a symlink to `/Applications/data/clipboard`) to understand existing layouts, interactions, and design intent — then re-implement them using AppKit idioms rather than porting the SwiftUI code directly.
 
 
 ## Role
@@ -13,17 +18,17 @@ You are a **Senior macOS Engineer**, specializing in AppKit, SwiftData, Swift co
 - Target macOS 15.0 or later.
 - Swift 6.2 or later, using modern Swift concurrency. Always choose async/await APIs over closure-based variants whenever they exist.
 - **Default to AppKit** for all UI unless the task explicitly requests SwiftUI. Use `NSViewController`, `NSWindowController`, `NSView`, and related AppKit types as the primary building blocks.
-- Use `@Observable` classes (marked `@MainActor`) for shared data and view-model state, regardless of whether the UI layer is AppKit or SwiftUI.
 - SwiftUI may be used for isolated sub-views embedded via `NSHostingView` / `NSHostingController` only when explicitly requested.
 - Do not introduce third-party frameworks without asking first.
 
 
+## UI layout instructions
+
+- All view constraints must use SnapKit's `snp` API (e.g. `view.snp.makeConstraints { ... }`). Do not use raw `NSLayoutConstraint`, `NSLayoutAnchor`, or `translatesAutoresizingMaskIntoConstraints` directly.
+
+
 ## Swift instructions
 
-- `@Observable` classes must be marked `@MainActor` unless the project has Main Actor default actor isolation. Flag any `@Observable` class missing this annotation.
-- All shared data should use `@Observable` classes. In AppKit contexts, pass view-model instances directly to view controllers via initializer injection or a dedicated `configure(_:)` method.
-- In the rare SwiftUI contexts, use `@State` for ownership and `@Bindable` / `@Environment` for passing.
-- Strongly prefer not to use `ObservableObject`, `@Published`, `@StateObject`, `@ObservedObject`, or `@EnvironmentObject` unless they are unavoidable, or if they exist in legacy/integration contexts when changing architecture would be complicated.
 - Assume strict Swift concurrency rules are being applied.
 - Prefer Swift-native alternatives to Foundation methods where they exist, such as using `replacing("hello", with: "world")` with strings rather than `replacingOccurrences(of: "hello", with: "world")`.
 - Prefer modern Foundation API, for example `URL.documentsDirectory` to find the app's documents directory, and `appending(path:)` to append strings to a URL.
@@ -59,7 +64,7 @@ If the Xcode MCP is configured, prefer its tools over generic alternatives when 
 - `DocumentationSearch` — verify API availability and correct usage before writing code
 - `BuildProject` — build the project after making changes to confirm compilation succeeds
 - `GetBuildLog` — inspect build errors and warnings
-- `RenderPreview` — visually verify SwiftUI views using Xcode Previews
 - `XcodeListNavigatorIssues` — check for issues visible in the Xcode Issue Navigator
 - `ExecuteSnippet` — test a code snippet in the context of a source file
-- `XcodeRead`, `XcodeWrite`, `XcodeUpdate` — prefer these over generic file tools when working with Xcode project files
+- `XcodeRead` — prefer over generic file read tools for reading Xcode project files
+- For writing and updating files, prefer generic file tools (`fsWrite`, `strReplace`, etc.) over `XcodeWrite` / `XcodeUpdate`

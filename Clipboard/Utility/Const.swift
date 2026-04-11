@@ -17,7 +17,7 @@ enum Const {
     static let hdSize: CGFloat = 50.0
     static let iconSize: CGFloat = 80.0
 
-    static let cardSpace: CGFloat = 16.0
+    static let cardSpace: CGFloat = 24.0
     static let cardLeadingSpace: CGFloat = 20.0
     static let bottomSize: CGFloat = 40.0
 
@@ -31,12 +31,13 @@ enum Const {
 
     static let topRadius: CGFloat =
         if #available(macOS 26.0, *) {
-            23.0
+            18.0
         } else {
             8.0
         }
 
     static let settingsRadius: CGFloat = 6.0
+    static let selectionBorderWidth: CGFloat = 4.0
 
     static let topBarHeight: CGFloat = 54.0
     static let topBarWidth: CGFloat = 450.0
@@ -97,6 +98,7 @@ enum Const {
 
     static let space32: CGFloat = 32.0
     static let space24: CGFloat = 24.0
+    static let space20: CGFloat = 20.0
     static let space16: CGFloat = 16.0
     static let space14: CGFloat = 14.0
     static let space12: CGFloat = 12.0

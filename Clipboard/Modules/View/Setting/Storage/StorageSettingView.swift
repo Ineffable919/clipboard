@@ -13,13 +13,14 @@ import UniformTypeIdentifiers
 struct StorageSettingView: View {
     @Environment(\.colorScheme) var colorScheme
 
-    private var db: PasteDataStore = .main
-
+    @State private var totalCount: Int = 0
     @State private var isExporting = false
     @State private var isImporting = false
     @State private var showAlert = false
     @State private var alertTitle = ""
     @State private var alertMessage = ""
+
+    private let db = PasteDataStore.main
 
     var body: some View {
         ScrollView(.vertical) {
@@ -33,7 +34,7 @@ struct StorageSettingView: View {
                                 defaultValue: "%lld items",
                                 table: "Localizable"
                             ),
-                            db.totalCount
+                            totalCount
                         )
                     )
                 }
@@ -86,6 +87,9 @@ struct StorageSettingView: View {
         }
         .scrollIndicators(.hidden)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .task {
+            totalCount = await PasteSQLManager.manager.getTotalCount()
+        }
         .alert(alertTitle, isPresented: $showAlert) {
             Button(.commonConfirm, role: .cancel) {}
         } message: {
@@ -162,9 +166,10 @@ struct StorageSettingView: View {
                     Task {
                         await AppColorService.shared.extractMissingColors(appInfo: result.importedAppInfo)
 
-                        await db.resetDefaultList()
+                        await PasteDataStore.main.resetDefaultList()
                         let count = await PasteSQLManager.manager.getTotalCount()
                         db.totalCount = count
+                        totalCount = count
                         PasteMetadataCache.shared.invalidateTagTypesCache()
                         db.notifyCategoryChipsChanged()
                     }

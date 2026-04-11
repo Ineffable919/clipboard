@@ -84,7 +84,7 @@ extension ClipMainWindowController {
             )
         }) {
             Task { @MainActor in
-                self.window?.orderOut(nil)
+                self.window?.resignFirstResponder()
                 self.window?.setIsVisible(false)
                 self.isAnimating = false
                 completionHandler?()
@@ -96,9 +96,8 @@ extension ClipMainWindowController {
         let frame = frame ?? .zero
         window?.setFrame(frame, display: true)
         window?.setIsVisible(true)
-        // window?.becomeFirstResponder()
-        window?.orderFrontRegardless()
-        window?.makeKey()
+        window?.becomeFirstResponder()
+        // window?.makeKeyAndOrderFront(nil)
     }
 }
 

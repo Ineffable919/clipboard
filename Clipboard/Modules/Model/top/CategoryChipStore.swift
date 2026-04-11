@@ -5,32 +5,30 @@
 //  Created by crown on 2026/1/16.
 //
 
+import Combine
 import Foundation
 
 extension Notification.Name {
     static let categoryChipsDidChange = Notification.Name("categoryChipsDidChange")
 }
 
-@MainActor
-@Observable
 final class CategoryChipStore {
     static let shared = CategoryChipStore()
 
     // MARK: - Properties
 
     private(set) var chips: [CategoryChip] = []
-    var selectedChipId: Int = -1 {
+    @Published var selectedChipId: Int = -1 {
         didSet {
             notifyChange()
         }
     }
 
-    private let dataStore: PasteDataStore
+    private let db = PasteDataStore.main
 
     // MARK: - Initialization
 
-    private init(dataStore: PasteDataStore = .main) {
-        self.dataStore = dataStore
+    private init() {
         loadCategories()
     }
 
@@ -102,7 +100,7 @@ final class CategoryChipStore {
         }
 
         saveUserCategories()
-        dataStore.deleteItemsByGroup(chip.id)
+        db.deleteItemsByGroup(chip.id)
     }
 
     func getSelectedChip() -> CategoryChip? {
@@ -118,7 +116,7 @@ final class CategoryChipStore {
 
     private func saveUserCategories() {
         PasteUserDefaults.userCategoryChip = chips.filter { !$0.isSystem }
-        dataStore.notifyCategoryChipsChanged()
+        db.notifyCategoryChipsChanged()
         notifyChange()
     }
 

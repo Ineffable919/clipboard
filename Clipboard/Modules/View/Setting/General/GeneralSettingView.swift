@@ -26,8 +26,6 @@ struct GeneralSettingView: View {
         .init(rawValue: PasteUserDefaults.historyTime)
     @State private var launchAtLoginTimer: Timer?
 
-    private var db: PasteDataStore = .main
-
     var body: some View {
         ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: 20) {
@@ -144,7 +142,7 @@ struct GeneralSettingView: View {
                             title: String(
                                 localized: .settingGeneralClearHistory
                             ),
-                            action: db.clearAllData
+                            action: PasteDataStore.main.clearAllData
                         )
                     }
                 }

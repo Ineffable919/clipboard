@@ -9,8 +9,6 @@ import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
-@MainActor
-@Observable
 final class PasteboardModel: Identifiable {
     var id: Int64?
     let uniqueId: String
@@ -22,15 +20,13 @@ final class PasteboardModel: Identifiable {
     let appName: String
     private(set) var searchText: String
     let length: Int
-    /// 截取后的富文本
-    let attributeString: NSAttributedString
+    /// 截取后的富文本（lazy，首次访问时解析 RTF，避免 init 阻塞主线程）
+    private(set) lazy var attributeString: NSAttributedString = .init(with: showData, type: pasteboardType) ?? NSAttributedString()
 
-    @ObservationIgnored
     private(set) lazy var writeItem = PasteboardWritingItem(
         data: data,
         type: pasteboardType
     )
-    @ObservationIgnored
     private(set) lazy var type = PasteModelType(
         with: pasteboardType,
         model: self
@@ -39,30 +35,46 @@ final class PasteboardModel: Identifiable {
     private(set) var group: Int
     let tag: String
     private(set) var hidden: Bool
-    @ObservationIgnored
     var cachedHighlightedPlainText: AttributedString?
-    @ObservationIgnored
     var cachedThumbnail: NSImage?
-    @ObservationIgnored
     var cachedImageSize: CGSize?
-    @ObservationIgnored
     var cachedBackgroundColor: Color?
-    @ObservationIgnored
     var cachedForegroundColor: Color?
-    @ObservationIgnored
     var cachedFilePaths: [String]?
-    @ObservationIgnored
     var cachedOCRRegions: [OCRTextRegion]?
-    @ObservationIgnored
     var cachedOCRKeyword: String?
-    @ObservationIgnored
     var cachedHasBackgroundColor: Bool = false
-    @ObservationIgnored
     var cachedNeedsBottomMask: Bool?
-    @ObservationIgnored
     var cachedDragPreviewRichImage: NSImage?
-    @ObservationIgnored
     var thumbnailLoadTask: Task<NSImage?, Never>?
+
+    /// 颜色缓存：lazy 计算，首次访问 attributeString 时触发
+    var backgroundColor: Color {
+        ensureColorsComputed()
+        return cachedBackgroundColor ?? .clear
+    }
+
+    var hasBgColor: Bool {
+        ensureColorsComputed()
+        return cachedHasBackgroundColor
+    }
+
+    private var colorsComputed = false
+
+    func ensureColorsComputed() {
+        guard !colorsComputed else { return }
+        colorsComputed = true
+        let (bg, fg, hasBg) = computeColors()
+        cachedBackgroundColor = bg
+        cachedForegroundColor = fg
+        cachedHasBackgroundColor = hasBg
+    }
+
+    /// 富文本背景色（NSColor）
+    var nsBackgroundColor: NSColor? {
+        guard hasBgColor, let cached = cachedBackgroundColor else { return nil }
+        return NSColor(cached)
+    }
 
     var isLink: Bool {
         attributeString.string.isLink()
@@ -97,21 +109,10 @@ final class PasteboardModel: Identifiable {
         self.tag = tag
         self.hidden = hidden
 
-        attributeString =
-            NSAttributedString(
-                with: showData,
-                type: pasteboardType
-            ) ?? NSAttributedString()
-
         uniqueId = Self.generateUniqueId(
             for: pasteboardType,
             data: data
         )
-
-        let (bg, fg, hasBg) = computeColors()
-        cachedBackgroundColor = bg
-        cachedForegroundColor = fg
-        cachedHasBackgroundColor = hasBg
 
         if pasteboardType == .fileURL {
             if let urlString = String(data: data, encoding: .utf8) {

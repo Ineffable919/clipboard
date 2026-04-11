@@ -6,30 +6,25 @@
 //
 
 import AppKit
+import Combine
 import SQLite
 import SwiftUI
 
 typealias Expression = SQLite.Expression
 
-@MainActor
-@Observable
 final class PasteDataStore {
     static let main = PasteDataStore()
-    private let pageSize = 50
-    var dataList: [PasteboardModel] = []
+    let pageSize = 50
 
-    private(set) var currentSearchKeyword: String = ""
+    private(set) var dataList = CurrentValueSubject<[PasteboardModel], Never>([])
 
+    private(set) var searchWord: String = ""
     private(set) var chipsVersion: Int = 0
 
     var totalCount: Int = 0
     private(set) var pageIndex = 0
-
     private(set) var isLoadingPage = false
-    private var lastRequestedPage = 0
-
     private(set) var hasMoreData = false
-
     var filteredCount: Int = 0
 
     enum DataChangeType {
@@ -42,6 +37,7 @@ final class PasteDataStore {
 
     private var currentFilter: Expression<Bool>?
     private(set) var isInFilterMode: Bool = false
+    private var lastRequestedPage = 0
 
     private let sqlManager = PasteSQLManager.manager
     private var searchTask: Task<Void, Error>?
@@ -77,7 +73,7 @@ final class PasteDataStore {
         with list: [PasteboardModel],
         changeType: DataChangeType = .reset
     ) {
-        dataList = list
+        dataList.send(list)
         lastDataChangeType = changeType
     }
 }
@@ -148,7 +144,7 @@ extension PasteDataStore {
 extension PasteDataStore {
     func loadNextPage() {
         guard !isLoadingPage else { return }
-        guard dataList.count < totalCount else { return }
+        guard dataList.value.count < totalCount else { return }
 
         let nextPage = pageIndex + 1
         guard nextPage != lastRequestedPage else { return }
@@ -159,7 +155,7 @@ extension PasteDataStore {
         lastRequestedPage = nextPage
         pageIndex = nextPage
 
-        let currentOffset = dataList.count
+        let currentOffset = dataList.value.count
         let filter = isInFilterMode ? currentFilter : nil
 
         log.debug(
@@ -192,7 +188,7 @@ extension PasteDataStore {
                 return
             }
 
-            var list = dataList
+            var list = dataList.value
             list += newItems
 
             updateData(with: list, changeType: .loadMore)
@@ -205,7 +201,7 @@ extension PasteDataStore {
         pageIndex = 0
         currentFilter = nil
         isInFilterMode = false
-        currentSearchKeyword = ""
+        searchWord = ""
         let list = await getItems(limit: pageSize, offset: pageSize * pageIndex)
         filteredCount = totalCount
         updateData(with: list)
@@ -223,13 +219,13 @@ extension PasteDataStore {
     }
 
     /// 数据搜索（关键词 + 自定义分组 + 过滤视图）
-    func searchData(_ criteria: TopBarViewModel.SearchCriteria) async {
+    func searchData(_ criteria: SearchCriteria) {
         searchTask?.cancel()
+
         searchTask = Task {
             let filter = PasteFilterBuilder.buildFilter(from: criteria)
 
-            currentSearchKeyword = criteria.keyword
-
+            searchWord = criteria.keyword
             currentFilter = filter
             isInFilterMode = (filter != nil)
             pageIndex = 0
@@ -242,7 +238,6 @@ extension PasteDataStore {
             try Task.checkCancellation()
 
             let result = mapRows(rows)
-            try Task.checkCancellation()
 
             filteredCount = count
             updateData(with: result, changeType: .searchFilter)
@@ -295,7 +290,7 @@ extension PasteDataStore {
                 return
             }
 
-            var list = dataList
+            var list = dataList.value
             list.removeAll(where: { $0.uniqueId == model.uniqueId })
             list.insert(model, at: 0)
             hasMoreData = list.count >= pageSize
@@ -307,7 +302,7 @@ extension PasteDataStore {
         guard !models.isEmpty else { return }
 
         let movedIds = Set(models.compactMap(\.id))
-        var list = dataList.filter { item in
+        var list = dataList.value.filter { item in
             guard let id = item.id else { return true }
             return !movedIds.contains(id)
         }
@@ -363,8 +358,10 @@ extension PasteDataStore {
         }
     }
 
-    func remove(at: Int) {
-        dataList.remove(at: at)
+    func remove(at index: Int) {
+        var list = dataList.value
+        list.remove(at: index)
+        dataList.send(list)
     }
 
     func clearExpiredData() {
@@ -397,7 +394,7 @@ extension PasteDataStore {
         if let deadDate = Calendar.current.date(byAdding: dateCom, to: Date()) {
             let deadTime = Int64(deadDate.timeIntervalSince1970)
             log.info("清理过期数据，截止时间戳：\(deadTime)")
-            dataList = dataList.filter { $0.timestamp > deadTime }
+            dataList.value = dataList.value.filter { $0.timestamp > deadTime }
             deleteItems(filter: Col.ts < deadTime && Col.group == -1)
         }
     }
@@ -441,8 +438,9 @@ extension PasteDataStore {
             tag: newTag
         )
 
-        if let index = dataList.firstIndex(where: { $0.id == id }) {
-            let oldModel = dataList[index]
+        var list = dataList.value
+        if let index = list.firstIndex(where: { $0.id == id }) {
+            let oldModel = list[index]
             let newModel = PasteboardModel(
                 pasteboardType: oldModel.pasteboardType,
                 data: newData,
@@ -456,13 +454,14 @@ extension PasteDataStore {
                 tag: newTag
             )
             newModel.id = id
-            dataList.remove(at: index)
-            dataList.insert(newModel, at: 0)
+            list.remove(at: index)
+            list.insert(newModel, at: 0)
+            dataList.value = list
         }
     }
 
     func updateItemGroup(itemId: Int64, groupId: Int) {
-        if let model = dataList.first(where: { $0.id == itemId }),
+        if let model = dataList.value.first(where: { $0.id == itemId }),
            groupId != model.group
         {
             model.updateGroup(val: groupId)
@@ -477,7 +476,7 @@ extension PasteDataStore {
     }
 
     func updateItemHidden(itemId: Int64, hidden: Bool) {
-        if let model = dataList.first(where: { $0.id == itemId }),
+        if let model = dataList.value.first(where: { $0.id == itemId }),
            hidden != model.hidden
         {
             model.updateHidden(val: hidden)
