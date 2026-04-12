@@ -6,7 +6,6 @@
 //
 
 import AppKit
-import SwiftUI
 
 @MainActor
 final class AppColorService {
@@ -57,15 +56,23 @@ final class AppColorService {
         }
     }
 
-    func color(for model: PasteboardModel) -> Color {
+    func color(for model: PasteboardModel) -> NSColor {
         if let chip = model.getGroupChip() {
-            return chip.color
+            return Self.paletteNSColor(at: chip.colorIndex)
         }
-
         if let colorStr = colorDict[model.appName] {
-            return Color(hex: colorStr).opacity(0.85)
+            return NSColor(hex: colorStr).withAlphaComponent(0.85)
         }
-        return Color(hex: Self.fallbackHex).opacity(0.85)
+        return NSColor(hex: Self.fallbackHex).withAlphaComponent(0.85)
+    }
+
+    private static func paletteNSColor(at index: Int) -> NSColor {
+        let colors: [NSColor] = [
+            .systemGray, .systemBlue, .systemGreen,
+            .systemPurple, .systemRed, .systemOrange, .systemYellow,
+        ]
+        guard index >= 0, index < colors.count else { return .systemGray }
+        return colors[index].withAlphaComponent(0.85)
     }
 }
 

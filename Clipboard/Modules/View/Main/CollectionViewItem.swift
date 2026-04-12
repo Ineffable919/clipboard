@@ -41,42 +41,21 @@ final class CollectionViewItem: NSCollectionViewItem {
         return view
     }()
 
-    private lazy var label: NSTextField = {
-        let field = NSTextField(wrappingLabelWithString: "")
-        field.wantsLayer = true
-        field.layer?.backgroundColor = .clear
-        field.font = .systemFont(ofSize: 14)
-        field.isEditable = false
-        field.isSelectable = false
-        field.textColor = .textColor
-        field.lineBreakMode = .byWordWrapping
-        field.maximumNumberOfLines = 0
-        field.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        return field
-    }()
+    private lazy var cardContentView = CardContentView()
 
-    func configure(with model: PasteboardModel) {
+    func configure(with model: PasteboardModel, keyword: String = "") {
         item = model
-
         headView.configure(with: model)
 
-        if model.pasteboardType.isText() {
-            guard let att = item?.attributeString else { return }
-            if att.length > 0,
-               let color = att.attribute(
-                   .backgroundColor,
-                   at: 0,
-                   effectiveRange: nil
-               ) as? NSColor
-            {
-                label.attributedStringValue = att
-                contentView.layer?.backgroundColor = color.cgColor
-            } else {
-                label.stringValue = att.string
-                contentView.layer?.backgroundColor =
-                    NSColor.textBackgroundColor.cgColor
-            }
+        if model.type == .color || (model.type == .rich && model.hasBgColor),
+           let bgColor = model.nsBackgroundColor
+        {
+            contentView.layer?.backgroundColor = bgColor.cgColor
+        } else {
+            contentView.layer?.backgroundColor = NSColor.textBackgroundColor.cgColor
         }
+
+        cardContentView.configure(with: model, keyword: keyword)
     }
 
     func setFocused(_ focused: Bool) {
@@ -109,6 +88,7 @@ extension CollectionViewItem {
         iconLoadTask?.cancel()
         iconLoadTask = nil
         headView.reset()
+        cardContentView.resetContent()
     }
 
     private func updateSelectionBorder() {
@@ -134,7 +114,7 @@ extension CollectionViewItem {
         view.addSubview(selectionBorderView)
         selectionBorderView.addSubview(contentView)
         contentView.addSubview(headView)
-        contentView.addSubview(label)
+        contentView.addSubview(cardContentView)
 
         selectionBorderView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
@@ -149,11 +129,9 @@ extension CollectionViewItem {
             make.height.equalTo(Const.hdSize)
         }
 
-        label.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(Const.space10)
-            make.trailing.equalToSuperview().offset(-Const.space8)
-            make.top.equalTo(headView.snp.bottom).offset(Const.space8)
-            make.bottom.lessThanOrEqualToSuperview().offset(-Const.space8)
+        cardContentView.snp.makeConstraints { make in
+            make.top.equalTo(headView.snp.bottom)
+            make.leading.trailing.bottom.equalToSuperview()
         }
     }
 }

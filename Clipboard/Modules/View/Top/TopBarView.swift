@@ -362,9 +362,7 @@ final class TopBarView: NSView {
     }
 
     private func handleChipSelection(id: Int) {
-        if !isSearching || searchField.stringValue.isEmpty {
-            deactivateSearch()
-        }
+        deactivateSearch()
         topVM?.setSelectChipId(chip: id)
         chipScrollView.selectedChipId = id
         dotChipScrollView.selectedChipId = id
@@ -382,7 +380,7 @@ final class TopBarView: NSView {
         onFocusRegionChange?(.search)
     }
 
-    private func deactivateSearch() {
+    func deactivateSearch() {
         guard isSearching else { return }
         isSearching = false
         searchField.clear()

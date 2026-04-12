@@ -27,7 +27,6 @@ final class SearchField: NSView {
     var suppressFocusRing: Bool = false {
         didSet {
             textField.suppressFocusRing = suppressFocusRing
-            textField.noteFocusRingMaskChanged()
         }
     }
 

@@ -6,7 +6,6 @@
 
 import AppKit
 import SnapKit
-import SwiftUI
 
 final class CardHeadView: NSView {
     private var iconLoadTask: Task<Void, Never>?
@@ -69,7 +68,7 @@ final class CardHeadView: NSView {
     func configure(with model: PasteboardModel) {
         let isDefault = model.group == -1
 
-        let color = NSColor(AppColorService.shared.color(for: model))
+        let color = AppColorService.shared.color(for: model)
         backgroundView.layer?.backgroundColor = color.cgColor
 
         typeLabel.stringValue = model.type.string

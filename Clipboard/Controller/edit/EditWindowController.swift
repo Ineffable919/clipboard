@@ -199,7 +199,9 @@ final class EditWindowController: NSWindowController {
                 tag: newTag
             )
 
-            PasteDataStore.main.insertModel(newModel)
+            Task {
+                await PasteDataStore.main.insertModel(newModel)
+            }
             closeWindow()
         } else {
             guard let itemId = model.id else { return }

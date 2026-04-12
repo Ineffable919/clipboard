@@ -123,6 +123,11 @@ extension ClipMainViewController {
             height: Const.defaultHeight
         )
 
+        if focusRegion == .search, topBarView.searchField.stringValue.isEmpty {
+            topBarView.deactivateSearch()
+            focusRegion = .collection
+        }
+
         updateSelectedItemBorder()
 
         let needsSearchFocus = focusRegion == .search
@@ -276,7 +281,7 @@ extension ClipMainViewController: NSCollectionViewDataSource {
         )
         guard let cItem = item as? CollectionViewItem else { return item }
         let model = dataList.value[indexPath.item]
-        cItem.configure(with: model)
+        cItem.configure(with: model, keyword: topVM.query)
         if selectIndexPath == indexPath {
             cItem.isSelected = true
             cItem.setFocused(focusRegion == .collection)

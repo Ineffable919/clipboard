@@ -6,7 +6,6 @@
 //
 
 import AppKit
-import SwiftUI
 import UniformTypeIdentifiers
 
 final class PasteboardModel: Identifiable {
@@ -20,7 +19,7 @@ final class PasteboardModel: Identifiable {
     let appName: String
     private(set) var searchText: String
     let length: Int
-    /// 截取后的富文本（lazy，首次访问时解析 RTF，避免 init 阻塞主线程）
+    /// 截取后的富文本
     private(set) lazy var attributeString: NSAttributedString = .init(with: showData, type: pasteboardType) ?? NSAttributedString()
 
     private(set) lazy var writeItem = PasteboardWritingItem(
@@ -35,11 +34,10 @@ final class PasteboardModel: Identifiable {
     private(set) var group: Int
     let tag: String
     private(set) var hidden: Bool
-    var cachedHighlightedPlainText: AttributedString?
     var cachedThumbnail: NSImage?
     var cachedImageSize: CGSize?
-    var cachedBackgroundColor: Color?
-    var cachedForegroundColor: Color?
+    var cachedBackgroundColor: NSColor?
+    var cachedForegroundColor: NSColor?
     var cachedFilePaths: [String]?
     var cachedOCRRegions: [OCRTextRegion]?
     var cachedOCRKeyword: String?
@@ -47,17 +45,8 @@ final class PasteboardModel: Identifiable {
     var cachedNeedsBottomMask: Bool?
     var cachedDragPreviewRichImage: NSImage?
     var thumbnailLoadTask: Task<NSImage?, Never>?
-
-    /// 颜色缓存：lazy 计算，首次访问 attributeString 时触发
-    var backgroundColor: Color {
-        ensureColorsComputed()
-        return cachedBackgroundColor ?? .clear
-    }
-
-    var hasBgColor: Bool {
-        ensureColorsComputed()
-        return cachedHasBackgroundColor
-    }
+    /// 链接预览元数据缓存
+    var cachedLinkMetadata: LinkPreviewMetadata?
 
     private var colorsComputed = false
 
@@ -70,10 +59,15 @@ final class PasteboardModel: Identifiable {
         cachedHasBackgroundColor = hasBg
     }
 
+    var hasBgColor: Bool {
+        ensureColorsComputed()
+        return cachedHasBackgroundColor
+    }
+
     /// 富文本背景色（NSColor）
     var nsBackgroundColor: NSColor? {
-        guard hasBgColor, let cached = cachedBackgroundColor else { return nil }
-        return NSColor(cached)
+        ensureColorsComputed()
+        return cachedHasBackgroundColor ? cachedBackgroundColor : nil
     }
 
     var isLink: Bool {

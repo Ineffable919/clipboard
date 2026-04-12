@@ -248,15 +248,14 @@ extension PasteDataStore {
     func addNewItem(_ item: NSPasteboard) {
         guard let model = PasteboardModel(with: item) else { return }
 
-        insertModel(model)
         AppColorService.shared.updateColor(for: model)
-
-        Task {
-            await runOCRIfNeeded(model)
-        }
-
         PasteMetadataCache.shared.invalidateAppInfoCache(model)
         PasteMetadataCache.shared.invalidateTagTypesCache(model)
+
+        Task {
+            await insertModel(model)
+            await runOCRIfNeeded(model)
+        }
     }
 
     func runOCRIfNeeded(_ model: PasteboardModel) async {
@@ -272,30 +271,28 @@ extension PasteDataStore {
         await sqlManager.update(id: id, item: model)
     }
 
-    func insertModel(_ model: PasteboardModel) {
-        Task {
-            let itemId = await sqlManager.insert(item: model)
-            let count = await sqlManager.getTotalCount()
+    func insertModel(_ model: PasteboardModel) async {
+        let itemId = await sqlManager.insert(item: model)
+        let count = await sqlManager.getTotalCount()
 
-            model.id = itemId
-            totalCount = count
+        model.id = itemId
+        totalCount = count
 
-            if isInFilterMode, let filter = currentFilter {
-                filteredCount = await sqlManager.getCount(filter: filter)
-            } else {
-                filteredCount = count
-            }
-
-            if lastDataChangeType == .searchFilter {
-                return
-            }
-
-            var list = dataList.value
-            list.removeAll(where: { $0.uniqueId == model.uniqueId })
-            list.insert(model, at: 0)
-            hasMoreData = list.count >= pageSize
-            updateData(with: Array(list.prefix(pageSize)))
+        if isInFilterMode, let filter = currentFilter {
+            filteredCount = await sqlManager.getCount(filter: filter)
+        } else {
+            filteredCount = count
         }
+
+        if lastDataChangeType == .searchFilter {
+            return
+        }
+
+        var list = dataList.value
+        list.removeAll(where: { $0.uniqueId == model.uniqueId })
+        list.insert(model, at: 0)
+        hasMoreData = list.count >= pageSize
+        updateData(with: Array(list.prefix(pageSize)))
     }
 
     func moveItemsToFirst(_ models: [PasteboardModel]) {
