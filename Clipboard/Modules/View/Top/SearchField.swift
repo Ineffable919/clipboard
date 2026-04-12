@@ -228,7 +228,9 @@ private final class InnerTextField: NSTextField {
     override func becomeFirstResponder() -> Bool {
         let result = super.becomeFirstResponder()
         if result {
-            noteFocusRingMaskChanged()
+            if !suppressFocusRing {
+                noteFocusRingMaskChanged()
+            }
             onBecomeFirstResponder?()
             if let editor = currentEditor() {
                 let end = editor.string.endIndex
@@ -237,10 +239,5 @@ private final class InnerTextField: NSTextField {
             }
         }
         return result
-    }
-
-    override func textDidEndEditing(_ notification: Notification) {
-        super.textDidEndEditing(notification)
-        noteFocusRingMaskChanged()
     }
 }
