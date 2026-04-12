@@ -18,6 +18,8 @@ final class ClipMainViewController: NSViewController {
     private let db = PasteDataStore.main
     private let store = CategoryChipStore.shared
 
+    var previousApp: NSRunningApplication?
+
     // MARK: - Focus
 
     private var focusRegion: FocusRegion = .collection
@@ -115,6 +117,13 @@ extension ClipMainViewController {
         initObserve()
     }
 
+    override func viewWillAppear() {
+        super.viewWillAppear()
+        if focusRegion != .search {
+            topBarView.searchField.acceptsFocus = false
+        }
+    }
+
     override func viewDidAppear() {
         view.frame = NSRect(
             x: view.frame.origin.x,
@@ -130,8 +139,9 @@ extension ClipMainViewController {
 
         updateSelectedItemBorder()
 
-        let needsSearchFocus = focusRegion == .search
-        if needsSearchFocus {
+        let targetRegion = focusRegion
+
+        if targetRegion == .search {
             topBarView.searchField.suppressFocusRing = true
         }
 
@@ -140,12 +150,21 @@ extension ClipMainViewController {
             self.view.animator().setFrameOrigin(.zero)
         } completionHandler: {
             MainActor.assumeIsolated {
-                if needsSearchFocus {
+                self.focusRegion = targetRegion
+
+                if self.topBarView.isSearching {
+                    self.topBarView.searchField.acceptsFocus = true
+                }
+
+                if targetRegion == .search {
                     self.topBarView.searchField.suppressFocusRing = false
-                    self.view.window?.makeFirstResponder(self.topBarView.searchField)
+                    self.view.window?.makeFirstResponder(
+                        self.topBarView.searchField
+                    )
                 } else {
                     self.view.window?.makeFirstResponder(self.collectionView)
                 }
+                self.updateSelectedItemBorder()
             }
         }
     }
@@ -231,7 +250,6 @@ extension ClipMainViewController {
             .sink { [weak self] _ in
                 guard let self else { return }
                 collectionView.reloadData()
-                updateSelectedItemBorder()
             }
             .store(in: &cancellables)
 
@@ -239,9 +257,9 @@ extension ClipMainViewController {
             .dropFirst()
             .removeDuplicates()
             .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
-            .sink { [weak self] text in
+            .sink { [weak self] _ in
                 guard let self else { return }
-                topVM.setQuery(text: text)
+                self.performSearch()
             }
             .store(in: &cancellables)
 
@@ -251,9 +269,26 @@ extension ClipMainViewController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self else { return }
-                topVM.performSearch()
+                self.performSearch()
             }
             .store(in: &cancellables)
+    }
+}
+
+extension ClipMainViewController {
+    private func performSearch() {
+        let text = topBarView.searchField.text
+        topVM.setQuery(text: text)
+        if topVM.willSearchCriteriaChange() {
+            resetSelectIndex()
+            collectionView.scroll(.zero)
+        }
+        topVM.performSearch()
+    }
+
+    private func resetToDefaultList() {
+        resetSelectIndex()
+        topVM.performSearch()
     }
 }
 
@@ -264,23 +299,18 @@ extension ClipMainViewController: NSCollectionViewDataSource {
         1
     }
 
-    func collectionView(
-        _: NSCollectionView,
-        numberOfItemsInSection _: Int
-    ) -> Int {
+    func collectionView(_: NSCollectionView, numberOfItemsInSection _: Int) -> Int {
         dataList.value.count
     }
 
-    func collectionView(
-        _ collectionView: NSCollectionView,
-        itemForRepresentedObjectAt indexPath: IndexPath
-    ) -> NSCollectionViewItem {
+    func collectionView(_ collectionView: NSCollectionView, itemForRepresentedObjectAt indexPath: IndexPath) -> NSCollectionViewItem {
         let item = collectionView.makeItem(
             withIdentifier: CollectionViewItem.identifier,
             for: indexPath
         )
         guard let cItem = item as? CollectionViewItem else { return item }
         let model = dataList.value[indexPath.item]
+        cItem.delegate = self
         cItem.configure(with: model, keyword: topVM.query)
         if selectIndexPath == indexPath {
             cItem.isSelected = true
@@ -296,28 +326,18 @@ extension ClipMainViewController: NSCollectionViewDataSource {
 // MARK: - NSCollectionViewDelegate
 
 extension ClipMainViewController: NSCollectionViewDelegate {
-    func collectionView(
-        _: NSCollectionView,
-        shouldSelectItemsAt indexPaths: Set<IndexPath>
-    ) -> Set<IndexPath> {
+    func collectionView(_: NSCollectionView, shouldSelectItemsAt indexPaths: Set<IndexPath>) -> Set<IndexPath> {
         if let indexPath = indexPaths.first {
             resetSelectIndex(indexPath)
         }
         return [selectIndexPath]
     }
 
-    func collectionView(
-        _: NSCollectionView,
-        canDragItemsAt _: Set<IndexPath>,
-        with _: NSEvent
-    ) -> Bool {
+    func collectionView(_: NSCollectionView, canDragItemsAt _: Set<IndexPath>, with _: NSEvent) -> Bool {
         true
     }
 
-    func collectionView(
-        _: NSCollectionView,
-        pasteboardWriterForItemAt indexPath: IndexPath
-    ) -> (any NSPasteboardWriting)? {
+    func collectionView(_: NSCollectionView, pasteboardWriterForItemAt indexPath: IndexPath) -> (any NSPasteboardWriting)? {
         dataList.value[indexPath.item].writeItem
     }
 }
@@ -326,27 +346,75 @@ extension ClipMainViewController {
     private func resetSelectIndex(
         _ indexPath: IndexPath = IndexPath(item: 0, section: 0)
     ) {
+        let zero = IndexPath(item: 0, section: 0)
+        if indexPath == zero, selectIndexPath == zero { return }
         collectionView.item(at: selectIndexPath)?.isSelected = false
         selectIndexPath = indexPath
         if !dataList.value.isEmpty {
             collectionView.selectionIndexPaths = [selectIndexPath]
             scrollTo(indexPath: selectIndexPath)
+            updateSelectedItemBorder()
         }
     }
 
     private func scrollTo(indexPath: IndexPath) {
-        if let item = collectionView.layoutAttributesForItem(at: indexPath) {
-            NSAnimationContext.runAnimationGroup { context in
-                context.duration = 0.25
-                collectionView.animator().scrollToVisible(
-                    NSRect(
-                        x: item.frame.origin.x - Const.cardSpace,
-                        y: 0,
-                        width: item.frame.width + Const.cardSpace * 2,
-                        height: item.frame.height
-                    )
-                )
-            }
+        guard let attrs = collectionView.layoutAttributesForItem(at: indexPath)
+        else { return }
+        collectionView.scrollToVisible(
+            NSRect(
+                x: attrs.frame.origin.x - Const.cardSpace,
+                y: 0,
+                width: attrs.frame.width + Const.cardSpace * 2,
+                height: attrs.frame.height
+            )
+        )
+    }
+}
+
+// MARK: - CollectionViewItemDelegate
+
+extension ClipMainViewController: CollectionViewItemDelegate {
+    var preApp: NSRunningApplication? {
+        previousApp
+    }
+
+    func itemDidRequestSelect(_ item: CollectionViewItem) {
+        if focusRegion != .collection {
+            setFocusRegion(.collection)
+            view.window?.makeFirstResponder(collectionView)
         }
+        guard let indexPath = collectionView.indexPath(for: item),
+              indexPath != selectIndexPath else { return }
+        resetSelectIndex(indexPath)
+    }
+
+    func itemDidRequestPaste(_ item: PasteboardModel) {
+        ClipActionService.shared.paste(item, checkPermissions: true)
+    }
+
+    func itemDidRequestPastePlain(_ item: PasteboardModel) {
+        ClipActionService.shared.paste(
+            item,
+            isAttribute: false,
+            checkPermissions: PasteUserDefaults.pasteDirect
+        )
+    }
+
+    func itemDidRequestCopy(_ item: PasteboardModel) {
+        ClipActionService.shared.copy(item)
+    }
+
+    func itemDidRequestEdit(_ item: PasteboardModel) {
+        EditWindowController.shared.openWindow(with: item)
+    }
+
+    func itemDidRequestDelete(_ item: PasteboardModel, indexPath: IndexPath) {
+        PasteDataStore.main.deleteItems(item)
+        collectionView.animator().deleteItems(at: [indexPath])
+        resetSelectIndex(indexPath)
+    }
+
+    func itemDidRequestPreview(_: PasteboardModel) {
+        // TODO: show preview popover
     }
 }

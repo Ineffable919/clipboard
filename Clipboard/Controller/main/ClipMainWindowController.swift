@@ -95,6 +95,9 @@ extension ClipMainWindowController {
 
     func show(in frame: NSRect?) {
         let frame = frame ?? .zero
+        if let vc = contentViewController as? ClipMainViewController {
+            vc.previousApp = NSWorkspace.shared.frontmostApplication
+        }
         window?.setFrame(frame, display: true)
         window?.setIsVisible(true)
         window?.becomeFirstResponder()

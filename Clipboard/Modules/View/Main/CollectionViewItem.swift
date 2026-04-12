@@ -9,7 +9,24 @@ import AppKit
 import CoreFoundation
 import SnapKit
 
+// MARK: - Delegate
+
+protocol CollectionViewItemDelegate: NSObjectProtocol {
+    var preApp: NSRunningApplication? { get }
+    func itemDidRequestSelect(_ item: CollectionViewItem)
+    func itemDidRequestPaste(_ item: PasteboardModel)
+    func itemDidRequestPastePlain(_ item: PasteboardModel)
+    func itemDidRequestCopy(_ item: PasteboardModel)
+    func itemDidRequestEdit(_ item: PasteboardModel)
+    func itemDidRequestDelete(_ item: PasteboardModel, indexPath: IndexPath)
+    func itemDidRequestPreview(_ item: PasteboardModel)
+}
+
+// MARK: - CollectionViewItem
+
 final class CollectionViewItem: NSCollectionViewItem {
+    weak var delegate: (any CollectionViewItemDelegate)?
+
     private var item: PasteboardModel?
     private var iconLoadTask: Task<Void, Never>?
     private var isFocused = true
@@ -42,6 +59,7 @@ final class CollectionViewItem: NSCollectionViewItem {
     }()
 
     private lazy var cardContentView = CardContentView()
+    private lazy var cardBottomView = CardBottomView()
 
     func configure(with model: PasteboardModel, keyword: String = "") {
         item = model
@@ -56,6 +74,7 @@ final class CollectionViewItem: NSCollectionViewItem {
         }
 
         cardContentView.configure(with: model, keyword: keyword)
+        cardBottomView.configure(with: model, keyword: keyword)
     }
 
     func setFocused(_ focused: Bool) {
@@ -80,7 +99,9 @@ extension CollectionViewItem {
 
     override func mouseDown(with event: NSEvent) {
         super.mouseDown(with: event)
-        if event.type == .leftMouseDown, event.clickCount == 2 {}
+        if event.type == .leftMouseDown, event.clickCount == 2 {
+            handlePaste()
+        }
     }
 
     override func prepareForReuse() {
@@ -89,6 +110,7 @@ extension CollectionViewItem {
         iconLoadTask = nil
         headView.reset()
         cardContentView.resetContent()
+        cardBottomView.reset()
     }
 
     private func updateSelectionBorder() {
@@ -104,6 +126,134 @@ extension CollectionViewItem {
     }
 }
 
+// MARK: - Context Menu
+
+extension CollectionViewItem {
+    private func makeContextMenu(for model: PasteboardModel) -> NSMenu {
+        let menu = NSMenu()
+
+        menu.addItem(pasteItem(for: model))
+
+        if model.pasteboardType.isText() {
+            menu.addItem(pastePlainItem())
+        }
+
+        menu.addItem(copyItem())
+        menu.addItem(.separator())
+
+        if model.pasteboardType.isText() {
+            menu.addItem(editItem())
+        }
+
+        menu.addItem(deleteItem())
+        menu.addItem(.separator())
+        menu.addItem(previewItem())
+
+        return menu
+    }
+
+    private func pasteItem(for _: PasteboardModel) -> NSMenuItem {
+        let title = if let appName = delegate?.preApp?.localizedName {
+            String(localized: .pasteToApp(appName))
+        } else {
+            String(localized: .paste)
+        }
+        let item = NSMenuItem(title: title, action: #selector(handlePaste), keyEquivalent: "\r")
+        item.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: nil)
+        item.target = self
+        return item
+    }
+
+    private func pastePlainItem() -> NSMenuItem {
+        let item = NSMenuItem(
+            title: String(localized: .pastePlain),
+            action: #selector(handlePastePlain),
+            keyEquivalent: ""
+        )
+        item.image = NSImage(systemSymbolName: "text.alignleft", accessibilityDescription: nil)
+        item.target = self
+        return item
+    }
+
+    private func copyItem() -> NSMenuItem {
+        let item = NSMenuItem(
+            title: String(localized: .copy),
+            action: #selector(handleCopy),
+            keyEquivalent: "c"
+        )
+        item.keyEquivalentModifierMask = .command
+        item.image = NSImage(systemSymbolName: "doc.on.doc", accessibilityDescription: nil)
+        item.target = self
+        return item
+    }
+
+    private func editItem() -> NSMenuItem {
+        let item = NSMenuItem(
+            title: String(localized: .edit),
+            action: #selector(handleEdit),
+            keyEquivalent: "e"
+        )
+        item.keyEquivalentModifierMask = .command
+        item.image = NSImage(systemSymbolName: "pencil", accessibilityDescription: nil)
+        item.target = self
+        return item
+    }
+
+    private func deleteItem() -> NSMenuItem {
+        let item = NSMenuItem(
+            title: String(localized: .delete),
+            action: #selector(handleDelete),
+            keyEquivalent: "\u{08}" // backspace
+        )
+        item.keyEquivalentModifierMask = []
+        item.image = NSImage(systemSymbolName: "trash", accessibilityDescription: nil)
+        item.target = self
+        return item
+    }
+
+    private func previewItem() -> NSMenuItem {
+        let item = NSMenuItem(
+            title: String(localized: .preview),
+            action: #selector(handlePreview),
+            keyEquivalent: " "
+        )
+        item.keyEquivalentModifierMask = []
+        item.image = NSImage(systemSymbolName: "eye", accessibilityDescription: nil)
+        item.target = self
+        return item
+    }
+
+    @objc private func handlePaste() {
+        guard let model = item else { return }
+        delegate?.itemDidRequestPaste(model)
+    }
+
+    @objc private func handlePastePlain() {
+        guard let model = item else { return }
+        delegate?.itemDidRequestPastePlain(model)
+    }
+
+    @objc private func handleCopy() {
+        guard let model = item else { return }
+        delegate?.itemDidRequestCopy(model)
+    }
+
+    @objc private func handleEdit() {
+        guard let model = item else { return }
+        delegate?.itemDidRequestEdit(model)
+    }
+
+    @objc private func handleDelete() {
+        guard let model = item, let indexPath = collectionView?.indexPath(for: self) else { return }
+        delegate?.itemDidRequestDelete(model, indexPath: indexPath)
+    }
+
+    @objc private func handlePreview() {
+        guard let model = item else { return }
+        delegate?.itemDidRequestPreview(model)
+    }
+}
+
 // MARK: - UI
 
 extension CollectionViewItem {
@@ -111,10 +261,15 @@ extension CollectionViewItem {
         view.wantsLayer = true
         view.layer?.backgroundColor = .clear
 
+        let contextMenu = NSMenu()
+        contextMenu.delegate = self
+        view.menu = contextMenu
+
         view.addSubview(selectionBorderView)
         selectionBorderView.addSubview(contentView)
         contentView.addSubview(headView)
         contentView.addSubview(cardContentView)
+        contentView.addSubview(cardBottomView)
 
         selectionBorderView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
@@ -133,7 +288,25 @@ extension CollectionViewItem {
             make.top.equalTo(headView.snp.bottom)
             make.leading.trailing.bottom.equalToSuperview()
         }
+
+        cardBottomView.snp.makeConstraints { make in
+            make.leading.trailing.bottom.equalToSuperview()
+            make.height.equalTo(Const.bottomSize)
+        }
     }
 }
 
 extension CollectionViewItem: UserInterfaceItemIdentifier {}
+
+// MARK: - NSMenuDelegate
+
+extension CollectionViewItem: NSMenuDelegate {
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        menu.removeAllItems()
+        guard let model = item else { return }
+        delegate?.itemDidRequestSelect(self)
+        for item in makeContextMenu(for: model).items {
+            menu.addItem(item)
+        }
+    }
+}

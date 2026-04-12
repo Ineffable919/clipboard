@@ -368,7 +368,8 @@ final class CardFileContentView: NSView {
                 let thumbView = CardFileThumbnailView(filePath: filePaths[0])
                 addSubview(thumbView)
                 thumbView.snp.makeConstraints { make in
-                    make.edges.equalToSuperview().inset(Const.space12)
+                    make.centerX.equalToSuperview()
+                    make.centerY.equalToSuperview().offset(-Const.space20)
                 }
             }
         } else {

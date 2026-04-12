@@ -107,7 +107,7 @@ final class CategoryChipStore {
         chips.first { $0.id == selectedChipId }
     }
 
-    func getGroupFilterForCurrentChip() -> Int {
+    func getSelectChipId() -> Int {
         guard let chip = getSelectedChip() else { return -1 }
         return chip.isSystem ? -1 : chip.id
     }

@@ -16,11 +16,7 @@ final class TopBarViewModel {
 
     // MARK: - Search Properties
 
-    private(set) var query: String {
-        didSet {
-            handleQueryChange()
-        }
-    }
+    private(set) var query: String = ""
 
     func setQuery(text: String) {
         query = text
@@ -190,14 +186,8 @@ final class TopBarViewModel {
         editingChipColorIndex = cycleColorIndex(editingChipColorIndex)
     }
 
-    // MARK: - Helper Methods
-
     private func cycleColorIndex(_ currentIndex: Int) -> Int {
         (currentIndex + 1) % CategoryChip.palette.count
-    }
-
-    private func getGroupFilterForCurrentChip() -> Int {
-        chipStore.getGroupFilterForCurrentChip()
     }
 
     // MARK: - Filter Methods
@@ -405,7 +395,7 @@ final class TopBarViewModel {
     // MARK: - Search Methods
 
     /// 处理查询变化，支持快捷指令（如 @img, @text 等）
-    private func handleQueryChange() {
+    func handleQueryChange() {
         let trimmedQuery = query.trimmingCharacters(in: .whitespaces)
 
         if trimmedQuery.hasPrefix("@"), displayModeRaw == 0 {
@@ -448,7 +438,19 @@ final class TopBarViewModel {
             chipStore.selectedChipId = -1
         }
 
-        lastSearchCriteria = SearchCriteria.empty
+        lastSearchCriteria = nil
+    }
+
+    func willSearchCriteriaChange() -> Bool {
+        let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        let criteria = SearchCriteria(
+            keyword: trimmedQuery,
+            chipGroup: getSelectChipId(),
+            selectedTypes: selectedTypes,
+            selectedAppNames: selectedAppNames,
+            selectedDateFilter: selectedDateFilter
+        )
+        return criteria != lastSearchCriteria
     }
 
     func performSearch() {
@@ -458,7 +460,7 @@ final class TopBarViewModel {
 
         let criteria = SearchCriteria(
             keyword: trimmedQuery,
-            chipGroup: getGroupFilterForCurrentChip(),
+            chipGroup: getSelectChipId(),
             selectedTypes: selectedTypes,
             selectedAppNames: selectedAppNames,
             selectedDateFilter: selectedDateFilter

@@ -316,6 +316,9 @@ extension PasteDataStore {
     }
 
     func deleteItems(_ items: PasteboardModel...) {
+        var list = dataList.value
+        list.removeAll(where: { items.contains($0) })
+        dataList.send(list)
         let ids = items.compactMap(\.id)
         guard !ids.isEmpty else { return }
         deleteItems(filter: ids.contains(Col.id))
@@ -347,12 +350,6 @@ extension PasteDataStore {
 
     func deleteItemsByGroup(_ groupId: Int) {
         deleteItems(filter: Col.group == groupId)
-    }
-
-    func delete(id: Int64) {
-        Task {
-            await sqlManager.delete(id: id)
-        }
     }
 
     func remove(at index: Int) {

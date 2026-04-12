@@ -18,12 +18,12 @@ final class SearchField: NSView {
 
     var onClear: (() -> Void)?
 
-    /// 控搜索框是否接受
+    /// 控制搜索框是否接受焦点
     var acceptsFocus: Bool = false {
         didSet { textField.canAcceptFocus = acceptsFocus }
     }
 
-    /// 隐藏焦点环
+    /// 控制焦点环
     var suppressFocusRing: Bool = false {
         didSet {
             textField.suppressFocusRing = suppressFocusRing

@@ -72,7 +72,6 @@ extension PasteboardModel {
         return mutable
     }
 
-    /// Plain-text attributed string with keyword highlighted (used for link cards).
     func highlightedPlainText(keyword: String) -> NSAttributedString {
         let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
         let source = attributeString.string
