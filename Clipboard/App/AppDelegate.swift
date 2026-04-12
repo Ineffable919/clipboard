@@ -91,7 +91,7 @@ extension AppDelegate {
 
         PasteDataStore.main.setup()
 
-        initEvent()
+        initLocalEvent()
 
         HotKeyManager.shared.initialize()
 
@@ -114,7 +114,7 @@ extension AppDelegate {
         windowManager.toggleWindow(completionHandler)
     }
 
-    private func initEvent() {
+    private func initLocalEvent() {
         EventDispatcher.shared.start()
 
         EventDispatcher.shared.registerHandler(

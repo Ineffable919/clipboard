@@ -259,7 +259,7 @@ extension ClipMainViewController {
             .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self else { return }
-                self.performSearch()
+                performSearch()
             }
             .store(in: &cancellables)
 
@@ -269,7 +269,7 @@ extension ClipMainViewController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self else { return }
-                self.performSearch()
+                performSearch()
             }
             .store(in: &cancellables)
     }
@@ -364,7 +364,7 @@ extension ClipMainViewController {
             NSRect(
                 x: attrs.frame.origin.x - Const.cardSpace,
                 y: 0,
-                width: attrs.frame.width + Const.cardSpace * 2,
+                width: attrs.frame.width + Const.cardSpace * 2 + Const.cardSize / 5,
                 height: attrs.frame.height
             )
         )
@@ -411,7 +411,21 @@ extension ClipMainViewController: CollectionViewItemDelegate {
     func itemDidRequestDelete(_ item: PasteboardModel, indexPath: IndexPath) {
         PasteDataStore.main.deleteItems(item)
         collectionView.animator().deleteItems(at: [indexPath])
-        resetSelectIndex(indexPath)
+
+        let count = dataList.value.count
+        guard count > 0 else {
+            selectIndexPath = IndexPath(item: 0, section: 0)
+            return
+        }
+        let newIndex = min(indexPath.item, count - 1)
+        let newPath = IndexPath(item: newIndex, section: 0)
+
+        collectionView.item(at: selectIndexPath)?.isSelected = false
+        selectIndexPath = newPath
+        collectionView.selectionIndexPaths = [newPath]
+        scrollTo(indexPath: newPath)
+        (collectionView.item(at: newPath) as? CollectionViewItem)?.isSelected = true
+        updateSelectedItemBorder()
     }
 
     func itemDidRequestPreview(_: PasteboardModel) {
