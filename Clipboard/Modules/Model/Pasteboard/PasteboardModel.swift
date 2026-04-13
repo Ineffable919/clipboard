@@ -24,7 +24,10 @@ final class PasteboardModel: Identifiable {
 
     private(set) lazy var writeItem = PasteboardWritingItem(
         data: data,
-        type: pasteboardType
+        type: pasteboardType,
+        searchText: searchText,
+        appName: appName,
+        timestamp: timestamp
     )
     private(set) lazy var type = PasteModelType(
         with: pasteboardType,
