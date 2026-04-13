@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import Combine
 import CoreFoundation
 import SnapKit
 
@@ -14,12 +15,12 @@ import SnapKit
 protocol CollectionViewItemDelegate: NSObjectProtocol {
     var preApp: NSRunningApplication? { get }
     func itemDidRequestSelect(_ item: CollectionViewItem)
-    func itemDidRequestPaste(_ item: PasteboardModel)
-    func itemDidRequestPastePlain(_ item: PasteboardModel)
-    func itemDidRequestCopy(_ item: PasteboardModel)
-    func itemDidRequestEdit(_ item: PasteboardModel)
-    func itemDidRequestDelete(_ item: PasteboardModel, indexPath: IndexPath)
-    func itemDidRequestPreview(_ item: PasteboardModel)
+    func paste(_ item: PasteboardModel)
+    func pastePlain(_ item: PasteboardModel)
+    func copy(_ item: PasteboardModel)
+    func edit(_ item: PasteboardModel)
+    func delete(_ item: PasteboardModel, indexPath: IndexPath)
+    func preview(_ item: PasteboardModel)
 }
 
 // MARK: - CollectionViewItem
@@ -30,6 +31,7 @@ final class CollectionViewItem: NSCollectionViewItem {
     private var item: PasteboardModel?
     private var iconLoadTask: Task<Void, Never>?
     private var isFocused = true
+    private var tickCancellable: AnyCancellable?
 
     // MARK: - Head
 
@@ -75,6 +77,12 @@ final class CollectionViewItem: NSCollectionViewItem {
 
         cardContentView.configure(with: model, keyword: keyword)
         cardBottomView.configure(with: model, keyword: keyword)
+
+        tickCancellable = TimeManager.shared.tick
+            .sink { [weak self] _ in
+                guard let self, let model = self.item else { return }
+                self.headView.refreshTimestamp(for: model)
+            }
     }
 
     func setFocused(_ focused: Bool) {
@@ -106,6 +114,8 @@ extension CollectionViewItem {
 
     override func prepareForReuse() {
         super.prepareForReuse()
+        tickCancellable?.cancel()
+        tickCancellable = nil
         iconLoadTask?.cancel()
         iconLoadTask = nil
         headView.reset()
@@ -159,6 +169,7 @@ extension CollectionViewItem {
             String(localized: .paste)
         }
         let item = NSMenuItem(title: title, action: #selector(handlePaste), keyEquivalent: "\r")
+        item.keyEquivalentModifierMask = []
         item.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: nil)
         item.target = self
         return item
@@ -168,8 +179,9 @@ extension CollectionViewItem {
         let item = NSMenuItem(
             title: String(localized: .pastePlain),
             action: #selector(handlePastePlain),
-            keyEquivalent: ""
+            keyEquivalent: "\r"
         )
+        item.keyEquivalentModifierMask = .shift
         item.image = NSImage(systemSymbolName: "text.alignleft", accessibilityDescription: nil)
         item.target = self
         return item
@@ -225,32 +237,32 @@ extension CollectionViewItem {
 
     @objc private func handlePaste() {
         guard let model = item else { return }
-        delegate?.itemDidRequestPaste(model)
+        delegate?.paste(model)
     }
 
     @objc private func handlePastePlain() {
         guard let model = item else { return }
-        delegate?.itemDidRequestPastePlain(model)
+        delegate?.pastePlain(model)
     }
 
     @objc private func handleCopy() {
         guard let model = item else { return }
-        delegate?.itemDidRequestCopy(model)
+        delegate?.copy(model)
     }
 
     @objc private func handleEdit() {
         guard let model = item else { return }
-        delegate?.itemDidRequestEdit(model)
+        delegate?.edit(model)
     }
 
     @objc private func handleDelete() {
         guard let model = item, let indexPath = collectionView?.indexPath(for: self) else { return }
-        delegate?.itemDidRequestDelete(model, indexPath: indexPath)
+        delegate?.delete(model, indexPath: indexPath)
     }
 
     @objc private func handlePreview() {
         guard let model = item else { return }
-        delegate?.itemDidRequestPreview(model)
+        delegate?.preview(model)
     }
 }
 

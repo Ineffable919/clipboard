@@ -19,6 +19,8 @@ final class ClipMainViewController: NSViewController {
     private let store = CategoryChipStore.shared
 
     var previousApp: NSRunningApplication?
+    var deleteFlag = false
+    private var monitorToken: Any?
 
     // MARK: - Focus
 
@@ -109,11 +111,13 @@ final class ClipMainViewController: NSViewController {
     }()
 }
 
+// MARK: - 生命周期
+
 extension ClipMainViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         initView()
-        initEvent()
+        initFocus()
         initObserve()
     }
 
@@ -139,9 +143,11 @@ extension ClipMainViewController {
 
         updateSelectedItemBorder()
 
-        let targetRegion = focusRegion
+        if monitorToken == nil {
+            monitorToken = NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: keyDownEvent(_:))
+        }
 
-        if targetRegion == .search {
+        if focusRegion == .search {
             topBarView.searchField.suppressFocusRing = true
         }
 
@@ -150,13 +156,11 @@ extension ClipMainViewController {
             self.view.animator().setFrameOrigin(.zero)
         } completionHandler: {
             MainActor.assumeIsolated {
-                self.focusRegion = targetRegion
-
                 if self.topBarView.isSearching {
                     self.topBarView.searchField.acceptsFocus = true
                 }
 
-                if targetRegion == .search {
+                if self.focusRegion == .search {
                     self.topBarView.searchField.suppressFocusRing = false
                     self.view.window?.makeFirstResponder(
                         self.topBarView.searchField
@@ -172,6 +176,10 @@ extension ClipMainViewController {
     override func viewDidDisappear() {
         super.viewDidDisappear()
         PasteDataStore.main.clearExpiredData()
+        if let token = monitorToken {
+            NSEvent.removeMonitor(token)
+            monitorToken = nil
+        }
     }
 }
 
@@ -216,8 +224,10 @@ extension ClipMainViewController {
     }
 }
 
+// MARK: - Event
+
 extension ClipMainViewController {
-    private func initEvent() {
+    private func initFocus() {
         topBarView.onFocusRegionChange = { [weak self] region in
             self?.setFocusRegion(region)
         }
@@ -225,6 +235,11 @@ extension ClipMainViewController {
         topBarView.searchField.onBecomeFirstResponder = { [weak self] in
             self?.setFocusRegion(.search)
         }
+
+        let clickGesture = NSClickGestureRecognizer(target: self, action: #selector(handleContentViewClick(_:)))
+        clickGesture.buttonMask = 0x1 // 左键点击
+        clickGesture.delegate = self
+        contentView.addGestureRecognizer(clickGesture)
     }
 
     // MARK: - Focus Management
@@ -249,6 +264,14 @@ extension ClipMainViewController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self else { return }
+                if deleteFlag {
+                    deleteFlag = false
+                    return
+                }
+                let changeType = PasteDataStore.main.lastDataChangeType
+                if changeType == .reset || changeType == .searchFilter {
+                    resetSelectIndex()
+                }
                 collectionView.reloadData()
             }
             .store(in: &cancellables)
@@ -259,7 +282,7 @@ extension ClipMainViewController {
             .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self else { return }
-                performSearch()
+                topVM.performSearch()
             }
             .store(in: &cancellables)
 
@@ -269,7 +292,7 @@ extension ClipMainViewController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self else { return }
-                performSearch()
+                topVM.performSearch()
             }
             .store(in: &cancellables)
     }
@@ -277,8 +300,6 @@ extension ClipMainViewController {
 
 extension ClipMainViewController {
     private func performSearch() {
-        let text = topBarView.searchField.text
-        topVM.setQuery(text: text)
         if topVM.willSearchCriteriaChange() {
             resetSelectIndex()
             collectionView.scroll(.zero)
@@ -286,9 +307,85 @@ extension ClipMainViewController {
         topVM.performSearch()
     }
 
-    private func resetToDefaultList() {
-        resetSelectIndex()
-        topVM.performSearch()
+    @objc private func handleContentViewClick(_: NSClickGestureRecognizer) {
+        setFocusRegion(.collection)
+        view.window?.makeFirstResponder(collectionView)
+    }
+
+    private func keyDownEvent(_ event: NSEvent) -> NSEvent? {
+        if KeyCode.shouldTriggerSearch(for: event),!topBarView.searchField.isFirstResponder {
+            setFocusRegion(.search)
+            view.window?.makeFirstResponder(topBarView.searchField)
+            // TODO: 帮输入的符号赋值给 topBarView.searchField.text 触发搜索
+            return nil
+        }
+
+        switch event.keyCode {
+        case KeyCode.escape:
+            return escapeKeyDown(event)
+        case KeyCode.delete:
+            return deleteKeyDown(event)
+        case KeyCode.return:
+            return returnKeyDown(event)
+        default:
+            return event
+        }
+    }
+
+    private func escapeKeyDown(_: NSEvent) -> NSEvent? {
+        let field = topBarView.searchField
+        if field.isFirstResponder {
+            if !field.text.isEmpty {
+                field.stringValue = ""
+            } else {
+                view.window?.makeFirstResponder(collectionView)
+                setFocusRegion(.collection)
+            }
+        } else {
+            WindowManager.shared.toggleWindow()
+        }
+        return nil
+    }
+
+    private func deleteKeyDown(_ event: NSEvent) -> NSEvent? {
+        guard !topBarView.searchField.isFirstResponder else { return event }
+        if selectIndexPath.item < dataList.value.count {
+            let item = dataList.value[selectIndexPath.item]
+            delete(item, indexPath: selectIndexPath)
+            return nil
+        }
+        return event
+    }
+
+    private func returnKeyDown(_ event: NSEvent) -> NSEvent? {
+        let item = dataList.value[selectIndexPath.item]
+        if event.modifierFlags.contains(.shift) {
+            pastePlain(item)
+        } else {
+            paste(item)
+        }
+        return nil
+    }
+}
+
+extension ClipMainViewController: NSGestureRecognizerDelegate {
+    func gestureRecognizer(_: NSGestureRecognizer,
+                           shouldAttemptToRecognizeWith event: NSEvent) -> Bool
+    {
+        guard let hitView = view.window?.contentView?
+            .hitTest(event.locationInWindow)
+        else {
+            return true
+        }
+        if hitView.isDescendant(of: collectionView) {
+            return false
+        }
+
+        if hitView.isDescendant(of: topBarView) {
+            return hitView === topBarView
+        }
+
+        return true
     }
 }
 
@@ -388,11 +485,11 @@ extension ClipMainViewController: CollectionViewItemDelegate {
         resetSelectIndex(indexPath)
     }
 
-    func itemDidRequestPaste(_ item: PasteboardModel) {
-        ClipActionService.shared.paste(item, checkPermissions: true)
+    func paste(_ item: PasteboardModel) {
+        ClipActionService.shared.paste(item, checkPermissions: PasteUserDefaults.pasteDirect)
     }
 
-    func itemDidRequestPastePlain(_ item: PasteboardModel) {
+    func pastePlain(_ item: PasteboardModel) {
         ClipActionService.shared.paste(
             item,
             isAttribute: false,
@@ -400,15 +497,16 @@ extension ClipMainViewController: CollectionViewItemDelegate {
         )
     }
 
-    func itemDidRequestCopy(_ item: PasteboardModel) {
+    func copy(_ item: PasteboardModel) {
         ClipActionService.shared.copy(item)
     }
 
-    func itemDidRequestEdit(_ item: PasteboardModel) {
+    func edit(_ item: PasteboardModel) {
         EditWindowController.shared.openWindow(with: item)
     }
 
-    func itemDidRequestDelete(_ item: PasteboardModel, indexPath: IndexPath) {
+    func delete(_ item: PasteboardModel, indexPath: IndexPath) {
+        deleteFlag = true
         PasteDataStore.main.deleteItems(item)
         collectionView.animator().deleteItems(at: [indexPath])
 
@@ -425,10 +523,9 @@ extension ClipMainViewController: CollectionViewItemDelegate {
         collectionView.selectionIndexPaths = [newPath]
         scrollTo(indexPath: newPath)
         (collectionView.item(at: newPath) as? CollectionViewItem)?.isSelected = true
-        updateSelectedItemBorder()
     }
 
-    func itemDidRequestPreview(_: PasteboardModel) {
+    func preview(_: PasteboardModel) {
         // TODO: show preview popover
     }
 }

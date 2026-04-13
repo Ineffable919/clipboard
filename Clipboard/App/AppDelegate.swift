@@ -22,6 +22,7 @@ class AppDelegate: NSObject {
 
     private lazy var windowManager = WindowManager.shared
     private lazy var settingWinController = SettingWindowController.shared
+    private var monitorToken: Any?
 }
 
 extension AppDelegate: NSApplicationDelegate {
@@ -44,8 +45,11 @@ extension AppDelegate: NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_: Notification) {
+        if let token = monitorToken {
+            NSEvent.removeMonitor(token)
+            monitorToken = nil
+        }
         StatusBarController.shared.cleanup()
-        EventDispatcher.shared.stop()
         AppIconCache.shared.clearCache()
     }
 
@@ -115,16 +119,13 @@ extension AppDelegate {
     }
 
     private func initLocalEvent() {
-        EventDispatcher.shared.start()
-
-        EventDispatcher.shared.registerHandler(
-            matching: .keyDown,
-            key: "setting"
-        ) { [weak self] event in
+        monitorToken = NSEvent.addLocalMonitorForEvents(matching: .keyDown) {
+            [weak self] event in
+            guard let self else { return event }
             if event.modifierFlags.contains(.command) {
                 let modifiers = event.charactersIgnoringModifiers
                 if modifiers == "," || modifiers == "，" {
-                    self?.settingWinController.toggleWindow()
+                    self.settingWinController.toggleWindow()
                     return nil
                 }
                 if modifiers == "q" || modifiers == "Q" {

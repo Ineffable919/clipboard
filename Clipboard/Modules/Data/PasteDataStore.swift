@@ -73,8 +73,8 @@ final class PasteDataStore {
         with list: [PasteboardModel],
         changeType: DataChangeType = .reset
     ) {
-        dataList.send(list)
         lastDataChangeType = changeType
+        dataList.send(list)
     }
 }
 

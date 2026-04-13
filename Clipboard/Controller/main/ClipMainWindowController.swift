@@ -76,7 +76,6 @@ extension ClipMainWindowController {
     func dismiss(_ completionHandler: (@MainActor () -> Void)? = nil) {
         guard !isAnimating else { return }
         isAnimating = true
-        window?.makeFirstResponder(nil)
 
         let view = window?.contentViewController?.view
         NSAnimationContext.runAnimationGroup({ context in

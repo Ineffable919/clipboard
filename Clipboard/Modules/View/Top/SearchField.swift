@@ -18,6 +18,8 @@ final class SearchField: NSView {
 
     var onClear: (() -> Void)?
 
+    var onTextChanged: ((String) -> Void)?
+
     /// 控制搜索框是否接受焦点
     var acceptsFocus: Bool = false {
         didSet { textField.canAcceptFocus = acceptsFocus }
@@ -180,6 +182,7 @@ extension SearchField: NSTextFieldDelegate {
         let value = textField.stringValue
         if value != text {
             text = value
+            onTextChanged?(value)
         }
         cancelButton.isHidden = value.isEmpty
     }

@@ -100,6 +100,13 @@ final class CardHeadView: NSView {
         timestampLabel.stringValue = ""
         backgroundView.layer?.backgroundColor = nil
     }
+
+    func refreshTimestamp(for model: PasteboardModel) {
+        guard model.group == -1 else { return }
+        timestampLabel.stringValue = model.timestamp.timeAgo(
+            relativeTo: TimeManager.shared.currentTime
+        )
+    }
 }
 
 // MARK: - Private

@@ -26,7 +26,6 @@ final class TopBarView: NSView {
 
     // MARK: - Callbacks
 
-    /// VC 通过此回调统一管理焦点区域切换
     var onFocusRegionChange: ((FocusRegion) -> Void)?
 
     // MARK: - State
@@ -107,6 +106,11 @@ final class TopBarView: NSView {
             guard let self, isSearching else { return }
             deactivateSearch()
             onFocusRegionChange?(.collection)
+        }
+
+        searchField.onTextChanged = { [weak self] text in
+            guard let self else { return }
+            topVM?.setQuery(text: text)
         }
 
         dotChipScrollView.setContentHuggingPriority(.required, for: .horizontal)
