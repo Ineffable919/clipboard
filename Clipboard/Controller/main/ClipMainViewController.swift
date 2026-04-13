@@ -97,6 +97,14 @@ final class ClipMainViewController: NSViewController {
         collectionView.onBecomeFirstResponder = { [weak self] in
             self?.setFocusRegion(.collection)
         }
+        collectionView.onDragMoved = { [weak self] screenPoint in
+            guard let self, let window = view.window else { return }
+            let visibleRect = effectView.convert(effectView.bounds, to: nil)
+            let screenRect = window.convertToScreen(visibleRect)
+            if !screenRect.contains(screenPoint), WindowManager.shared.isVisible {
+                WindowManager.shared.toggleWindow()
+            }
+        }
         return collectionView
     }()
 
@@ -437,6 +445,7 @@ extension ClipMainViewController: NSCollectionViewDelegate {
     func collectionView(_: NSCollectionView, pasteboardWriterForItemAt indexPath: IndexPath) -> (any NSPasteboardWriting)? {
         dataList.value[indexPath.item].writeItem
     }
+
 }
 
 extension ClipMainViewController {

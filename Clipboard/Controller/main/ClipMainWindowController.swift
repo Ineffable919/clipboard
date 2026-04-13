@@ -74,7 +74,7 @@ final class ClipMainWindowController: NSWindowController {
 
 extension ClipMainWindowController {
     func dismiss(_ completionHandler: (@MainActor () -> Void)? = nil) {
-        guard !isAnimating else { return }
+        guard !isAnimating, isVisible else { return }
         isAnimating = true
 
         let view = window?.contentViewController?.view
@@ -105,9 +105,6 @@ extension ClipMainWindowController {
 
 extension ClipMainWindowController: NSWindowDelegate {
     func windowDidResignKey(_: Notification) {
-        // if clipVC.env.isShowDel {
-        //     return
-        // }
         dismiss()
     }
 }
