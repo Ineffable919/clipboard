@@ -64,6 +64,7 @@ final class TopBarViewModel {
     }
 
     func clearInput() {
+        guard hasInput else { return }
         query = ""
         clearAllFilters()
     }

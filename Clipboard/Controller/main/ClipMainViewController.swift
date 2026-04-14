@@ -285,8 +285,8 @@ extension ClipMainViewController {
             .store(in: &cancellables)
 
         topBarView.searchField.$text
-            .dropFirst()
             .removeDuplicates()
+            .dropFirst()
             .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self else { return }
@@ -321,10 +321,13 @@ extension ClipMainViewController {
     }
 
     private func keyDownEvent(_ event: NSEvent) -> NSEvent? {
-        if KeyCode.shouldTriggerSearch(for: event),!topBarView.searchField.isFirstResponder {
-            setFocusRegion(.search)
-            view.window?.makeFirstResponder(topBarView.searchField)
-            // TODO: 帮输入的符号赋值给 topBarView.searchField.text 触发搜索
+        if KeyCode.shouldTriggerSearch(for: event), !topBarView.searchField.isFirstResponder {
+            if let characters = event.characters, !characters.isEmpty {
+                topBarView.activateSearch(with: characters)
+            } else {
+                setFocusRegion(.search)
+                view.window?.makeFirstResponder(topBarView.searchField)
+            }
             return nil
         }
 
@@ -346,6 +349,7 @@ extension ClipMainViewController {
             if !field.text.isEmpty {
                 field.stringValue = ""
             } else {
+                topBarView.deactivateSearch()
                 view.window?.makeFirstResponder(collectionView)
                 setFocusRegion(.collection)
             }

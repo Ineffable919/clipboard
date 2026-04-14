@@ -384,6 +384,12 @@ final class TopBarView: NSView {
         onFocusRegionChange?(.search)
     }
 
+    func activateSearch(with character: String) {
+        activateSearch()
+        searchField.stringValue = character
+        searchField.notifyTextChanged(character)
+    }
+
     func deactivateSearch() {
         guard isSearching else { return }
         isSearching = false

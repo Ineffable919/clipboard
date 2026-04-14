@@ -173,6 +173,12 @@ final class SearchField: NSView {
         cancelButton.isHidden = true
         onClear?()
     }
+
+    func notifyTextChanged(_ value: String) {
+        text = value
+        cancelButton.isHidden = value.isEmpty
+        onTextChanged?(value)
+    }
 }
 
 // MARK: - NSTextFieldDelegate
