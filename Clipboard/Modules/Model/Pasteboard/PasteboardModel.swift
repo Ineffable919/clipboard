@@ -51,26 +51,8 @@ final class PasteboardModel: Identifiable {
     /// 链接预览元数据缓存
     var cachedLinkMetadata: LinkPreviewMetadata?
 
-    private var colorsComputed = false
-
-    func ensureColorsComputed() {
-        guard !colorsComputed else { return }
-        colorsComputed = true
-        let (bg, fg, hasBg) = computeColors()
-        cachedBackgroundColor = bg
-        cachedForegroundColor = fg
-        cachedHasBackgroundColor = hasBg
-    }
-
     var hasBgColor: Bool {
-        ensureColorsComputed()
-        return cachedHasBackgroundColor
-    }
-
-    /// 富文本背景色（NSColor）
-    var nsBackgroundColor: NSColor? {
-        ensureColorsComputed()
-        return cachedHasBackgroundColor ? cachedBackgroundColor : nil
+        cachedHasBackgroundColor
     }
 
     var isLink: Bool {
@@ -121,6 +103,11 @@ final class PasteboardModel: Identifiable {
         if pasteboardType == .png || pasteboardType == .tiff {
             cachedImageSize = Self.computeImageSize(from: data)
         }
+
+        let (bg, fg, hasBg) = computeColors()
+        cachedBackgroundColor = bg
+        cachedForegroundColor = fg
+        cachedHasBackgroundColor = hasBg
     }
 
     // MARK: - 计算图片尺寸

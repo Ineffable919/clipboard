@@ -39,22 +39,25 @@ final class CollectionViewItem: NSCollectionViewItem {
 
     // MARK: - Selection border
 
-    private lazy var selectionBorderView: NSView = {
-        let view = NSView()
+    private lazy var selectionBorderView: AppearanceObservingView = {
+        let view = AppearanceObservingView()
         view.wantsLayer = true
         view.layer?.masksToBounds = false
         view.layer?.backgroundColor = .clear
         view.layer?.cornerRadius = Const.radius + Const.selectionBorderWidth
         view.layer?.cornerCurve = .continuous
         view.layer?.borderWidth = 0
+        view.onAppearanceChange = { [weak self] in
+            self?.updateSelectionBorder()
+            self?.updateShadow()
+        }
         return view
     }()
 
-    private lazy var contentView: NSView = {
-        let view = NSView()
+    private lazy var contentView: DynamicBackgroundView = {
+        let view = DynamicBackgroundView()
         view.wantsLayer = true
         view.layer?.masksToBounds = true
-        view.layer?.backgroundColor = .clear
         view.layer?.cornerRadius = Const.radius
         view.layer?.cornerCurve = .continuous
         return view
@@ -66,23 +69,27 @@ final class CollectionViewItem: NSCollectionViewItem {
     func configure(with model: PasteboardModel, keyword: String = "") {
         item = model
         headView.configure(with: model)
-
-        if model.type == .color || (model.type == .rich && model.hasBgColor),
-           let bgColor = model.nsBackgroundColor
-        {
-            contentView.layer?.backgroundColor = bgColor.cgColor
-        } else {
-            contentView.layer?.backgroundColor = NSColor.textBackgroundColor.cgColor
-        }
+        updateContentBackground()
 
         cardContentView.configure(with: model, keyword: keyword)
         cardBottomView.configure(with: model, keyword: keyword)
 
         tickCancellable = TimeManager.shared.tick
             .sink { [weak self] _ in
-                guard let self, let model = self.item else { return }
-                self.headView.refreshTimestamp(for: model)
+                guard let self, let model = item else { return }
+                headView.refreshTimestamp(for: model)
             }
+    }
+
+    private func updateContentBackground() {
+        guard let model = item else { return }
+        if model.type == .color || (model.type == .rich && model.hasBgColor),
+           let bgColor = model.cachedBackgroundColor
+        {
+            contentView.dynamicBackgroundColor = bgColor
+        } else {
+            contentView.dynamicBackgroundColor = NSColor.textBackgroundColor
+        }
     }
 
     func setFocused(_ focused: Bool) {
@@ -133,6 +140,17 @@ extension CollectionViewItem {
             : .gray.withAlphaComponent(0.5)
         selectionBorderView.layer?.borderColor = color.cgColor
         selectionBorderView.layer?.borderWidth = Const.selectionBorderWidth
+    }
+
+    private func updateShadow() {
+        guard let layer = selectionBorderView.layer else { return }
+        let isDark = selectionBorderView.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        layer.shadowColor = isDark
+            ? NSColor.black.withAlphaComponent(0.5).cgColor
+            : NSColor(hex: "#30689C").withAlphaComponent(0.1).cgColor
+        layer.shadowOpacity = 1
+        layer.shadowRadius = 1
+        layer.shadowOffset = CGSize(width: 0, height: -1)
     }
 }
 
@@ -305,6 +323,8 @@ extension CollectionViewItem {
             make.leading.trailing.bottom.equalToSuperview()
             make.height.equalTo(Const.bottomSize)
         }
+
+        updateShadow()
     }
 }
 
@@ -320,5 +340,16 @@ extension CollectionViewItem: NSMenuDelegate {
         for item in makeContextMenu(for: model).items {
             menu.addItem(item)
         }
+    }
+}
+
+// MARK: - AppearanceObservingView
+
+private final class AppearanceObservingView: NSView {
+    var onAppearanceChange: (() -> Void)?
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        onAppearanceChange?()
     }
 }

@@ -167,6 +167,10 @@ final class SearchField: NSView {
 
     // MARK: - Actions
 
+    func moveCursorToEnd() {
+        textField.moveCursorToEnd()
+    }
+
     @objc func clear() {
         textField.stringValue = ""
         text = ""
@@ -241,12 +245,14 @@ private final class InnerTextField: NSTextField {
                 noteFocusRingMaskChanged()
             }
             onBecomeFirstResponder?()
-            if let editor = currentEditor() {
-                let end = editor.string.endIndex
-                let nsRange = NSRange(end..., in: editor.string)
-                editor.selectedRange = nsRange
-            }
+            moveCursorToEnd()
         }
         return result
+    }
+
+    func moveCursorToEnd() {
+        guard let editor = currentEditor() else { return }
+        let end = editor.string.endIndex
+        editor.selectedRange = NSRange(end..., in: editor.string)
     }
 }

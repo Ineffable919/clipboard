@@ -78,7 +78,7 @@ extension PasteboardWritingItem: NSPasteboardWriting {
                 .time(includingFractionalSeconds: false)
                 .timeSeparator(.colon)
         )
-        
+
         let safeDateString = iso.replacing(":", with: ".")
         let name = appName.isEmpty ? "Image" : appName
         let fileName = "\(name) \(safeDateString).\(ext)"

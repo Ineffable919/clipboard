@@ -125,7 +125,7 @@ extension AppDelegate {
             if event.modifierFlags.contains(.command) {
                 let modifiers = event.charactersIgnoringModifiers
                 if modifiers == "," || modifiers == "，" {
-                    self.settingWinController.toggleWindow()
+                    settingWinController.toggleWindow()
                     return nil
                 }
                 if modifiers == "q" || modifiers == "Q" {

@@ -16,8 +16,7 @@ extension PasteboardModel {
     // MARK: - 颜色
 
     func colors() -> (NSColor, NSColor) {
-        ensureColorsComputed()
-        return (
+        (
             cachedBackgroundColor ?? .controlBackgroundColor,
             cachedForegroundColor ?? .secondaryLabelColor
         )
@@ -49,7 +48,7 @@ extension PasteboardModel {
 
     func highlightedNSAttributedString(keyword: String) -> NSAttributedString {
         let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return attributeString }
+        guard !trimmed.isEmpty else { return plainTextAttributedString }
 
         let source = attributeString.string
         let mutable = NSMutableAttributedString(string: source)
@@ -59,7 +58,23 @@ extension PasteboardModel {
             mutable.addAttributes(attrs, range: range)
         }
 
+        let fullRange = NSRange(location: 0, length: mutable.length)
+        mutable.addAttribute(.foregroundColor, value: NSColor.labelColor, range: fullRange)
+
         applyHighlight(to: mutable, source: source as NSString, keyword: trimmed)
+        return mutable
+    }
+
+    var plainTextAttributedString: NSAttributedString {
+        let source = attributeString.string
+        let mutable = NSMutableAttributedString(string: source)
+        attributeString.enumerateAttributes(
+            in: NSRange(location: 0, length: attributeString.length)
+        ) { attrs, range, _ in
+            mutable.addAttributes(attrs, range: range)
+        }
+        let fullRange = NSRange(location: 0, length: mutable.length)
+        mutable.addAttribute(.foregroundColor, value: NSColor.labelColor, range: fullRange)
         return mutable
     }
 

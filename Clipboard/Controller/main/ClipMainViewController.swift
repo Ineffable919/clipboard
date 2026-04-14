@@ -348,6 +348,7 @@ extension ClipMainViewController {
         if field.isFirstResponder {
             if !field.text.isEmpty {
                 field.stringValue = ""
+                field.notifyTextChanged("")
             } else {
                 topBarView.deactivateSearch()
                 view.window?.makeFirstResponder(collectionView)
@@ -449,7 +450,6 @@ extension ClipMainViewController: NSCollectionViewDelegate {
     func collectionView(_: NSCollectionView, pasteboardWriterForItemAt indexPath: IndexPath) -> (any NSPasteboardWriting)? {
         dataList.value[indexPath.item].writeItem
     }
-
 }
 
 extension ClipMainViewController {

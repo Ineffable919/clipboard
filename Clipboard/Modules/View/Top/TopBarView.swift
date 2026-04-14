@@ -388,6 +388,7 @@ final class TopBarView: NSView {
         activateSearch()
         searchField.stringValue = character
         searchField.notifyTextChanged(character)
+        searchField.moveCursorToEnd()
     }
 
     func deactivateSearch() {

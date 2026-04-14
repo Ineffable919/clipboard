@@ -2,16 +2,12 @@
 //  CardContentView.swift
 //  Clipboard
 //
-//  AppKit re-implementation of the SwiftUI CardContentView.
-//  Dispatches to a type-specific sub-view based on PasteModelType.
 //
 //  Created by crown on 2026/4/9.
 //
 
 import AppKit
 import SnapKit
-
-// MARK: - CardContentView
 
 final class CardContentView: NSView {
     private var currentContentView: NSView?
@@ -141,7 +137,11 @@ final class CardContentView: NSView {
         case .file:
             return CardFileContentView(model: model)
         case .rich:
-            return CardRichContentView(model: model, keyword: keyword)
+            if model.hasBgColor {
+                return CardRichContentView(model: model, keyword: keyword)
+            } else {
+                return CardStringContentView(model: model, keyword: keyword)
+            }
         case .link:
             if PasteUserDefaults.enableLinkPreview {
                 return CardLinkPreviewContentView(model: model, keyword: keyword)
@@ -184,7 +184,7 @@ final class CardStringContentView: NSView {
         textView.snp.makeConstraints { $0.edges.equalToSuperview() }
 
         let attributed: NSAttributedString = keyword.isEmpty
-            ? model.attributeString
+            ? model.plainTextAttributedString
             : model.highlightedNSAttributedString(keyword: keyword)
         textView.textStorage?.setAttributedString(attributed)
     }
@@ -196,7 +196,7 @@ final class CardStringContentView: NSView {
 
     func updateKeyword(_ keyword: String, model: PasteboardModel) {
         let attributed: NSAttributedString = keyword.isEmpty
-            ? model.attributeString
+            ? model.plainTextAttributedString
             : model.highlightedNSAttributedString(keyword: keyword)
         textView.textStorage?.setAttributedString(attributed)
     }
@@ -263,7 +263,7 @@ final class CardRichContentView: NSView {
     init(model: PasteboardModel, keyword: String) {
         super.init(frame: .zero)
 
-        if model.hasBgColor, let bgColor = model.nsBackgroundColor {
+        if model.hasBgColor, let bgColor = model.cachedBackgroundColor {
             textView.drawsBackground = true
             textView.backgroundColor = bgColor
         } else {
@@ -316,7 +316,7 @@ final class CardColorContentView: NSView {
         super.init(frame: .zero)
         wantsLayer = true
 
-        let bgNS = model.nsBackgroundColor ?? NSColor.controlBackgroundColor
+        let bgNS = model.cachedBackgroundColor ?? NSColor.controlBackgroundColor
         layer?.backgroundColor = bgNS.cgColor
 
         let textNS = contrastingNSColor(for: bgNS)

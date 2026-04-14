@@ -15,14 +15,12 @@ import SnapKit
 final class CardLinkPreviewContentView: NSView {
     // MARK: - Subviews
 
-    /// Top image area — fills (Const.cntSize - 48) pt
-    private lazy var imageContainerView: NSView = {
-        let v = NSView()
+    private lazy var imageContainerView: DynamicBackgroundView = {
+        let v = DynamicBackgroundView()
         v.wantsLayer = true
         return v
     }()
 
-    /// Shown when a full preview image is available (fill / aspectFill)
     private lazy var previewImageView: NSImageView = {
         let iv = NSImageView()
         iv.imageScaling = .scaleProportionallyUpOrDown
@@ -30,7 +28,6 @@ final class CardLinkPreviewContentView: NSView {
         return iv
     }()
 
-    /// Shown when only a site icon is available (centred, fixed size)
     private lazy var iconImageView: NSImageView = {
         let iv = NSImageView()
         iv.imageScaling = .scaleProportionallyDown
@@ -38,7 +35,6 @@ final class CardLinkPreviewContentView: NSView {
         return iv
     }()
 
-    /// Shown while loading or when no image is available
     private lazy var placeholderImageView: NSImageView = {
         let iv = NSImageView()
         iv.image = NSImage(systemSymbolName: "link", accessibilityDescription: nil)
@@ -47,9 +43,8 @@ final class CardLinkPreviewContentView: NSView {
         return iv
     }()
 
-    /// Bottom info bar — 48 pt tall
-    private lazy var infoView: NSView = {
-        let v = NSView()
+    private lazy var infoView: DynamicBackgroundView = {
+        let v = DynamicBackgroundView()
         v.wantsLayer = true
         return v
     }()
@@ -63,7 +58,6 @@ final class CardLinkPreviewContentView: NSView {
         return f
     }()
 
-    /// Uses NSAttributedString so keyword matches can be highlighted
     private lazy var urlLabel: NSTextField = {
         let f = NSTextField(labelWithString: "")
         f.font = .systemFont(ofSize: 11)
@@ -100,11 +94,9 @@ final class CardLinkPreviewContentView: NSView {
         let urlString = model.attributeString.string
         let url = urlString.asCompleteURL()
 
-        // --- title label ---
         titleLabel.stringValue = model.cachedLinkMetadata?.title
             ?? url?.host() ?? urlString
 
-        // --- url label with optional keyword highlight ---
         if keyword.isEmpty {
             urlLabel.attributedStringValue = NSAttributedString(
                 string: url?.absoluteString ?? urlString,
@@ -116,7 +108,6 @@ final class CardLinkPreviewContentView: NSView {
         } else {
             let highlighted = model.highlightedPlainText(keyword: keyword)
             let mutable = NSMutableAttributedString(attributedString: highlighted)
-            // Apply base style; highlight background is already set by highlightedPlainText
             mutable.addAttributes(
                 [
                     .font: NSFont.systemFont(ofSize: 11),
@@ -124,7 +115,6 @@ final class CardLinkPreviewContentView: NSView {
                 ],
                 range: NSRange(location: 0, length: mutable.length)
             )
-            // Re-apply highlight background on top (addAttributes overwrites foreground but not bg)
             let plain = highlighted.string as NSString
             let options: NSString.CompareOptions = [.caseInsensitive, .diacriticInsensitive, .widthInsensitive]
             var searchRange = NSRange(location: 0, length: plain.length)
@@ -139,7 +129,6 @@ final class CardLinkPreviewContentView: NSView {
             urlLabel.attributedStringValue = mutable
         }
 
-        // Apply cached images immediately if available
         if let meta = model.cachedLinkMetadata {
             applyMetadata(meta)
             return
@@ -246,8 +235,8 @@ final class CardLinkPreviewContentView: NSView {
     private func updateBackground() {
         let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
         let imageBg: NSColor = isDark ? NSColor(hex: "#272835") : NSColor(hex: "#f5f5f5")
-        imageContainerView.layer?.backgroundColor = imageBg.cgColor
-        infoView.layer?.backgroundColor = NSColor.textBackgroundColor.cgColor
+        imageContainerView.dynamicBackgroundColor = imageBg
+        infoView.dynamicBackgroundColor = .textBackgroundColor
     }
 
     private func resetImageViews() {

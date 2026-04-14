@@ -88,7 +88,6 @@ private final class CardImageBottomView: NSView {
         field.textColor = .secondaryLabelColor
         field.lineBreakMode = .byTruncatingTail
         field.wantsLayer = true
-        field.layer?.backgroundColor = NSColor.unemphasizedSelectedContentBackgroundColor.withAlphaComponent(0.6).cgColor
         field.layer?.cornerRadius = 6.0
         field.layer?.cornerCurve = .continuous
         return field
@@ -105,11 +104,25 @@ private final class CardImageBottomView: NSView {
             make.leading.greaterThanOrEqualToSuperview()
             make.trailing.lessThanOrEqualToSuperview()
         }
+
+        updateLabelBackground()
     }
 
     @available(*, unavailable)
     required init?(coder _: NSCoder) {
         fatalError()
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        updateLabelBackground()
+    }
+
+    private func updateLabelBackground() {
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            label.layer?.backgroundColor = NSColor.unemphasizedSelectedContentBackgroundColor
+                .withAlphaComponent(0.6).cgColor
+        }
     }
 
     override func mouseDown(with event: NSEvent) {
@@ -285,12 +298,14 @@ final class CardCommonBottomView: NSView {
     }()
 
     private var needsMask: Bool = false
+    private var baseColor: NSColor = .controlBackgroundColor
 
     init(model: PasteboardModel) {
         super.init(frame: .zero)
         wantsLayer = true
 
-        let (baseColor, textColor) = model.colors()
+        let (base, textColor) = model.colors()
+        baseColor = base
         label.textColor = textColor
         label.stringValue = model.introString()
 
@@ -300,7 +315,7 @@ final class CardCommonBottomView: NSView {
 
         if needsMask {
             layer?.addSublayer(gradientLayer)
-            updateGradient(baseColor: baseColor)
+            updateGradient()
         }
 
         addSubview(label)
@@ -322,7 +337,9 @@ final class CardCommonBottomView: NSView {
 
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
-        needsLayout = true
+        if needsMask {
+            updateGradient()
+        }
     }
 
     override func mouseDown(with event: NSEvent) {
@@ -341,17 +358,19 @@ final class CardCommonBottomView: NSView {
         nextResponder?.rightMouseDown(with: event)
     }
 
-    private func updateGradient(baseColor: NSColor) {
-        let resolved = baseColor.usingColorSpace(.sRGB) ?? baseColor
+    private func updateGradient() {
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            let resolved = baseColor.usingColorSpace(.sRGB) ?? baseColor
+            gradientLayer.colors = [
+                resolved.cgColor,
+                resolved.cgColor,
+                resolved.withAlphaComponent(0.8).cgColor,
+                resolved.withAlphaComponent(0.0).cgColor,
+            ]
+        }
         gradientLayer.startPoint = CGPoint(x: 0.5, y: 0.0)
         gradientLayer.endPoint = CGPoint(x: 0.5, y: 1.0)
-        gradientLayer.colors = [
-            resolved.cgColor,
-            resolved.cgColor,
-            resolved.withAlphaComponent(0.8).cgColor,
-            resolved.withAlphaComponent(0.0).cgColor,
-        ]
-        gradientLayer.locations = [0.0, 0.6, 0.9, 1.0]
+        gradientLayer.locations = [0.0, 0.6, 0.8, 1.0]
     }
 }
 
