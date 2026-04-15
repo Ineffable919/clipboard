@@ -17,6 +17,7 @@ final class ClipMainWindowController: NSWindowController {
 
     private let db = PasteDataStore.main
     private var isAnimating = false
+    var suppressResignKey = false
 
     init() {
         let panel = ClipWindowView(
@@ -105,6 +106,7 @@ extension ClipMainWindowController {
 
 extension ClipMainWindowController: NSWindowDelegate {
     func windowDidResignKey(_: Notification) {
+        guard !suppressResignKey else { return }
         dismiss()
     }
 }

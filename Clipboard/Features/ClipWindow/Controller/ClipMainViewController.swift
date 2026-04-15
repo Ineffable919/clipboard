@@ -107,6 +107,19 @@ final class ClipMainViewController: NSViewController {
                 WindowManager.shared.toggleWindow()
             }
         }
+        collectionView.onDragEnded = { [weak self] screenPoint in
+            guard let self, let window = view.window else { return }
+            let visibleRect = effectView.convert(effectView.bounds, to: nil)
+            let screenRect = window.convertToScreen(visibleRect)
+            guard screenRect.contains(screenPoint) else { return }
+
+            let controller = ClipMainWindowController.shared
+            controller.suppressResignKey = true
+            window.resignKey()
+            window.makeKey()
+            window.makeFirstResponder(collectionView)
+            controller.suppressResignKey = false
+        }
         return collectionView
     }()
 
@@ -282,6 +295,9 @@ extension ClipMainViewController {
                 guard let self else { return }
                 deleteFlag = false
                 collectionView.reloadData()
+                if db.lastDataChangeType == .reset, selectIndexPath.item != 0 {
+                    resetSelectIndex()
+                }
             }
             .store(in: &cancellables)
 

@@ -162,7 +162,14 @@ final class SearchField: NSView {
     }
 
     private func updateColors() {
-        layer?.backgroundColor = NSColor.quaternaryLabelColor.cgColor
+        if #available(macOS 26.0, *) {
+            layer?.backgroundColor = NSColor.clear.cgColor
+        } else {
+            let color = NSApp.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+                ? NSColor(white: 1.0, alpha: 0.12)
+                : NSColor(white: 0.0, alpha: 0.1)
+            layer?.backgroundColor = color.cgColor
+        }
     }
 
     // MARK: - Actions

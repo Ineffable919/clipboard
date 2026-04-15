@@ -66,19 +66,20 @@ extension ClipMainViewController {
     ) {
         let zero = IndexPath(item: 0, section: 0)
         if indexPath == zero, selectIndexPath == zero {
+            guard !dataList.value.isEmpty else { return }
             scrollTo(indexPath: selectIndexPath)
             return
         }
         collectionView.item(at: selectIndexPath)?.isSelected = false
         selectIndexPath = indexPath
-        if !dataList.value.isEmpty {
-            collectionView.selectionIndexPaths = [selectIndexPath]
-            scrollTo(indexPath: selectIndexPath)
-            updateSelectedItemBorder()
-        }
+        guard !dataList.value.isEmpty else { return }
+        collectionView.selectionIndexPaths = [selectIndexPath]
+        scrollTo(indexPath: selectIndexPath)
+        updateSelectedItemBorder()
     }
 
     private func scrollTo(indexPath: IndexPath) {
+        guard !dataList.value.isEmpty else { return }
         guard let attrs = collectionView.layoutAttributesForItem(at: indexPath)
         else { return }
         collectionView.scrollToVisible(
