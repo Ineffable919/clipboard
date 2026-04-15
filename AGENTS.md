@@ -68,3 +68,23 @@ If the Xcode MCP is configured, prefer its tools over generic alternatives when 
 - `ExecuteSnippet` — test a code snippet in the context of a source file
 - `XcodeRead` — prefer over generic file read tools for reading Xcode project files
 - For writing and updating files, prefer generic file tools (`fsWrite`, `strReplace`, etc.) over `XcodeWrite` / `XcodeUpdate`
+
+
+## Collaboration workflow
+
+- Default to replying in Chinese unless the user requests otherwise.
+- Clarify ambiguous requirements before implementation. Do not invent missing requirements.
+- Start from first principles: reason from the user's goal, constraints, and observable facts rather than assumptions.
+- If the goal or motivation is unclear, discuss it before choosing an implementation path.
+- If a better path is identified, proactively explain the tradeoffs and recommend it.
+- Think before acting: analyze and plan before making changes.
+- For non-trivial tasks, present the implementation approach first and wait for approval before editing code.
+- If a change will likely touch more than 3 files or requires architecture decisions, split it into smaller tasks with clear file-level responsibilities.
+- Record the plan in `tasks/todo.md`, including optional items when relevant.
+- Update `tasks/todo.md` as work progresses and mark completed items step by step.
+- Add a short review section to `tasks/todo.md` after completion, covering validation performed, edge cases considered, and remaining risks.
+- Record lessons learned and corrective guidance in `tasks/lessons.md`.
+- For bug fixes, prefer reproducing the issue with a test first when practical, then fix the root cause.
+- Do not add compatibility code unless it is explicitly required.
+- Prefer elegant solutions over temporary patches, but do not over-engineer simple fixes.
+- Before finishing, validate the result and consider edge cases proactively.

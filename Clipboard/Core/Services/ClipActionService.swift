@@ -60,7 +60,7 @@ final class ClipActionService {
         guard !items.isEmpty else { return }
 
         if items.count == 1 {
-            paste(
+            _ = paste(
                 items[0],
                 isAttribute: isAttribute,
                 checkPermissions: checkPermissions

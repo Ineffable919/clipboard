@@ -9,7 +9,7 @@
 import AppKit
 import SnapKit
 
-final class CardContentView: NSView {
+final class CardContentView: NSView, PassthroughMouseEvents {
     private var currentContentView: NSView?
     private nonisolated(unsafe) var currentModel: PasteboardModel?
     private nonisolated(unsafe) var currentKeyword: String = ""
@@ -57,22 +57,6 @@ final class CardContentView: NSView {
         currentContentView = nil
         currentModel = nil
         currentKeyword = ""
-    }
-
-    override func mouseDown(with event: NSEvent) {
-        nextResponder?.mouseDown(with: event)
-    }
-
-    override func mouseUp(with event: NSEvent) {
-        nextResponder?.mouseUp(with: event)
-    }
-
-    override func mouseDragged(with event: NSEvent) {
-        nextResponder?.mouseDragged(with: event)
-    }
-
-    override func rightMouseDown(with event: NSEvent) {
-        nextResponder?.rightMouseDown(with: event)
     }
 
     // MARK: Private
@@ -157,7 +141,7 @@ final class CardContentView: NSView {
 
 // MARK: - CardStringContentView
 
-final class CardStringContentView: NSView {
+final class CardStringContentView: NSView, PassthroughMouseEvents {
     private lazy var textView: PassthroughTextView = {
         let tv = PassthroughTextView(usingTextLayoutManager: false)
         tv.isEditable = false
@@ -200,22 +184,6 @@ final class CardStringContentView: NSView {
             : model.highlightedNSAttributedString(keyword: keyword)
         textView.textStorage?.setAttributedString(attributed)
     }
-
-    override func mouseDown(with event: NSEvent) {
-        nextResponder?.mouseDown(with: event)
-    }
-
-    override func mouseUp(with event: NSEvent) {
-        nextResponder?.mouseUp(with: event)
-    }
-
-    override func mouseDragged(with event: NSEvent) {
-        nextResponder?.mouseDragged(with: event)
-    }
-
-    override func rightMouseDown(with event: NSEvent) {
-        nextResponder?.rightMouseDown(with: event)
-    }
 }
 
 // MARK: - PassthroughTextView
@@ -240,7 +208,7 @@ private final class PassthroughTextView: NSTextView {
 
 // MARK: - CardRichContentView
 
-final class CardRichContentView: NSView {
+final class CardRichContentView: NSView, PassthroughMouseEvents {
     private lazy var textView: PassthroughTextView = {
         let tv = PassthroughTextView(usingTextLayoutManager: false)
         tv.isEditable = false
@@ -283,27 +251,11 @@ final class CardRichContentView: NSView {
     func updateKeyword(_ keyword: String, model: PasteboardModel) {
         textView.textStorage?.setAttributedString(model.highlightedRichText(keyword: keyword))
     }
-
-    override func mouseDown(with event: NSEvent) {
-        nextResponder?.mouseDown(with: event)
-    }
-
-    override func mouseUp(with event: NSEvent) {
-        nextResponder?.mouseUp(with: event)
-    }
-
-    override func mouseDragged(with event: NSEvent) {
-        nextResponder?.mouseDragged(with: event)
-    }
-
-    override func rightMouseDown(with event: NSEvent) {
-        nextResponder?.rightMouseDown(with: event)
-    }
 }
 
 // MARK: - CardColorContentView
 
-final class CardColorContentView: NSView {
+final class CardColorContentView: NSView, PassthroughMouseEvents {
     private lazy var label: NSTextField = {
         let field = NSTextField(labelWithString: "")
         field.font = .systemFont(ofSize: 17, weight: .medium)
@@ -335,27 +287,11 @@ final class CardColorContentView: NSView {
     required init?(coder _: NSCoder) {
         fatalError()
     }
-
-    override func mouseDown(with event: NSEvent) {
-        nextResponder?.mouseDown(with: event)
-    }
-
-    override func mouseUp(with event: NSEvent) {
-        nextResponder?.mouseUp(with: event)
-    }
-
-    override func mouseDragged(with event: NSEvent) {
-        nextResponder?.mouseDragged(with: event)
-    }
-
-    override func rightMouseDown(with event: NSEvent) {
-        nextResponder?.rightMouseDown(with: event)
-    }
 }
 
 // MARK: - CardFileContentView
 
-final class CardFileContentView: NSView {
+final class CardFileContentView: NSView, PassthroughMouseEvents {
     init(model: PasteboardModel) {
         super.init(frame: .zero)
 
@@ -383,27 +319,11 @@ final class CardFileContentView: NSView {
     required init?(coder _: NSCoder) {
         fatalError()
     }
-
-    override func mouseDown(with event: NSEvent) {
-        nextResponder?.mouseDown(with: event)
-    }
-
-    override func mouseUp(with event: NSEvent) {
-        nextResponder?.mouseUp(with: event)
-    }
-
-    override func mouseDragged(with event: NSEvent) {
-        nextResponder?.mouseDragged(with: event)
-    }
-
-    override func rightMouseDown(with event: NSEvent) {
-        nextResponder?.rightMouseDown(with: event)
-    }
 }
 
 // MARK: - CardFileThumbnailView
 
-final class CardFileThumbnailView: NSView {
+final class CardFileThumbnailView: NSView, PassthroughMouseEvents {
     private lazy var imageView: NSImageView = {
         let iv = NSImageView()
         iv.imageScaling = .scaleProportionallyDown // scaledToFit
@@ -445,27 +365,11 @@ final class CardFileThumbnailView: NSView {
         loadTask?.cancel()
         loadTask = nil
     }
-
-    override func mouseDown(with event: NSEvent) {
-        nextResponder?.mouseDown(with: event)
-    }
-
-    override func mouseUp(with event: NSEvent) {
-        nextResponder?.mouseUp(with: event)
-    }
-
-    override func mouseDragged(with event: NSEvent) {
-        nextResponder?.mouseDragged(with: event)
-    }
-
-    override func rightMouseDown(with event: NSEvent) {
-        nextResponder?.rightMouseDown(with: event)
-    }
 }
 
 // MARK: - CardMultipleFilesView
 
-final class CardMultipleFilesView: NSView {
+final class CardMultipleFilesView: NSView, PassthroughMouseEvents {
     private var thumbnailViews: [CardFileThumbnailView] = []
 
     init(filePaths: [String]) {
@@ -500,23 +404,6 @@ final class CardMultipleFilesView: NSView {
     required init?(coder _: NSCoder) {
         fatalError()
     }
-
-    /// Pass mouse events through
-    override func mouseDown(with event: NSEvent) {
-        nextResponder?.mouseDown(with: event)
-    }
-
-    override func mouseUp(with event: NSEvent) {
-        nextResponder?.mouseUp(with: event)
-    }
-
-    override func mouseDragged(with event: NSEvent) {
-        nextResponder?.mouseDragged(with: event)
-    }
-
-    override func rightMouseDown(with event: NSEvent) {
-        nextResponder?.rightMouseDown(with: event)
-    }
 }
 
 // MARK: - CardFileIconPlaceholder
@@ -547,7 +434,7 @@ private final class CardFileIconPlaceholder: NSView {
 
 // MARK: - CardImageContentView
 
-final class CardImageContentView: NSView {
+final class CardImageContentView: NSView, PassthroughMouseEvents {
     private lazy var checkerboardView = CheckerboardView()
 
     private lazy var imageView: NSImageView = {
@@ -609,22 +496,6 @@ final class CardImageContentView: NSView {
     func updateKeyword(_ keyword: String, model: PasteboardModel) {
         currentKeyword = ""
         updateOCR(model: model, keyword: keyword)
-    }
-
-    override func mouseDown(with event: NSEvent) {
-        nextResponder?.mouseDown(with: event)
-    }
-
-    override func mouseUp(with event: NSEvent) {
-        nextResponder?.mouseUp(with: event)
-    }
-
-    override func mouseDragged(with event: NSEvent) {
-        nextResponder?.mouseDragged(with: event)
-    }
-
-    override func rightMouseDown(with event: NSEvent) {
-        nextResponder?.rightMouseDown(with: event)
     }
 
     private func setupViews() {
