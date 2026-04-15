@@ -270,16 +270,10 @@ extension ClipMainViewController {
     private func initObserve() {
         dataList
             .receive(on: DispatchQueue.main)
+            .filter { [weak self] _ in self?.deleteFlag == false }
             .sink { [weak self] _ in
                 guard let self else { return }
-                if deleteFlag {
-                    deleteFlag = false
-                    return
-                }
-                let changeType = PasteDataStore.main.lastDataChangeType
-                if changeType == .reset || changeType == .searchFilter {
-                    resetSelectIndex()
-                }
+                deleteFlag = false
                 collectionView.reloadData()
             }
             .store(in: &cancellables)
@@ -290,7 +284,7 @@ extension ClipMainViewController {
             .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self else { return }
-                topVM.performSearch()
+                performSearch()
             }
             .store(in: &cancellables)
 
@@ -300,7 +294,7 @@ extension ClipMainViewController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self else { return }
-                topVM.performSearch()
+                performSearch()
             }
             .store(in: &cancellables)
     }
@@ -308,10 +302,7 @@ extension ClipMainViewController {
 
 extension ClipMainViewController {
     private func performSearch() {
-        if topVM.willSearchCriteriaChange() {
-            resetSelectIndex()
-            collectionView.scroll(.zero)
-        }
+        resetSelectIndex()
         topVM.performSearch()
     }
 
@@ -457,7 +448,10 @@ extension ClipMainViewController {
         _ indexPath: IndexPath = IndexPath(item: 0, section: 0)
     ) {
         let zero = IndexPath(item: 0, section: 0)
-        if indexPath == zero, selectIndexPath == zero { return }
+        if indexPath == zero, selectIndexPath == zero {
+            scrollTo(indexPath: selectIndexPath)
+            return
+        }
         collectionView.item(at: selectIndexPath)?.isSelected = false
         selectIndexPath = indexPath
         if !dataList.value.isEmpty {
@@ -519,23 +513,18 @@ extension ClipMainViewController: CollectionViewItemDelegate {
     }
 
     func delete(_ item: PasteboardModel, indexPath: IndexPath) {
+        defer { deleteFlag = false }
         deleteFlag = true
         PasteDataStore.main.deleteItems(item)
         collectionView.animator().deleteItems(at: [indexPath])
 
-        let count = dataList.value.count
-        guard count > 0 else {
-            selectIndexPath = IndexPath(item: 0, section: 0)
-            return
+        let newCount = dataList.value.count
+        if newCount > 0 {
+            let newItem = min(indexPath.item, newCount - 1)
+            let newIndexPath = IndexPath(item: newItem, section: 0)
+            selectIndexPath = IndexPath(item: -1, section: 0)
+            resetSelectIndex(newIndexPath)
         }
-        let newIndex = min(indexPath.item, count - 1)
-        let newPath = IndexPath(item: newIndex, section: 0)
-
-        collectionView.item(at: selectIndexPath)?.isSelected = false
-        selectIndexPath = newPath
-        collectionView.selectionIndexPaths = [newPath]
-        scrollTo(indexPath: newPath)
-        (collectionView.item(at: newPath) as? CollectionViewItem)?.isSelected = true
     }
 
     func preview(_: PasteboardModel) {

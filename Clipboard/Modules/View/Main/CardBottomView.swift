@@ -164,7 +164,7 @@ private final class CardFileBottomView: NSView {
     private lazy var stack: NSStackView = {
         let sv = NSStackView(views: [firstLineLabel, secondLineLabel])
         sv.orientation = .vertical
-        sv.alignment = .leading
+        sv.alignment = .centerX
         sv.spacing = 0
         sv.distribution = .fill
         return sv
