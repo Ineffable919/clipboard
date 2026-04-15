@@ -436,6 +436,12 @@ private final class CardFileIconPlaceholder: NSView {
 
 final class CardImageContentView: NSView, PassthroughMouseEvents {
     private lazy var checkerboardView = CheckerboardView()
+    private lazy var imageContainerView: NSView = {
+        let view = NSView()
+        view.wantsLayer = true
+        view.layer?.masksToBounds = true
+        return view
+    }()
 
     private lazy var imageView: NSImageView = {
         let iv = NSImageView()
@@ -469,6 +475,7 @@ final class CardImageContentView: NSView, PassthroughMouseEvents {
     /// true = fill (aspect-fill, clipped), false = fit (aspect-fit)
     private var isFillMode: Bool = false
     private var currentImageSize: CGSize?
+    private let maxFillCropRatio: CGFloat = 0.15
 
     private static let containerSize = CGSize(width: Const.cardSize, height: Const.cntSize)
     private static let containerRatio = Const.cardSize / Const.cntSize
@@ -500,12 +507,15 @@ final class CardImageContentView: NSView, PassthroughMouseEvents {
 
     private func setupViews() {
         addSubview(checkerboardView)
-        addSubview(imageView)
-        addSubview(ocrOverlayView)
+        addSubview(imageContainerView)
         addSubview(loadingIndicator)
         addSubview(placeholderImageView)
 
+        imageContainerView.addSubview(imageView)
+        imageContainerView.addSubview(ocrOverlayView)
+
         checkerboardView.snp.makeConstraints { $0.edges.equalToSuperview() }
+        imageContainerView.snp.makeConstraints { $0.edges.equalToSuperview() }
         imageView.snp.makeConstraints { $0.edges.equalToSuperview() }
         ocrOverlayView.snp.makeConstraints { $0.edges.equalToSuperview() }
 
@@ -523,18 +533,24 @@ final class CardImageContentView: NSView, PassthroughMouseEvents {
         let imageRatio = imageSize.width / imageSize.height
         let containerRatio = containerSize.width / containerSize.height
 
-        imageView.snp.remakeConstraints { make in
+        imageContainerView.snp.remakeConstraints { make in
             make.center.equalToSuperview()
             if isFillMode {
                 if imageRatio > containerRatio {
                     make.height.equalToSuperview()
-                    make.width.equalTo(imageView.snp.height).multipliedBy(imageRatio)
+                    make.width.equalTo(imageContainerView.snp.height).multipliedBy(imageRatio)
                 } else {
                     make.width.equalToSuperview()
-                    make.height.equalTo(imageView.snp.width).dividedBy(imageRatio)
+                    make.height.equalTo(imageContainerView.snp.width).dividedBy(imageRatio)
                 }
             } else {
-                make.edges.equalToSuperview()
+                if imageRatio > containerRatio {
+                    make.width.equalToSuperview()
+                    make.height.equalTo(imageContainerView.snp.width).dividedBy(imageRatio)
+                } else {
+                    make.height.equalToSuperview()
+                    make.width.equalTo(imageContainerView.snp.height).multipliedBy(imageRatio)
+                }
             }
         }
     }
@@ -561,9 +577,7 @@ final class CardImageContentView: NSView, PassthroughMouseEvents {
             loadingIndicator.isHidden = true
 
             if let image {
-                let imageRatio = image.size.width / image.size.height
-                let ratioDiff = abs(imageRatio - Self.containerRatio)
-                isFillMode = ratioDiff < 0.5
+                isFillMode = shouldUseFillMode(for: image.size)
                 currentImageSize = image.size
 
                 imageView.imageScaling = .scaleProportionallyUpOrDown
@@ -599,6 +613,23 @@ final class CardImageContentView: NSView, PassthroughMouseEvents {
             ocrOverlayView.isFillMode = isFillMode
             ocrOverlayView.setNeedsDisplay(ocrOverlayView.bounds)
         }
+    }
+
+    private func shouldUseFillMode(for imageSize: CGSize) -> Bool {
+        guard imageSize.width > 0, imageSize.height > 0 else { return false }
+
+        let fillLayout = imageLayout(
+            imageSize: imageSize,
+            containerSize: Self.containerSize,
+            isFillMode: true
+        )
+        let fillArea = fillLayout.width * fillLayout.height
+        let visibleArea = Self.containerSize.width * Self.containerSize.height
+
+        guard fillArea > 0 else { return false }
+
+        let cropRatio = max(0, 1 - (visibleArea / fillArea))
+        return cropRatio <= maxFillCropRatio
     }
 }
 
@@ -642,31 +673,7 @@ private final class OCRHighlightOverlayView: NSView {
     }
 
     private func computeImageLayout(imageSize: CGSize, containerSize: CGSize) -> CGRect {
-        let imageRatio = imageSize.width / imageSize.height
-        let containerRatio = containerSize.width / containerSize.height
-
-        let renderSize: CGSize
-        if isFillMode {
-            if imageRatio > containerRatio {
-                let h = containerSize.height
-                renderSize = CGSize(width: h * imageRatio, height: h)
-            } else {
-                let w = containerSize.width
-                renderSize = CGSize(width: w, height: w / imageRatio)
-            }
-        } else {
-            if imageRatio > containerRatio {
-                let w = containerSize.width
-                renderSize = CGSize(width: w, height: w / imageRatio)
-            } else {
-                let h = containerSize.height
-                renderSize = CGSize(width: h * imageRatio, height: h)
-            }
-        }
-
-        let x = (containerSize.width - renderSize.width) / 2
-        let y = (containerSize.height - renderSize.height) / 2
-        return CGRect(origin: CGPoint(x: x, y: y), size: renderSize)
+        imageLayout(imageSize: imageSize, containerSize: containerSize, isFillMode: isFillMode)
     }
 
     private func convertToContainerRect(normalizedBox: CGRect, imageLayout: CGRect) -> CGRect {
@@ -676,6 +683,34 @@ private final class OCRHighlightOverlayView: NSView {
         let h = normalizedBox.height * imageLayout.height
         return CGRect(x: x, y: y, width: w, height: h)
     }
+}
+
+private func imageLayout(imageSize: CGSize, containerSize: CGSize, isFillMode: Bool) -> CGRect {
+    let imageRatio = imageSize.width / imageSize.height
+    let containerRatio = containerSize.width / containerSize.height
+
+    let renderSize: CGSize
+    if isFillMode {
+        if imageRatio > containerRatio {
+            let height = containerSize.height
+            renderSize = CGSize(width: height * imageRatio, height: height)
+        } else {
+            let width = containerSize.width
+            renderSize = CGSize(width: width, height: width / imageRatio)
+        }
+    } else {
+        if imageRatio > containerRatio {
+            let width = containerSize.width
+            renderSize = CGSize(width: width, height: width / imageRatio)
+        } else {
+            let height = containerSize.height
+            renderSize = CGSize(width: height * imageRatio, height: height)
+        }
+    }
+
+    let x = (containerSize.width - renderSize.width) / 2
+    let y = (containerSize.height - renderSize.height) / 2
+    return CGRect(origin: CGPoint(x: x, y: y), size: renderSize)
 }
 
 // MARK: - CheckerboardView
