@@ -18,6 +18,7 @@ struct ShortcutRecorder: View {
     @State private var isRecording: Bool = false
     @State private var viewFrame: CGRect = .zero
     @State private var mouseMonitor: Any?
+    @State private var keyMonitor: Any?
 
     @Binding var value: KeyboardShortcut
     @Environment(\.colorScheme) var colorScheme
@@ -139,23 +140,20 @@ struct ShortcutRecorder: View {
     // MARK: - 注册EventHandle
 
     private func installEventHandle() {
-        EventDispatcher.shared.registerHandler(
-            matching: .keyDown,
-            key: "shortcutRecorder"
-        ) { [self] event in
-            return handleKeyEvent(event)
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            handleKeyEvent(event)
         }
 
-        mouseMonitor = NSEvent.addLocalMonitorForEvents(
-            matching: .leftMouseDown
-        ) { [self] event in
-            return handleMouseEvent(event)
+        mouseMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { event in
+            handleMouseEvent(event)
         }
     }
 
     private func uninstallEventHandle() {
-        EventDispatcher.shared.unregisterHandler("shortcutRecorder")
-
+        if let monitor = keyMonitor {
+            NSEvent.removeMonitor(monitor)
+            keyMonitor = nil
+        }
         if let monitor = mouseMonitor {
             NSEvent.removeMonitor(monitor)
             mouseMonitor = nil

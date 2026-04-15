@@ -493,19 +493,24 @@ extension ClipMainViewController: CollectionViewItemDelegate {
     }
 
     func paste(_ item: PasteboardModel) {
-        ClipActionService.shared.paste(item, checkPermissions: PasteUserDefaults.pasteDirect)
+        if ClipActionService.shared.paste(item, checkPermissions: PasteUserDefaults.pasteDirect) {
+            resetSelectIndex()
+        }
     }
 
     func pastePlain(_ item: PasteboardModel) {
-        ClipActionService.shared.paste(
+        if ClipActionService.shared.paste(
             item,
             isAttribute: false,
             checkPermissions: PasteUserDefaults.pasteDirect
-        )
+        ) {
+            resetSelectIndex()
+        }
     }
 
     func copy(_ item: PasteboardModel) {
         ClipActionService.shared.copy(item)
+        resetSelectIndex()
     }
 
     func edit(_ item: PasteboardModel) {
@@ -515,6 +520,14 @@ extension ClipMainViewController: CollectionViewItemDelegate {
     func delete(_ item: PasteboardModel, indexPath: IndexPath) {
         defer { deleteFlag = false }
         deleteFlag = true
+        guard PasteUserDefaults.delConfirm else {
+            deleteItem(item, indexPath: indexPath)
+            return
+        }
+        
+    }
+
+    func deleteItem(_ item: PasteboardModel, indexPath: IndexPath) {
         PasteDataStore.main.deleteItems(item)
         collectionView.animator().deleteItems(at: [indexPath])
 

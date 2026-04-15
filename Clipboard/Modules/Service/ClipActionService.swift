@@ -15,11 +15,11 @@ final class ClipActionService {
         _ item: PasteboardModel,
         isAttribute: Bool = true,
         checkPermissions: Bool = false
-    ) {
+    ) -> Bool {
         guard userDefaults.pasteDirect, checkPermissions else {
             pasteBoard.pasteMultipleData([item], isAttribute)
             WindowManager.shared.toggleWindow()
-            return
+            return false
         }
         let hasPermission = AXIsProcessTrusted()
 
@@ -33,12 +33,13 @@ final class ClipActionService {
                     isAttribute: isAttribute
                 )
             }
-            return
+            return false
         }
         pasteBoard.pasteMultipleData([item], isAttribute)
         WindowManager.shared.toggleWindow {
             KeyboardShortcuts.postCmdVEvent()
         }
+        return true
     }
 
     func copy(_ item: PasteboardModel, isAttribute: Bool = true) {

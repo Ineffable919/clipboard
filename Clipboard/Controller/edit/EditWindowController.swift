@@ -9,11 +9,9 @@ import AppKit
 import SwiftUI
 
 @MainActor
-final class EditWindowController: NSWindowController {
+final class EditWindowController: NSWindowController, NSWindowDelegate {
     static let shared = EditWindowController()
 
-    private static let windowWidth: CGFloat = 500.0
-    private static let windowHeight: CGFloat = 400.0
     private static let minWidth: CGFloat = 400.0
     private static let minHeight: CGFloat = 300.0
 
@@ -22,6 +20,8 @@ final class EditWindowController: NSWindowController {
     private var editState: EditWindowState?
 
     var onSave: ((PasteboardModel, NSAttributedString) -> Void)?
+
+    private var localEventMonitor: Any?
 
     private init() {
         let window = NSWindow(
@@ -59,7 +59,7 @@ final class EditWindowController: NSWindowController {
 
         super.init(window: window)
 
-        setupKeyboardShortcuts()
+        window.delegate = self
     }
 
     @available(*, unavailable)
@@ -106,6 +106,7 @@ final class EditWindowController: NSWindowController {
             window?.contentView = NSHostingView(rootView: editView)
         }
 
+        registerLocalEventMonitor()
         NSApp.activate(ignoringOtherApps: true)
         window?.makeKeyAndOrderFront(nil)
     }
@@ -133,12 +134,23 @@ final class EditWindowController: NSWindowController {
             window?.contentView = NSHostingView(rootView: editView)
         }
 
+        registerLocalEventMonitor()
         NSApp.activate(ignoringOtherApps: true)
         window?.makeKeyAndOrderFront(nil)
     }
 
     func closeWindow() {
+        removeLocalEventMonitor()
         window?.orderOut(nil)
+        currentModel = nil
+        editState = nil
+        isNewItem = false
+    }
+
+    // MARK: - NSWindowDelegate
+
+    func windowWillClose(_: Notification) {
+        removeLocalEventMonitor()
         currentModel = nil
         editState = nil
         isNewItem = false
@@ -270,57 +282,52 @@ final class EditWindowController: NSWindowController {
 
     // MARK: - Private Methods
 
-    private func setupKeyboardShortcuts() {
-        EventDispatcher.shared.registerHandler(
-            matching: .keyDown,
-            key: "editWindow"
-        ) { [weak self] event in
-            guard event.window === EditWindowController.shared.window else {
-                return event
-            }
-
-            let keyChar = event.charactersIgnoringModifiers?.lowercased() ?? ""
-            let modifiers = event.modifierFlags.intersection([
-                .command, .option, .control, .shift,
-            ])
-
-            // Cmd+W 关闭窗口
-            if modifiers == .command, keyChar == "w" {
-                Task { @MainActor in
-                    self?.closeWindow()
-                }
-                return nil
-            }
-
-            // Cmd+S 保存
-            if modifiers == .command, keyChar == "s" {
-                Task { @MainActor in
-                    self?.saveFromState()
-                }
-                return nil
-            }
-
-            // Cmd+M 最小化
-            if modifiers == .command, keyChar == "m" {
-                if self?.window?.isKeyWindow == true {
-                    self?.window?.miniaturize(nil)
-                    return nil
-                }
-            }
-
-            // Escape 关闭窗口
-            if event.keyCode == KeyCode.escape {
-                Task { @MainActor in
-                    self?.closeWindow()
-                }
-                return nil
-            }
-
-            if EventDispatcher.shared.handleSystemEditingCommand(event) {
-                return nil
-            }
-
-            return event
+    private func registerLocalEventMonitor() {
+        guard localEventMonitor == nil else { return }
+        localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            self?.handleKeyDown(event) ?? event
         }
+    }
+
+    private func removeLocalEventMonitor() {
+        if let token = localEventMonitor {
+            NSEvent.removeMonitor(token)
+            localEventMonitor = nil
+        }
+    }
+
+    private func handleKeyDown(_ event: NSEvent) -> NSEvent? {
+        guard event.window === window else { return event }
+
+        let keyChar = event.charactersIgnoringModifiers?.lowercased() ?? ""
+        let modifiers = event.modifierFlags.intersection([
+            .command, .option, .control, .shift,
+        ])
+
+        // Cmd+W — close window
+        if modifiers == .command, keyChar == "w" {
+            closeWindow()
+            return nil
+        }
+
+        // Cmd+S — save
+        if modifiers == .command, keyChar == "s" {
+            saveFromState()
+            return nil
+        }
+
+        // Cmd+M — minimise
+        if modifiers == .command, keyChar == "m" {
+            window?.miniaturize(nil)
+            return nil
+        }
+
+        // Escape — close window
+        if event.keyCode == KeyCode.escape {
+            closeWindow()
+            return nil
+        }
+
+        return event
     }
 }

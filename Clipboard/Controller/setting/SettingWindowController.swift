@@ -12,6 +12,8 @@ class SettingWindowController: NSWindowController {
     static let shared = SettingWindowController()
     private var settingView = SettingView()
 
+    private var localEventMonitor: Any?
+
     private init() {
         let window = NSWindow(
             contentRect: NSRect(
@@ -36,41 +38,42 @@ class SettingWindowController: NSWindowController {
         window.contentView = NSHostingView(rootView: settingView)
 
         super.init(window: window)
-
-        setupKeyboardShortcuts()
     }
 
-    private func setupKeyboardShortcuts() {
-        EventDispatcher.shared.registerHandler(
-            matching: .keyDown,
-            key: "settingWindow"
-        ) { [weak self] event in
-            guard event.window === SettingWindowController.shared.window else {
-                return event
-            }
-            // Cmd + W 关闭窗口
-            if event.modifierFlags.contains(.command),
-               event.charactersIgnoringModifiers == "w"
-            {
-                if self?.window?.isKeyWindow == true {
-                    self?.hideWindow()
-                    return nil
-                }
-            }
-            // Cmd + M 最小化窗口
-            if event.modifierFlags.contains(.command),
-               event.charactersIgnoringModifiers == "m"
-            {
-                if self?.window?.isKeyWindow == true {
-                    self?.minWindow()
-                    return nil
-                }
-            }
-            if EventDispatcher.shared.handleSystemEditingCommand(event) {
-                return nil
-            }
-            return event
+    private func registerLocalEventMonitor() {
+        guard localEventMonitor == nil else { return }
+        localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            self?.handleKeyDown(event) ?? event
         }
+    }
+
+    private func removeLocalEventMonitor() {
+        if let token = localEventMonitor {
+            NSEvent.removeMonitor(token)
+            localEventMonitor = nil
+        }
+    }
+
+    private func handleKeyDown(_ event: NSEvent) -> NSEvent? {
+        guard event.window === window else { return event }
+
+        // Cmd+W — hide window
+        if event.modifierFlags.contains(.command),
+           event.charactersIgnoringModifiers == "w"
+        {
+            hideWindow()
+            return nil
+        }
+
+        // Cmd+M — minimise window
+        if event.modifierFlags.contains(.command),
+           event.charactersIgnoringModifiers == "m"
+        {
+            minWindow()
+            return nil
+        }
+
+        return event
     }
 
     @available(*, unavailable)
@@ -87,6 +90,7 @@ class SettingWindowController: NSWindowController {
             window.deminiaturize(nil)
         }
 
+        registerLocalEventMonitor()
         window.makeKeyAndOrderFront(nil)
     }
 
@@ -102,6 +106,7 @@ class SettingWindowController: NSWindowController {
     }
 
     func hideWindow() {
+        removeLocalEventMonitor()
         window?.orderOut(nil)
     }
 
