@@ -10,7 +10,7 @@ import SnapKit
 
 // MARK: - CardBottomView
 
-final class CardBottomView: NSView {
+final class CardBottomView: NSView, PassthroughMouseEvents {
     private var currentView: NSView?
 
     override init(frame: NSRect) {
@@ -39,24 +39,6 @@ final class CardBottomView: NSView {
         currentView = nil
     }
 
-    // MARK: - Mouse passthrough
-
-    override func mouseDown(with event: NSEvent) {
-        nextResponder?.mouseDown(with: event)
-    }
-
-    override func mouseUp(with event: NSEvent) {
-        nextResponder?.mouseUp(with: event)
-    }
-
-    override func mouseDragged(with event: NSEvent) {
-        nextResponder?.mouseDragged(with: event)
-    }
-
-    override func rightMouseDown(with event: NSEvent) {
-        nextResponder?.rightMouseDown(with: event)
-    }
-
     // MARK: - Factory
 
     private func makeBottomView(for model: PasteboardModel, keyword: String) -> NSView? {
@@ -78,7 +60,7 @@ final class CardBottomView: NSView {
 
 // MARK: - CardImageBottomView
 
-private final class CardImageBottomView: NSView {
+private final class CardImageBottomView: NSView, PassthroughMouseEvents {
     private lazy var label: PaddedTextField = {
         let field = PaddedTextField(padding: NSEdgeInsets(
             top: 2, left: Const.space6,
@@ -124,27 +106,11 @@ private final class CardImageBottomView: NSView {
                 .withAlphaComponent(0.6).cgColor
         }
     }
-
-    override func mouseDown(with event: NSEvent) {
-        nextResponder?.mouseDown(with: event)
-    }
-
-    override func mouseUp(with event: NSEvent) {
-        nextResponder?.mouseUp(with: event)
-    }
-
-    override func mouseDragged(with event: NSEvent) {
-        nextResponder?.mouseDragged(with: event)
-    }
-
-    override func rightMouseDown(with event: NSEvent) {
-        nextResponder?.rightMouseDown(with: event)
-    }
 }
 
 // MARK: - CardFileBottomView
 
-private final class CardFileBottomView: NSView {
+private final class CardFileBottomView: NSView, PassthroughMouseEvents {
     private lazy var firstLineLabel: NSTextField = {
         let field = NSTextField(labelWithString: "")
         field.font = .preferredFont(forTextStyle: .callout)
@@ -212,22 +178,6 @@ private final class CardFileBottomView: NSView {
         fatalError()
     }
 
-    override func mouseDown(with event: NSEvent) {
-        nextResponder?.mouseDown(with: event)
-    }
-
-    override func mouseUp(with event: NSEvent) {
-        nextResponder?.mouseUp(with: event)
-    }
-
-    override func mouseDragged(with event: NSEvent) {
-        nextResponder?.mouseDragged(with: event)
-    }
-
-    override func rightMouseDown(with event: NSEvent) {
-        nextResponder?.rightMouseDown(with: event)
-    }
-
     private func splitTextIntoTwoLines(_ text: String, font: NSFont, maxWidth: CGFloat) -> (String, String) {
         let attrs: [NSAttributedString.Key: Any] = [.font: font]
         guard (text as NSString).size(withAttributes: attrs).width > maxWidth else {
@@ -286,7 +236,7 @@ private final class CardFileBottomView: NSView {
 
 // MARK: - CardCommonBottomView
 
-final class CardCommonBottomView: NSView {
+final class CardCommonBottomView: NSView, PassthroughMouseEvents {
     private lazy var gradientLayer = CAGradientLayer()
 
     private lazy var label: NSTextField = {
@@ -340,22 +290,6 @@ final class CardCommonBottomView: NSView {
         if needsMask {
             updateGradient()
         }
-    }
-
-    override func mouseDown(with event: NSEvent) {
-        nextResponder?.mouseDown(with: event)
-    }
-
-    override func mouseUp(with event: NSEvent) {
-        nextResponder?.mouseUp(with: event)
-    }
-
-    override func mouseDragged(with event: NSEvent) {
-        nextResponder?.mouseDragged(with: event)
-    }
-
-    override func rightMouseDown(with event: NSEvent) {
-        nextResponder?.rightMouseDown(with: event)
     }
 
     private func updateGradient() {
