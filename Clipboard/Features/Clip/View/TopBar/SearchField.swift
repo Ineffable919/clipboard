@@ -163,7 +163,7 @@ final class SearchField: NSView {
 
     private func updateColors() {
         if #available(macOS 26.0, *) {
-            layer?.backgroundColor = NSColor.clear.cgColor
+            layer?.backgroundColor = NSColor.unemphasizedSelectedContentBackgroundColor.cgColor
         } else {
             let color = NSApp.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
                 ? NSColor(white: 1.0, alpha: 0.12)

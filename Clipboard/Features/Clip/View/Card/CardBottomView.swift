@@ -103,7 +103,7 @@ private final class CardImageBottomView: NSView, PassthroughMouseEvents {
     private func updateLabelBackground() {
         effectiveAppearance.performAsCurrentDrawingAppearance {
             label.layer?.backgroundColor = NSColor.unemphasizedSelectedContentBackgroundColor
-                .withAlphaComponent(0.6).cgColor
+                .cgColor
         }
     }
 }
@@ -194,14 +194,6 @@ private final class CardFileBottomView: NSView, PassthroughMouseEvents {
                 lo = mid
             } else {
                 hi = mid - 1
-            }
-        }
-
-        let candidateRange = max(0, lo - 20) ..< lo
-        if let separatorIdx = chars[candidateRange].lastIndex(of: "/") {
-            let breakAt = chars.distance(from: chars.startIndex, to: separatorIdx) + 1
-            if breakAt > 0 {
-                return (String(chars[..<breakAt]), String(chars[breakAt...]))
             }
         }
 
