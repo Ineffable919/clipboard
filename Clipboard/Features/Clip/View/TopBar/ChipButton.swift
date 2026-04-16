@@ -286,7 +286,7 @@ final class ChipButton: NSView, NSTextFieldDelegate {
 
         let pillFrame = bounds.insetBy(dx: haloInset, dy: haloInset)
         backgroundLayer.frame = pillFrame
-        backgroundLayer.cornerRadius = pillFrame.height / 2
+        backgroundLayer.cornerRadius = Const.radius
     }
 
     override func viewDidChangeEffectiveAppearance() {
@@ -462,8 +462,8 @@ private final class ChipTextField: NSTextField {
         let maskRect = focusRingMaskBounds
         NSBezierPath(
             roundedRect: maskRect,
-            xRadius: maskRect.height / 2,
-            yRadius: maskRect.height / 2
+            xRadius: Const.radius,
+            yRadius: Const.radius
         ).fill()
     }
 
