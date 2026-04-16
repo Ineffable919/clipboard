@@ -54,7 +54,7 @@ final class ChipScrollView: NSView {
         scrollView.contentView = clipView
 
         contentStack.orientation = .horizontal
-        contentStack.spacing = Const.space6
+        contentStack.spacing = Const.space6 / 2
         contentStack.alignment = .centerY
         scrollView.documentView = contentStack
 
@@ -77,11 +77,17 @@ final class ChipScrollView: NSView {
 
     private func invalidateWidth() {
         invalidateIntrinsicContentSize()
+        superview?.needsLayout = true
     }
 
     // MARK: - Public API
 
-    func reload(chips: [CategoryChip], selectedId: Int, dotMode: Bool = false) {
+    func reload(
+        chips: [CategoryChip],
+        selectedId: Int,
+        dotMode: Bool = false,
+        makeConfig: ((CategoryChip, Bool, Bool) -> ChipButton.Config)? = nil
+    ) {
         self.chips = chips
         selectedChipId = selectedId
 
@@ -93,16 +99,21 @@ final class ChipScrollView: NSView {
         chipButtons = []
 
         for chip in chips {
-            let btn = ChipButton(
-                config: .init(
-                    chip: chip,
-                    isSelected: chip.id == selectedId,
-                    dotMode: dotMode,
-                    action: { [weak self] in
-                        self?.select(id: chip.id)
-                    }
-                )
-            )
+            let isSelected = chip.id == selectedId
+            let config =
+                makeConfig?(chip, isSelected, dotMode)
+                    ?? .init(
+                        chip: chip,
+                        isSelected: isSelected,
+                        dotMode: dotMode,
+                        action: { [weak self] in
+                            self?.select(id: chip.id)
+                        }
+                    )
+            let btn = ChipButton(config: config)
+            btn.onWidthChanged = { [weak self] in
+                self?.invalidateWidth()
+            }
             chipButtons.append(btn)
             contentStack.addArrangedSubview(btn)
         }

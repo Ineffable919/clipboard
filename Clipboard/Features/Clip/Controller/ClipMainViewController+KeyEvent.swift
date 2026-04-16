@@ -33,6 +33,23 @@ extension ClipMainViewController: NSGestureRecognizerDelegate {
 
 extension ClipMainViewController {
     func keyDownEvent(_ event: NSEvent) -> NSEvent? {
+        if topBarView.isEditingChipFirstResponder {
+            switch event.keyCode {
+            case KeyCode.escape:
+                topBarView.cancelKeyboardEditing()
+                setFocusRegion(.collection)
+                view.window?.makeFirstResponder(collectionView)
+                return nil
+            case KeyCode.return:
+                topBarView.commitKeyboardEditing()
+                setFocusRegion(.collection)
+                view.window?.makeFirstResponder(collectionView)
+                return nil
+            default:
+                return event
+            }
+        }
+
         if KeyCode.shouldTriggerSearch(for: event), !topBarView.searchField.isFirstResponder {
             if let characters = event.characters, !characters.isEmpty {
                 topBarView.activateSearch(with: characters)
@@ -73,7 +90,9 @@ extension ClipMainViewController {
     }
 
     private func deleteKeyDown(_ event: NSEvent) -> NSEvent? {
-        guard !topBarView.searchField.isFirstResponder else { return event }
+        guard !topBarView.searchField.isFirstResponder,
+              !topBarView.isEditingChipFirstResponder
+        else { return event }
         if selectIndexPath.item < dataList.value.count {
             let item = dataList.value[selectIndexPath.item]
             delete(item, indexPath: selectIndexPath)

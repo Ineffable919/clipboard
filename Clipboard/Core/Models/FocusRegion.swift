@@ -8,11 +8,13 @@
 enum FocusRegion: CustomStringConvertible {
     case collection
     case search
+    case chipEditing
 
     var description: String {
         switch self {
         case .collection: "collection"
         case .search: "search"
+        case .chipEditing: "chipEditing"
         }
     }
 }

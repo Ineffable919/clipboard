@@ -564,6 +564,24 @@
         }
       }
     },
+    "rename" : {
+      "comment" : "Rename action",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rename"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重命名"
+          }
+        }
+      }
+    },
     "emptyHint" : {
       "comment" : "Empty state hint when there is no clipboard history",
       "extractionState" : "manual",

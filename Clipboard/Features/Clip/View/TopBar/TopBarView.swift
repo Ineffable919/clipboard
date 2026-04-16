@@ -11,6 +11,8 @@ import SnapKit
 import Sparkle
 
 final class TopBarView: NSView {
+    private let chipRowHeight: CGFloat = 44
+
     private let settingBtn = TopBarIconButton(symbolName: "ellipsis")
 
     private let defaultRow = NSStackView()
@@ -32,6 +34,8 @@ final class TopBarView: NSView {
 
     private(set) var isSearching = false
     private var topVM: TopBarViewModel?
+    private nonisolated(unsafe) var chipObserverToken: Any?
+    private(set) var isEditingChipFirstResponder = false
 
     // MARK: - Init
 
@@ -45,11 +49,21 @@ final class TopBarView: NSView {
         fatalError()
     }
 
+    deinit {
+        if let chipObserverToken {
+            NotificationCenter.default.removeObserver(chipObserverToken)
+        }
+    }
+
     // MARK: - Public API
 
     func configure(topVM: TopBarViewModel) {
         self.topVM = topVM
         reloadChips()
+    }
+
+    var isEditingChip: Bool {
+        topVM?.isEditingChip ?? false
     }
 
     // MARK: - Setup
@@ -61,11 +75,13 @@ final class TopBarView: NSView {
         setupDefaultRow()
         setupSearchRow()
         setupSettingBtn()
+        observeChipChanges()
         layoutRows()
         applyMode()
     }
 
     private func setupDefaultRow() {
+        defaultRow.wantsLayer = true
         defaultRow.orientation = .horizontal
         defaultRow.spacing = Const.space12
         defaultRow.alignment = .centerY
@@ -338,7 +354,7 @@ final class TopBarView: NSView {
         defaultRow.snp.makeConstraints { make in
             make.leading.equalToSuperview().offset(100)
             make.trailing.lessThanOrEqualTo(settingBtn.snp.leading).offset(-Const.space12)
-            make.top.equalToSuperview().offset(Const.space16)
+            make.top.equalToSuperview().offset(Const.space12)
         }
 
         searchRow.snp.makeConstraints { make in
@@ -351,15 +367,27 @@ final class TopBarView: NSView {
     // MARK: - Chip Reload
 
     func reloadChips() {
-        let chips = topVM?.chips()
-        let currentId = topVM?.getSelectChipId()
+        guard let topVM else { return }
 
-        chipScrollView.reload(chips: chips!, selectedId: currentId!, dotMode: false)
+        let chips = topVM.chips()
+        let currentId = topVM.getSelectChipId()
+
+        chipScrollView.reload(
+            chips: chips,
+            selectedId: currentId,
+            dotMode: false,
+            makeConfig: makeChipButtonConfig
+        )
         chipScrollView.onSelectionChanged = { [weak self] id in
             self?.handleChipSelection(id: id)
         }
 
-        dotChipScrollView.reload(chips: chips!, selectedId: currentId!, dotMode: true)
+        dotChipScrollView.reload(
+            chips: chips,
+            selectedId: currentId,
+            dotMode: true,
+            makeConfig: makeChipButtonConfig
+        )
         dotChipScrollView.onSelectionChanged = { [weak self] id in
             self?.handleChipSelection(id: id)
         }
@@ -403,5 +431,123 @@ final class TopBarView: NSView {
     private func applyMode() {
         defaultRow.isHidden = isSearching
         searchRow.isHidden = !isSearching
+    }
+
+    private func observeChipChanges() {
+        chipObserverToken = NotificationCenter.default.addObserver(
+            forName: .categoryChipsDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.reloadChips()
+            }
+        }
+    }
+
+    private func makeChipButtonConfig(
+        chip: CategoryChip,
+        isSelected: Bool,
+        dotMode: Bool
+    ) -> ChipButton.Config {
+        let isEditing = !dotMode && topVM?.editingChipId == chip.id
+
+        return .init(
+            chip: chip,
+            isSelected: isSelected,
+            dotMode: dotMode,
+            isEditing: isEditing,
+            editingName: isEditing ? (topVM?.editingChipName ?? chip.name) : chip.name,
+            editingColorIndex: isEditing ? (topVM?.editingChipColorIndex ?? chip.colorIndex) : chip.colorIndex,
+            action: { [weak self] in
+                self?.handleChipSelection(id: chip.id)
+            },
+            onEdit: { [weak self] in
+                self?.startEditingChip(chip)
+            },
+            onDelete: { [weak self] in
+                self?.confirmDeleteChip(chip)
+            },
+            onColorChange: { [weak self] colorIndex in
+                self?.updateChipColor(chip, colorIndex: colorIndex)
+            },
+            onEditingNameChange: { [weak self] text in
+                self?.topVM?.editingChipName = text
+            },
+            onEditingSubmit: { [weak self] in
+                self?.commitChipEditing(for: chip.id)
+            },
+            onEditingCancel: { [weak self] in
+                self?.cancelChipEditing(for: chip.id)
+            },
+            onEditingFocusChange: { [weak self] focused in
+                self?.handleEditingChipFocusChange(for: chip.id, focused: focused)
+            }
+        )
+    }
+
+    private func startEditingChip(_ chip: CategoryChip) {
+        guard !chip.isSystem else { return }
+        isEditingChipFirstResponder = false
+        topVM?.startEditingChip(chip)
+        reloadChips()
+    }
+
+    private func commitChipEditing(for chipId: Int) {
+        guard topVM?.editingChipId == chipId else { return }
+        isEditingChipFirstResponder = false
+        topVM?.commitEditingChip()
+        reloadChips()
+    }
+
+    private func cancelChipEditing(for chipId: Int) {
+        guard topVM?.editingChipId == chipId else { return }
+        isEditingChipFirstResponder = false
+        topVM?.cancelEditingChip()
+        reloadChips()
+    }
+
+    private func updateChipColor(_ chip: CategoryChip, colorIndex: Int) {
+        topVM?.updateChip(chip, colorIndex: colorIndex)
+        reloadChips()
+    }
+
+    private func handleEditingChipFocusChange(for chipId: Int, focused: Bool) {
+        guard topVM?.editingChipId == chipId else { return }
+        isEditingChipFirstResponder = focused
+        onFocusRegionChange?(focused ? .chipEditing : .collection)
+    }
+
+    func commitKeyboardEditing() {
+        guard let chipId = topVM?.editingChipId else { return }
+        commitChipEditing(for: chipId)
+    }
+
+    func cancelKeyboardEditing() {
+        guard let chipId = topVM?.editingChipId else { return }
+        cancelChipEditing(for: chipId)
+    }
+
+    private func confirmDeleteChip(_ chip: CategoryChip) {
+        guard !chip.isSystem else { return }
+
+        let alert = NSAlert()
+        alert.messageText = String(localized: .deleteChipTitle(chip.name))
+        alert.informativeText = String(localized: .deleteChipMessage(chip.name))
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: String(localized: .commonConfirm))
+        alert.addButton(withTitle: String(localized: .commonCancel))
+
+        let handleResponse: (NSApplication.ModalResponse) -> Void = { [weak self] response in
+            guard response == .alertFirstButtonReturn else { return }
+            self?.topVM?.removeChip(chip)
+            self?.reloadChips()
+        }
+
+        if let window {
+            alert.beginSheetModal(for: window, completionHandler: handleResponse)
+        } else {
+            handleResponse(alert.runModal())
+        }
     }
 }

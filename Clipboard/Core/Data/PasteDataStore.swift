@@ -31,6 +31,7 @@ final class PasteDataStore {
         case loadMore
         case searchFilter
         case reset
+        case new
     }
 
     private(set) var lastDataChangeType: DataChangeType = .reset
@@ -292,7 +293,7 @@ extension PasteDataStore {
         list.removeAll(where: { $0.uniqueId == model.uniqueId })
         list.insert(model, at: 0)
         hasMoreData = list.count >= pageSize
-        updateData(with: Array(list.prefix(pageSize)))
+        updateData(with: Array(list.prefix(pageSize)), changeType: .new)
     }
 
     func moveItemsToFirst(_ models: [PasteboardModel]) {

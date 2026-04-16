@@ -295,7 +295,7 @@ extension ClipMainViewController {
                 guard let self else { return }
                 deleteFlag = false
                 collectionView.reloadData()
-                if db.lastDataChangeType == .reset, selectIndexPath.item != 0 {
+                if db.lastDataChangeType == .new, selectIndexPath.item != 0 {
                     resetSelectIndex()
                 }
             }
