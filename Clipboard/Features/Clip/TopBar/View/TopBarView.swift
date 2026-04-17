@@ -528,10 +528,18 @@ final class TopBarView: NSView {
     }
 
     private func handleChipSelection(id: Int) {
+        if let topVM {
+            if topVM.editingNewChip {
+                commitNewChip()
+            } else if let editingId = topVM.editingChipId {
+                commitChipEditing(for: editingId)
+            }
+        }
         deactivateSearch()
         topVM?.setSelectChipId(chip: id)
         chipScrollView.selectedChipId = id
         dotChipScrollView.selectedChipId = id
+        reloadChips()
         onFocusRegionChange?(.collection)
     }
 

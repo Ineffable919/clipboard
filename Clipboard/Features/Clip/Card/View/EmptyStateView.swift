@@ -93,12 +93,12 @@ class EmptyStateView: NSView {
 
         titleLabel.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.top.equalTo(iconImageView.snp.bottom).offset(Const.space12)
+            make.top.equalTo(iconImageView.snp.bottom).offset(Const.space20)
         }
 
         hintLabel.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.top.equalTo(titleLabel.snp.bottom).offset(Const.space12)
+            make.top.equalTo(titleLabel.snp.bottom).offset(Const.space20)
             make.bottom.lessThanOrEqualToSuperview().offset(-20)
         }
     }
