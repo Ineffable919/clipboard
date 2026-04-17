@@ -136,8 +136,8 @@ extension ClipMainViewController: CollectionViewItemDelegate {
     }
 
     func delete(_ item: PasteboardModel, indexPath: IndexPath) {
-        defer { deleteFlag = false }
-        deleteFlag = true
+        defer { cardVM.deleteFlag = false }
+        cardVM.deleteFlag = true
         guard PasteUserDefaults.delConfirm else {
             deleteItem(item, indexPath: indexPath)
             return
@@ -145,7 +145,7 @@ extension ClipMainViewController: CollectionViewItemDelegate {
     }
 
     func deleteItem(_ item: PasteboardModel, indexPath: IndexPath) {
-        PasteDataStore.main.deleteItems(item)
+        cardVM.delete(item)
         collectionView.animator().deleteItems(at: [indexPath])
 
         let newCount = dataList.value.count

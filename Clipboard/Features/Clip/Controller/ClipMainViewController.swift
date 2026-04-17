@@ -13,6 +13,7 @@ import Sparkle
 
 final class ClipMainViewController: NSViewController {
     let topVM = TopBarViewModel()
+    let cardVM = CardViewModel()
     let env = AppEnvironment.shared
 
     var dataList = PasteDataStore.main.dataList
@@ -20,7 +21,6 @@ final class ClipMainViewController: NSViewController {
     let db = PasteDataStore.main
     let store = CategoryChipStore.shared
 
-    var deleteFlag = false
     var monitorToken: Any?
 
     // MARK: - Focus
@@ -137,6 +137,12 @@ final class ClipMainViewController: NSViewController {
         scrollview.horizontalScrollElasticity = .automatic
         return scrollview
     }()
+
+    lazy var emptyStateView: EmptyStateView = {
+        let view = EmptyStateView(style: .main)
+        view.isHidden = true
+        return view
+    }()
 }
 
 // MARK: - 生命周期
@@ -226,6 +232,7 @@ extension ClipMainViewController {
 
         contentView.addSubview(scrollView)
         contentView.addSubview(topBarView)
+        contentView.addSubview(emptyStateView)
 
         let inner: CGFloat =
             if #available(macOS 26.0, *) {
@@ -250,6 +257,12 @@ extension ClipMainViewController {
             make.trailing.equalToSuperview()
             make.top.equalToSuperview()
             make.height.equalTo(Const.topBarHeight)
+        }
+
+        emptyStateView.snp.makeConstraints { make in
+            make.center.equalTo(scrollView)
+            make.leading.greaterThanOrEqualTo(scrollView).offset(16)
+            make.trailing.lessThanOrEqualTo(scrollView).offset(-16)
         }
     }
 }
@@ -295,11 +308,12 @@ extension ClipMainViewController {
     func initObserve() {
         dataList
             .receive(on: DispatchQueue.main)
-            .filter { [weak self] _ in self?.deleteFlag == false }
+            .filter { [weak self] _ in self?.cardVM.deleteFlag == false }
             .sink { [weak self] _ in
                 guard let self else { return }
-                deleteFlag = false
+                self.cardVM .deleteFlag = false
                 collectionView.reloadData()
+                updateEmptyState()
                 if db.lastDataChangeType == .new, selectIndexPath.item != 0 {
                     resetSelectIndex()
                 }
@@ -337,5 +351,12 @@ extension ClipMainViewController {
     func performSearch() {
         resetSelectIndex()
         topVM.performSearch()
+        updateEmptyState()
+    }
+
+    func updateEmptyState() {
+        let isEmpty = dataList.value.isEmpty
+        emptyStateView.isHidden = !isEmpty
+        scrollView.isHidden = isEmpty
     }
 }
