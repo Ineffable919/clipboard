@@ -17,7 +17,6 @@ final class ClipMainWindowController: NSWindowController {
 
     private let db = PasteDataStore.main
     private var isAnimating = false
-    var suppressResignKey = false
 
     init() {
         let panel = ClipWindowView(
@@ -95,9 +94,7 @@ extension ClipMainWindowController {
 
     func show(in frame: NSRect?) {
         let frame = frame ?? .zero
-        if let vc = contentViewController as? ClipMainViewController {
-            vc.previousApp = NSWorkspace.shared.frontmostApplication
-        }
+        AppEnvironment.shared.previousApp = NSWorkspace.shared.frontmostApplication
         window?.setFrame(frame, display: true)
         window?.setIsVisible(true)
         window?.becomeFirstResponder()
@@ -106,7 +103,7 @@ extension ClipMainWindowController {
 
 extension ClipMainWindowController: NSWindowDelegate {
     func windowDidResignKey(_: Notification) {
-        guard !suppressResignKey else { return }
+        guard !AppEnvironment.shared.suppressResignKey else { return }
         dismiss()
     }
 }

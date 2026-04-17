@@ -1,5 +1,5 @@
 //
-//  OCRViewModel.swift
+//  OCRViewService.swift
 //  Clipboard
 //
 //  Created by crown on 2026/01/01.
@@ -14,8 +14,8 @@ struct OCRTextRegion {
     let boundingBox: CGRect
 }
 
-class OCRViewModel {
-    static let shared = OCRViewModel()
+class OCRViewService {
+    static let shared = OCRViewService()
 
     func recognizeText(from data: Data) async -> String {
         guard let image = NSImage(data: data),
@@ -46,10 +46,7 @@ class OCRViewModel {
     }
 
     /// 识别文字并返回匹配关键字的精确子串级 bounding box
-    func recognizeHighlightRegions(
-        from data: Data,
-        keyword: String
-    ) async -> [OCRTextRegion] {
+    func recognizeHighlightRegions(from data: Data, keyword: String) async -> [OCRTextRegion] {
         let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return [] }
 

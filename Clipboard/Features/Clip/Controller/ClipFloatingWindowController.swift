@@ -224,7 +224,7 @@ final class ClipFloatingWindowController: NSWindowController {
 
         if presented {
             if !win.isVisible {
-                clipVC.env.preApp = NSWorkspace.shared.frontmostApplication
+                clipVC.env.previousApp = NSWorkspace.shared.frontmostApplication
                 positionWindow()
                 win.orderFrontRegardless()
             }
@@ -262,7 +262,7 @@ extension ClipFloatingWindowController: NSWindowDelegate {
             window.level = .normal
             return
         } else {
-            if isPinned || clipVC.env.isShowDel {
+            if isPinned || AppEnvironment.shared.suppressResignKey {
                 return
             }
         }

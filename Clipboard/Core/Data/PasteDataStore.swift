@@ -262,7 +262,7 @@ extension PasteDataStore {
     func runOCRIfNeeded(_ model: PasteboardModel) async {
         guard model.type == .image, let id = model.id else { return }
 
-        let searchText = await OCRViewModel.shared.recognizeText(
+        let searchText = await OCRViewService.shared.recognizeText(
             from: model.data
         )
 

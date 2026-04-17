@@ -139,10 +139,11 @@ final class TopBarViewModel {
         let trimmed = newChipName.trimmingCharacters(
             in: .whitespacesAndNewlines
         )
-        if commitIfNonEmpty, !trimmed.isEmpty {
-            addChip(name: trimmed, colorIndex: newChipColorIndex)
-        }
+        let colorIndex = newChipColorIndex
         resetNewChipState()
+        if commitIfNonEmpty, !trimmed.isEmpty {
+            addChip(name: trimmed, colorIndex: colorIndex)
+        }
     }
 
     private func resetNewChipState() {
@@ -167,7 +168,7 @@ final class TopBarViewModel {
             cancelEditingChip()
             return
         }
-
+        editingChipId = nil
         let trimmed = editingChipName.trimmingCharacters(
             in: .whitespacesAndNewlines
         )

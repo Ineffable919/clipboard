@@ -9,28 +9,33 @@ import AppKit
 import Combine
 import CoreFoundation
 import SnapKit
+import Sparkle
 
 final class ClipMainViewController: NSViewController {
     let topVM = TopBarViewModel()
-    var selectIndexPath = IndexPath(item: 0, section: 0)
+    let env = AppEnvironment.shared
+
     var dataList = PasteDataStore.main.dataList
     var cancellables = Set<AnyCancellable>()
     let db = PasteDataStore.main
     let store = CategoryChipStore.shared
 
-    var previousApp: NSRunningApplication?
     var deleteFlag = false
     var monitorToken: Any?
 
     // MARK: - Focus
 
-    var focusRegion: FocusRegion = .collection
+    var focusRegion: FocusRegion {
+        get { env.focusRegion }
+        set { env.focusRegion = newValue }
+    }
 
-    // MARK: - Filter State
+    // MARK: - Selection
 
-    var selectedTypes: Set<PasteModelType> = []
-    var selectedAppNames: Set<String> = []
-    var selectedDateFilter: DateFilterOption?
+    var selectIndexPath: IndexPath {
+        get { env.selectIndexPath }
+        set { env.selectIndexPath = newValue }
+    }
 
     // MARK: - Views
 
@@ -114,11 +119,11 @@ final class ClipMainViewController: NSViewController {
             guard screenRect.contains(screenPoint) else { return }
 
             let controller = ClipMainWindowController.shared
-            controller.suppressResignKey = true
+            AppEnvironment.shared.suppressResignKey = true
             window.resignKey()
             window.makeKey()
             window.makeFirstResponder(collectionView)
-            controller.suppressResignKey = false
+            AppEnvironment.shared.suppressResignKey = false
         }
         return collectionView
     }()

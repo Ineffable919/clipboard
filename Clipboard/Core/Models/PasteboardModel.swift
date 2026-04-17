@@ -226,7 +226,7 @@ final class PasteboardModel: Identifiable {
             return cachedOCRRegions
         }
 
-        let regions = await OCRViewModel.shared.recognizeHighlightRegions(
+        let regions = await OCRViewService.shared.recognizeHighlightRegions(
             from: data,
             keyword: trimmed
         )

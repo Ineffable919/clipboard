@@ -97,7 +97,7 @@ extension ClipMainViewController {
 
 extension ClipMainViewController: CollectionViewItemDelegate {
     var preApp: NSRunningApplication? {
-        previousApp
+        env.previousApp
     }
 
     func itemDidRequestSelect(_ item: CollectionViewItem) {

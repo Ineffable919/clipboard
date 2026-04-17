@@ -16,6 +16,7 @@ final class ChipScrollView: NSView {
 
     private var chips: [CategoryChip] = []
     private var chipButtons: [ChipButton] = []
+    private weak var newChipButton: ChipButton?
 
     var selectedChipId: Int = -1 {
         didSet {
@@ -90,6 +91,7 @@ final class ChipScrollView: NSView {
     ) {
         self.chips = chips
         selectedChipId = selectedId
+        newChipButton = nil
 
         chipButtons.forEach { $0.removeFromSuperview() }
         for arrangedSubview in contentStack.arrangedSubviews {
@@ -132,5 +134,26 @@ final class ChipScrollView: NSView {
         for (btn, chip) in zip(chipButtons, chips) {
             btn.isSelected = chip.id == selectedChipId
         }
+    }
+
+    // MARK: - New Chip Placeholder
+
+    func appendNewChipButton(config: ChipButton.Config) {
+        removeNewChipButton()
+        let btn = ChipButton(config: config)
+        btn.onWidthChanged = { [weak self] in
+            self?.invalidateWidth()
+        }
+        newChipButton = btn
+        contentStack.addArrangedSubview(btn)
+        invalidateWidth()
+    }
+
+    func removeNewChipButton() {
+        guard let btn = newChipButton else { return }
+        contentStack.removeArrangedSubview(btn)
+        btn.removeFromSuperview()
+        newChipButton = nil
+        invalidateWidth()
     }
 }

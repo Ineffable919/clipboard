@@ -10,7 +10,7 @@ import AppKit
 final class ClipFloatingViewController: NSViewController {
     private(set) var isPresented: Bool = false
 
-    var env = AppEnvironment()
+    var env = AppEnvironment.shared
 
     /// AppKit 浮动内容视图，后续替换 SwiftUI NSHostingView
     var contentView: NSView?

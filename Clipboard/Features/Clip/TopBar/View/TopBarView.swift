@@ -16,7 +16,10 @@ final class TopBarView: NSView {
     private let settingBtn = TopBarIconButton(symbolName: "ellipsis")
 
     private let defaultRow = NSStackView()
-    private let searchIconBtn = TopBarIconButton(symbolName: "magnifyingglass", pointSize: 18)
+    private let searchIconBtn = TopBarIconButton(
+        symbolName: "magnifyingglass",
+        pointSize: 18
+    )
     private let chipScrollView = ChipScrollView()
     private let addChipBtn = TopBarIconButton(symbolName: "plus")
 
@@ -90,10 +93,13 @@ final class TopBarView: NSView {
         addSubview(defaultRow)
 
         searchIconBtn.action = { [weak self] in self?.activateSearch() }
-        addChipBtn.action = {}
+        addChipBtn.action = { [weak self] in self?.startCreatingChip() }
 
         chipScrollView.setContentHuggingPriority(.required, for: .horizontal)
-        chipScrollView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        chipScrollView.setContentCompressionResistancePriority(
+            .defaultLow,
+            for: .horizontal
+        )
 
         defaultRow.addArrangedSubview(searchIconBtn)
         defaultRow.addArrangedSubview(chipScrollView)
@@ -113,7 +119,9 @@ final class TopBarView: NSView {
         }
 
         searchField.onResignFirstResponder = { [weak self] in
-            guard let self, isSearching, searchField.stringValue.isEmpty else { return }
+            guard let self, isSearching, searchField.stringValue.isEmpty else {
+                return
+            }
             deactivateSearch()
             onFocusRegionChange?(.collection)
         }
@@ -130,7 +138,10 @@ final class TopBarView: NSView {
         }
 
         dotChipScrollView.setContentHuggingPriority(.required, for: .horizontal)
-        dotChipScrollView.setContentCompressionResistancePriority(.required, for: .horizontal)
+        dotChipScrollView.setContentCompressionResistancePriority(
+            .required,
+            for: .horizontal
+        )
 
         searchRow.addArrangedSubview(searchField)
         searchRow.addArrangedSubview(dotChipScrollView)
@@ -144,11 +155,15 @@ final class TopBarView: NSView {
     // MARK: - Settings Menu
 
     private static let appName: String =
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? "Clipboard"
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
+            ?? "Clipboard"
 
     private func setMenuItemImage(_ item: NSMenuItem, symbolName: String) {
         if #available(macOS 26.0, *) {
-            item.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)
+            item.image = NSImage(
+                systemSymbolName: symbolName,
+                accessibilityDescription: nil
+            )
         }
     }
 
@@ -158,15 +173,25 @@ final class TopBarView: NSView {
 
         if updateManager.hasUpdate {
             let newVersionItem = NSMenuItem(
-                title: String(localized: .updateAvailable(updateManager.availableVersion ?? "")),
+                title: String(
+                    localized: .updateAvailable(
+                        updateManager.availableVersion ?? ""
+                    )
+                ),
                 action: #selector(checkForUpdatesAction),
                 keyEquivalent: ""
             )
             newVersionItem.target = self
             if #available(macOS 26.0, *),
-               let image = NSImage(systemSymbolName: "arrow.up.circle.dotted", accessibilityDescription: nil)
+               let image = NSImage(
+                   systemSymbolName: "arrow.up.circle.dotted",
+                   accessibilityDescription: nil
+               )
             {
-                let config = NSImage.SymbolConfiguration(pointSize: 16.0, weight: .semibold)
+                let config = NSImage.SymbolConfiguration(
+                    pointSize: 16.0,
+                    weight: .semibold
+                )
                 image.isTemplate = true
                 newVersionItem.image = image.withSymbolConfiguration(config)
             }
@@ -276,15 +301,34 @@ final class TopBarView: NSView {
         }
 
         let durations: [(String, String, Selector)] = [
-            (String(localized: .pauseFifteen), "15.circle", #selector(pause15MinutesAction)),
-            (String(localized: .pauseThirty), "30.circle", #selector(pause30MinutesAction)),
-            (String(localized: .pauseOneHour), "1.circle", #selector(pause1HourAction)),
-            (String(localized: .pauseThreeHours), "3.circle", #selector(pause3HoursAction)),
-            (String(localized: .pauseEightHours), "8.circle", #selector(pause8HoursAction)),
+            (
+                String(localized: .pauseFifteen), "15.circle",
+                #selector(pause15MinutesAction)
+            ),
+            (
+                String(localized: .pauseThirty), "30.circle",
+                #selector(pause30MinutesAction)
+            ),
+            (
+                String(localized: .pauseOneHour), "1.circle",
+                #selector(pause1HourAction)
+            ),
+            (
+                String(localized: .pauseThreeHours), "3.circle",
+                #selector(pause3HoursAction)
+            ),
+            (
+                String(localized: .pauseEightHours), "8.circle",
+                #selector(pause8HoursAction)
+            ),
         ]
 
         for (title, symbol, selector) in durations {
-            let item = NSMenuItem(title: title, action: selector, keyEquivalent: "")
+            let item = NSMenuItem(
+                title: title,
+                action: selector,
+                keyEquivalent: ""
+            )
             item.target = self
             setMenuItemImage(item, symbolName: symbol)
             submenu.addItem(item)
@@ -304,7 +348,10 @@ final class TopBarView: NSView {
     }
 
     @objc private func invokeHelpAction() {
-        if let url = URL(string: "https://github.com/Ineffable919/clipboard/blob/master/README.md") {
+        if let url = URL(
+            string:
+            "https://github.com/Ineffable919/clipboard/blob/master/README.md"
+        ) {
             NSWorkspace.shared.open(url)
         }
     }
@@ -353,7 +400,9 @@ final class TopBarView: NSView {
 
         defaultRow.snp.makeConstraints { make in
             make.leading.equalToSuperview().offset(100)
-            make.trailing.lessThanOrEqualTo(settingBtn.snp.leading).offset(-Const.space12)
+            make.trailing.lessThanOrEqualTo(settingBtn.snp.leading).offset(
+                -Const.space12
+            )
             make.top.equalToSuperview().offset(Const.space12)
         }
 
@@ -391,6 +440,91 @@ final class TopBarView: NSView {
         dotChipScrollView.onSelectionChanged = { [weak self] id in
             self?.handleChipSelection(id: id)
         }
+
+        if topVM.editingNewChip {
+            appendNewChipPlaceholder()
+        }
+    }
+
+    // MARK: - New Chip Creation
+
+    private func startCreatingChip() {
+        guard let topVM else { return }
+        if topVM.editingNewChip {
+            commitNewChip()
+        }
+        if let editingId = topVM.editingChipId {
+            commitChipEditing(for: editingId)
+        }
+        topVM.editingNewChip = true
+        topVM.newChipName = String(localized: .untitled)
+        appendNewChipPlaceholder()
+    }
+
+    private func appendNewChipPlaceholder() {
+        guard let topVM else { return }
+
+        let placeholder = CategoryChip(
+            id: Int.min,
+            name: topVM.newChipName,
+            colorIndex: topVM.newChipColorIndex,
+            isSystem: false
+        )
+
+        let config = ChipButton.Config(
+            chip: placeholder,
+            isSelected: true,
+            dotMode: false,
+            isEditing: true,
+            editingName: topVM.newChipName,
+            editingColorIndex: topVM.newChipColorIndex,
+            action: {},
+            onEdit: nil,
+            onDelete: nil,
+            onColorChange: { [weak self] colorIndex in
+                self?.topVM?.newChipColorIndex = colorIndex
+                self?.refreshNewChipPlaceholder()
+            },
+            onEditingNameChange: { [weak self] text in
+                self?.topVM?.newChipName = text
+            },
+            onEditingSubmit: { [weak self] in
+                self?.commitNewChip()
+            },
+            onEditingCancel: { [weak self] in
+                self?.cancelNewChip()
+            },
+            onEditingFocusChange: { [weak self] focused in
+                self?.isEditingChipFirstResponder = focused
+                self?.onFocusRegionChange?(focused ? .chipEditing : .collection)
+            }
+        )
+
+        chipScrollView.appendNewChipButton(config: config)
+    }
+
+    private func refreshNewChipPlaceholder() {
+        guard let topVM, topVM.editingNewChip else { return }
+        chipScrollView.removeNewChipButton()
+        appendNewChipPlaceholder()
+    }
+
+    private func commitNewChip() {
+        guard let topVM, topVM.editingNewChip else { return }
+        topVM.editingNewChip = false // 先清，第二次调用时 guard 直接拦住
+        isEditingChipFirstResponder = false
+        topVM.commitNewChipOrCancel(commitIfNonEmpty: true)
+        reloadChips()
+        onFocusRegionChange?(.collection)
+    }
+
+    private func cancelNewChip() {
+        guard let topVM, topVM.editingNewChip else { return }
+        topVM.editingNewChip = false // 先清，第二次调用时 guard 直接拦住
+        isEditingChipFirstResponder = false
+        topVM.commitNewChipOrCancel(commitIfNonEmpty: false)
+        reloadChips()
+        onFocusRegionChange?(.collection)
     }
 
     private func handleChipSelection(id: Int) {
@@ -457,8 +591,11 @@ final class TopBarView: NSView {
             isSelected: isSelected,
             dotMode: dotMode,
             isEditing: isEditing,
-            editingName: isEditing ? (topVM?.editingChipName ?? chip.name) : chip.name,
-            editingColorIndex: isEditing ? (topVM?.editingChipColorIndex ?? chip.colorIndex) : chip.colorIndex,
+            editingName: isEditing
+                ? (topVM?.editingChipName ?? chip.name) : chip.name,
+            editingColorIndex: isEditing
+                ? (topVM?.editingChipColorIndex ?? chip.colorIndex)
+                : chip.colorIndex,
             action: { [weak self] in
                 self?.handleChipSelection(id: chip.id)
             },
@@ -481,7 +618,10 @@ final class TopBarView: NSView {
                 self?.cancelChipEditing(for: chip.id)
             },
             onEditingFocusChange: { [weak self] focused in
-                self?.handleEditingChipFocusChange(for: chip.id, focused: focused)
+                self?.handleEditingChipFocusChange(
+                    for: chip.id,
+                    focused: focused
+                )
             }
         )
     }
@@ -519,13 +659,19 @@ final class TopBarView: NSView {
     }
 
     func commitKeyboardEditing() {
-        guard let chipId = topVM?.editingChipId else { return }
-        commitChipEditing(for: chipId)
+        if let topVM, topVM.editingNewChip {
+            commitNewChip()
+        } else if let chipId = topVM?.editingChipId {
+            commitChipEditing(for: chipId)
+        }
     }
 
     func cancelKeyboardEditing() {
-        guard let chipId = topVM?.editingChipId else { return }
-        cancelChipEditing(for: chipId)
+        if let topVM, topVM.editingNewChip {
+            cancelNewChip()
+        } else if let chipId = topVM?.editingChipId {
+            cancelChipEditing(for: chipId)
+        }
     }
 
     private func confirmDeleteChip(_ chip: CategoryChip) {
@@ -538,16 +684,17 @@ final class TopBarView: NSView {
         alert.addButton(withTitle: String(localized: .commonConfirm))
         alert.addButton(withTitle: String(localized: .commonCancel))
 
-        let handleResponse: (NSApplication.ModalResponse) -> Void = { [weak self] response in
+        let handleResponse: (NSApplication.ModalResponse) -> Void = {
+            [weak self] response in
             guard response == .alertFirstButtonReturn else { return }
             self?.topVM?.removeChip(chip)
             self?.reloadChips()
         }
-
-        if let window {
-            alert.beginSheetModal(for: window, completionHandler: handleResponse)
-        } else {
-            handleResponse(alert.runModal())
+        defer {
+            AppEnvironment.shared.suppressResignKey = false
         }
+        AppEnvironment.shared.suppressResignKey = true
+        let response = alert.runModal()
+        handleResponse(response)
     }
 }
