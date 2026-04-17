@@ -127,9 +127,7 @@ class HotKeyManager {
                     let keyHash = abs(key.hashValue) % Int(UInt32.max)
                     return keyHash == receivedHash
                 })?.value {
-                    DispatchQueue.main.async {
-                        handler()
-                    }
+                    handler()
                 }
 
                 return noErr
@@ -153,13 +151,6 @@ class HotKeyManager {
         isInitialized = true
         migrateHotKeysIfNeeded()
         loadHotKeys()
-
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(applicationWillTerminate),
-            name: NSApplication.willTerminateNotification,
-            object: nil
-        )
     }
 
     private func migrateHotKeysIfNeeded() {
@@ -203,7 +194,7 @@ class HotKeyManager {
         }
     }
 
-    @objc private func applicationWillTerminate() {
+    func clear() {
         unregisterAllHotKeys()
 
         if let eventHandlerRef {

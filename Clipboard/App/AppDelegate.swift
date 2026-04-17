@@ -20,8 +20,6 @@ class AppDelegate: NSObject {
         userDriverDelegate: self
     )
 
-    private lazy var windowManager = WindowManager.shared
-    private lazy var settingWinController = SettingWindowController.shared
     private var monitorToken: Any?
 }
 
@@ -51,12 +49,11 @@ extension AppDelegate: NSApplicationDelegate {
         }
         StatusBarController.shared.cleanup()
         AppIconCache.shared.clearCache()
+        HotKeyManager.shared.clear()
     }
 
     func applicationShouldHandleReopen(_: NSApplication, hasVisibleWindows _: Bool) -> Bool {
-        if !windowManager.isVisible {
-            toggleWindow()
-        }
+        WindowManager.shared.toggleWindow(frame: NSScreen.main?.frame)
         return true
     }
 
@@ -114,18 +111,13 @@ extension AppDelegate {
 }
 
 extension AppDelegate {
-    func toggleWindow(_ completionHandler: (@MainActor @Sendable () -> Void)? = nil) {
-        windowManager.toggleWindow(completionHandler)
-    }
-
     private func initLocalEvent() {
         monitorToken = NSEvent.addLocalMonitorForEvents(matching: .keyDown) {
-            [weak self] event in
-            guard let self else { return event }
+            event in
             if event.modifierFlags.contains(.command) {
                 let modifiers = event.charactersIgnoringModifiers
                 if modifiers == "," || modifiers == "，" {
-                    settingWinController.toggleWindow()
+                    SettingWindowController.shared.toggleWindow()
                     return nil
                 }
                 if modifiers == "q" || modifiers == "Q" {

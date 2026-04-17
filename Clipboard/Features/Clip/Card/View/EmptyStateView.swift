@@ -9,7 +9,6 @@ import Cocoa
 import SnapKit
 
 class EmptyStateView: NSView {
-
     enum Style {
         case main
         case floating
@@ -53,26 +52,29 @@ class EmptyStateView: NSView {
         setupConstraints()
     }
 
-    required init?(coder: NSCoder) {
+    @available(*, unavailable)
+    required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    private var iconSize: CGFloat { style == .main ? 64.0 : 48.0 }
+    private var iconSize: CGFloat {
+        style == .main ? 64.0 : 48.0
+    }
 
     // MARK: - Setup
 
-    private func setupViews() {        
+    private func setupViews() {
         addSubview(iconImageView)
         addSubview(titleLabel)
         addSubview(hintLabel)
 
         if #available(macOS 26.0, *) {
             iconImageView.image = NSImage(
-                systemSymbolName: "sparkle.text.clipboard",
+                systemSymbolName: "heart.text.clipboard.fill",
                 accessibilityDescription: nil
             )
         } else {
-            iconImageView.image = NSImage(named: "sparkle.text.clipboard")
+            iconImageView.image = NSImage(named: "heart.text.clipboard.fill")
         }
 
         if let symbolImage = iconImageView.image {
@@ -99,6 +101,5 @@ class EmptyStateView: NSView {
             make.top.equalTo(titleLabel.snp.bottom).offset(Const.space12)
             make.bottom.lessThanOrEqualToSuperview().offset(-20)
         }
-
     }
 }

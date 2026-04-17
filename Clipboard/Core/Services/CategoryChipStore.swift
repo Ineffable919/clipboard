@@ -120,7 +120,6 @@ final class CategoryChipStore {
         PasteUserDefaults.userCategoryChip = chips.filter { !$0.isSystem }
         db.notifyCategoryChipsChanged()
         chipsContentDidChange.send()
-        //notifyChange()
     }
 
     private func notifyChange() {

@@ -10,8 +10,6 @@ import Carbon
 import Foundation
 import SwiftUI
 
-/// 键盘按键代码常量和按键处理工具
-/// 提供易读的按键代码定义和按键事件处理功能
 enum KeyCode {
     // MARK: - 字母键
 

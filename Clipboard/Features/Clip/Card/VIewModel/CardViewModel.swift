@@ -27,5 +27,4 @@ final class CardViewModel {
             pd.deleteItems(item)
         }
     }
-
 }

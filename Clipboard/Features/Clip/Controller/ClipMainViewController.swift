@@ -185,11 +185,13 @@ extension ClipMainViewController {
             topBarView.searchField.suppressFocusRing = true
         }
 
-        NSAnimationContext.runAnimationGroup { context in
-            context.duration = 0.15
+        NSAnimationContext.runAnimationGroup({ context in
+            context.duration = Const.showDuration
             self.view.animator().setFrameOrigin(.zero)
-        } completionHandler: {
+        }) {
             MainActor.assumeIsolated {
+                ClipMainWindowController.shared.isAnimating = false
+
                 if self.topBarView.isSearching {
                     self.topBarView.searchField.acceptsFocus = true
                 }
@@ -311,7 +313,7 @@ extension ClipMainViewController {
             .filter { [weak self] _ in self?.cardVM.deleteFlag == false }
             .sink { [weak self] _ in
                 guard let self else { return }
-                self.cardVM .deleteFlag = false
+                cardVM.deleteFlag = false
                 collectionView.reloadData()
                 updateEmptyState()
                 if db.lastDataChangeType == .new, selectIndexPath.item != 0 {

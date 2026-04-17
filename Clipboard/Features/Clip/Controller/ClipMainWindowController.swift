@@ -16,7 +16,7 @@ final class ClipMainWindowController: NSWindowController {
     }
 
     private let db = PasteDataStore.main
-    private var isAnimating = false
+    var isAnimating = false
 
     init() {
         let panel = ClipWindowView(
@@ -93,11 +93,15 @@ extension ClipMainWindowController {
     }
 
     func show(in frame: NSRect?) {
-        let frame = frame ?? .zero
+        guard !isAnimating else { return }
+        isAnimating = true
+
+        let frame = frame ?? NSScreen.main?.frame ?? .zero
         AppEnvironment.shared.previousApp = NSWorkspace.shared.frontmostApplication
         window?.setFrame(frame, display: true)
         window?.setIsVisible(true)
-        window?.becomeFirstResponder()
+        window?.orderFrontRegardless()
+        window?.makeKey()
     }
 }
 

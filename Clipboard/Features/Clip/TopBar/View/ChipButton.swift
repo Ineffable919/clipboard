@@ -158,10 +158,11 @@ final class ChipButton: NSView, NSTextFieldDelegate {
 
         if config.dotMode {
             if config.chip.isSystem {
-                iconImageView.image = NSImage(
+                let icon: NSImage? = NSImage(
                     systemSymbolName: "clock.arrow.trianglehead.counterclockwise.rotate.90",
                     accessibilityDescription: nil
-                )?.withSymbolConfiguration(.init(pointSize: 12, weight: .medium))
+                )
+                iconImageView.image = icon?.withSymbolConfiguration(.init(pointSize: 12, weight: .medium))
                 iconImageView.snp.remakeConstraints { make in
                     make.width.height.equalTo(16)
                 }
@@ -175,10 +176,12 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         }
 
         if config.chip.id == -1 {
-            iconImageView.image = NSImage(
+            let icon: NSImage? = NSImage(
                 systemSymbolName: "clock.arrow.trianglehead.counterclockwise.rotate.90",
                 accessibilityDescription: nil
-            )?.withSymbolConfiguration(.init(pointSize: 16, weight: .regular))
+            )
+
+            iconImageView.image = icon?.withSymbolConfiguration(.init(pointSize: 16, weight: .regular))
             iconImageView.snp.remakeConstraints { make in
                 make.width.height.equalTo(16)
             }

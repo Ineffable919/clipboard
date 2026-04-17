@@ -11,56 +11,29 @@ import Foundation
 final class WindowManager {
     static let shared = WindowManager()
 
-    private lazy var drawerController = ClipMainWindowController.shared
-    private lazy var floatingController = ClipFloatingWindowController.shared
+    private let drawerController = ClipMainWindowController.shared
+    private let floatingController = ClipFloatingWindowController.shared
 
     private init() {}
 
-    func getCurrentDisplayMode() -> DisplayMode {
-        let rawValue = UserDefaults.standard.integer(
-            forKey: PrefKey.displayMode.rawValue
-        )
+    // MARK: - 当前显示模式
+
+    var displayMode: DisplayMode {
+        let rawValue = UserDefaults.standard.integer(forKey: PrefKey.displayMode.rawValue)
         return DisplayMode(rawValue: rawValue) ?? .drawer
     }
 
     func toggleWindow(
-        _ completionHandler: (@MainActor @Sendable () -> Void)? = nil,
-        frame: NSRect? = nil
-    ) {
-        let mode = getCurrentDisplayMode()
-
-        switch mode {
-        case .drawer:
-            if floatingController.isVisible {
-                floatingController.setPresented(false)
-            }
-            drawerController.toggleWindow(frame, completionHandler)
-        case .floating:
-            if drawerController.isVisible {
-                drawerController.dismiss()
-            }
-            floatingController.toggleWindow(completionHandler)
-        }
-    }
-
-    func setPresented(
-        _ presented: Bool,
-        animated _: Bool,
+        frame: NSRect? = nil,
         _ completionHandler: (@MainActor @Sendable () -> Void)? = nil
     ) {
-        let mode = getCurrentDisplayMode()
-
-        switch mode {
+        switch displayMode {
         case .drawer:
-            if floatingController.isVisible {
-                floatingController.setPresented(false)
-            }
-            drawerController.show(in: NSScreen.main?.frame)
+            dismissFloatingIfNeeded()
+            drawerController.toggleWindow(frame ?? NSScreen.main?.frame, completionHandler)
         case .floating:
-            if drawerController.isVisible {
-                drawerController.dismiss()
-            }
-            floatingController.setPresented(presented, completionHandler)
+            dismissDrawerIfNeeded()
+            floatingController.toggleWindow(completionHandler)
         }
     }
 
@@ -69,22 +42,28 @@ final class WindowManager {
     }
 
     var window: NSWindow? {
-        let mode = getCurrentDisplayMode()
-        switch mode {
-        case .drawer:
-            return drawerController.window
-        case .floating:
-            return floatingController.window
+        switch displayMode {
+        case .drawer: drawerController.window
+        case .floating: floatingController.window
         }
     }
 
     func configureWindowSharing() {
-        let mode = getCurrentDisplayMode()
-        switch mode {
-        case .drawer:
-            drawerController.configureWindowSharing()
-        case .floating:
-            floatingController.configureWindowSharing()
+        switch displayMode {
+        case .drawer: drawerController.configureWindowSharing()
+        case .floating: floatingController.configureWindowSharing()
+        }
+    }
+
+    private func dismissFloatingIfNeeded() {
+        if floatingController.isVisible {
+            floatingController.setPresented(false)
+        }
+    }
+
+    private func dismissDrawerIfNeeded() {
+        if drawerController.isVisible {
+            drawerController.dismiss()
         }
     }
 }
