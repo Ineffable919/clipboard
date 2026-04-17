@@ -23,6 +23,18 @@ struct CategoryChip: Identifiable, Equatable, Codable {
         .yellow,
     ]
 
+    static let paletteNSColors: [NSColor] = [
+        .systemGray, .systemBlue, .systemGreen,
+        .systemPurple, .systemRed, .systemOrange, .systemYellow,
+    ]
+
+    static func nsColor(at index: Int, alpha: CGFloat = 0.85) -> NSColor {
+        guard index >= 0, index < paletteNSColors.count else {
+            return paletteNSColors[0].withAlphaComponent(alpha)
+        }
+        return paletteNSColors[index].withAlphaComponent(alpha)
+    }
+
     var color: Color {
         get {
             guard colorIndex >= 0, colorIndex < CategoryChip.palette.count

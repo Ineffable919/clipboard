@@ -24,6 +24,8 @@ final class CategoryChipStore {
         }
     }
 
+    let chipsContentDidChange = PassthroughSubject<Void, Never>()
+
     private let db = PasteDataStore.main
 
     // MARK: - Initialization
@@ -117,7 +119,8 @@ final class CategoryChipStore {
     private func saveUserCategories() {
         PasteUserDefaults.userCategoryChip = chips.filter { !$0.isSystem }
         db.notifyCategoryChipsChanged()
-        notifyChange()
+        chipsContentDidChange.send()
+        //notifyChange()
     }
 
     private func notifyChange() {

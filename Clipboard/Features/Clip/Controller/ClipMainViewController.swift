@@ -325,6 +325,13 @@ extension ClipMainViewController {
                 performSearch()
             }
             .store(in: &cancellables)
+
+        store.chipsContentDidChange
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in
+                self?.collectionView.reloadData()
+            }
+            .store(in: &cancellables)
     }
 
     func performSearch() {

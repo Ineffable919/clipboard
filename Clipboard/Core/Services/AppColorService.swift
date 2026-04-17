@@ -67,12 +67,7 @@ final class AppColorService {
     }
 
     private static func paletteNSColor(at index: Int) -> NSColor {
-        let colors: [NSColor] = [
-            .systemGray, .systemBlue, .systemGreen,
-            .systemPurple, .systemRed, .systemOrange, .systemYellow,
-        ]
-        guard index >= 0, index < colors.count else { return .systemGray }
-        return colors[index].withAlphaComponent(0.85)
+        CategoryChip.nsColor(at: index)
     }
 }
 
