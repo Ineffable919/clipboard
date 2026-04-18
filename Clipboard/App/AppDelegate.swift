@@ -117,7 +117,7 @@ extension AppDelegate {
             if event.modifierFlags.contains(.command) {
                 let modifiers = event.charactersIgnoringModifiers
                 if modifiers == "," || modifiers == "，" {
-                    SettingWindowController.shared.toggleWindow()
+                    SettingWindowController.shared.toggleWindow(page: .general)
                     return nil
                 }
                 if modifiers == "q" || modifiers == "Q" {
@@ -197,5 +197,4 @@ extension AppDelegate: SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
 
 extension Notification.Name {
     static let menuBarIconVisibilityChanged = Notification.Name("menuBarIconVisibilityChanged")
-    static let navigateToSettingPage = Notification.Name("navigateToSettingPage")
 }

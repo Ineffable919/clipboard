@@ -33,6 +33,14 @@ final class CollectionViewItem: NSCollectionViewItem {
     private var isFocused = true
     private var tickCancellable: AnyCancellable?
 
+    // MARK: - Quick Paste
+
+    var quickPasteIndex: Int? {
+        didSet {
+            updateQuickPasteLabel()
+        }
+    }
+
     // MARK: - Head
 
     private lazy var headView: CardHeadView = .init()
@@ -66,6 +74,17 @@ final class CollectionViewItem: NSCollectionViewItem {
     private lazy var cardContentView = CardContentView()
     private lazy var cardBottomView = CardBottomView()
 
+    // MARK: - Quick Paste Label
+
+    private lazy var quickPasteLabel: NSTextField = {
+        let label = NSTextField(labelWithString: "")
+        label.font = .systemFont(ofSize: 12, weight: .regular)
+        label.textColor = .labelColor
+        label.alignment = .right
+        label.isHidden = true
+        return label
+    }()
+
     func configure(with model: PasteboardModel, keyword: String = "") {
         item = model
         headView.configure(with: model)
@@ -95,6 +114,20 @@ final class CollectionViewItem: NSCollectionViewItem {
     func setFocused(_ focused: Bool) {
         isFocused = focused
         updateSelectionBorder()
+    }
+
+    private func updateQuickPasteLabel() {
+        if let index = quickPasteIndex {
+            quickPasteLabel.stringValue = "\(index)"
+            quickPasteLabel.isHidden = false
+
+            if let model = item {
+                let (_, textColor) = model.colors()
+                quickPasteLabel.textColor = textColor
+            }
+        } else {
+            quickPasteLabel.isHidden = true
+        }
     }
 }
 
@@ -300,6 +333,7 @@ extension CollectionViewItem {
         contentView.addSubview(headView)
         contentView.addSubview(cardContentView)
         contentView.addSubview(cardBottomView)
+        contentView.addSubview(quickPasteLabel)
 
         selectionBorderView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
@@ -322,6 +356,11 @@ extension CollectionViewItem {
         cardBottomView.snp.makeConstraints { make in
             make.leading.trailing.bottom.equalToSuperview()
             make.height.equalTo(Const.bottomSize)
+        }
+
+        quickPasteLabel.snp.makeConstraints { make in
+            make.trailing.equalToSuperview().inset(Const.space6)
+            make.bottom.equalToSuperview().inset(Const.space4)
         }
 
         updateShadow()

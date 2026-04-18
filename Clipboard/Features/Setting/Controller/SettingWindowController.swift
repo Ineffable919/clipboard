@@ -10,12 +10,10 @@ import SwiftUI
 
 class SettingWindowController: NSWindowController {
     static let shared = SettingWindowController()
-    private var settingView = SettingView()
-
-    private var localEventMonitor: Any?
+    private let viewModel = SettingViewModel()
 
     private init() {
-        let window = NSWindow(
+        let window = SettingWindow(
             contentRect: NSRect(
                 x: 0,
                 y: 0,
@@ -35,45 +33,19 @@ class SettingWindowController: NSWindowController {
         window.titlebarSeparatorStyle = .none
         window.titlebarAppearsTransparent = true
 
+        let settingView = SettingView()
+            .environment(viewModel)
         window.contentView = NSHostingView(rootView: settingView)
 
         super.init(window: window)
-    }
 
-    private func registerLocalEventMonitor() {
-        guard localEventMonitor == nil else { return }
-        localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            self?.handleKeyDown(event) ?? event
-        }
-    }
-
-    private func removeLocalEventMonitor() {
-        if let token = localEventMonitor {
-            NSEvent.removeMonitor(token)
-            localEventMonitor = nil
-        }
-    }
-
-    private func handleKeyDown(_ event: NSEvent) -> NSEvent? {
-        guard event.window === window else { return event }
-
-        // Cmd+W — hide window
-        if event.modifierFlags.contains(.command),
-           event.charactersIgnoringModifiers == "w"
-        {
-            hideWindow()
-            return nil
+        window.onCommandW = { [weak self] in
+            self?.hideWindow()
         }
 
-        // Cmd+M — minimise window
-        if event.modifierFlags.contains(.command),
-           event.charactersIgnoringModifiers == "m"
-        {
-            minWindow()
-            return nil
+        window.onCommandM = { [weak self] in
+            self?.minWindow()
         }
-
-        return event
     }
 
     @available(*, unavailable)
@@ -90,23 +62,15 @@ class SettingWindowController: NSWindowController {
             window.deminiaturize(nil)
         }
 
-        registerLocalEventMonitor()
         window.makeKeyAndOrderFront(nil)
     }
 
     func toggleWindow(page: SettingPage) {
+        viewModel.navigateTo(page)
         toggleWindow()
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(50))
-            NotificationCenter.default.post(
-                name: .navigateToSettingPage,
-                object: page
-            )
-        }
     }
 
     func hideWindow() {
-        removeLocalEventMonitor()
         window?.orderOut(nil)
     }
 

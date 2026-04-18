@@ -22,6 +22,17 @@ final class ClipMainViewController: NSViewController {
     let store = CategoryChipStore.shared
 
     var monitorToken: Any?
+    var flagsMonitorToken: Any?
+
+    // MARK: - Quick Paste
+
+    var isQuickPastePressed: Bool = false {
+        didSet {
+            if oldValue != isQuickPastePressed {
+                updateQuickPasteDisplay()
+            }
+        }
+    }
 
     // MARK: - Focus
 
@@ -181,6 +192,13 @@ extension ClipMainViewController {
             monitorToken = NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: keyDownEvent(_:))
         }
 
+        if flagsMonitorToken == nil {
+            flagsMonitorToken = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) {
+                [weak self] event in
+                self?.flagsChangedEvent(event)
+            }
+        }
+
         if focusRegion == .search {
             topBarView.searchField.suppressFocusRing = true
         }
@@ -216,6 +234,11 @@ extension ClipMainViewController {
             NSEvent.removeMonitor(token)
             monitorToken = nil
         }
+        if let token = flagsMonitorToken {
+            NSEvent.removeMonitor(token)
+            flagsMonitorToken = nil
+        }
+        isQuickPastePressed = false
     }
 }
 

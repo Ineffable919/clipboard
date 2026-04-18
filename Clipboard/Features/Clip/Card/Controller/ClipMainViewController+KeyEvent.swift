@@ -50,6 +50,11 @@ extension ClipMainViewController {
             }
         }
 
+        if let index = handleQuickPasteShortcut(event) {
+            performQuickPaste(at: index)
+            return nil
+        }
+
         if KeyCode.shouldTriggerSearch(for: event), !topBarView.searchField.isFirstResponder {
             if let characters = event.characters, !characters.isEmpty {
                 topBarView.activateSearch(with: characters)
@@ -58,6 +63,10 @@ extension ClipMainViewController {
                 view.window?.makeFirstResponder(topBarView.searchField)
             }
             return nil
+        }
+
+        if event.modifierFlags.contains(.command) {
+            return handleCommandKeyEvent(event)
         }
 
         switch event.keyCode {
@@ -103,11 +112,54 @@ extension ClipMainViewController {
 
     private func returnKeyDown(_ event: NSEvent) -> NSEvent? {
         let item = dataList.value[selectIndexPath.item]
-        if event.modifierFlags.contains(.shift) {
-            pastePlain(item)
-        } else {
-            paste(item)
+        if ClipActionService.shared.paste(
+            item,
+            isAttribute: !hasPlainTextModifier(event),
+            checkPermissions: PasteUserDefaults.pasteDirect
+        ) {
+            resetSelectIndex()
         }
+        return nil
+    }
+
+    private func hasPlainTextModifier(_ event: NSEvent) -> Bool {
+        KeyCode.hasModifier(
+            event,
+            modifierIndex: PasteUserDefaults.plainTextModifier
+        )
+    }
+
+    private func handleCommandKeyEvent(_ event: NSEvent) -> NSEvent? {
+        let hasModifiers = !event.modifierFlags.intersection([
+            .option, .control, .shift,
+        ]).isEmpty
+        guard !hasModifiers else {
+            return event
+        }
+
+        switch event.keyCode {
+        case KeyCode.c:
+            return handleCopy()
+
+        case KeyCode.e:
+            return handleEdit()
+
+        default:
+            return event
+        }
+    }
+
+    private func handleCopy() -> NSEvent? {
+        guard selectIndexPath.item < dataList.value.count else { return nil }
+        let item = dataList.value[selectIndexPath.item]
+        copy(item)
+        return nil
+    }
+
+    private func handleEdit() -> NSEvent? {
+        guard selectIndexPath.item < dataList.value.count else { return nil }
+        let item = dataList.value[selectIndexPath.item]
+        edit(item)
         return nil
     }
 }

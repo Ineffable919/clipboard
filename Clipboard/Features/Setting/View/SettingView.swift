@@ -43,13 +43,15 @@ enum SettingPage: CaseIterable, Identifiable {
 }
 
 struct SettingView: View {
-    @State private var selectedPage: SettingPage = .general
+    @Environment(SettingViewModel.self) private var viewModel
     @FocusState private var isSidebarFocused: Bool
 
     var body: some View {
+        @Bindable var vm = viewModel
+        
         NavigationSplitView {
             VStack(spacing: 0) {
-                List(selection: $selectedPage) {
+                List(selection: $vm.selectedPage) {
                     ForEach(SettingPage.allCases) { page in
                         NavigationLink(value: page) {
                             Label {
@@ -72,7 +74,7 @@ struct SettingView: View {
             .frame(minWidth: 200)
         } detail: {
             Group {
-                switch selectedPage {
+                switch vm.selectedPage {
                 case .general:
                     GeneralSettingView()
                 case .appearance:
@@ -87,15 +89,10 @@ struct SettingView: View {
                     AboutSettingView()
                 }
             }
-            .navigationTitle(Text(selectedPage.title))
+            .navigationTitle(Text(vm.selectedPage.title))
         }
         .onAppear {
             isSidebarFocused = true
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .navigateToSettingPage)) { notification in
-            if let page = notification.object as? SettingPage {
-                selectedPage = page
-            }
         }
     }
 }

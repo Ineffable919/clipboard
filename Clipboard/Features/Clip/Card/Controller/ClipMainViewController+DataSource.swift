@@ -28,6 +28,7 @@ extension ClipMainViewController: NSCollectionViewDataSource {
         let model = dataList.value[indexPath.item]
         cItem.delegate = self
         cItem.configure(with: model, keyword: topVM.query)
+        cItem.quickPasteIndex = quickPasteIndex(for: indexPath.item)
         if selectIndexPath == indexPath {
             cItem.isSelected = true
             cItem.setFocused(focusRegion == .collection)
