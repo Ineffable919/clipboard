@@ -511,7 +511,7 @@ final class TopBarView: NSView {
 
     private func commitNewChip() {
         guard let topVM, topVM.editingNewChip else { return }
-        topVM.editingNewChip = false // 先清，第二次调用时 guard 直接拦住
+        topVM.editingNewChip = false
         isEditingChipFirstResponder = false
         topVM.commitNewChipOrCancel(commitIfNonEmpty: true)
         reloadChips()
@@ -520,7 +520,7 @@ final class TopBarView: NSView {
 
     private func cancelNewChip() {
         guard let topVM, topVM.editingNewChip else { return }
-        topVM.editingNewChip = false // 先清，第二次调用时 guard 直接拦住
+        topVM.editingNewChip = false
         isEditingChipFirstResponder = false
         topVM.commitNewChipOrCancel(commitIfNonEmpty: false)
         reloadChips()
@@ -630,6 +630,9 @@ final class TopBarView: NSView {
                     for: chip.id,
                     focused: focused
                 )
+            },
+            onDrop: { [weak self] model in
+                self?.handleCardDroppedOnChip(model: model, chip: chip) ?? false
             }
         )
     }
@@ -704,5 +707,11 @@ final class TopBarView: NSView {
         AppEnvironment.shared.suppressResignKey = true
         let response = alert.runModal()
         handleResponse(response)
+    }
+
+    // MARK: - Drag & Drop
+
+    private func handleCardDroppedOnChip(model: PasteboardModel, chip: CategoryChip) -> Bool {
+        return topVM?.assignModelToChip(model: model, chipId: chip.id) ?? false
     }
 }

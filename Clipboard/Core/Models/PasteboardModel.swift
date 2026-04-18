@@ -8,7 +8,7 @@
 import AppKit
 import UniformTypeIdentifiers
 
-final class PasteboardModel: Identifiable {
+final class PasteboardModel: Identifiable, Codable {
     var id: Int64?
     let uniqueId: String
     let pasteboardType: PasteboardType
@@ -27,7 +27,8 @@ final class PasteboardModel: Identifiable {
         type: pasteboardType,
         searchText: searchText,
         appName: appName,
-        timestamp: timestamp
+        timestamp: timestamp,
+        model: self
     )
     private(set) lazy var type = PasteModelType(
         with: pasteboardType,
@@ -263,6 +264,51 @@ final class PasteboardModel: Identifiable {
             return chip.name
         }
         return type.string
+    }
+
+    // MARK: - Codable
+
+    enum CodingKeys: String, CodingKey {
+        case id, uniqueId, pasteboardType, data, showData, timestamp
+        case appPath, appName, searchText, length, group, tag, hidden
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(id, forKey: .id)
+        try container.encode(uniqueId, forKey: .uniqueId)
+        try container.encode(pasteboardType.rawValue, forKey: .pasteboardType)
+        try container.encode(data, forKey: .data)
+        try container.encodeIfPresent(showData, forKey: .showData)
+        try container.encode(timestamp, forKey: .timestamp)
+        try container.encode(appPath, forKey: .appPath)
+        try container.encode(appName, forKey: .appName)
+        try container.encode(searchText, forKey: .searchText)
+        try container.encode(length, forKey: .length)
+        try container.encode(group, forKey: .group)
+        try container.encode(tag, forKey: .tag)
+        try container.encode(hidden, forKey: .hidden)
+    }
+
+    convenience init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let pasteboardTypeRaw = try container.decode(String.self, forKey: .pasteboardType)
+
+        try self.init(
+            pasteboardType: PasteboardType(pasteboardTypeRaw),
+            data: container.decode(Data.self, forKey: .data),
+            showData: container.decodeIfPresent(Data.self, forKey: .showData),
+            timestamp: container.decode(Int64.self, forKey: .timestamp),
+            appPath: container.decode(String.self, forKey: .appPath),
+            appName: container.decode(String.self, forKey: .appName),
+            searchText: container.decode(String.self, forKey: .searchText),
+            length: container.decode(Int.self, forKey: .length),
+            group: container.decode(Int.self, forKey: .group),
+            tag: container.decode(String.self, forKey: .tag),
+            hidden: container.decode(Bool.self, forKey: .hidden)
+        )
+
+        id = try container.decodeIfPresent(Int64.self, forKey: .id)
     }
 }
 

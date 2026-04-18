@@ -454,20 +454,9 @@ extension PasteDataStore {
             dataList.value = list
         }
     }
-
-    func updateItemGroup(itemId: Int64, groupId: Int) {
-        if let model = dataList.value.first(where: { $0.id == itemId }),
-           groupId != model.group
-        {
-            model.updateGroup(val: groupId)
-        }
-
-        Task {
-            await sqlManager.updateItemGroup(
-                id: itemId,
-                groupId: groupId
-            )
-        }
+    
+    func updateItemGroupInDB(id: Int64, groupId: Int) async {
+        await sqlManager.updateItemGroup(id: id, groupId: groupId)
     }
 
     func updateItemHidden(itemId: Int64, hidden: Bool) {

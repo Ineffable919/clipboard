@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import Combine
 import Foundation
 import SQLite
 
@@ -552,5 +553,38 @@ extension TopBarViewModel {
         date.formatted(
             .dateTime.hour(.twoDigits(amPM: .omitted)).minute(.twoDigits)
         )
+    }
+}
+
+// MARK: - Drag & Drop
+
+extension TopBarViewModel {
+    func assignModelToChip(model: PasteboardModel, chipId: Int) -> Bool {
+        if model.group == chipId {
+            return true
+        }
+
+        guard let modelId = model.id else {
+            return false
+        }
+
+        Task {
+            await db.updateItemGroupInDB(id: modelId, groupId: chipId)
+        }
+
+        if getSelectChipId() != -1 {
+            var list = db.dataList.value
+            list.removeAll(where: { $0.id == modelId })
+            db.updateData(with: list)
+        } else {
+            if let model = db.dataList.value.first(where: { $0.id == modelId }),
+               chipId != model.group
+            {
+                model.updateGroup(val: chipId)
+            }
+            db.updateData(with: db.dataList.value)
+        }
+
+        return true
     }
 }

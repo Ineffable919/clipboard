@@ -27,6 +27,7 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         var onEditingSubmit: (() -> Void)?
         var onEditingCancel: (() -> Void)?
         var onEditingFocusChange: ((Bool) -> Void)?
+        var onDrop: ((PasteboardModel) -> Bool)?
     }
 
     private let backgroundLayer = CALayer()
@@ -43,6 +44,7 @@ final class ChipButton: NSView, NSTextFieldDelegate {
 
     private var config: Config
     private var isHovering = false
+    private var isDraggingOver = false
     private var didHandleEditingCompletion = false
 
     var isSelected: Bool {
@@ -125,6 +127,8 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         )
 
         addGestureRecognizer(clickGestureRecognizer)
+
+        registerForDraggedTypes(PasteboardType.supportTypes)
     }
 
     private var contentInsets: NSEdgeInsets {
@@ -255,17 +259,20 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
 
         if config.dotMode {
+            if isDraggingOver {
+                return isDark ? NSColor(Const.hoverDarkColor) : NSColor(Const.hoverLightColorLiquid)
+            }
             return isHovering
-                ? (isDark ? NSColor(Const.hoverDarkColor) : NSColor(Const.hoverLightColorFrosted))
+                ? (isDark ? NSColor(Const.hoverDarkColor) : NSColor(Const.hoverLightColorLiquid))
                 : .clear
         }
 
         if config.isSelected || config.isEditing {
-            return isDark ? NSColor(Const.chooseDarkColor) : NSColor(Const.chooseLightColorFrosted)
+            return isDark ? NSColor(Const.chooseDarkColor) : NSColor(Const.chooseLightColorLiquid)
         }
 
-        if isHovering {
-            return isDark ? NSColor(Const.hoverDarkColor) : NSColor(Const.hoverLightColorFrosted)
+        if isHovering || isDraggingOver {
+            return isDark ? NSColor(Const.hoverDarkColor) : NSColor(Const.hoverLightColorLiquid)
         }
 
         return .clear
@@ -429,6 +436,66 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         default:
             return false
         }
+    }
+
+    // MARK: - Drag & Drop
+
+    override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        guard !config.isEditing else {
+            return []
+        }
+
+        let pasteboard = sender.draggingPasteboard
+
+        guard pasteboard.availableType(from: [.pasteboardModel]) != nil else {
+            return []
+        }
+
+        isDraggingOver = true
+        updateAppearance(animated: true)
+
+        return [.copy, .move]
+    }
+
+    override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
+        guard !config.isEditing else {
+            return []
+        }
+
+        let pasteboard = sender.draggingPasteboard
+        guard pasteboard.availableType(from: [.pasteboardModel]) != nil else {
+            return []
+        }
+
+        return [.copy, .move]
+    }
+
+    override func draggingExited(_: NSDraggingInfo?) {
+        isDraggingOver = false
+        updateAppearance(animated: true)
+    }
+
+    override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        isDraggingOver = false
+        updateAppearance(animated: true)
+
+        guard !config.isEditing else {
+            return false
+        }
+
+        let pasteboard = sender.draggingPasteboard
+
+        guard let data = pasteboard.data(forType: .pasteboardModel) else {
+            return false
+        }
+
+        guard let model = try? JSONDecoder()
+            .decode(PasteboardModel.self, from: data)
+        else {
+            return false
+        }
+
+        return config.onDrop?(model) ?? false
     }
 }
 

@@ -13,32 +13,45 @@ final class PasteboardWritingItem: NSObject {
     private let searchText: String
     private let appName: String
     private let timestamp: Int64
+    private let model: PasteboardModel?
 
-    init(data: Data, type: PasteboardType, searchText: String = "", appName: String = "", timestamp: Int64 = 0) {
+    init(data: Data, type: PasteboardType, searchText: String = "", appName: String = "", timestamp: Int64 = 0, model: PasteboardModel? = nil) {
         self.data = data
         self.type = type
         self.searchText = searchText
         self.appName = appName
         self.timestamp = timestamp
+        self.model = model
     }
 }
 
 extension PasteboardWritingItem: NSPasteboardWriting {
     func writableTypes(for _: NSPasteboard) -> [PasteboardType] {
+        var types: [PasteboardType] = []
+
+        types.append(.pasteboardModel)
+
         if type.isFile() {
-            return [.fileURL]
+            types.append(.fileURL)
+            return types
         }
         if type.isImage() {
-            return [type, .fileURL]
+            types.append(contentsOf: [type, .fileURL])
+            return types
         }
         // 文本类型：提供原始类型 + 纯文本回退
         if type == .string {
-            return [.string]
+            types.append(.string)
+            return types
         }
-        return [type, .string]
+        types.append(contentsOf: [type, .string])
+        return types
     }
 
     func pasteboardPropertyList(forType requestedType: PasteboardType) -> Any? {
+        if requestedType == .pasteboardModel {
+            return modelPropertyList()
+        }
         if type.isFile() {
             return filePropertyList()
         }
@@ -52,6 +65,12 @@ extension PasteboardWritingItem: NSPasteboardWriting {
     }
 
     // MARK: - Private
+
+    private func modelPropertyList() -> Any? {
+        guard let model else { return nil }
+        guard let jsonData = try? JSONEncoder().encode(model) else { return nil }
+        return jsonData
+    }
 
     /// 将存储的文件路径转为 file:// URL 字符串（Finder 需要的格式）
     private func filePropertyList() -> Any? {
