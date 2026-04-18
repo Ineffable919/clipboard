@@ -29,6 +29,21 @@ final class TopBarView: NSView {
     let searchField = SearchField()
     private let dotChipScrollView = ChipScrollView()
 
+    // MARK: - Popover
+
+    private lazy var filterPopover: NSPopover = {
+        let popover = NSPopover()
+        popover.behavior = .transient
+        popover.animates = true
+        popover.delegate = self
+        return popover
+    }()
+
+    private lazy var filterPopoverVC: FilterPopoverViewController? = {
+        guard let topVM else { return nil }
+        return FilterPopoverViewController(viewModel: topVM)
+    }()
+
     // MARK: - Callbacks
 
     var onFocusRegionChange: ((FocusRegion) -> Void)?
@@ -135,6 +150,10 @@ final class TopBarView: NSView {
         searchField.onTextChanged = { [weak self] text in
             guard let self else { return }
             topVM?.setQuery(text: text)
+        }
+
+        searchField.onFilterButtonTapped = { [weak self] in
+            self?.showFilterPopover()
         }
 
         dotChipScrollView.setContentHuggingPriority(.required, for: .horizontal)
@@ -712,6 +731,35 @@ final class TopBarView: NSView {
     // MARK: - Drag & Drop
 
     private func handleCardDroppedOnChip(model: PasteboardModel, chip: CategoryChip) -> Bool {
-        return topVM?.assignModelToChip(model: model, chipId: chip.id) ?? false
+        topVM?.assignModelToChip(model: model, chipId: chip.id) ?? false
+    }
+
+    // MARK: - Filter Popover
+
+    private func showFilterPopover() {
+        guard let filterPopoverVC else { return }
+
+        if filterPopover.isShown {
+            filterPopover.close()
+            return
+        }
+
+        if filterPopover.contentViewController !== filterPopoverVC {
+            filterPopover.contentViewController = filterPopoverVC
+        }
+
+        filterPopover.show(
+            relativeTo: searchField.filterButton.bounds,
+            of: searchField.filterButton,
+            preferredEdge: .maxY
+        )
+    }
+}
+
+// MARK: - NSPopoverDelegate
+
+extension TopBarView: NSPopoverDelegate {
+    func popoverDidClose(_: Notification) {
+        // Popover 关闭时的清理工作(如果需要)
     }
 }

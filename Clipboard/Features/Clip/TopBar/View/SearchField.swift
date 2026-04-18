@@ -20,6 +20,8 @@ final class SearchField: NSView {
 
     var onTextChanged: ((String) -> Void)?
 
+    var onFilterButtonTapped: (() -> Void)?
+
     /// 控制搜索框是否接受焦点
     var acceptsFocus: Bool = false {
         didSet { textField.canAcceptFocus = acceptsFocus }
@@ -71,6 +73,7 @@ final class SearchField: NSView {
     private let searchIcon = NSImageView()
     private let textField = InnerTextField()
     private let cancelButton = NSButton()
+    let filterButton = FilterIconButton()
 
     // MARK: - Init
 
@@ -92,6 +95,7 @@ final class SearchField: NSView {
         updateColors()
 
         setupSearchIcon()
+        setupFilterButton()
         setupCancelButton()
         setupTextField()
     }
@@ -126,9 +130,21 @@ final class SearchField: NSView {
         addSubview(cancelButton)
 
         cancelButton.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().offset(-10)
+            make.trailing.equalTo(filterButton.snp.leading).offset(-Const.space6)
             make.centerY.equalToSuperview()
             make.size.equalTo(16)
+        }
+    }
+
+    private func setupFilterButton() {
+        filterButton.action = { [weak self] in
+            self?.onFilterButtonTapped?()
+        }
+        addSubview(filterButton)
+
+        filterButton.snp.makeConstraints { make in
+            make.trailing.equalToSuperview().offset(-10)
+            make.centerY.equalToSuperview()
         }
     }
 
@@ -148,8 +164,8 @@ final class SearchField: NSView {
         addSubview(textField)
 
         textField.snp.makeConstraints { make in
-            make.leading.equalTo(searchIcon.snp.trailing).offset(4)
-            make.trailing.equalTo(cancelButton.snp.leading).offset(-6)
+            make.leading.equalTo(searchIcon.snp.trailing).offset(Const.space4)
+            make.trailing.equalTo(filterButton.snp.leading).offset(-Const.space6)
             make.centerY.equalToSuperview()
         }
     }

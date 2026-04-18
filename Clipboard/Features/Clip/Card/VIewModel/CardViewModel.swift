@@ -6,6 +6,7 @@
 //
 
 import Combine
+
 final class CardViewModel {
     private let pd = PasteDataStore.main
 

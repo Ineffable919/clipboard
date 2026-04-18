@@ -454,7 +454,7 @@ extension PasteDataStore {
             dataList.value = list
         }
     }
-    
+
     func updateItemGroupInDB(id: Int64, groupId: Int) async {
         await sqlManager.updateItemGroup(id: id, groupId: groupId)
     }
