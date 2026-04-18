@@ -463,7 +463,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "delete"
+            "value" : "Delete"
           }
         },
         "zh-Hans" : {
@@ -560,24 +560,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "编辑"
-          }
-        }
-      }
-    },
-    "rename" : {
-      "comment" : "Rename action",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rename"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "重命名"
           }
         }
       }
@@ -1676,6 +1658,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "30秒前"
+          }
+        }
+      }
+    },
+    "rename" : {
+      "comment" : "Rename action",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rename"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重命名"
           }
         }
       }
