@@ -339,7 +339,7 @@ extension ClipMainViewController {
                 cardVM.deleteFlag = false
                 collectionView.reloadData()
                 updateEmptyState()
-                if db.lastDataChangeType == .new, selectIndexPath.item != 0 {
+                if db.lastDataChangeType == .new || db.lastDataChangeType == .searchFilter {
                     resetSelectIndex()
                 }
             }

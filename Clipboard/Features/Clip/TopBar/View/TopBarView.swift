@@ -52,8 +52,8 @@ final class TopBarView: NSView {
 
     private(set) var isSearching = false
     private var topVM: TopBarViewModel?
-    private nonisolated(unsafe) var chipObserverToken: Any?
     private(set) var isEditingChipFirstResponder = false
+    private var isShowingPopover = false
 
     // MARK: - Init
 
@@ -65,12 +65,6 @@ final class TopBarView: NSView {
     @available(*, unavailable)
     required init?(coder _: NSCoder) {
         fatalError()
-    }
-
-    deinit {
-        if let chipObserverToken {
-            NotificationCenter.default.removeObserver(chipObserverToken)
-        }
     }
 
     // MARK: - Public API
@@ -93,7 +87,6 @@ final class TopBarView: NSView {
         setupDefaultRow()
         setupSearchRow()
         setupSettingBtn()
-        observeChipChanges()
         layoutRows()
         applyMode()
     }
@@ -134,11 +127,16 @@ final class TopBarView: NSView {
         }
 
         searchField.onResignFirstResponder = { [weak self] in
-            guard let self, isSearching, searchField.stringValue.isEmpty else {
+            guard let self else { return }
+
+            if isShowingPopover {
                 return
             }
-            deactivateSearch()
-            onFocusRegionChange?(.collection)
+
+            if isSearching, searchField.stringValue.isEmpty {
+                deactivateSearch()
+                onFocusRegionChange?(.collection)
+            }
         }
 
         searchField.onClear = { [weak self] in
@@ -153,7 +151,7 @@ final class TopBarView: NSView {
         }
 
         searchField.onFilterButtonTapped = { [weak self] in
-            self?.showFilterPopover()
+            self?.togglePopover()
         }
 
         dotChipScrollView.setContentHuggingPriority(.required, for: .horizontal)
@@ -594,18 +592,6 @@ final class TopBarView: NSView {
         searchRow.isHidden = !isSearching
     }
 
-    private func observeChipChanges() {
-        chipObserverToken = NotificationCenter.default.addObserver(
-            forName: .categoryChipsDidChange,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            MainActor.assumeIsolated {
-                self?.reloadChips()
-            }
-        }
-    }
-
     private func makeChipButtonConfig(
         chip: CategoryChip,
         isSelected: Bool,
@@ -736,7 +722,7 @@ final class TopBarView: NSView {
 
     // MARK: - Filter Popover
 
-    private func showFilterPopover() {
+    private func togglePopover() {
         guard let filterPopoverVC else { return }
 
         if filterPopover.isShown {
@@ -753,13 +739,32 @@ final class TopBarView: NSView {
             of: searchField.filterButton,
             preferredEdge: .maxY
         )
+        onFocusRegionChange?(.filter)
+        filterPopoverVC.view.window?.makeFirstResponder(filterPopoverVC.view)
     }
 }
 
 // MARK: - NSPopoverDelegate
 
 extension TopBarView: NSPopoverDelegate {
+    func popoverWillShow(_: Notification) {
+        isShowingPopover = true
+    }
+
+    func popoverWillClose(_: Notification) {
+        //searchField.acceptsFocus = false
+    }
+
     func popoverDidClose(_: Notification) {
-        // Popover 关闭时的清理工作(如果需要)
+        isShowingPopover = false
+
+        if isSearching, searchField.stringValue.isEmpty, !searchField.isFirstResponder {
+            deactivateSearch()
+            onFocusRegionChange?(.collection)
+        }
+
+        if isSearching {
+            //searchField.acceptsFocus = true
+        }
     }
 }

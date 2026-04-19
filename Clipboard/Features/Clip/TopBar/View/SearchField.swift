@@ -130,7 +130,7 @@ final class SearchField: NSView {
         addSubview(cancelButton)
 
         cancelButton.snp.makeConstraints { make in
-            make.trailing.equalTo(filterButton.snp.leading).offset(-Const.space6)
+            make.trailing.equalTo(filterButton.snp.leading).offset(-Const.space2)
             make.centerY.equalToSuperview()
             make.size.equalTo(16)
         }
@@ -165,7 +165,7 @@ final class SearchField: NSView {
 
         textField.snp.makeConstraints { make in
             make.leading.equalTo(searchIcon.snp.trailing).offset(Const.space4)
-            make.trailing.equalTo(filterButton.snp.leading).offset(-Const.space6)
+            make.trailing.equalTo(cancelButton.snp.leading).offset(-Const.space4)
             make.centerY.equalToSuperview()
         }
     }
@@ -201,7 +201,7 @@ final class SearchField: NSView {
         textField.stringValue = ""
         text = ""
         cancelButton.isHidden = true
-        onClear?()
+        onTextChanged?("")
     }
 
     func notifyTextChanged(_ value: String) {
