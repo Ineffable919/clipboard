@@ -42,6 +42,8 @@ final class ClipMainWindowController: NSWindowController {
 
     private func setupWindow() {
         guard let win = window as? ClipWindowView else { return }
+        
+        win.delegate = self
 
         win.configureCommonSettings()
 
@@ -49,7 +51,6 @@ final class ClipMainWindowController: NSWindowController {
         win.isOpaque = false
         win.collectionBehavior = [.canJoinAllSpaces, .stationary]
 
-        win.delegate = self
     }
 
     func configureWindowSharing() {
@@ -85,6 +86,7 @@ extension ClipMainWindowController {
             )
         }) {
             Task { @MainActor in
+                self.window?.resignFirstResponder()
                 self.window?.setIsVisible(false)
                 self.isAnimating = false
                 completionHandler?()
@@ -100,8 +102,7 @@ extension ClipMainWindowController {
         AppEnvironment.shared.previousApp = NSWorkspace.shared.frontmostApplication
         window?.setFrame(frame, display: true)
         window?.setIsVisible(true)
-        window?.orderFrontRegardless()
-        window?.makeKey()
+        window?.makeKeyAndOrderFront(nil)
     }
 }
 
