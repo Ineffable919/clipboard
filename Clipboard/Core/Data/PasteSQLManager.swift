@@ -70,29 +70,34 @@ actor PasteSQLManager {
         _db = connection
 
         let tab = Table("Clip")
-        if let conn = connection {
-            let statement = tab.create(ifNotExists: true, withoutRowid: false) { t in
-                t.column(Col.id, primaryKey: true)
-                t.column(Col.uniqueId)
-                t.column(Col.type)
-                t.column(Col.data)
-                t.column(Col.showData)
-                t.column(Col.ts)
-                t.column(Col.appPath)
-                t.column(Col.appName)
-                t.column(Col.searchText)
-                t.column(Col.length)
-                t.column(Col.group, defaultValue: -1)
-                t.column(Col.tag)
-                t.column(Col.hidden, defaultValue: 0)
-            }
-            do {
-                try conn.run(statement)
-            } catch {
-                log.error("Create Table Error: \(error)")
-            }
-        }
         table = tab
+
+        if let conn = connection {
+            Self.createTable(on: conn, table: tab)
+        }
+    }
+
+    private nonisolated static func createTable(on conn: Connection, table: Table) {
+        let statement = table.create(ifNotExists: true, withoutRowid: false) { t in
+            t.column(Col.id, primaryKey: true)
+            t.column(Col.uniqueId)
+            t.column(Col.type)
+            t.column(Col.data)
+            t.column(Col.showData)
+            t.column(Col.ts)
+            t.column(Col.appPath)
+            t.column(Col.appName)
+            t.column(Col.searchText)
+            t.column(Col.length)
+            t.column(Col.group, defaultValue: -1)
+            t.column(Col.tag)
+            t.column(Col.hidden, defaultValue: 0)
+        }
+        do {
+            try conn.run(statement)
+        } catch {
+            log.error("Create Table Error: \(error)")
+        }
     }
 
     func setup() {
@@ -182,6 +187,13 @@ extension PasteSQLManager {
         } catch {
             log.error("删除失败：\(error)")
         }
+    }
+
+    func recreateTable() async {
+        guard let conn = db else { return }
+        Self.createTable(on: conn, table: table)
+        performIndexCreation()
+        log.debug("表重新创建成功")
     }
 
     func update(id: Int64, item: PasteboardModel) async {
@@ -456,7 +468,7 @@ extension PasteSQLManager {
 
         let destPath = Self.sandboxDatabasePath
 
-        return await Task.detached(priority: .userInitiated) {
+        let result = await Task.detached(priority: .userInitiated) {
             do {
                 let sourceDb = try Connection(sourceURL.path, readonly: true)
                 let destDb = try Connection(destPath)
@@ -528,6 +540,14 @@ extension PasteSQLManager {
                 )
             }
         }.value
+
+        if result.success {
+            await MainActor.run {
+                PasteMetadataCache.shared.invalidateAllCaches()
+            }
+        }
+
+        return result
     }
 
     private nonisolated func validateImportDatabase(at url: URL) async -> ImportExportResult {

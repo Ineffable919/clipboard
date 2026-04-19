@@ -404,6 +404,10 @@ extension PasteDataStore {
         if response == .alertFirstButtonReturn {
             Task {
                 await sqlManager.dropTable()
+                await sqlManager.recreateTable()
+                await MainActor.run {
+                    PasteMetadataCache.shared.invalidateAllCaches()
+                }
                 resetToDefault()
             }
         }

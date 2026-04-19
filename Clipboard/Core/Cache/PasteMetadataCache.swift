@@ -30,9 +30,16 @@ final class PasteMetadataCache {
     }
 
     func invalidateAppInfoCache(_ model: PasteboardModel) {
-        if let index = cachedAppInfo?.firstIndex(where: {
-            $0.name == model.appName
-        }) {
+        guard !model.appName.isEmpty else { return }
+
+        if cachedAppInfo == nil {
+            Task {
+                cachedAppInfo = await getAllAppInfo()
+            }
+            return
+        }
+
+        if let index = cachedAppInfo?.firstIndex(where: { $0.name == model.appName }) {
             cachedAppInfo?[index].path = model.appPath
         } else {
             cachedAppInfo?.insert(
@@ -50,35 +57,9 @@ final class PasteMetadataCache {
         }
 
         let tags = await sqlManager.getDistinctTags()
-        let types = tags.compactMap { tag -> PasteModelType? in
-            switch tag {
-            case "image": .image
-            case "string": .string
-            case "rich": .rich
-            case "file": .file
-            case "link": .link
-            case "color": .color
-            default: nil
-            }
-        }
-
-        var finalTypes: [PasteModelType] = []
-        let hasString = types.contains(.string)
-        let hasRich = types.contains(.rich)
-
-        if hasString || hasRich {
-            finalTypes.append(.string)
-        }
-
-        for type in types where type != .string && type != .rich {
-            if !finalTypes.contains(type) {
-                finalTypes.append(type)
-            }
-        }
-
-        finalTypes.sort(by: Self.typeOrder)
-        cachedTagTypes = finalTypes
-        return finalTypes
+        let types = Self.buildTagTypes(from: tags)
+        cachedTagTypes = types
+        return types
     }
 
     func invalidateTagTypesCache(_ model: PasteboardModel? = nil) {
@@ -87,17 +68,9 @@ final class PasteMetadataCache {
             return
         }
 
-        let modelType: PasteModelType? =
-            switch model.tag {
-            case "image": .image
-            case "string", "rich": .string
-            case "file": .file
-            case "link": .link
-            case "color": .color
-            default: nil
-            }
-
-        guard let modelType else { return }
+        guard let modelType = Self.pasteModelType(from: model.tag) else {
+            return
+        }
 
         Task {
             if cachedTagTypes == nil {
@@ -115,7 +88,46 @@ final class PasteMetadataCache {
         }
     }
 
-    // MARK: - Private
+    // MARK: - Cache Management
+
+    func invalidateAllCaches() {
+        cachedAppInfo = nil
+        cachedTagTypes = nil
+    }
+
+    // MARK: - Private Helpers
+
+    private static func pasteModelType(from tag: String) -> PasteModelType? {
+        switch tag {
+        case "image": .image
+        case "string", "rich": .string
+        case "file": .file
+        case "link": .link
+        case "color": .color
+        default: nil
+        }
+    }
+
+    private static func buildTagTypes(from tags: [String]) -> [PasteModelType] {
+        let types = tags.compactMap { pasteModelType(from: $0) }
+
+        var finalTypes: [PasteModelType] = []
+        let hasString = types.contains(.string)
+        let hasRich = types.contains(where: { $0 == .string })
+
+        if hasString || hasRich {
+            finalTypes.append(.string)
+        }
+
+        for type in types where type != .string {
+            if !finalTypes.contains(type) {
+                finalTypes.append(type)
+            }
+        }
+
+        finalTypes.sort(by: typeOrder)
+        return finalTypes
+    }
 
     private static let order: [PasteModelType] = [
         .color, .file, .image, .link, .string,

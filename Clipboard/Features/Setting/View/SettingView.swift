@@ -48,7 +48,7 @@ struct SettingView: View {
 
     var body: some View {
         @Bindable var vm = viewModel
-        
+
         NavigationSplitView {
             VStack(spacing: 0) {
                 List(selection: $vm.selectedPage) {

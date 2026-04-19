@@ -91,11 +91,10 @@ final class FilterPopoverContentView: NSView {
 
         contentView.snp.makeConstraints { make in
             make.width.equalTo(scrollView)
-            make.height.greaterThanOrEqualTo(320)
         }
 
         mainStack.orientation = .vertical
-        mainStack.alignment = .centerX
+        mainStack.alignment = .leading
         mainStack.spacing = Const.space16
         contentView.addSubview(mainStack)
 

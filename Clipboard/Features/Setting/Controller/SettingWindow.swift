@@ -10,7 +10,7 @@ import AppKit
 final class SettingWindow: NSWindow {
     var onCommandW: (() -> Void)?
     var onCommandM: (() -> Void)?
-    
+
     override func keyDown(with event: NSEvent) {
         if event.modifierFlags.contains(.command),
            event.charactersIgnoringModifiers == "w"
@@ -18,14 +18,14 @@ final class SettingWindow: NSWindow {
             onCommandW?()
             return
         }
-        
+
         if event.modifierFlags.contains(.command),
            event.charactersIgnoringModifiers == "m"
         {
             onCommandM?()
             return
         }
-        
+
         super.keyDown(with: event)
     }
 }

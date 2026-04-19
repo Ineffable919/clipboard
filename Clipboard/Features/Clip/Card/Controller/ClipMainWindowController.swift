@@ -26,7 +26,7 @@ final class ClipMainWindowController: NSWindowController {
                 width: 0,
                 height: Const.defaultHeight
             ),
-            styleMask: [.borderless, .nonactivatingPanel],
+            styleMask: [.borderless, .nonactivatingPanel, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
@@ -42,7 +42,7 @@ final class ClipMainWindowController: NSWindowController {
 
     private func setupWindow() {
         guard let win = window as? ClipWindowView else { return }
-        
+
         win.delegate = self
 
         win.configureCommonSettings()
@@ -50,7 +50,6 @@ final class ClipMainWindowController: NSWindowController {
         win.level = .statusBar
         win.isOpaque = false
         win.collectionBehavior = [.canJoinAllSpaces, .stationary]
-
     }
 
     func configureWindowSharing() {

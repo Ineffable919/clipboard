@@ -11,7 +11,7 @@ import SwiftUI
 @MainActor
 @Observable final class SettingViewModel {
     var selectedPage: SettingPage = .general
-    
+
     func navigateTo(_ page: SettingPage) {
         selectedPage = page
     }

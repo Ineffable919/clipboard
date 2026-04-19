@@ -102,4 +102,8 @@ class EmptyStateView: NSView {
             make.bottom.lessThanOrEqualToSuperview().offset(-20)
         }
     }
+
+    override var acceptsFirstResponder: Bool {
+        true
+    }
 }

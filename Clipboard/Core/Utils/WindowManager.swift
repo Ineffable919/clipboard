@@ -30,7 +30,7 @@ final class WindowManager {
         switch displayMode {
         case .drawer:
             dismissFloatingIfNeeded()
-            drawerController.toggleWindow(frame ?? NSScreen.main?.frame, completionHandler)
+            drawerController.toggleWindow(frame, completionHandler)
         case .floating:
             dismissDrawerIfNeeded()
             floatingController.toggleWindow(completionHandler)
