@@ -51,7 +51,7 @@ final class FilterPopoverViewController: NSViewController {
 
 extension FilterPopoverViewController {
     private func initView() {
-        preferredContentSize = NSSize(width: 480, height: 320)
+        preferredContentSize = NSSize(width: 450, height: 320)
     }
 }
 

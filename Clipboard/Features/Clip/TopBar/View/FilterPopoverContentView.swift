@@ -99,7 +99,7 @@ final class FilterPopoverContentView: NSView {
         contentView.addSubview(mainStack)
 
         mainStack.snp.makeConstraints { make in
-            make.top.equalToSuperview().inset(Const.space8)
+            make.top.equalToSuperview().inset(Const.space6)
             make.leading.trailing.bottom.equalToSuperview().inset(Const.space16)
         }
 
