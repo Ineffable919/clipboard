@@ -339,7 +339,7 @@ extension ClipMainViewController {
                 cardVM.deleteFlag = false
                 collectionView.reloadData()
                 updateEmptyState()
-                if db.lastDataChangeType == .new || db.lastDataChangeType == .searchFilter {
+                if db.lastDataChangeType == .new {
                     resetSelectIndex()
                 }
             }
@@ -369,6 +369,13 @@ extension ClipMainViewController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] in
                 self?.collectionView.reloadData()
+            }
+            .store(in: &cancellables)
+
+        topVM.filterDidChange
+            .debounce(for: .milliseconds(100), scheduler: DispatchQueue.main)
+            .sink { [weak self] in
+                self?.performSearch()
             }
             .store(in: &cancellables)
     }

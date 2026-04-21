@@ -730,9 +730,11 @@ final class TopBarView: NSView {
             return
         }
 
-        if filterPopover.contentViewController !== filterPopoverVC {
+        if filterPopover.contentViewController == nil {
             filterPopover.contentViewController = filterPopoverVC
         }
+
+        isShowingPopover = true
 
         filterPopover.show(
             relativeTo: searchField.filterButton.bounds,
@@ -751,9 +753,7 @@ extension TopBarView: NSPopoverDelegate {
         isShowingPopover = true
     }
 
-    func popoverWillClose(_: Notification) {
-        //searchField.acceptsFocus = false
-    }
+    func popoverWillClose(_: Notification) {}
 
     func popoverDidClose(_: Notification) {
         isShowingPopover = false
@@ -763,8 +763,6 @@ extension TopBarView: NSPopoverDelegate {
             onFocusRegionChange?(.collection)
         }
 
-        if isSearching {
-            //searchField.acceptsFocus = true
-        }
+        if isSearching {}
     }
 }

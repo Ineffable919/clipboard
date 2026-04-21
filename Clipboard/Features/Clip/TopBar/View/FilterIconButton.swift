@@ -7,21 +7,13 @@
 
 import AppKit
 import SnapKit
-import SwiftUI
 
-final class FilterIconButton: NSView {
-    // MARK: - Properties
-
-    private let backgroundLayer = CALayer()
-    private let imageView = NSImageView()
-
+final class FilterIconButton: NSButton {
     var isActive: Bool = false {
-        didSet { updateAppearance(animated: false) }
+        didSet { updateAppearance() }
     }
 
-    var action: (() -> Void)?
-
-    // MARK: - Init
+    var onTap: (() -> Void)?
 
     init() {
         super.init(frame: .zero)
@@ -33,86 +25,37 @@ final class FilterIconButton: NSView {
         fatalError()
     }
 
-    // MARK: - Setup
-
     private func setup() {
-        wantsLayer = true
+        bezelStyle = .inline
+        isBordered = false
+        refusesFirstResponder = true
 
-        backgroundLayer.cornerRadius = Const.radius
-        backgroundLayer.masksToBounds = true
-        layer?.addSublayer(backgroundLayer)
-
-        let symConfig = NSImage.SymbolConfiguration(
-            pointSize: 15,
-            weight: .regular
-        )
-        imageView.image = NSImage(
+        let symConfig = NSImage.SymbolConfiguration(pointSize: 15, weight: .regular)
+        image = NSImage(
             systemSymbolName: "line.3.horizontal.decrease",
             accessibilityDescription: nil
         )?.withSymbolConfiguration(symConfig)
-        imageView.imageScaling = .scaleProportionallyDown
-        addSubview(imageView)
 
-        imageView.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-        }
+        target = self
+        action = #selector(handleClick)
+
         snp.makeConstraints { make in
             make.width.height.equalTo(28)
         }
 
-        let area = NSTrackingArea(
-            rect: .zero,
-            options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
-            owner: self,
-            userInfo: nil
-        )
-        addTrackingArea(area)
-
-        let click = NSClickGestureRecognizer(
-            target: self,
-            action: #selector(handleClick)
-        )
-        addGestureRecognizer(click)
-
-        updateAppearance(animated: false)
+        updateAppearance()
     }
 
-    // MARK: - Appearance
-
-    private func updateAppearance(animated: Bool) {
-        imageView.contentTintColor = .labelColor
-
-        let bgColor: NSColor = .clear
-
-        if animated {
-            NSAnimationContext.runAnimationGroup { ctx in
-                ctx.duration = 0.1
-                ctx.allowsImplicitAnimation = true
-                backgroundLayer.backgroundColor = bgColor.cgColor
-            }
-        } else {
-            CATransaction.begin()
-            CATransaction.setDisableActions(true)
-            backgroundLayer.backgroundColor = bgColor.cgColor
-            CATransaction.commit()
-        }
-    }
-
-    // MARK: - Layout
-
-    override func layout() {
-        super.layout()
-        backgroundLayer.frame = bounds
+    private func updateAppearance() {
+        contentTintColor = isActive ? .controlAccentColor : .labelColor
     }
 
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
-        updateAppearance(animated: false)
+        updateAppearance()
     }
 
-    // MARK: - Action
-
     @objc private func handleClick() {
-        action?()
+        onTap?()
     }
 }

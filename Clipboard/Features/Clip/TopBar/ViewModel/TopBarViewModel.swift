@@ -15,6 +15,10 @@ final class TopBarViewModel {
         UserDefaults.standard.integer(forKey: PrefKey.displayMode.rawValue)
     }
 
+    // MARK: - Filter Change Publisher
+
+    let filterDidChange = PassthroughSubject<Void, Never>()
+
     // MARK: - Search Properties
 
     private(set) var query: String = ""
@@ -203,7 +207,7 @@ final class TopBarViewModel {
             selectedTypes.insert(type)
             addTagForType(type)
         }
-        performSearch()
+        filterDidChange.send()
     }
 
     func toggleApp(_ appName: String, appPath: String? = nil) {
@@ -219,7 +223,7 @@ final class TopBarViewModel {
             }
             addTagForApp(appName)
         }
-        performSearch()
+        filterDidChange.send()
     }
 
     func setDateFilter(_ option: DateFilterOption?) {
@@ -237,7 +241,7 @@ final class TopBarViewModel {
             )
             tags.append(tag)
         }
-        performSearch()
+        filterDidChange.send()
     }
 
     func clearAllFilters() {
@@ -245,7 +249,7 @@ final class TopBarViewModel {
         selectedAppNames.removeAll()
         selectedDateFilter = nil
         tags.removeAll()
-        performSearch()
+        filterDidChange.send()
     }
 
     private let textTagAssociatedValue = "text"
@@ -352,7 +356,7 @@ final class TopBarViewModel {
         case .filterDate:
             selectedDateFilter = nil
         }
-        performSearch()
+        filterDidChange.send()
     }
 
     func removeLastFilter() {
@@ -388,7 +392,7 @@ final class TopBarViewModel {
                 tags.append(tag)
             }
         }
-        performSearch()
+        filterDidChange.send()
     }
 
     func isTextTypeSelected() -> Bool {

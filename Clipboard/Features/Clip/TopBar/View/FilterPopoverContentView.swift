@@ -351,11 +351,16 @@ final class FilterPopoverContentView: NSView {
     }
 
     func setAvailableTypes(_ types: [PasteModelType]) {
+        guard availableTypes != types else { return }
         availableTypes = types
         rebuildTypeGrid()
     }
 
     func setAvailableApps(_ apps: [(name: String, path: String, icon: NSImage?)]) {
+        let newAppNames = apps.map(\.name)
+        let oldAppNames = appInfoList.map(\.name)
+        guard newAppNames != oldAppNames else { return }
+        
         appInfoList = apps
         showAllApps = false
         rebuildAppGrid()

@@ -137,7 +137,7 @@ final class SearchField: NSView {
     }
 
     private func setupFilterButton() {
-        filterButton.action = { [weak self] in
+        filterButton.onTap = { [weak self] in
             self?.onFilterButtonTapped?()
         }
         addSubview(filterButton)
@@ -201,6 +201,10 @@ final class SearchField: NSView {
         textField.stringValue = ""
         text = ""
         cancelButton.isHidden = true
+        if !isFirstResponder {
+            window?.makeFirstResponder(textField)
+            onBecomeFirstResponder?()
+        }
         onTextChanged?("")
     }
 
