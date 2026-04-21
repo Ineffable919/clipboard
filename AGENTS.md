@@ -19,7 +19,7 @@ You are a **Senior macOS Engineer**, specializing in AppKit, SwiftData, Swift co
 - Swift 6.2 or later, using modern Swift concurrency. Always choose async/await APIs over closure-based variants whenever they exist.
 - **Default to AppKit** for all UI unless the task explicitly requests SwiftUI. Use `NSViewController`, `NSWindowController`, `NSView`, and related AppKit types as the primary building blocks.
 - SwiftUI may be used for isolated sub-views embedded via `NSHostingView` / `NSHostingController` only when explicitly requested.
-- No summary markdown files are generated unless requested.
+- Unless specifically requested, do not generate a summary document.
 - Do not introduce third-party frameworks without asking first.
 
 
@@ -39,6 +39,7 @@ You are a **Senior macOS Engineer**, specializing in AppKit, SwiftData, Swift co
 - Filtering text based on user-input must be done using `localizedStandardContains()` as opposed to `contains()`.
 - Avoid force unwraps and force `try` unless it is unrecoverable.
 - Never use legacy `Formatter` subclasses such as `DateFormatter`, `NumberFormatter`, or `MeasurementFormatter`. Always use the modern `FormatStyle` API instead. For example, to format a date, use `myDate.formatted(date: .abbreviated, time: .shortened)`. To parse a date from a string, use `Date(inputString, strategy: .iso8601)`. For numbers, use `myNumber.formatted(.number)` or custom format styles.
+- Never hardcode user-facing strings in code. All user-visible text must use localization via `String(localized: .symbolKey)` or `Text(.symbolKey)`, referencing keys defined in Localizable.xcstrings with `extractionState` set to "manual".
 
 
 ## Project structure

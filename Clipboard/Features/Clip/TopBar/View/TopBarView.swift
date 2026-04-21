@@ -463,6 +463,13 @@ final class TopBarView: NSView {
         }
     }
 
+    func updateChipSelection() {
+        guard let topVM else { return }
+        let currentId = topVM.getSelectChipId()
+        chipScrollView.selectedChipId = currentId
+        dotChipScrollView.selectedChipId = currentId
+    }
+
     // MARK: - New Chip Creation
 
     private func startCreatingChip() {

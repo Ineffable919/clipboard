@@ -46,6 +46,7 @@ final class ChipButton: NSView, NSTextFieldDelegate {
     private var isHovering = false
     private var isDraggingOver = false
     private var didHandleEditingCompletion = false
+    private var helpTextUpdateTask: Task<Void, Never>?
 
     var isSelected: Bool {
         get { config.isSelected }
@@ -309,11 +310,15 @@ final class ChipButton: NSView, NSTextFieldDelegate {
     override func mouseEntered(with _: NSEvent) {
         isHovering = true
         updateAppearance(animated: true)
+        updateHelpText()
     }
 
     override func mouseExited(with _: NSEvent) {
         isHovering = false
         updateAppearance(animated: true)
+        helpTextUpdateTask?.cancel()
+        helpTextUpdateTask = nil
+        toolTip = nil
     }
 
     override func rightMouseDown(with event: NSEvent) {
@@ -496,6 +501,41 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         }
 
         return config.onDrop?(model) ?? false
+    }
+
+    // MARK: - Help Text
+
+    private func updateHelpText() {
+        helpTextUpdateTask?.cancel()
+
+        helpTextUpdateTask = Task { @MainActor [weak self] in
+            guard let self else { return }
+
+            let count: Int
+            if config.chip.id == -1 {
+                count = PasteDataStore.main.totalCount
+            } else {
+                count = await PasteDataStore.main.getCountByGroup(groupId: config.chip.id)
+            }
+
+            guard !Task.isCancelled else { return }
+
+            var shortcutText = ""
+            if let prevInfo = HotKeyManager.shared.getHotKey(key: "previous_tab"),
+               let nextInfo = HotKeyManager.shared.getHotKey(key: "next_tab"),
+               prevInfo.isEnabled,
+               nextInfo.isEnabled
+            {
+                let prevDisplay = prevInfo.shortcut.displayString
+                let nextDisplay = nextInfo.shortcut.displayString
+                shortcutText = String(localized: .chipTabs(prevDisplay, nextDisplay))
+            }
+
+            let helpText = String(localized: .chipHelp(count, shortcutText))
+
+            guard !Task.isCancelled else { return }
+            toolTip = helpText
+        }
     }
 }
 

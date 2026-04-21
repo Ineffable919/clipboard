@@ -65,6 +65,10 @@ extension ClipMainViewController {
             return nil
         }
 
+        if handleChipTab(event, viewModel: topVM) {
+            return nil
+        }
+
         if event.modifierFlags.contains(.command) {
             return handleCommandKeyEvent(event)
         }
@@ -161,5 +165,36 @@ extension ClipMainViewController {
         let item = dataList.value[selectIndexPath.item]
         edit(item)
         return nil
+    }
+
+    private func handleChipTab(_ event: NSEvent, viewModel: TopBarViewModel) -> Bool {
+        guard let previousTabInfo = HotKeyManager.shared.getHotKey(key: "previous_tab"),
+              let nextTabInfo = HotKeyManager.shared.getHotKey(key: "next_tab")
+        else {
+            return false
+        }
+
+        let relevantModifiers: NSEvent.ModifierFlags = [.command, .option, .control, .shift]
+        let eventModifiers = event.modifierFlags.intersection(relevantModifiers)
+
+        if previousTabInfo.isEnabled,
+           event.keyCode == previousTabInfo.shortcut.keyCode,
+           eventModifiers == previousTabInfo.shortcut.modifiers.intersection(relevantModifiers)
+        {
+            viewModel.selectPreviousChip()
+            topBarView.updateChipSelection()
+            return true
+        }
+
+        if nextTabInfo.isEnabled,
+           event.keyCode == nextTabInfo.shortcut.keyCode,
+           eventModifiers == nextTabInfo.shortcut.modifiers.intersection(relevantModifiers)
+        {
+            viewModel.selectNextChip()
+            topBarView.updateChipSelection()
+            return true
+        }
+
+        return false
     }
 }
