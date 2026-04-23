@@ -71,7 +71,7 @@ final class TopBarViewModel {
     func clearInput() {
         guard hasInput else { return }
         query = ""
-        // clearAllFilters()
+        clearAllFilters()
     }
 
     var isEditingChip: Bool {

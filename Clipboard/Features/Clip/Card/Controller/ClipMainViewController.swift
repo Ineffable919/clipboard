@@ -168,9 +168,6 @@ extension ClipMainViewController {
 
     override func viewWillAppear() {
         super.viewWillAppear()
-        if focusRegion != .search {
-            topBarView.searchField.acceptsFocus = false
-        }
     }
 
     override func viewDidAppear() {
@@ -181,7 +178,7 @@ extension ClipMainViewController {
             height: Const.defaultHeight
         )
 
-        if focusRegion == .search, topBarView.searchField.stringValue.isEmpty {
+        if focusRegion == .search, !topVM.hasInput {
             topBarView.deactivateSearch()
             focusRegion = .collection
         }
@@ -189,18 +186,19 @@ extension ClipMainViewController {
         updateSelectedItemBorder()
 
         if monitorToken == nil {
-            monitorToken = NSEvent.addLocalMonitorForEvents(matching: .keyDown, handler: keyDownEvent(_:))
+            monitorToken = NSEvent.addLocalMonitorForEvents(
+                matching: .keyDown,
+                handler: keyDownEvent(_:)
+            )
         }
 
         if flagsMonitorToken == nil {
-            flagsMonitorToken = NSEvent.addLocalMonitorForEvents(matching: .flagsChanged) {
+            flagsMonitorToken = NSEvent.addLocalMonitorForEvents(
+                matching: .flagsChanged
+            ) {
                 [weak self] event in
                 self?.flagsChangedEvent(event)
             }
-        }
-
-        if focusRegion == .search {
-            topBarView.searchField.suppressFocusRing = true
         }
 
         NSAnimationContext.runAnimationGroup({ context in
@@ -210,12 +208,7 @@ extension ClipMainViewController {
             MainActor.assumeIsolated {
                 ClipMainWindowController.shared.isAnimating = false
 
-                if self.topBarView.isSearching {
-                    self.topBarView.searchField.acceptsFocus = true
-                }
-
                 if self.focusRegion == .search {
-                    self.topBarView.searchField.suppressFocusRing = false
                     self.view.window?.makeFirstResponder(
                         self.topBarView.searchField
                     )
@@ -304,7 +297,10 @@ extension ClipMainViewController {
             self?.setFocusRegion(.search)
         }
 
-        let clickGesture = NSClickGestureRecognizer(target: self, action: #selector(handleContentViewClick(_:)))
+        let clickGesture = NSClickGestureRecognizer(
+            target: self,
+            action: #selector(handleContentViewClick(_:))
+        )
         clickGesture.buttonMask = 0x1 // 左键点击
         clickGesture.delegate = self
         contentView.addGestureRecognizer(clickGesture)

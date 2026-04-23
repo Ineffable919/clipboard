@@ -54,6 +54,7 @@ final class TopBarView: NSView {
     private var topVM: TopBarViewModel?
     private(set) var isEditingChipFirstResponder = false
     private var isShowingPopover = false
+    private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Init
 
@@ -72,6 +73,7 @@ final class TopBarView: NSView {
     func configure(topVM: TopBarViewModel) {
         self.topVM = topVM
         reloadChips()
+        setupTokenSync()
     }
 
     var isEditingChip: Bool {
@@ -121,28 +123,24 @@ final class TopBarView: NSView {
         searchRow.alignment = .centerY
         addSubview(searchRow)
 
+        searchField.placeholderString = String(localized: .search)
         searchField.snp.makeConstraints { make in
             make.width.equalTo(Const.topBarWidth)
             make.height.equalTo(32)
         }
 
         searchField.onResignFirstResponder = { [weak self] in
-            guard let self else { return }
+            guard let self, let topVM else { return }
 
             if isShowingPopover {
                 return
             }
+            log.debug("搜索聚焦： \(isSearching)  筛选有值： \(topVM.hasInput)")
 
-            if isSearching, searchField.stringValue.isEmpty {
+            if isSearching, !topVM.hasInput {
                 deactivateSearch()
                 onFocusRegionChange?(.collection)
             }
-        }
-
-        searchField.onClear = { [weak self] in
-            guard let self, isSearching else { return }
-            deactivateSearch()
-            onFocusRegionChange?(.collection)
         }
 
         searchField.onTextChanged = { [weak self] text in
@@ -152,6 +150,16 @@ final class TopBarView: NSView {
 
         searchField.onFilterButtonTapped = { [weak self] in
             self?.togglePopover()
+        }
+
+        searchField.onTokenDeleted = { [weak self] tag in
+            Task { @MainActor [weak self] in
+                self?.handleTokenDeletedFromSearchField(tag)
+            }
+        }
+
+        searchField.onClearAllFilters = { [weak self] in
+            self?.topVM?.clearAllFilters()
         }
 
         dotChipScrollView.setContentHuggingPriority(.required, for: .horizontal)
@@ -572,7 +580,6 @@ final class TopBarView: NSView {
     private func activateSearch() {
         guard !isSearching else { return }
         isSearching = true
-        searchField.acceptsFocus = true
         applyMode()
         window?.makeFirstResponder(searchField)
         onFocusRegionChange?(.search)
@@ -588,8 +595,7 @@ final class TopBarView: NSView {
     func deactivateSearch() {
         guard isSearching else { return }
         isSearching = false
-        searchField.clear()
-        searchField.acceptsFocus = false
+        searchField.clearAllContent()
         topVM?.clearInput()
         applyMode()
     }
@@ -729,6 +735,26 @@ final class TopBarView: NSView {
 
     // MARK: - Filter Popover
 
+    private func setupTokenSync() {
+        guard let topVM else { return }
+
+        topVM.filterDidChange
+            .sink { [weak self] in
+                self?.syncTokensToSearchField()
+            }
+            .store(in: &cancellables)
+    }
+
+    private func syncTokensToSearchField() {
+        guard let topVM else { return }
+        searchField.clearTokensOnly()
+        searchField.insertTokens(topVM.tags)
+    }
+
+    private func handleTokenDeletedFromSearchField(_ tag: InputTag) {
+        topVM?.removeTag(tag)
+    }
+
     private func togglePopover() {
         guard let filterPopoverVC else { return }
 
@@ -765,7 +791,7 @@ extension TopBarView: NSPopoverDelegate {
     func popoverDidClose(_: Notification) {
         isShowingPopover = false
 
-        if isSearching, searchField.stringValue.isEmpty, !searchField.isFirstResponder {
+        if isSearching, !topVM!.hasInput, !searchField.isFirstResponder {
             deactivateSearch()
             onFocusRegionChange?(.collection)
         }

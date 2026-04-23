@@ -511,11 +511,10 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         helpTextUpdateTask = Task { @MainActor [weak self] in
             guard let self else { return }
 
-            let count: Int
-            if config.chip.id == -1 {
-                count = PasteDataStore.main.totalCount
+            let count: Int = if config.chip.id == -1 {
+                PasteDataStore.main.totalCount
             } else {
-                count = await PasteDataStore.main.getCountByGroup(groupId: config.chip.id)
+                await PasteDataStore.main.getCountByGroup(groupId: config.chip.id)
             }
 
             guard !Task.isCancelled else { return }

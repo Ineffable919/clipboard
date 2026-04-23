@@ -360,7 +360,7 @@ final class FilterPopoverContentView: NSView {
         let newAppNames = apps.map(\.name)
         let oldAppNames = appInfoList.map(\.name)
         guard newAppNames != oldAppNames else { return }
-        
+
         appInfoList = apps
         showAllApps = false
         rebuildAppGrid()

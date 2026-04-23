@@ -12,8 +12,8 @@ final class FilterPopoverViewController: NSViewController {
 
     private weak var viewModel: TopBarViewModel?
     private var loadingTask: Task<Void, Never>?
-    
-    // 标记是否已经初始化过视图数据
+
+    /// 标记是否已经初始化过视图数据
     private var hasInitializedView = false
 
     // MARK: - Views
@@ -117,21 +117,21 @@ extension FilterPopoverViewController {
             updateContentViewState()
         }
     }
-    
+
     private func updateFromCache() {
         loadingTask?.cancel()
 
         loadingTask = Task { @MainActor [weak self] in
             guard let self else { return }
-            
+
             let types = await PasteMetadataCache.shared.getAllTagTypes()
             let rawAppInfo = await PasteMetadataCache.shared.getAllAppInfo()
-            
+
             let appInfo = rawAppInfo.map { info in
                 let icon = AppIconCache.shared.getCachedIcon(forPath: info.path)
                 return (name: info.name, path: info.path, icon: icon)
             }
-            
+
             contentView.setAvailableTypes(types)
             contentView.setAvailableApps(appInfo)
             updateContentViewState()

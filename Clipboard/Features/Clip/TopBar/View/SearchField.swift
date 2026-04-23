@@ -13,65 +13,47 @@ final class SearchField: NSView {
     @Published private(set) var text: String = ""
 
     var onResignFirstResponder: (() -> Void)?
-
     var onBecomeFirstResponder: (() -> Void)?
-
-    var onClear: (() -> Void)?
-
     var onTextChanged: ((String) -> Void)?
-
     var onFilterButtonTapped: (() -> Void)?
+    var onTokenDeleted: ((InputTag) -> Void)?
+    var onClearAllFilters: (() -> Void)?
 
-    /// 控制搜索框是否接受焦点
-    var acceptsFocus: Bool = false {
-        didSet { textField.canAcceptFocus = acceptsFocus }
-    }
-
-    /// 控制焦点环
-    var suppressFocusRing: Bool = false {
-        didSet {
-            textField.suppressFocusRing = suppressFocusRing
+    var stringValue: String {
+        get { tokenTextView.getPlainText() }
+        set {
+            if newValue.isEmpty {
+                clearAllContent()
+            } else {
+                tokenTextView.string = newValue
+                updateCancelButtonVisibility()
+            }
         }
     }
 
-    var stringValue: String {
-        get { textField.stringValue }
-        set { textField.stringValue = newValue }
-    }
-
     var placeholderString: String? {
-        get { textField.placeholderString }
-        set { textField.placeholderString = newValue }
+        didSet { tokenTextView.placeholderString = placeholderString ?? "" }
     }
 
     var isFirstResponder: Bool {
-        textField.currentEditor() != nil
-            && textField.currentEditor() == window?.firstResponder
-    }
-
-    override var canBecomeKeyView: Bool {
-        acceptsFocus
-    }
-
-    override var acceptsFirstResponder: Bool {
-        acceptsFocus
-    }
-
-    override var focusRingType: NSFocusRingType {
-        get { .none }
-        set {}
+        window?.firstResponder === tokenTextView
     }
 
     override func becomeFirstResponder() -> Bool {
-        guard acceptsFocus else { return false }
-        window?.makeFirstResponder(textField)
+        window?.makeFirstResponder(tokenTextView)
         return true
+    }
+
+    override func layout() {
+        super.layout()
+        syncTextViewFrameToScrollView()
     }
 
     // MARK: - Subviews
 
     private let searchIcon = NSImageView()
-    private let textField = InnerTextField()
+    private let scrollView = NSScrollView()
+    private let tokenTextView = TokenTextView.makeConfigured()
     private let cancelButton = NSButton()
     let filterButton = FilterIconButton()
 
@@ -97,7 +79,7 @@ final class SearchField: NSView {
         setupSearchIcon()
         setupFilterButton()
         setupCancelButton()
-        setupTextField()
+        setupTokenTextView()
     }
 
     private func setupSearchIcon() {
@@ -148,26 +130,42 @@ final class SearchField: NSView {
         }
     }
 
-    private func setupTextField() {
-        textField.isBordered = false
-        textField.drawsBackground = false
-        textField.focusRingType = .default
-        textField.font = .systemFont(ofSize: 14)
-        textField.placeholderString = String(localized: .search)
-        textField.cell?.isScrollable = true
-        textField.cell?.wraps = false
-        textField.cell?.usesSingleLineMode = true
-        textField.delegate = self
-        textField.containerCornerRadius = Const.topRadius
-        textField.onBecomeFirstResponder = { [weak self] in self?.onBecomeFirstResponder?() }
-        textField.onResignFirstResponder = { [weak self] in self?.onResignFirstResponder?() }
-        addSubview(textField)
+    private func setupTokenTextView() {
+        tokenTextView.delegate = self
 
-        textField.snp.makeConstraints { make in
-            make.leading.equalTo(searchIcon.snp.trailing).offset(Const.space4)
+        tokenTextView.onTokenDeleted = { [weak self] tag in
+            self?.handleTokenDeleted(tag)
+        }
+        tokenTextView.onTextChanged = { [weak self] plainText in
+            self?.handleTextChanged(plainText)
+        }
+        tokenTextView.onBecomeFirstResponder = { [weak self] in
+            self?.onBecomeFirstResponder?()
+        }
+        tokenTextView.onResignFirstResponder = { [weak self] in
+            self?.onResignFirstResponder?()
+        }
+
+        scrollView.documentView = tokenTextView
+        scrollView.hasHorizontalScroller = false
+        scrollView.hasVerticalScroller = false
+        scrollView.drawsBackground = false
+        scrollView.autohidesScrollers = true
+        scrollView.horizontalScrollElasticity = .none
+        scrollView.verticalScrollElasticity = .none
+
+        scrollView.contentInsets = NSEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+
+        addSubview(scrollView)
+
+        scrollView.snp.makeConstraints { make in
+            make.leading.equalTo(searchIcon.snp.trailing)
             make.trailing.equalTo(cancelButton.snp.leading).offset(-Const.space4)
             make.centerY.equalToSuperview()
+            make.height.equalTo(28)
         }
+
+        syncTextViewFrameToScrollView()
     }
 
     // MARK: - Appearance
@@ -194,95 +192,97 @@ final class SearchField: NSView {
     // MARK: - Actions
 
     func moveCursorToEnd() {
-        textField.moveCursorToEnd()
+        let length = tokenTextView.textStorage?.length ?? 0
+        tokenTextView.setSelectedRange(NSRange(location: length, length: 0))
+        tokenTextView.scrollRangeToVisible(tokenTextView.selectedRange())
     }
 
     @objc func clear() {
-        textField.stringValue = ""
-        text = ""
-        cancelButton.isHidden = true
+        clearAllContent()
         if !isFirstResponder {
-            window?.makeFirstResponder(textField)
+            window?.makeFirstResponder(tokenTextView)
             onBecomeFirstResponder?()
         }
+    }
+
+    func clearAllContent() {
+        tokenTextView.clearAllTokens()
+        tokenTextView.string = ""
+        text = ""
+        cancelButton.isHidden = true
         onTextChanged?("")
+        if !tokenTextView.getAllTokens().isEmpty {
+            onClearAllFilters?()
+        }
+    }
+
+    func clearTokensOnly() {
+        tokenTextView.clearAllTokens()
+        updateCancelButtonVisibility()
+    }
+
+    func insertToken(_ tag: InputTag) {
+        tokenTextView.insertToken(tag)
+        updateCancelButtonVisibility()
+    }
+
+    func insertTokens(_ tags: [InputTag]) {
+        guard !tags.isEmpty else { return }
+        tokenTextView.insertTokens(tags)
+        updateCancelButtonVisibility()
+    }
+
+    func removeToken(_ tag: InputTag) {
+        tokenTextView.removeToken(tag)
+        updateCancelButtonVisibility()
+    }
+
+    func getAllTokens() -> [InputTag] {
+        tokenTextView.getAllTokens()
+    }
+
+    private func handleTokenDeleted(_ tag: InputTag) {
+        onTokenDeleted?(tag)
+        updateCancelButtonVisibility()
+    }
+
+    private func handleTextChanged(_ plainText: String) {
+        text = plainText
+        onTextChanged?(plainText)
+        updateCancelButtonVisibility()
+    }
+
+    private func updateCancelButtonVisibility() {
+        let hasContent = !text.isEmpty || !tokenTextView.getAllTokens().isEmpty
+        cancelButton.isHidden = !hasContent
+    }
+
+    private func syncTextViewFrameToScrollView() {
+        let bounds = scrollView.contentView.bounds
+        guard bounds.width > 0, bounds.height > 0 else { return }
+        tokenTextView.frame = bounds
     }
 
     func notifyTextChanged(_ value: String) {
         text = value
-        cancelButton.isHidden = value.isEmpty
+        cancelButton.isHidden = value.isEmpty && tokenTextView.getAllTokens().isEmpty
         onTextChanged?(value)
     }
 }
 
-// MARK: - NSTextFieldDelegate
+// MARK: - NSTextViewDelegate
 
-extension SearchField: NSTextFieldDelegate {
-    func controlTextDidChange(_: Notification) {
-        let value = textField.stringValue
-        if value != text {
-            text = value
-            onTextChanged?(value)
+extension SearchField: NSTextViewDelegate {
+    func textDidChange(_: Notification) {
+        let plainText = tokenTextView.getPlainText()
+        if plainText != text {
+            text = plainText
+            onTextChanged?(plainText)
         }
-        cancelButton.isHidden = value.isEmpty
+        updateCancelButtonVisibility()
     }
 
-    func controlTextDidEndEditing(_: Notification) {
-        onResignFirstResponder?()
-    }
-}
-
-// MARK: - InnerTextField
-
-private final class InnerTextField: NSTextField {
-    var containerCornerRadius: CGFloat = Const.radius
-    var canAcceptFocus: Bool = false
-    var suppressFocusRing: Bool = false
-    var onBecomeFirstResponder: (() -> Void)?
-    var onResignFirstResponder: (() -> Void)?
-
-    override var canBecomeKeyView: Bool {
-        true
-    }
-
-    override var acceptsFirstResponder: Bool {
-        canAcceptFocus
-    }
-
-    override var focusRingType: NSFocusRingType {
-        get { suppressFocusRing ? .none : .exterior }
-        set {}
-    }
-
-    override var focusRingMaskBounds: NSRect {
-        guard let container = superview else { return bounds }
-        return container.convert(container.bounds, to: self)
-    }
-
-    override func drawFocusRingMask() {
-        let maskRect = focusRingMaskBounds
-        NSBezierPath(
-            roundedRect: maskRect,
-            xRadius: containerCornerRadius,
-            yRadius: containerCornerRadius
-        ).fill()
-    }
-
-    override func becomeFirstResponder() -> Bool {
-        let result = super.becomeFirstResponder()
-        if result {
-            if !suppressFocusRing {
-                noteFocusRingMaskChanged()
-            }
-            onBecomeFirstResponder?()
-            moveCursorToEnd()
-        }
-        return result
-    }
-
-    func moveCursorToEnd() {
-        guard let editor = currentEditor() else { return }
-        let end = editor.string.endIndex
-        editor.selectedRange = NSRange(end..., in: editor.string)
+    func textDidBeginEditing(_: Notification) {
+        onBecomeFirstResponder?()
     }
 }

@@ -88,9 +88,8 @@ extension ClipMainViewController {
     private func escapeKeyDown(_: NSEvent) -> NSEvent? {
         let field = topBarView.searchField
         if field.isFirstResponder {
-            if !field.text.isEmpty {
-                field.stringValue = ""
-                field.notifyTextChanged("")
+            if topVM.hasInput {
+                field.clearAllContent()
             } else {
                 topBarView.deactivateSearch()
                 view.window?.makeFirstResponder(collectionView)
