@@ -74,14 +74,6 @@ struct HistoryView: View {
         .onChange(of: env.focusView) {
             isFocused = (env.focusView == .history)
         }
-        .onChange(of: historyVM.activeId) { _, newId in
-            if let id = newId {
-                historyVM.scrollPosition.scrollTo(
-                    id: id,
-                    anchor: historyVM.scrollAnchor()
-                )
-            }
-        }
     }
 }
 

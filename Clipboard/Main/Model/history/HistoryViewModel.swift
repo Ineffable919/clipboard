@@ -16,9 +16,13 @@ import SwiftUI
 
     @ObservationIgnored var lastTapId: PasteboardModel.ID?
     @ObservationIgnored var lastTapTime: TimeInterval = 0
-    @ObservationIgnored var isDel: Bool = false
+    @ObservationIgnored var pendingDeleteCount: Int = 0
     @ObservationIgnored var lastLoadTriggerIndex: Int = -1
     @ObservationIgnored private var flagsMonitorToken: Any?
+
+    @ObservationIgnored private var deleteThrottleTask: Task<Void, Never>?
+    @ObservationIgnored private var pendingDeleteQueue: [Int] = []
+    @ObservationIgnored private var isKeyRepeatDeleting: Bool = false
 
     var isMultiSelectMode: Bool {
         selectedIds.count > 1
@@ -71,11 +75,17 @@ import SwiftUI
     // MARK: - Selection
 
     /// 单选：清除旧选中，选中指定项
-    func selectSingle(id: PasteboardModel.ID?) {
+    func selectSingle(id: PasteboardModel.ID?, animate: Bool = true) {
         selectedIds.removeAll()
         activeId = id
         if let id {
             selectedIds.insert(id)
+            if animate {
+                scrollPosition.scrollTo(
+                    id: id,
+                    anchor: scrollAnchor()
+                )
+            }
         }
     }
 
@@ -259,26 +269,31 @@ import SwiftUI
             selectedIds.remove(id)
         }
 
-        isDel = true
+        pendingDeleteCount += 1
 
-        withAnimation(.easeInOut(duration: 0.18)) {
+        // 连续删除时使用更短更轻的动画，避免动画堆积
+        let animation: Animation = isKeyRepeatDeleting
+            ? .easeOut(duration: 0.1)
+            : .easeInOut(duration: 0.18)
+
+        withAnimation(animation) {
             pd.remove(at: index)
         }
 
         delete(item)
 
+        updateSelectionAfterDeletion(at: index)
+
         let needsMore =
             pd.dataList.count < 50 && pd.hasMoreData && !pd.isLoadingPage
 
         Task { @MainActor in
-            isDel = false
+            pendingDeleteCount -= 1
 
-            if needsMore {
+            if needsMore, pendingDeleteCount == 0 {
                 pd.loadNextPage()
             }
         }
-
-        updateSelectionAfterDeletion(at: index)
     }
 
     private func delete(_ item: PasteboardModel) {
@@ -301,10 +316,10 @@ import SwiftUI
 
     private func updateSelectionAfterDeletion(at index: Int) {
         if pd.dataList.isEmpty {
-            selectSingle(id: nil)
+            selectSingle(id: nil, animate: false)
         } else {
             let newIndex = min(index, pd.dataList.count - 1)
-            selectSingle(id: pd.dataList[newIndex].id)
+            selectSingle(id: pd.dataList[newIndex].id, animate: false)
         }
     }
 
@@ -422,7 +437,7 @@ import SwiftUI
     }
 
     func reset() {
-        guard !isDel else { return }
+        guard pendingDeleteCount == 0 else { return }
 
         let changeType = pd.lastDataChangeType
 
@@ -526,8 +541,11 @@ import SwiftUI
     }
 
     func cleanup() {
-        isDel = false
+        pendingDeleteCount = 0
         isQuickPastePressed = false
+        isKeyRepeatDeleting = false
+        deleteThrottleTask?.cancel()
+        deleteThrottleTask = nil
         showPreviewId = nil
         selectedIds.removeAll()
         activeId = nil
@@ -714,8 +732,46 @@ import SwiftUI
             NSSound.beep()
             return nil
         }
-        requestDelete()
+
+        if PasteUserDefaults.delConfirm {
+            requestDelete()
+            return nil
+        }
+
+        if event_isARepeat() {
+            isKeyRepeatDeleting = true
+            scheduleThrottledDelete()
+        } else {
+            isKeyRepeatDeleting = false
+            requestDelete()
+        }
+
         return nil
+    }
+
+    /// 键盘长按时的节流删除：合并快速重复的按键事件
+    private func scheduleThrottledDelete() {
+        guard deleteThrottleTask == nil else { return }
+
+        deleteThrottleTask = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(30))
+
+            guard !Task.isCancelled else {
+                deleteThrottleTask = nil
+                return
+            }
+
+            if let idx = activeIndex, idx < pd.dataList.count {
+                deleteItem(at: idx)
+            }
+
+            deleteThrottleTask = nil
+        }
+    }
+
+    /// 检测当前是否处于键盘重复按键状态
+    private func event_isARepeat() -> Bool {
+        NSApp.currentEvent?.isARepeat ?? false
     }
 
     private func performQuickPaste(at index: Int) {

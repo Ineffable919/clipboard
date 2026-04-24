@@ -52,11 +52,6 @@ struct FloatingHistoryView: View {
                 .onChange(of: env.focusView) { _, newValue in
                     isFocused = (newValue == .history)
                 }
-                .onChange(of: historyVM.activeId) { _, newId in
-                    if let id = newId {
-                        historyVM.scrollPosition.scrollTo(id: id, anchor: historyVM.scrollAnchor())
-                    }
-                }
             }
         }
         .focusable()
