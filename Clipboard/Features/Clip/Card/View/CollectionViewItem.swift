@@ -177,12 +177,9 @@ extension CollectionViewItem {
 
     private func updateShadow() {
         guard let layer = selectionBorderView.layer else { return }
-        let isDark = selectionBorderView.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        layer.shadowColor = isDark
-            ? NSColor.black.withAlphaComponent(0.5).cgColor
-            : NSColor(hex: "#30689C").withAlphaComponent(0.1).cgColor
+        layer.shadowColor = NSColor.shadowColor.withAlphaComponent(0.1).cgColor
         layer.shadowOpacity = 1
-        layer.shadowRadius = 1
+        layer.shadowRadius = 2
         layer.shadowOffset = CGSize(width: 0, height: -1)
     }
 }

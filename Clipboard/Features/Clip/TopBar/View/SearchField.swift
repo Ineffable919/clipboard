@@ -47,6 +47,7 @@ final class SearchField: NSView {
     override func layout() {
         super.layout()
         syncTextViewFrameToScrollView()
+        updateFocusRingLayout()
     }
 
     // MARK: - Subviews
@@ -56,6 +57,16 @@ final class SearchField: NSView {
     private let tokenTextView = TokenTextView.makeConfigured()
     private let cancelButton = NSButton()
     let filterButton = FilterIconButton()
+
+    private var showsFocusRing = false
+
+    private lazy var focusRingLayer: CAShapeLayer = {
+        let layer = CAShapeLayer()
+        layer.fillColor = nil
+        layer.lineWidth = 3.0
+        layer.opacity = 0
+        return layer
+    }()
 
     // MARK: - Init
 
@@ -74,12 +85,14 @@ final class SearchField: NSView {
     private func setup() {
         wantsLayer = true
         layer?.cornerRadius = Const.topRadius
+        layer?.masksToBounds = false
         updateColors()
 
         setupSearchIcon()
         setupFilterButton()
         setupCancelButton()
         setupTokenTextView()
+        setupFocusRing()
     }
 
     private func setupSearchIcon() {
@@ -140,9 +153,11 @@ final class SearchField: NSView {
             self?.handleTextChanged(plainText)
         }
         tokenTextView.onBecomeFirstResponder = { [weak self] in
+            self?.showFocusRing()
             self?.onBecomeFirstResponder?()
         }
         tokenTextView.onResignFirstResponder = { [weak self] in
+            self?.hideFocusRing()
             self?.onResignFirstResponder?()
         }
 
@@ -168,11 +183,59 @@ final class SearchField: NSView {
         syncTextViewFrameToScrollView()
     }
 
+    // MARK: - Focus Ring
+
+    private static let focusRingOutset: CGFloat = 0.5
+
+    private func setupFocusRing() {
+        guard let hostLayer = layer else { return }
+        focusRingLayer.strokeColor = NSColor.keyboardFocusIndicatorColor.cgColor
+        hostLayer.addSublayer(focusRingLayer)
+        updateFocusRingLayout()
+    }
+
+    private func updateFocusRingLayout() {
+        let outset = Self.focusRingOutset
+        focusRingLayer.frame = bounds.insetBy(dx: -outset, dy: -outset)
+        let pathRect = CGRect(origin: .zero, size: focusRingLayer.frame.size)
+        let cornerRadius = Const.topRadius + outset
+        focusRingLayer.path = CGPath(
+            roundedRect: pathRect,
+            cornerWidth: cornerRadius,
+            cornerHeight: cornerRadius,
+            transform: nil
+        )
+    }
+
+    private func showFocusRing() {
+        guard !showsFocusRing else { return }
+        showsFocusRing = true
+        updateFocusRingLayout()
+
+        CATransaction.begin()
+        CATransaction.setAnimationDuration(0.15)
+        CATransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: .easeIn))
+        focusRingLayer.opacity = 1.0
+        CATransaction.commit()
+    }
+
+    private func hideFocusRing() {
+        guard showsFocusRing else { return }
+        showsFocusRing = false
+
+        CATransaction.begin()
+        CATransaction.setAnimationDuration(0.2)
+        CATransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: .easeOut))
+        focusRingLayer.opacity = 0
+        CATransaction.commit()
+    }
+
     // MARK: - Appearance
 
     override func updateLayer() {
         super.updateLayer()
         updateColors()
+        focusRingLayer.strokeColor = NSColor.keyboardFocusIndicatorColor.cgColor
     }
 
     private func updateColors() {
@@ -206,12 +269,13 @@ final class SearchField: NSView {
     }
 
     func clearAllContent() {
+        let hadTokens = !tokenTextView.getAllTokens().isEmpty
         tokenTextView.clearAllTokens()
         tokenTextView.string = ""
         text = ""
         cancelButton.isHidden = true
         onTextChanged?("")
-        if !tokenTextView.getAllTokens().isEmpty {
+        if hadTokens {
             onClearAllFilters?()
         }
     }
