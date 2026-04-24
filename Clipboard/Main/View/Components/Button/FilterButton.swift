@@ -57,7 +57,7 @@ struct FilterButton: View {
                     .fill(
                         isSelected
                             ? Color.accentColor
-                            : Color.secondary.opacity(0.15)
+                            : Color.secondary.opacity(0.1)
                     )
             )
             .frame(width: 140.0, height: 30.0)

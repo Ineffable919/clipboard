@@ -532,7 +532,7 @@ private struct SearchFieldView: View {
             RoundedRectangle(cornerRadius: Const.radius)
                 .strokeBorder(
                     focus == .search
-                        ? Color.accentColor.opacity(0.45)
+                        ? Color(.keyboardFocusIndicatorColor)
                         : Color.clear,
                     lineWidth: 3.0
                 )

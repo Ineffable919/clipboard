@@ -101,9 +101,9 @@ struct ClipTopBarView: View {
             RoundedRectangle(cornerRadius: Const.topRadius, style: .continuous)
                 .stroke(
                     focus == .search
-                        ? Color.accentColor.opacity(0.4)
+                        ? Color(.keyboardFocusIndicatorColor)
                         : Color.gray.opacity(0.4),
-                    lineWidth: 3.5
+                    lineWidth: focus == .search ? 3.5 : 0
                 )
                 .padding(-1)
         )

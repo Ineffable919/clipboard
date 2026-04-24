@@ -78,7 +78,7 @@ struct CardTextView: NSViewRepresentable {
             }
 
         if let container = textView.textContainer,
-            let layoutManager = textView.layoutManager
+           let layoutManager = textView.layoutManager
         {
             let inset = textView.textContainerInset
             container.containerSize = CGSize(
@@ -96,7 +96,7 @@ struct CardTextView: NSViewRepresentable {
         context: Context
     ) -> CGSize? {
         guard let container = nsView.textContainer,
-            let layoutManager = nsView.layoutManager
+              let layoutManager = nsView.layoutManager
         else { return nil }
 
         applyTextIfNeeded(to: nsView, context: context)

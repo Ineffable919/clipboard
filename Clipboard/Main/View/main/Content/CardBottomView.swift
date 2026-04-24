@@ -72,12 +72,13 @@ private struct ImageBottomView: View {
 
     var body: some View {
         Text(introString)
-            .padding(Const.space4)
+            .padding(Const.space2)
+            .multilineTextAlignment(.center)
             .font(.callout)
             .foregroundStyle(.secondary)
-            .background(Color(.controlBackgroundColor).opacity(0.9))
-            .clipShape(.rect(cornerRadius: Const.radius))
-            .frame(maxHeight: Const.bottomSize, alignment: .bottom)
+            .frame(alignment: .bottom)
+            .background(Color(nsColor: .unemphasizedSelectedContentBackgroundColor))
+            .clipShape(.rect(cornerRadius: 6.0))
             .padding(.bottom, Const.space4)
     }
 }
@@ -144,90 +145,5 @@ private struct BottomIntroTextView: View {
             .padding(.horizontal, Const.space12)
             .padding(.bottom, Const.space4)
             .frame(width: Const.cardSize)
-    }
-}
-
-// MARK: - Content Mask Calculator
-
-private enum ContentMaskCalculator {
-    static func needsMask(for model: PasteboardModel) -> Bool {
-        guard model.pasteboardType.isText() else { return false }
-
-        let contentTopPadding = Const.space8
-        let contentHeightBeforeBottomOverlay = Const.cntSize - Const.bottomSize
-        let contentTextHeight = calculateContentTextHeight(model: model)
-
-        return (contentTopPadding + contentTextHeight)
-            > contentHeightBeforeBottomOverlay
-    }
-
-    private static func calculateContentTextHeight(model: PasteboardModel) -> CGFloat {
-        let availableWidth = Const.cardSize - Const.space10 - Const.space8
-        let constraintRect = CGSize(
-            width: max(0, availableWidth),
-            height: .greatestFiniteMagnitude
-        )
-
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.lineBreakMode = .byWordWrapping
-
-        let defaultFont = NSFont.preferredFont(forTextStyle: .body)
-
-        let measuredAttributed = makeMeasuringAttributedString(
-            base: model.attributeString,
-            defaultFont: defaultFont,
-            paragraphStyle: paragraphStyle
-        )
-
-        let boundingBox = measuredAttributed.boundingRect(
-            with: constraintRect,
-            options: [.usesLineFragmentOrigin, .usesFontLeading],
-            context: nil
-        )
-
-        return ceil(boundingBox.height)
-    }
-
-    private static func makeMeasuringAttributedString(
-        base: NSAttributedString,
-        defaultFont: NSFont,
-        paragraphStyle: NSParagraphStyle
-    ) -> NSAttributedString {
-        let mutable = NSMutableAttributedString(attributedString: base)
-
-        if mutable.string.contains("\r\n") {
-            mutable.mutableString.replaceOccurrences(
-                of: "\r\n",
-                with: "\n",
-                options: [],
-                range: NSRange(location: 0, length: mutable.length)
-            )
-        }
-        if mutable.string.hasSuffix("\n") {
-            mutable.append(
-                NSAttributedString(
-                    string: " ",
-                    attributes: [.font: defaultFont]
-                )
-            )
-        }
-
-        if mutable.length > 0,
-           mutable.attribute(.font, at: 0, effectiveRange: nil) == nil
-        {
-            mutable.addAttribute(
-                .font,
-                value: defaultFont,
-                range: NSRange(location: 0, length: mutable.length)
-            )
-        }
-
-        mutable.addAttribute(
-            .paragraphStyle,
-            value: paragraphStyle,
-            range: NSRange(location: 0, length: mutable.length)
-        )
-
-        return mutable
     }
 }

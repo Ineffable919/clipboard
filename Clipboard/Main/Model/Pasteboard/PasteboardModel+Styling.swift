@@ -54,7 +54,7 @@ extension PasteboardModel {
         if pasteboardType == .string || type == .link {
             return (fallbackBG, .secondary, false)
         }
-        
+
         if attributeString.length > 0,
            let bg = attributeString.attribute(
                .backgroundColor,

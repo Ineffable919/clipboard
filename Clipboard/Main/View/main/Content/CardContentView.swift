@@ -85,15 +85,8 @@ struct RichContentView: View {
 
     var body: some View {
         if model.hasBgColor {
-            CardTextView(
-                attributedString: model.highlightedRichText(keyword: keyword),
-                backgroundColor: model.nsBackgroundColor
-            )
-            .frame(
-                maxWidth: Const.cardSize,
-                maxHeight: Const.cntSize,
-                alignment: .topLeading
-            )
+            Text(AttributedString(model.attributeString))
+                .textCardStyle()
         } else {
             StringContentView(model: model, keyword: keyword)
         }

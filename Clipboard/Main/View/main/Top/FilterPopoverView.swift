@@ -57,9 +57,16 @@ struct FilterPopoverView: View {
                     clearFiltersButton
                 }
             }
-            .padding(Const.space16)
+            .padding(
+                EdgeInsets(
+                    top: Const.space8,
+                    leading: Const.space16,
+                    bottom: Const.space16,
+                    trailing: Const.space16
+                )
+            )
         }
-        .frame(width: 480.0, height: 270.0)
+        .frame(width: 450.0, height: 320.0)
         .focusEffectDisabled()
         .task {
             await loadAppInfo()
@@ -200,11 +207,17 @@ struct FilterPopoverView: View {
 
         let (rawAppInfo, tagTypeList) = await (info, types)
 
-        let appInfoWithIcons = await withTaskGroup(of: (Int, AppInfo).self) { group in
+        let appInfoWithIcons = await withTaskGroup(of: (Int, AppInfo).self) {
+            group in
             for (index, info) in rawAppInfo.enumerated() {
                 group.addTask {
-                    let icon = await AppIconCache.shared.loadIcon(forPath: info.path)
-                    return (index, AppInfo(name: info.name, path: info.path, icon: icon))
+                    let icon = await AppIconCache.shared.loadIcon(
+                        forPath: info.path
+                    )
+                    return (
+                        index,
+                        AppInfo(name: info.name, path: info.path, icon: icon)
+                    )
                 }
             }
 
