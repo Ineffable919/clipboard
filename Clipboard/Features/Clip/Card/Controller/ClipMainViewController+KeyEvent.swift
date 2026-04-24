@@ -115,13 +115,11 @@ extension ClipMainViewController {
 
     private func returnKeyDown(_ event: NSEvent) -> NSEvent? {
         let item = dataList.value[selectIndexPath.item]
-        if ClipActionService.shared.paste(
+        ClipActionService.shared.paste(
             item,
             isAttribute: !hasPlainTextModifier(event),
             checkPermissions: PasteUserDefaults.pasteDirect
-        ) {
-            resetSelectIndex()
-        }
+        )
         return nil
     }
 

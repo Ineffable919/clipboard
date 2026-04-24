@@ -312,10 +312,17 @@ final class PasteboardModel: Identifiable, Codable {
     }
 }
 
-// MARK: - Equatable
+// MARK: - Equatable & Hashable
 
 extension PasteboardModel: Equatable {
     static func == (lhs: PasteboardModel, rhs: PasteboardModel) -> Bool {
         lhs.uniqueId == rhs.uniqueId
+    }
+}
+
+extension PasteboardModel: Hashable {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(uniqueId)
+        hasher.combine(group)
     }
 }

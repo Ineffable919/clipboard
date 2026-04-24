@@ -743,6 +743,12 @@ final class TopBarView: NSView {
                 self?.syncTokensToSearchField()
             }
             .store(in: &cancellables)
+
+        topVM.clearQueryRequested
+            .sink { [weak self] in
+                self?.searchField.clearTextSilently()
+            }
+            .store(in: &cancellables)
     }
 
     private func syncTokensToSearchField() {

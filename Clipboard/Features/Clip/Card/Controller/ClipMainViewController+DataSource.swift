@@ -8,38 +8,6 @@
 import AppKit
 import Combine
 
-// MARK: - NSCollectionViewDataSource
-
-extension ClipMainViewController: NSCollectionViewDataSource {
-    func numberOfSections(in _: NSCollectionView) -> Int {
-        1
-    }
-
-    func collectionView(_: NSCollectionView, numberOfItemsInSection _: Int) -> Int {
-        dataList.value.count
-    }
-
-    func collectionView(_ collectionView: NSCollectionView, itemForRepresentedObjectAt indexPath: IndexPath) -> NSCollectionViewItem {
-        let item = collectionView.makeItem(
-            withIdentifier: CollectionViewItem.identifier,
-            for: indexPath
-        )
-        guard let cItem = item as? CollectionViewItem else { return item }
-        let model = dataList.value[indexPath.item]
-        cItem.delegate = self
-        cItem.configure(with: model, keyword: topVM.query)
-        cItem.quickPasteIndex = quickPasteIndex(for: indexPath.item)
-        if selectIndexPath == indexPath {
-            cItem.isSelected = true
-            cItem.setFocused(focusRegion == .collection)
-            collectionView.selectionIndexPaths = [indexPath]
-        } else {
-            cItem.isSelected = false
-        }
-        return cItem
-    }
-}
-
 // MARK: - NSCollectionViewDelegate
 
 extension ClipMainViewController: NSCollectionViewDelegate {
@@ -56,6 +24,20 @@ extension ClipMainViewController: NSCollectionViewDelegate {
 
     func collectionView(_: NSCollectionView, pasteboardWriterForItemAt indexPath: IndexPath) -> (any NSPasteboardWriting)? {
         dataList.value[indexPath.item].writeItem
+    }
+
+    func collectionView(
+        _: NSCollectionView,
+        willDisplay _: NSCollectionViewItem,
+        forRepresentedObjectAt indexPath: IndexPath
+    ) {
+        let threshold = 5
+        let totalItems = dataList.value.count
+        guard indexPath.item >= totalItems - threshold,
+              db.hasMoreData,
+              !db.isLoadingPage
+        else { return }
+        db.loadNextPage()
     }
 }
 
@@ -79,15 +61,30 @@ extension ClipMainViewController {
         updateSelectedItemBorder()
     }
 
-    private func scrollTo(indexPath: IndexPath) {
+    private func event_isARepeat() -> Bool {
+        guard let event = NSApp.currentEvent else { return false }
+
+        switch event.type {
+        case .keyDown:
+            return event.isARepeat
+        default:
+            return false
+        }
+    }
+
+    func scrollTo(indexPath: IndexPath) {
         guard !dataList.value.isEmpty else { return }
         guard let attrs = collectionView.layoutAttributesForItem(at: indexPath)
         else { return }
+
+        scrollView.hasHorizontalScroller = false
+        let padding = Const.cardSpace + Const.cardSize / 5
+
         collectionView.scrollToVisible(
             NSRect(
-                x: attrs.frame.origin.x - Const.cardSpace,
+                x: attrs.frame.origin.x - padding,
                 y: 0,
-                width: attrs.frame.width + Const.cardSpace * 2 + Const.cardSize / 5,
+                width: attrs.frame.width + padding * 2,
                 height: attrs.frame.height
             )
         )
@@ -112,24 +109,19 @@ extension ClipMainViewController: CollectionViewItemDelegate {
     }
 
     func paste(_ item: PasteboardModel) {
-        if ClipActionService.shared.paste(item, checkPermissions: PasteUserDefaults.pasteDirect) {
-            resetSelectIndex()
-        }
+        ClipActionService.shared.paste(item, checkPermissions: PasteUserDefaults.pasteDirect)
     }
 
     func pastePlain(_ item: PasteboardModel) {
-        if ClipActionService.shared.paste(
+        ClipActionService.shared.paste(
             item,
             isAttribute: false,
             checkPermissions: PasteUserDefaults.pasteDirect
-        ) {
-            resetSelectIndex()
-        }
+        )
     }
 
     func copy(_ item: PasteboardModel) {
         ClipActionService.shared.copy(item)
-        resetSelectIndex()
     }
 
     func edit(_ item: PasteboardModel) {
@@ -137,8 +129,6 @@ extension ClipMainViewController: CollectionViewItemDelegate {
     }
 
     func delete(_ item: PasteboardModel, indexPath: IndexPath) {
-        defer { cardVM.deleteFlag = false }
-        cardVM.deleteFlag = true
         guard PasteUserDefaults.delConfirm else {
             deleteItem(item, indexPath: indexPath)
             return
@@ -146,16 +136,13 @@ extension ClipMainViewController: CollectionViewItemDelegate {
     }
 
     func deleteItem(_ item: PasteboardModel, indexPath: IndexPath) {
-        cardVM.delete(item)
-        collectionView.animator().deleteItems(at: [indexPath])
-
-        let newCount = dataList.value.count
-        if newCount > 0 {
-            let newItem = min(indexPath.item, newCount - 1)
-            let newIndexPath = IndexPath(item: newItem, section: 0)
-            selectIndexPath = IndexPath(item: -1, section: 0)
-            resetSelectIndex(newIndexPath)
+        let countAfterDelete = dataList.value.count - 1
+        if countAfterDelete > 0 {
+            let newItem = min(indexPath.item, countAfterDelete - 1)
+            selectIndexPath = IndexPath(item: newItem, section: 0)
         }
+
+        cardVM.delete(item)
     }
 
     func preview(_: PasteboardModel) {

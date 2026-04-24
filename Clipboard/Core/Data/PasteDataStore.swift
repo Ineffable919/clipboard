@@ -32,6 +32,9 @@ final class PasteDataStore {
         case searchFilter
         case reset
         case new
+        case delete
+        case moveToFirst
+        case update
     }
 
     private(set) var lastDataChangeType: DataChangeType = .reset
@@ -145,7 +148,8 @@ extension PasteDataStore {
 extension PasteDataStore {
     func loadNextPage() {
         guard !isLoadingPage else { return }
-        guard dataList.value.count < totalCount else { return }
+        let effectiveTotal = isInFilterMode ? filteredCount : totalCount
+        guard dataList.value.count < effectiveTotal else { return }
 
         let nextPage = pageIndex + 1
         guard nextPage != lastRequestedPage else { return }
@@ -285,7 +289,7 @@ extension PasteDataStore {
             filteredCount = count
         }
 
-        if lastDataChangeType == .searchFilter {
+        if isInFilterMode {
             return
         }
 
@@ -310,19 +314,92 @@ extension PasteDataStore {
         if list.count > pageSize {
             list = Array(list.prefix(pageSize))
         }
-        if lastDataChangeType == .loadMore {
-            lastDataChangeType = .reset
-        }
-        updateData(with: list, changeType: lastDataChangeType)
+        updateData(with: list, changeType: .moveToFirst)
     }
 
     func deleteItems(_ items: PasteboardModel...) {
+        let deleteSet = Set(items.compactMap(\.id))
         var list = dataList.value
-        list.removeAll(where: { items.contains($0) })
-        dataList.send(list)
-        let ids = items.compactMap(\.id)
+        list.removeAll { item in
+            guard let id = item.id else { return false }
+            return deleteSet.contains(id)
+        }
+        let ids = Array(deleteSet)
         guard !ids.isEmpty else { return }
-        deleteItems(filter: ids.contains(Col.id))
+
+        let deficit = pageSize - list.count
+        let needsBackfill = deficit > 0 && hasMoreData
+        let inFilter = isInFilterMode
+        let activeFilter = currentFilter
+
+        if needsBackfill {
+            let currentCount = list.count
+            Task { [weak self, sqlManager] in
+                guard let self else { return }
+
+                await sqlManager.delete(filter: ids.contains(Col.id))
+                let count = await sqlManager.getTotalCount()
+
+                let filter = inFilter ? activeFilter : nil
+                let rows = await sqlManager.search(
+                    filter: filter ?? (Col.hidden == 0),
+                    limit: deficit,
+                    offset: currentCount
+                )
+                let backfillItems = mapRows(rows)
+
+                let filtered: Int =
+                    if inFilter, let f = activeFilter {
+                        await sqlManager.getCount(filter: f)
+                    } else {
+                        count
+                    }
+
+                await MainActor.run { [weak self] in
+                    guard let self else { return }
+                    totalCount = count
+                    filteredCount = filtered
+
+                    var finalList = dataList.value
+                    finalList.removeAll { item in
+                        guard let id = item.id else { return false }
+                        return deleteSet.contains(id)
+                    }
+
+                    let existingIds = Set(finalList.compactMap(\.id))
+                    let uniqueBackfill = backfillItems.filter { item in
+                        guard let id = item.id else { return true }
+                        return !existingIds.contains(id)
+                    }
+                    finalList += uniqueBackfill
+
+                    hasMoreData = finalList.count >= pageSize
+                    updateData(with: finalList, changeType: .delete)
+                    PasteMetadataCache.shared.invalidateTagTypesCache()
+                }
+            }
+        } else {
+            updateData(with: list, changeType: .delete)
+
+            Task.detached(priority: .utility) { [weak self, sqlManager] in
+                await sqlManager.delete(filter: ids.contains(Col.id))
+                let count = await sqlManager.getTotalCount()
+
+                let filtered: Int =
+                    if inFilter, let activeFilter {
+                        await sqlManager.getCount(filter: activeFilter)
+                    } else {
+                        count
+                    }
+
+                await MainActor.run { [weak self] in
+                    guard let self else { return }
+                    totalCount = count
+                    filteredCount = filtered
+                    PasteMetadataCache.shared.invalidateTagTypesCache()
+                }
+            }
+        }
     }
 
     func deleteItems(filter: Expression<Bool>) {

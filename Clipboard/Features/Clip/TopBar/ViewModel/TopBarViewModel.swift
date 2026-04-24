@@ -19,6 +19,8 @@ final class TopBarViewModel {
 
     let filterDidChange = PassthroughSubject<Void, Never>()
 
+    let clearQueryRequested = PassthroughSubject<Void, Never>()
+
     // MARK: - Search Properties
 
     private(set) var query: String = ""
@@ -408,9 +410,8 @@ final class TopBarViewModel {
         if trimmedQuery.hasPrefix("@"), displayModeRaw == 0 {
             let command = String(trimmedQuery.dropFirst()).lowercased()
             if let type = parseShortcutCommand(command) {
-                Task { @MainActor in
-                    self.query = ""
-                }
+                query = ""
+                clearQueryRequested.send()
                 toggleType(type)
                 return
             }
@@ -579,14 +580,14 @@ extension TopBarViewModel {
         if getSelectChipId() != -1 {
             var list = db.dataList.value
             list.removeAll(where: { $0.id == modelId })
-            db.updateData(with: list)
+            db.updateData(with: list, changeType: .delete)
         } else {
             if let model = db.dataList.value.first(where: { $0.id == modelId }),
                chipId != model.group
             {
                 model.updateGroup(val: chipId)
             }
-            db.updateData(with: db.dataList.value)
+            db.updateData(with: db.dataList.value, changeType: .update)
         }
 
         return true

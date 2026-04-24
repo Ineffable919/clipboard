@@ -79,6 +79,8 @@ extension ClipMainViewController {
         }
 
         let item = dataList.value[index]
+
+        collectionView.deselectItems(at: [selectIndexPath])
         selectIndexPath = IndexPath(item: index, section: 0)
         collectionView.selectItems(
             at: [selectIndexPath],
@@ -86,12 +88,10 @@ extension ClipMainViewController {
         )
         updateSelectedItemBorder()
 
-        if ClipActionService.shared.paste(
+        ClipActionService.shared.paste(
             item,
             isAttribute: true,
             checkPermissions: PasteUserDefaults.pasteDirect
-        ) {
-            resetSelectIndex()
-        }
+        )
     }
 }

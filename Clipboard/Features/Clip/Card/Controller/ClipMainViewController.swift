@@ -48,6 +48,12 @@ final class ClipMainViewController: NSViewController {
         set { env.selectIndexPath = newValue }
     }
 
+    // MARK: - DiffableDataSource
+
+    enum ClipSection { case main }
+
+    var diffableDataSource: NSCollectionViewDiffableDataSource<ClipSection, PasteboardModel>!
+
     // MARK: - Views
 
     lazy var effectView: NSView = {
@@ -103,7 +109,6 @@ final class ClipMainViewController: NSViewController {
         let collectionView = ClipCollectionView()
         collectionView.wantsLayer = true
         collectionView.delegate = self
-        collectionView.dataSource = self
         collectionView.allowsEmptySelection = false
         collectionView.backgroundColors = [.clear]
         collectionView.collectionViewLayout = flowLayout
@@ -162,6 +167,7 @@ extension ClipMainViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         initView()
+        initDiffableDataSource()
         initFocus()
         initObserve()
     }
@@ -283,6 +289,51 @@ extension ClipMainViewController {
             make.trailing.lessThanOrEqualTo(scrollView).offset(-16)
         }
     }
+
+    private func initDiffableDataSource() {
+        diffableDataSource = NSCollectionViewDiffableDataSource<ClipSection, PasteboardModel>(
+            collectionView: collectionView
+        ) { [weak self] collectionView, indexPath, model in
+            let item = collectionView.makeItem(
+                withIdentifier: CollectionViewItem.identifier,
+                for: indexPath
+            )
+            guard let self, let cItem = item as? CollectionViewItem else { return item }
+            cItem.delegate = self
+            cItem.configure(with: model, keyword: topVM.query)
+            cItem.quickPasteIndex = quickPasteIndex(for: indexPath.item)
+            return cItem
+        }
+    }
+
+    func applySnapshot(animating: Bool = true, completion: (() -> Void)? = nil) {
+        var snapshot = NSDiffableDataSourceSnapshot<ClipSection, PasteboardModel>()
+        snapshot.appendSections([.main])
+        snapshot.appendItems(dataList.value)
+        diffableDataSource.apply(snapshot, animatingDifferences: animating) {
+            completion?()
+        }
+        updateEmptyState()
+    }
+
+    func applyLoadMoreSnapshot() {
+        var snapshot = diffableDataSource.snapshot()
+        let existingIds = Set(snapshot.itemIdentifiers.map(\.uniqueId))
+        let newItems = dataList.value.filter { !existingIds.contains($0.uniqueId) }
+        guard !newItems.isEmpty else {
+            updateEmptyState()
+            return
+        }
+        snapshot.appendItems(newItems, toSection: .main)
+        diffableDataSource.apply(snapshot, animatingDifferences: false)
+        updateEmptyState()
+    }
+
+    func restoreSelection() {
+        guard !dataList.value.isEmpty else { return }
+        collectionView.selectionIndexPaths = [selectIndexPath]
+        updateSelectedItemBorder()
+    }
 }
 
 // MARK: - Focus
@@ -329,14 +380,43 @@ extension ClipMainViewController {
     func initObserve() {
         dataList
             .receive(on: DispatchQueue.main)
-            .filter { [weak self] _ in self?.cardVM.deleteFlag == false }
             .sink { [weak self] _ in
                 guard let self else { return }
-                cardVM.deleteFlag = false
-                collectionView.reloadData()
-                updateEmptyState()
-                if db.lastDataChangeType == .new {
+
+                let changeType = db.lastDataChangeType
+
+                switch changeType {
+                case .delete:
+                    applySnapshot(animating: true) { [weak self] in
+                        guard let self, !dataList.value.isEmpty else { return }
+                        let safeItem = min(selectIndexPath.item, dataList.value.count - 1)
+                        let safePath = IndexPath(item: safeItem, section: 0)
+                        selectIndexPath = safePath
+                        collectionView.selectionIndexPaths = [safePath]
+                        scrollTo(indexPath: safePath)
+                        updateSelectedItemBorder()
+                    }
+                case .new:
+                    applySnapshot(animating: false)
                     resetSelectIndex()
+                    restoreSelection()
+                case .searchFilter:
+                    applySnapshot(animating: false)
+                    resetSelectIndex()
+                    restoreSelection()
+                case .moveToFirst:
+                    applySnapshot(animating: false)
+                    resetSelectIndex()
+                    restoreSelection()
+                case .loadMore:
+                    applyLoadMoreSnapshot()
+                case .reset:
+                    applySnapshot(animating: false)
+                    resetSelectIndex()
+                    restoreSelection()
+                case .update:
+                    applySnapshot(animating: false)
+                    restoreSelection()
                 }
             }
             .store(in: &cancellables)
@@ -347,7 +427,7 @@ extension ClipMainViewController {
             .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self else { return }
-                performSearch()
+                topVM.handleQueryChange()
             }
             .store(in: &cancellables)
 
@@ -357,29 +437,25 @@ extension ClipMainViewController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self else { return }
-                performSearch()
+                topVM.performSearch()
             }
             .store(in: &cancellables)
 
         store.chipsContentDidChange
             .receive(on: DispatchQueue.main)
             .sink { [weak self] in
-                self?.collectionView.reloadData()
+                guard let self else { return }
+                applySnapshot(animating: false)
             }
             .store(in: &cancellables)
 
         topVM.filterDidChange
             .debounce(for: .milliseconds(100), scheduler: DispatchQueue.main)
             .sink { [weak self] in
-                self?.performSearch()
+                guard let self else { return }
+                topVM.performSearch()
             }
             .store(in: &cancellables)
-    }
-
-    func performSearch() {
-        resetSelectIndex()
-        topVM.performSearch()
-        updateEmptyState()
     }
 
     func updateEmptyState() {

@@ -280,6 +280,12 @@ final class SearchField: NSView {
         }
     }
 
+    func clearTextSilently() {
+        tokenTextView.string = ""
+        text = ""
+        updateCancelButtonVisibility()
+    }
+
     func clearTokensOnly() {
         tokenTextView.clearAllTokens()
         updateCancelButtonVisibility()
