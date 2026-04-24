@@ -14,18 +14,21 @@ struct FloatingHistoryView: View {
     @State private var historyVM = HistoryViewModel()
     @FocusState private var isFocused: Bool
     @State private var flagsMonitorToken: Any?
+    @AppStorage(PrefKey.enableLinkPreview.rawValue)
+    private var enableLinkPreview: Bool = PasteUserDefaults.enableLinkPreview
+    @AppStorage(PrefKey.displayMode.rawValue) private var displayModeRaw: Int = 0
 
     private let pd = PasteDataStore.main
 
     var body: some View {
-        ScrollViewReader { proxy in
+        VStack {
             if pd.dataList.isEmpty {
                 ClipboardEmptyStateView(style: .floating)
             } else {
                 ScrollView {
                     contentView()
                 }
-                .scrollIndicators(.automatic)
+                .scrollPosition($historyVM.scrollPosition)
                 .contentMargins(
                     .top,
                     FloatConst.headerHeight + FloatConst.cardSpacing,
@@ -46,27 +49,28 @@ struct FloatingHistoryView: View {
                     FloatConst.footerHeight,
                     for: .scrollIndicators
                 )
-                .onChange(of: env.focusView) {
-                    isFocused = (env.focusView == .history)
+                .onChange(of: env.focusView) { _, newValue in
+                    isFocused = (newValue == .history)
                 }
-                .onChange(of: historyVM.selectedId) { _, newId in
+                .onChange(of: historyVM.activeId) { _, newId in
                     if let id = newId {
-                        proxy.scrollTo(id, anchor: historyVM.scrollAnchor())
+                        historyVM.scrollPosition.scrollTo(id: id, anchor: historyVM.scrollAnchor())
                     }
                 }
             }
-
-            EmptyView()
-                .onChange(of: pd.dataList) {
-                    historyVM.reset(proxy: proxy)
-                }
-                .onChange(of: env.quickPasteResetTrigger) {
-                    historyVM.isQuickPastePressed = false
-                }
         }
         .focusable()
         .focused($isFocused)
         .focusEffectDisabled()
+        .onChange(of: displayModeRaw) {
+            historyVM.handleModeSwitch()
+        }
+        .onChange(of: pd.dataList) {
+            historyVM.reset()
+        }
+        .onChange(of: env.quickPasteResetTrigger) {
+            historyVM.isQuickPastePressed = false
+        }
         .onAppear {
             appear()
         }
@@ -87,13 +91,31 @@ struct FloatingHistoryView: View {
     private func cardItem(item: PasteboardModel, index: Int) -> some View {
         FloatingCardView(
             model: item,
-            isSelected: historyVM.selectedId == item.id,
-            showPreviewId: $historyVM.showPreviewId,
+            isSelected: historyVM.isItemSelected(item.id),
+            showPreview: historyVM.isShowPreview(item.id),
             quickPasteIndex: historyVM.quickPasteIndex(for: index),
+            enableLinkPreview: enableLinkPreview,
             searchKeyword: historyVM.searchKeyword,
-            onRequestDelete: { requestDelete(index: index) }
+            onRequestDelete: { requestDelete(index: index) },
+            onPaste: { historyVM.pasteSelectedItems(checkPermissions: true) },
+            onPastePlainText: {
+                historyVM.pasteSelectedItems(
+                    isAttribute: false,
+                    checkPermissions: PasteUserDefaults.pasteDirect
+                )
+            },
+            onCopy: { historyVM.copySelectedItems() },
+            onTogglePreview: { historyVM.togglePreview(for: item.id) },
+            onClosePreview: { historyVM.closePreview() }
         )
-        .contentShape(Rectangle())
+        .id(item.id)
+        .contentShape(.rect)
+        .transition(
+            .asymmetric(
+                insertion: .identity,
+                removal: .opacity.combined(with: .scale(scale: 0.92))
+            )
+        )
         .onTapGesture {
             handleTap(on: item, index: index)
         }
@@ -102,7 +124,7 @@ struct FloatingHistoryView: View {
             if env.focusView != .history {
                 env.focusView = .history
             }
-            historyVM.setSelection(id: item.id, index: index)
+            historyVM.selectSingle(id: item.id)
             return item.itemProvider()
         }
         .task(id: item.id) {
@@ -112,19 +134,29 @@ struct FloatingHistoryView: View {
     }
 
     private func handleTap(on item: PasteboardModel, index: Int) {
-        historyVM.handleTap(on: item, index: index) {
-            ClipActionService.shared.paste(item, isAttribute: true)
+        let isCommandHeld = NSEvent.modifierFlags.contains(.command)
+        historyVM.handleTap(
+            on: item,
+            index: index,
+            isCommandHeld: isCommandHeld
+        ) {
+            historyVM.pasteSelectedItems(
+                checkPermissions: PasteUserDefaults.pasteDirect
+            )
         }
     }
 
-    private func requestDelete(index: Int) {
+    private func requestDelete(index: Int? = nil) {
+        let targetIndex = index ?? historyVM.activeIndex
+        guard let targetIndex else { return }
+
         guard PasteUserDefaults.delConfirm else {
-            historyVM.deleteItem(at: index)
+            historyVM.deleteItem(at: targetIndex)
             return
         }
         env.isShowDel = true
-        historyVM.showDeleteConfirmAlert(for: index) { [self] in
-            historyVM.deleteItem(at: index)
+        historyVM.showDeleteConfirmAlert { [self] in
+            historyVM.deleteItem(at: targetIndex)
         }
     }
 
@@ -144,8 +176,8 @@ struct FloatingHistoryView: View {
             flagsChangedEvent(event)
         }
 
-        if historyVM.selectedId == nil {
-            historyVM.setSelection(id: pd.dataList.first?.id, index: 0)
+        if historyVM.activeId == nil {
+            historyVM.selectSingle(id: pd.dataList.first?.id)
         }
     }
 
@@ -179,7 +211,7 @@ struct FloatingHistoryView: View {
         }
 
         if event.keyCode == KeyCode.escape {
-            if case .some(_?) = historyVM.showPreviewId {
+            if historyVM.showPreviewId != nil {
                 historyVM.showPreviewId = nil
                 return nil
             }
@@ -233,12 +265,12 @@ struct FloatingHistoryView: View {
     private func moveSelection(offset: Int, event _: NSEvent) -> NSEvent? {
         guard !pd.dataList.isEmpty else {
             historyVM.showPreviewId = nil
-            historyVM.setSelection(id: nil, index: 0)
+            historyVM.selectSingle(id: nil)
             NSSound.beep()
             return nil
         }
 
-        let currentIndex = historyVM.selectedIndex ?? 0
+        let currentIndex = historyVM.activeIndex ?? 0
         let newIndex = max(0, min(currentIndex + offset, pd.dataList.count - 1))
 
         guard newIndex != currentIndex else {
@@ -246,14 +278,14 @@ struct FloatingHistoryView: View {
             return nil
         }
 
-        historyVM.setSelection(id: pd.dataList[newIndex].id, index: newIndex)
+        historyVM.selectSingle(id: pd.dataList[newIndex].id)
         if historyVM.showPreviewId != nil {
             historyVM.showPreviewId = nil
         }
 
         if offset > 0, historyVM.shouldLoadNextPage(at: newIndex) {
-            Task.detached(priority: .userInitiated) { [weak historyVM] in
-                await historyVM?.loadNextPageIfNeeded(at: newIndex)
+            Task(priority: .userInitiated) { [weak historyVM] in
+                historyVM?.loadNextPageIfNeeded(at: newIndex)
             }
         }
         return nil
@@ -266,11 +298,8 @@ struct FloatingHistoryView: View {
         }
 
         let item = pd.dataList[index]
-        historyVM.setSelection(id: item.id, index: index)
-        ClipActionService.shared.paste(
-            item,
-            isAttribute: true
-        )
+        historyVM.selectSingle(id: item.id)
+        ClipActionService.shared.paste(item, isAttribute: true)
     }
 
     private func handleCommandKeyEvent(_ event: NSEvent) -> NSEvent? {
@@ -283,10 +312,15 @@ struct FloatingHistoryView: View {
 
         switch event.keyCode {
         case UInt16(kVK_ANSI_C):
-            return handleCopy()
+            historyVM.copySelectedItems()
+            return nil
 
         case UInt16(kVK_ANSI_E):
             return handleEdit()
+
+        case UInt16(kVK_ANSI_A):
+            historyVM.selectFirstNine()
+            return nil
 
         default:
             return event
@@ -294,8 +328,7 @@ struct FloatingHistoryView: View {
     }
 
     private func handleEdit() -> NSEvent? {
-        guard let index = historyVM.selectedIndex
-        else {
+        guard let index = historyVM.activeIndex else {
             NSSound.beep()
             return nil
         }
@@ -303,18 +336,8 @@ struct FloatingHistoryView: View {
         return nil
     }
 
-    private func handleCopy() -> NSEvent? {
-        guard let index = historyVM.selectedIndex
-        else {
-            NSSound.beep()
-            return nil
-        }
-        ClipActionService.shared.copy(pd.dataList[index])
-        return nil
-    }
-
     private func handleSpace(_: NSEvent) -> NSEvent? {
-        if let id = historyVM.selectedId {
+        if let id = historyVM.activeId {
             if historyVM.showPreviewId == id {
                 historyVM.showPreviewId = nil
             } else {
@@ -325,13 +348,10 @@ struct FloatingHistoryView: View {
     }
 
     private func handleReturnKey(_ event: NSEvent) -> NSEvent? {
-        guard let index = historyVM.selectedIndex
-        else {
-            return event
-        }
-        ClipActionService.shared.paste(
-            pd.dataList[index],
-            isAttribute: !hasPlainTextModifier(event)
+        guard !historyVM.selectedIds.isEmpty else { return event }
+        historyVM.pasteSelectedItems(
+            isAttribute: !hasPlainTextModifier(event),
+            checkPermissions: true
         )
         return nil
     }
@@ -344,28 +364,12 @@ struct FloatingHistoryView: View {
     }
 
     private func deleteKeyDown(_: NSEvent) -> NSEvent? {
-        guard let index = historyVM.selectedIndex else {
+        guard historyVM.activeIndex != nil else {
             NSSound.beep()
             return nil
         }
-        requestDelete(index: index)
+        requestDelete()
         return nil
-    }
-}
-
-// MARK: - Bottom Margins Modifier
-
-private struct BottomMarginsModifier: ViewModifier {
-    let height: CGFloat
-
-    func body(content: Content) -> some View {
-        if #available(macOS 26, *) {
-            content
-                .contentMargins(.bottom, height, for: .scrollContent)
-                .contentMargins(.bottom, height, for: .scrollIndicators)
-        } else {
-            content
-        }
     }
 }
 
@@ -376,7 +380,7 @@ private struct DragPreviewView: View {
 
     var body: some View {
         Image(systemName: iconName)
-            .font(.system(size: 32, weight: .regular))
+            .imageScale(.large)
             .frame(width: 48, height: 48)
     }
 

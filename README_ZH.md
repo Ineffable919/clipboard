@@ -33,7 +33,7 @@
 
 ## 系统要求
 
-- macOS 14.0 或更高版本 （已适配macOS 26）
+- macOS 15.0 或更高版本 （已适配macOS 26）
 - 支持 Apple Silicon (arm64) 和 Intel (x86_64) 架构
 
 ## 使用方法

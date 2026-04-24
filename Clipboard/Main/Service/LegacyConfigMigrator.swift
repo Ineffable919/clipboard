@@ -26,9 +26,9 @@ final class LegacyConfigMigrator {
 
     private func presentMigrationAlert() {
         let alert = NSAlert()
-        alert.messageText = "导入旧版本配置？"
-        alert.addButton(withTitle: "导入")
-        alert.addButton(withTitle: "跳过")
+        alert.messageText = String(localized: .importAsk)
+        alert.addButton(withTitle: String(localized: .importAction))
+        alert.addButton(withTitle: String(localized: .skip))
 
         let response = alert.runModal()
 
@@ -43,9 +43,9 @@ final class LegacyConfigMigrator {
 
     private func presentLegacyPlistPicker() {
         let panel = NSOpenPanel()
-        panel.title = "选择旧版配置文件"
-        panel.message = "请选择 com.crown.clipboard.plist"
-        panel.prompt = "导入"
+        panel.title = String(localized: .chooseFile)
+        panel.message = String(localized: .choosePlist)
+        panel.prompt = String(localized: .importAction)
 
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
@@ -142,16 +142,18 @@ final class LegacyConfigMigrator {
 
     private func presentWrongFileAlert() {
         let alert = NSAlert()
-        alert.messageText = "文件不正确"
-        alert.informativeText = "请选择 com.crown.clipboard.plist"
-        alert.addButton(withTitle: "好")
+        alert.messageText = String(localized: .wrongFile)
+        alert.informativeText = String(localized: .choosePlist)
+        alert.addButton(withTitle: String(localized: .commonConfirm))
         alert.runModal()
     }
 
     private func presentResultAlert(success: Bool) {
         let alert = NSAlert()
-        alert.messageText = success ? "导入成功" : "导入失败"
-        alert.addButton(withTitle: "好的")
+        alert.messageText = success
+            ? String(localized: .importSuccess)
+            : String(localized: .importFail)
+        alert.addButton(withTitle: String(localized: .commonConfirm))
         alert.runModal()
     }
 }

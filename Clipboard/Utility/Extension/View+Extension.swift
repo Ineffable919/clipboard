@@ -80,6 +80,14 @@ struct AutoScrollOnIMEInputModifier: ViewModifier {
     }
 }
 
+struct HorizontalScrollWheelModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content.background {
+            HorizontalScrollWheelReader()
+        }
+    }
+}
+
 extension View {
     func settingsStyle() -> some View {
         modifier(SettingsStyleModifier())
@@ -99,6 +107,10 @@ extension View {
         overlay {
             WindowDragArea()
         }
+    }
+
+    func horizontalMouseWheelScroll() -> some View {
+        modifier(HorizontalScrollWheelModifier())
     }
 }
 

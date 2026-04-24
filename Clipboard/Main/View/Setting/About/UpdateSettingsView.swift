@@ -23,26 +23,42 @@ struct UpdaterSettingsView: View {
     }
 
     var body: some View {
-        HStack(spacing: 20) {
-            Toggle(
-                "自动检查更新",
+        HStack(spacing: Const.space12) {
+            settingsToggle(
+                title: String(
+                    localized: .settingAboutAutomaticallyCheckUpdates
+                ),
                 isOn: $automaticallyChecksForUpdates
             )
-            .onChange(of: automaticallyChecksForUpdates) {
+            .onChange(of: automaticallyChecksForUpdates) { _, _ in
                 updater.automaticallyChecksForUpdates =
                     automaticallyChecksForUpdates
             }
 
-            Toggle(
-                "自动下载更新",
+            settingsToggle(
+                title: String(
+                    localized: .settingAboutAutomaticallyDownloadUpdates
+                ),
                 isOn: $automaticallyDownloadsUpdates
             )
             .disabled(!automaticallyChecksForUpdates)
-            .onChange(of: automaticallyDownloadsUpdates) {
+            .onChange(of: automaticallyDownloadsUpdates) { _, _ in
                 updater.automaticallyDownloadsUpdates =
                     automaticallyDownloadsUpdates
             }
         }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .center)
+    }
+
+    private func settingsToggle(title: String, isOn: Binding<Bool>) -> some View {
+        Toggle(isOn: isOn) {
+            Text(title)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .help(title)
+        }
+        .help(title)
     }
 }
 

@@ -10,10 +10,16 @@ import SwiftUI
 struct FloatingCardView: View {
     let model: PasteboardModel
     let isSelected: Bool
-    @Binding var showPreviewId: PasteboardModel.ID?
+    let showPreview: Bool
     let quickPasteIndex: Int?
+    let enableLinkPreview: Bool
     let searchKeyword: String
     var onRequestDelete: (() -> Void)?
+    var onPaste: (() -> Void)?
+    var onPastePlainText: (() -> Void)?
+    var onCopy: (() -> Void)?
+    var onTogglePreview: (() -> Void)?
+    var onClosePreview: (() -> Void)?
 
     @Environment(AppEnvironment.self) private var env
 
@@ -23,13 +29,6 @@ struct FloatingCardView: View {
 
     private var isTextType: Bool {
         model.pasteboardType.isText()
-    }
-
-    private var showPreview: Binding<Bool> {
-        Binding(
-            get: { showPreviewId == model.id },
-            set: { showPreviewId = $0 ? model.id : nil }
-        )
     }
 
     var body: some View {
@@ -52,10 +51,16 @@ struct FloatingCardView: View {
             )
             .padding(Const.space2)
             .contextMenu { contextMenuContent }
-            .popover(isPresented: showPreview, arrowEdge: .leading) {
+            .popover(
+                isPresented: Binding(
+                    get: { showPreview },
+                    set: { if !$0 { onClosePreview?() } }
+                ),
+                arrowEdge: .leading
+            ) {
                 PreviewPopoverView(
                     model: model,
-                    onClose: { showPreviewId = nil }
+                    onClose: { onClosePreview?() }
                 )
             }
     }
@@ -65,14 +70,18 @@ struct FloatingCardView: View {
             AppIconImageView(appPath: model.appPath)
                 .padding(.leading, Const.space6)
 
-            floatContentView
-                .padding(.vertical, Const.space4)
-                .frame(
-                    maxWidth: .infinity,
-                    maxHeight: .infinity,
-                    alignment: isTextType || model.pasteboardType.isFile()
-                        ? .leading : .center
-                )
+            FloatingCardContentView(
+                model: model,
+                enableLinkPreview: enableLinkPreview,
+                searchKeyword: searchKeyword
+            )
+            .padding(.vertical, Const.space4)
+            .frame(
+                maxWidth: .infinity,
+                maxHeight: .infinity,
+                alignment: isTextType || model.pasteboardType.isFile()
+                    ? .leading : .center
+            )
 
             VStack(alignment: .trailing, spacing: Const.space4) {
                 Text(
@@ -80,14 +89,14 @@ struct FloatingCardView: View {
                         relativeTo: TimeManager.shared.currentTime
                     )
                 )
-                .font(.system(size: 10))
+                .font(.caption2)
                 .foregroundStyle(modelColors.1)
                 Spacer()
                 if let index = quickPasteIndex {
-                    quickPasteBadge(index: index)
+                    QuickPasteBadgeView(index: index, color: modelColors.1)
                 }
             }
-            .padding(.vertical, Const.space6)
+            .padding(.vertical, Const.space4)
             .padding(.trailing, Const.space6)
         }
         .frame(
@@ -96,124 +105,81 @@ struct FloatingCardView: View {
             maxHeight: FloatConst.cardHeight
         )
         .background {
-            if model.type == .color {
-                Color(hex: model.attributeString.string)
-            } else {
-                model.backgroundColor
-            }
+            model.backgroundColor
         }
         .clipShape(.rect(cornerRadius: Const.radius))
     }
 
-    @ViewBuilder
-    private var floatContentView: some View {
-        switch model.type {
-        case .image:
-            FloatingImageThumbnailView(model: model)
-                .clipShape(.rect(cornerRadius: 6.0))
-        case .color:
-            Text(model.attributeString.string)
-                .font(.system(size: 14.0, weight: .medium, design: .monospaced))
-                .foregroundStyle(modelColors.1)
-        case .file:
-            fileContentView
-        case .rich:
-            richTextContentView
-        default:
-            plainTextContentView
-        }
-    }
-
-    @ViewBuilder
-    private var fileContentView: some View {
-        if let paths = model.cachedFilePaths {
-            if paths.count > 1 {
-                Text("\(paths.count) 个文件")
-            } else if let firstPath = paths.first {
-                Text(firstPath)
-                    .truncationMode(.head)
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var richTextContentView: some View {
-        if model.hasBgColor {
-            if searchKeyword.isEmpty {
-                Text(model.attributed())
-            } else {
-                Text(model.highlightedRichText(keyword: searchKeyword))
-            }
-        } else {
-            plainTextContentView
-        }
-    }
-
-    @ViewBuilder
-    private var plainTextContentView: some View {
-        if searchKeyword.isEmpty {
-            Text(model.attributeString.string)
-        } else {
-            Text(model.highlightedPlainText(keyword: searchKeyword))
-        }
-    }
-
-    private func quickPasteBadge(index: Int) -> some View {
-        Text(index, format: .number)
-            .font(.system(size: 10, weight: .regular, design: .rounded))
-            .foregroundStyle(modelColors.1)
-    }
-
     private var selectionColor: Color {
-        env.focusView == .history ? .accentColor.opacity(0.8) : .gray
+        env.focusView == .history ? Color(.keyboardFocusIndicatorColor) : .gray
     }
 
     // MARK: - Context Menu
 
     @ViewBuilder
     private var contextMenuContent: some View {
-        Button("粘贴", systemImage: "doc.on.clipboard", action: pasteToApp)
-            .keyboardShortcut(.return, modifiers: [])
+        Button(
+            String(localized: .paste),
+            systemImage: "doc.on.clipboard",
+            action: pasteToApp
+        )
+        .keyboardShortcut(.return, modifiers: [])
 
         if isTextType {
             Button(
-                "以纯文本粘贴",
+                String(localized: .pastePlain),
                 systemImage: "text.alignleft",
                 action: pasteAsPlainText
             )
         }
 
-        Button("复制", systemImage: "doc.on.doc", action: copyToClipboard)
-            .keyboardShortcut("c", modifiers: [.command])
+        Button(
+            String(localized: .copy),
+            systemImage: "doc.on.doc",
+            action: copyToClipboard
+        )
+        .keyboardShortcut("c", modifiers: [.command])
 
         Divider()
 
         if isTextType {
-            Button("编辑", systemImage: "pencil", action: openEditWindow)
-                .keyboardShortcut("e", modifiers: [.command])
+            Button(
+                String(localized: .edit),
+                systemImage: "pencil",
+                action: openEditWindow
+            )
+            .keyboardShortcut("e", modifiers: [.command])
         }
 
-        Button("删除", systemImage: "trash", action: deleteItem)
-            .keyboardShortcut(.delete, modifiers: [])
+        Button(
+            String(localized: .delete),
+            systemImage: "trash",
+            action: deleteItem
+        )
+        .keyboardShortcut(.delete, modifiers: [])
 
         Divider()
 
-        Button("预览", systemImage: "eye", action: togglePreview)
-            .keyboardShortcut(.space, modifiers: [])
+        Button(
+            String(localized: .preview),
+            systemImage: "eye",
+            action: togglePreview
+        )
+        .keyboardShortcut(.space, modifiers: [])
     }
 
     // MARK: - Actions
 
     private func pasteToApp() {
-        ClipActionService.shared.paste(model)
+        onPaste?()
     }
 
     private func pasteAsPlainText() {
-        ClipActionService.shared.paste(model, isAttribute: false)
+        onPastePlainText?()
     }
 
     private func copyToClipboard() {
-        ClipActionService.shared.copy(model)
+        onCopy?()
     }
 
     private func deleteItem() {
@@ -221,11 +187,166 @@ struct FloatingCardView: View {
     }
 
     private func togglePreview() {
-        showPreviewId = showPreviewId == model.id ? nil : model.id
+        onTogglePreview?()
     }
 
     private func openEditWindow() {
         EditWindowController.shared.openWindow(with: model)
+    }
+}
+
+// MARK: - Floating Card Content View
+
+private struct FloatingCardContentView: View {
+    let model: PasteboardModel
+    let enableLinkPreview: Bool
+    let searchKeyword: String
+
+    var body: some View {
+        switch model.type {
+        case .image:
+            FloatingImageThumbnailView(model: model)
+                .clipShape(.rect(cornerRadius: 6.0))
+        case .color:
+            Text(model.colorDisplayText)
+                .font(.system(.body, design: .monospaced).weight(.medium))
+                .foregroundStyle(model.colors().1)
+        case .file:
+            FloatingFileContentView(model: model)
+        case .rich:
+            FloatingRichTextContentView(
+                model: model,
+                searchKeyword: searchKeyword
+            )
+        case .link:
+            if enableLinkPreview {
+                FloatingLinkPreviewView(
+                    model: model,
+                    searchKeyword: searchKeyword
+                )
+            } else {
+                FloatingPlainTextContentView(
+                    model: model,
+                    searchKeyword: searchKeyword
+                )
+            }
+        default:
+            FloatingPlainTextContentView(
+                model: model,
+                searchKeyword: searchKeyword
+            )
+        }
+    }
+}
+
+// MARK: - Floating File Content View
+
+private struct FloatingFileContentView: View {
+    let model: PasteboardModel
+
+    var body: some View {
+        if let paths = model.cachedFilePaths, !paths.isEmpty {
+            if paths.count > 1 {
+                FloatingMultipleFilesView(paths: paths)
+            } else if let firstPath = paths.first {
+                FloatingSingleFileView(path: firstPath)
+            }
+        }
+    }
+}
+
+// MARK: - Floating Rich Text Content View
+
+private struct FloatingRichTextContentView: View {
+    let model: PasteboardModel
+    let searchKeyword: String
+
+    var body: some View {
+        if model.hasBgColor {
+            Text(
+                AttributedString(
+                    model.highlightedRichText(keyword: searchKeyword)
+                )
+            )
+        } else {
+            FloatingPlainTextContentView(
+                model: model,
+                searchKeyword: searchKeyword
+            )
+        }
+    }
+}
+
+// MARK: - Floating Plain Text Content View
+
+private struct FloatingPlainTextContentView: View {
+    let model: PasteboardModel
+    let searchKeyword: String
+
+    var body: some View {
+        if searchKeyword.isEmpty {
+            Text(model.attributeString.string)
+        } else {
+            Text(model.highlightedPlainText(keyword: searchKeyword))
+        }
+    }
+}
+
+// MARK: - Quick Paste Badge View
+
+private struct QuickPasteBadgeView: View {
+    let index: Int
+    let color: Color
+
+    var body: some View {
+        Text(index, format: .number)
+            .font(.system(.caption2, design: .rounded))
+            .foregroundStyle(color)
+    }
+}
+
+// MARK: - File Content Views
+
+private struct FloatingSingleFileView: View {
+    let path: String
+
+    private var fileURL: URL {
+        URL(filePath: path)
+    }
+
+    private var fileName: String {
+        fileURL.lastPathComponent
+    }
+
+    var body: some View {
+        HStack(spacing: Const.space8) {
+            FileThumbnailView(fileURLString: path, maxSize: 32)
+                .frame(width: 32, height: 32)
+
+            Text(fileName)
+                .font(.caption)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .foregroundStyle(.primary)
+        }
+    }
+}
+
+private struct FloatingMultipleFilesView: View {
+    let paths: [String]
+
+    var body: some View {
+        HStack(spacing: Const.space8) {
+            Image(systemName: "folder.fill")
+                .resizable()
+                .scaledToFit()
+                .foregroundStyle(Color.accentColor.opacity(0.6))
+                .frame(width: 24, height: 24)
+
+            Text(.fileCount(paths.count))
+                .font(.caption)
+                .foregroundStyle(.primary)
+        }
     }
 }
 
@@ -311,9 +432,8 @@ private struct FloatingImageThumbnailView: View {
 }
 
 #Preview {
-    @Previewable @State var previewId: PasteboardModel.ID? = nil
     let env = AppEnvironment()
-    let data = "你好".data(using: .utf8) ?? Data()
+    let data = "Hello".data(using: .utf8) ?? Data()
     FloatingCardView(
         model: PasteboardModel(
             pasteboardType: .string,
@@ -321,15 +441,16 @@ private struct FloatingImageThumbnailView: View {
             showData: data,
             timestamp: Int64(Date().timeIntervalSince1970),
             appPath: "/Applications/Google Chrome.app",
-            appName: "微信",
-            searchText: "你好",
+            appName: "Preview",
+            searchText: "Hello",
             length: 2,
             group: -1,
             tag: "string"
         ),
         isSelected: false,
-        showPreviewId: $previewId,
+        showPreview: false,
         quickPasteIndex: 1,
+        enableLinkPreview: true,
         searchKeyword: ""
     )
     .environment(env)

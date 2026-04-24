@@ -95,21 +95,19 @@ enum PasteUserDefaults {
         defaultValue: {
             var apps: [IgnoredAppInfo] = [
                 IgnoredAppInfo(
-                    name: "钥匙串访问",
+                    name: String(localized: .keychain),
                     bundleIdentifier: "com.apple.keychainaccess",
                     path: "/System/Applications/Utilities/Keychain Access.app"
                 ),
             ]
-            if #available(macOS 15.0, *) {
-                apps.insert(
-                    IgnoredAppInfo(
-                        name: "密码",
-                        bundleIdentifier: "com.apple.Passwords",
-                        path: "/System/Applications/Passwords.app"
-                    ),
-                    at: 0
-                )
-            }
+            apps.insert(
+                IgnoredAppInfo(
+                    name: String(localized: .passwords),
+                    bundleIdentifier: "com.apple.Passwords",
+                    path: "/System/Applications/Passwords.app"
+                ),
+                at: 0
+            )
             return apps
         }()
     )
@@ -155,9 +153,15 @@ enum PasteUserDefaults {
     /// tag 字段迁移标记
     @UserDefaultsWrapper(.tagFieldMigrated, defaultValue: false)
     static var tagFieldMigrated
+    /// hidden 字段新增标记
+    @UserDefaultsWrapper(.hiddenFieldMigrated, defaultValue: false)
+    static var hiddenFieldMigrated
     /// 状态栏图标
     @UserDefaultsWrapper(.showMenuBarIcon, defaultValue: true)
     static var showMenuBarIcon
+    /// Dock 图标
+    @UserDefaultsWrapper(.showDockIcon, defaultValue: true)
+    static var showDockIcon
 }
 
 @propertyWrapper

@@ -61,8 +61,8 @@ final class RichTextEditorCoordinator: NSObject {
     private func applyBold(to storage: NSTextStorage, range: NSRange) {
         storage.enumerateAttribute(.font, in: range, options: []) {
             value,
-                subRange,
-                _ in
+            subRange,
+            _ in
             let currentFont =
                 (value as? NSFont)
                     ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
@@ -85,8 +85,8 @@ final class RichTextEditorCoordinator: NSObject {
     private func applyItalic(to storage: NSTextStorage, range: NSRange) {
         storage.enumerateAttribute(.font, in: range, options: []) {
             value,
-                subRange,
-                _ in
+            subRange,
+            _ in
             let currentFont =
                 (value as? NSFont)
                     ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
@@ -114,8 +114,8 @@ final class RichTextEditorCoordinator: NSObject {
 
         storage.enumerateAttribute(.underlineStyle, in: range, options: []) {
             value,
-                _,
-                stop in
+            _,
+            stop in
             if let style = value as? Int, style != 0 {
                 hasUnderline = true
                 stop.pointee = true

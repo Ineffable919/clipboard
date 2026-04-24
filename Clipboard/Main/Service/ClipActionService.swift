@@ -13,8 +13,14 @@ final class ClipActionService {
 
     func paste(
         _ item: PasteboardModel,
-        isAttribute: Bool = true
+        isAttribute: Bool = true,
+        checkPermissions: Bool = false
     ) {
+        guard userDefaults.pasteDirect, checkPermissions else {
+            pasteBoard.pasteMultipleData([item], isAttribute)
+            WindowManager.shared.toggleWindow()
+            return
+        }
         let hasPermission = AXIsProcessTrusted()
 
         if !hasPermission {
@@ -29,34 +35,58 @@ final class ClipActionService {
             }
             return
         }
-
-        pasteBoard.pasteData(item, isAttribute)
-        guard userDefaults.pasteDirect else {
-            WindowManager.shared.toggleWindow()
-            return
-        }
+        pasteBoard.pasteMultipleData([item], isAttribute)
         WindowManager.shared.toggleWindow {
             KeyboardShortcuts.postCmdVEvent()
         }
     }
 
     func copy(_ item: PasteboardModel, isAttribute: Bool = true) {
-        pasteBoard.pasteData(item, isAttribute)
+        pasteBoard.pasteMultipleData([item], isAttribute)
     }
 
-    func delete(_ item: PasteboardModel) {
-        if item.group != -1, let id = item.id {
-            do {
-                try dataStore.updateItemGroup(
-                    itemId: id,
-                    groupId: -1
-                )
-            } catch {
-                log.error("更新卡片 group 失败: \(error)")
-            }
+    /// 将多个项目合并写入剪贴板
+    func copyMultiple(_ items: [PasteboardModel], isAttribute: Bool = true) {
+        pasteBoard.pasteMultipleData(items, isAttribute)
+    }
+
+    /// 将多个项目合并写入剪贴板并粘贴
+    func pasteMultiple(
+        _ items: [PasteboardModel],
+        isAttribute: Bool = true,
+        checkPermissions: Bool = false
+    ) {
+        guard !items.isEmpty else { return }
+
+        if items.count == 1 {
+            paste(
+                items[0],
+                isAttribute: isAttribute,
+                checkPermissions: checkPermissions
+            )
             return
         }
-        dataStore.deleteItems(item)
+
+        guard userDefaults.pasteDirect, checkPermissions else {
+            pasteBoard.pasteMultipleData(items, isAttribute)
+            WindowManager.shared.toggleWindow()
+            return
+        }
+
+        let hasPermission = AXIsProcessTrusted()
+        guard hasPermission else {
+            log.debug(
+                "Accessibility permission not granted, cannot send keyboard events"
+            )
+            pasteBoard.pasteMultipleData(items, isAttribute)
+            WindowManager.shared.toggleWindow()
+            return
+        }
+
+        pasteBoard.pasteMultipleData(items, isAttribute)
+        WindowManager.shared.toggleWindow {
+            KeyboardShortcuts.postCmdVEvent()
+        }
     }
 
     private func requestAccessibilityPermission(
@@ -64,14 +94,11 @@ final class ClipActionService {
         isAttribute: Bool = true
     ) {
         let alert = NSAlert()
-        alert.messageText = "需要辅助功能权限"
-        alert.informativeText = """
-        Clipboard 需要获取辅助功能权限
-        才能直接粘贴到其它应用
-        """
+        alert.messageText = String(localized: .accessTitle)
+        alert.informativeText = String(localized: .accessMessage)
         alert.alertStyle = .informational
-        alert.addButton(withTitle: "设置")
-        alert.addButton(withTitle: "稍后设置，复制到剪贴板")
+        alert.addButton(withTitle: String(localized: .openSettings))
+        alert.addButton(withTitle: String(localized: .copyLater))
 
         let response = alert.runModal()
 
@@ -84,7 +111,7 @@ final class ClipActionService {
                 NSWorkspace.shared.open(url)
             }
         case .alertSecondButtonReturn:
-            pasteBoard.pasteData(item, isAttribute)
+            pasteBoard.pasteMultipleData([item], isAttribute)
         default:
             break
         }

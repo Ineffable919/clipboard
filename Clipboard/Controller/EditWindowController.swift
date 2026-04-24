@@ -67,7 +67,48 @@ final class EditWindowController: NSWindowController {
         fatalError("init(coder:) has not been implemented")
     }
 
+    private var isNewItem: Bool = false
+
     // MARK: - Public Methods
+
+    func openNewWindow() {
+        let appName = Bundle.main.object(
+            forInfoDictionaryKey: "CFBundleName"
+        ) as? String ?? "Clipboard"
+
+        let emptyModel = PasteboardModel(
+            pasteboardType: .string,
+            data: Data(),
+            showData: nil,
+            timestamp: Int64(Date().timeIntervalSince1970),
+            appPath: Bundle.main.bundlePath,
+            appName: appName,
+            searchText: "",
+            length: 0,
+            group: -1,
+            tag: "string"
+        )
+
+        isNewItem = true
+        currentModel = emptyModel
+        editState = EditWindowState(model: emptyModel)
+
+        if let state = editState {
+            let editView = TextEditView(
+                state: state,
+                onCancel: { [weak self] in
+                    self?.closeWindow()
+                },
+                onSave: { [weak self] content in
+                    self?.saveContent(content)
+                }
+            )
+            window?.contentView = NSHostingView(rootView: editView)
+        }
+
+        NSApp.activate(ignoringOtherApps: true)
+        window?.makeKeyAndOrderFront(nil)
+    }
 
     func openWindow(with model: PasteboardModel) {
         guard model.pasteboardType.isText() else {
@@ -75,6 +116,7 @@ final class EditWindowController: NSWindowController {
             return
         }
 
+        isNewItem = false
         currentModel = model
         editState = EditWindowState(model: model)
 
@@ -99,6 +141,7 @@ final class EditWindowController: NSWindowController {
         window?.orderOut(nil)
         currentModel = nil
         editState = nil
+        isNewItem = false
     }
 
     private func saveFromState() {
@@ -114,12 +157,19 @@ final class EditWindowController: NSWindowController {
         }
 
         let plainText = content.string
-        let length = content.length
+        guard !plainText.allSatisfy(\.isWhitespace) else {
+            closeWindow()
+            return
+        }
 
-        let newData: Data = if model.pasteboardType == .string {
+        let length = content.length
+        let isRich = Self.hasRichTextAttributes(content)
+        let actualType: PasteboardType = isRich ? .rtf : .string
+
+        let newData: Data = if actualType == .string {
             plainText.data(using: .utf8) ?? Data()
         } else {
-            content.toData(with: model.pasteboardType) ?? Data()
+            content.toData(with: actualType) ?? Data()
         }
 
         let showAttr =
@@ -128,27 +178,92 @@ final class EditWindowController: NSWindowController {
                     from: NSRange(location: 0, length: 250)
                 )
                 : content
-        let showData = showAttr.toData(with: model.pasteboardType)
+        let showData = showAttr.toData(with: actualType)
 
         let newTag = PasteboardModel.calculateTag(
-            type: model.pasteboardType,
+            type: actualType,
             content: newData
         )
 
-        Task {
-            await PasteDataStore.main.updateItemContent(
-                id: model.id!,
-                newData: newData,
-                newShowData: showData,
-                newSearchText: plainText,
-                newLength: length,
-                newTag: newTag
+        if isNewItem {
+            let newModel = PasteboardModel(
+                pasteboardType: actualType,
+                data: newData,
+                showData: showData,
+                timestamp: Int64(Date().timeIntervalSince1970),
+                appPath: model.appPath,
+                appName: model.appName,
+                searchText: plainText,
+                length: length,
+                group: -1,
+                tag: newTag
             )
 
-            await MainActor.run {
-                self.closeWindow()
+            PasteDataStore.main.insertModel(newModel)
+            closeWindow()
+        } else {
+            guard let itemId = model.id else { return }
+
+            Task {
+                await PasteDataStore.main.updateItemContent(
+                    id: itemId,
+                    newData: newData,
+                    newShowData: showData,
+                    newSearchText: plainText,
+                    newLength: length,
+                    newTag: newTag
+                )
+
+                await MainActor.run {
+                    self.closeWindow()
+                }
             }
         }
+    }
+
+    /// 检测 NSAttributedString 是否包含富文本属性（加粗、斜体、下划线、删除线等）
+    private static func hasRichTextAttributes(
+        _ attributedString: NSAttributedString
+    ) -> Bool {
+        guard attributedString.length > 0 else { return false }
+
+        let fullRange = NSRange(location: 0, length: attributedString.length)
+        var found = false
+
+        attributedString.enumerateAttributes(
+            in: fullRange,
+            options: []
+        ) { attributes, _, stop in
+            // 检查下划线
+            if let underline = attributes[.underlineStyle] as? Int,
+               underline != 0
+            {
+                found = true
+                stop.pointee = true
+                return
+            }
+
+            // 检查删除线
+            if let strikethrough = attributes[.strikethroughStyle] as? Int,
+               strikethrough != 0
+            {
+                found = true
+                stop.pointee = true
+                return
+            }
+
+            // 检查字体特征（加粗、斜体）
+            if let font = attributes[.font] as? NSFont {
+                let traits = font.fontDescriptor.symbolicTraits
+                if traits.contains(.bold) || traits.contains(.italic) {
+                    found = true
+                    stop.pointee = true
+                    return
+                }
+            }
+        }
+
+        return found
     }
 
     // MARK: - Private Methods

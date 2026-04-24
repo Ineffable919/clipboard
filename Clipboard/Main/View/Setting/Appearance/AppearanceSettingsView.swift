@@ -54,44 +54,26 @@ struct AppearanceSettingsView: View {
             }
             .settingsStyle()
 
-            Text("背景")
+            Text(.settingAppearanceBackgroundSectionTitle)
                 .font(.headline)
-                .fontWeight(.medium)
+                .bold()
 
             VStack(spacing: 0) {
                 if #available(macOS 26.0, *) {
                     HStack {
-                        Text("类型")
+                        Text(.settingAppearanceBackgroundTypeLabel)
                         Spacer()
-                        HStack(alignment: .top, spacing: Const.space4) {
-                            Image(
-                                systemName: backgroundType == .liquid
-                                    ? "record.circle.fill" : "circle"
-                            )
-                            .foregroundStyle(
-                                backgroundType == .liquid
-                                    ? Color.accentColor : .secondary
-                            )
-                            .font(.system(size: Const.space16))
-                            .onTapGesture {
-                                backgroundType = .liquid
-                            }
-                            Text("液态玻璃")
+                        BackgroundTypeOptionButton(
+                            title: .settingAppearanceBackgroundTypeLiquid,
+                            isSelected: backgroundType == .liquid
+                        ) {
+                            backgroundType = .liquid
                         }
-                        HStack(alignment: .top, spacing: Const.space4) {
-                            Image(
-                                systemName: backgroundType == .frosted
-                                    ? "record.circle.fill" : "circle"
-                            )
-                            .foregroundStyle(
-                                backgroundType == .frosted
-                                    ? Color.accentColor : .secondary
-                            )
-                            .font(.system(size: Const.space16))
-                            .onTapGesture {
-                                backgroundType = .frosted
-                            }
-                            Text("毛玻璃")
+                        BackgroundTypeOptionButton(
+                            title: .settingAppearanceBackgroundTypeFrosted,
+                            isSelected: backgroundType == .frosted
+                        ) {
+                            backgroundType = .frosted
                         }
                     }
                 }
@@ -139,10 +121,10 @@ struct GlassMaterialSlider: View {
 
     var body: some View {
         HStack {
-            Text("玻璃材质")
+            Text(.settingAppearanceGlassMaterialLabel)
             Spacer()
             HStack(spacing: Const.space8) {
-                Text("透明")
+                Text(.settingAppearanceGlassMaterialTransparent)
                     .font(.callout)
                     .foregroundStyle(.secondary)
                 if #available(macOS 26.0, *) {
@@ -165,7 +147,7 @@ struct GlassMaterialSlider: View {
                     )
                     .tint(.accentColor)
                 }
-                Text("模糊")
+                Text(.settingAppearanceGlassMaterialBlurred)
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
@@ -175,14 +157,21 @@ struct GlassMaterialSlider: View {
     }
 }
 
-// MARK: - 外观设置行
+// MARK: - 语言与外观设置行
 
 struct AppearanceSettingsRow: View {
     @AppStorage(PrefKey.appearance.rawValue) private var appearanceRaw: Int = 0
+    @AppStorage(PrefKey.appLanguage.rawValue) private var languageRaw: String =
+        AppLanguage.zhHans.rawValue
+    @State private var pendingLanguage: AppLanguage? = nil
 
     private var selectedAppearance: AppearanceMode {
         get { .init(rawValue: appearanceRaw) ?? .system }
         nonmutating set { appearanceRaw = newValue.rawValue }
+    }
+
+    private var selectedLanguage: AppLanguage {
+        AppLanguage(rawValue: languageRaw) ?? .zhHans
     }
 
     private let options: [(mode: AppearanceMode, icon: String)] = [
@@ -192,34 +181,80 @@ struct AppearanceSettingsRow: View {
     ]
 
     var body: some View {
-        HStack {
-            Text("外观")
-            Spacer()
-            Picker(
-                "",
-                selection: Binding(
-                    get: { selectedAppearance },
-                    set: { newValue in
-                        selectedAppearance = newValue
-                        applyAppearance(newValue)
+        VStack(spacing: 0) {
+            // 语言
+            HStack {
+                Text(.settingLanguage)
+                Spacer()
+                Picker(
+                    selection: Binding(
+                        get: { selectedLanguage },
+                        set: { newValue in
+                            guard newValue != selectedLanguage else { return }
+                            pendingLanguage = newValue
+                        }
+                    ),
+                    label: EmptyView()
+                ) {
+                    ForEach(AppLanguage.allCases) { lang in
+                        Text(lang.title).tag(lang)
                     }
-                )
-            ) {
-                ForEach(options, id: \.mode) { option in
-                    HStack {
-                        Image(systemName: option.icon)
-                        Text(option.mode.title)
-                    }
-                    .tag(option.mode)
                 }
+                .pickerStyle(.menu)
+                .buttonStyle(.borderless)
             }
-            .pickerStyle(.menu)
-            .buttonStyle(.borderless)
+            .padding(.vertical, Const.space8)
+            .padding(.horizontal, Const.space16)
+
+            // 外观
+            HStack {
+                Text(.settingAppearanceModeLabel)
+                Spacer()
+                Picker(
+                    "",
+                    selection: Binding(
+                        get: { selectedAppearance },
+                        set: { newValue in
+                            selectedAppearance = newValue
+                            applyAppearance(newValue)
+                        }
+                    )
+                ) {
+                    ForEach(options, id: \.mode) { option in
+                        HStack {
+                            Image(systemName: option.icon)
+                            Text(option.mode.title)
+                        }
+                        .tag(option.mode)
+                    }
+                }
+                .pickerStyle(.menu)
+                .buttonStyle(.borderless)
+            }
+            .padding(.vertical, Const.space8)
+            .padding(.horizontal, Const.space16)
         }
-        .padding(.vertical, Const.space8)
-        .padding(.horizontal, Const.space16)
         .onAppear {
             applyAppearance(selectedAppearance)
+        }
+        .alert(
+            Text(.settingLanguageRestartConfirmTitle),
+            isPresented: Binding(
+                get: { pendingLanguage != nil },
+                set: { if !$0 { pendingLanguage = nil } }
+            )
+        ) {
+            Button(.commonCancel, role: .cancel) {
+                pendingLanguage = nil
+            }
+            Button(.commonConfirm) {
+                guard let lang = pendingLanguage else { return }
+                languageRaw = lang.rawValue
+                _ = lang.apply()
+                NSApplication.shared.relaunch()
+            }
+        } message: {
+            Text(.settingLanguageRestartConfirmMessage)
         }
     }
 
@@ -249,24 +284,15 @@ struct DisplayModeRow: View {
 
     var body: some View {
         HStack {
-            Text("显示模式")
+            Text(.settingAppearanceDisplayModeLabel)
             Spacer()
             HStack(spacing: Const.space16) {
                 ForEach(DisplayMode.allCases, id: \.self) { mode in
-                    HStack(spacing: Const.space4) {
-                        Image(
-                            systemName: displayMode == mode
-                                ? "record.circle.fill" : "circle"
-                        )
-                        .foregroundStyle(
-                            displayMode == mode
-                                ? Color.accentColor : .secondary
-                        )
-                        .font(.system(size: Const.space16))
-                        .onTapGesture {
-                            displayMode = mode
-                        }
-                        Text(mode.title)
+                    BackgroundTypeOptionButton(
+                        title: mode.title,
+                        isSelected: displayMode == mode
+                    ) {
+                        displayMode = mode
                     }
                 }
             }
@@ -283,7 +309,7 @@ struct WindowPositionRow: View {
 
     var body: some View {
         HStack {
-            Text("窗口位置")
+            Text(.settingAppearanceWindowPositionLabel)
             Spacer()
             Picker(
                 "",
@@ -298,6 +324,26 @@ struct WindowPositionRow: View {
         }
         .padding(.vertical, Const.space8)
         .padding(.horizontal, Const.space16)
+    }
+}
+
+struct BackgroundTypeOptionButton: View {
+    let title: LocalizedStringResource
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(alignment: .top, spacing: Const.space4) {
+                Image(systemName: isSelected ? "record.circle.fill" : "circle")
+                    .foregroundStyle(
+                        isSelected ? Color.accentColor : .secondary
+                    )
+                    .font(.system(size: Const.space16))
+                Text(title)
+            }
+        }
+        .buttonStyle(.plain)
     }
 }
 

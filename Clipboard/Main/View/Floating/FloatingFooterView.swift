@@ -8,20 +8,13 @@
 import SwiftUI
 
 struct FloatingFooterView: View {
-    @State private var topBarVM = TopBarViewModel()
+    @Environment(TopBarViewModel.self) private var topBarVM
     private let pd = PasteDataStore.main
-
-    private var formattedCount: String {
-        NumberFormatter.localizedString(
-            from: NSNumber(value: pd.filteredCount),
-            number: .decimal
-        )
-    }
 
     var body: some View {
         HStack {
             Spacer()
-            Text("\(formattedCount) 个项目")
+            Text(.itemCount(pd.filteredCount))
                 .font(.system(size: 12.0, weight: .regular))
                 .foregroundStyle(.secondary)
             Spacer()
@@ -34,9 +27,6 @@ struct FloatingFooterView: View {
         .padding(.horizontal, Const.space16)
         .frame(height: FloatConst.footerHeight)
         .frame(maxWidth: .infinity)
-        .onAppear {
-            topBarVM.startPauseDisplayTimer()
-        }
     }
 }
 
@@ -67,12 +57,14 @@ private struct CompactPauseIndicator: View {
             )
         }
         .buttonStyle(.plain)
-        .help("点击恢复记录")
+        .help(String(localized: .resumeHint))
     }
 }
 
 #Preview {
+    let topBarVM = TopBarViewModel()
     FloatingFooterView()
+        .environment(topBarVM)
         .frame(width: 350, height: 32)
         .background(Color.gray.opacity(0.1))
 }

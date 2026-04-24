@@ -32,6 +32,8 @@ extension AppDelegate: NSApplicationDelegate {
 
         applyAppearanceSettings()
 
+        applyDockIconPolicy()
+
         Task {
             await initClipboardAsync()
         }
@@ -45,6 +47,18 @@ extension AppDelegate: NSApplicationDelegate {
         StatusBarController.shared.cleanup()
         EventDispatcher.shared.stop()
         AppIconCache.shared.clearCache()
+    }
+
+    func applicationShouldHandleReopen(_: NSApplication, hasVisibleWindows _: Bool) -> Bool {
+        if !windowManager.isVisible {
+            toggleWindow()
+        }
+        return true
+    }
+
+    private func applyDockIconPolicy() {
+        let showDockIcon = PasteUserDefaults.showDockIcon
+        NSApp.setActivationPolicy(showDockIcon ? .regular : .accessory)
     }
 
     private func applyAppearanceSettings() {
@@ -117,6 +131,10 @@ extension AppDelegate {
                     NSApplication.shared.terminate(nil)
                     return nil
                 }
+                if modifiers == "t" || modifiers == "T" {
+                    EditWindowController.shared.openNewWindow()
+                    return nil
+                }
             }
             return event
         }
@@ -170,7 +188,7 @@ extension AppDelegate: SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
     ) {
         guard !willHandle else { return }
         log.info("发现更新：\(update.displayVersionString)")
-        UpdateManager.shared.setUpdateAvailable(version: update.versionString)
+        UpdateManager.shared.setUpdateAvailable(version: update.displayVersionString)
     }
 
     func standardUserDriverDidReceiveUserAttention(forUpdate _: SUAppcastItem) {
@@ -186,4 +204,5 @@ extension AppDelegate: SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
 
 extension Notification.Name {
     static let menuBarIconVisibilityChanged = Notification.Name("menuBarIconVisibilityChanged")
+    static let navigateToSettingPage = Notification.Name("navigateToSettingPage")
 }

@@ -20,7 +20,7 @@ struct SettingsMenuView: View {
     var body: some View {
         ZStack(alignment: .topTrailing) {
             Image(systemName: "ellipsis")
-                .font(.system(size: Const.iconHdSize, weight: .regular))
+                .font(.system(size: Const.iconSize14, weight: .regular))
                 .padding(.horizontal, Const.space6)
                 .padding(.vertical, Const.space10)
                 .background(
@@ -60,20 +60,42 @@ struct SettingsMenuView: View {
         }
     }
 
+    private static let appName: String = Bundle.main.object(
+        forInfoDictionaryKey: "CFBundleName"
+    ) as? String ?? "Clipboard"
+
+    private func setMenuItemImage(
+        _ item: NSMenuItem,
+        symbolName: String
+    ) {
+        if #available(macOS 26.0, *) {
+            item.image = NSImage(
+                systemSymbolName: symbolName,
+                accessibilityDescription: nil
+            )
+        }
+    }
+
     private func showNativeMenu() {
         let menu = NSMenu()
 
         if updateManager.hasUpdate {
             let newVersionItem = NSMenuItem(
-                title: "检测到新版本 \(updateManager.availableVersion ?? "")",
+                title: String(
+                    localized: .updateAvailable(
+                        updateManager.availableVersion ?? ""
+                    )
+                ),
                 action: #selector(MenuActions.checkForUpdates),
                 keyEquivalent: ""
             )
             newVersionItem.target = MenuActions.shared
-            if let image = NSImage(
-                systemSymbolName: "arrow.up.circle.dotted",
-                accessibilityDescription: nil
-            ) {
+            if #available(macOS 26.0, *),
+               let image = NSImage(
+                   systemSymbolName: "arrow.up.circle.dotted",
+                   accessibilityDescription: nil
+               )
+            {
                 let config = NSImage.SymbolConfiguration(
                     pointSize: 16.0,
                     weight: .semibold
@@ -87,40 +109,54 @@ struct SettingsMenuView: View {
             AppDelegate.shared?.updaterController.updater.checkForUpdatesInBackground()
         }
 
+        let aboutItem = NSMenuItem(
+            title: String(localized: .aboutApp(Self.appName)),
+            action: #selector(MenuActions.openAbout),
+            keyEquivalent: ""
+        )
+        aboutItem.target = MenuActions.shared
+        setMenuItemImage(aboutItem, symbolName: "info.circle")
+        menu.addItem(aboutItem)
+
+        menu.addItem(NSMenuItem.separator())
+
+        let newTextItem = NSMenuItem(
+            title: String(localized: .newText),
+            action: #selector(MenuActions.openNewTextItem),
+            keyEquivalent: "t"
+        )
+        newTextItem.keyEquivalentModifierMask = .command
+        newTextItem.target = MenuActions.shared
+        setMenuItemImage(newTextItem, symbolName: "square.and.pencil")
+        menu.addItem(newTextItem)
+
         let settingsItem = NSMenuItem(
-            title: "设置...",
+            title: String(localized: .settings),
             action: #selector(MenuActions.openSettings),
             keyEquivalent: ","
         )
         settingsItem.target = MenuActions.shared
-        settingsItem.image = NSImage(
-            systemSymbolName: "gearshape",
-            accessibilityDescription: nil
-        )
+        setMenuItemImage(settingsItem, symbolName: "gearshape")
         menu.addItem(settingsItem)
 
+        menu.addItem(NSMenuItem.separator())
+
         let updateItem = NSMenuItem(
-            title: "检查更新",
+            title: String(localized: .checkUpdates),
             action: #selector(MenuActions.checkForUpdates),
             keyEquivalent: ""
         )
         updateItem.target = MenuActions.shared
-        updateItem.image = NSImage(
-            systemSymbolName: "arrow.clockwise",
-            accessibilityDescription: nil
-        )
+        setMenuItemImage(updateItem, symbolName: "arrow.clockwise")
         menu.addItem(updateItem)
 
         let helpItem = NSMenuItem(
-            title: "帮助",
+            title: String(localized: .menuHelp),
             action: #selector(MenuActions.invokeHelp),
             keyEquivalent: ""
         )
         helpItem.target = MenuActions.shared
-        helpItem.image = NSImage(
-            systemSymbolName: "questionmark.circle",
-            accessibilityDescription: nil
-        )
+        setMenuItemImage(helpItem, symbolName: "questionmark.circle")
         menu.addItem(helpItem)
 
         menu.addItem(NSMenuItem.separator())
@@ -130,92 +166,83 @@ struct SettingsMenuView: View {
             action: nil,
             keyEquivalent: ""
         )
-        pauseItem.image = NSImage(
-            systemSymbolName: "pause.circle",
-            accessibilityDescription: nil
-        )
+        setMenuItemImage(pauseItem, symbolName: "pause.circle")
 
         let pauseSubmenu = NSMenu()
 
         if topBarVM.isPaused {
             let resumeItem = NSMenuItem(
-                title: "恢复",
+                title: String(localized: .resume),
                 action: #selector(MenuActions.resumePasteboard),
                 keyEquivalent: ""
             )
             resumeItem.target = MenuActions.shared
-            resumeItem.image = NSImage(
-                systemSymbolName: "play.circle",
-                accessibilityDescription: nil
-            )
+            setMenuItemImage(resumeItem, symbolName: "play.circle")
             pauseSubmenu.addItem(resumeItem)
             pauseSubmenu.addItem(NSMenuItem.separator())
         } else {
             let pauseIndefiniteItem = NSMenuItem(
-                title: "暂停",
+                title: String(localized: .pause),
                 action: #selector(MenuActions.pauseIndefinitely),
                 keyEquivalent: ""
             )
             pauseIndefiniteItem.target = MenuActions.shared
-            pauseIndefiniteItem.image = NSImage(
-                systemSymbolName: "pause.circle",
-                accessibilityDescription: nil
-            )
+            setMenuItemImage(pauseIndefiniteItem, symbolName: "pause.circle")
             pauseSubmenu.addItem(pauseIndefiniteItem)
 
             pauseSubmenu.addItem(NSMenuItem.separator())
         }
 
         let pause15Item = NSMenuItem(
-            title: "暂停 15 分钟",
+            title: String(localized: .pauseFifteen),
             action: #selector(MenuActions.pause15Minutes),
             keyEquivalent: ""
         )
         pause15Item.target = MenuActions.shared
-        pause15Item.image = symbolImage(number: 15)
+        setMenuItemImage(pause15Item, symbolName: "15.circle")
         pauseSubmenu.addItem(pause15Item)
 
         let pause30Item = NSMenuItem(
-            title: "暂停 30 分钟",
+            title: String(localized: .pauseThirty),
             action: #selector(MenuActions.pause30Minutes),
             keyEquivalent: ""
         )
         pause30Item.target = MenuActions.shared
-        pause30Item.image = symbolImage(number: 30)
+        setMenuItemImage(pause30Item, symbolName: "30.circle")
         pauseSubmenu.addItem(pause30Item)
 
         let pause1hItem = NSMenuItem(
-            title: "暂停 1 小时",
+            title: String(localized: .pauseOneHour),
             action: #selector(MenuActions.pause1Hour),
             keyEquivalent: ""
         )
         pause1hItem.target = MenuActions.shared
-        pause1hItem.image = symbolImage(number: 1)
+        setMenuItemImage(pause1hItem, symbolName: "1.circle")
         pauseSubmenu.addItem(pause1hItem)
 
         let pause3hItem = NSMenuItem(
-            title: "暂停 3 小时",
+            title: String(localized: .pauseThreeHours),
             action: #selector(MenuActions.pause3Hours),
             keyEquivalent: ""
         )
         pause3hItem.target = MenuActions.shared
-        pause3hItem.image = symbolImage(number: 3)
+        setMenuItemImage(pause3hItem, symbolName: "3.circle")
         pauseSubmenu.addItem(pause3hItem)
 
         let pause8hItem = NSMenuItem(
-            title: "暂停 8 小时",
+            title: String(localized: .pauseEightHours),
             action: #selector(MenuActions.pause8Hours),
             keyEquivalent: ""
         )
         pause8hItem.target = MenuActions.shared
-        pause8hItem.image = symbolImage(number: 8)
+        setMenuItemImage(pause8hItem, symbolName: "8.circle")
         pauseSubmenu.addItem(pause8hItem)
 
         pauseItem.submenu = pauseSubmenu
         menu.addItem(pauseItem)
 
         let quitItem = NSMenuItem(
-            title: "退出",
+            title: String(localized: .quit),
             action: #selector(NSApplication.shared.terminate),
             keyEquivalent: "q"
         )
@@ -224,13 +251,6 @@ struct SettingsMenuView: View {
         if let event = NSApp.currentEvent {
             NSMenu.popUpContextMenu(menu, with: event, for: NSView())
         }
-    }
-
-    private func symbolImage(number: Int) -> NSImage? {
-        NSImage(
-            systemSymbolName: "\(number).circle",
-            accessibilityDescription: nil
-        )
     }
 }
 
@@ -252,6 +272,14 @@ class MenuActions: NSObject {
         ) {
             NSWorkspace.shared.open(url)
         }
+    }
+
+    @objc func openNewTextItem() {
+        EditWindowController.shared.openNewWindow()
+    }
+
+    @objc func openAbout() {
+        SettingWindowController.shared.toggleWindow(page: .about)
     }
 
     // MARK: - 暂停功能
