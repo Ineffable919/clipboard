@@ -32,6 +32,9 @@ struct TextEditView: View {
                 coordinator: $textEditor
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .onChange(of: textEditor) { _, newCoordinator in
+                state.editorCoordinator = newCoordinator
+            }
 
             Divider()
 

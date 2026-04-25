@@ -135,7 +135,6 @@ final class TopBarView: NSView {
             if isShowingPopover {
                 return
             }
-            log.debug("搜索聚焦： \(isSearching)  筛选有值： \(topVM.hasInput)")
 
             if isSearching, !topVM.hasInput {
                 deactivateSearch()
@@ -587,9 +586,7 @@ final class TopBarView: NSView {
 
     func activateSearch(with character: String) {
         activateSearch()
-        searchField.stringValue = character
-        searchField.notifyTextChanged(character)
-        searchField.moveCursorToEnd()
+        searchField.appendText(character)
     }
 
     func deactivateSearch() {
@@ -764,8 +761,9 @@ final class TopBarView: NSView {
     private func togglePopover() {
         guard let filterPopoverVC else { return }
 
-        if filterPopover.isShown {
+        if isShowingPopover {
             filterPopover.close()
+            isShowingPopover = false
             return
         }
 
@@ -788,20 +786,10 @@ final class TopBarView: NSView {
 // MARK: - NSPopoverDelegate
 
 extension TopBarView: NSPopoverDelegate {
-    func popoverWillShow(_: Notification) {
-        isShowingPopover = true
-    }
-
-    func popoverWillClose(_: Notification) {}
-
     func popoverDidClose(_: Notification) {
-        isShowingPopover = false
-
         if isSearching, !topVM!.hasInput, !searchField.isFirstResponder {
             deactivateSearch()
             onFocusRegionChange?(.collection)
         }
-
-        if isSearching {}
     }
 }

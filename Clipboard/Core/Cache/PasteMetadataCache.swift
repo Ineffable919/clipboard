@@ -113,9 +113,8 @@ final class PasteMetadataCache {
 
         var finalTypes: [PasteModelType] = []
         let hasString = types.contains(.string)
-        let hasRich = types.contains(where: { $0 == .string })
 
-        if hasString || hasRich {
+        if hasString {
             finalTypes.append(.string)
         }
 

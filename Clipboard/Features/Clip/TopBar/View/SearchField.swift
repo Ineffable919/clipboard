@@ -338,6 +338,19 @@ final class SearchField: NSView {
         cancelButton.isHidden = value.isEmpty && tokenTextView.getAllTokens().isEmpty
         onTextChanged?(value)
     }
+
+    func appendText(_ character: String) {
+        guard !character.isEmpty else { return }
+        tokenTextView.insertText(
+            character,
+            replacementRange: NSRange(location: NSNotFound, length: 0)
+        )
+        let plainText = tokenTextView.getPlainText()
+        text = plainText
+        updateCancelButtonVisibility()
+        onTextChanged?(plainText)
+        moveCursorToEnd()
+    }
 }
 
 // MARK: - NSTextViewDelegate

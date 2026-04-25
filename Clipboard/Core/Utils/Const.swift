@@ -22,6 +22,15 @@ enum Const {
     static let bottomSize: CGFloat = 40.0
 
     static let windowRadis: CGFloat = 23.0
+    
+    static let btnRadius: CGFloat =
+        if #available(macOS 26.0, *) {
+            10.0
+        } else {
+            6.0
+        }
+
+    
     static let radius: CGFloat =
         if #available(macOS 26.0, *) {
             14.0
@@ -74,9 +83,9 @@ enum Const {
         style: .continuous
     )
 
-    static let maxPreviewWidth: CGFloat = 800.0
-    static let maxPreviewHeight: CGFloat = 600.0
-    static let maxContentHeight: CGFloat = 480.0
+    static let maxPreviewWidth: CGFloat = 980.0
+    static let maxPreviewHeight: CGFloat = 640.0
+    static let maxContentHeight: CGFloat = 600.0
     static let minPreviewHeight: CGFloat = 300.0
     static let minPreviewWidth: CGFloat = 400.0
     static let maxTextSize: Int = 1000

@@ -21,10 +21,8 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
 
     var onSave: ((PasteboardModel, NSAttributedString) -> Void)?
 
-    private var localEventMonitor: Any?
-
     private init() {
-        let window = NSWindow(
+        let window = EditWindow(
             contentRect: NSRect(
                 x: 0,
                 y: 0,
@@ -60,6 +58,9 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
         super.init(window: window)
 
         window.delegate = self
+        window.onKeyEquivalent = { [weak self] event in
+            self?.handleKeyEquivalent(event) ?? false
+        }
     }
 
     @available(*, unavailable)
@@ -106,7 +107,6 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
             window?.contentView = NSHostingView(rootView: editView)
         }
 
-        registerLocalEventMonitor()
         NSApp.activate(ignoringOtherApps: true)
         window?.makeKeyAndOrderFront(nil)
     }
@@ -134,13 +134,11 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
             window?.contentView = NSHostingView(rootView: editView)
         }
 
-        registerLocalEventMonitor()
         NSApp.activate(ignoringOtherApps: true)
         window?.makeKeyAndOrderFront(nil)
     }
 
     func closeWindow() {
-        removeLocalEventMonitor()
         window?.orderOut(nil)
         currentModel = nil
         editState = nil
@@ -150,7 +148,6 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
     // MARK: - NSWindowDelegate
 
     func windowWillClose(_: Notification) {
-        removeLocalEventMonitor()
         currentModel = nil
         editState = nil
         isNewItem = false
@@ -160,7 +157,7 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
         guard let state = editState else {
             return
         }
-        saveContent(state.editedContent)
+        saveContent(state.currentContent)
     }
 
     func saveContent(_ content: NSAttributedString) {
@@ -282,23 +279,7 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
 
     // MARK: - Private Methods
 
-    private func registerLocalEventMonitor() {
-        guard localEventMonitor == nil else { return }
-        localEventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            self?.handleKeyDown(event) ?? event
-        }
-    }
-
-    private func removeLocalEventMonitor() {
-        if let token = localEventMonitor {
-            NSEvent.removeMonitor(token)
-            localEventMonitor = nil
-        }
-    }
-
-    private func handleKeyDown(_ event: NSEvent) -> NSEvent? {
-        guard event.window === window else { return event }
-
+    private func handleKeyEquivalent(_ event: NSEvent) -> Bool {
         let keyChar = event.charactersIgnoringModifiers?.lowercased() ?? ""
         let modifiers = event.modifierFlags.intersection([
             .command, .option, .control, .shift,
@@ -307,27 +288,27 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
         // Cmd+W — close window
         if modifiers == .command, keyChar == "w" {
             closeWindow()
-            return nil
+            return true
         }
 
         // Cmd+S — save
         if modifiers == .command, keyChar == "s" {
             saveFromState()
-            return nil
+            return true
         }
 
         // Cmd+M — minimise
         if modifiers == .command, keyChar == "m" {
             window?.miniaturize(nil)
-            return nil
+            return true
         }
 
         // Escape — close window
         if event.keyCode == KeyCode.escape {
             closeWindow()
-            return nil
+            return true
         }
 
-        return event
+        return false
     }
 }

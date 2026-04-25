@@ -11,10 +11,12 @@ import Combine
 // MARK: - Keyboard Events
 
 extension ClipMainViewController: NSGestureRecognizerDelegate {
-    func gestureRecognizer(_: NSGestureRecognizer,
-                           shouldAttemptToRecognizeWith event: NSEvent) -> Bool
-    {
-        guard let hitView = view.window?.contentView?
+    func gestureRecognizer(
+        _: NSGestureRecognizer,
+        shouldAttemptToRecognizeWith event: NSEvent
+    ) -> Bool {
+        guard
+            let hitView = view.window?.contentView?
             .hitTest(event.locationInWindow)
         else {
             return true
@@ -33,6 +35,14 @@ extension ClipMainViewController: NSGestureRecognizerDelegate {
 
 extension ClipMainViewController {
     func keyDownEvent(_ event: NSEvent) -> NSEvent? {
+        if focusRegion == .popover {
+            if event.keyCode == KeyCode.escape {
+                previewManager.close()
+                return nil
+            }
+            return event
+        }
+
         if topBarView.isEditingChipFirstResponder {
             switch event.keyCode {
             case KeyCode.escape:
@@ -55,7 +65,9 @@ extension ClipMainViewController {
             return nil
         }
 
-        if KeyCode.shouldTriggerSearch(for: event), !topBarView.searchField.isFirstResponder {
+        if KeyCode.shouldTriggerSearch(for: event),
+           !topBarView.searchField.isFirstResponder, focusRegion != .popover
+        {
             if let characters = event.characters, !characters.isEmpty {
                 topBarView.activateSearch(with: characters)
             } else {
@@ -80,12 +92,21 @@ extension ClipMainViewController {
             return deleteKeyDown(event)
         case KeyCode.return:
             return returnKeyDown(event)
+        case KeyCode.space:
+            return spaceKeyDown(event)
         default:
+            log.debug(
+                "firstResponder: \(String(describing: view.window?.firstResponder))"
+            )
             return event
         }
     }
 
     private func escapeKeyDown(_: NSEvent) -> NSEvent? {
+        if previewManager.isShowing {
+            previewManager.close()
+            return nil
+        }
         let field = topBarView.searchField
         if field.isFirstResponder {
             if topVM.hasInput {
@@ -98,6 +119,17 @@ extension ClipMainViewController {
         } else {
             WindowManager.shared.toggleWindow()
         }
+        return nil
+    }
+
+    private func spaceKeyDown(_ event: NSEvent) -> NSEvent? {
+        guard !topBarView.searchField.isFirstResponder,
+              !topBarView.isEditingChipFirstResponder
+        else { return event }
+
+        guard selectIndexPath.item < dataList.value.count else { return nil }
+        let item = dataList.value[selectIndexPath.item]
+        preview(item)
         return nil
     }
 
@@ -164,19 +196,29 @@ extension ClipMainViewController {
         return nil
     }
 
-    private func handleChipTab(_ event: NSEvent, viewModel: TopBarViewModel) -> Bool {
-        guard let previousTabInfo = HotKeyManager.shared.getHotKey(key: "previous_tab"),
-              let nextTabInfo = HotKeyManager.shared.getHotKey(key: "next_tab")
+    private func handleChipTab(_ event: NSEvent, viewModel: TopBarViewModel)
+        -> Bool
+    {
+        guard
+            let previousTabInfo = HotKeyManager.shared.getHotKey(
+                key: "previous_tab"
+            ),
+            let nextTabInfo = HotKeyManager.shared.getHotKey(key: "next_tab")
         else {
             return false
         }
 
-        let relevantModifiers: NSEvent.ModifierFlags = [.command, .option, .control, .shift]
+        let relevantModifiers: NSEvent.ModifierFlags = [
+            .command, .option, .control, .shift,
+        ]
         let eventModifiers = event.modifierFlags.intersection(relevantModifiers)
 
         if previousTabInfo.isEnabled,
            event.keyCode == previousTabInfo.shortcut.keyCode,
-           eventModifiers == previousTabInfo.shortcut.modifiers.intersection(relevantModifiers)
+           eventModifiers
+           == previousTabInfo.shortcut.modifiers.intersection(
+               relevantModifiers
+           )
         {
             viewModel.selectPreviousChip()
             topBarView.updateChipSelection()
@@ -185,7 +227,10 @@ extension ClipMainViewController {
 
         if nextTabInfo.isEnabled,
            event.keyCode == nextTabInfo.shortcut.keyCode,
-           eventModifiers == nextTabInfo.shortcut.modifiers.intersection(relevantModifiers)
+           eventModifiers
+           == nextTabInfo.shortcut.modifiers.intersection(
+               relevantModifiers
+           )
         {
             viewModel.selectNextChip()
             topBarView.updateChipSelection()

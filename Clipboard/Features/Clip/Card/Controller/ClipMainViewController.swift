@@ -24,6 +24,24 @@ final class ClipMainViewController: NSViewController {
     var monitorToken: Any?
     var flagsMonitorToken: Any?
 
+    // MARK: - Preview
+
+    private(set) lazy var previewManager: ClipPreviewManager = .init(
+        onFocusChange: { [weak self] region in
+            self?.setFocusRegion(region)
+        },
+        onPopoverClose: { [weak self] in
+            guard let self else { return }
+            guard focusRegion == .popover else { return }
+            setFocusRegion(.collection)
+            view.window?.makeFirstResponder(collectionView)
+        },
+        onRestoreFirstResponder: { [weak self] in
+            guard let self else { return }
+            view.window?.makeFirstResponder(collectionView)
+        }
+    )
+
     // MARK: - Quick Paste
 
     var isQuickPastePressed: Bool = false {
@@ -172,10 +190,6 @@ extension ClipMainViewController {
         initObserve()
     }
 
-    override func viewWillAppear() {
-        super.viewWillAppear()
-    }
-
     override func viewDidAppear() {
         view.frame = NSRect(
             x: view.frame.origin.x,
@@ -211,17 +225,8 @@ extension ClipMainViewController {
             context.duration = Const.showDuration
             self.view.animator().setFrameOrigin(.zero)
         }) {
-            MainActor.assumeIsolated {
+            Task { @MainActor in
                 ClipMainWindowController.shared.isAnimating = false
-
-                if self.focusRegion == .search {
-                    self.view.window?.makeFirstResponder(
-                        self.topBarView.searchField
-                    )
-                } else {
-                    self.view.window?.makeFirstResponder(self.collectionView)
-                }
-                self.updateSelectedItemBorder()
             }
         }
     }
@@ -397,6 +402,8 @@ extension ClipMainViewController {
                         updateSelectedItemBorder()
                     }
                 case .new:
+                    // 新卡片插入后 selectedIndex 会偏移，popover anchor 会错位，直接关闭
+                    previewManager.close()
                     applySnapshot(animating: false)
                     resetSelectIndex()
                     restoreSelection()
@@ -405,6 +412,8 @@ extension ClipMainViewController {
                     resetSelectIndex()
                     restoreSelection()
                 case .moveToFirst:
+                    // 同 .new，卡片顺序变化导致 anchor 错位
+                    previewManager.close()
                     applySnapshot(animating: false)
                     resetSelectIndex()
                     restoreSelection()

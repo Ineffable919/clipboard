@@ -10,6 +10,7 @@ enum FocusRegion: CustomStringConvertible {
     case search
     case chipEditing
     case filter
+    case popover
 
     var description: String {
         switch self {
@@ -17,6 +18,7 @@ enum FocusRegion: CustomStringConvertible {
         case .search: "search"
         case .chipEditing: "chipEditing"
         case .filter: "filter"
+        case .popover: "popover"
         }
     }
 }

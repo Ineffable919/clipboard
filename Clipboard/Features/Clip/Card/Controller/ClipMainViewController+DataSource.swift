@@ -13,6 +13,9 @@ import Combine
 extension ClipMainViewController: NSCollectionViewDelegate {
     func collectionView(_: NSCollectionView, shouldSelectItemsAt indexPaths: Set<IndexPath>) -> Set<IndexPath> {
         if let indexPath = indexPaths.first {
+            if previewManager.isShowing {
+                previewManager.close()
+            }
             resetSelectIndex(indexPath)
         }
         return [selectIndexPath]
@@ -145,7 +148,27 @@ extension ClipMainViewController: CollectionViewItemDelegate {
         cardVM.delete(item)
     }
 
-    func preview(_: PasteboardModel) {
-        // TODO: show preview popover
+    func preview(_ item: PasteboardModel) {
+        // 优先用选中卡片作为 anchor，fallback 到 collectionView 中心
+        let anchorView: NSView
+        let anchorRect: NSRect
+
+        if let cardItem = collectionView.item(at: selectIndexPath) as? CollectionViewItem,
+           cardItem.view.window != nil
+        {
+            anchorView = cardItem.view
+            anchorRect = cardItem.view.bounds
+        } else {
+            // 卡片 cell 不可见（被回收或滚出屏幕），用 collectionView 作为 anchor
+            anchorView = collectionView
+            anchorRect = NSRect(
+                x: collectionView.bounds.midX - 1,
+                y: collectionView.bounds.midY - 1,
+                width: 2,
+                height: 2
+            )
+        }
+
+        previewManager.toggle(for: item, relativeTo: anchorRect, of: anchorView)
     }
 }

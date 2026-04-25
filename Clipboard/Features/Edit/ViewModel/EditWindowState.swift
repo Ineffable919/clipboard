@@ -40,6 +40,12 @@ final class EditWindowState {
     private var statisticsTask: Task<Void, Never>?
     private var lastStatisticsText: String = ""
 
+    weak var editorCoordinator: RichTextEditorCoordinator?
+
+    var currentContent: NSAttributedString {
+        editorCoordinator?.currentContent() ?? editedContent
+    }
+
     var editedContent: NSAttributedString {
         didSet {
             scheduleStatisticsUpdate()
