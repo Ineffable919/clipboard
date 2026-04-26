@@ -28,20 +28,6 @@ extension ClipMainViewController: NSCollectionViewDelegate {
     func collectionView(_: NSCollectionView, pasteboardWriterForItemAt indexPath: IndexPath) -> (any NSPasteboardWriting)? {
         dataList.value[indexPath.item].writeItem
     }
-
-    func collectionView(
-        _: NSCollectionView,
-        willDisplay _: NSCollectionViewItem,
-        forRepresentedObjectAt indexPath: IndexPath
-    ) {
-        let threshold = 5
-        let totalItems = dataList.value.count
-        guard indexPath.item >= totalItems - threshold,
-              db.hasMoreData,
-              !db.isLoadingPage
-        else { return }
-        db.loadNextPage()
-    }
 }
 
 // MARK: - Selection & Scroll

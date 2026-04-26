@@ -22,7 +22,7 @@ enum Const {
     static let bottomSize: CGFloat = 40.0
 
     static let windowRadis: CGFloat = 23.0
-    
+
     static let btnRadius: CGFloat =
         if #available(macOS 26.0, *) {
             10.0
@@ -30,7 +30,6 @@ enum Const {
             6.0
         }
 
-    
     static let radius: CGFloat =
         if #available(macOS 26.0, *) {
             14.0

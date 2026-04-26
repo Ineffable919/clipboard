@@ -286,7 +286,7 @@ final class PasteBoard {
     /// 合并多个纯文本
     private func writeMultiplePlainText(_ items: [PasteboardModel]) -> Bool {
         let texts = items.compactMap { item -> String? in
-            var text = item.searchText
+            var text = item.plainText
             if PasteUserDefaults.removeTailingNewline {
                 text = text.trimmingTrailingNewlines()
             }
@@ -315,7 +315,7 @@ final class PasteBoard {
                     combined.append(newline)
                 }
             } else {
-                var text = item.searchText
+                var text = item.plainText
                 if PasteUserDefaults.removeTailingNewline {
                     text = text.trimmingTrailingNewlines()
                 }
@@ -413,7 +413,7 @@ final class PasteBoard {
 
     /// 写入纯文本
     private func writePlainText(_ data: PasteboardModel) {
-        var text = data.searchText
+        var text = data.plainText
         if PasteUserDefaults.removeTailingNewline {
             text = text.trimmingTrailingNewlines()
         }

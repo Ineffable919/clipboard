@@ -787,9 +787,17 @@ final class TopBarView: NSView {
 
 extension TopBarView: NSPopoverDelegate {
     func popoverDidClose(_: Notification) {
-        if isSearching, !topVM!.hasInput, !searchField.isFirstResponder {
-            deactivateSearch()
-            onFocusRegionChange?(.collection)
+        isShowingPopover = false
+
+        guard isSearching, let topVM else { return }
+
+        Task { @MainActor [weak self] in
+            guard let self, isSearching, !topVM.hasInput else { return }
+
+            if !searchField.isFirstResponder {
+                deactivateSearch()
+                onFocusRegionChange?(.collection)
+            }
         }
     }
 }

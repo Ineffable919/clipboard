@@ -33,7 +33,7 @@ extension PasteboardModel {
                   !paths.isEmpty
             else { return nil }
 
-            searchText = paths.joined(separator: "")
+            searchText = Self.normalizeSearchText(paths.joined(separator: " "))
 
             let filePathsString = paths.joined(separator: "\n")
             content = filePathsString.data(using: .utf8) ?? Data()
@@ -56,7 +56,7 @@ extension PasteboardModel {
                 length > 300
                     ? att.attributedSubstring(from: NSMakeRange(0, 300)) : att
             showData = showAtt?.toData(with: type)
-            searchText = att.string
+            searchText = Self.normalizeSearchText(att.string)
         }
 
         let calculatedTag = Self.calculateTag(
@@ -82,13 +82,6 @@ extension PasteboardModel {
 
     // MARK: - 从剪贴板提取文件路径
 
-    /// 从剪贴板提取文件路径（兼容跨平台应用）
-    ///
-    /// 优先级：
-    /// 1. 标准 NSURL readObjects
-    /// 2. Apple URL pasteboard type 中的 file: URL
-    /// 3. x-special/gnome-copied-files 中的 file: URL
-    /// 4. 通用兜底：遍历所有类型，查找 file: URL 字符串
     static func extractFilePaths(
         from pasteboard: NSPasteboard,
         item: NSPasteboardItem

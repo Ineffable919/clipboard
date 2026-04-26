@@ -43,7 +43,11 @@ final class ClipPreviewManager: NSObject {
 
     // MARK: - Public API
 
-    func toggle(for model: PasteboardModel, relativeTo positioningRect: NSRect, of view: NSView) {
+    func toggle(
+        for model: PasteboardModel,
+        relativeTo positioningRect: NSRect,
+        of view: NSView
+    ) {
         if isShowing {
             close()
         } else {
@@ -51,12 +55,15 @@ final class ClipPreviewManager: NSObject {
         }
     }
 
-    func show(for model: PasteboardModel, relativeTo positioningRect: NSRect, of view: NSView) {
+    func show(
+        for model: PasteboardModel,
+        relativeTo positioningRect: NSRect,
+        of view: NSView
+    ) {
         guard view.window != nil else {
             return
         }
 
-        // 如果有旧的 popover（可能被 .transient 自动关闭但回调还没到），先同步清理
         tearDown()
 
         let vc = ClipPreviewPopoverViewController()
@@ -87,9 +94,7 @@ final class ClipPreviewManager: NSObject {
         )
         isShowing = true
 
-        Task { @MainActor [weak self] in
-            self?.onRestoreFirstResponder?()
-        }
+        onRestoreFirstResponder?()
     }
 
     func close() {

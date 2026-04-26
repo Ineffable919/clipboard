@@ -21,9 +21,6 @@ final class ClipMainViewController: NSViewController {
     let db = PasteDataStore.main
     let store = CategoryChipStore.shared
 
-    var monitorToken: Any?
-    var flagsMonitorToken: Any?
-
     // MARK: - Preview
 
     private(set) lazy var previewManager: ClipPreviewManager = .init(
@@ -205,22 +202,6 @@ extension ClipMainViewController {
 
         updateSelectedItemBorder()
 
-        if monitorToken == nil {
-            monitorToken = NSEvent.addLocalMonitorForEvents(
-                matching: .keyDown,
-                handler: keyDownEvent(_:)
-            )
-        }
-
-        if flagsMonitorToken == nil {
-            flagsMonitorToken = NSEvent.addLocalMonitorForEvents(
-                matching: .flagsChanged
-            ) {
-                [weak self] event in
-                self?.flagsChangedEvent(event)
-            }
-        }
-
         NSAnimationContext.runAnimationGroup({ context in
             context.duration = Const.showDuration
             self.view.animator().setFrameOrigin(.zero)
@@ -234,14 +215,6 @@ extension ClipMainViewController {
     override func viewDidDisappear() {
         super.viewDidDisappear()
         PasteDataStore.main.clearExpiredData()
-        if let token = monitorToken {
-            NSEvent.removeMonitor(token)
-            monitorToken = nil
-        }
-        if let token = flagsMonitorToken {
-            NSEvent.removeMonitor(token)
-            flagsMonitorToken = nil
-        }
         isQuickPastePressed = false
     }
 }
@@ -360,6 +333,18 @@ extension ClipMainViewController {
         clickGesture.buttonMask = 0x1 // 左键点击
         clickGesture.delegate = self
         contentView.addGestureRecognizer(clickGesture)
+
+        NSEvent.addLocalMonitorForEvents(
+            matching: .keyDown,
+            handler: keyDownEvent(_:)
+        )
+
+        NSEvent.addLocalMonitorForEvents(
+            matching: .flagsChanged
+        ) {
+            [weak self] event in
+            self?.flagsChangedEvent(event)
+        }
     }
 
     func setFocusRegion(_ region: FocusRegion) {
@@ -387,46 +372,7 @@ extension ClipMainViewController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self else { return }
-
-                let changeType = db.lastDataChangeType
-
-                switch changeType {
-                case .delete:
-                    applySnapshot(animating: true) { [weak self] in
-                        guard let self, !dataList.value.isEmpty else { return }
-                        let safeItem = min(selectIndexPath.item, dataList.value.count - 1)
-                        let safePath = IndexPath(item: safeItem, section: 0)
-                        selectIndexPath = safePath
-                        collectionView.selectionIndexPaths = [safePath]
-                        scrollTo(indexPath: safePath)
-                        updateSelectedItemBorder()
-                    }
-                case .new:
-                    // 新卡片插入后 selectedIndex 会偏移，popover anchor 会错位，直接关闭
-                    previewManager.close()
-                    applySnapshot(animating: false)
-                    resetSelectIndex()
-                    restoreSelection()
-                case .searchFilter:
-                    applySnapshot(animating: false)
-                    resetSelectIndex()
-                    restoreSelection()
-                case .moveToFirst:
-                    // 同 .new，卡片顺序变化导致 anchor 错位
-                    previewManager.close()
-                    applySnapshot(animating: false)
-                    resetSelectIndex()
-                    restoreSelection()
-                case .loadMore:
-                    applyLoadMoreSnapshot()
-                case .reset:
-                    applySnapshot(animating: false)
-                    resetSelectIndex()
-                    restoreSelection()
-                case .update:
-                    applySnapshot(animating: false)
-                    restoreSelection()
-                }
+                handleDataChange(db.lastDataChangeType)
             }
             .store(in: &cancellables)
 
@@ -465,11 +411,64 @@ extension ClipMainViewController {
                 topVM.performSearch()
             }
             .store(in: &cancellables)
+
+        NotificationCenter.default.publisher(
+            for: NSView.boundsDidChangeNotification,
+            object: scrollView.contentView
+        )
+        .throttle(for: .milliseconds(200), scheduler: DispatchQueue.main, latest: true)
+        .sink { [weak self] _ in
+            self?.checkLoadMore()
+        }
+        .store(in: &cancellables)
+        scrollView.contentView.postsBoundsChangedNotifications = true
+    }
+
+    ///  UI 刷新策略
+    private func handleDataChange(_ changeType: PasteDataStore.DataChangeType) {
+        switch changeType {
+        case .delete:
+            applySnapshot(animating: true) { [weak self] in
+                self?.adjustSelectionAfterDelete()
+            }
+        case .new, .searchFilter, .moveToFirst, .reset:
+            applySnapshot(animating: false)
+            resetSelectIndex()
+            restoreSelection()
+        case .loadMore:
+            applyLoadMoreSnapshot()
+        case .update:
+            applySnapshot(animating: false)
+            restoreSelection()
+        }
+    }
+
+    /// 删除后将选中索引修正到安全范围内
+    private func adjustSelectionAfterDelete() {
+        guard !dataList.value.isEmpty else { return }
+        let safeItem = min(selectIndexPath.item, dataList.value.count - 1)
+        let safePath = IndexPath(item: safeItem, section: 0)
+        selectIndexPath = safePath
+        collectionView.selectionIndexPaths = [safePath]
+        scrollTo(indexPath: safePath)
+        updateSelectedItemBorder()
     }
 
     func updateEmptyState() {
         let isEmpty = dataList.value.isEmpty
         emptyStateView.isHidden = !isEmpty
         scrollView.isHidden = isEmpty
+    }
+
+    private func checkLoadMore() {
+        guard db.hasMoreData, !db.isLoadingPage else { return }
+
+        let clipView = scrollView.contentView
+        let contentWidth = collectionView.frame.width
+        let visibleMaxX = clipView.bounds.origin.x + clipView.bounds.width
+        let threshold = (Const.cardSize + Const.cardSpace) * 2
+
+        guard contentWidth - visibleMaxX < threshold else { return }
+        db.loadNextPage()
     }
 }

@@ -115,8 +115,10 @@ extension PasteDataStore {
                 let pType = PasteboardType(type)
 
                 if pType.isText(), showData == nil {
-                    if let searchText {
-                        showData = String(searchText.prefix(300)).data(
+                    if let plain = NSAttributedString(with: data, type: pType)?.string
+                        ?? String(data: data, encoding: .utf8)
+                    {
+                        showData = String(plain.prefix(300)).data(
                             using: .utf8
                         )
                     }
@@ -266,12 +268,13 @@ extension PasteDataStore {
     func runOCRIfNeeded(_ model: PasteboardModel) async {
         guard model.type == .image, let id = model.id else { return }
 
-        let searchText = await OCRViewService.shared.recognizeText(
+        let rawText = await OCRViewService.shared.recognizeText(
             from: model.data
         )
 
-        guard !searchText.isEmpty else { return }
+        guard !rawText.isEmpty else { return }
 
+        let searchText = PasteboardModel.normalizeSearchText(rawText)
         model.updateSearchText(val: searchText)
         await sqlManager.update(id: id, item: model)
     }
@@ -296,8 +299,15 @@ extension PasteDataStore {
         var list = dataList.value
         list.removeAll(where: { $0.uniqueId == model.uniqueId })
         list.insert(model, at: 0)
+        let truncated = Array(list.prefix(pageSize))
         hasMoreData = list.count >= pageSize
-        updateData(with: Array(list.prefix(pageSize)), changeType: .new)
+
+        pageIndex = 0
+        lastRequestedPage = 0
+        loadPageTask?.cancel()
+        isLoadingPage = false
+
+        updateData(with: truncated, changeType: .new)
     }
 
     func moveItemsToFirst(_ models: [PasteboardModel]) {
@@ -505,11 +515,13 @@ extension PasteDataStore {
         newLength: Int,
         newTag: String
     ) async {
+        let normalizedSearchText = PasteboardModel.normalizeSearchText(newSearchText)
+
         await sqlManager.updateItemContent(
             id: id,
             data: newData,
             showData: newShowData,
-            searchText: newSearchText,
+            searchText: normalizedSearchText,
             length: newLength,
             tag: newTag
         )
@@ -524,7 +536,7 @@ extension PasteDataStore {
                 timestamp: Int64(Date().timeIntervalSince1970),
                 appPath: oldModel.appPath,
                 appName: oldModel.appName,
-                searchText: newSearchText,
+                searchText: normalizedSearchText,
                 length: newLength,
                 group: oldModel.group,
                 tag: newTag

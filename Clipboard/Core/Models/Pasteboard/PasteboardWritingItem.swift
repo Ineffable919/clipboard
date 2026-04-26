@@ -10,15 +10,22 @@ import AppKit
 final class PasteboardWritingItem: NSObject {
     private let data: Data
     private let type: PasteboardType
-    private let searchText: String
+    private let plainText: String
     private let appName: String
     private let timestamp: Int64
     private let model: PasteboardModel?
 
-    init(data: Data, type: PasteboardType, searchText: String = "", appName: String = "", timestamp: Int64 = 0, model: PasteboardModel? = nil) {
+    init(
+        data: Data,
+        type: PasteboardType,
+        plainText: String = "",
+        appName: String = "",
+        timestamp: Int64 = 0,
+        model: PasteboardModel? = nil
+    ) {
         self.data = data
         self.type = type
-        self.searchText = searchText
+        self.plainText = plainText
         self.appName = appName
         self.timestamp = timestamp
         self.model = model
@@ -39,7 +46,6 @@ extension PasteboardWritingItem: NSPasteboardWriting {
             types.append(contentsOf: [type, .fileURL])
             return types
         }
-        // 文本类型：提供原始类型 + 纯文本回退
         if type == .string {
             types.append(.string)
             return types
@@ -59,7 +65,7 @@ extension PasteboardWritingItem: NSPasteboardWriting {
             return imageAsFileURL()
         }
         if requestedType == .string, type != .string {
-            return searchText as NSString
+            return plainText as NSString
         }
         return data
     }
@@ -68,7 +74,9 @@ extension PasteboardWritingItem: NSPasteboardWriting {
 
     private func modelPropertyList() -> Any? {
         guard let model else { return nil }
-        guard let jsonData = try? JSONEncoder().encode(model) else { return nil }
+        guard let jsonData = try? JSONEncoder().encode(model) else {
+            return nil
+        }
         return jsonData
     }
 
@@ -77,10 +85,13 @@ extension PasteboardWritingItem: NSPasteboardWriting {
         guard let pathString = String(data: data, encoding: .utf8) else {
             return nil
         }
-        let firstPath = pathString
-            .components(separatedBy: "\n")
-            .first { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }?
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let firstPath =
+            pathString
+                .components(separatedBy: "\n")
+                .first {
+                    !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                }?
+                .trimmingCharacters(in: .whitespacesAndNewlines)
         guard let firstPath else { return nil }
         let url = URL(fileURLWithPath: firstPath)
         return url.absoluteString as NSString
@@ -107,7 +118,10 @@ extension PasteboardWritingItem: NSPasteboardWriting {
             .appending(path: fileName)
 
         let dir = tempURL.deletingLastPathComponent()
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        try? FileManager.default.createDirectory(
+            at: dir,
+            withIntermediateDirectories: true
+        )
         try? data.write(to: tempURL)
 
         return tempURL.absoluteString as NSString

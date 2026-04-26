@@ -2,7 +2,7 @@
 //  ClipPreviewPopoverViewController.swift
 //  Clipboard
 //
-//  预览 Popover 的主 ViewController
+//  预览 Popover ViewController
 //
 
 import AppKit

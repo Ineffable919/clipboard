@@ -202,7 +202,7 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
                 timestamp: Int64(Date().timeIntervalSince1970),
                 appPath: model.appPath,
                 appName: model.appName,
-                searchText: plainText,
+                searchText: PasteboardModel.normalizeSearchText(plainText),
                 length: length,
                 group: -1,
                 tag: newTag

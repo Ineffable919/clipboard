@@ -20,12 +20,13 @@ final class PasteboardModel: Identifiable, Codable {
     private(set) var searchText: String
     let length: Int
     /// 截取后的富文本
-    private(set) lazy var attributeString: NSAttributedString = .init(with: showData, type: pasteboardType) ?? NSAttributedString()
+    private(set) lazy var attributeString: NSAttributedString =
+        .init(with: showData, type: pasteboardType) ?? NSAttributedString()
 
     private(set) lazy var writeItem = PasteboardWritingItem(
         data: data,
         type: pasteboardType,
-        searchText: searchText,
+        plainText: plainText,
         appName: appName,
         timestamp: timestamp,
         model: self
@@ -111,44 +112,26 @@ final class PasteboardModel: Identifiable, Codable {
         cachedHasBackgroundColor = hasBg
     }
 
-    // MARK: - 计算图片尺寸
+    // MARK: - 纯文本（粘贴用）
 
-    private static func computeImageSize(from data: Data) -> CGSize? {
-        let options = [kCGImageSourceShouldCache: false] as CFDictionary
-        guard
-            let source = CGImageSourceCreateWithData(data as CFData, options),
-            let properties = CGImageSourceCopyPropertiesAtIndex(
-                source,
-                0,
-                options
-            ) as? [CFString: Any]
-        else {
-            return nil
+    var plainText: String {
+        if pasteboardType.isText() {
+            let att = NSAttributedString(with: data, type: pasteboardType)
+            return att?.string ?? (String(data: data, encoding: .utf8) ?? "")
         }
+        return String(data: data, encoding: .utf8) ?? ""
+    }
 
-        let width: CGFloat
-        let height: CGFloat
+    // MARK: - 搜索文本归一化
 
-        if let w = properties[kCGImagePropertyPixelWidth] as? Int {
-            width = CGFloat(w)
-        } else if let w = properties[kCGImagePropertyPixelWidth] as? CGFloat {
-            width = w
-        } else {
-            return nil
-        }
-
-        if let h = properties[kCGImagePropertyPixelHeight] as? Int {
-            height = CGFloat(h)
-        } else if let h = properties[kCGImagePropertyPixelHeight] as? CGFloat {
-            height = h
-        } else {
-            return nil
-        }
-
-        let dpi = properties[kCGImagePropertyDPIWidth] as? CGFloat ?? 72.0
-        let scale = dpi / 72.0
-
-        return CGSize(width: width / scale, height: height / scale)
+    /// 将原始文本归一化为适合搜索的形式：
+    /// - 去除首尾空白和换行
+    /// - 内部连续空白/换行合并为单个空格
+    /// - 去除不可见控制字符
+    static func normalizeSearchText(_ raw: String) -> String {
+        raw.trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacing(/[\p{Cc}\p{Cf}&&[^\t\n]]/, with: "")
+            .replacing(/\s+/, with: " ")
     }
 
     // MARK: - 辅助
@@ -218,24 +201,6 @@ final class PasteboardModel: Identifiable, Codable {
         return await task.value
     }
 
-    /// 加载匹配关键字的 OCR 高亮区域
-    func loadOCRHighlightRegions(keyword: String) async -> [OCRTextRegion] {
-        let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return [] }
-
-        if cachedOCRKeyword == trimmed, let cachedOCRRegions {
-            return cachedOCRRegions
-        }
-
-        let regions = await OCRViewService.shared.recognizeHighlightRegions(
-            from: data,
-            keyword: trimmed
-        )
-        cachedOCRKeyword = trimmed
-        cachedOCRRegions = regions
-        return regions
-    }
-
     // MARK: - 状态更新
 
     func updateGroup(val: Int) {
@@ -292,7 +257,10 @@ final class PasteboardModel: Identifiable, Codable {
 
     convenience init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        let pasteboardTypeRaw = try container.decode(String.self, forKey: .pasteboardType)
+        let pasteboardTypeRaw = try container.decode(
+            String.self,
+            forKey: .pasteboardType
+        )
 
         try self.init(
             pasteboardType: PasteboardType(pasteboardTypeRaw),
