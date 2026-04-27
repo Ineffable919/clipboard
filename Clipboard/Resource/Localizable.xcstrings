@@ -3893,6 +3893,42 @@
           }
         }
       }
+    },
+    "hudCopySucceeded" : {
+      "comment" : "HUD: copy succeeded",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copied"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已复制"
+          }
+        }
+      }
+    },
+    "hudPasteSucceeded" : {
+      "comment" : "HUD: paste succeeded",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pasted"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已粘贴"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

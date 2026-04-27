@@ -14,10 +14,15 @@ final class ClipActionService {
     func paste(
         _ item: PasteboardModel,
         isAttribute: Bool = true,
-        checkPermissions: Bool = false
+        checkPermissions: Bool = false,
+        showTip: Bool = false
     ) {
         guard userDefaults.pasteDirect, checkPermissions else {
-            pasteBoard.pasteMultipleData([item], isAttribute)
+            pasteBoard.pasteMultipleData(
+                [item],
+                isAttribute: isAttribute,
+                showTip: showTip
+            )
             WindowManager.shared.toggleWindow()
             return
         }
@@ -30,31 +35,46 @@ final class ClipActionService {
             Task { @MainActor in
                 requestAccessibilityPermission(
                     item: item,
-                    isAttribute: isAttribute
+                    isAttribute: isAttribute,
+                    showTip: true
                 )
             }
             return
         }
-        pasteBoard.pasteMultipleData([item], isAttribute)
+        pasteBoard.pasteMultipleData(
+            [item],
+            isAttribute: isAttribute
+        )
         WindowManager.shared.toggleWindow {
             KeyboardShortcuts.postCmdVEvent()
         }
     }
 
-    func copy(_ item: PasteboardModel, isAttribute: Bool = true) {
-        pasteBoard.pasteMultipleData([item], isAttribute)
+    func copy(
+        _ item: PasteboardModel,
+        isAttribute: Bool = true,
+        showTip: Bool = false
+    ) {
+        pasteBoard.pasteMultipleData(
+            [item],
+            isAttribute: isAttribute,
+            showTip: showTip,
+            copy: true
+        )
+        WindowManager.shared.toggleWindow()
     }
 
     /// 将多个项目合并写入剪贴板
     func copyMultiple(_ items: [PasteboardModel], isAttribute: Bool = true) {
-        pasteBoard.pasteMultipleData(items, isAttribute)
+        pasteBoard.pasteMultipleData(items, isAttribute: isAttribute)
     }
 
     /// 将多个项目合并写入剪贴板并粘贴
     func pasteMultiple(
         _ items: [PasteboardModel],
         isAttribute: Bool = true,
-        checkPermissions: Bool = false
+        checkPermissions: Bool = false,
+        showTip: Bool = false
     ) {
         guard !items.isEmpty else { return }
 
@@ -62,13 +82,14 @@ final class ClipActionService {
             paste(
                 items[0],
                 isAttribute: isAttribute,
-                checkPermissions: checkPermissions
+                checkPermissions: checkPermissions,
+                showTip: showTip
             )
             return
         }
 
         guard userDefaults.pasteDirect, checkPermissions else {
-            pasteBoard.pasteMultipleData(items, isAttribute)
+            pasteBoard.pasteMultipleData(items, isAttribute: isAttribute)
             WindowManager.shared.toggleWindow()
             return
         }
@@ -78,12 +99,12 @@ final class ClipActionService {
             log.debug(
                 "Accessibility permission not granted, cannot send keyboard events"
             )
-            pasteBoard.pasteMultipleData(items, isAttribute)
+            pasteBoard.pasteMultipleData(items, isAttribute: isAttribute)
             WindowManager.shared.toggleWindow()
             return
         }
 
-        pasteBoard.pasteMultipleData(items, isAttribute)
+        pasteBoard.pasteMultipleData(items, isAttribute: isAttribute)
         WindowManager.shared.toggleWindow {
             KeyboardShortcuts.postCmdVEvent()
         }
@@ -91,7 +112,8 @@ final class ClipActionService {
 
     private func requestAccessibilityPermission(
         item: PasteboardModel,
-        isAttribute: Bool = true
+        isAttribute: Bool = true,
+        showTip: Bool = false
     ) {
         let alert = NSAlert()
         alert.messageText = String(localized: .accessTitle)
@@ -111,7 +133,11 @@ final class ClipActionService {
                 NSWorkspace.shared.open(url)
             }
         case .alertSecondButtonReturn:
-            pasteBoard.pasteMultipleData([item], isAttribute)
+            pasteBoard.pasteMultipleData(
+                [item],
+                isAttribute: isAttribute,
+                showTip: showTip
+            )
         default:
             break
         }

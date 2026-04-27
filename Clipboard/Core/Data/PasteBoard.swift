@@ -95,7 +95,10 @@ final class PasteBoard {
             RunLoop.main.add(resumeTimer!, forMode: .common)
         }
 
-        NotificationCenter.default.post(name: .pasteboardPauseStateChanged, object: nil)
+        NotificationCenter.default.post(
+            name: .pasteboardPauseStateChanged,
+            object: nil
+        )
     }
 
     func resume() {
@@ -109,7 +112,10 @@ final class PasteBoard {
         pauseDuration = nil
         startListening()
 
-        NotificationCenter.default.post(name: .pasteboardPauseStateChanged, object: nil)
+        NotificationCenter.default.post(
+            name: .pasteboardPauseStateChanged,
+            object: nil
+        )
     }
 
     /// 剩余暂停时间（秒）
@@ -191,7 +197,8 @@ final class PasteBoard {
                 if let plist = item.propertyList(forType: t) {
                     log.debug("  [\(t.rawValue)] propertyList = \(plist)")
                 } else if let str = item.string(forType: t) {
-                    let preview = str.count > 200 ? String(str.prefix(200)) + "..." : str
+                    let preview =
+                        str.count > 200 ? String(str.prefix(200)) + "..." : str
                     log.debug("  [\(t.rawValue)] string = \(preview)")
                 } else if let data = item.data(forType: t) {
                     log.debug("  [\(t.rawValue)] data(\(data.count) bytes)")
@@ -230,7 +237,12 @@ final class PasteBoard {
 
     /// 将多个项目合并写入系统剪贴板
     /// 文本类型会用换行符拼接，文件类型会合并 URL，其他类型只写入第一个
-    func pasteMultipleData(_ items: [PasteboardModel], _ isAttribute: Bool = true) {
+    func pasteMultipleData(
+        _ items: [PasteboardModel],
+        isAttribute: Bool = true,
+        showTip: Bool = false,
+        copy: Bool = false
+    ) {
         guard !items.isEmpty else { return }
 
         for item in items {
@@ -248,6 +260,11 @@ final class PasteBoard {
 
         PasteDataStore.main.moveItemsToFirst(items)
         SoundManager.shared.play(.paste)
+        if showTip {
+            Task { @MainActor in
+                copy ? HUDManager.shared.showCopySucceeded() : HUDManager.shared.showPasteSucceeded()
+            }
+        }
     }
 
     /// 将多个项目合并写入剪贴板
@@ -255,7 +272,8 @@ final class PasteBoard {
         _ items: [PasteboardModel],
         isAttribute: Bool
     ) -> Bool {
-        let shouldPasteAsPlainText = !isAttribute || PasteUserDefaults.pasteOnlyText
+        let shouldPasteAsPlainText =
+            !isAttribute || PasteUserDefaults.pasteOnlyText
 
         let textItems = items.filter { $0.pasteboardType.isText() }
         let fileItems = items.filter { $0.type == .file }
@@ -305,7 +323,10 @@ final class PasteBoard {
         let newline = NSAttributedString(string: "\n")
 
         for (index, item) in items.enumerated() {
-            if let attr = NSAttributedString(with: item.data, type: item.pasteboardType) {
+            if let attr = NSAttributedString(
+                with: item.data,
+                type: item.pasteboardType
+            ) {
                 let mutable = NSMutableAttributedString(attributedString: attr)
                 if PasteUserDefaults.removeTailingNewline {
                     mutable.trimTrailingNewlines()
@@ -343,15 +364,17 @@ final class PasteBoard {
         var allURLs: [URL] = []
 
         for item in items {
-            guard let filePaths = String(data: item.data, encoding: .utf8) else {
+            guard let filePaths = String(data: item.data, encoding: .utf8)
+            else {
                 continue
             }
-            let urls = filePaths
-                .components(separatedBy: "\n")
-                .lazy
-                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-                .filter { !$0.isEmpty && fileManager.fileExists(atPath: $0) }
-                .map { URL(fileURLWithPath: $0) }
+            let urls =
+                filePaths
+                    .components(separatedBy: "\n")
+                    .lazy
+                    .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                    .filter { !$0.isEmpty && fileManager.fileExists(atPath: $0) }
+                    .map { URL(fileURLWithPath: $0) }
             allURLs.append(contentsOf: urls)
         }
 
@@ -367,7 +390,10 @@ final class PasteBoard {
 
         // 清理旧的临时目录
         try? FileManager.default.removeItem(at: tempDir)
-        try? FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        try? FileManager.default.createDirectory(
+            at: tempDir,
+            withIntermediateDirectories: true
+        )
 
         var fileURLs: [URL] = []
         for (index, item) in items.enumerated() {
@@ -397,8 +423,11 @@ final class PasteBoard {
 
     /// 将数据写入系统剪贴板
     /// - Returns: 是否成功写入
-    private func writeToPasteboard(_ data: PasteboardModel, isAttribute: Bool) -> Bool {
-        let shouldPasteAsPlainText = !isAttribute || PasteUserDefaults.pasteOnlyText
+    private func writeToPasteboard(_ data: PasteboardModel, isAttribute: Bool)
+        -> Bool
+    {
+        let shouldPasteAsPlainText =
+            !isAttribute || PasteUserDefaults.pasteOnlyText
 
         if data.pasteboardType.isText(), shouldPasteAsPlainText {
             writePlainText(data)
@@ -428,12 +457,13 @@ final class PasteBoard {
         }
 
         let fileManager = FileManager.default
-        let validURLs = filePaths
-            .components(separatedBy: "\n")
-            .lazy
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty && fileManager.fileExists(atPath: $0) }
-            .map { URL(fileURLWithPath: $0) }
+        let validURLs =
+            filePaths
+                .components(separatedBy: "\n")
+                .lazy
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty && fileManager.fileExists(atPath: $0) }
+                .map { URL(fileURLWithPath: $0) }
 
         let urlArray = Array(validURLs)
         guard !urlArray.isEmpty else { return false }
@@ -447,13 +477,23 @@ final class PasteBoard {
         // 处理需要去除末尾换行的富文本
         if data.pasteboardType.isText(),
            PasteUserDefaults.removeTailingNewline,
-           let attributedString = NSAttributedString(with: data.data, type: data.pasteboardType)
+           let attributedString = NSAttributedString(
+               with: data.data,
+               type: data.pasteboardType
+           )
         {
-            let mutableString = NSMutableAttributedString(attributedString: attributedString)
+            let mutableString = NSMutableAttributedString(
+                attributedString: attributedString
+            )
             mutableString.trimTrailingNewlines()
 
-            if let processedData = mutableString.toData(with: data.pasteboardType) {
-                NSPasteboard.general.setData(processedData, forType: data.pasteboardType)
+            if let processedData = mutableString.toData(
+                with: data.pasteboardType
+            ) {
+                NSPasteboard.general.setData(
+                    processedData,
+                    forType: data.pasteboardType
+                )
                 return
             }
         }
@@ -479,7 +519,12 @@ extension NSMutableAttributedString {
         }
 
         if currentLength < length {
-            deleteCharacters(in: NSRange(location: currentLength, length: length - currentLength))
+            deleteCharacters(
+                in: NSRange(
+                    location: currentLength,
+                    length: length - currentLength
+                )
+            )
         }
     }
 }
@@ -487,5 +532,7 @@ extension NSMutableAttributedString {
 // MARK: - Notification
 
 extension Notification.Name {
-    static let pasteboardPauseStateChanged = Notification.Name("pasteboardPauseStateChanged")
+    static let pasteboardPauseStateChanged = Notification.Name(
+        "pasteboardPauseStateChanged"
+    )
 }

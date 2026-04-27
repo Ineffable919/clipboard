@@ -100,19 +100,20 @@ extension ClipMainViewController: CollectionViewItemDelegate {
     }
 
     func paste(_ item: PasteboardModel) {
-        ClipActionService.shared.paste(item, checkPermissions: PasteUserDefaults.pasteDirect)
+        ClipActionService.shared.paste(item, checkPermissions: PasteUserDefaults.pasteDirect, showTip: !PasteUserDefaults.pasteDirect)
     }
 
     func pastePlain(_ item: PasteboardModel) {
         ClipActionService.shared.paste(
             item,
             isAttribute: false,
-            checkPermissions: PasteUserDefaults.pasteDirect
+            checkPermissions: PasteUserDefaults.pasteDirect,
+            showTip: !PasteUserDefaults.pasteDirect
         )
     }
 
     func copy(_ item: PasteboardModel) {
-        ClipActionService.shared.copy(item)
+        ClipActionService.shared.copy(item, showTip: true)
     }
 
     func edit(_ item: PasteboardModel) {

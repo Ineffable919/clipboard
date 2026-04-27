@@ -211,7 +211,7 @@ extension CollectionViewItem {
     }
 
     private func pasteItem(for _: PasteboardModel) -> NSMenuItem {
-        let title = if let appName = delegate?.preApp?.localizedName {
+        let title = if let appName = delegate?.preApp?.localizedName, PasteUserDefaults.pasteDirect {
             String(localized: .pasteToApp(appName))
         } else {
             String(localized: .paste)
