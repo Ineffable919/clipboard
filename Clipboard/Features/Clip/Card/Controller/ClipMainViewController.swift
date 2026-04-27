@@ -21,6 +21,9 @@ final class ClipMainViewController: NSViewController {
     let db = PasteDataStore.main
     let store = CategoryChipStore.shared
 
+    var monitorToken: Any?
+    var flagsMonitorToken: Any?
+
     // MARK: - Preview
 
     private(set) lazy var previewManager: ClipPreviewManager = .init(
@@ -35,6 +38,7 @@ final class ClipMainViewController: NSViewController {
         },
         onRestoreFirstResponder: { [weak self] in
             guard let self else { return }
+            setFocusRegion(.collection)
             view.window?.makeFirstResponder(collectionView)
         }
     )
@@ -202,6 +206,22 @@ extension ClipMainViewController {
 
         updateSelectedItemBorder()
 
+        if monitorToken == nil {
+            monitorToken = NSEvent.addLocalMonitorForEvents(
+                matching: .keyDown,
+                handler: keyDownEvent(_:)
+            )
+        }
+
+        if flagsMonitorToken == nil {
+            flagsMonitorToken = NSEvent.addLocalMonitorForEvents(
+                matching: .flagsChanged
+            ) {
+                [weak self] event in
+                self?.flagsChangedEvent(event)
+            }
+        }
+
         NSAnimationContext.runAnimationGroup({ context in
             context.duration = Const.showDuration
             self.view.animator().setFrameOrigin(.zero)
@@ -215,6 +235,14 @@ extension ClipMainViewController {
     override func viewDidDisappear() {
         super.viewDidDisappear()
         PasteDataStore.main.clearExpiredData()
+        if let token = monitorToken {
+            NSEvent.removeMonitor(token)
+            monitorToken = nil
+        }
+        if let token = flagsMonitorToken {
+            NSEvent.removeMonitor(token)
+            flagsMonitorToken = nil
+        }
         isQuickPastePressed = false
     }
 }
@@ -269,14 +297,18 @@ extension ClipMainViewController {
     }
 
     private func initDiffableDataSource() {
-        diffableDataSource = NSCollectionViewDiffableDataSource<ClipSection, PasteboardModel>(
+        diffableDataSource = NSCollectionViewDiffableDataSource<
+            ClipSection, PasteboardModel
+        >(
             collectionView: collectionView
         ) { [weak self] collectionView, indexPath, model in
             let item = collectionView.makeItem(
                 withIdentifier: CollectionViewItem.identifier,
                 for: indexPath
             )
-            guard let self, let cItem = item as? CollectionViewItem else { return item }
+            guard let self, let cItem = item as? CollectionViewItem else {
+                return item
+            }
             cItem.delegate = self
             cItem.configure(with: model, keyword: topVM.query)
             cItem.quickPasteIndex = quickPasteIndex(for: indexPath.item)
@@ -297,7 +329,9 @@ extension ClipMainViewController {
     func applyLoadMoreSnapshot() {
         var snapshot = diffableDataSource.snapshot()
         let existingIds = Set(snapshot.itemIdentifiers.map(\.uniqueId))
-        let newItems = dataList.value.filter { !existingIds.contains($0.uniqueId) }
+        let newItems = dataList.value.filter {
+            !existingIds.contains($0.uniqueId)
+        }
         guard !newItems.isEmpty else {
             updateEmptyState()
             return
@@ -333,18 +367,6 @@ extension ClipMainViewController {
         clickGesture.buttonMask = 0x1 // 左键点击
         clickGesture.delegate = self
         contentView.addGestureRecognizer(clickGesture)
-
-        NSEvent.addLocalMonitorForEvents(
-            matching: .keyDown,
-            handler: keyDownEvent(_:)
-        )
-
-        NSEvent.addLocalMonitorForEvents(
-            matching: .flagsChanged
-        ) {
-            [weak self] event in
-            self?.flagsChangedEvent(event)
-        }
     }
 
     func setFocusRegion(_ region: FocusRegion) {
@@ -416,7 +438,11 @@ extension ClipMainViewController {
             for: NSView.boundsDidChangeNotification,
             object: scrollView.contentView
         )
-        .throttle(for: .milliseconds(200), scheduler: DispatchQueue.main, latest: true)
+        .throttle(
+            for: .milliseconds(200),
+            scheduler: DispatchQueue.main,
+            latest: true
+        )
         .sink { [weak self] _ in
             self?.checkLoadMore()
         }
