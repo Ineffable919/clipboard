@@ -35,9 +35,10 @@ extension ClipMainViewController: NSGestureRecognizerDelegate {
 
 extension ClipMainViewController {
     func keyDownEvent(_ event: NSEvent) -> NSEvent? {
+        log.debug("focusRegion: \(focusRegion)")
         if focusRegion == .popover {
             if event.keyCode == KeyCode.escape {
-                previewManager.close()
+                closePreviewPopover()
                 return nil
             }
             return event
@@ -66,14 +67,13 @@ extension ClipMainViewController {
         }
 
         if KeyCode.shouldTriggerSearch(for: event),
-           !topBarView.searchField.isFirstResponder, focusRegion != .popover
+           !topBarView.searchField.isFirstResponder, focusRegion != .search
         {
             if let characters = event.characters, !characters.isEmpty {
                 topBarView.activateSearch(with: characters)
-            } else {
-                setFocusRegion(.search)
-                view.window?.makeFirstResponder(topBarView.searchField)
             }
+            setFocusRegion(.search)
+            view.window?.makeFirstResponder(topBarView.searchField)
             return nil
         }
 
@@ -103,10 +103,6 @@ extension ClipMainViewController {
     }
 
     private func escapeKeyDown(_: NSEvent) -> NSEvent? {
-        if previewManager.isShowing {
-            previewManager.close()
-            return nil
-        }
         let field = topBarView.searchField
         if field.isFirstResponder {
             if topVM.hasInput {
@@ -124,7 +120,8 @@ extension ClipMainViewController {
 
     private func spaceKeyDown(_ event: NSEvent) -> NSEvent? {
         guard !topBarView.searchField.isFirstResponder,
-              !topBarView.isEditingChipFirstResponder
+              !topBarView.isEditingChipFirstResponder,
+              focusRegion == .collection
         else { return event }
 
         guard selectIndexPath.item < dataList.value.count else { return nil }

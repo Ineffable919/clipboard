@@ -169,7 +169,7 @@ extension CollectionViewItem {
             return
         }
         let color: NSColor = isFocused
-            ? .controlAccentColor.withAlphaComponent(0.8)
+            ? .controlAccentColor
             : .gray.withAlphaComponent(0.5)
         selectionBorderView.layer?.borderColor = color.cgColor
         selectionBorderView.layer?.borderWidth = Const.selectionBorderWidth

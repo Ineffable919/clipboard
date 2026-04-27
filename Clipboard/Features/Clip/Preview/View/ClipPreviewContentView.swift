@@ -2,7 +2,7 @@
 //  ClipPreviewContentView.swift
 //  Clipboard
 //
-//  预览 Popover
+//  预览内容容器：根据 model 类型切换子视图，包含所有内容子视图实现
 //
 
 import AppKit
@@ -14,10 +14,16 @@ import WebKit
 // MARK: - ClipPreviewContentView
 
 final class ClipPreviewContentView: NSView {
+    // MARK: - State
+
     private var currentContentView: NSView?
     private var mouseMonitor: Any?
 
+    // MARK: - Callbacks
+
     var onMouseDown: (() -> Void)?
+
+    // MARK: - Init
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -34,6 +40,8 @@ final class ClipPreviewContentView: NSView {
         fatalError()
     }
 
+    // MARK: - Appearance
+
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
         layer?.borderColor = NSColor.separatorColor.cgColor
@@ -48,28 +56,7 @@ final class ClipPreviewContentView: NSView {
         }
     }
 
-    // MARK: - Local event monitor
-
-    private func installMouseMonitor() {
-        guard mouseMonitor == nil else { return }
-        mouseMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] event in
-            guard let self else { return event }
-            let locationInSelf = convert(event.locationInWindow, from: nil)
-            if bounds.contains(locationInSelf) {
-                onMouseDown?()
-            }
-            return event
-        }
-    }
-
-    private func removeMouseMonitor() {
-        if let monitor = mouseMonitor {
-            NSEvent.removeMonitor(monitor)
-            mouseMonitor = nil
-        }
-    }
-
-    // MARK: - Configure
+    // MARK: - Public API
 
     func configure(with model: PasteboardModel) {
         currentContentView?.removeFromSuperview()
@@ -88,8 +75,9 @@ final class ClipPreviewContentView: NSView {
         currentContentView = nil
     }
 
-    // MARK: - Size hint
+    // MARK: - Size Hint
 
+    /// 根据 model 类型计算内容区域的理想高度
     static func preferredContentHeight(for model: PasteboardModel, width: CGFloat) -> CGFloat {
         switch model.type {
         case .color:
@@ -109,6 +97,8 @@ final class ClipPreviewContentView: NSView {
             return 270
         }
     }
+
+    // MARK: - Private Size Helpers
 
     private static func textContentHeight(for model: PasteboardModel, width: CGFloat) -> CGFloat {
         let isLarge = model.type == .rich
@@ -162,6 +152,27 @@ final class ClipPreviewContentView: NSView {
             PreviewRichTextView(model: model)
         case .none:
             PreviewEmptyView()
+        }
+    }
+
+    // MARK: - Mouse Monitor
+
+    private func installMouseMonitor() {
+        guard mouseMonitor == nil else { return }
+        mouseMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] event in
+            guard let self else { return event }
+            let locationInSelf = convert(event.locationInWindow, from: nil)
+            if bounds.contains(locationInSelf) {
+                onMouseDown?()
+            }
+            return event
+        }
+    }
+
+    private func removeMouseMonitor() {
+        if let monitor = mouseMonitor {
+            NSEvent.removeMonitor(monitor)
+            mouseMonitor = nil
         }
     }
 }
@@ -573,7 +584,7 @@ final class PreviewWebView: NSView, WKNavigationDelegate {
 
 // MARK: - PreviewEmptyView
 
-private final class PreviewEmptyView: NSView {
+final class PreviewEmptyView: NSView {
     override init(frame: NSRect) {
         super.init(frame: frame)
         let label = NSTextField(labelWithString: String(localized: .noPreview))

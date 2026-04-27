@@ -26,22 +26,7 @@ final class ClipMainViewController: NSViewController {
 
     // MARK: - Preview
 
-    private(set) lazy var previewManager: ClipPreviewManager = .init(
-        onFocusChange: { [weak self] region in
-            self?.setFocusRegion(region)
-        },
-        onPopoverClose: { [weak self] in
-            guard let self else { return }
-            guard focusRegion == .popover else { return }
-            setFocusRegion(.collection)
-            view.window?.makeFirstResponder(collectionView)
-        },
-        onRestoreFirstResponder: { [weak self] in
-            guard let self else { return }
-            setFocusRegion(.collection)
-            view.window?.makeFirstResponder(collectionView)
-        }
-    )
+    var previewPopover: ClipPreviewPopover?
 
     // MARK: - Quick Paste
 
@@ -452,6 +437,13 @@ extension ClipMainViewController {
 
     ///  UI 刷新策略
     private func handleDataChange(_ changeType: PasteDataStore.DataChangeType) {
+        let shouldDismissPreview = changeType != .loadMore && changeType != .update
+        let wasShowingPreview = previewPopover?.isShown == true
+
+        if shouldDismissPreview, wasShowingPreview {
+            closePreviewPopover()
+        }
+
         switch changeType {
         case .delete:
             applySnapshot(animating: true) { [weak self] in
@@ -466,6 +458,10 @@ extension ClipMainViewController {
         case .update:
             applySnapshot(animating: false)
             restoreSelection()
+        }
+
+        if changeType == .new, wasShowingPreview {
+            reopenPreviewForSelectedItem()
         }
     }
 

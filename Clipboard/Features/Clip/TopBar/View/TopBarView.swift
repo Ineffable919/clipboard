@@ -760,15 +760,14 @@ final class TopBarView: NSView {
 
     private func togglePopover() {
         guard let filterPopoverVC else { return }
+        if filterPopover.contentViewController == nil {
+            filterPopover.contentViewController = filterPopoverVC
+        }
 
-        if isShowingPopover {
+        if filterPopover.isShown {
             filterPopover.close()
             isShowingPopover = false
             return
-        }
-
-        if filterPopover.contentViewController == nil {
-            filterPopover.contentViewController = filterPopoverVC
         }
 
         isShowingPopover = true
@@ -778,8 +777,10 @@ final class TopBarView: NSView {
             of: searchField.filterButton,
             preferredEdge: .maxY
         )
-        onFocusRegionChange?(.filter)
-        filterPopoverVC.view.window?.makeFirstResponder(filterPopoverVC.view)
+        Task { @MainActor in
+            onFocusRegionChange?(.filter)
+            filterPopoverVC.view.window?.makeFirstResponder(filterPopoverVC.view)
+        }
     }
 }
 

@@ -74,6 +74,12 @@ final class PreviewPillButton: NSView {
         }
     }
 
+    // MARK: - First Responder
+
+    override var acceptsFirstResponder: Bool {
+        false
+    }
+
     // MARK: - Layout
 
     override func layout() {
