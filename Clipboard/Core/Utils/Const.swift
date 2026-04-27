@@ -87,8 +87,7 @@ enum Const {
     static let maxContentHeight: CGFloat = 600.0
     static let minPreviewHeight: CGFloat = 300.0
     static let minPreviewWidth: CGFloat = 400.0
-    static let maxTextSize: Int = 1000
-    static let maxRichTextSize: Int = 500
+    static let maxTextSize: Int = 10000
 
     /// 设置页面
     static let settingWidth: CGFloat = 650.0

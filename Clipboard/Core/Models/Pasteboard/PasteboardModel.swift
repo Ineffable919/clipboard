@@ -122,12 +122,8 @@ final class PasteboardModel: Identifiable, Codable {
         return String(data: data, encoding: .utf8) ?? ""
     }
 
-    // MARK: - 搜索文本归一化
+    // MARK: - 搜索文本格式化
 
-    /// 将原始文本归一化为适合搜索的形式：
-    /// - 去除首尾空白和换行
-    /// - 内部连续空白/换行合并为单个空格
-    /// - 去除不可见控制字符
     static func normalizeSearchText(_ raw: String) -> String {
         raw.trimmingCharacters(in: .whitespacesAndNewlines)
             .replacing(/[\p{Cc}\p{Cf}&&[^\t\n]]/, with: "")

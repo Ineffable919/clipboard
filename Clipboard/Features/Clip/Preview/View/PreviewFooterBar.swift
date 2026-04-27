@@ -121,7 +121,6 @@ final class PreviewFooterBar: NSView {
             && PasteUserDefaults.enableLinkPreview
             && model.isLink
 
-        // 信息标签
         if isSingleFile, let path = model.cachedFilePaths?.first {
             let maxWidth = (Const.maxPreviewWidth - Const.space12 * 2) * 0.7
             let font = firstLineLabel.font ?? .systemFont(ofSize: NSFont.systemFontSize)
@@ -130,7 +129,7 @@ final class PreviewFooterBar: NSView {
             secondLineLabel.stringValue = line2
             secondLineLabel.isHidden = line2.isEmpty
         } else if model.pasteboardType.isText(), !showLinkPreview {
-            let stats = TextStatistics(from: model.attributeString.string)
+            let stats = TextStatistics(from: model.plainText)
             firstLineLabel.stringValue = stats.displayString
             secondLineLabel.stringValue = ""
             secondLineLabel.isHidden = true
@@ -140,7 +139,6 @@ final class PreviewFooterBar: NSView {
             secondLineLabel.isHidden = true
         }
 
-        // 文件大小
         if isSingleFile, let size = fileSize {
             fileSizeLabel.stringValue = size
             fileSizeLabel.isHidden = false
@@ -148,10 +146,8 @@ final class PreviewFooterBar: NSView {
             fileSizeLabel.isHidden = true
         }
 
-        // Finder 按钮
         finderButton.isHidden = !isSingleFile
 
-        // 浏览器按钮
         if showLinkPreview, let name = browserName {
             browserButton.title = String(localized: .openInApp(name))
             browserButton.isHidden = false
@@ -162,7 +158,6 @@ final class PreviewFooterBar: NSView {
 
     // MARK: - Private
 
-    /// 将长路径拆分为两行显示，第一行尽量填满可用宽度
     private func splitPathIntoTwoLines(
         _ text: String,
         font: NSFont,

@@ -15,10 +15,7 @@ extension ClipMainViewController: NSCollectionViewDelegate {
         if let indexPath = indexPaths.first {
             resetSelectIndex(indexPath)
             if previewPopover?.isShown == true, indexPath.item < dataList.value.count {
-                let model = dataList.value[indexPath.item]
-                if let itemView = collectionView.item(at: indexPath)?.view {
-                    showPreviewPopover(for: model, relativeTo: itemView)
-                }
+                reopenPreviewForSelectedItem()
             }
         }
         return [selectIndexPath]

@@ -20,7 +20,7 @@ final class AppEnvironment {
     // MARK: - UI State
 
     var suppressResignKey = false
-    var quickPasteResetTrigger: Bool = false
+    var quickPasteResetTrigger = false
 
     private init() {}
 

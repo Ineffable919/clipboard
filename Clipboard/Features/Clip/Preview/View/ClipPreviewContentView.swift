@@ -101,22 +101,27 @@ final class ClipPreviewContentView: NSView {
     // MARK: - Private Size Helpers
 
     private static func textContentHeight(for model: PasteboardModel, width: CGFloat) -> CGFloat {
-        let isLarge = model.type == .rich
-            ? model.length > Const.maxRichTextSize
-            : model.length > Const.maxTextSize
-        if isLarge { return Const.maxContentHeight }
+        if model.length > Const.maxTextSize { return Const.maxContentHeight }
 
         let inset: CGFloat = Const.space8 * 2
         let textWidth = width - inset * 2
         guard textWidth > 0 else { return Const.minPreviewHeight }
 
-        let attributed = model.attributeString
+        let attributed = Self.measuringAttributedString(for: model)
         let boundingRect = attributed.boundingRect(
             with: NSSize(width: textWidth, height: .greatestFiniteMagnitude),
             options: [.usesLineFragmentOrigin, .usesFontLeading]
         )
         let measured = ceil(boundingRect.height) + inset * 2
         return min(max(measured, 80), Const.maxContentHeight)
+    }
+
+    static func measuringAttributedString(for model: PasteboardModel) -> NSAttributedString {
+        if model.type == .rich {
+            return NSAttributedString(with: model.data, type: model.pasteboardType)
+                ?? model.attributeString
+        }
+        return model.attributeString
     }
 
     private static func imageContentHeight(for model: PasteboardModel) -> CGFloat {
@@ -144,12 +149,10 @@ final class ClipPreviewContentView: NSView {
             {
                 PreviewWebView(url: url)
             } else {
-                PreviewTextView(model: model)
+                PreviewTextContentView(model: model)
             }
-        case .string:
-            PreviewTextView(model: model)
-        case .rich:
-            PreviewRichTextView(model: model)
+        case .string, .rich:
+            PreviewTextContentView(model: model)
         case .none:
             PreviewEmptyView()
         }
@@ -177,144 +180,99 @@ final class ClipPreviewContentView: NSView {
     }
 }
 
-// MARK: - PreviewTextView
+// MARK: - PreviewTextContentView
 
-final class PreviewTextView: NSView {
+final class PreviewTextContentView: NSView {
     private let scrollView = NSScrollView()
     private let textView = NSTextView()
 
     init(model: PasteboardModel) {
         super.init(frame: .zero)
         wantsLayer = true
-        layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
 
+        setupScrollView()
+        setupTextView()
+
+        let bgColor: NSColor = if model.type == .rich, model.hasBgColor,
+                                  let bg = model.cachedBackgroundColor
+        {
+            bg
+        } else {
+            .controlBackgroundColor
+        }
+        textView.backgroundColor = bgColor
+        layer?.backgroundColor = bgColor.cgColor
+
+        scrollView.documentView = textView
+        addSubview(scrollView)
+        scrollView.snp.makeConstraints { $0.edges.equalToSuperview() }
+
+        applyContent(for: model)
+    }
+
+    @available(*, unavailable)
+    required init?(coder _: NSCoder) {
+        fatalError()
+    }
+
+    override func layout() {
+        super.layout()
+        let w = scrollView.contentSize.width
+        guard w > 0 else { return }
+        if textView.frame.width != w {
+            textView.frame = NSRect(x: 0, y: 0, width: w, height: max(scrollView.contentSize.height, 1))
+            textView.minSize = NSSize(width: 0, height: scrollView.contentSize.height)
+            textView.maxSize = NSSize(width: w, height: .greatestFiniteMagnitude)
+            textView.textContainer?.containerSize = NSSize(width: w, height: .greatestFiniteMagnitude)
+        }
+    }
+
+    // MARK: - Private Setup
+
+    private func setupScrollView() {
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = false
         scrollView.autohidesScrollers = true
         scrollView.borderType = .noBorder
         scrollView.drawsBackground = false
+    }
 
+    private func setupTextView() {
         textView.isEditable = false
         textView.isSelectable = true
         textView.drawsBackground = true
-        textView.backgroundColor = .controlBackgroundColor
         textView.textContainerInset = NSSize(width: Const.space8, height: Const.space8)
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
         textView.autoresizingMask = .width
+        textView.textContainer?.widthTracksTextView = true
+        textView.layoutManager?.allowsNonContiguousLayout = true
+    }
+
+    // MARK: - Content
+
+    private func applyContent(for model: PasteboardModel) {
+        switch model.type {
+        case .rich:
+            applyRichContent(for: model)
+        default:
+            applyPlainContent(for: model)
+        }
+    }
+
+    private func applyRichContent(for model: PasteboardModel) {
+        if let attributed = NSAttributedString(with: model.data, type: model.pasteboardType) {
+            textView.textStorage?.setAttributedString(attributed)
+        } else {
+            textView.textStorage?.setAttributedString(model.attributeString)
+        }
+    }
+
+    private func applyPlainContent(for model: PasteboardModel) {
         textView.font = .systemFont(ofSize: NSFont.systemFontSize)
         textView.textColor = .labelColor
-        textView.textContainer?.widthTracksTextView = true
-        textView.layoutManager?.allowsNonContiguousLayout = true
-
-        scrollView.documentView = textView
-        addSubview(scrollView)
-        scrollView.snp.makeConstraints { $0.edges.equalToSuperview() }
-
-        let text: String = if model.length > Const.maxTextSize {
-            String(data: model.data, encoding: .utf8) ?? model.attributeString.string
-        } else {
-            model.attributeString.string
-        }
-        textView.string = text
-    }
-
-    @available(*, unavailable)
-    required init?(coder _: NSCoder) {
-        fatalError()
-    }
-
-    override func layout() {
-        super.layout()
-        let w = scrollView.contentSize.width
-        guard w > 0 else { return }
-        if textView.frame.width != w {
-            textView.frame = NSRect(x: 0, y: 0, width: w, height: max(scrollView.contentSize.height, 1))
-            textView.minSize = NSSize(width: 0, height: scrollView.contentSize.height)
-            textView.maxSize = NSSize(width: w, height: .greatestFiniteMagnitude)
-            textView.textContainer?.containerSize = NSSize(width: w, height: .greatestFiniteMagnitude)
-        }
-    }
-}
-
-// MARK: - PreviewRichTextView
-
-final class PreviewRichTextView: NSView {
-    private let scrollView = NSScrollView()
-    private let textView = NSTextView()
-
-    init(model: PasteboardModel) {
-        super.init(frame: .zero)
-        wantsLayer = true
-
-        scrollView.hasVerticalScroller = true
-        scrollView.hasHorizontalScroller = false
-        scrollView.autohidesScrollers = true
-        scrollView.borderType = .noBorder
-        scrollView.drawsBackground = false
-
-        textView.isEditable = false
-        textView.isSelectable = true
-        textView.textContainerInset = NSSize(width: Const.space8, height: Const.space8)
-        textView.isVerticallyResizable = true
-        textView.isHorizontallyResizable = false
-        textView.autoresizingMask = .width
-        textView.textContainer?.widthTracksTextView = true
-        textView.layoutManager?.allowsNonContiguousLayout = true
-
-        if model.hasBgColor, let bg = model.cachedBackgroundColor {
-            textView.drawsBackground = true
-            textView.backgroundColor = bg
-            layer?.backgroundColor = bg.cgColor
-        } else {
-            textView.drawsBackground = true
-            textView.backgroundColor = .controlBackgroundColor
-            layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
-        }
-
-        scrollView.documentView = textView
-        addSubview(scrollView)
-        scrollView.snp.makeConstraints { $0.edges.equalToSuperview() }
-
-        if model.length > Const.maxRichTextSize {
-            if model.hasBgColor {
-                if let attributed = NSAttributedString(with: model.data, type: model.pasteboardType) {
-                    textView.textStorage?.setAttributedString(attributed)
-                } else {
-                    textView.string = model.attributeString.string
-                    textView.font = .systemFont(ofSize: NSFont.systemFontSize)
-                    textView.textColor = .labelColor
-                }
-            } else {
-                let text = String(data: model.data, encoding: .utf8) ?? model.attributeString.string
-                textView.string = text
-                textView.font = .systemFont(ofSize: NSFont.systemFontSize)
-                textView.textColor = .labelColor
-            }
-        } else {
-            if let attributed = NSAttributedString(with: model.data, type: model.pasteboardType) {
-                textView.textStorage?.setAttributedString(attributed)
-            } else {
-                textView.textStorage?.setAttributedString(model.attributeString)
-            }
-        }
-    }
-
-    @available(*, unavailable)
-    required init?(coder _: NSCoder) {
-        fatalError()
-    }
-
-    override func layout() {
-        super.layout()
-        let w = scrollView.contentSize.width
-        guard w > 0 else { return }
-        if textView.frame.width != w {
-            textView.frame = NSRect(x: 0, y: 0, width: w, height: max(scrollView.contentSize.height, 1))
-            textView.minSize = NSSize(width: 0, height: scrollView.contentSize.height)
-            textView.maxSize = NSSize(width: w, height: .greatestFiniteMagnitude)
-            textView.textContainer?.containerSize = NSSize(width: w, height: .greatestFiniteMagnitude)
-        }
+        textView.string = String(data: model.data, encoding: .utf8)
+            ?? model.attributeString.string
     }
 }
 

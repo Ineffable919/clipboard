@@ -95,13 +95,13 @@ private extension HUDManager {
         parent.subviews.forEach { $0.removeFromSuperview() }
 
         if let icon {
-            let symbolConfig = NSImage.SymbolConfiguration(pointSize: 100, weight: .medium)
+            let symbolConfig = NSImage.SymbolConfiguration(pointSize: 100, weight: .regular)
             let scaledIcon = icon.withSymbolConfiguration(symbolConfig) ?? icon
 
             let imageView = NSImageView(frame: .zero)
             imageView.image = scaledIcon
             imageView.imageScaling = .scaleProportionallyUpOrDown
-            imageView.contentTintColor = .secondaryLabelColor
+            imageView.contentTintColor = .labelColor
 
             parent.addSubview(imageView)
             imageView.snp.makeConstraints { make in

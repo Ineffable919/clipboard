@@ -52,7 +52,6 @@ final class ClipPreviewController: NSViewController {
 
     // MARK: - Public API
 
-    /// 配置预览内容，返回计算后的理想尺寸
     @discardableResult
     func configure(with model: PasteboardModel) -> NSSize {
         self.model = model
@@ -77,7 +76,6 @@ final class ClipPreviewController: NSViewController {
         return size
     }
 
-    /// 清理资源（popover 关闭时调用）
     func cleanup() {
         metadataTask?.cancel()
         metadataTask = nil
