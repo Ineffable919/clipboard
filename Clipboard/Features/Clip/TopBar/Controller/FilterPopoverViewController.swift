@@ -2,7 +2,7 @@
 //  FilterPopoverViewController.swift
 //  Clipboard
 //
-//  Popover 视图控制器，管理筛选内容视图的生命周期
+//  Popover 视图控制器：管理筛选内容视图的生命周期与数据加载
 //
 
 import AppKit
@@ -13,7 +13,6 @@ final class FilterPopoverViewController: NSViewController {
     private weak var viewModel: TopBarViewModel?
     private var loadingTask: Task<Void, Never>?
 
-    /// 标记是否已经初始化过视图数据
     private var hasInitializedView = false
 
     // MARK: - Views
@@ -68,19 +67,19 @@ extension FilterPopoverViewController {
 extension FilterPopoverViewController {
     private func initBindings() {
         // 类型筛选回调
-        contentView.onTypeToggle = { [weak self] type in
+        contentView.typeSection.onTypeToggle = { [weak self] type in
             self?.viewModel?.toggleType(type)
             self?.updateContentViewState()
         }
 
         // 应用筛选回调
-        contentView.onAppToggle = { [weak self] appName, appPath in
+        contentView.appSection.onAppToggle = { [weak self] appName, appPath in
             self?.viewModel?.toggleApp(appName, appPath: appPath)
             self?.updateContentViewState()
         }
 
         // 日期筛选回调
-        contentView.onDateFilterChange = { [weak self] dateFilter in
+        contentView.dateSection.onDateFilterChange = { [weak self] dateFilter in
             self?.viewModel?.setDateFilter(dateFilter)
             self?.updateContentViewState()
         }
@@ -93,9 +92,9 @@ extension FilterPopoverViewController {
     private func updateContentViewState() {
         guard let viewModel else { return }
 
-        contentView.updateTypeSelection(viewModel.selectedTypes)
-        contentView.updateAppSelection(viewModel.selectedAppNames)
-        contentView.updateDateSelection(viewModel.selectedDateFilter)
+        contentView.typeSection.updateSelection(viewModel.selectedTypes)
+        contentView.appSection.updateSelection(viewModel.selectedAppNames)
+        contentView.dateSection.updateSelection(viewModel.selectedDateFilter)
     }
 
     private func loadDataFromCache() {
@@ -111,8 +110,8 @@ extension FilterPopoverViewController {
 
             let (appInfo, types) = await (appInfoTask, typesTask)
 
-            contentView.setAvailableTypes(types)
-            contentView.setAvailableApps(appInfo)
+            contentView.typeSection.setAvailableTypes(types)
+            contentView.appSection.setAvailableApps(appInfo)
 
             updateContentViewState()
         }
@@ -132,8 +131,8 @@ extension FilterPopoverViewController {
                 return (name: info.name, path: info.path, icon: icon)
             }
 
-            contentView.setAvailableTypes(types)
-            contentView.setAvailableApps(appInfo)
+            contentView.typeSection.setAvailableTypes(types)
+            contentView.appSection.setAvailableApps(appInfo)
             updateContentViewState()
         }
     }

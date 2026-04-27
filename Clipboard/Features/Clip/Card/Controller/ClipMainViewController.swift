@@ -408,6 +408,7 @@ extension ClipMainViewController {
             .sink { [weak self] in
                 guard let self else { return }
                 applySnapshot(animating: false)
+                restoreSelection()
             }
             .store(in: &cancellables)
 

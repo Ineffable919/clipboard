@@ -2,7 +2,7 @@
 //  FilterButton.swift
 //  Clipboard
 //
-//  Created by Kiro on 2026/4/9.
+//  Created by crown on 2026/4/9.
 //
 
 import AppKit
