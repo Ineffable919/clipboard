@@ -76,7 +76,6 @@ final class TokenAttachment: NSTextAttachment {
             bytesPerRow: 0,
             bitsPerPixel: 0
         ) else {
-            // 降级：返回空白图像
             return NSImage(size: size)
         }
 
@@ -87,7 +86,6 @@ final class TokenAttachment: NSTextAttachment {
 
         let rect = NSRect(origin: .zero, size: size)
 
-        // 1. 背景胶囊
         let bg = NSBezierPath(
             roundedRect: rect,
             xRadius: rect.height / 2,
@@ -98,7 +96,6 @@ final class TokenAttachment: NSTextAttachment {
 
         var x = hPad
 
-        // 2. 图标
         if let icon = tag.icon {
             let iconRect = NSRect(
                 x: x,
@@ -117,7 +114,6 @@ final class TokenAttachment: NSTextAttachment {
             x += iconSize + gap
         }
 
-        // 3. 文字
         let textRect = NSRect(
             x: x,
             y: rect.midY - textSize.height / 2,

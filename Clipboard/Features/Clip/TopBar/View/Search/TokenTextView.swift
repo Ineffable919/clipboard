@@ -74,7 +74,6 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
 
     // MARK: - Layout Constants
 
-    /// 用于 baseline 计算的固定字体，避免 NSTextView.font 被 attachment 污染
     private static let baselineFont: NSFont = .preferredFont(forTextStyle: .callout)
 
     private static let fixedParagraphStyle: NSParagraphStyle = {
@@ -95,7 +94,6 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
 
     // MARK: - Token Management
 
-    /// 插入 Token 到末尾（Token 区域的最右侧）
     func insertToken(_ tag: InputTag) {
         insertTokens([tag])
     }
@@ -115,7 +113,6 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         notifyTextChanged()
     }
 
-    /// 删除指定的 Token
     func removeToken(_ tag: InputTag) {
         guard let storage = textStorage else { return }
 
@@ -242,7 +239,6 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
                 }
 
                 if !tokensInRange.isEmpty {
-                    // 选区包含 token：扩展删除范围以包含 token 后面的空格
                     let storageLength = storage.length
                     var extendedEnd = range.location + range.length
                     if extendedEnd < storageLength {
@@ -369,9 +365,15 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
             y: textContainerInset.height + topPadding
         )
 
+        let fontColor = if #available(macOS 26.0, *) {
+            NSColor.placeholderTextColor
+        } else {
+            NSColor.labelColor
+        }
+
         let attrs: [NSAttributedString.Key: Any] = [
             .font: font,
-            .foregroundColor: NSColor.placeholderTextColor,
+            .foregroundColor: fontColor,
         ]
         (placeholder as NSString).draw(at: origin, withAttributes: attrs)
     }

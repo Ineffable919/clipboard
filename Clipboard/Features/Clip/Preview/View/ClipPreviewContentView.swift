@@ -233,6 +233,7 @@ final class PreviewTextContentView: NSView {
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = false
         scrollView.autohidesScrollers = true
+        scrollView.scrollerStyle = .overlay
         scrollView.borderType = .noBorder
         scrollView.drawsBackground = false
     }
@@ -261,10 +262,19 @@ final class PreviewTextContentView: NSView {
     }
 
     private func applyRichContent(for model: PasteboardModel) {
-        if let attributed = NSAttributedString(with: model.data, type: model.pasteboardType) {
-            textView.textStorage?.setAttributedString(attributed)
+        let base = NSAttributedString(with: model.data, type: model.pasteboardType)
+            ?? model.attributeString
+
+        if model.hasBgColor {
+            textView.textStorage?.setAttributedString(base)
         } else {
-            textView.textStorage?.setAttributedString(model.attributeString)
+            let mutable = NSMutableAttributedString(attributedString: base)
+            mutable.addAttribute(
+                .foregroundColor,
+                value: NSColor.labelColor,
+                range: NSRange(location: 0, length: mutable.length)
+            )
+            textView.textStorage?.setAttributedString(mutable)
         }
     }
 

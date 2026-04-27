@@ -148,7 +148,7 @@ enum PasteUserDefaults {
     @UserDefaultsWrapper(.backgroundType, defaultValue: 0)
     static var backgroundType
     /// 玻璃材质强度(0-4, 默认为regular)
-    @UserDefaultsWrapper(.glassMaterial, defaultValue: 2)
+    @UserDefaultsWrapper(.glassMaterial, defaultValue: 1)
     static var glassMaterial
     /// tag 字段迁移标记
     @UserDefaultsWrapper(.tagFieldMigrated, defaultValue: false)

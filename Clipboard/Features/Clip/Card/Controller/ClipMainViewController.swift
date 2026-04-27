@@ -24,6 +24,9 @@ final class ClipMainViewController: NSViewController {
     var monitorToken: Any?
     var flagsMonitorToken: Any?
 
+    var lastBackgroundType: Int = 0
+    var lastGlassMaterial: Int = 2
+
     // MARK: - Preview
 
     var previewPopover: ClipPreviewPopover?
@@ -60,22 +63,62 @@ final class ClipMainViewController: NSViewController {
 
     // MARK: - Views
 
-    lazy var effectView: NSView = {
+    lazy var effectView: NSView = buildEffectView()
+
+    private func buildEffectView() -> NSView {
         if #available(macOS 26.0, *) {
-            let glassView = NSGlassEffectView()
-            glassView.frame = view.frame
-            glassView.cornerRadius = Const.windowRadis
-            glassView.contentView = contentView
-            return glassView
-        } else {
-            let effectView = NSVisualEffectView()
-            effectView.wantsLayer = true
-            effectView.frame = view.frame
-            effectView.state = .active
-            effectView.blendingMode = .behindWindow
-            return effectView
+            let bgType = BackgroundType(rawValue: PasteUserDefaults.backgroundType) ?? .liquid
+            if bgType == .liquid {
+                let glassView = NSGlassEffectView()
+                glassView.frame = view.frame
+                glassView.cornerRadius = Const.windowRadis
+                glassView.contentView = contentView
+                return glassView
+            }
         }
-    }()
+
+        let visualEffect = NSVisualEffectView()
+        visualEffect.wantsLayer = true
+        visualEffect.frame = view.frame
+        visualEffect.state = .active
+        visualEffect.blendingMode = .behindWindow
+        let material = GlassMaterial(rawValue: PasteUserDefaults.glassMaterial) ?? .regular
+        visualEffect.material = material.nsMaterial
+        return visualEffect
+    }
+
+    func rebuildEffectView() {
+        contentView.removeFromSuperview()
+
+        let oldView = effectView
+        oldView.removeFromSuperview()
+
+        let newView = buildEffectView()
+        effectView = newView
+
+        view.addSubview(newView)
+
+        if newView is NSVisualEffectView {
+            newView.addSubview(contentView)
+            contentView.snp.makeConstraints { make in
+                make.edges.equalToSuperview()
+            }
+        }
+
+        let inner: CGFloat =
+            if #available(macOS 26.0, *) {
+                8.0
+            } else { 0.0 }
+
+        newView.snp.makeConstraints { make in
+            make.leading.equalTo(inner)
+            make.trailing.equalTo(-inner)
+            make.top.equalToSuperview()
+            make.bottom.equalTo(-inner)
+        }
+
+        view.layoutSubtreeIfNeeded()
+    }
 
     lazy var contentView: NSView = {
         let view = NSView()
@@ -434,6 +477,36 @@ extension ClipMainViewController {
         }
         .store(in: &cancellables)
         scrollView.contentView.postsBoundsChangedNotifications = true
+
+        NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
+            .debounce(for: .milliseconds(100), scheduler: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.handleEffectViewSettingsChange()
+            }
+            .store(in: &cancellables)
+
+        lastBackgroundType = PasteUserDefaults.backgroundType
+        lastGlassMaterial = PasteUserDefaults.glassMaterial
+    }
+
+    private func handleEffectViewSettingsChange() {
+        let currentBgType = PasteUserDefaults.backgroundType
+        let currentMaterial = PasteUserDefaults.glassMaterial
+
+        guard currentBgType != lastBackgroundType || currentMaterial != lastGlassMaterial else {
+            return
+        }
+
+        let bgTypeChanged = currentBgType != lastBackgroundType
+        lastBackgroundType = currentBgType
+        lastGlassMaterial = currentMaterial
+
+        if !bgTypeChanged, let visualEffect = effectView as? NSVisualEffectView {
+            let material = GlassMaterial(rawValue: currentMaterial) ?? .regular
+            visualEffect.material = material.nsMaterial
+        } else {
+            rebuildEffectView()
+        }
     }
 
     ///  UI 刷新策略

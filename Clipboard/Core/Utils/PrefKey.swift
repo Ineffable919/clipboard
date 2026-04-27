@@ -177,19 +177,19 @@ enum BackgroundType: Int, CaseIterable {
 
 /// 玻璃材质强度
 enum GlassMaterial: Int, CaseIterable {
-    case ultraThin = 0
-    case thin = 1
-    case regular = 2
+    case thin = 0
+    case regular = 1
+    case medium = 2
     case thick = 3
-    case ultraThick = 4
+    case opaque = 4
 
-    var material: Material {
+    var nsMaterial: NSVisualEffectView.Material {
         switch self {
-        case .ultraThin: .ultraThinMaterial
-        case .thin: .thinMaterial
-        case .regular: .regularMaterial
-        case .thick: .thickMaterial
-        case .ultraThick: .ultraThickMaterial
+        case .thin: .popover
+        case .regular: .menu
+        case .medium: .sidebar
+        case .thick: .headerView
+        case .opaque: .sheet
         }
     }
 }

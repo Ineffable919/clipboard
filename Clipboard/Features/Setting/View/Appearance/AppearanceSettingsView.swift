@@ -111,13 +111,7 @@ struct GlassMaterialSlider: View {
         nonmutating set { glassMaterialRaw = Int(newValue) }
     }
 
-    private var range: ClosedRange<Double> {
-        if #available(macOS 26.0, *) {
-            0 ... 4
-        } else {
-            0 ... 3
-        }
-    }
+    private var range: ClosedRange<Double> = 0 ... 4
 
     var body: some View {
         HStack {
