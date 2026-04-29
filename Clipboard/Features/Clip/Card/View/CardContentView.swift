@@ -2,18 +2,41 @@
 //  CardContentView.swift
 //  Clipboard
 //
-//
-//  Created by crown on 2026/4/9.
-//
 
 import AppKit
+import Combine
 import SnapKit
+
+// MARK: - NSTextView factory
+
+private func makeCardTextView() -> PassthroughTextView {
+    let tv = PassthroughTextView(usingTextLayoutManager: false)
+    tv.isEditable = false
+    tv.isSelectable = false
+    tv.drawsBackground = false
+    tv.isHorizontallyResizable = false
+    tv.isVerticallyResizable = true
+    tv.textContainer?.widthTracksTextView = false
+    tv.textContainer?.heightTracksTextView = false
+    tv.textContainer?.lineFragmentPadding = 0
+    tv.textContainer?.lineBreakMode = .byWordWrapping
+    tv.textContainer?.containerSize = CGSize(
+        width: Const.cardSize - Const.space10 * 2,
+        height: .greatestFiniteMagnitude
+    )
+    tv.textContainerInset = NSSize(width: Const.space10, height: Const.space8)
+    tv.layoutManager?.allowsNonContiguousLayout = false
+    return tv
+}
+
+// MARK: - CardContentView
 
 final class CardContentView: NSView, PassthroughMouseEvents {
     private var currentContentView: NSView?
     private nonisolated(unsafe) var currentModel: PasteboardModel?
     private nonisolated(unsafe) var currentKeyword: String = ""
-    private nonisolated(unsafe) var previewObserverToken: Any?
+
+    private var linkPreviewCancellable: AnyCancellable?
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -25,12 +48,6 @@ final class CardContentView: NSView, PassthroughMouseEvents {
     @available(*, unavailable)
     required init?(coder _: NSCoder) {
         fatalError()
-    }
-
-    deinit {
-        if let token = previewObserverToken {
-            NotificationCenter.default.removeObserver(token)
-        }
     }
 
     // MARK: Configure
@@ -62,19 +79,17 @@ final class CardContentView: NSView, PassthroughMouseEvents {
     // MARK: Private
 
     private func observeLinkPreviewSetting() {
-        previewObserverToken = NotificationCenter.default.addObserver(
-            forName: UserDefaults.didChangeNotification,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            MainActor.assumeIsolated {
+        linkPreviewCancellable = UserDefaults.standard
+            .publisher(for: \.enableLinkPreview)
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
                 guard let self,
                       let model = self.currentModel,
                       model.type == .link
                 else { return }
                 self.replaceContentView(for: model, keyword: self.currentKeyword)
             }
-        }
     }
 
     private func replaceContentView(for model: PasteboardModel, keyword: String) {
@@ -109,6 +124,8 @@ final class CardContentView: NSView, PassthroughMouseEvents {
             imageView.cancelLoad()
         } else if let linkView = currentContentView as? CardLinkPreviewContentView {
             linkView.cancelLoad()
+        } else if let fileView = currentContentView as? CardFileContentView {
+            fileView.cancelLoad()
         }
     }
 
@@ -142,25 +159,7 @@ final class CardContentView: NSView, PassthroughMouseEvents {
 // MARK: - CardStringContentView
 
 final class CardStringContentView: NSView, PassthroughMouseEvents {
-    private lazy var textView: PassthroughTextView = {
-        let tv = PassthroughTextView(usingTextLayoutManager: false)
-        tv.isEditable = false
-        tv.isSelectable = false
-        tv.drawsBackground = false
-        tv.isHorizontallyResizable = false
-        tv.isVerticallyResizable = true
-        tv.textContainer?.widthTracksTextView = false
-        tv.textContainer?.heightTracksTextView = false
-        tv.textContainer?.lineFragmentPadding = 0
-        tv.textContainer?.lineBreakMode = .byWordWrapping
-        tv.textContainer?.containerSize = CGSize(
-            width: Const.cardSize - Const.space10 * 2,
-            height: .greatestFiniteMagnitude
-        )
-        tv.textContainerInset = NSSize(width: Const.space10, height: Const.space8)
-        tv.layoutManager?.allowsNonContiguousLayout = false
-        return tv
-    }()
+    private lazy var textView: PassthroughTextView = makeCardTextView()
 
     init(model: PasteboardModel, keyword: String) {
         super.init(frame: .zero)
@@ -209,24 +208,7 @@ private final class PassthroughTextView: NSTextView {
 // MARK: - CardRichContentView
 
 final class CardRichContentView: NSView, PassthroughMouseEvents {
-    private lazy var textView: PassthroughTextView = {
-        let tv = PassthroughTextView(usingTextLayoutManager: false)
-        tv.isEditable = false
-        tv.isSelectable = false
-        tv.isHorizontallyResizable = false
-        tv.isVerticallyResizable = true
-        tv.textContainer?.widthTracksTextView = false
-        tv.textContainer?.heightTracksTextView = false
-        tv.textContainer?.lineFragmentPadding = 0
-        tv.textContainer?.lineBreakMode = .byWordWrapping
-        tv.textContainer?.containerSize = CGSize(
-            width: Const.cardSize - Const.space10 * 2,
-            height: .greatestFiniteMagnitude
-        )
-        tv.textContainerInset = NSSize(width: Const.space10, height: Const.space8)
-        tv.layoutManager?.allowsNonContiguousLayout = false
-        return tv
-    }()
+    private lazy var textView: PassthroughTextView = makeCardTextView()
 
     init(model: PasteboardModel, keyword: String) {
         super.init(frame: .zero)
@@ -234,8 +216,6 @@ final class CardRichContentView: NSView, PassthroughMouseEvents {
         if model.hasBgColor, let bgColor = model.cachedBackgroundColor {
             textView.drawsBackground = true
             textView.backgroundColor = bgColor
-        } else {
-            textView.drawsBackground = false
         }
 
         addSubview(textView)
@@ -264,17 +244,16 @@ final class CardColorContentView: NSView, PassthroughMouseEvents {
         return field
     }()
 
+    private var dynamicBgColor: NSColor = .controlBackgroundColor
+
     init(model: PasteboardModel) {
         super.init(frame: .zero)
         wantsLayer = true
 
-        let bgNS = model.cachedBackgroundColor ?? NSColor.controlBackgroundColor
-        layer?.backgroundColor = bgNS.cgColor
+        dynamicBgColor = model.cachedBackgroundColor ?? .controlBackgroundColor
+        applyColors()
 
-        let textNS = contrastingNSColor(for: bgNS)
         label.stringValue = model.colorDisplayText
-        label.textColor = textNS
-
         addSubview(label)
         label.snp.makeConstraints { make in
             make.center.equalToSuperview()
@@ -287,23 +266,40 @@ final class CardColorContentView: NSView, PassthroughMouseEvents {
     required init?(coder _: NSCoder) {
         fatalError()
     }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        applyColors()
+    }
+
+    private func applyColors() {
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            layer?.backgroundColor = dynamicBgColor.cgColor
+            label.textColor = contrastingNSColor(for: dynamicBgColor)
+        }
+    }
 }
 
 // MARK: - CardFileContentView
 
 final class CardFileContentView: NSView, PassthroughMouseEvents {
+    private var thumbnailView: CardFileThumbnailView?
+    private var multiView: CardMultipleFilesView?
+
     init(model: PasteboardModel) {
         super.init(frame: .zero)
 
         if let filePaths = model.cachedFilePaths, !filePaths.isEmpty {
             if filePaths.count > 1 {
-                let multiView = CardMultipleFilesView(filePaths: filePaths)
-                addSubview(multiView)
-                multiView.snp.makeConstraints { $0.edges.equalToSuperview() }
+                let mv = CardMultipleFilesView(filePaths: filePaths)
+                multiView = mv
+                addSubview(mv)
+                mv.snp.makeConstraints { $0.edges.equalToSuperview() }
             } else {
-                let thumbView = CardFileThumbnailView(filePath: filePaths[0])
-                addSubview(thumbView)
-                thumbView.snp.makeConstraints { make in
+                let tv = CardFileThumbnailView(filePath: filePaths[0])
+                thumbnailView = tv
+                addSubview(tv)
+                tv.snp.makeConstraints { make in
                     make.centerX.equalToSuperview()
                     make.centerY.equalToSuperview().offset(-Const.space20)
                 }
@@ -319,6 +315,11 @@ final class CardFileContentView: NSView, PassthroughMouseEvents {
     required init?(coder _: NSCoder) {
         fatalError()
     }
+
+    func cancelLoad() {
+        thumbnailView?.cancelLoad()
+        multiView?.cancelLoad()
+    }
 }
 
 // MARK: - CardFileThumbnailView
@@ -326,7 +327,7 @@ final class CardFileContentView: NSView, PassthroughMouseEvents {
 final class CardFileThumbnailView: NSView, PassthroughMouseEvents {
     private lazy var imageView: NSImageView = {
         let iv = NSImageView()
-        iv.imageScaling = .scaleProportionallyDown // scaledToFit
+        iv.imageScaling = .scaleProportionallyDown
         return iv
     }()
 
@@ -365,6 +366,10 @@ final class CardFileThumbnailView: NSView, PassthroughMouseEvents {
         loadTask?.cancel()
         loadTask = nil
     }
+
+    deinit {
+        loadTask?.cancel()
+    }
 }
 
 // MARK: - CardMultipleFilesView
@@ -375,9 +380,7 @@ final class CardMultipleFilesView: NSView, PassthroughMouseEvents {
     init(filePaths: [String]) {
         super.init(frame: .zero)
 
-        let maxSize: CGFloat = 128
-        let thumbSize = maxSize * 0.5
-
+        let thumbSize: CGFloat = 64 // 128 * 0.5
         let paths = Array(filePaths.prefix(4))
 
         for (index, path) in paths.enumerated().reversed() {
@@ -403,6 +406,10 @@ final class CardMultipleFilesView: NSView, PassthroughMouseEvents {
     @available(*, unavailable)
     required init?(coder _: NSCoder) {
         fatalError()
+    }
+
+    func cancelLoad() {
+        thumbnailViews.forEach { $0.cancelLoad() }
     }
 }
 
@@ -472,9 +479,11 @@ final class CardImageContentView: NSView, PassthroughMouseEvents {
     private var ocrTask: Task<Void, Never>?
     private var currentModelId: String = ""
     private var currentKeyword: String = ""
-    /// true = fill (aspect-fill, clipped), false = fit (aspect-fit)
     private var isFillMode: Bool = false
     private var currentImageSize: CGSize?
+
+    private var fillModeCache: [CGSize: Bool] = [:]
+
     private let maxFillCropRatio: CGFloat = 0.15
 
     private static let containerSize = CGSize(width: Const.cardSize, height: Const.cntSize)
@@ -491,6 +500,11 @@ final class CardImageContentView: NSView, PassthroughMouseEvents {
     @available(*, unavailable)
     required init?(coder _: NSCoder) {
         fatalError()
+    }
+
+    deinit {
+        loadTask?.cancel()
+        ocrTask?.cancel()
     }
 
     func cancelLoad() {
@@ -716,9 +730,12 @@ private func imageLayout(imageSize: CGSize, containerSize: CGSize, isFillMode: B
 // MARK: - CheckerboardView
 
 final class CheckerboardView: NSView {
+    private var cachedTile: CGImage?
     private var cachedAppearanceName: NSAppearance.Name?
     private var lightColor: NSColor = Const.lightImageShallowColor
     private var darkColor: NSColor = Const.lightImageDeepColor
+
+    private static let tileSize: CGFloat = 16 // 2×2 格，每格 8pt
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -730,41 +747,67 @@ final class CheckerboardView: NSView {
     }
 
     override func draw(_ dirtyRect: NSRect) {
-        refreshColorsIfNeeded()
+        guard let tile = currentTile() else { return }
+        guard let ctx = NSGraphicsContext.current?.cgContext else { return }
 
-        let sq: CGFloat = 8
-        let minX = floor(dirtyRect.minX / sq) * sq
-        let minY = floor(dirtyRect.minY / sq) * sq
-        let maxX = dirtyRect.maxX
-        let maxY = dirtyRect.maxY
-
-        var y = minY
-        while y < maxY {
-            var x = minX
-            while x < maxX {
-                let col = Int(x / sq)
-                let row = Int(y / sq)
-                let isLight = (col + row) % 2 == 0
-                (isLight ? lightColor : darkColor).setFill()
-                NSRect(x: x, y: y, width: sq, height: sq).fill()
-                x += sq
+        ctx.saveGState()
+        ctx.clip(to: dirtyRect)
+        let tileSize = Self.tileSize
+        let origin = bounds.origin
+        var y = origin.y
+        while y < dirtyRect.maxY {
+            var x = origin.x
+            while x < dirtyRect.maxX {
+                ctx.draw(tile, in: CGRect(x: x, y: y, width: tileSize, height: tileSize))
+                x += tileSize
             }
-            y += sq
+            y += tileSize
         }
+        ctx.restoreGState()
     }
 
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
         cachedAppearanceName = nil
+        cachedTile = nil
         needsDisplay = true
     }
 
-    private func refreshColorsIfNeeded() {
+    // MARK: Private
+
+    private func currentTile() -> CGImage? {
         let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
         let name: NSAppearance.Name = isDark ? .darkAqua : .aqua
-        guard cachedAppearanceName != name else { return }
+        if cachedAppearanceName == name, let tile = cachedTile { return tile }
+
         cachedAppearanceName = name
         lightColor = isDark ? Const.darkImageShallowColor : Const.lightImageShallowColor
         darkColor = isDark ? Const.darkImageDeepColor : Const.lightImageDeepColor
+        cachedTile = renderTile()
+        return cachedTile
+    }
+
+    private func renderTile() -> CGImage? {
+        let size = Int(Self.tileSize)
+        let half = size / 2
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        guard let ctx = CGContext(
+            data: nil,
+            width: size, height: size,
+            bitsPerComponent: 8,
+            bytesPerRow: 0,
+            space: colorSpace,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return nil }
+
+        ctx.setFillColor(lightColor.cgColor)
+        ctx.fill([CGRect(x: 0, y: 0, width: half, height: half),
+                  CGRect(x: half, y: half, width: half, height: half)])
+
+        ctx.setFillColor(darkColor.cgColor)
+        ctx.fill([CGRect(x: half, y: 0, width: half, height: half),
+                  CGRect(x: 0, y: half, width: half, height: half)])
+
+        return ctx.makeImage()
     }
 }

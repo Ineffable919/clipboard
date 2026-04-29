@@ -477,12 +477,16 @@ extension ClipMainViewController {
             self?.checkLoadMore()
         }
         .store(in: &cancellables)
+
         scrollView.contentView.postsBoundsChangedNotifications = true
 
-        NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
-            .debounce(for: .milliseconds(100), scheduler: DispatchQueue.main)
+        UserDefaults.standard
+            .publisher(for: \.appearance)
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
-                self?.handleEffectViewSettingsChange()
+                guard let self else { return }
+                handleEffectViewSettingsChange()
             }
             .store(in: &cancellables)
 

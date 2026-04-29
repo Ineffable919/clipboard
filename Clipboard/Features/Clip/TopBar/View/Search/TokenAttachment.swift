@@ -28,7 +28,7 @@ final class TokenAttachment: NSTextAttachment {
 
     // MARK: - Layout Constants
 
-    private static let hPad: CGFloat = 10
+    private static let hPad: CGFloat = 6
     private static let gap: CGFloat = 4
     private static let iconSize: CGFloat = 14
 

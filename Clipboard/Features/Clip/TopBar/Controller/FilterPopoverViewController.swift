@@ -78,8 +78,8 @@ extension FilterPopoverViewController {
             self?.updateContentViewState()
         }
 
-        // 分组筛选回调
-        contentView.groupSection.onGroupToggle = { [weak self] groupId in
+        // 标签筛选回调
+        contentView.labelSection.onGroupToggle = { [weak self] groupId in
             self?.viewModel?.setGroupFilter(groupId)
             self?.updateContentViewState()
         }
@@ -100,7 +100,7 @@ extension FilterPopoverViewController {
 
         contentView.typeSection.updateSelection(viewModel.selectedTypes)
         contentView.appSection.updateSelection(viewModel.selectedAppNames)
-        contentView.groupSection.updateSelection(viewModel.selectedGroupId)
+        contentView.labelSection.updateSelection(viewModel.selectedGroupId)
         contentView.dateSection.updateSelection(viewModel.selectedDateFilter)
     }
 
@@ -121,7 +121,7 @@ extension FilterPopoverViewController {
             contentView.appSection.setAvailableApps(appInfo)
 
             let userChips = CategoryChipStore.shared.chips.filter { !$0.isSystem }
-            contentView.groupSection.setAvailableGroups(userChips)
+            contentView.labelSection.setAvailableGroups(userChips)
 
             updateContentViewState()
         }
@@ -145,7 +145,7 @@ extension FilterPopoverViewController {
             contentView.appSection.setAvailableApps(appInfo)
 
             let userChips = CategoryChipStore.shared.chips.filter { !$0.isSystem }
-            contentView.groupSection.setAvailableGroups(userChips)
+            contentView.labelSection.setAvailableGroups(userChips)
 
             updateContentViewState()
         }

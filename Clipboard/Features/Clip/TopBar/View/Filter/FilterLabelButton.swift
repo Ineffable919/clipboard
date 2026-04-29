@@ -2,13 +2,13 @@
 //  FilterGroupButton.swift
 //  Clipboard
 //
-//  分组筛选按钮：左边颜色圆点 + 右边文案
+//  标签筛选按钮：左边颜色圆点 + 右边文案
 //
 
 import AppKit
 import SnapKit
 
-final class FilterGroupButton: FilterButton {
+final class FilterLabelButton: FilterButton {
     let groupId: Int
 
     init(colorIndex: Int, title: String, groupId: Int) {

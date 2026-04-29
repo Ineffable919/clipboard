@@ -21,7 +21,7 @@ final class FilterPopoverContentView: NSView {
 
     let typeSection = FilterTypeSectionView()
     let appSection = FilterAppSectionView()
-    let groupSection = FilterGroupSectionView()
+    let labelSection = FilterLabelSectionView()
     let dateSection = FilterDateSectionView()
 
     // MARK: - Views
@@ -79,11 +79,11 @@ final class FilterPopoverContentView: NSView {
 
         typeSection.isHidden = true
         appSection.isHidden = true
-        groupSection.isHidden = true
+        labelSection.isHidden = true
 
         mainStack.addArrangedSubview(typeSection)
         mainStack.addArrangedSubview(appSection)
-        mainStack.addArrangedSubview(groupSection)
+        mainStack.addArrangedSubview(labelSection)
         mainStack.addArrangedSubview(dateSection)
     }
 }

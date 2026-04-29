@@ -103,7 +103,7 @@ private final class CardImageBottomView: NSView, PassthroughMouseEvents {
     private func updateLabelBackground() {
         effectiveAppearance.performAsCurrentDrawingAppearance {
             label.layer?.backgroundColor = NSColor.unemphasizedSelectedContentBackgroundColor
-                .cgColor
+                .withAlphaComponent(0.8).cgColor
         }
     }
 }

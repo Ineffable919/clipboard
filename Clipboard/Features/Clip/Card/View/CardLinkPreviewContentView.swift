@@ -7,12 +7,12 @@
 //
 
 import AppKit
-import LinkPresentation
+@preconcurrency import LinkPresentation
 import SnapKit
 
 // MARK: - CardLinkPreviewContentView
 
-final class CardLinkPreviewContentView: NSView {
+final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
     // MARK: - Subviews
 
     private lazy var imageContainerView: DynamicBackgroundView = {
@@ -30,7 +30,7 @@ final class CardLinkPreviewContentView: NSView {
 
     private lazy var iconImageView: NSImageView = {
         let iv = NSImageView()
-        iv.imageScaling = .scaleProportionallyDown
+        iv.imageScaling = .scaleProportionallyUpOrDown
         iv.isHidden = true
         return iv
     }()
@@ -39,7 +39,7 @@ final class CardLinkPreviewContentView: NSView {
         let iv = NSImageView()
         iv.image = NSImage(systemSymbolName: "link", accessibilityDescription: nil)
         iv.contentTintColor = .secondaryLabelColor
-        iv.imageScaling = .scaleProportionallyDown
+        iv.imageScaling = .scaleProportionallyUpOrDown
         return iv
     }()
 
@@ -71,7 +71,8 @@ final class CardLinkPreviewContentView: NSView {
     // MARK: - State
 
     private var fetchTask: Task<Void, Never>?
-    private var currentModelId: String = ""
+
+    private var fetchedModelId: String = ""
 
     // MARK: - Init
 
@@ -95,39 +96,14 @@ final class CardLinkPreviewContentView: NSView {
         let url = urlString.asCompleteURL()
 
         titleLabel.stringValue = model.cachedLinkMetadata?.title
-            ?? url?.host() ?? urlString
+            ?? url?.host()
+            ?? urlString
 
-        if keyword.isEmpty {
-            urlLabel.attributedStringValue = NSAttributedString(
-                string: url?.absoluteString ?? urlString,
-                attributes: [
-                    .font: NSFont.systemFont(ofSize: 11),
-                    .foregroundColor: NSColor.secondaryLabelColor,
-                ]
-            )
-        } else {
-            let highlighted = model.highlightedPlainText(keyword: keyword)
-            let mutable = NSMutableAttributedString(attributedString: highlighted)
-            mutable.addAttributes(
-                [
-                    .font: NSFont.systemFont(ofSize: 11),
-                    .foregroundColor: NSColor.secondaryLabelColor,
-                ],
-                range: NSRange(location: 0, length: mutable.length)
-            )
-            let plain = highlighted.string as NSString
-            let options: NSString.CompareOptions = [.caseInsensitive, .diacriticInsensitive, .widthInsensitive]
-            var searchRange = NSRange(location: 0, length: plain.length)
-            while searchRange.length > 0 {
-                let found = plain.range(of: keyword, options: options, range: searchRange, locale: .current)
-                guard found.location != NSNotFound else { break }
-                mutable.addAttribute(.backgroundColor, value: NSColor.systemYellow.withAlphaComponent(0.65), range: found)
-                let next = found.location + found.length
-                guard next < plain.length else { break }
-                searchRange = NSRange(location: next, length: plain.length - next)
-            }
-            urlLabel.attributedStringValue = mutable
-        }
+        urlLabel.attributedStringValue = makeURLAttributedString(
+            urlString: url?.absoluteString ?? urlString,
+            keyword: keyword,
+            highlighted: model.highlightedPlainText(keyword: keyword)
+        )
 
         if let meta = model.cachedLinkMetadata {
             applyMetadata(meta)
@@ -136,45 +112,38 @@ final class CardLinkPreviewContentView: NSView {
 
         resetImageViews()
 
-        guard let url, currentModelId != model.uniqueId else { return }
-        currentModelId = model.uniqueId
+        guard let url else {
+            fetchedModelId = ""
+            return
+        }
+
+        guard fetchedModelId != model.uniqueId else { return }
+        fetchedModelId = model.uniqueId
 
         fetchTask?.cancel()
-        fetchTask = Task { @MainActor [weak self, weak model] in
+
+        fetchTask = Task.detached(priority: .userInitiated) { [weak self, weak model] in
             guard let self, let model else { return }
+
             let meta = await Self.fetchMetadata(for: url)
-            guard !Task.isCancelled else { return }
-            model.cachedLinkMetadata = meta
-            titleLabel.stringValue = meta.title ?? url.host() ?? url.absoluteString
-            applyMetadata(meta)
+
+            await MainActor.run {
+                guard !Task.isCancelled else { return }
+                model.cachedLinkMetadata = meta
+                self.titleLabel.stringValue = meta.title ?? url.host() ?? url.absoluteString
+                self.applyMetadata(meta)
+            }
         }
     }
 
     func cancelLoad() {
         fetchTask?.cancel()
         fetchTask = nil
+        fetchedModelId = ""
     }
 
     func updateKeyword(_ keyword: String, model: PasteboardModel) {
         configure(with: model, keyword: keyword)
-    }
-
-    // MARK: - Mouse passthrough
-
-    override func mouseDown(with event: NSEvent) {
-        nextResponder?.mouseDown(with: event)
-    }
-
-    override func mouseUp(with event: NSEvent) {
-        nextResponder?.mouseUp(with: event)
-    }
-
-    override func mouseDragged(with event: NSEvent) {
-        nextResponder?.mouseDragged(with: event)
-    }
-
-    override func rightMouseDown(with event: NSEvent) {
-        nextResponder?.rightMouseDown(with: event)
     }
 
     // MARK: - Appearance
@@ -184,7 +153,7 @@ final class CardLinkPreviewContentView: NSView {
         updateBackground()
     }
 
-    // MARK: - Private layout
+    // MARK: - Private: Layout
 
     private func setupViews() {
         addSubview(imageContainerView)
@@ -239,6 +208,8 @@ final class CardLinkPreviewContentView: NSView {
         infoView.dynamicBackgroundColor = .textBackgroundColor
     }
 
+    // MARK: - Private: Image state
+
     private func resetImageViews() {
         previewImageView.isHidden = true
         iconImageView.isHidden = true
@@ -262,33 +233,72 @@ final class CardLinkPreviewContentView: NSView {
         }
     }
 
-    // MARK: - Metadata fetch
+    // MARK: - Private: URL label
+
+    private func makeURLAttributedString(
+        urlString: String,
+        keyword: String,
+        highlighted: NSAttributedString
+    ) -> NSAttributedString {
+        let baseAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 11),
+            .foregroundColor: NSColor.secondaryLabelColor,
+        ]
+
+        guard !keyword.isEmpty else {
+            return NSAttributedString(string: urlString, attributes: baseAttrs)
+        }
+
+        let mutable = NSMutableAttributedString(attributedString: highlighted)
+        mutable.addAttributes(baseAttrs, range: NSRange(location: 0, length: mutable.length))
+
+        let plain = highlighted.string as NSString
+        let options: NSString.CompareOptions = [.caseInsensitive, .diacriticInsensitive, .widthInsensitive]
+        var searchRange = NSRange(location: 0, length: plain.length)
+
+        while searchRange.length > 0 {
+            let found = plain.range(of: keyword, options: options, range: searchRange, locale: .current)
+            guard found.location != NSNotFound else { break }
+            mutable.addAttribute(.backgroundColor, value: NSColor.systemYellow.withAlphaComponent(0.65), range: found)
+            let next = found.location + found.length
+            guard next < plain.length else { break }
+            searchRange = NSRange(location: next, length: plain.length - next)
+        }
+
+        return mutable
+    }
 
     private static func fetchMetadata(for url: URL) async -> LinkPreviewMetadata {
         let provider = LPMetadataProvider()
         provider.timeout = 5.0
+
+        nonisolated(unsafe) let unsafeProvider = provider
+
         do {
-            let metadata = try await provider.startFetchingMetadata(for: url)
-            guard !Task.isCancelled else {
-                provider.cancel()
-                return LinkPreviewMetadata(title: nil, previewImage: nil, iconImage: nil)
+            let metadata = try await withTaskCancellationHandler {
+                try await provider.startFetchingMetadata(for: url)
+            } onCancel: {
+                unsafeProvider.cancel()
             }
-            var previewImage: NSImage?
-            var iconImage: NSImage?
-            if let imageProvider = metadata.imageProvider {
-                previewImage = await loadImage(from: imageProvider)
-            }
-            if previewImage == nil, let iconProvider = metadata.iconProvider {
-                iconImage = await loadImage(from: iconProvider)
-            }
-            return LinkPreviewMetadata(title: metadata.title, previewImage: previewImage, iconImage: iconImage)
+
+            let previewImage: NSImage? = await loadImage(from: metadata.imageProvider)
+            let iconImage: NSImage? = previewImage == nil
+                ? await loadImage(from: metadata.iconProvider)
+                : nil
+
+            return LinkPreviewMetadata(
+                title: metadata.title,
+                previewImage: previewImage,
+                iconImage: iconImage
+            )
         } catch {
             return LinkPreviewMetadata(title: nil, previewImage: nil, iconImage: nil)
         }
     }
 
-    private static func loadImage(from provider: NSItemProvider) async -> NSImage? {
-        await withCheckedContinuation { continuation in
+    private static func loadImage(from provider: NSItemProvider?) async -> NSImage? {
+        guard let provider else { return nil }
+        return await withCheckedContinuation { continuation in
             provider.loadObject(ofClass: NSImage.self) { image, _ in
                 continuation.resume(returning: image as? NSImage)
             }

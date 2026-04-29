@@ -224,3 +224,17 @@ extension UserDefaults {
         return try? JSONDecoder().decode(T.self, from: data)
     }
 }
+
+// MARK: - UserDefaults KVO extension
+
+extension UserDefaults {
+    @objc dynamic var enableLinkPreview: Bool {
+        get { bool(forKey: "enableLinkPreview") }
+        set { set(newValue, forKey: "enableLinkPreview") }
+    }
+
+    @objc dynamic var appearance: Bool {
+        get { bool(forKey: "appearance") }
+        set { set(newValue, forKey: "appearance") }
+    }
+}

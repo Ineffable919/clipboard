@@ -96,7 +96,7 @@ final class SearchField: NSView {
     }
 
     private func setupSearchIcon() {
-        let config = NSImage.SymbolConfiguration(pointSize: 16, weight: .regular)
+        let config = NSImage.SymbolConfiguration(pointSize: 14, weight: .regular)
         searchIcon.image = NSImage(
             systemSymbolName: "magnifyingglass",
             accessibilityDescription: nil
@@ -105,7 +105,7 @@ final class SearchField: NSView {
         addSubview(searchIcon)
 
         searchIcon.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(10)
+            make.leading.equalToSuperview().offset(Const.space8)
             make.centerY.equalToSuperview()
         }
     }

@@ -127,10 +127,10 @@ final class ClipPreviewContentView: NSView {
 
     private static func imageContentHeight(for model: PasteboardModel) -> CGFloat {
         guard let size = model.cachedImageSize, size.width > 0, size.height > 0 else {
-            return Const.maxContentHeight
+            return 270.0
         }
         let availableW = Const.maxPreviewWidth - Const.space12 * 2
-        let scale = min(availableW / size.width, Const.maxContentHeight / size.height, 1.0)
+        let scale = min(availableW / size.width, 480.0 / size.height, 1.0)
         return ceil(size.height * scale)
     }
 

@@ -65,17 +65,50 @@ extension ClipMainViewController {
         guard !dataList.value.isEmpty else { return }
         guard let attrs = collectionView.layoutAttributesForItem(at: indexPath)
         else { return }
-
         let padding = Const.cardSpace + Const.cardSize / 5
 
-        collectionView.scrollToVisible(
-            NSRect(
-                x: attrs.frame.origin.x - padding,
-                y: 0,
-                width: attrs.frame.width + padding * 2,
-                height: attrs.frame.height
+        guard event_isARepeat() else {
+            collectionView.scrollToVisible(
+                NSRect(
+                    x: attrs.frame.origin.x - padding,
+                    y: 0,
+                    width: attrs.frame.width + padding * 2,
+                    height: attrs.frame.height
+                )
             )
+            return
+        }
+
+        guard let scrollView = collectionView.enclosingScrollView else { return }
+
+        let clipView = scrollView.contentView
+        let visibleRect = clipView.documentVisibleRect
+
+        let targetMinX = attrs.frame.minX - padding
+        let targetMaxX = attrs.frame.maxX + padding
+
+        var newOriginX = visibleRect.origin.x
+
+        if targetMinX < visibleRect.minX {
+            newOriginX = targetMinX
+        } else if targetMaxX > visibleRect.maxX {
+            newOriginX = targetMaxX - visibleRect.width
+        }
+
+        let maxX = max(
+            0,
+            collectionView.bounds.width - visibleRect.width
         )
+
+        newOriginX = min(max(0, newOriginX), maxX)
+
+        if abs(newOriginX - visibleRect.origin.x) > 1 {
+            clipView.setBoundsOrigin(
+                NSPoint(x: newOriginX, y: 0)
+            )
+
+            scrollView.reflectScrolledClipView(clipView)
+        }
     }
 }
 

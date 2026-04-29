@@ -81,12 +81,11 @@ final class PreviewFooterBar: NSView {
         infoStack.snp.makeConstraints { make in
             make.leading.centerY.equalToSuperview()
             make.trailing.lessThanOrEqualTo(finderButton.snp.leading).offset(-Const.space8)
-            make.width.lessThanOrEqualTo((Const.maxPreviewWidth - Const.space12 * 2) * 0.7)
+            make.width.lessThanOrEqualTo((Const.maxPreviewWidth - Const.space12 * 2) * 0.8)
         }
 
         finderButton.snp.makeConstraints { make in
-            make.trailing.equalTo(browserButton.snp.leading).offset(-Const.space6)
-            make.centerY.equalToSuperview()
+            make.trailing.centerY.equalToSuperview()
         }
 
         browserButton.snp.makeConstraints { make in

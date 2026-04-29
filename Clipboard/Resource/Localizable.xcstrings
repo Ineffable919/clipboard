@@ -672,24 +672,6 @@
         }
       }
     },
-    "group" : {
-      "comment" : "Group filter section title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Groups"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "分组"
-          }
-        }
-      }
-    },
     "historyTimeDisplayDays" : {
       "comment" : "History display: N days, e.g. '3 days'",
       "extractionState" : "manual",
@@ -888,6 +870,42 @@
         }
       }
     },
+    "hudCopySucceeded" : {
+      "comment" : "HUD: copy succeeded",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copied"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已复制"
+          }
+        }
+      }
+    },
+    "hudPasteSucceeded" : {
+      "comment" : "HUD: paste succeeded",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pasted"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已粘贴"
+          }
+        }
+      }
+    },
     "image" : {
       "comment" : "Image type label",
       "extractionState" : "manual",
@@ -1082,6 +1100,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "钥匙串访问"
+          }
+        }
+      }
+    },
+    "label" : {
+      "comment" : "Label filter section title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Labels"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "标签"
           }
         }
       }
@@ -3908,42 +3944,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "昨天"
-          }
-        }
-      }
-    },
-    "hudCopySucceeded" : {
-      "comment" : "HUD: copy succeeded",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copied"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已复制"
-          }
-        }
-      }
-    },
-    "hudPasteSucceeded" : {
-      "comment" : "HUD: paste succeeded",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pasted"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已粘贴"
           }
         }
       }
