@@ -105,6 +105,10 @@ extension ClipMainViewController {
     private func escapeKeyDown(_: NSEvent) -> NSEvent? {
         let field = topBarView.searchField
         if field.isFirstResponder {
+            if field.suggestionWindow.isVisible {
+                field.suggestionWindow.hide()
+                return nil
+            }
             if topVM.hasInput {
                 field.clearAllContent()
             } else {
@@ -143,6 +147,7 @@ extension ClipMainViewController {
     }
 
     private func returnKeyDown(_ event: NSEvent) -> NSEvent? {
+        guard focusRegion == .collection else { return event }
         let item = dataList.value[selectIndexPath.item]
         ClipActionService.shared.paste(
             item,

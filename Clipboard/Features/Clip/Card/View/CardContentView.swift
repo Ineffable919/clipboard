@@ -85,10 +85,10 @@ final class CardContentView: NSView, PassthroughMouseEvents {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self,
-                      let model = self.currentModel,
+                      let model = currentModel,
                       model.type == .link
                 else { return }
-                self.replaceContentView(for: model, keyword: self.currentKeyword)
+                replaceContentView(for: model, keyword: currentKeyword)
             }
     }
 

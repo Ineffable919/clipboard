@@ -10,11 +10,14 @@ import AppKit
 final class TokenAttachment: NSTextAttachment {
     let tag: InputTag
 
+    // MARK: - Layout Constants
+
+    static let lineHeight: CGFloat = 20
+
     init(tag: InputTag) {
         self.tag = tag
         super.init(data: nil, ofType: nil)
-        image = Self.makeChipImage(for: tag)
-        bounds = Self.makeBounds(for: tag)
+        attachmentCell = TokenAttachmentCell(tag: tag)
     }
 
     override nonisolated init(data _: Data?, ofType _: String?) {
@@ -25,118 +28,96 @@ final class TokenAttachment: NSTextAttachment {
     required nonisolated init?(coder _: NSCoder) {
         nil
     }
+}
 
-    // MARK: - Layout Constants
+// MARK: - TokenAttachmentCell
 
-    private static let hPad: CGFloat = 6
-    private static let gap: CGFloat = 4
-    private static let iconSize: CGFloat = 14
+private final class TokenAttachmentCell: NSTextAttachmentCell {
+    private let inputTag: InputTag
 
-    static let lineHeight: CGFloat = 20
+    private let hPad: CGFloat = 6
+    private let gap: CGFloat = 4
+    private let iconSize: CGFloat = 14
 
-    // MARK: - Drawing
+    init(tag: InputTag) {
+        inputTag = tag
+        super.init(textCell: "")
+    }
 
-    private static func chipFont() -> NSFont {
+    @available(*, unavailable)
+    required init(coder _: NSCoder) {
+        fatalError("Use init(tag:) instead")
+    }
+
+    // MARK: - Sizing
+
+    private func chipFont() -> NSFont {
         .preferredFont(forTextStyle: .callout)
     }
 
-    private static func textAttributes() -> [NSAttributedString.Key: Any] {
-        [
-            .font: chipFont(),
-            .foregroundColor: NSColor.labelColor,
-        ]
-    }
-
-    private static func chipSize(for tag: InputTag) -> NSSize {
-        let attrs = textAttributes()
-        let textSize = (tag.label as NSString).size(withAttributes: attrs)
-        var width = hPad * 2 + textSize.width
-        if tag.icon != nil { width += iconSize + gap }
-        return NSSize(width: ceil(width), height: lineHeight)
-    }
-
-    private static func makeChipImage(for tag: InputTag) -> NSImage {
-        let size = chipSize(for: tag)
-        let attrs = textAttributes()
-        let textSize = (tag.label as NSString).size(withAttributes: attrs)
-
-        let scale = NSScreen.main?.backingScaleFactor ?? 2.0
-        let pixelWidth = Int(size.width * scale)
-        let pixelHeight = Int(size.height * scale)
-
-        guard let rep = NSBitmapImageRep(
-            bitmapDataPlanes: nil,
-            pixelsWide: pixelWidth,
-            pixelsHigh: pixelHeight,
-            bitsPerSample: 8,
-            samplesPerPixel: 4,
-            hasAlpha: true,
-            isPlanar: false,
-            colorSpaceName: .deviceRGB,
-            bytesPerRow: 0,
-            bitsPerPixel: 0
-        ) else {
-            return NSImage(size: size)
+    private nonisolated func labelSize() -> NSSize {
+        MainActor.assumeIsolated {
+            let attrs: [NSAttributedString.Key: Any] = [.font: chipFont()]
+            return (inputTag.label as NSString).size(withAttributes: attrs)
         }
+    }
 
-        rep.size = size
+    override nonisolated func cellSize() -> NSSize {
+        MainActor.assumeIsolated {
+            let textSize = labelSize()
+            var width = hPad * 2 + textSize.width
+            if inputTag.icon != nil { width += iconSize + gap }
+            return NSSize(width: ceil(width), height: TokenAttachment.lineHeight)
+        }
+    }
 
-        NSGraphicsContext.saveGraphicsState()
-        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+    // MARK: - Baseline
 
-        let rect = NSRect(origin: .zero, size: size)
+    override nonisolated func cellBaselineOffset() -> NSPoint {
+        MainActor.assumeIsolated {
+            let font = chipFont()
+            let textLineHeight = font.ascender + abs(font.descender)
+            let topPadding = (TokenAttachment.lineHeight - textLineHeight) / 2
+            let baselineOffset = topPadding + font.ascender
+            let y = baselineOffset - TokenAttachment.lineHeight
+            return NSPoint(x: 0, y: y)
+        }
+    }
 
+    // MARK: - Drawing
+
+    override func draw(withFrame cellFrame: NSRect, in _: NSView?) {
         let bg = NSBezierPath(
-            roundedRect: rect,
-            xRadius: rect.height / 2,
-            yRadius: rect.height / 2
+            roundedRect: cellFrame,
+            xRadius: cellFrame.height / 2,
+            yRadius: cellFrame.height / 2
         )
-        NSColor(white: 0, alpha: 0.08).setFill()
+        NSColor.quaternaryLabelColor.setFill()
         bg.fill()
 
-        var x = hPad
+        var x = cellFrame.minX + hPad
 
-        if let icon = tag.icon {
+        if let icon = inputTag.icon {
             let iconRect = NSRect(
                 x: x,
-                y: rect.midY - iconSize / 2,
+                y: cellFrame.midY - iconSize / 2,
                 width: iconSize,
                 height: iconSize
             )
-            icon.draw(
-                in: iconRect,
-                from: .zero,
-                operation: .sourceOver,
-                fraction: 1.0,
-                respectFlipped: false,
-                hints: nil
-            )
+            icon.draw(in: iconRect)
             x += iconSize + gap
         }
 
-        let textRect = NSRect(
+        let textAttrs: [NSAttributedString.Key: Any] = [
+            .font: chipFont(),
+            .foregroundColor: NSColor.labelColor,
+        ]
+        let textSize = labelSize()
+        let textOrigin = NSPoint(
             x: x,
-            y: rect.midY - textSize.height / 2,
-            width: textSize.width,
-            height: textSize.height
+            y: cellFrame.midY - textSize.height / 2
         )
-        (tag.label as NSString).draw(in: textRect, withAttributes: attrs)
-
-        NSGraphicsContext.restoreGraphicsState()
-
-        let image = NSImage(size: size)
-        image.addRepresentation(rep)
-        return image
-    }
-
-    private static func makeBounds(for tag: InputTag) -> CGRect {
-        let size = chipSize(for: tag)
-        let font = chipFont()
-        let textLineHeight = font.ascender + abs(font.descender)
-        let topPadding = (lineHeight - textLineHeight) / 2
-        let baselineOffset = topPadding + font.ascender
-        let y = baselineOffset - lineHeight
-        return CGRect(x: 0, y: y, width: size.width, height: size.height)
+        (inputTag.label as NSString).draw(at: textOrigin, withAttributes: textAttrs)
     }
 }
 

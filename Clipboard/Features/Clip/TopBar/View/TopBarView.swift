@@ -177,6 +177,14 @@ final class TopBarView: NSView {
             topVM?.setQuery(text: text)
         }
 
+        searchField.onSuggestionsNeeded = { [weak self] query in
+            self?.buildSuggestions(query: query) ?? []
+        }
+
+        searchField.onSuggestionSelected = { [weak self] item in
+            self?.handleSuggestionSelected(item)
+        }
+
         searchField.onFilterButtonTapped = { [weak self] in
             self?.togglePopover()
         }
@@ -245,6 +253,7 @@ final class TopBarView: NSView {
         guard !isSearching else { return }
         isSearching = true
         applyMode()
+        loadAppSuggestionsIfNeeded()
         window?.makeFirstResponder(searchField)
         onFocusRegionChange?(.search)
     }
@@ -257,6 +266,7 @@ final class TopBarView: NSView {
     func deactivateSearch() {
         guard isSearching else { return }
         isSearching = false
+        searchField.hideSuggestions()
         searchField.clearAllContent()
         topVM?.clearInput()
         applyMode()
@@ -320,5 +330,132 @@ final class TopBarView: NSView {
                 onFocusRegionChange?(.collection)
             }
         }
+    }
+
+    // MARK: - Suggestion Data Source
+
+    private func buildSuggestions(query: String) -> [SearchSuggestionItem] {
+        guard !query.isEmpty else { return [] }
+
+        let q = query.lowercased()
+        var result: [SearchSuggestionItem] = []
+
+        // 类型
+        let allTypes: [PasteModelType] = [.color, .file, .image, .link, .string]
+        for type in allTypes {
+            let (icon, label) = type.iconAndLabel
+            guard label.localizedStandardContains(q) else { continue }
+            let image = NSImage(systemSymbolName: icon, accessibilityDescription: nil)
+            result.append(SearchSuggestionItem(
+                title: label,
+                icon: image,
+                action: .toggleType(type)
+            ))
+        }
+
+        // 日期
+        for option in DateFilterOption.allCases {
+            let label = option.displayName
+            guard label.localizedStandardContains(q) else { continue }
+            let image = NSImage(systemSymbolName: "calendar", accessibilityDescription: nil)
+            result.append(SearchSuggestionItem(
+                title: label,
+                icon: image,
+                action: .setDate(option)
+            ))
+        }
+
+        // 标签（用户自定义分组）
+        let userChips = CategoryChipStore.shared.chips.filter { !$0.isSystem }
+        for chip in userChips {
+            guard chip.name.localizedStandardContains(q) else { continue }
+            let dotIcon = makeChipDotIcon(colorIndex: chip.colorIndex)
+            result.append(SearchSuggestionItem(
+                title: chip.name,
+                icon: dotIcon,
+                action: .setGroup(chip.id)
+            ))
+        }
+
+        // 应用
+        if let cachedApps = cachedAppSuggestions {
+            for app in cachedApps {
+                guard app.name.localizedStandardContains(q) else { continue }
+                result.append(SearchSuggestionItem(
+                    title: app.name,
+                    icon: app.icon,
+                    action: .toggleApp(app.name, app.path)
+                ))
+            }
+        }
+
+        return result
+    }
+
+    private func handleSuggestionSelected(_ item: SearchSuggestionItem) {
+        guard let topVM else { return }
+
+        searchField.clearTextSilently()
+        topVM.setQuery(text: "")
+
+        switch item.action {
+        case let .toggleType(type):
+            topVM.toggleType(type)
+        case let .toggleApp(name, path):
+            topVM.toggleApp(name, appPath: path)
+        case let .setDate(option):
+            topVM.setDateFilter(option)
+        case let .setGroup(id):
+            topVM.setGroupFilter(id)
+        }
+    }
+
+    // MARK: - App Suggestions Cache
+
+    private struct AppSuggestionInfo {
+        let name: String
+        let path: String
+        let icon: NSImage?
+    }
+
+    private static var _cachedAppSuggestions: [AppSuggestionInfo]?
+
+    private var cachedAppSuggestions: [AppSuggestionInfo]? {
+        get { Self._cachedAppSuggestions }
+        set { Self._cachedAppSuggestions = newValue }
+    }
+
+    func loadAppSuggestionsIfNeeded() {
+        guard cachedAppSuggestions == nil else { return }
+        Task { @MainActor [weak self] in
+            let appInfo = await PasteMetadataCache.shared.getAllAppInfo()
+            var suggestions: [AppSuggestionInfo] = []
+            for info in appInfo {
+                let icon = await AppIconCache.shared.loadIcon(forPath: info.path)
+                suggestions.append(AppSuggestionInfo(
+                    name: info.name,
+                    path: info.path,
+                    icon: icon
+                ))
+            }
+            self?.cachedAppSuggestions = suggestions
+            if let self, !self.searchField.text.isEmpty {
+                searchField.showSuggestions()
+            }
+        }
+    }
+
+    private func makeChipDotIcon(colorIndex: Int) -> NSImage {
+        let canvasSize: CGFloat = 14
+        let dotSize: CGFloat = 10
+        let image = NSImage(size: NSSize(width: canvasSize, height: canvasSize))
+        image.lockFocus()
+        let color = CategoryChip.nsColor(at: colorIndex)
+        color.setFill()
+        let origin = (canvasSize - dotSize) / 2
+        NSBezierPath(ovalIn: NSRect(x: origin, y: origin, width: dotSize, height: dotSize)).fill()
+        image.unlockFocus()
+        image.isTemplate = false
+        return image
     }
 }

@@ -1,5 +1,5 @@
 //
-//  FilterGroupButton.swift
+//  FilterLabelButton.swift
 //  Clipboard
 //
 //  标签筛选按钮：左边颜色圆点 + 右边文案

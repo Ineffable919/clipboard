@@ -71,6 +71,7 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
     var onTextChanged: ((String) -> Void)?
     var onBecomeFirstResponder: (() -> Void)?
     var onResignFirstResponder: (() -> Void)?
+    var onKeyDown: ((NSEvent) -> Bool)?
 
     // MARK: - Layout Constants
 
@@ -226,6 +227,11 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
 
     // MARK: - Overrides
 
+    override func keyDown(with event: NSEvent) {
+        if let onKeyDown, onKeyDown(event) { return }
+        super.keyDown(with: event)
+    }
+
     override func deleteBackward(_ sender: Any?) {
         let range = selectedRange()
 
@@ -365,15 +371,9 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
             y: textContainerInset.height + topPadding
         )
 
-        let fontColor = if #available(macOS 26.0, *) {
-            NSColor.placeholderTextColor
-        } else {
-            NSColor.labelColor
-        }
-
         let attrs: [NSAttributedString.Key: Any] = [
             .font: font,
-            .foregroundColor: fontColor,
+            .foregroundColor: NSColor.secondaryLabelColor,
         ]
         (placeholder as NSString).draw(at: origin, withAttributes: attrs)
     }
