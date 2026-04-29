@@ -431,9 +431,9 @@ final class SearchField: NSView {
 
         if !suggestionWindow.isVisible {
             guard let win = tokenTextView.window ?? window else { return }
-            suggestionWindow.show(at: cursorScreenOrigin, items: items, parentWindow: win)
+            suggestionWindow.show(at: cursorScreenOrigin, items: items, query: query, parentWindow: win)
         } else {
-            suggestionWindow.updateFrame(at: cursorScreenOrigin, items: items)
+            suggestionWindow.updateFrame(at: cursorScreenOrigin, items: items, query: query)
         }
     }
 

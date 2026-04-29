@@ -11,11 +11,10 @@ final class SearchSuggestionWindow: NSPanel {
     // MARK: - Metrics
 
     private enum Metrics {
-        static let minWidth: CGFloat = 125
-        static let cornerRadius: CGFloat = 12
+        static let minWidth: CGFloat = 120
+        static let cornerRadius: CGFloat = Const.radius
         static let verticalGap: CGFloat = 4
-        /// icon + padding + gap 的固定宽度
-        static let rowFixedWidth: CGFloat = 8 + 18 + 6 + 8
+        static let widthBuffer: CGFloat = 8
     }
 
     // MARK: - Properties
@@ -71,8 +70,13 @@ final class SearchSuggestionWindow: NSPanel {
 
     // MARK: - Show / Hide / Update
 
-    func show(at cursorScreenOrigin: NSPoint, items: [SearchSuggestionItem], parentWindow: NSWindow) {
-        let width = calculateWidth(for: items)
+    func show(
+        at cursorScreenOrigin: NSPoint,
+        items: [SearchSuggestionItem],
+        query: String,
+        parentWindow: NSWindow
+    ) {
+        let width = calculateWidth(for: items, query: query)
         let height = suggestionVC.preferredHeight
         let frame = calculateFrame(
             cursorScreenOrigin: cursorScreenOrigin,
@@ -81,12 +85,13 @@ final class SearchSuggestionWindow: NSPanel {
         )
 
         setFrame(frame, display: true)
+        suggestionVC.syncLayoutToVisibleBounds()
         parentWindow.addChildWindow(self, ordered: .above)
         orderFront(nil)
     }
 
-    func updateFrame(at cursorScreenOrigin: NSPoint, items: [SearchSuggestionItem]) {
-        let width = calculateWidth(for: items)
+    func updateFrame(at cursorScreenOrigin: NSPoint, items: [SearchSuggestionItem], query: String) {
+        let width = calculateWidth(for: items, query: query)
         let height = suggestionVC.preferredHeight
         let frame = calculateFrame(
             cursorScreenOrigin: cursorScreenOrigin,
@@ -94,6 +99,7 @@ final class SearchSuggestionWindow: NSPanel {
             height: height
         )
         setFrame(frame, display: true)
+        suggestionVC.syncLayoutToVisibleBounds()
     }
 
     func hide() {
@@ -123,17 +129,11 @@ final class SearchSuggestionWindow: NSPanel {
 
     // MARK: - Private
 
-    private func calculateWidth(for items: [SearchSuggestionItem]) -> CGFloat {
-        let font = NSFont.systemFont(ofSize: 12)
-        var maxTextWidth: CGFloat = 0
-
-        for item in items {
-            let textWidth = (item.title as NSString).size(withAttributes: [.font: font]).width
-            maxTextWidth = max(maxTextWidth, textWidth)
-        }
-
-        let totalWidth = ceil(Metrics.rowFixedWidth + maxTextWidth)
-        return max(totalWidth, Metrics.minWidth)
+    private func calculateWidth(for items: [SearchSuggestionItem], query: String) -> CGFloat {
+        let contentWidth = items
+            .map { SearchSuggestionCellView.preferredWidth(for: $0.title, query: query) }
+            .max() ?? Metrics.minWidth
+        return max(ceil(contentWidth) + Metrics.widthBuffer, Metrics.minWidth)
     }
 
     private func calculateFrame(

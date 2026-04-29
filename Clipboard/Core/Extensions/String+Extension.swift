@@ -222,3 +222,15 @@ extension CharacterSet {
     static let cjkUnifiedIdeographs =
         CharacterSet(charactersIn: "\u{4E00}" ... "\u{9FFF}")
 }
+
+// MARK: - Localized Prefix Matching
+
+extension String {
+    func localizedStandardHasPrefix(_ prefix: String) -> Bool {
+        range(
+            of: prefix,
+            options: [.caseInsensitive, .diacriticInsensitive, .anchored],
+            locale: .current
+        ) != nil
+    }
+}

@@ -6,14 +6,15 @@
 //
 
 import AppKit
+import SnapKit
 
 final class SearchSuggestionViewController: NSViewController {
     // MARK: - Metrics
 
     private enum Metrics {
-        static let rowHeight: CGFloat = 26
+        static let rowHeight: CGFloat = 24
         static let maxVisibleRows: Int = 6
-        static let verticalInset: CGFloat = 4
+        static let verticalInset: CGFloat = 6
     }
 
     // MARK: - Properties
@@ -37,11 +38,8 @@ final class SearchSuggestionViewController: NSViewController {
 
     private lazy var scrollView: NSScrollView = {
         let sv = NSScrollView()
-        sv.hasVerticalScroller = true
+        sv.hasVerticalScroller = false
         sv.hasHorizontalScroller = false
-        sv.autohidesScrollers = true
-        sv.scrollerStyle = .overlay
-        sv.verticalScroller?.alphaValue = 0
         sv.drawsBackground = false
         sv.horizontalScrollElasticity = .none
         sv.verticalScrollElasticity = .none
@@ -66,6 +64,7 @@ final class SearchSuggestionViewController: NSViewController {
 
         let column = NSTableColumn(identifier: .init("suggestion"))
         column.isEditable = false
+        column.resizingMask = .autoresizingMask
         tv.addTableColumn(column)
 
         tv.dataSource = self
@@ -90,10 +89,16 @@ final class SearchSuggestionViewController: NSViewController {
 
         scrollView.documentView = tableView
         container.addSubview(scrollView)
-        scrollView.frame = container.bounds
-        scrollView.autoresizingMask = [.width, .height]
+        scrollView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
 
         tableView.addTrackingArea(trackingArea)
+    }
+
+    override func viewDidLayout() {
+        super.viewDidLayout()
+        updateTableColumnWidth()
     }
 
     // MARK: - Public API
@@ -103,6 +108,7 @@ final class SearchSuggestionViewController: NSViewController {
         self.query = query
         highlightedIndex = newItems.isEmpty ? -1 : 0
         tableView.reloadData()
+        syncLayoutToVisibleBounds()
         if !newItems.isEmpty {
             scrollView.contentView.scroll(to: NSPoint(x: 0, y: -scrollView.contentInsets.top))
             scrollView.reflectScrolledClipView(scrollView.contentView)
@@ -110,21 +116,38 @@ final class SearchSuggestionViewController: NSViewController {
         updateHighlight()
     }
 
+    func syncLayoutToVisibleBounds() {
+        view.needsLayout = true
+        view.layoutSubtreeIfNeeded()
+        scrollView.needsLayout = true
+        scrollView.layoutSubtreeIfNeeded()
+        updateTableColumnWidth()
+        tableView.tile()
+    }
+
     // MARK: - Keyboard Navigation
 
     func selectNext() -> Bool {
         guard !items.isEmpty else { return false }
-        highlightedIndex = (highlightedIndex + 1) % items.count
+        if highlightedIndex >= items.count - 1 {
+            NSSound.beep()
+            return true
+        }
+        highlightedIndex += 1
         updateHighlight()
-        tableView.scrollRowToVisible(highlightedIndex)
+        tableView.animator().scrollRowToVisible(highlightedIndex)
         return true
     }
 
     func selectPrevious() -> Bool {
         guard !items.isEmpty else { return false }
-        highlightedIndex = highlightedIndex <= 0 ? items.count - 1 : highlightedIndex - 1
+        if highlightedIndex <= 0 {
+            NSSound.beep()
+            return true
+        }
+        highlightedIndex -= 1
         updateHighlight()
-        tableView.scrollRowToVisible(highlightedIndex)
+        tableView.animator().scrollRowToVisible(highlightedIndex)
         return true
     }
 
@@ -171,6 +194,14 @@ final class SearchSuggestionViewController: NSViewController {
                 cellView.setHighlighted(isSelected)
             }
         }
+    }
+
+    private func updateTableColumnWidth() {
+        guard let column = tableView.tableColumns.first else { return }
+        let width = scrollView.contentView.bounds.width
+        guard width > 0 else { return }
+        tableView.frame.size.width = width
+        column.width = width
     }
 }
 

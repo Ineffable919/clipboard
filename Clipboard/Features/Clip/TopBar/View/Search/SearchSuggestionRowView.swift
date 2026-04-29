@@ -75,6 +75,17 @@ final class SearchSuggestionCellView: NSView {
 
     // MARK: - Configure
 
+    static func preferredWidth(for title: String, query: String) -> CGFloat {
+        let attributedTitle = attributedTitle(title, query: query, isHighlighted: false)
+        return ceil(
+            Metrics.horizontalPadding
+                + Metrics.iconSize
+                + Metrics.iconTextGap
+                + attributedTitle.size().width
+                + Metrics.horizontalPadding
+        )
+    }
+
     func configure(item: SearchSuggestionItem, query: String) {
         iconView.image = item.icon
         currentTitle = item.title
@@ -105,6 +116,14 @@ final class SearchSuggestionCellView: NSView {
     // MARK: - Highlight Text
 
     private func highlightedTitle(_ title: String, query: String) -> NSAttributedString {
+        Self.attributedTitle(title, query: query, isHighlighted: isHighlighted)
+    }
+
+    private static func attributedTitle(
+        _ title: String,
+        query: String,
+        isHighlighted: Bool
+    ) -> NSAttributedString {
         let baseFont = NSFont.systemFont(ofSize: Metrics.fontSize)
         let boldFont = NSFont.boldSystemFont(ofSize: Metrics.fontSize)
 
@@ -120,17 +139,13 @@ final class SearchSuggestionCellView: NSView {
 
         guard !query.isEmpty else { return attributed }
 
-        let titleLower = title.lowercased()
-        let queryLower = query.lowercased()
-
-        var searchStart = titleLower.startIndex
-        while let range = titleLower.range(of: queryLower, range: searchStart ..< titleLower.endIndex) {
+        if let range = title.range(
+            of: query,
+            options: [.caseInsensitive, .diacriticInsensitive, .anchored],
+            locale: .current
+        ) {
             let nsRange = NSRange(range, in: title)
             attributed.addAttribute(.font, value: boldFont, range: nsRange)
-            if !isHighlighted {
-                attributed.addAttribute(.foregroundColor, value: NSColor.controlAccentColor, range: nsRange)
-            }
-            searchStart = range.upperBound
         }
 
         return attributed

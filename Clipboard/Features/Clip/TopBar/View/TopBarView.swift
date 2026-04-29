@@ -337,14 +337,13 @@ final class TopBarView: NSView {
     private func buildSuggestions(query: String) -> [SearchSuggestionItem] {
         guard !query.isEmpty else { return [] }
 
-        let q = query.lowercased()
         var result: [SearchSuggestionItem] = []
 
         // 类型
         let allTypes: [PasteModelType] = [.color, .file, .image, .link, .string]
         for type in allTypes {
             let (icon, label) = type.iconAndLabel
-            guard label.localizedStandardContains(q) else { continue }
+            guard label.localizedStandardHasPrefix(query) else { continue }
             let image = NSImage(systemSymbolName: icon, accessibilityDescription: nil)
             result.append(SearchSuggestionItem(
                 title: label,
@@ -356,7 +355,7 @@ final class TopBarView: NSView {
         // 日期
         for option in DateFilterOption.allCases {
             let label = option.displayName
-            guard label.localizedStandardContains(q) else { continue }
+            guard label.localizedStandardHasPrefix(query) else { continue }
             let image = NSImage(systemSymbolName: "calendar", accessibilityDescription: nil)
             result.append(SearchSuggestionItem(
                 title: label,
@@ -368,7 +367,7 @@ final class TopBarView: NSView {
         // 标签（用户自定义分组）
         let userChips = CategoryChipStore.shared.chips.filter { !$0.isSystem }
         for chip in userChips {
-            guard chip.name.localizedStandardContains(q) else { continue }
+            guard chip.name.localizedStandardHasPrefix(query) else { continue }
             let dotIcon = makeChipDotIcon(colorIndex: chip.colorIndex)
             result.append(SearchSuggestionItem(
                 title: chip.name,
@@ -380,7 +379,7 @@ final class TopBarView: NSView {
         // 应用
         if let cachedApps = cachedAppSuggestions {
             for app in cachedApps {
-                guard app.name.localizedStandardContains(q) else { continue }
+                guard app.name.localizedStandardHasPrefix(query) else { continue }
                 result.append(SearchSuggestionItem(
                     title: app.name,
                     icon: app.icon,
