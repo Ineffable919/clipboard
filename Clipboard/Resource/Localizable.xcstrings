@@ -672,6 +672,24 @@
         }
       }
     },
+    "group" : {
+      "comment" : "Group filter section title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Groups"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分组"
+          }
+        }
+      }
+    },
     "historyTimeDisplayDays" : {
       "comment" : "History display: N days, e.g. '3 days'",
       "extractionState" : "manual",

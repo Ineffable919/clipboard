@@ -395,7 +395,7 @@ final class CardMultipleFilesView: NSView, PassthroughMouseEvents {
             thumbView.snp.makeConstraints { make in
                 make.width.height.equalTo(thumbSize)
                 make.centerX.equalToSuperview().offset(xOffset - Const.space32)
-                make.centerY.equalToSuperview().offset(-yOffset + Const.space32)
+                make.centerY.equalToSuperview().offset(-yOffset)
             }
         }
     }

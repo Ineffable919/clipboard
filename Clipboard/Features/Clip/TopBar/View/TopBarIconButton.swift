@@ -89,8 +89,8 @@ final class TopBarIconButton: NSView {
         let bgColor: NSColor =
             isHovering
                 ? (isDark
-                    ? NSColor(Const.hoverDarkColor)
-                    : NSColor(Const.hoverLightColorFrosted))
+                    ? .quinaryLabel
+                    : .labelColor.withAlphaComponent(0.06))
                 : .clear
 
         if animated {

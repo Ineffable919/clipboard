@@ -68,24 +68,24 @@ enum DateFilterOption: String, CaseIterable, Equatable {
 /// 搜索条件：关键词 + 顶栏分组（自定义 chip）+ 原始筛选条件
 struct SearchCriteria: Equatable {
     var keyword: String
-    var chipGroup: Int
     var selectedTypes: Set<PasteModelType>
     var selectedAppNames: Set<String>
     var selectedDateFilter: DateFilterOption?
+    var selectedGroupId: Int?
 
     static let empty = SearchCriteria(
         keyword: "",
-        chipGroup: -1,
         selectedTypes: [],
         selectedAppNames: [],
-        selectedDateFilter: nil
+        selectedDateFilter: nil,
+        selectedGroupId: nil
     )
 
     var isEmpty: Bool {
         keyword.isEmpty
-            && chipGroup == -1
             && selectedTypes.isEmpty
             && selectedAppNames.isEmpty
             && selectedDateFilter == nil
+            && selectedGroupId == nil
     }
 }

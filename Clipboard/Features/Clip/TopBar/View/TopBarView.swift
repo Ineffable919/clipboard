@@ -289,6 +289,7 @@ final class TopBarView: NSView {
         guard let topVM else { return }
         searchField.clearTokensOnly()
         searchField.insertTokens(topVM.tags)
+        updateChipSelection()
     }
 
     private func handleTokenDeletedFromSearchField(_ tag: InputTag) {

@@ -45,14 +45,6 @@ final class PreviewFooterBar: NSView {
         return sv
     }()
 
-    private let fileSizeLabel: NSTextField = {
-        let f = NSTextField(labelWithString: "")
-        f.font = .systemFont(ofSize: NSFont.systemFontSize)
-        f.textColor = .secondaryLabelColor
-        f.isHidden = true
-        return f
-    }()
-
     private let finderButton: PreviewPillButton = {
         let btn = PreviewPillButton(title: String(localized: .showInFinder))
         btn.isHidden = true
@@ -83,19 +75,13 @@ final class PreviewFooterBar: NSView {
 
     private func setupLayout() {
         addSubview(infoStack)
-        addSubview(fileSizeLabel)
         addSubview(finderButton)
         addSubview(browserButton)
 
         infoStack.snp.makeConstraints { make in
             make.leading.centerY.equalToSuperview()
-            make.trailing.lessThanOrEqualTo(fileSizeLabel.snp.leading).offset(-Const.space8)
+            make.trailing.lessThanOrEqualTo(finderButton.snp.leading).offset(-Const.space8)
             make.width.lessThanOrEqualTo((Const.maxPreviewWidth - Const.space12 * 2) * 0.7)
-        }
-
-        fileSizeLabel.snp.makeConstraints { make in
-            make.trailing.equalTo(finderButton.snp.leading).offset(-Const.space6)
-            make.centerY.equalToSuperview()
         }
 
         finderButton.snp.makeConstraints { make in
@@ -122,9 +108,12 @@ final class PreviewFooterBar: NSView {
             && model.isLink
 
         if isSingleFile, let path = model.cachedFilePaths?.first {
+            let suffix = fileSize.map { " · \($0)" } ?? ""
             let maxWidth = (Const.maxPreviewWidth - Const.space12 * 2) * 0.7
             let font = firstLineLabel.font ?? .systemFont(ofSize: NSFont.systemFontSize)
-            let (line1, line2) = splitPathIntoTwoLines(path, font: font, maxWidth: maxWidth)
+            let (line1, line2) = splitPathIntoTwoLines(
+                path, suffix: suffix, font: font, maxWidth: maxWidth
+            )
             firstLineLabel.stringValue = line1
             secondLineLabel.stringValue = line2
             secondLineLabel.isHidden = line2.isEmpty
@@ -137,13 +126,6 @@ final class PreviewFooterBar: NSView {
             firstLineLabel.stringValue = model.introString()
             secondLineLabel.stringValue = ""
             secondLineLabel.isHidden = true
-        }
-
-        if isSingleFile, let size = fileSize {
-            fileSizeLabel.stringValue = size
-            fileSizeLabel.isHidden = false
-        } else {
-            fileSizeLabel.isHidden = true
         }
 
         finderButton.isHidden = !isSingleFile
@@ -160,14 +142,19 @@ final class PreviewFooterBar: NSView {
 
     private func splitPathIntoTwoLines(
         _ text: String,
+        suffix: String,
         font: NSFont,
         maxWidth: CGFloat
     ) -> (String, String) {
         let attrs: [NSAttributedString.Key: Any] = [.font: font]
-        guard (text as NSString).size(withAttributes: attrs).width > maxWidth else {
-            return (text, "")
+        let fullText = text + suffix
+
+        // 整体一行放得下，直接返回
+        guard (fullText as NSString).size(withAttributes: attrs).width > maxWidth else {
+            return (fullText, "")
         }
 
+        // 先只对路径做分行
         let chars = Array(text)
         var lo = 0
         var hi = chars.count
@@ -181,6 +168,8 @@ final class PreviewFooterBar: NSView {
             }
         }
 
-        return (String(chars[..<lo]), String(chars[lo...]))
+        let line1 = String(chars[..<lo])
+        let line2 = String(chars[lo...]) + suffix
+        return (line1, line2)
     }
 }

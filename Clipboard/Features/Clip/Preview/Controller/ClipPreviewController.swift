@@ -155,7 +155,7 @@ final class ClipPreviewController: NSViewController {
                 for: NSWorkspace.shared.urlForApplication(toOpen: url)
             )
             if let attrs = try? FileManager.default.attributesOfItem(
-                atPath: url.path()
+                atPath: url.path
             ),
                 let size = attrs[.size] as? Int64
             {

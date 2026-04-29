@@ -33,6 +33,7 @@ final class PreviewPillButton: NSView {
 
     private let backgroundLayer = CALayer()
     private var trackingArea: NSTrackingArea?
+    private var isHovering = false
 
     // MARK: - Init
 
@@ -54,13 +55,9 @@ final class PreviewPillButton: NSView {
 
         backgroundLayer.cornerRadius = Const.btnRadius
         backgroundLayer.cornerCurve = .continuous
-        backgroundLayer.backgroundColor = NSColor.clear.cgColor
-
         layer?.cornerRadius = Const.btnRadius
         layer?.cornerCurve = .continuous
         layer?.borderWidth = 1
-        layer?.borderColor = NSColor.separatorColor.cgColor
-
         layer?.insertSublayer(backgroundLayer, at: 0)
 
         addSubview(label)
@@ -72,6 +69,8 @@ final class PreviewPillButton: NSView {
         snp.makeConstraints { make in
             make.height.equalTo(24)
         }
+
+        updateAppearance(animated: false)
     }
 
     // MARK: - First Responder
@@ -89,9 +88,36 @@ final class PreviewPillButton: NSView {
 
     // MARK: - Appearance
 
+    private func updateAppearance(animated: Bool) {
+        let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+
+        let bgColor: NSColor = isHovering
+            ? (isDark ? .white.withAlphaComponent(0.08) : .black.withAlphaComponent(0.06))
+            : .clear
+
+        let borderColor: NSColor = isDark
+            ? .white.withAlphaComponent(0.2)
+            : .separatorColor
+
+        layer?.borderColor = borderColor.cgColor
+
+        if animated {
+            NSAnimationContext.runAnimationGroup { ctx in
+                ctx.duration = 0.12
+                ctx.allowsImplicitAnimation = true
+                backgroundLayer.backgroundColor = bgColor.cgColor
+            }
+        } else {
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            backgroundLayer.backgroundColor = bgColor.cgColor
+            CATransaction.commit()
+        }
+    }
+
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
-        layer?.borderColor = NSColor.separatorColor.cgColor
+        updateAppearance(animated: false)
     }
 
     // MARK: - Tracking
@@ -110,36 +136,33 @@ final class PreviewPillButton: NSView {
     }
 
     override func mouseEntered(with _: NSEvent) {
-        CATransaction.begin()
-        CATransaction.setAnimationDuration(0.12)
-        backgroundLayer.backgroundColor = NSColor.labelColor.withAlphaComponent(0.03).cgColor
-        CATransaction.commit()
+        isHovering = true
+        updateAppearance(animated: true)
         NSCursor.pointingHand.push()
     }
 
     override func mouseExited(with _: NSEvent) {
-        CATransaction.begin()
-        CATransaction.setAnimationDuration(0.06)
-        backgroundLayer.backgroundColor = NSColor.clear.cgColor
-        CATransaction.commit()
+        isHovering = false
+        updateAppearance(animated: true)
         NSCursor.pop()
     }
 
     // MARK: - Click
 
     override func mouseDown(with event: NSEvent) {
+        let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        let pressedColor: NSColor = isDark
+            ? .white.withAlphaComponent(0.14)
+            : .black.withAlphaComponent(0.10)
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        backgroundLayer.backgroundColor = NSColor.labelColor.withAlphaComponent(0.07).cgColor
+        backgroundLayer.backgroundColor = pressedColor.cgColor
         CATransaction.commit()
         super.mouseDown(with: event)
     }
 
     override func mouseUp(with event: NSEvent) {
-        CATransaction.begin()
-        CATransaction.setDisableActions(true)
-        backgroundLayer.backgroundColor = NSColor.labelColor.withAlphaComponent(0.03).cgColor
-        CATransaction.commit()
+        updateAppearance(animated: false)
 
         let loc = convert(event.locationInWindow, from: nil)
         if bounds.contains(loc) {

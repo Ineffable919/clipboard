@@ -51,21 +51,6 @@ enum Const {
     static let topBarWidth: CGFloat = 450.0
     static let cardBottomPadding: CGFloat = 16.0
 
-    static let hoverDarkColor: Color = .init(NSColor(hex: "#171D38"))
-        .opacity(0.6)
-    static let hoverLightColorLiquid: Color = .primary.opacity(0.06)
-    static let hoverLightColorFrosted: Color = .primary.opacity(0.08)
-    static let hoverLightColorFrostedLow: Color = .init(
-        nsColor: NSColor(hex: "#D0D0CF")
-    ).opacity(0.6)
-
-    static let chooseDarkColor: Color = .init(NSColor(hex: "#171D38"))
-    static let chooseLightColorLiquid: Color = .primary.opacity(0.1)
-    static let chooseLightColorFrosted: Color = .primary.opacity(0.12)
-    static let chooseLightColorFrostedLow: Color = .init(
-        nsColor: NSColor(hex: "#D0D0CF")
-    )
-
     static let contentShape = UnevenRoundedRectangle(
         topLeadingRadius: 0,
         bottomLeadingRadius: Const.radius,
@@ -87,7 +72,9 @@ enum Const {
     static let maxContentHeight: CGFloat = 600.0
     static let minPreviewHeight: CGFloat = 300.0
     static let minPreviewWidth: CGFloat = 400.0
-    static let maxTextSize: Int = 10000
+    static let maxTextheight: CGFloat = 480.0
+    static let maxTextWidth: CGFloat = 660.0
+    static let maxTextSize: Int = 2500
 
     /// 设置页面
     static let settingWidth: CGFloat = 650.0

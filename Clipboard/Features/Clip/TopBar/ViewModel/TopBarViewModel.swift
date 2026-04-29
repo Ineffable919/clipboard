@@ -35,6 +35,7 @@ final class TopBarViewModel {
 
     func selectChip(id: Int) {
         CategoryChipStore.shared.selectedChipId = id
+        syncGroupIdFromChipStore()
     }
 
     // New Chip State
@@ -65,9 +66,12 @@ final class TopBarViewModel {
     /// 日期筛选：单选
     private(set) var selectedDateFilter: DateFilterOption?
 
+    /// 分组筛选：单选
+    private(set) var selectedGroupId: Int?
+
     var hasInput: Bool {
         !query.isEmpty || !selectedTypes.isEmpty || !selectedAppNames.isEmpty
-            || selectedDateFilter != nil
+            || selectedDateFilter != nil || selectedGroupId != nil
     }
 
     func clearInput() {
@@ -82,7 +86,7 @@ final class TopBarViewModel {
 
     var hasActiveFilters: Bool {
         !selectedTypes.isEmpty || !selectedAppNames.isEmpty
-            || selectedDateFilter != nil
+            || selectedDateFilter != nil || selectedGroupId != nil
     }
 
     // MARK: - Private Properties
@@ -114,14 +118,17 @@ final class TopBarViewModel {
 
     func setSelectChipId(chip: Int) {
         chipStore.selectedChipId = chip
+        syncGroupIdFromChipStore()
     }
 
     func selectPreviousChip() {
         chipStore.selectPreviousChip()
+        syncGroupIdFromChipStore()
     }
 
     func selectNextChip() {
         chipStore.selectNextChip()
+        syncGroupIdFromChipStore()
     }
 
     func addChip(name: String, colorIndex: Int) {
@@ -138,6 +145,31 @@ final class TopBarViewModel {
 
     func removeChip(_ chip: CategoryChip) {
         chipStore.removeChip(chip)
+        syncGroupIdFromChipStore()
+    }
+
+    private func syncGroupIdFromChipStore() {
+        let groupId = chipStore.getSelectChipId()
+        let newGroupId = groupId == -1 ? nil : groupId
+        guard selectedGroupId != newGroupId else { return }
+
+        tags.removeAll { $0.type == .filterGroup }
+        selectedGroupId = newGroupId
+        if let newGroupId {
+            let chipModel = chipStore.chips.first { $0.id == newGroupId }
+            let label = chipModel?.name ?? ""
+            let dotIcon = makeColorDotImage(
+                colorIndex: chipModel?.colorIndex ?? 0
+            )
+            let tag = InputTag(
+                icon: dotIcon,
+                label: label,
+                type: .filterGroup,
+                associatedValue: String(newGroupId)
+            )
+            tags.append(tag)
+        }
+        filterDidChange.send()
     }
 
     // MARK: - New Chip Methods
@@ -246,11 +278,53 @@ final class TopBarViewModel {
         filterDidChange.send()
     }
 
+    func setGroupFilter(_ groupId: Int?) {
+        tags.removeAll { $0.type == .filterGroup }
+        selectedGroupId = groupId
+        if let groupId {
+            let chip = chipStore.chips.first { $0.id == groupId }
+            let label = chip?.name ?? ""
+            let dotIcon = makeColorDotImage(
+                colorIndex: chip?.colorIndex ?? 0
+            )
+            let tag = InputTag(
+                icon: dotIcon,
+                label: label,
+                type: .filterGroup,
+                associatedValue: String(groupId)
+            )
+            tags.append(tag)
+        }
+        let chipId = groupId ?? -1
+        if chipStore.selectedChipId != chipId {
+            chipStore.selectedChipId = chipId
+        }
+        filterDidChange.send()
+    }
+
+    private func makeColorDotImage(colorIndex: Int) -> NSImage {
+        let canvasSize: CGFloat = 14
+        let dotSize: CGFloat = 10
+        let image = NSImage(size: NSSize(width: canvasSize, height: canvasSize))
+        image.lockFocus()
+        let color = CategoryChip.nsColor(at: colorIndex)
+        color.setFill()
+        let origin = (canvasSize - dotSize) / 2
+        NSBezierPath(ovalIn: NSRect(x: origin, y: origin, width: dotSize, height: dotSize)).fill()
+        image.unlockFocus()
+        image.isTemplate = false
+        return image
+    }
+
     func clearAllFilters() {
         selectedTypes.removeAll()
         selectedAppNames.removeAll()
         selectedDateFilter = nil
+        selectedGroupId = nil
         tags.removeAll()
+        if chipStore.selectedChipId != -1 {
+            chipStore.selectedChipId = -1
+        }
         filterDidChange.send()
     }
 
@@ -357,6 +431,11 @@ final class TopBarViewModel {
             selectedAppNames.remove(tag.associatedValue)
         case .filterDate:
             selectedDateFilter = nil
+        case .filterGroup:
+            selectedGroupId = nil
+            if chipStore.selectedChipId != -1 {
+                chipStore.selectedChipId = -1
+            }
         }
         filterDidChange.send()
     }
@@ -441,6 +520,7 @@ final class TopBarViewModel {
         selectedTypes.removeAll()
         selectedAppNames.removeAll()
         selectedDateFilter = nil
+        selectedGroupId = nil
 
         if chipStore.selectedChipId != -1 {
             chipStore.selectedChipId = -1
@@ -453,10 +533,10 @@ final class TopBarViewModel {
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
         let criteria = SearchCriteria(
             keyword: trimmedQuery,
-            chipGroup: getSelectChipId(),
             selectedTypes: selectedTypes,
             selectedAppNames: selectedAppNames,
-            selectedDateFilter: selectedDateFilter
+            selectedDateFilter: selectedDateFilter,
+            selectedGroupId: selectedGroupId
         )
         return criteria != lastSearchCriteria
     }
@@ -468,16 +548,16 @@ final class TopBarViewModel {
 
         let criteria = SearchCriteria(
             keyword: trimmedQuery,
-            chipGroup: getSelectChipId(),
             selectedTypes: selectedTypes,
             selectedAppNames: selectedAppNames,
-            selectedDateFilter: selectedDateFilter
+            selectedDateFilter: selectedDateFilter,
+            selectedGroupId: selectedGroupId
         )
 
         if criteria == lastSearchCriteria { return }
         lastSearchCriteria = criteria
 
-        if criteria.isEmpty, chipStore.selectedChipId == -1 {
+        if criteria.isEmpty {
             db.resetToDefault()
         } else {
             db.searchData(criteria)
@@ -577,7 +657,7 @@ extension TopBarViewModel {
             await db.updateItemGroupInDB(id: modelId, groupId: chipId)
         }
 
-        if getSelectChipId() != -1 {
+        if selectedGroupId != nil {
             var list = db.dataList.value
             list.removeAll(where: { $0.id == modelId })
             db.updateData(with: list, changeType: .delete)

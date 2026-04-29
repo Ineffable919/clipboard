@@ -101,19 +101,20 @@ final class ClipPreviewContentView: NSView {
     // MARK: - Private Size Helpers
 
     private static func textContentHeight(for model: PasteboardModel, width: CGFloat) -> CGFloat {
-        if model.length > Const.maxTextSize { return Const.maxContentHeight }
+        if model.length > Const.maxTextSize { return Const.maxTextheight }
 
         let inset: CGFloat = Const.space8 * 2
         let textWidth = width - inset * 2
-        guard textWidth > 0 else { return Const.minPreviewHeight }
+        guard textWidth > 0 else { return 240.0 }
 
         let attributed = Self.measuringAttributedString(for: model)
         let boundingRect = attributed.boundingRect(
-            with: NSSize(width: textWidth, height: .greatestFiniteMagnitude),
+            with: NSSize(width: textWidth, height: Const.maxTextheight),
             options: [.usesLineFragmentOrigin, .usesFontLeading]
         )
+
         let measured = ceil(boundingRect.height) + inset * 2
-        return min(max(measured, 80), Const.maxContentHeight)
+        return min(max(measured, 240.0), Const.maxTextheight)
     }
 
     static func measuringAttributedString(for model: PasteboardModel) -> NSAttributedString {
@@ -163,7 +164,8 @@ final class ClipPreviewContentView: NSView {
     private func installMouseMonitor() {
         guard mouseMonitor == nil else { return }
         mouseMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { [weak self] event in
-            guard let self else { return event }
+            guard let self, let viewWindow = window else { return event }
+            guard event.window === viewWindow else { return event }
             let locationInSelf = convert(event.locationInWindow, from: nil)
             if bounds.contains(locationInSelf) {
                 onMouseDown?()
@@ -186,22 +188,27 @@ final class PreviewTextContentView: NSView {
     private let scrollView = NSScrollView()
     private let textView = NSTextView()
 
+    private let fixedBgColor: NSColor?
+
     init(model: PasteboardModel) {
+        if model.type == .rich, model.hasBgColor, let bg = model.cachedBackgroundColor {
+            fixedBgColor = bg
+        } else {
+            fixedBgColor = nil
+        }
+
         super.init(frame: .zero)
         wantsLayer = true
 
         setupScrollView()
         setupTextView()
 
-        let bgColor: NSColor = if model.type == .rich, model.hasBgColor,
-                                  let bg = model.cachedBackgroundColor
-        {
-            bg
+        if let bg = fixedBgColor {
+            textView.backgroundColor = bg
+            layer?.backgroundColor = bg.cgColor
         } else {
-            .controlBackgroundColor
+            textView.backgroundColor = .textBackgroundColor
         }
-        textView.backgroundColor = bgColor
-        layer?.backgroundColor = bgColor.cgColor
 
         scrollView.documentView = textView
         addSubview(scrollView)
@@ -213,6 +220,13 @@ final class PreviewTextContentView: NSView {
     @available(*, unavailable)
     required init?(coder _: NSCoder) {
         fatalError()
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        if let bg = fixedBgColor {
+            layer?.backgroundColor = bg.cgColor
+        }
     }
 
     override func layout() {
@@ -367,7 +381,6 @@ final class PreviewFileView: NSView {
     init(model: PasteboardModel) {
         super.init(frame: .zero)
         wantsLayer = true
-        layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
 
         if let paths = model.cachedFilePaths, !paths.isEmpty {
             if paths.count == 1, let first = paths.first {
@@ -408,10 +421,6 @@ final class PreviewQuickLookView: NSView {
         wantsLayer = true
 
         let url = URL(fileURLWithPath: filePath)
-        guard FileManager.default.fileExists(atPath: filePath) else {
-            showFallbackIcon(for: url)
-            return
-        }
 
         guard let preview = QLPreviewView(frame: .zero, style: .normal) else {
             showFallbackIcon(for: url)
@@ -435,7 +444,7 @@ final class PreviewQuickLookView: NSView {
         let icon = NSWorkspace.shared.icon(forFile: url.path())
         let iv = NSImageView()
         iv.image = icon
-        iv.imageScaling = .scaleProportionallyDown
+        iv.imageScaling = .scaleProportionallyUpOrDown
         addSubview(iv)
         iv.snp.makeConstraints { make in
             make.center.equalToSuperview()
@@ -452,25 +461,25 @@ final class PreviewMultiFileView: NSView {
         wantsLayer = true
 
         let paths = Array(filePaths.prefix(4))
-        let thumbSize: CGFloat = 80
+        let thumbSize: CGFloat = 320
 
         for (index, path) in paths.enumerated().reversed() {
             let url = URL(fileURLWithPath: path)
             let icon = NSWorkspace.shared.icon(forFile: url.path())
             let iv = NSImageView()
             iv.image = icon
-            iv.imageScaling = .scaleProportionallyDown
+            iv.imageScaling = .scaleProportionallyUpOrDown
             iv.wantsLayer = true
             iv.layer?.cornerRadius = Const.radius
             iv.layer?.masksToBounds = true
 
             addSubview(iv)
-            let xOffset = CGFloat(index) * 18
+            let xOffset = CGFloat(index) * 20
             let yOffset = CGFloat(index) * 10
             iv.snp.makeConstraints { make in
                 make.width.height.equalTo(thumbSize)
-                make.centerX.equalToSuperview().offset(xOffset - 27)
-                make.centerY.equalToSuperview().offset(-yOffset + 27)
+                make.centerX.equalToSuperview().offset(xOffset - Const.space32)
+                make.centerY.equalToSuperview().offset(-yOffset)
             }
         }
     }
@@ -510,8 +519,8 @@ final class PreviewWebView: NSView, WKNavigationDelegate {
         loadingIndicator.startAnimation(nil)
         webView.load(URLRequest(
             url: url,
-            cachePolicy: .reloadIgnoringLocalCacheData,
-            timeoutInterval: 5
+            cachePolicy: .reloadIgnoringLocalAndRemoteCacheData,
+            timeoutInterval: 10
         ))
     }
 
@@ -574,7 +583,7 @@ final class PreviewEmptyView: NSView {
 final class PreviewLiveTextView: NSView, ImageAnalysisOverlayViewDelegate {
     private let imageView: NSImageView = {
         let iv = NSImageView()
-        iv.imageScaling = .scaleProportionallyDown
+        iv.imageScaling = .scaleProportionallyUpOrDown
         iv.imageAlignment = .alignCenter
         return iv
     }()

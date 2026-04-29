@@ -109,7 +109,10 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         nameField.cell?.wraps = false
         nameField.cell?.usesSingleLineMode = true
         nameField.setContentHuggingPriority(.required, for: .horizontal)
-        nameField.setContentCompressionResistancePriority(.required, for: .horizontal)
+        nameField.setContentCompressionResistancePriority(
+            .required,
+            for: .horizontal
+        )
         nameField.focusRingMaskView = self
         nameField.containerCornerRadius = Const.radius
         nameField.onFocusChange = { [weak self] focused in
@@ -133,7 +136,8 @@ final class ChipButton: NSView, NSTextFieldDelegate {
     }
 
     private var contentInsets: NSEdgeInsets {
-        let horizontalInset: CGFloat = config.dotMode ? Const.space6 : Const.space10
+        let horizontalInset: CGFloat =
+            config.dotMode ? Const.space6 : Const.space10
         return NSEdgeInsets(
             top: haloInset + Const.space6,
             left: haloInset + horizontalInset,
@@ -164,10 +168,13 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         if config.dotMode {
             if config.chip.isSystem {
                 let icon: NSImage? = NSImage(
-                    systemSymbolName: "clock.arrow.trianglehead.counterclockwise.rotate.90",
+                    systemSymbolName:
+                    "clock.arrow.trianglehead.counterclockwise.rotate.90",
                     accessibilityDescription: nil
                 )
-                iconImageView.image = icon?.withSymbolConfiguration(.init(pointSize: 12, weight: .medium))
+                iconImageView.image = icon?.withSymbolConfiguration(
+                    .init(pointSize: 12, weight: .medium)
+                )
                 iconImageView.snp.remakeConstraints { make in
                     make.width.height.equalTo(16)
                 }
@@ -182,17 +189,22 @@ final class ChipButton: NSView, NSTextFieldDelegate {
 
         if config.chip.id == -1 {
             let icon: NSImage? = NSImage(
-                systemSymbolName: "clock.arrow.trianglehead.counterclockwise.rotate.90",
+                systemSymbolName:
+                "clock.arrow.trianglehead.counterclockwise.rotate.90",
                 accessibilityDescription: nil
             )
 
-            iconImageView.image = icon?.withSymbolConfiguration(.init(pointSize: 16, weight: .regular))
+            iconImageView.image = icon?.withSymbolConfiguration(
+                .init(pointSize: 16, weight: .regular)
+            )
             iconImageView.snp.remakeConstraints { make in
                 make.width.height.equalTo(16)
             }
             stack.addArrangedSubview(iconImageView)
         } else {
-            let colorIndex = config.isEditing ? config.editingColorIndex : config.chip.colorIndex
+            let colorIndex =
+                config.isEditing
+                    ? config.editingColorIndex : config.chip.colorIndex
             configureDot(colorIndex: colorIndex)
             stack.addArrangedSubview(dotContainerView)
         }
@@ -203,7 +215,8 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         clickGestureRecognizer.isEnabled = !config.isEditing
         stack.addArrangedSubview(nameField)
         nameField.snp.remakeConstraints { make in
-            nameFieldWidthConstraint = make.width.equalTo(nameFieldDisplayWidth()).constraint
+            nameFieldWidthConstraint =
+                make.width.equalTo(nameFieldDisplayWidth()).constraint
         }
 
         if config.isEditing {
@@ -228,60 +241,71 @@ final class ChipButton: NSView, NSTextFieldDelegate {
     private func configureDot(colorIndex: Int) {
         let index = min(max(colorIndex, 0), CategoryChip.palette.count - 1)
         dotView.layer?.cornerRadius = 6
-        dotView.layer?.backgroundColor = NSColor(CategoryChip.palette[index]).cgColor
+        let color = NSColor(CategoryChip.palette[index])
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            dotView.layer?.backgroundColor = color.cgColor
+        }
     }
 
     private func updateAppearance(animated: Bool) {
-        let backgroundColor = resolvedBackgroundColor()
-        let foregroundColor = resolvedForegroundColor()
+        var resolvedBgCGColor: CGColor = .clear
+        var resolvedFgColor: NSColor = .labelColor
 
-        nameField.textColor = foregroundColor
-        iconImageView.contentTintColor = foregroundColor
-
-        let apply = {
-            self.backgroundLayer.backgroundColor = backgroundColor.cgColor
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            resolvedBgCGColor = resolvedBackgroundColor().cgColor
+            resolvedFgColor = resolvedForegroundColor()
         }
+
+        nameField.textColor = resolvedFgColor
+        iconImageView.contentTintColor = resolvedFgColor
 
         if animated {
             NSAnimationContext.runAnimationGroup { context in
                 context.duration = 0.12
                 context.allowsImplicitAnimation = true
-                apply()
+                self.backgroundLayer.backgroundColor = resolvedBgCGColor
             }
         } else {
             CATransaction.begin()
             CATransaction.setDisableActions(true)
-            apply()
+            backgroundLayer.backgroundColor = resolvedBgCGColor
             CATransaction.commit()
         }
     }
 
     private func resolvedBackgroundColor() -> NSColor {
-        let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        let isDark =
+            effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
 
         if config.dotMode {
             if isDraggingOver {
-                return isDark ? NSColor(Const.hoverDarkColor) : NSColor(Const.hoverLightColorLiquid)
+                return isDark
+                    ? .quaternaryLabelColor
+                    : .labelColor.withAlphaComponent(0.06)
             }
             return isHovering
-                ? (isDark ? NSColor(Const.hoverDarkColor) : NSColor(Const.hoverLightColorLiquid))
+                ? isDark
+                    ? .quaternaryLabelColor
+                    : .labelColor.withAlphaComponent(0.06)
                 : .clear
         }
 
         if config.isSelected || config.isEditing {
-            return isDark ? NSColor(Const.chooseDarkColor) : NSColor(Const.chooseLightColorLiquid)
+            return isDark
+                ? .quaternaryLabelColor : .labelColor.withAlphaComponent(0.1)
         }
 
         if isHovering || isDraggingOver {
-            return isDark ? NSColor(Const.hoverDarkColor) : NSColor(Const.hoverLightColorLiquid)
+            return isDark
+                ? .quaternaryLabelColor.withAlphaComponent(0.06)
+                : .labelColor.withAlphaComponent(0.06)
         }
 
         return .clear
     }
 
     private func resolvedForegroundColor() -> NSColor {
-        let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        return isDark ? .white : .black
+        .labelColor
     }
 
     override var intrinsicContentSize: NSSize {
@@ -303,6 +327,13 @@ final class ChipButton: NSView, NSTextFieldDelegate {
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
         updateAppearance(animated: false)
+
+        let colorIndex =
+            config.isEditing
+                ? config.editingColorIndex : config.chip.colorIndex
+        if !config.chip.isSystem || !config.dotMode {
+            configureDot(colorIndex: colorIndex)
+        }
     }
 
     // MARK: - Mouse
@@ -335,7 +366,10 @@ final class ChipButton: NSView, NSTextFieldDelegate {
             keyEquivalent: ""
         )
         editItem.target = self
-        editItem.image = NSImage(systemSymbolName: "pencil", accessibilityDescription: nil)
+        editItem.image = NSImage(
+            systemSymbolName: "pencil",
+            accessibilityDescription: nil
+        )
         menu.addItem(editItem)
 
         let deleteItem = NSMenuItem(
@@ -344,7 +378,10 @@ final class ChipButton: NSView, NSTextFieldDelegate {
             keyEquivalent: ""
         )
         deleteItem.target = self
-        deleteItem.image = NSImage(systemSymbolName: "trash", accessibilityDescription: nil)
+        deleteItem.image = NSImage(
+            systemSymbolName: "trash",
+            accessibilityDescription: nil
+        )
         menu.addItem(deleteItem)
 
         menu.addItem(.separator())
@@ -376,7 +413,9 @@ final class ChipButton: NSView, NSTextFieldDelegate {
     }
 
     func controlTextDidChange(_ obj: Notification) {
-        guard let field = obj.object as? NSTextField, field === nameField else { return }
+        guard let field = obj.object as? NSTextField, field === nameField else {
+            return
+        }
         updateNameFieldWidth()
 
         if let editor = nameField.currentEditor() as? NSTextView {
@@ -397,14 +436,18 @@ final class ChipButton: NSView, NSTextFieldDelegate {
     }
 
     private func updateNameFieldWidth() {
-        let displayText: String = if let editor = nameField.currentEditor() as? NSTextView, !editor.string.isEmpty {
-            editor.string
-        } else {
-            nameField.stringValue
-        }
+        let displayText: String =
+            if let editor = nameField.currentEditor() as? NSTextView,
+            !editor.string.isEmpty {
+                editor.string
+            } else {
+                nameField.stringValue
+            }
         let font = nameField.font ?? .systemFont(ofSize: 13, weight: .regular)
         let text = displayText.isEmpty ? " " : displayText
-        let width = ceil((text as NSString).size(withAttributes: [.font: font]).width)
+        let width = ceil(
+            (text as NSString).size(withAttributes: [.font: font]).width
+        )
         nameFieldWidthConstraint?.update(offset: width)
         invalidateIntrinsicContentSize()
         needsLayout = true
@@ -494,7 +537,8 @@ final class ChipButton: NSView, NSTextFieldDelegate {
             return false
         }
 
-        guard let model = try? JSONDecoder()
+        guard
+            let model = try? JSONDecoder()
             .decode(PasteboardModel.self, from: data)
         else {
             return false
@@ -511,23 +555,30 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         helpTextUpdateTask = Task { @MainActor [weak self] in
             guard let self else { return }
 
-            let count: Int = if config.chip.id == -1 {
-                PasteDataStore.main.totalCount
-            } else {
-                await PasteDataStore.main.getCountByGroup(groupId: config.chip.id)
-            }
+            let count: Int =
+                if config.chip.id == -1 {
+                    PasteDataStore.main.totalCount
+                } else {
+                    await PasteDataStore.main.getCountByGroup(
+                        groupId: config.chip.id
+                    )
+                }
 
             guard !Task.isCancelled else { return }
 
             var shortcutText = ""
-            if let prevInfo = HotKeyManager.shared.getHotKey(key: "previous_tab"),
-               let nextInfo = HotKeyManager.shared.getHotKey(key: "next_tab"),
-               prevInfo.isEnabled,
-               nextInfo.isEnabled
+            if let prevInfo = HotKeyManager.shared.getHotKey(
+                key: "previous_tab"
+            ),
+                let nextInfo = HotKeyManager.shared.getHotKey(key: "next_tab"),
+                prevInfo.isEnabled,
+                nextInfo.isEnabled
             {
                 let prevDisplay = prevInfo.shortcut.displayString
                 let nextDisplay = nextInfo.shortcut.displayString
-                shortcutText = String(localized: .chipTabs(prevDisplay, nextDisplay))
+                shortcutText = String(
+                    localized: .chipTabs(prevDisplay, nextDisplay)
+                )
             }
 
             let helpText = String(localized: .chipHelp(count, shortcutText))
@@ -562,7 +613,10 @@ private final class ChipTextField: NSTextField {
     override var focusRingMaskBounds: NSRect {
         guard let focusRingMaskView else { return bounds }
         return focusRingMaskView.convert(
-            focusRingMaskView.bounds.insetBy(dx: focusRingInset, dy: focusRingInset),
+            focusRingMaskView.bounds.insetBy(
+                dx: focusRingInset,
+                dy: focusRingInset
+            ),
             to: self
         )
     }
@@ -664,13 +718,21 @@ private final class ChipColorCircleView: NSView {
         )
         addTrackingArea(trackingArea)
 
-        let click = NSClickGestureRecognizer(target: self, action: #selector(handleTap))
+        let click = NSClickGestureRecognizer(
+            target: self,
+            action: #selector(handleTap)
+        )
         addGestureRecognizer(click)
     }
 
     @available(*, unavailable)
     required init?(coder _: NSCoder) {
         fatalError()
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        needsDisplay = true
     }
 
     override func mouseEntered(with _: NSEvent) {

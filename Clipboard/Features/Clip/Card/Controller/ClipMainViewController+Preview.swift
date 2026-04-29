@@ -23,8 +23,10 @@ extension ClipMainViewController {
     }
 
     func closePreviewPopover() {
-        previewPopover?.close()
+        guard let popover = previewPopover else { return }
+        popover.onContentInteraction = nil
         previewPopover = nil
+        popover.close()
         if focusRegion == .popover {
             setFocusRegion(.collection)
         }
@@ -42,17 +44,16 @@ extension ClipMainViewController {
 // MARK: - NSPopoverDelegate
 
 extension ClipMainViewController: NSPopoverDelegate {
-    func popoverWillClose(_: Notification) {
+    func popoverWillClose(_ notification: Notification) {
+        guard let closing = notification.object as? ClipPreviewPopover,
+              closing === previewPopover else { return }
+        closing.onContentInteraction = nil
+        previewPopover = nil
         if focusRegion == .popover {
             setFocusRegion(.collection)
             view.window?.makeFirstResponder(collectionView)
         }
     }
 
-    func popoverDidClose(_ notification: Notification) {
-        // AppEnvironment.shared.previewOpen = false
-        if (notification.object as? NSPopover) === previewPopover {
-            previewPopover = nil
-        }
-    }
+    func popoverDidClose(_: Notification) {}
 }

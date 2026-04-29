@@ -27,6 +27,7 @@ struct InputTag: Identifiable, Equatable {
         case filterType
         case filterApp
         case filterDate
+        case filterGroup
     }
 
     static func == (lhs: InputTag, rhs: InputTag) -> Bool {

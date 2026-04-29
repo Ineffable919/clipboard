@@ -66,7 +66,7 @@ final class ClipPreviewPopover: NSPopover {
         let width = clampedWidth(for: model)
         let contentH = ClipPreviewContentView.preferredContentHeight(
             for: model,
-            width: width - Const.space12 * 2
+            width: width
         )
         // header(24) + space8 + content + space8 + footer(24) + 上下 inset(space12 * 2)
         let totalH = 24 + Const.space8 + contentH + Const.space8 + 24 + Const.space12 * 2
@@ -79,7 +79,7 @@ final class ClipPreviewPopover: NSPopover {
     private static func clampedWidth(for model: PasteboardModel) -> CGFloat {
         switch model.type {
         case .color:
-            return 500
+            return 400
         case .file, .link:
             return Const.maxPreviewWidth
         case .image:
@@ -94,11 +94,10 @@ final class ClipPreviewPopover: NSPopover {
             let displayW = ceil(size.width * scale) + Const.space12 * 2
             return min(max(displayW, Const.minPreviewWidth), Const.maxPreviewWidth)
         case .string, .rich:
-            if model.length > Const.maxTextSize { return Const.maxPreviewWidth }
             let textWidth = estimatedTextWidth(for: model)
             return min(
-                max(textWidth + Const.space12 * 2 + Const.space8 * 2, Const.minPreviewWidth),
-                Const.maxPreviewWidth
+                max(textWidth, Const.minPreviewWidth),
+                Const.maxTextWidth
             )
         case .none:
             return Const.minPreviewWidth
@@ -106,15 +105,17 @@ final class ClipPreviewPopover: NSPopover {
     }
 
     private static func estimatedTextWidth(for model: PasteboardModel) -> CGFloat {
+        if model.length > Const.maxTextSize { return Const.maxTextWidth }
+
         let attributed = ClipPreviewContentView.measuringAttributedString(for: model)
         guard attributed.length > 0 else { return Const.minPreviewWidth }
 
-        let maxW = Const.maxPreviewWidth - Const.space12 * 2 - Const.space8 * 2
         let rect = attributed.boundingRect(
-            with: NSSize(width: maxW, height: .greatestFiniteMagnitude),
+            with: NSSize(width: Const.maxTextWidth, height: Const.maxTextheight),
             options: [.usesLineFragmentOrigin, .usesFontLeading]
         )
-        return min(ceil(rect.width) + 32, maxW)
+
+        return min(ceil(rect.width) + 32, Const.maxTextWidth)
     }
 
     // MARK: - Key Monitor

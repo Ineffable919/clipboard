@@ -19,8 +19,8 @@ enum PasteFilterBuilder {
         }
 
         // 分组筛选
-        if criteria.chipGroup != -1 {
-            clauses.append(Col.group == criteria.chipGroup)
+        if let groupId = criteria.selectedGroupId {
+            clauses.append(Col.group == groupId)
         } else {
             clauses.append(Col.hidden == 0)
         }

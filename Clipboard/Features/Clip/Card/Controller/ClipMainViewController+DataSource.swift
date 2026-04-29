@@ -14,9 +14,9 @@ extension ClipMainViewController: NSCollectionViewDelegate {
     func collectionView(_: NSCollectionView, shouldSelectItemsAt indexPaths: Set<IndexPath>) -> Set<IndexPath> {
         if let indexPath = indexPaths.first {
             resetSelectIndex(indexPath)
-            if previewPopover?.isShown == true, indexPath.item < dataList.value.count {
-                reopenPreviewForSelectedItem()
-            }
+            // if previewPopover != nil, indexPath.item < dataList.value.count {
+            //     reopenPreviewForSelectedItem()
+            // }
         }
         return [selectIndexPath]
     }
@@ -135,7 +135,7 @@ extension ClipMainViewController: CollectionViewItemDelegate {
     }
 
     func preview(_ item: PasteboardModel) {
-        if previewPopover?.isShown == true {
+        if previewPopover != nil {
             closePreviewPopover()
         } else {
             guard let itemView = collectionView.item(at: selectIndexPath)?.view

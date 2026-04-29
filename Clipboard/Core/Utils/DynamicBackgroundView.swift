@@ -17,6 +17,19 @@ final class DynamicBackgroundView: NSView {
     }
 
     override func updateLayer() {
-        layer?.backgroundColor = dynamicBackgroundColor.cgColor
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            layer?.backgroundColor = dynamicBackgroundColor.cgColor
+
+            let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            layer?.borderColor = isDark
+                ? NSColor.secondaryLabelColor.withAlphaComponent(0.05).cgColor
+                : NSColor.black.withAlphaComponent(0.06).cgColor
+        }
+        layer?.borderWidth = 0.8
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        needsDisplay = true
     }
 }

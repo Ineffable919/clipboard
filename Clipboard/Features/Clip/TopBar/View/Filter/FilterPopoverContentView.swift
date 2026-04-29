@@ -21,6 +21,7 @@ final class FilterPopoverContentView: NSView {
 
     let typeSection = FilterTypeSectionView()
     let appSection = FilterAppSectionView()
+    let groupSection = FilterGroupSectionView()
     let dateSection = FilterDateSectionView()
 
     // MARK: - Views
@@ -76,12 +77,13 @@ final class FilterPopoverContentView: NSView {
             make.leading.trailing.bottom.equalToSuperview().inset(Const.space16)
         }
 
-        // 初始隐藏类型和应用区域（数据加载后显示）
         typeSection.isHidden = true
         appSection.isHidden = true
+        groupSection.isHidden = true
 
         mainStack.addArrangedSubview(typeSection)
         mainStack.addArrangedSubview(appSection)
+        mainStack.addArrangedSubview(groupSection)
         mainStack.addArrangedSubview(dateSection)
     }
 }

@@ -82,6 +82,7 @@ final class ClipMainViewController: NSViewController {
         visualEffect.frame = view.frame
         visualEffect.state = .active
         visualEffect.blendingMode = .behindWindow
+        visualEffect.layer?.cornerRadius = Const.windowRadis
         let material = GlassMaterial(rawValue: PasteUserDefaults.glassMaterial) ?? .regular
         visualEffect.material = material.nsMaterial
         return visualEffect
