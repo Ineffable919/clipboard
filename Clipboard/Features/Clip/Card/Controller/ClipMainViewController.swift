@@ -482,15 +482,16 @@ extension ClipMainViewController {
 
         scrollView.contentView.postsBoundsChangedNotifications = true
 
-        UserDefaults.standard
-            .publisher(for: \.appearance)
-            .removeDuplicates()
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                guard let self else { return }
-                handleEffectViewSettingsChange()
-            }
-            .store(in: &cancellables)
+        Publishers.Merge(
+            UserDefaults.standard.publisher(for: \.backgroundType).map { _ in () },
+            UserDefaults.standard.publisher(for: \.glassMaterial).map { _ in () }
+        )
+        .receive(on: DispatchQueue.main)
+        .sink { [weak self] _ in
+            guard let self else { return }
+            handleEffectViewSettingsChange()
+        }
+        .store(in: &cancellables)
 
         lastBackgroundType = PasteUserDefaults.backgroundType
         lastGlassMaterial = PasteUserDefaults.glassMaterial

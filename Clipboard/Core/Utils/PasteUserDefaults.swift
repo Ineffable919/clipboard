@@ -237,4 +237,14 @@ extension UserDefaults {
         get { bool(forKey: "appearance") }
         set { set(newValue, forKey: "appearance") }
     }
+
+    @objc dynamic var backgroundType: Int {
+        get { integer(forKey: "backgroundType") }
+        set { set(newValue, forKey: "backgroundType") }
+    }
+
+    @objc dynamic var glassMaterial: Int {
+        get { integer(forKey: "glassMaterial") }
+        set { set(newValue, forKey: "glassMaterial") }
+    }
 }
