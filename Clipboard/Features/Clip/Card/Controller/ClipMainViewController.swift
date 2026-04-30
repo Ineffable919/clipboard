@@ -541,7 +541,7 @@ extension ClipMainViewController {
             restoreSelection()
         }
 
-        if changeType == .new, wasShowingPreview {
+        if (changeType == .new || changeType == .update), wasShowingPreview {
             reopenPreviewForSelectedItem()
         }
     }
