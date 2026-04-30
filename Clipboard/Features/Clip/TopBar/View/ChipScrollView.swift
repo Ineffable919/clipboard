@@ -11,7 +11,7 @@ import SnapKit
 final class ChipScrollView: NSView {
     // MARK: - Properties
 
-    private let scrollView = NSScrollView()
+    private let scrollView = HorizontalScrollView()
     private let contentStack = NSStackView()
 
     private var chips: [CategoryChip] = []

@@ -18,6 +18,10 @@ final class HUDManager {
     private var hudWindow: HUDWindow?
     private var dismissTask: Task<Void, Never>?
 
+    private var contentTarget: NSView? {
+        hudWindow?.contentTarget
+    }
+
     func show(
         icon: NSImage? = NSImage(systemSymbolName: "hammer", accessibilityDescription: nil),
         text: String = String(localized: "hudCopySucceeded"),
@@ -37,19 +41,13 @@ private extension HUDManager {
     func presentHUD(icon: NSImage?, text: String, duration: TimeInterval) {
         let window: HUDWindow
         if let existing = hudWindow {
-            existing.contentViewController?.view.subviews.forEach { $0.removeFromSuperview() }
             window = existing
         } else {
             window = HUDWindow()
             hudWindow = window
         }
 
-        guard let contentView = window.contentView else { return }
-        let targetView: NSView = if #available(macOS 26.0, *), let glassContent = contentView.subviews.first {
-            glassContent
-        } else {
-            contentView
-        }
+        guard let targetView = contentTarget else { return }
         buildContent(in: targetView, icon: icon, text: text)
 
         centerWindow(window)
@@ -101,7 +99,7 @@ private extension HUDManager {
             let imageView = NSImageView(frame: .zero)
             imageView.image = scaledIcon
             imageView.imageScaling = .scaleProportionallyUpOrDown
-            imageView.contentTintColor = .labelColor
+            imageView.contentTintColor = .secondaryLabelColor
 
             parent.addSubview(imageView)
             imageView.snp.makeConstraints { make in
@@ -144,6 +142,8 @@ private final class HUDWindow: NSPanel {
     private static let hudSize = CGSize(width: 200, height: 200)
     private static let cornerRadius: CGFloat = 20
 
+    private(set) var contentTarget: NSView?
+
     init() {
         super.init(
             contentRect: NSRect(origin: .zero, size: Self.hudSize),
@@ -167,9 +167,11 @@ private final class HUDWindow: NSPanel {
 
     private func makeBackgroundView() -> NSView {
         if #available(macOS 26.0, *) {
-            makeGlassView()
+            return makeGlassView()
         } else {
-            makeVisualEffectView()
+            let ve = makeVisualEffectView()
+            contentTarget = ve
+            return ve
         }
     }
 
@@ -179,9 +181,10 @@ private final class HUDWindow: NSPanel {
         glass.frame = NSRect(origin: .zero, size: Self.hudSize)
         glass.cornerRadius = Self.cornerRadius
 
-        let container = NSView(frame: NSRect(origin: .zero, size: Self.hudSize))
+        let container = NSView()
         container.wantsLayer = true
         glass.contentView = container
+        contentTarget = container
 
         return glass
     }

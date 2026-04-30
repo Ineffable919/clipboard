@@ -63,7 +63,7 @@ final class SearchField: NSView {
     // MARK: - Subviews
 
     private let searchIcon = NSImageView()
-    private let scrollView = NSScrollView()
+    private let scrollView = HorizontalScrollView()
     private let tokenTextView = TokenTextView.makeConfigured()
     private let cancelButton = NSButton()
     let filterButton = FilterIconButton()
@@ -77,7 +77,7 @@ final class SearchField: NSView {
     private lazy var focusRingLayer: CAShapeLayer = {
         let layer = CAShapeLayer()
         layer.fillColor = nil
-        layer.lineWidth = 3.0
+        layer.lineWidth = 3.5
         layer.opacity = 0
         return layer
     }()
@@ -153,7 +153,7 @@ final class SearchField: NSView {
         addSubview(filterButton)
 
         filterButton.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().offset(-10)
+            make.trailing.equalToSuperview().offset(-Const.space6)
             make.centerY.equalToSuperview()
         }
     }

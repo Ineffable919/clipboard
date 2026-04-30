@@ -232,25 +232,30 @@ final class TopBarChipController {
     private func confirmDeleteChip(_ chip: CategoryChip) {
         guard !chip.isSystem else { return }
 
-        let alert = NSAlert()
-        alert.messageText = String(localized: .deleteChipTitle(chip.name))
-        alert.informativeText = String(localized: .deleteChipMessage(chip.name))
-        alert.alertStyle = .warning
-        alert.addButton(withTitle: String(localized: .commonConfirm))
-        alert.addButton(withTitle: String(localized: .commonCancel))
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            let count = await PasteDataStore.main.getCountByGroup(groupId: chip.id)
+            if count == 0 {
+                topVM?.removeChip(chip)
+                onReloadNeeded?()
+                return
+            }
 
-        let handleResponse: (NSApplication.ModalResponse) -> Void = {
-            [weak self] response in
-            guard response == .alertFirstButtonReturn else { return }
-            self?.topVM?.removeChip(chip)
-            self?.onReloadNeeded?()
-        }
-        defer {
+            let alert = NSAlert()
+            alert.messageText = String(localized: .deleteChipTitle(chip.name))
+            alert.informativeText = String(localized: .deleteChipMessage(chip.name))
+            alert.alertStyle = .warning
+            alert.addButton(withTitle: String(localized: .commonConfirm))
+            alert.addButton(withTitle: String(localized: .commonCancel))
+
+            AppEnvironment.shared.suppressResignKey = true
+            let response = alert.runModal()
             AppEnvironment.shared.suppressResignKey = false
+
+            guard response == .alertFirstButtonReturn else { return }
+            topVM?.removeChip(chip)
+            onReloadNeeded?()
         }
-        AppEnvironment.shared.suppressResignKey = true
-        let response = alert.runModal()
-        handleResponse(response)
     }
 
     // MARK: - Drag & Drop

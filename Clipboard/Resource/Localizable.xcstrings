@@ -1621,7 +1621,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "置顶"
+            "value" : "固定"
           }
         }
       }
@@ -3871,7 +3871,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "取消置顶"
+            "value" : "取消固定"
           }
         }
       }

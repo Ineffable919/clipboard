@@ -20,6 +20,7 @@ protocol CollectionViewItemDelegate: NSObjectProtocol {
     func copy(_ item: PasteboardModel)
     func edit(_ item: PasteboardModel)
     func delete(_ item: PasteboardModel, indexPath: IndexPath)
+    func assignToChip(_ item: PasteboardModel, chipId: Int)
     func preview(_ item: PasteboardModel)
 }
 
@@ -205,6 +206,8 @@ extension CollectionViewItem {
 
         menu.addItem(deleteItem())
         menu.addItem(.separator())
+        menu.addItem(labelItem(for: model))
+        menu.addItem(.separator())
         menu.addItem(previewItem())
 
         return menu
@@ -269,6 +272,65 @@ extension CollectionViewItem {
         item.image = NSImage(systemSymbolName: "trash", accessibilityDescription: nil)
         item.target = self
         return item
+    }
+
+    private func labelItem(for model: PasteboardModel) -> NSMenuItem {
+        let parent = NSMenuItem(
+            title: String(localized: .pin),
+            action: nil,
+            keyEquivalent: ""
+        )
+        parent.image = NSImage(systemSymbolName: "pin", accessibilityDescription: nil)
+
+        let submenu = NSMenu()
+        let userChips = CategoryChipStore.shared.chips.filter { !$0.isSystem }
+        for chip in userChips {
+            let chipItem = NSMenuItem(title: chip.name, action: #selector(handleAssignToChip(_:)), keyEquivalent: "")
+            chipItem.target = self
+            chipItem.tag = chip.id
+            chipItem.state = model.group == chip.id ? .on : .off
+            chipItem.image = chipDotImage(colorIndex: chip.colorIndex)
+            submenu.addItem(chipItem)
+        }
+
+        if model.group != -1 {
+            submenu.addItem(.separator())
+            let unpinItem = NSMenuItem(
+                title: String(localized: .unpin),
+                action: #selector(handleUnpin),
+                keyEquivalent: ""
+            )
+            unpinItem.target = self
+            submenu.addItem(unpinItem)
+        }
+
+        parent.submenu = submenu
+        return parent
+    }
+
+    private func chipDotImage(colorIndex: Int) -> NSImage {
+        let size = NSSize(width: 12, height: 12)
+        let image = NSImage(size: size, flipped: false) { rect in
+            let color = CategoryChip.paletteNSColors[
+                min(max(colorIndex, 0), CategoryChip.paletteNSColors.count - 1)
+            ]
+            color.setFill()
+            NSBezierPath(ovalIn: rect.insetBy(dx: 0.5, dy: 0.5)).fill()
+            return true
+        }
+        image.isTemplate = false
+        return image
+    }
+
+    @objc private func handleAssignToChip(_ sender: NSMenuItem) {
+        guard let model = item else { return }
+        guard model.group != sender.tag else { return }
+        delegate?.assignToChip(model, chipId: sender.tag)
+    }
+
+    @objc private func handleUnpin() {
+        guard let model = item else { return }
+        delegate?.assignToChip(model, chipId: -1)
     }
 
     private func previewItem() -> NSMenuItem {

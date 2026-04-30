@@ -167,6 +167,10 @@ extension ClipMainViewController: CollectionViewItemDelegate {
         cardVM.delete(item)
     }
 
+    func assignToChip(_ item: PasteboardModel, chipId: Int) {
+        _ = topVM.assignModelToChip(model: item, chipId: chipId)
+    }
+
     func preview(_ item: PasteboardModel) {
         if previewPopover != nil {
             closePreviewPopover()

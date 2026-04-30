@@ -152,7 +152,8 @@ extension ClipMainViewController {
         ClipActionService.shared.paste(
             item,
             isAttribute: !hasPlainTextModifier(event),
-            checkPermissions: PasteUserDefaults.pasteDirect
+            checkPermissions: PasteUserDefaults.pasteDirect,
+            showTip: !PasteUserDefaults.pasteDirect
         )
         return nil
     }

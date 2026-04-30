@@ -17,6 +17,12 @@ extension ClipMainViewController {
         let popover = ClipPreviewPopover(model: model) {
             self.setFocusRegion(.popover)
         }
+        popover.onPinToChip = { [weak self] model, chipId in
+            _ = self?.topVM.assignModelToChip(model: model, chipId: chipId)
+        }
+        popover.onUnpin = { [weak self] model in
+            _ = self?.topVM.assignModelToChip(model: model, chipId: -1)
+        }
         popover.delegate = self
         previewPopover = popover
         popover.show(relativeTo: view.bounds, of: view, preferredEdge: .maxY)

@@ -9,7 +9,7 @@ import AppKit
 
 final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
     private enum Metrics {
-        static let height: CGFloat = 24
+        static let height: CGFloat = 28
         static let horizontalInset: CGFloat = 6
         /// 垂直内边距：使行高在容器中垂直居中
         /// (scrollView height - lineHeight) / 2 = (28 - 20) / 2 = 4

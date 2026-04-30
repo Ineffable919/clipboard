@@ -12,6 +12,8 @@ import Carbon
 
 final class ClipPreviewPopover: NSPopover {
     var onContentInteraction: (() -> Void)?
+    var onPinToChip: ((PasteboardModel, Int) -> Void)?
+    var onUnpin: ((PasteboardModel) -> Void)?
 
     private let previewVC = ClipPreviewController()
     private nonisolated(unsafe) var keyMonitor: Any?
@@ -52,6 +54,12 @@ final class ClipPreviewPopover: NSPopover {
         }
         previewVC.onDismiss = { [weak self] in
             self?.close()
+        }
+        previewVC.onPinToChip = { [weak self] model, chipId in
+            self?.onPinToChip?(model, chipId)
+        }
+        previewVC.onUnpin = { [weak self] model in
+            self?.onUnpin?(model)
         }
     }
 

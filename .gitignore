@@ -90,7 +90,7 @@ fastlane/test_output
 iOSInjectionProject/
 *.resolved
 
-# Qoder
 .qoder
-
 .vscode
+.claude
+/reference
