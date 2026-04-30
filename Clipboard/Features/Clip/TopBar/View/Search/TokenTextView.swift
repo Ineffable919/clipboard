@@ -40,6 +40,9 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         tv.isEditable = true
         tv.isSelectable = true
         tv.font = .preferredFont(forTextStyle: .callout)
+        tv.writingToolsBehavior = .none
+        tv.isAutomaticDataDetectionEnabled = false
+        tv.isAutomaticLinkDetectionEnabled = false
 
         let paragraphStyle = Self.fixedParagraphStyle
 
@@ -350,7 +353,10 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
 
     override func resignFirstResponder() -> Bool {
         let result = super.resignFirstResponder()
-        if result { onResignFirstResponder?() }
+        if result {
+            if #unavailable(macOS 26) { syncTokenSelectionState() }
+            onResignFirstResponder?()
+        }
         return result
     }
 
@@ -376,6 +382,21 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
             .foregroundColor: NSColor.secondaryLabelColor,
         ]
         (placeholder as NSString).draw(at: origin, withAttributes: attrs)
+    }
+
+    override func setSelectedRanges(_ ranges: [NSValue], affinity: NSSelectionAffinity, stillSelecting: Bool) {
+        super.setSelectedRanges(ranges, affinity: affinity, stillSelecting: stillSelecting)
+        if #unavailable(macOS 26) { syncTokenSelectionState() }
+    }
+
+    private func syncTokenSelectionState() {
+        guard let storage = textStorage else { return }
+        let sel = selectedRange()
+        let fullRange = NSRange(location: 0, length: storage.length)
+        storage.enumerateAttribute(.attachment, in: fullRange, options: []) { value, range, _ in
+            guard let attachment = value as? TokenAttachment else { return }
+            attachment.isSelected = sel.length > 0 && NSIntersectionRange(sel, range).length > 0
+        }
     }
 
     func layoutManager(

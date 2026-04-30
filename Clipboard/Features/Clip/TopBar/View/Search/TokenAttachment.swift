@@ -14,6 +14,10 @@ final class TokenAttachment: NSTextAttachment {
 
     static let lineHeight: CGFloat = 20
 
+    var isSelected: Bool = false {
+        didSet { (attachmentCell as? TokenAttachmentCell)?.isSelected = isSelected }
+    }
+
     init(tag: InputTag) {
         self.tag = tag
         super.init(data: nil, ofType: nil)
@@ -34,10 +38,18 @@ final class TokenAttachment: NSTextAttachment {
 
 private final class TokenAttachmentCell: NSTextAttachmentCell {
     private let inputTag: InputTag
+    var isSelected: Bool = false
 
     private let hPad: CGFloat = 6
     private let gap: CGFloat = 4
     private let iconSize: CGFloat = 14
+
+    // Slightly more visible than quaternaryLabelColor, adapts to light/dark
+    private static let bgColor = NSColor(name: nil) { appearance in
+        appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+            ? NSColor(white: 1, alpha: 0.15)
+            : NSColor(white: 0, alpha: 0.1)
+    }
 
     init(tag: InputTag) {
         inputTag = tag
@@ -92,8 +104,13 @@ private final class TokenAttachmentCell: NSTextAttachmentCell {
             xRadius: cellFrame.height / 2,
             yRadius: cellFrame.height / 2
         )
-        NSColor.quaternaryLabelColor.setFill()
+        Self.bgColor.setFill()
         bg.fill()
+
+        if #unavailable(macOS 26), isSelected {
+            NSColor.selectedTextBackgroundColor.withAlphaComponent(0.4).setFill()
+            bg.fill()
+        }
 
         var x = cellFrame.minX + hPad
 
