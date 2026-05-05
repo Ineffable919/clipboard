@@ -439,16 +439,6 @@ extension ClipMainViewController {
             }
             .store(in: &cancellables)
 
-        store.$selectedChipId
-            .dropFirst()
-            .removeDuplicates()
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                guard let self else { return }
-                topVM.performSearch()
-            }
-            .store(in: &cancellables)
-
         store.chipsContentDidChange
             .receive(on: DispatchQueue.main)
             .sink { [weak self] in
@@ -466,6 +456,8 @@ extension ClipMainViewController {
             }
             .store(in: &cancellables)
 
+        scrollView.contentView.postsBoundsChangedNotifications = true
+
         NotificationCenter.default.publisher(
             for: NSView.boundsDidChangeNotification,
             object: scrollView.contentView
@@ -479,8 +471,6 @@ extension ClipMainViewController {
             self?.checkLoadMore()
         }
         .store(in: &cancellables)
-
-        scrollView.contentView.postsBoundsChangedNotifications = true
 
         Publishers.Merge(
             UserDefaults.standard.publisher(for: \.backgroundType).map { _ in () },
@@ -542,7 +532,7 @@ extension ClipMainViewController {
             restoreSelection()
         }
 
-        if (changeType == .new || changeType == .update), wasShowingPreview {
+        if changeType == .new || changeType == .update, wasShowingPreview {
             reopenPreviewForSelectedItem()
         }
     }

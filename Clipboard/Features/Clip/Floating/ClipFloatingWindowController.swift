@@ -55,7 +55,7 @@ final class ClipFloatingWindowController: NSWindowController {
         ]
 
         win.contentView?.wantsLayer = true
-        win.contentView?.layer?.cornerRadius = Const.radius
+        win.contentView?.layer?.cornerRadius = Const.windowRadis
         win.contentView?.layer?.masksToBounds = true
 
         win.delegate = self
@@ -213,34 +213,53 @@ final class ClipFloatingWindowController: NSWindowController {
     }
 
     func toggleWindow(_ completionHandler: (@MainActor @Sendable () -> Void)? = nil) {
-        setPresented(!clipVC.isPresented, completionHandler)
+        if isVisible {
+            dismiss(completionHandler)
+        } else {
+            show(completionHandler)
+        }
     }
 
-    func setPresented(
-        _ presented: Bool,
-        _ completionHandler: (@MainActor @Sendable () -> Void)? = nil
-    ) {
+    func show(_ completionHandler: (@MainActor @Sendable () -> Void)? = nil) {
         guard let win = window else { return }
-
-        if presented {
-            if !win.isVisible {
-                clipVC.env.previousApp = NSWorkspace.shared.frontmostApplication
-                positionWindow()
-                win.orderFrontRegardless()
-            }
+        guard !win.isVisible else {
             win.makeKey()
+            completionHandler?()
+            return
+        }
 
-            clipVC.env.resetQuickPasteState()
+        clipVC.env.previousApp = NSWorkspace.shared.frontmostApplication
+        positionWindow()
+        win.alphaValue = 0
+        win.setIsVisible(true)
+        win.makeKeyAndOrderFront(nil)
 
-            clipVC.setPresented(true)
-        } else {
-            clipVC.setPresented(false) { [weak self] in
-                guard let self, let win = window else { return }
+        NSAnimationContext.runAnimationGroup({ ctx in
+            ctx.duration = Const.showDuration
+            win.animator().alphaValue = 1
+        }) {
+            Task { @MainActor in
+                completionHandler?()
+            }
+        }
+    }
+
+    func dismiss(_ completionHandler: (@MainActor @Sendable () -> Void)? = nil) {
+        guard let win = window, win.isVisible else {
+            completionHandler?()
+            return
+        }
+
+        NSAnimationContext.runAnimationGroup({ ctx in
+            ctx.duration = Const.hideDuration
+            win.animator().alphaValue = 0
+        }) { [weak self] in
+            Task { @MainActor in
+                guard let self, let win = self.window else { return }
+                win.setIsVisible(false)
+                win.alphaValue = 1
                 win.orderOut(nil)
                 completionHandler?()
-                Task { [weak self] in
-                    self?.db.clearExpiredData()
-                }
             }
         }
     }
@@ -266,7 +285,7 @@ extension ClipFloatingWindowController: NSWindowDelegate {
                 return
             }
         }
-        setPresented(false)
+        dismiss()
     }
 
     func windowDidBecomeKey(_: Notification) {

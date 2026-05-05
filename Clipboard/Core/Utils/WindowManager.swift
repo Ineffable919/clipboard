@@ -57,7 +57,7 @@ final class WindowManager {
 
     private func dismissFloatingIfNeeded() {
         if floatingController.isVisible {
-            floatingController.setPresented(false)
+            floatingController.dismiss()
         }
     }
 

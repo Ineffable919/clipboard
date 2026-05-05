@@ -113,8 +113,13 @@ enum Const {
     )
 }
 
-/// 浮动窗口尺寸常量
 enum FloatConst {
     static let floatWindowWidth: CGFloat = 320.0
-    static let floatWindowHeight: CGFloat = 400.0
+    static let floatWindowHeight: CGFloat = 650.0
+    static let cardSize: CGFloat = 300.0
+    static let headerHeight: CGFloat = 90.0
+    static let footerHeight: CGFloat = 32.0
+    static let cardHeight: CGFloat = 60.0
+    static let cardSpacing: CGFloat = 10.0
+    static let floatSelectionBorderWidth: CGFloat = 2.0
 }

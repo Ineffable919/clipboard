@@ -303,7 +303,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSDesktopFolderUsageDescription = "需要访问桌面文件以预览剪贴板内容";
-				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "需要访问文档文件以预览剪贴板内容";
+				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "需要访问文稿存储剪贴板内容";
 				INFOPLIST_KEY_NSDownloadsFolderUsageDescription = "需要访问下载文件以预览剪贴板内容";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -355,7 +355,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSDesktopFolderUsageDescription = "需要访问桌面文件以预览剪贴板内容";
-				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "需要访问文档文件以预览剪贴板内容";
+				INFOPLIST_KEY_NSDocumentsFolderUsageDescription = "需要访问文稿存储剪贴板内容";
 				INFOPLIST_KEY_NSDownloadsFolderUsageDescription = "需要访问下载文件以预览剪贴板内容";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (

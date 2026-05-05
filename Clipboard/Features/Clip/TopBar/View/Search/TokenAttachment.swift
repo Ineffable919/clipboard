@@ -44,7 +44,7 @@ private final class TokenAttachmentCell: NSTextAttachmentCell {
     private let gap: CGFloat = 4
     private let iconSize: CGFloat = 14
 
-    // Slightly more visible than quaternaryLabelColor, adapts to light/dark
+    /// Slightly more visible than quaternaryLabelColor, adapts to light/dark
     private static let bgColor = NSColor(name: nil) { appearance in
         appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
             ? NSColor(white: 1, alpha: 0.15)
