@@ -55,7 +55,7 @@ final class FloatingHeaderView: NSView {
         let chips = topVM.chips()
         let selectedId = topVM.getSelectChipId()
 
-        chipScrollView.reload(chips: chips, selectedId: selectedId, dotMode: false)
+        chipScrollView.reload(chips: chips, selectedId: selectedId, dotMode: false, compact: true)
         chipScrollView.onSelectionChanged = { [weak self] id in
             self?.topVM?.setSelectChipId(chip: id)
         }
@@ -96,6 +96,7 @@ final class FloatingHeaderView: NSView {
         addSubview(pinButton)
         addSubview(searchField)
         addSubview(settingsBtn)
+        chipScrollView.scrollMode = true
         addSubview(chipScrollView)
         addSubview(addChipBtn)
 

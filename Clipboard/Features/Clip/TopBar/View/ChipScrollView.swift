@@ -27,6 +27,9 @@ final class ChipScrollView: NSView {
 
     var onSelectionChanged: ((Int) -> Void)?
 
+    /// 浮动窗口场景：宽度由父视图约束决定，内容超出时滚动；主窗口默认 false（展开到内容宽度）
+    var scrollMode: Bool = false
+
     // MARK: - Init
 
     override init(frame: NSRect) {
@@ -72,8 +75,8 @@ final class ChipScrollView: NSView {
     // MARK: - Intrinsic Content Size
 
     override var intrinsicContentSize: NSSize {
-        let width = contentStack.fittingSize.width
-        return NSSize(width: width, height: NSView.noIntrinsicMetric)
+        if scrollMode { return NSSize(width: NSView.noIntrinsicMetric, height: NSView.noIntrinsicMetric) }
+        return NSSize(width: contentStack.fittingSize.width, height: NSView.noIntrinsicMetric)
     }
 
     private func invalidateWidth() {
@@ -87,6 +90,7 @@ final class ChipScrollView: NSView {
         chips: [CategoryChip],
         selectedId: Int,
         dotMode: Bool = false,
+        compact: Bool = false,
         makeConfig: ((CategoryChip, Bool, Bool) -> ChipButton.Config)? = nil
     ) {
         self.chips = chips
@@ -108,6 +112,7 @@ final class ChipScrollView: NSView {
                         chip: chip,
                         isSelected: isSelected,
                         dotMode: dotMode,
+                        compact: compact,
                         action: { [weak self] in
                             self?.select(id: chip.id)
                         }

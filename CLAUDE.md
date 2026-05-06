@@ -8,7 +8,7 @@ A macOS clipboard manager (AppKit rewrite of a prior SwiftUI implementation). Th
 
 - **Target**: macOS 15.0+, Swift 6.2+
 - **Language**: AppKit-first; SwiftUI only via `NSHostingView`/`NSHostingController` when explicitly requested
-- **Default reply language**: Chinese
+- **Default reply language**: Chinese(simplified)
 
 ## Build & Development
 

@@ -16,6 +16,7 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         let chip: CategoryChip
         var isSelected: Bool
         var dotMode: Bool = false
+        var compact: Bool = false
         var isEditing: Bool = false
         var editingName: String = ""
         var editingColorIndex: Int = 0
@@ -28,6 +29,22 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         var onEditingCancel: (() -> Void)?
         var onEditingFocusChange: ((Bool) -> Void)?
         var onDrop: ((PasteboardModel) -> Bool)?
+
+        fileprivate var iconContainerSize: CGFloat {
+            compact ? 14 : 16
+        }
+
+        fileprivate var smallIconPt: CGFloat {
+            compact ? 10 : 12
+        }
+
+        fileprivate var labelFontSize: CGFloat {
+            compact ? 12 : 13
+        }
+
+        fileprivate var dotRadius: CGFloat {
+            compact ? 5 : 6
+        }
     }
 
     private let backgroundLayer = CALayer()
@@ -90,17 +107,17 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         iconImageView.imageScaling = .scaleProportionallyDown
 
         dotContainerView.snp.makeConstraints { make in
-            make.width.height.equalTo(16)
+            make.width.height.equalTo(config.iconContainerSize)
         }
         dotView.wantsLayer = true
         dotContainerView.addSubview(dotView)
         dotView.snp.makeConstraints { make in
-            make.width.height.equalTo(12)
+            make.width.height.equalTo(config.smallIconPt)
             make.center.equalToSuperview()
         }
 
         nameField.delegate = self
-        nameField.font = .systemFont(ofSize: 13, weight: .regular)
+        nameField.font = .systemFont(ofSize: config.labelFontSize, weight: .regular)
         nameField.isBordered = false
         nameField.drawsBackground = false
         nameField.maximumNumberOfLines = 1
@@ -136,8 +153,16 @@ final class ChipButton: NSView, NSTextFieldDelegate {
     }
 
     private var contentInsets: NSEdgeInsets {
-        let horizontalInset: CGFloat =
-            config.dotMode ? Const.space6 : Const.space10
+        if config.compact {
+            let h: CGFloat = config.dotMode ? Const.space4 : Const.space6
+            return NSEdgeInsets(
+                top: haloInset + Const.space4,
+                left: haloInset + h,
+                bottom: haloInset + Const.space4,
+                right: haloInset + h
+            )
+        }
+        let horizontalInset: CGFloat = config.dotMode ? Const.space6 : Const.space10
         return NSEdgeInsets(
             top: haloInset + Const.space6,
             left: haloInset + horizontalInset,
@@ -173,10 +198,10 @@ final class ChipButton: NSView, NSTextFieldDelegate {
                     accessibilityDescription: nil
                 )
                 iconImageView.image = icon?.withSymbolConfiguration(
-                    .init(pointSize: 12, weight: .medium)
+                    .init(pointSize: config.smallIconPt, weight: .medium)
                 )
                 iconImageView.snp.remakeConstraints { make in
-                    make.width.height.equalTo(16)
+                    make.width.height.equalTo(config.iconContainerSize)
                 }
                 stack.addArrangedSubview(iconImageView)
             } else {
@@ -193,12 +218,11 @@ final class ChipButton: NSView, NSTextFieldDelegate {
                 "clock.arrow.trianglehead.counterclockwise.rotate.90",
                 accessibilityDescription: nil
             )
-
             iconImageView.image = icon?.withSymbolConfiguration(
-                .init(pointSize: 16, weight: .regular)
+                .init(pointSize: config.iconContainerSize, weight: .regular)
             )
             iconImageView.snp.remakeConstraints { make in
-                make.width.height.equalTo(16)
+                make.width.height.equalTo(config.iconContainerSize)
             }
             stack.addArrangedSubview(iconImageView)
         } else {
@@ -240,7 +264,7 @@ final class ChipButton: NSView, NSTextFieldDelegate {
 
     private func configureDot(colorIndex: Int) {
         let index = min(max(colorIndex, 0), CategoryChip.palette.count - 1)
-        dotView.layer?.cornerRadius = 6
+        dotView.layer?.cornerRadius = config.dotRadius
         let color = NSColor(CategoryChip.palette[index])
         effectiveAppearance.performAsCurrentDrawingAppearance {
             dotView.layer?.backgroundColor = color.cgColor
@@ -285,8 +309,8 @@ final class ChipButton: NSView, NSTextFieldDelegate {
             }
             return isHovering
                 ? isDark
-                    ? .quaternaryLabelColor
-                    : .labelColor.withAlphaComponent(0.06)
+                ? .quaternaryLabelColor
+                : .labelColor.withAlphaComponent(0.06)
                 : .clear
         }
 
@@ -321,7 +345,9 @@ final class ChipButton: NSView, NSTextFieldDelegate {
 
         let pillFrame = bounds.insetBy(dx: haloInset, dy: haloInset)
         backgroundLayer.frame = pillFrame
-        backgroundLayer.cornerRadius = Const.radius
+        backgroundLayer.cornerRadius = config.compact
+            ? pillFrame.height / 2
+            : Const.radius
     }
 
     override func viewDidChangeEffectiveAppearance() {

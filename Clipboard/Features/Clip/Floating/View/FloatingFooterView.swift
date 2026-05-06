@@ -44,9 +44,11 @@ final class FloatingFooterView: NSView {
 
     func configure(topVM: TopBarViewModel) {
         self.topVM = topVM
-        observePauseState()
+        topVM.$isPaused
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.updatePauseState() }
+            .store(in: &cancellables)
         updateCount()
-        updatePauseState()
     }
 
     func updateCount() {
@@ -87,33 +89,34 @@ final class FloatingFooterView: NSView {
         pauseStack.orientation = .horizontal
         pauseStack.alignment = .centerY
         pauseStack.spacing = Const.space4
+        pauseStack.edgeInsets = NSEdgeInsets(top: Const.space4, left: Const.space8, bottom: Const.space4, right: Const.space8)
         pauseStack.addArrangedSubview(pauseIcon)
         pauseStack.addArrangedSubview(pauseTimeLabel)
         pauseStack.wantsLayer = true
-        pauseStack.layer?.cornerRadius = 10
+        pauseStack.layer?.cornerRadius = Const.btnRadius
         pauseStack.layer?.cornerCurve = .continuous
         pauseStack.isHidden = true
 
-        // 包装成可点击的按钮区域
         pauseButton.isBordered = false
         pauseButton.title = ""
         pauseButton.target = self
         pauseButton.action = #selector(resumePasteboard)
-        pauseButton.addSubview(pauseStack)
         addSubview(pauseButton)
-
-        pauseStack.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(NSEdgeInsets(top: 3, left: 8, bottom: 3, right: 8))
-        }
+        addSubview(pauseStack)
 
         // 布局
         countLabel.snp.makeConstraints { make in
             make.center.equalToSuperview()
         }
 
-        pauseButton.snp.makeConstraints { make in
+        pauseStack.snp.makeConstraints { make in
             make.leading.equalToSuperview().offset(Const.space12)
             make.centerY.equalToSuperview()
+            make.top.bottom.equalToSuperview().inset(Const.space6)
+        }
+
+        pauseButton.snp.makeConstraints { make in
+            make.edges.equalTo(pauseStack)
         }
 
         Publishers.Merge(
@@ -125,19 +128,9 @@ final class FloatingFooterView: NSView {
         .store(in: &cancellables)
     }
 
-    private func observePauseState() {
-        NotificationCenter.default.publisher(for: .pasteboardPauseStateChanged)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.updatePauseState()
-            }
-            .store(in: &cancellables)
-    }
-
     // MARK: - Background
 
     private static func buildEffectView() -> NSView {
-        // Only bottom two corners rounded to match the window edge; inner-top corners stay square.
         let bottomCorners: CACornerMask = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
         if #available(macOS 26.0, *) {
             let bgType = BackgroundType(rawValue: PasteUserDefaults.backgroundType) ?? .liquid

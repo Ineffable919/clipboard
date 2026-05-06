@@ -155,8 +155,7 @@ final class FloatingHistoryView: NSView {
     func updateSelectedItemBorder() {
         let focused = env.focusRegion == .collection
         for case let item as FloatingCollectionItem
-            in collectionView.visibleItems()
-        {
+        in collectionView.visibleItems() {
             item.setFocused(focused)
         }
     }
@@ -320,6 +319,15 @@ final class FloatingHistoryView: NSView {
         emptyStateView.isHidden = true
         addSubview(emptyStateView)
 
+        scrollView.contentView.postsBoundsChangedNotifications = true
+        NotificationCenter.default.publisher(
+            for: NSView.boundsDidChangeNotification,
+            object: scrollView.contentView
+        )
+        .throttle(for: .milliseconds(200), scheduler: DispatchQueue.main, latest: true)
+        .sink { [weak self] _ in self?.checkLoadMore() }
+        .store(in: &cancellables)
+
         scrollView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
@@ -410,7 +418,7 @@ final class FloatingHistoryView: NSView {
     private func restoreSelection() {
         guard selectedIndex < dataList.count else { return }
         collectionView.selectionIndexPaths = [
-            IndexPath(item: selectedIndex, section: 0)
+            IndexPath(item: selectedIndex, section: 0),
         ]
     }
 
@@ -418,16 +426,19 @@ final class FloatingHistoryView: NSView {
         guard index >= 0, index < dataList.count else { return }
         selectedIndex = index
         collectionView.selectionIndexPaths = [
-            IndexPath(item: index, section: 0)
+            IndexPath(item: index, section: 0),
         ]
     }
 
     // MARK: - Load More
 
-    private func checkLoadMore(visibleRow: Int) {
+    private func checkLoadMore() {
         guard pd.hasMoreData, !pd.isLoadingPage else { return }
-        let threshold = 5
-        guard visibleRow >= dataList.count - threshold else { return }
+        let clipView = scrollView.contentView
+        let contentHeight = collectionView.frame.height
+        let visibleMaxY = clipView.bounds.origin.y + clipView.bounds.height
+        let threshold = (FloatConst.cardHeight + FloatConst.cardSpacing) * 5
+        guard contentHeight - visibleMaxY < threshold else { return }
         pd.loadNextPage()
     }
 
@@ -441,12 +452,12 @@ final class FloatingHistoryView: NSView {
     func scrollTo(index: Int) {
         let indexPath = IndexPath(item: index, section: 0)
         guard let attrs = collectionView.layoutAttributesForItem(at: indexPath),
-            let clipView = collectionView.enclosingScrollView?.contentView
+              let clipView = collectionView.enclosingScrollView?.contentView
         else { return }
 
         let visibleRect = clipView.documentVisibleRect
-        let topCover = FloatConst.headerHeight + FloatConst.cardSpacing
-        let bottomCover = FloatConst.footerHeight + FloatConst.cardSpacing
+        let topCover = scrollInsets.top - Const.selectionBorderWidth
+        let bottomCover = scrollInsets.bottom
         let peek = FloatConst.cardHeight / 3
 
         let effectiveMinY = visibleRect.minY + topCover + peek
@@ -468,11 +479,13 @@ final class FloatingHistoryView: NSView {
         )
         newOriginY = min(max(0, newOriginY), maxScrollY)
 
+        let scrollView = clipView.enclosingScrollView
         if event_isARepeat() {
             clipView.setBoundsOrigin(NSPoint(x: 0, y: newOriginY))
-            clipView.enclosingScrollView?.reflectScrolledClipView(clipView)
+            scrollView?.reflectScrolledClipView(clipView)
         } else {
             clipView.animator().setBoundsOrigin(NSPoint(x: 0, y: newOriginY))
+            scrollView?.reflectScrolledClipView(clipView)
         }
     }
 
@@ -480,8 +493,7 @@ final class FloatingHistoryView: NSView {
 
     private func updateQuickPasteDisplay() {
         for case let item as FloatingCollectionItem
-            in collectionView.visibleItems()
-        {
+        in collectionView.visibleItems() {
             guard let indexPath = collectionView.indexPath(for: item) else {
                 continue
             }
@@ -552,19 +564,19 @@ extension FloatingHistoryView: NSGestureRecognizerDelegate {
 
 // MARK: - Drag
 
-extension FloatingHistoryView {
-    fileprivate func handleDragMoved(_ screenPoint: NSPoint) {
+private extension FloatingHistoryView {
+    func handleDragMoved(_ screenPoint: NSPoint) {
         guard let window else { return }
         let visibleRect = convert(bounds, to: nil)
         let screenRect = window.convertToScreen(visibleRect)
         if !screenRect.contains(screenPoint),
-            ClipFloatingWindowController.shared.isVisible
+           ClipFloatingWindowController.shared.isVisible
         {
             ClipFloatingWindowController.shared.toggleWindow()
         }
     }
 
-    fileprivate func handleDragEnded(_ screenPoint: NSPoint) {
+    func handleDragEnded(_ screenPoint: NSPoint) {
         guard let window else { return }
         let visibleRect = convert(bounds, to: nil)
         let screenRect = window.convertToScreen(visibleRect)

@@ -50,8 +50,7 @@ final class TopBarViewModel {
 
     // MARK: - State
 
-    private(set) var isPaused: Bool = false
-    private(set) var remainingTime: TimeInterval = 0
+    @Published private(set) var isPaused: Bool = false
 
     private var pauseDisplayTimer: Timer?
 
@@ -575,8 +574,9 @@ extension TopBarViewModel {
     }
 
     var formattedRemainingTime: String {
-        guard remainingTime > 0 else { return String(localized: .paused) }
-        return Duration.seconds(remainingTime).formatted(.time(pattern: .hourMinuteSecond))
+        let time = PasteBoard.main.remainingPauseTime ?? 0
+        guard time > 0 else { return String(localized: .paused) }
+        return Duration.seconds(time).formatted(.time(pattern: .hourMinuteSecond))
     }
 
     // MARK: - Timer
@@ -631,7 +631,6 @@ extension TopBarViewModel {
 
     private func updateState() {
         isPaused = PasteBoard.main.isPaused
-        remainingTime = PasteBoard.main.remainingPauseTime ?? 0
     }
 
     private func pauseTimeString(from date: Date) -> String {

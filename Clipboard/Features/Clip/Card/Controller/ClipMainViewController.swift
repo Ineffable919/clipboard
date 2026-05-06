@@ -24,6 +24,14 @@ final class ClipMainViewController: NSViewController {
     var monitorToken: Any?
     var flagsMonitorToken: Any?
 
+    // MARK: - Pause Indicator
+
+    private let pauseStack = NSStackView()
+    private let pauseTimeLabel = NSTextField(labelWithString: "")
+    private let pauseButton = NSButton()
+    private var pauseTimer: Timer?
+    private var appearanceObservation: NSKeyValueObservation?
+
     var lastBackgroundType: Int = 0
     var lastGlassMaterial: Int = 2
 
@@ -294,6 +302,7 @@ extension ClipMainViewController {
         contentView.addSubview(scrollView)
         contentView.addSubview(topBarView)
         contentView.addSubview(emptyStateView)
+        setupPauseIndicator()
 
         let inner: CGFloat =
             if #available(macOS 26.0, *) {
@@ -325,6 +334,51 @@ extension ClipMainViewController {
             make.leading.greaterThanOrEqualTo(scrollView).offset(16)
             make.trailing.lessThanOrEqualTo(scrollView).offset(-16)
         }
+    }
+
+    private func setupPauseIndicator() {
+        let pauseIcon = NSImageView()
+        let iconConfig = NSImage.SymbolConfiguration(pointSize: 12, weight: .medium)
+        pauseIcon.image = NSImage(systemSymbolName: "pause.circle.fill", accessibilityDescription: nil)?
+            .withSymbolConfiguration(iconConfig)
+        pauseIcon.contentTintColor = .controlAccentColor
+        pauseIcon.snp.makeConstraints { make in
+            make.width.height.equalTo(16)
+        }
+
+        pauseTimeLabel.font = .monospacedDigitSystemFont(ofSize: 13, weight: .regular)
+        pauseTimeLabel.textColor = .secondaryLabelColor
+
+        pauseStack.orientation = .horizontal
+        pauseStack.alignment = .centerY
+        pauseStack.spacing = Const.space6
+        pauseStack.edgeInsets = NSEdgeInsets(top: 0, left: Const.space8, bottom: 0, right: Const.space8)
+        pauseStack.addArrangedSubview(pauseIcon)
+        pauseStack.addArrangedSubview(pauseTimeLabel)
+        pauseStack.wantsLayer = true
+        pauseStack.layer?.cornerRadius = 14
+        pauseStack.layer?.cornerCurve = .continuous
+        pauseStack.isHidden = true
+
+        pauseButton.isBordered = false
+        pauseButton.title = ""
+        pauseButton.target = self
+        pauseButton.action = #selector(resumePasteboard)
+        contentView.addSubview(pauseButton)
+        contentView.addSubview(pauseStack)
+
+        pauseStack.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(Const.space12)
+            make.centerY.equalTo(topBarView)
+            make.height.equalTo(28)
+        }
+        pauseButton.snp.makeConstraints { make in
+            make.edges.equalTo(pauseStack)
+        }
+    }
+
+    @objc private func resumePasteboard() {
+        topVM.resume()
     }
 
     private func initDiffableDataSource() {
@@ -485,6 +539,49 @@ extension ClipMainViewController {
 
         lastBackgroundType = PasteUserDefaults.backgroundType
         lastGlassMaterial = PasteUserDefaults.glassMaterial
+
+        topVM.$isPaused
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.updatePauseState() }
+            .store(in: &cancellables)
+
+        appearanceObservation = view.observe(\.effectiveAppearance) { [weak self] _, _ in
+            Task { @MainActor [weak self] in
+                guard let self, !pauseStack.isHidden else { return }
+                view.effectiveAppearance.performAsCurrentDrawingAppearance {
+                    pauseStack.layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.1).cgColor
+                }
+            }
+        }
+    }
+
+    private func updatePauseState() {
+        let isPaused = topVM.isPaused
+        pauseStack.isHidden = !isPaused
+        if isPaused {
+            pauseTimeLabel.stringValue = topVM.formattedRemainingTime
+            startPauseTimer()
+        } else {
+            stopPauseTimer()
+        }
+        view.effectiveAppearance.performAsCurrentDrawingAppearance {
+            pauseStack.layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.1).cgColor
+        }
+    }
+
+    private func startPauseTimer() {
+        guard pauseTimer == nil else { return }
+        pauseTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.pauseTimeLabel.stringValue = self?.topVM.formattedRemainingTime ?? ""
+            }
+        }
+        RunLoop.main.add(pauseTimer!, forMode: .common)
+    }
+
+    private func stopPauseTimer() {
+        pauseTimer?.invalidate()
+        pauseTimer = nil
     }
 
     private func handleEffectViewSettingsChange() {
@@ -537,7 +634,6 @@ extension ClipMainViewController {
         }
     }
 
-    /// 删除后将选中索引修正到安全范围内
     private func adjustSelectionAfterDelete() {
         guard !dataList.value.isEmpty else { return }
         let safeItem = min(selectIndexPath.item, dataList.value.count - 1)
