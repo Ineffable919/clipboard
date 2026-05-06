@@ -119,6 +119,27 @@ final class SearchSuggestionCellView: NSView {
         Self.attributedTitle(title, query: query, isHighlighted: isHighlighted)
     }
 
+    private static func fuzzyMatchRanges(_ title: String, query: String) -> [Range<String.Index>] {
+        let queryLower = query.lowercased()
+        let titleLower = title.lowercased()
+        var queryIndex = queryLower.startIndex
+        var titleIndex = titleLower.startIndex
+        var ranges: [Range<String.Index>] = []
+
+        while queryIndex < queryLower.endIndex, titleIndex < titleLower.endIndex {
+            if titleLower[titleIndex] == queryLower[queryIndex] {
+                let end = title.index(after: titleIndex)
+                ranges.append(titleIndex ..< end)
+                titleIndex = end
+                queryIndex = queryLower.index(after: queryIndex)
+            } else {
+                titleIndex = titleLower.index(after: titleIndex)
+            }
+        }
+
+        return ranges
+    }
+
     private static func attributedTitle(
         _ title: String,
         query: String,
@@ -139,11 +160,8 @@ final class SearchSuggestionCellView: NSView {
 
         guard !query.isEmpty else { return attributed }
 
-        if let range = title.range(
-            of: query,
-            options: [.caseInsensitive, .diacriticInsensitive, .anchored],
-            locale: .current
-        ) {
+        let matchRanges = fuzzyMatchRanges(title, query: query)
+        for range in matchRanges {
             let nsRange = NSRange(range, in: title)
             attributed.addAttribute(.font, value: boldFont, range: nsRange)
         }

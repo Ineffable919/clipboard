@@ -140,7 +140,7 @@ final class FloatingHistoryView: NSView {
         env.focusRegion = .collection
         applySnapshot(scrollToTop: true)
         observeData()
-        DispatchQueue.main.async { [weak self] in
+        Task { @MainActor [weak self] in
             guard let self else { return }
             window?.makeFirstResponder(collectionView)
         }
@@ -282,7 +282,7 @@ final class FloatingHistoryView: NSView {
         scrollView.drawsBackground = false
         scrollView.hasVerticalScroller = true
         scrollView.autohidesScrollers = true
-        scrollView.scrollerStyle = .overlay
+        scrollView.scrollerStyle = .legacy
         scrollView.verticalScrollElasticity = .automatic
         scrollView.horizontalScrollElasticity = .none
         scrollView.documentView = collectionView

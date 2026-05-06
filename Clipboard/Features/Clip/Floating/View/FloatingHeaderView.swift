@@ -361,7 +361,7 @@ final class FloatingSearchField: NSSearchField {
     override init(frame: NSRect) {
         super.init(frame: frame)
         placeholderString = String(localized: .search)
-        controlSize = .regular
+        controlSize = .large
         focusRingType = .default
         font = .systemFont(ofSize: 13)
     }
@@ -416,7 +416,7 @@ final class FloatingPinButton: NSButton {
 
     private func updateAppearance() {
         let symbolName = isPinned ? "pin.fill" : "pin"
-        let config = NSImage.SymbolConfiguration(pointSize: 14, weight: .regular)
+        let config = NSImage.SymbolConfiguration(pointSize: 16, weight: .medium)
         image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?
             .withSymbolConfiguration(config)
         contentTintColor = isPinned ? .controlAccentColor : .secondaryLabelColor

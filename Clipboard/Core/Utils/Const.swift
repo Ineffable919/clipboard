@@ -21,7 +21,12 @@ enum Const {
     static let cardLeadingSpace: CGFloat = 16.0
     static let bottomSize: CGFloat = 40.0
 
-    static let windowRadis: CGFloat = 23.0
+    static let windowRadis: CGFloat =
+        if #available(macOS 26.0, *) {
+            23.0
+        } else {
+            12.0
+        }
 
     static let btnRadius: CGFloat =
         if #available(macOS 26.0, *) {

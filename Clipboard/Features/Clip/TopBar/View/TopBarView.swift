@@ -332,6 +332,22 @@ final class TopBarView: NSView {
         }
     }
 
+    // MARK: - Fuzzy Match
+
+    private func fuzzyMatch(_ text: String, query: String) -> Bool {
+        let text = text.lowercased()
+        let query = query.lowercased()
+        var queryIndex = query.startIndex
+
+        for char in text {
+            if queryIndex < query.endIndex, char == query[queryIndex] {
+                text.formIndex(after: &queryIndex)
+            }
+        }
+
+        return queryIndex == query.endIndex
+    }
+
     // MARK: - Suggestion Data Source
 
     private func buildSuggestions(query: String) -> [SearchSuggestionItem] {
@@ -343,7 +359,7 @@ final class TopBarView: NSView {
         let allTypes: [PasteModelType] = [.color, .file, .image, .link, .string]
         for type in allTypes {
             let (icon, label) = type.iconAndLabel
-            guard label.localizedStandardHasPrefix(query) else { continue }
+            guard fuzzyMatch(label, query: query) else { continue }
             let image = NSImage(systemSymbolName: icon, accessibilityDescription: nil)
             result.append(SearchSuggestionItem(
                 title: label,
@@ -355,7 +371,7 @@ final class TopBarView: NSView {
         // 日期
         for option in DateFilterOption.allCases {
             let label = option.displayName
-            guard label.localizedStandardHasPrefix(query) else { continue }
+            guard fuzzyMatch(label, query: query) else { continue }
             let image = NSImage(systemSymbolName: "calendar", accessibilityDescription: nil)
             result.append(SearchSuggestionItem(
                 title: label,
@@ -367,7 +383,7 @@ final class TopBarView: NSView {
         // 标签（用户自定义分组）
         let userChips = CategoryChipStore.shared.chips.filter { !$0.isSystem }
         for chip in userChips {
-            guard chip.name.localizedStandardHasPrefix(query) else { continue }
+            guard fuzzyMatch(chip.name, query: query) else { continue }
             let dotIcon = makeChipDotIcon(colorIndex: chip.colorIndex)
             result.append(SearchSuggestionItem(
                 title: chip.name,
@@ -379,7 +395,7 @@ final class TopBarView: NSView {
         // 应用
         if let cachedApps = cachedAppSuggestions {
             for app in cachedApps {
-                guard app.name.localizedStandardHasPrefix(query) else { continue }
+                guard fuzzyMatch(app.name, query: query) else { continue }
                 result.append(SearchSuggestionItem(
                     title: app.name,
                     icon: app.icon,

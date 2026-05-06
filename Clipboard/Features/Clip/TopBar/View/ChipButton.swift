@@ -117,7 +117,10 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         }
 
         nameField.delegate = self
-        nameField.font = .systemFont(ofSize: config.labelFontSize, weight: .regular)
+        nameField.font = .systemFont(
+            ofSize: config.labelFontSize,
+            weight: .regular
+        )
         nameField.isBordered = false
         nameField.drawsBackground = false
         nameField.maximumNumberOfLines = 1
@@ -162,7 +165,8 @@ final class ChipButton: NSView, NSTextFieldDelegate {
                 right: haloInset + h
             )
         }
-        let horizontalInset: CGFloat = config.dotMode ? Const.space6 : Const.space10
+        let horizontalInset: CGFloat =
+            config.dotMode ? Const.space6 : Const.space10
         return NSEdgeInsets(
             top: haloInset + Const.space6,
             left: haloInset + horizontalInset,
@@ -345,9 +349,8 @@ final class ChipButton: NSView, NSTextFieldDelegate {
 
         let pillFrame = bounds.insetBy(dx: haloInset, dy: haloInset)
         backgroundLayer.frame = pillFrame
-        backgroundLayer.cornerRadius = config.compact
-            ? pillFrame.height / 2
-            : Const.radius
+        backgroundLayer.cornerRadius =
+            config.compact ? Const.btnRadius : Const.radius
     }
 
     override func viewDidChangeEffectiveAppearance() {

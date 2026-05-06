@@ -356,7 +356,7 @@ extension ClipMainViewController {
         pauseStack.addArrangedSubview(pauseIcon)
         pauseStack.addArrangedSubview(pauseTimeLabel)
         pauseStack.wantsLayer = true
-        pauseStack.layer?.cornerRadius = 14
+        pauseStack.layer?.cornerRadius = Const.btnRadius
         pauseStack.layer?.cornerCurve = .continuous
         pauseStack.isHidden = true
 
