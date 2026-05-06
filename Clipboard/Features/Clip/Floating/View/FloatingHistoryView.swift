@@ -89,6 +89,12 @@ final class FloatingHistoryView: NSView {
     let collectionView = ClipCollectionView()
     private let collectionLayout = NSCollectionViewFlowLayout()
     private let emptyStateView = EmptyStateView(style: .floating)
+    private let scrollInsets = NSEdgeInsets(
+        top: FloatConst.headerHeight + FloatConst.cardSpacing + Const.selectionBorderWidth,
+        left: FloatConst.floatSelectionBorderWidth + FloatConst.cardSpacing,
+        bottom: FloatConst.footerHeight + FloatConst.cardSpacing,
+        right: Const.selectionBorderWidth
+    )
 
     // MARK: - Data Source
 
@@ -159,7 +165,6 @@ final class FloatingHistoryView: NSView {
         updateQuickPasteDisplay()
     }
 
-    /// 选中并滚动到指定行
     func selectAndScrollTo(index: Int) {
         selectRow(index)
         scrollTo(index: index)
@@ -242,12 +247,8 @@ final class FloatingHistoryView: NSView {
         collectionLayout.scrollDirection = .vertical
         collectionLayout.minimumInteritemSpacing = 0
         collectionLayout.minimumLineSpacing = FloatConst.cardSpacing
-        collectionLayout.sectionInset = NSEdgeInsets(
-            top: FloatConst.headerHeight + FloatConst.cardSpacing + Const.selectionBorderWidth,
-            left: 0,
-            bottom: FloatConst.footerHeight + FloatConst.cardSpacing,
-            right: FloatConst.floatSelectionBorderWidth
-        )
+
+        collectionLayout.sectionInset = scrollInsets
         collectionLayout.itemSize = NSSize(
             width: FloatConst.cardSize,
             height: FloatConst.cardHeight
@@ -292,12 +293,7 @@ final class FloatingHistoryView: NSView {
         scrollView.verticalScrollElasticity = .automatic
         scrollView.horizontalScrollElasticity = .none
         scrollView.documentView = collectionView
-        scrollView.scrollerInsets = NSEdgeInsets(
-            top: FloatConst.headerHeight,
-            left: 0,
-            bottom: FloatConst.footerHeight,
-            right: 0
-        )
+        scrollView.scrollerInsets = scrollInsets
         addSubview(scrollView)
 
         dataSource = NSCollectionViewDiffableDataSource<Int, PasteboardModel>(
