@@ -60,7 +60,7 @@ final class FloatingHeaderView: NSView {
             self?.topVM?.setSelectChipId(chip: id)
         }
     }
-    
+
     func updateChipSelection() {
         guard let topVM else { return }
         let currentId = topVM.getSelectChipId()

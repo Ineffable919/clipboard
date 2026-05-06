@@ -50,7 +50,10 @@ private final class FloatingCollectionItem: NSCollectionViewItem {
 
     override var isSelected: Bool {
         didSet {
-            cardView.updateSelection(isSelected: isSelected, isFocused: isFocused)
+            cardView.updateSelection(
+                isSelected: isSelected,
+                isFocused: isFocused
+            )
         }
     }
 
@@ -90,15 +93,17 @@ final class FloatingHistoryView: NSView {
     private let collectionLayout = NSCollectionViewFlowLayout()
     private let emptyStateView = EmptyStateView(style: .floating)
     private let scrollInsets = NSEdgeInsets(
-        top: FloatConst.headerHeight + FloatConst.cardSpacing + Const.selectionBorderWidth,
-        left: FloatConst.floatSelectionBorderWidth + FloatConst.cardSpacing,
+        top: FloatConst.headerHeight + FloatConst.cardSpacing
+            + Const.selectionBorderWidth,
+        left: 0,
         bottom: FloatConst.footerHeight + FloatConst.cardSpacing,
-        right: Const.selectionBorderWidth
+        right: 0
     )
 
     // MARK: - Data Source
 
-    private var dataSource: NSCollectionViewDiffableDataSource<Int, PasteboardModel>!
+    private var dataSource:
+        NSCollectionViewDiffableDataSource<Int, PasteboardModel>!
 
     // MARK: - State
 
@@ -149,7 +154,9 @@ final class FloatingHistoryView: NSView {
 
     func updateSelectedItemBorder() {
         let focused = env.focusRegion == .collection
-        for case let item as FloatingCollectionItem in collectionView.visibleItems() {
+        for case let item as FloatingCollectionItem
+            in collectionView.visibleItems()
+        {
             item.setFocused(focused)
         }
     }
@@ -172,7 +179,8 @@ final class FloatingHistoryView: NSView {
 
     func anchorViewForItem(at index: Int) -> NSView {
         let indexPath = IndexPath(item: index, section: 0)
-        return (collectionView.item(at: indexPath) as? FloatingCollectionItem)?.cardView
+        return (collectionView.item(at: indexPath) as? FloatingCollectionItem)?
+            .cardView
             ?? collectionView
     }
 
@@ -222,21 +230,6 @@ final class FloatingHistoryView: NSView {
 
     func activateSearchField(with text: String?) {
         onActivateSearch?(text)
-    }
-
-    // MARK: - Layout
-
-    override func layout() {
-        super.layout()
-        let inset = collectionLayout.sectionInset
-        let horizontalInset = inset.left + inset.right
-        let newWidth = bounds.width - horizontalInset
-        if collectionLayout.itemSize.width != newWidth {
-            collectionLayout.itemSize = NSSize(
-                width: newWidth,
-                height: FloatConst.cardHeight
-            )
-        }
     }
 
     // MARK: - Setup
@@ -373,7 +366,10 @@ final class FloatingHistoryView: NSView {
         }
     }
 
-    private func applySnapshot(scrollToTop: Bool = false, animating: Bool = false) {
+    private func applySnapshot(
+        scrollToTop: Bool = false,
+        animating: Bool = false
+    ) {
         var snapshot = NSDiffableDataSourceSnapshot<Int, PasteboardModel>()
         snapshot.appendSections([0])
         snapshot.appendItems(dataList, toSection: 0)
@@ -414,7 +410,7 @@ final class FloatingHistoryView: NSView {
     private func restoreSelection() {
         guard selectedIndex < dataList.count else { return }
         collectionView.selectionIndexPaths = [
-            IndexPath(item: selectedIndex, section: 0),
+            IndexPath(item: selectedIndex, section: 0)
         ]
     }
 
@@ -422,7 +418,7 @@ final class FloatingHistoryView: NSView {
         guard index >= 0, index < dataList.count else { return }
         selectedIndex = index
         collectionView.selectionIndexPaths = [
-            IndexPath(item: index, section: 0),
+            IndexPath(item: index, section: 0)
         ]
     }
 
@@ -444,51 +440,51 @@ final class FloatingHistoryView: NSView {
 
     func scrollTo(index: Int) {
         let indexPath = IndexPath(item: index, section: 0)
-        guard let attrs = collectionView.layoutAttributesForItem(at: indexPath)
+        guard let attrs = collectionView.layoutAttributesForItem(at: indexPath),
+            let clipView = collectionView.enclosingScrollView?.contentView
         else { return }
-        let topInset = FloatConst.headerHeight + FloatConst.cardSpacing
-        let bottomInset = FloatConst.footerHeight + FloatConst.cardSpacing
-        let padding = FloatConst.cardSpacing
 
-        guard event_isARepeat() else {
-            let rect = NSRect(
-                x: attrs.frame.origin.x,
-                y: attrs.frame.origin.y - topInset - padding,
-                width: attrs.frame.width,
-                height: attrs.frame.height + topInset + bottomInset + padding * 2
-            )
-            collectionView.animator().scrollToVisible(rect)
+        let visibleRect = clipView.documentVisibleRect
+        let topCover = FloatConst.headerHeight + FloatConst.cardSpacing
+        let bottomCover = FloatConst.footerHeight + FloatConst.cardSpacing
+        let peek = FloatConst.cardHeight / 3
+
+        let effectiveMinY = visibleRect.minY + topCover + peek
+        let effectiveMaxY = visibleRect.maxY - bottomCover - peek
+
+        var newOriginY = visibleRect.origin.y
+        if attrs.frame.minY < effectiveMinY {
+            newOriginY = attrs.frame.minY - topCover - peek
+        } else if attrs.frame.maxY > effectiveMaxY {
+            newOriginY =
+                attrs.frame.maxY + bottomCover + peek - visibleRect.height
+        } else {
             return
         }
 
-        guard let scrollView = collectionView.enclosingScrollView else { return }
-        let clipView = scrollView.contentView
-        let visibleRect = clipView.documentVisibleRect
+        let maxScrollY = max(
+            0,
+            collectionView.bounds.height - visibleRect.height
+        )
+        newOriginY = min(max(0, newOriginY), maxScrollY)
 
-        let targetMinY = attrs.frame.minY - topInset - padding
-        let targetMaxY = attrs.frame.maxY + bottomInset + padding
-
-        var newOriginY = visibleRect.origin.y
-        if targetMinY < visibleRect.minY {
-            newOriginY = targetMinY
-        } else if targetMaxY > visibleRect.maxY {
-            newOriginY = targetMaxY - visibleRect.height
-        }
-
-        let maxY = max(0, collectionView.bounds.height - visibleRect.height)
-        newOriginY = min(max(0, newOriginY), maxY)
-
-        if abs(newOriginY - visibleRect.origin.y) > 1 {
+        if event_isARepeat() {
             clipView.setBoundsOrigin(NSPoint(x: 0, y: newOriginY))
-            scrollView.reflectScrolledClipView(clipView)
+            clipView.enclosingScrollView?.reflectScrolledClipView(clipView)
+        } else {
+            clipView.animator().setBoundsOrigin(NSPoint(x: 0, y: newOriginY))
         }
     }
 
     // MARK: - Quick Paste Display
 
     private func updateQuickPasteDisplay() {
-        for case let item as FloatingCollectionItem in collectionView.visibleItems() {
-            guard let indexPath = collectionView.indexPath(for: item) else { continue }
+        for case let item as FloatingCollectionItem
+            in collectionView.visibleItems()
+        {
+            guard let indexPath = collectionView.indexPath(for: item) else {
+                continue
+            }
             item.setQuickPasteIndex(quickPasteDisplayIndex(for: indexPath.item))
         }
     }
@@ -502,14 +498,21 @@ final class FloatingHistoryView: NSView {
 // MARK: - NSCollectionViewDelegate
 
 extension FloatingHistoryView: NSCollectionViewDelegate {
-    func collectionView(_: NSCollectionView, shouldSelectItemsAt indexPaths: Set<IndexPath>) -> Set<IndexPath> {
+    func collectionView(
+        _: NSCollectionView,
+        shouldSelectItemsAt indexPaths: Set<IndexPath>
+    ) -> Set<IndexPath> {
         if let indexPath = indexPaths.first {
             resetSelectIndex(indexPath)
         }
         return [IndexPath(item: selectedIndex, section: 0)]
     }
 
-    func collectionView(_: NSCollectionView, canDragItemsAt _: Set<IndexPath>, with _: NSEvent) -> Bool {
+    func collectionView(
+        _: NSCollectionView,
+        canDragItemsAt _: Set<IndexPath>,
+        with _: NSEvent
+    ) -> Bool {
         true
     }
 
@@ -549,19 +552,19 @@ extension FloatingHistoryView: NSGestureRecognizerDelegate {
 
 // MARK: - Drag
 
-private extension FloatingHistoryView {
-    func handleDragMoved(_ screenPoint: NSPoint) {
+extension FloatingHistoryView {
+    fileprivate func handleDragMoved(_ screenPoint: NSPoint) {
         guard let window else { return }
         let visibleRect = convert(bounds, to: nil)
         let screenRect = window.convertToScreen(visibleRect)
         if !screenRect.contains(screenPoint),
-           ClipFloatingWindowController.shared.isVisible
+            ClipFloatingWindowController.shared.isVisible
         {
             ClipFloatingWindowController.shared.toggleWindow()
         }
     }
 
-    func handleDragEnded(_ screenPoint: NSPoint) {
+    fileprivate func handleDragEnded(_ screenPoint: NSPoint) {
         guard let window else { return }
         let visibleRect = convert(bounds, to: nil)
         let screenRect = window.convertToScreen(visibleRect)

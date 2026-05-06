@@ -38,13 +38,13 @@ extension ClipFloatingViewController {
         }
 
         if KeyCode.shouldTriggerSearch(for: event),
-            focusRegion != .search,
-            floatingContentView.headerView.searchField.currentEditor() == nil
+           focusRegion != .search,
+           floatingContentView.headerView.searchField.currentEditor() == nil
         {
             historyView.activateSearchField(with: event.characters)
             return nil
         }
-        
+
         if handleChipTab(event, viewModel: floatingContentView.topVM) {
             return nil
         }
@@ -74,8 +74,8 @@ extension ClipFloatingViewController {
 
     func flagsChangedEvent(_ event: NSEvent) -> NSEvent? {
         guard event.window == ClipFloatingWindowController.shared.window,
-            ClipFloatingWindowController.shared.isVisible,
-            floatingContentView.historyView.collectionView.isFirstResponder
+              ClipFloatingWindowController.shared.isVisible,
+              floatingContentView.historyView.collectionView.isFirstResponder
         else { return event }
 
         isQuickPastePressed = KeyCode.isQuickPasteModifierPressed()
@@ -163,11 +163,11 @@ extension ClipFloatingViewController {
         let eventModifiers = event.modifierFlags.intersection(relevantModifiers)
 
         if previousTabInfo.isEnabled,
-            event.keyCode == previousTabInfo.shortcut.keyCode,
-            eventModifiers
-                == previousTabInfo.shortcut.modifiers.intersection(
-                    relevantModifiers
-                )
+           event.keyCode == previousTabInfo.shortcut.keyCode,
+           eventModifiers
+           == previousTabInfo.shortcut.modifiers.intersection(
+               relevantModifiers
+           )
         {
             viewModel.selectPreviousChip()
             floatingContentView.headerView.updateChipSelection()
@@ -175,11 +175,11 @@ extension ClipFloatingViewController {
         }
 
         if nextTabInfo.isEnabled,
-            event.keyCode == nextTabInfo.shortcut.keyCode,
-            eventModifiers
-                == nextTabInfo.shortcut.modifiers.intersection(
-                    relevantModifiers
-                )
+           event.keyCode == nextTabInfo.shortcut.keyCode,
+           eventModifiers
+           == nextTabInfo.shortcut.modifiers.intersection(
+               relevantModifiers
+           )
         {
             viewModel.selectNextChip()
             floatingContentView.headerView.updateChipSelection()

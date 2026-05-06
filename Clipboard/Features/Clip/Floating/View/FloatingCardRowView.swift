@@ -77,10 +77,6 @@ final class FloatingCardRowView: NSView {
         selectionBorderView.layer?.backgroundColor = .clear
         selectionBorderView.layer?.masksToBounds = false
 
-        selectionBorderView.layer?.shadowColor = NSColor.shadowColor.cgColor
-        selectionBorderView.layer?.shadowOpacity = 0.14
-        selectionBorderView.layer?.shadowRadius = 10
-        selectionBorderView.layer?.shadowOffset = CGSize(width: 0, height: -4)
         addSubview(selectionBorderView)
 
         backgroundView.wantsLayer = true
@@ -113,8 +109,8 @@ final class FloatingCardRowView: NSView {
 
         selectionBorderView.snp.makeConstraints { make in
             make.top.bottom.equalToSuperview()
-            make.leading.equalToSuperview().offset(Const.space8 - FloatConst.floatSelectionBorderWidth)
-            make.trailing.equalToSuperview().offset(-(Const.space8 - FloatConst.floatSelectionBorderWidth))
+            make.leading.equalToSuperview().offset(FloatConst.floatSelectionBorderWidth)
+            make.trailing.equalToSuperview().offset(-FloatConst.floatSelectionBorderWidth)
         }
 
         backgroundView.snp.makeConstraints { make in
