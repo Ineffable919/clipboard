@@ -281,11 +281,23 @@ final class PasteBoard {
 
         // 文件类型
         if !fileItems.isEmpty {
+            if !isAttribute {
+                let paths = fileItems.flatMap { $0.cachedFilePaths ?? [] }
+                guard !paths.isEmpty else { return false }
+                NSPasteboard.general.setString(paths.joined(separator: "\n"), forType: .string)
+                return true
+            }
             return writeMultipleFileURLs(fileItems)
         }
 
         // 图片类型
         if !imageItems.isEmpty {
+            if !isAttribute {
+                let text = imageItems.map { $0.searchText }.filter { !$0.isEmpty }.joined(separator: "\n")
+                guard !text.isEmpty else { return false }
+                NSPasteboard.general.setString(text, forType: .string)
+                return true
+            }
             return writeMultipleImages(imageItems)
         }
 

@@ -192,11 +192,7 @@ extension CollectionViewItem {
         let menu = NSMenu()
 
         menu.addItem(pasteItem(for: model))
-
-        if model.pasteboardType.isText() {
-            menu.addItem(pastePlainItem())
-        }
-
+        menu.addItem(pastePlainItem())
         menu.addItem(copyItem())
         menu.addItem(.separator())
 

@@ -188,7 +188,8 @@ final class FloatingHistoryView: NSView {
         ClipActionService.shared.paste(
             dataList[index],
             isAttribute: isAttribute,
-            checkPermissions: PasteUserDefaults.pasteDirect
+            checkPermissions: PasteUserDefaults.pasteDirect,
+            showTip: !PasteUserDefaults.pasteDirect
         )
     }
 
