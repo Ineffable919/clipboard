@@ -1,27 +1,10 @@
+@AGENTS.md
+
 # CLAUDE.md
-
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
-## Project Overview
-
-A macOS clipboard manager (AppKit rewrite of a prior SwiftUI implementation). The SwiftUI reference project is at `./reference` — use it to understand existing layouts and design intent, then re-implement with AppKit idioms.
-
-- **Target**: macOS 15.0+, Swift 6.2+
-- **Language**: AppKit-first; SwiftUI only via `NSHostingView`/`NSHostingController` when explicitly requested
-- **Default reply language**: Chinese(simplified)
 
 ## Build & Development
 
 Open `Clipboard.xcodeproj` in Xcode and build/run with ⌘R. There is no separate CLI build command.
-
-If Xcode MCP is configured, prefer its tools:
-- `BuildProject` — build after changes to confirm compilation
-- `GetBuildLog` — inspect build errors
-- `DocumentationSearch` — verify API availability before writing code
-- `XcodeListNavigatorIssues` — check Issue Navigator
-- `ExecuteSnippet` — test a snippet in file context
-
-Run SwiftLint before committing: `swiftlint` (no warnings or errors permitted).
 
 ## Architecture
 
@@ -58,25 +41,6 @@ Search pipeline: `SearchField` text → `TopBarViewModel.handleQueryChange` → 
 | `ClipActionService` | Paste/copy actions triggered from `ClipMainViewController` |
 | `PasteUserDefaults` / `PrefKey` | All user preferences via `UserDefaults`; keys defined in `PrefKey` enum |
 | `WindowManager` | Single entry point to show/hide either display mode |
-
-## Key Conventions
-
-- **Layout**: all constraints use SnapKit `snp` API — never raw `NSLayoutConstraint` or anchors directly.
-- **Concurrency**: always `async/await`; never `DispatchQueue.main.async` or other GCD patterns.
-- **Text search**: use `localizedStandardContains()`, not `contains()`.
-- **Localization**: all user-visible strings must use `String(localized: .symbolKey)` / `Text(.symbolKey)` referencing keys in `Localizable.xcstrings` with `extractionState: "manual"`.
-- **Number/date formatting**: always `FormatStyle` API — no `DateFormatter`, `NumberFormatter`, or `String(format:)`.
-- **No third-party frameworks** without asking first.
-
-## Think Before Coding
-
-**Don't assume. Don't hide confusion. Surface tradeoffs.**
-
-Before implementing:
-- State your assumptions explicitly. If uncertain, ask.
-- If multiple interpretations exist, present them - don't pick silently.
-- If a simpler approach exists, say so. Push back when warranted.
-- If something is unclear, stop. Name what's confusing. Ask.
 
 ## Simplicity First
 

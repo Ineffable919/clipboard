@@ -29,6 +29,10 @@ extension ClipMainViewController: NSGestureRecognizerDelegate {
             return hitView === topBarView
         }
 
+        if hitView is NSControl {
+            return false
+        }
+
         return true
     }
 }

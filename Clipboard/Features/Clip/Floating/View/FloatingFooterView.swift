@@ -42,6 +42,8 @@ final class FloatingFooterView: NSView {
 
     // MARK: - Public API
 
+    var onBackgroundClick: (() -> Void)?
+
     func configure(topVM: TopBarViewModel) {
         self.topVM = topVM
         topVM.$isPaused
@@ -219,6 +221,10 @@ final class FloatingFooterView: NSView {
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
         updatePauseBackground()
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        onBackgroundClick?()
     }
 
     @objc private func resumePasteboard() {

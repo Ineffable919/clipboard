@@ -211,3 +211,39 @@ extension ClipFloatingViewController {
         )
     }
 }
+
+// MARK: - NSGestureRecognizerDelegate
+
+extension ClipFloatingViewController: NSGestureRecognizerDelegate {
+    func gestureRecognizer(
+        _: NSGestureRecognizer,
+        shouldAttemptToRecognizeWith event: NSEvent
+    ) -> Bool {
+        guard
+            let hitView = view.window?.contentView?
+            .hitTest(event.locationInWindow)
+        else {
+            return true
+        }
+
+        let historyView = floatingContentView.historyView
+        let headerView = floatingContentView.headerView
+        let footerView = floatingContentView.footerView
+
+        if hitView.isDescendant(of: historyView.collectionView) {
+            return false
+        }
+
+        if hitView.isDescendant(of: footerView) {
+            return false
+        }
+
+        // header：精确排除不应触发聚焦的控件（搜索框、Pin、设置、加号）
+        // 拖拽区域和 chip 区域允许触发，使点击后焦点回到集合列表
+        if hitView.isDescendant(of: headerView) {
+            return !headerView.isExcludedFromFocusGesture(hitView)
+        }
+
+        return true
+    }
+}

@@ -57,6 +57,31 @@ final class ClipFloatingViewController: NSViewController {
         floatingContentView.historyView.onTogglePreview = { [weak self] index in
             self?.togglePreview(at: index)
         }
+
+        floatingContentView.headerView.onChipSelected = { [weak self] in
+            self?.focusCollection()
+        }
+
+        floatingContentView.footerView.onBackgroundClick = { [weak self] in
+            self?.focusCollection()
+        }
+
+        let clickGesture = NSClickGestureRecognizer(
+            target: self,
+            action: #selector(handleContentViewClick)
+        )
+        clickGesture.buttonMask = 0x1
+        clickGesture.delegate = self
+        floatingContentView.addGestureRecognizer(clickGesture)
+    }
+
+    @objc private func handleContentViewClick() {
+        focusCollection()
+    }
+
+    func focusCollection() {
+        focusRegion = .collection
+        view.window?.makeFirstResponder(floatingContentView.historyView.collectionView)
     }
 
     override func viewDidAppear() {

@@ -43,6 +43,14 @@ final class FloatingHeaderView: NSView {
     // MARK: - Public API
 
     var onSearchBecameFirstResponder: (() -> Void)?
+    var onChipSelected: (() -> Void)?
+
+    func isExcludedFromFocusGesture(_ view: NSView) -> Bool {
+        view === pinButton || view.isDescendant(of: pinButton) ||
+        view === searchField || view.isDescendant(of: searchField) ||
+        view === settingsBtn || view.isDescendant(of: settingsBtn) ||
+        view === addChipBtn || view.isDescendant(of: addChipBtn)
+    }
 
     func configure(topVM: TopBarViewModel) {
         self.topVM = topVM
@@ -58,6 +66,7 @@ final class FloatingHeaderView: NSView {
         chipScrollView.reload(chips: chips, selectedId: selectedId, dotMode: false, compact: true)
         chipScrollView.onSelectionChanged = { [weak self] id in
             self?.topVM?.setSelectChipId(chip: id)
+            self?.onChipSelected?()
         }
     }
 
@@ -352,7 +361,7 @@ final class FloatingSearchField: NSSearchField {
     override init(frame: NSRect) {
         super.init(frame: frame)
         placeholderString = String(localized: .search)
-        controlSize = .large
+        controlSize = .regular
         focusRingType = .default
         font = .systemFont(ofSize: 13)
     }
