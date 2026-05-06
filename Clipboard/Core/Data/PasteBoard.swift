@@ -293,7 +293,7 @@ final class PasteBoard {
         // 图片类型
         if !imageItems.isEmpty {
             if !isAttribute {
-                let text = imageItems.map { $0.searchText }.filter { !$0.isEmpty }.joined(separator: "\n")
+                let text = imageItems.map(\.searchText).filter { !$0.isEmpty }.joined(separator: "\n")
                 guard !text.isEmpty else { return false }
                 NSPasteboard.general.setString(text, forType: .string)
                 return true

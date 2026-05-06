@@ -47,9 +47,9 @@ final class FloatingHeaderView: NSView {
 
     func isExcludedFromFocusGesture(_ view: NSView) -> Bool {
         view === pinButton || view.isDescendant(of: pinButton) ||
-        view === searchField || view.isDescendant(of: searchField) ||
-        view === settingsBtn || view.isDescendant(of: settingsBtn) ||
-        view === addChipBtn || view.isDescendant(of: addChipBtn)
+            view === searchField || view.isDescendant(of: searchField) ||
+            view === settingsBtn || view.isDescendant(of: settingsBtn) ||
+            view === addChipBtn || view.isDescendant(of: addChipBtn)
     }
 
     func configure(topVM: TopBarViewModel) {

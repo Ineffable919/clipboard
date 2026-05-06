@@ -223,7 +223,7 @@ final class FloatingFooterView: NSView {
         updatePauseBackground()
     }
 
-    override func mouseDown(with event: NSEvent) {
+    override func mouseDown(with _: NSEvent) {
         onBackgroundClick?()
     }
 
