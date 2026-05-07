@@ -146,15 +146,14 @@ final class SearchSuggestionCellView: NSView {
         isHighlighted: Bool
     ) -> NSAttributedString {
         let baseFont = NSFont.systemFont(ofSize: Metrics.fontSize)
-        let boldFont = NSFont.boldSystemFont(ofSize: Metrics.fontSize)
-
-        let textColor: NSColor = isHighlighted ? .white : .labelColor
+        let matchColor: NSColor = isHighlighted ? .white : .headerTextColor
+        let dimColor: NSColor = isHighlighted ? .white.withAlphaComponent(0.6) : .secondaryLabelColor
 
         let attributed = NSMutableAttributedString(
             string: title,
             attributes: [
                 .font: baseFont,
-                .foregroundColor: textColor,
+                .foregroundColor: dimColor,
             ]
         )
 
@@ -163,7 +162,7 @@ final class SearchSuggestionCellView: NSView {
         let matchRanges = fuzzyMatchRanges(title, query: query)
         for range in matchRanges {
             let nsRange = NSRange(range, in: title)
-            attributed.addAttribute(.font, value: boldFont, range: nsRange)
+            attributed.addAttribute(.foregroundColor, value: matchColor, range: nsRange)
         }
 
         return attributed

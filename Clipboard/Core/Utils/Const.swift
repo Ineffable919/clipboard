@@ -53,7 +53,7 @@ enum Const {
     static let selectionBorderWidth: CGFloat = 4.0
 
     static let topBarHeight: CGFloat = 54.0
-    static let topBarWidth: CGFloat = 450.0
+    static let topBarWidth: CGFloat = 400.0
     static let cardBottomPadding: CGFloat = 16.0
 
     static let contentShape = UnevenRoundedRectangle(
