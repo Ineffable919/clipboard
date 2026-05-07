@@ -48,10 +48,6 @@ final class TopBarView: NSView {
         dotChipScrollView: dotChipScrollView
     )
 
-    var isEditingChipFirstResponder: Bool {
-        chipController.isEditingChipFirstResponder
-    }
-
     // MARK: - Init
 
     override init(frame: NSRect) {

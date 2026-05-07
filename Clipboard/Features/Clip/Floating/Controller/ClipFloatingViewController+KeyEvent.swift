@@ -25,6 +25,21 @@ extension ClipFloatingViewController {
             return event
         }
 
+        if focusRegion == .chipEditing {
+            switch event.keyCode {
+            case KeyCode.escape:
+                floatingContentView.headerView.cancelKeyboardEditing()
+                focusCollection()
+                return nil
+            case KeyCode.return:
+                floatingContentView.headerView.commitKeyboardEditing()
+                focusCollection()
+                return nil
+            default:
+                return event
+            }
+        }
+
         if focusRegion == .search {
             if event.keyCode == KeyCode.escape {
                 return searchEscapeKeyDown()
@@ -39,7 +54,7 @@ extension ClipFloatingViewController {
 
         if KeyCode.shouldTriggerSearch(for: event),
            focusRegion != .search,
-           floatingContentView.headerView.searchField.currentEditor() == nil
+           !floatingContentView.headerView.isSearchFieldFirstResponder
         {
             historyView.activateSearchField(with: event.characters)
             return nil
@@ -238,8 +253,6 @@ extension ClipFloatingViewController: NSGestureRecognizerDelegate {
             return false
         }
 
-        // header：精确排除不应触发聚焦的控件（搜索框、Pin、设置、加号）
-        // 拖拽区域和 chip 区域允许触发，使点击后焦点回到集合列表
         if hitView.isDescendant(of: headerView) {
             return !headerView.isExcludedFromFocusGesture(hitView)
         }

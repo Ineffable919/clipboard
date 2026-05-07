@@ -79,6 +79,9 @@ final class FloatingWindowContentView: NSView {
         headerView.onSearchBecameFirstResponder = { [weak self] in
             self?.historyView.setFocusRegion(.search)
         }
+        headerView.onChipEditingFocusChange = { [weak self] focused in
+            self?.historyView.setFocusRegion(focused ? .chipEditing : .collection)
+        }
 
         PasteDataStore.main.dataList
             .receive(on: DispatchQueue.main)

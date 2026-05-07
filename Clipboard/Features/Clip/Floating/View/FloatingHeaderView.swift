@@ -44,6 +44,7 @@ final class FloatingHeaderView: NSView {
 
     var onSearchBecameFirstResponder: (() -> Void)?
     var onChipSelected: (() -> Void)?
+    var onChipEditingFocusChange: ((Bool) -> Void)?
 
     func isExcludedFromFocusGesture(_ view: NSView) -> Bool {
         view === pinButton || view.isDescendant(of: pinButton) ||
@@ -57,6 +58,10 @@ final class FloatingHeaderView: NSView {
         reloadChips()
     }
 
+    var isSearchFieldFirstResponder: Bool {
+        window?.firstResponder === searchField
+    }
+
     func reloadChips() {
         guard let topVM else { return }
         let chips = topVM.chips()
@@ -68,14 +73,43 @@ final class FloatingHeaderView: NSView {
             dotMode: false,
             compact: true,
             makeConfig: { [weak self] chip, isSelected, dotMode in
-                .init(
+                let isEditing = topVM.editingChipId == chip.id
+                return .init(
                     chip: chip,
                     isSelected: isSelected,
                     dotMode: dotMode,
                     compact: true,
+                    isEditing: isEditing,
+                    editingName: isEditing ? topVM.editingChipName : chip.name,
+                    editingColorIndex: isEditing ? topVM.editingChipColorIndex : chip.colorIndex,
                     action: { [weak self] in
                         self?.chipScrollView.selectedChipId = chip.id
                         self?.chipScrollView.onSelectionChanged?(chip.id)
+                    },
+                    onEdit: { [weak self] in
+                        topVM.startEditingChip(chip)
+                        self?.reloadChips()
+                    },
+                    onDelete: { [weak self] in
+                        self?.confirmDeleteChip(chip)
+                    },
+                    onColorChange: { [weak self] colorIndex in
+                        topVM.updateChip(chip, colorIndex: colorIndex)
+                        self?.reloadChips()
+                    },
+                    onEditingNameChange: { text in
+                        topVM.editingChipName = text
+                    },
+                    onEditingSubmit: { [weak self] in
+                        topVM.commitEditingChip()
+                        self?.reloadChips()
+                    },
+                    onEditingCancel: { [weak self] in
+                        topVM.cancelEditingChip()
+                        self?.reloadChips()
+                    },
+                    onEditingFocusChange: { [weak self] focused in
+                        self?.onChipEditingFocusChange?(focused)
                     },
                     onDrop: { [weak self] model in
                         self?.topVM?.assignModelToChip(model: model, chipId: chip.id) ?? false
@@ -87,6 +121,56 @@ final class FloatingHeaderView: NSView {
             self?.topVM?.setSelectChipId(chip: id)
             self?.onChipSelected?()
         }
+    }
+
+    private func confirmDeleteChip(_ chip: CategoryChip) {
+        guard !chip.isSystem else { return }
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            let count = await PasteDataStore.main.getCountByGroup(groupId: chip.id)
+            if count == 0 {
+                topVM?.removeChip(chip)
+                reloadChips()
+                return
+            }
+
+            let alert = NSAlert()
+            alert.messageText = String(localized: .deleteChipTitle(chip.name))
+            alert.informativeText = String(localized: .deleteChipMessage(chip.name))
+            alert.alertStyle = .warning
+            alert.addButton(withTitle: String(localized: .commonConfirm))
+            alert.addButton(withTitle: String(localized: .commonCancel))
+
+            AppEnvironment.shared.suppressResignKey = true
+            let response = alert.runModal()
+            AppEnvironment.shared.suppressResignKey = false
+
+            guard response == .alertFirstButtonReturn else { return }
+            topVM?.removeChip(chip)
+            reloadChips()
+        }
+    }
+
+    func commitKeyboardEditing() {
+        guard let topVM else { return }
+        if topVM.editingNewChip {
+            topVM.editingNewChip = false
+            topVM.commitNewChipOrCancel(commitIfNonEmpty: true)
+        } else if topVM.editingChipId != nil {
+            topVM.commitEditingChip()
+        }
+        reloadChips()
+    }
+
+    func cancelKeyboardEditing() {
+        guard let topVM else { return }
+        if topVM.editingNewChip {
+            topVM.editingNewChip = false
+            topVM.commitNewChipOrCancel(commitIfNonEmpty: false)
+        } else if topVM.editingChipId != nil {
+            topVM.cancelEditingChip()
+        }
+        reloadChips()
     }
 
     func updateChipSelection() {

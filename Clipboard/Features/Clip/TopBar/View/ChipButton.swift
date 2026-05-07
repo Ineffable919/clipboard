@@ -134,7 +134,7 @@ final class ChipButton: NSView, NSTextFieldDelegate {
             for: .horizontal
         )
         nameField.focusRingMaskView = self
-        nameField.containerCornerRadius = Const.radius
+        nameField.containerCornerRadius = config.compact ? Const.btnRadius : Const.radius
         nameField.onFocusChange = { [weak self] focused in
             self?.handleNameFieldFocusChange(focused)
         }
@@ -678,8 +678,8 @@ private final class ChipTextField: NSTextField {
         let maskRect = focusRingMaskBounds
         NSBezierPath(
             roundedRect: maskRect,
-            xRadius: Const.radius,
-            yRadius: Const.radius
+            xRadius: containerCornerRadius,
+            yRadius: containerCornerRadius
         ).fill()
     }
 

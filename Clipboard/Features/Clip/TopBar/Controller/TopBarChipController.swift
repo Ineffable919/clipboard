@@ -20,10 +20,6 @@ final class TopBarChipController {
     var onFocusRegionChange: ((FocusRegion) -> Void)?
     var onDeactivateSearch: (() -> Void)?
 
-    // MARK: - State
-
-    private(set) var isEditingChipFirstResponder = false
-
     // MARK: - Init
 
     init(
@@ -129,7 +125,6 @@ final class TopBarChipController {
                 self?.cancelNewChip()
             },
             onEditingFocusChange: { [weak self] focused in
-                self?.isEditingChipFirstResponder = focused
                 self?.onFocusRegionChange?(focused ? .chipEditing : .collection)
             }
         )
@@ -146,7 +141,6 @@ final class TopBarChipController {
     private func commitNewChip() {
         guard let topVM, topVM.editingNewChip else { return }
         topVM.editingNewChip = false
-        isEditingChipFirstResponder = false
         topVM.commitNewChipOrCancel(commitIfNonEmpty: true)
         onReloadNeeded?()
         onFocusRegionChange?(.collection)
@@ -155,7 +149,6 @@ final class TopBarChipController {
     private func cancelNewChip() {
         guard let topVM, topVM.editingNewChip else { return }
         topVM.editingNewChip = false
-        isEditingChipFirstResponder = false
         topVM.commitNewChipOrCancel(commitIfNonEmpty: false)
         onReloadNeeded?()
         onFocusRegionChange?(.collection)
@@ -181,21 +174,18 @@ final class TopBarChipController {
 
     private func startEditingChip(_ chip: CategoryChip) {
         guard !chip.isSystem else { return }
-        isEditingChipFirstResponder = false
         topVM?.startEditingChip(chip)
         onReloadNeeded?()
     }
 
     func commitChipEditing(for chipId: Int) {
         guard topVM?.editingChipId == chipId else { return }
-        isEditingChipFirstResponder = false
         topVM?.commitEditingChip()
         onReloadNeeded?()
     }
 
     func cancelChipEditing(for chipId: Int) {
         guard topVM?.editingChipId == chipId else { return }
-        isEditingChipFirstResponder = false
         topVM?.cancelEditingChip()
         onReloadNeeded?()
     }
@@ -207,7 +197,6 @@ final class TopBarChipController {
 
     private func handleEditingChipFocusChange(for chipId: Int, focused: Bool) {
         guard topVM?.editingChipId == chipId else { return }
-        isEditingChipFirstResponder = focused
         onFocusRegionChange?(focused ? .chipEditing : .collection)
     }
 

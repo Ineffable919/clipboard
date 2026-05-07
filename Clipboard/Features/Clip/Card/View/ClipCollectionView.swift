@@ -15,8 +15,10 @@ final class ClipCollectionView: NSCollectionView {
         if result { onBecomeFirstResponder?() }
         return result
     }
-    
-    override var acceptsFirstResponder: Bool { true }
+
+    override var acceptsFirstResponder: Bool {
+        true
+    }
 
     override func draggingSession(_ session: NSDraggingSession, movedTo screenPoint: NSPoint) {
         super.draggingSession(session, movedTo: screenPoint)

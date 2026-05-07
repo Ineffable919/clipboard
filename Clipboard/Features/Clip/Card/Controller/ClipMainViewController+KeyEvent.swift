@@ -48,7 +48,7 @@ extension ClipMainViewController {
             return event
         }
 
-        if topBarView.isEditingChipFirstResponder {
+        if focusRegion == .chipEditing {
             switch event.keyCode {
             case KeyCode.escape:
                 topBarView.cancelKeyboardEditing()
@@ -71,7 +71,8 @@ extension ClipMainViewController {
         }
 
         if KeyCode.shouldTriggerSearch(for: event),
-           !topBarView.searchField.isFirstResponder, focusRegion != .search
+           !topBarView.searchField.isFirstResponder,
+           focusRegion != .search
         {
             if let characters = event.characters, !characters.isEmpty {
                 topBarView.activateSearch(with: characters)
@@ -128,7 +129,7 @@ extension ClipMainViewController {
 
     private func spaceKeyDown(_ event: NSEvent) -> NSEvent? {
         guard !topBarView.searchField.isFirstResponder,
-              !topBarView.isEditingChipFirstResponder,
+              focusRegion != .chipEditing,
               focusRegion == .collection
         else { return event }
 
@@ -140,7 +141,7 @@ extension ClipMainViewController {
 
     private func deleteKeyDown(_ event: NSEvent) -> NSEvent? {
         guard !topBarView.searchField.isFirstResponder,
-              !topBarView.isEditingChipFirstResponder
+              focusRegion != .chipEditing
         else { return event }
         if selectIndexPath.item < dataList.value.count {
             let item = dataList.value[selectIndexPath.item]
