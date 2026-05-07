@@ -61,6 +61,10 @@ final class ClipFloatingWindowController: NSWindowController {
         win.delegate = self
     }
 
+    func resetState() {
+        clipVC.floatingContentView.resetState()
+    }
+
     func configureWindowSharing() {
         guard let win = window as? ClipWindowView else { return }
         win.configureWindowSharing(

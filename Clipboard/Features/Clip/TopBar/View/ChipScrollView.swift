@@ -94,7 +94,6 @@ final class ChipScrollView: NSView {
         makeConfig: ((CategoryChip, Bool, Bool) -> ChipButton.Config)? = nil
     ) {
         self.chips = chips
-        selectedChipId = selectedId
         newChipButton = nil
 
         chipButtons.forEach { $0.removeFromSuperview() }
@@ -125,7 +124,9 @@ final class ChipScrollView: NSView {
             contentStack.addArrangedSubview(btn)
         }
 
+        selectedChipId = selectedId
         invalidateWidth()
+        scrollView.documentView?.scroll(.zero)
     }
 
     // MARK: - Private

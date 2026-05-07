@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import Combine
 import Foundation
 
 final class WindowManager {
@@ -14,7 +15,17 @@ final class WindowManager {
     private let drawerController = ClipMainWindowController.shared
     private let floatingController = ClipFloatingWindowController.shared
 
-    private init() {}
+    private var cancellables = Set<AnyCancellable>()
+
+    private init() {
+        UserDefaults.standard.publisher(for: \.displayMode)
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] newRaw in
+                self?.handleDisplayModeChange(to: newRaw)
+            }
+            .store(in: &cancellables)
+    }
 
     // MARK: - 当前显示模式
 
@@ -52,6 +63,17 @@ final class WindowManager {
         switch displayMode {
         case .drawer: drawerController.configureWindowSharing()
         case .floating: floatingController.configureWindowSharing()
+        }
+    }
+
+    private func handleDisplayModeChange(to newRaw: Int) {
+        switch DisplayMode(rawValue: newRaw) {
+        case .drawer:
+            drawerController.resetState()
+        case .floating:
+            floatingController.resetState()
+        case nil:
+            break
         }
     }
 

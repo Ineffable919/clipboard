@@ -55,7 +55,6 @@ final class FloatingHeaderView: NSView {
     func configure(topVM: TopBarViewModel) {
         self.topVM = topVM
         reloadChips()
-        observeChipChanges()
     }
 
     func reloadChips() {
@@ -166,15 +165,6 @@ final class FloatingHeaderView: NSView {
         .receive(on: DispatchQueue.main)
         .sink { [weak self] in self?.handleBackgroundSettingsChange() }
         .store(in: &cancellables)
-    }
-
-    private func observeChipChanges() {
-        NotificationCenter.default.publisher(for: .categoryChipsDidChange)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.reloadChips()
-            }
-            .store(in: &cancellables)
     }
 
     // MARK: - Background

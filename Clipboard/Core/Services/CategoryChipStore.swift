@@ -8,21 +8,13 @@
 import Combine
 import Foundation
 
-extension Notification.Name {
-    static let categoryChipsDidChange = Notification.Name("categoryChipsDidChange")
-}
-
 final class CategoryChipStore {
     static let shared = CategoryChipStore()
 
     // MARK: - Properties
 
     private(set) var chips: [CategoryChip] = []
-    @Published var selectedChipId: Int = -1 {
-        didSet {
-            notifyChange()
-        }
-    }
+    @Published var selectedChipId: Int = -1
 
     let chipsContentDidChange = PassthroughSubject<Void, Never>()
 
@@ -120,12 +112,5 @@ final class CategoryChipStore {
         PasteUserDefaults.userCategoryChip = chips.filter { !$0.isSystem }
         db.notifyCategoryChipsChanged()
         chipsContentDidChange.send()
-    }
-
-    private func notifyChange() {
-        NotificationCenter.default.post(
-            name: .categoryChipsDidChange,
-            object: nil
-        )
     }
 }

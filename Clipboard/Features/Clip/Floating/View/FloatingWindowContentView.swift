@@ -38,7 +38,16 @@ final class FloatingWindowContentView: NSView {
         fatalError()
     }
 
-    // MARK: - Lifecycle
+    // MARK: - Public API
+
+    func resetState() {
+        topVM.resetFilterState()
+        headerView.clearSearch()
+        headerView.reloadChips()
+        PasteDataStore.main.resetToDefault()
+        historyView.setFocusRegion(.collection)
+        window?.makeFirstResponder(historyView.collectionView)
+    }
 
     // MARK: - Setup
 
@@ -102,7 +111,9 @@ final class FloatingWindowContentView: NSView {
         topVM.filterDidChange
             .receive(on: DispatchQueue.main)
             .sink { [weak self] in
-                self?.topVM.performSearch()
+                guard let self else { return }
+                topVM.performSearch()
+                headerView.updateChipSelection()
             }
             .store(in: &cancellables)
 

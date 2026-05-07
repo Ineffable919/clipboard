@@ -52,6 +52,10 @@ final class ClipMainWindowController: NSWindowController {
         win.collectionBehavior = [.canJoinAllSpaces, .stationary]
     }
 
+    func resetState() {
+        (contentViewController as? ClipMainViewController)?.resetState()
+    }
+
     func configureWindowSharing() {
         guard let win = window as? ClipWindowView else { return }
         win.configureWindowSharing(

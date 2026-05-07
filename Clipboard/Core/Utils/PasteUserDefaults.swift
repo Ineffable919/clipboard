@@ -247,4 +247,9 @@ extension UserDefaults {
         get { integer(forKey: "glassMaterial") }
         set { set(newValue, forKey: "glassMaterial") }
     }
+
+    @objc dynamic var displayMode: Int {
+        get { integer(forKey: PrefKey.displayMode.rawValue) }
+        set { set(newValue, forKey: PrefKey.displayMode.rawValue) }
+    }
 }

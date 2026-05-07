@@ -271,6 +271,15 @@ extension ClipMainViewController {
         }
     }
 
+    func resetState() {
+        topVM.resetFilterState()
+        topBarView.deactivateSearch()
+        topBarView.reloadChips()
+        db.resetToDefault()
+        setFocusRegion(.collection)
+        view.window?.makeFirstResponder(collectionView)
+    }
+
     override func viewDidDisappear() {
         super.viewDidDisappear()
         PasteDataStore.main.clearExpiredData()

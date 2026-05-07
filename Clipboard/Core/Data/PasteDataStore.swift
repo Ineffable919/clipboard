@@ -54,19 +54,6 @@ final class PasteDataStore {
             totalCount = count
             filteredCount = count
         }
-        setupChipObserver()
-    }
-
-    private func setupChipObserver() {
-        NotificationCenter.default.addObserver(
-            forName: .categoryChipsDidChange,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                self?.chipsVersion &+= 1
-            }
-        }
     }
 
     func notifyCategoryChipsChanged() {
