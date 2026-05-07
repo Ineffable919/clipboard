@@ -67,7 +67,6 @@ final class ClipMainWindowController: NSWindowController {
         _ frame: NSRect? = nil,
         _ completionHandler: (@MainActor () -> Void)? = nil
     ) {
-        guard !isAnimating else { return }
         if isVisible {
             dismiss(completionHandler)
         } else {
@@ -78,8 +77,7 @@ final class ClipMainWindowController: NSWindowController {
 
 extension ClipMainWindowController {
     func dismiss(_ completionHandler: (@MainActor () -> Void)? = nil) {
-        guard !isAnimating, isVisible else { return }
-        isAnimating = true
+        guard isVisible else { return }
 
         let view = window?.contentViewController?.view
         NSAnimationContext.runAnimationGroup({ context in
@@ -91,16 +89,12 @@ extension ClipMainWindowController {
             Task { @MainActor in
                 self.window?.resignFirstResponder()
                 self.window?.setIsVisible(false)
-                self.isAnimating = false
                 completionHandler?()
             }
         }
     }
 
     func show(in frame: NSRect?) {
-        guard !isAnimating else { return }
-        isAnimating = true
-
         let frame = frame ?? NSScreen.main?.frame ?? .zero
         AppEnvironment.shared.previousApp = NSWorkspace.shared.frontmostApplication
         window?.setFrame(frame, display: true)

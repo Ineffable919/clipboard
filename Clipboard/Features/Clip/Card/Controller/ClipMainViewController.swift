@@ -261,13 +261,9 @@ extension ClipMainViewController {
             }
         }
 
-        NSAnimationContext.runAnimationGroup({ context in
+        NSAnimationContext.runAnimationGroup { context in
             context.duration = Const.showDuration
             self.view.animator().setFrameOrigin(.zero)
-        }) {
-            Task { @MainActor in
-                ClipMainWindowController.shared.isAnimating = false
-            }
         }
     }
 
