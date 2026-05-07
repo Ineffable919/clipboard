@@ -11,19 +11,29 @@ import SwiftUI
 // MARK: - 通用设置视图
 
 struct GeneralSettingView: View {
-    @State private var launchAtLogin: Bool = LaunchAtLoginHelper.shared
-        .isEnabled
-    @AppStorage(PrefKey.showMenuBarIcon.rawValue) private var showMenuBarIcon =
-        true
-    @AppStorage(PrefKey.showDockIcon.rawValue) private var showDockIcon = false
-    @AppStorage(PrefKey.soundEnabled.rawValue) private var soundEnabled = true
+    @State private var launchAtLogin: Bool = LaunchAtLoginHelper.shared.isEnabled
+
+    @AppStorage(PrefKey.showMenuBarIcon.rawValue)
+    private var showMenuBarIcon = true
+
+    @AppStorage(PrefKey.showDockIcon.rawValue)
+    private var showDockIcon = true
+
+    @AppStorage(PrefKey.soundEnabled.rawValue)
+    private var soundEnabled = true
+
     @State private var selectedPasteTarget: PasteTargetMode =
         PasteUserDefaults.pasteDirect ? .toApp : .toClipboard
-    @AppStorage(PrefKey.pasteOnlyText.rawValue) private var pasteAsPlainText =
-        false
-    @AppStorage(PrefKey.removeTailingNewline.rawValue) private var removeTailingNewline = false
+
+    @AppStorage(PrefKey.pasteOnlyText.rawValue)
+    private var pasteAsPlainText = false
+
+    @AppStorage(PrefKey.removeTailingNewline.rawValue)
+    private var removeTailingNewline = false
+
     @State private var selectedHistoryTimeUnit: HistoryTimeUnit =
         .init(rawValue: PasteUserDefaults.historyTime)
+
     @State private var launchAtLoginTimer: Timer?
 
     var body: some View {
