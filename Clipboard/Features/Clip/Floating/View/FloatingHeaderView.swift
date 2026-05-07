@@ -62,7 +62,27 @@ final class FloatingHeaderView: NSView {
         let chips = topVM.chips()
         let selectedId = topVM.getSelectChipId()
 
-        chipScrollView.reload(chips: chips, selectedId: selectedId, dotMode: false, compact: true)
+        chipScrollView.reload(
+            chips: chips,
+            selectedId: selectedId,
+            dotMode: false,
+            compact: true,
+            makeConfig: { [weak self] chip, isSelected, dotMode in
+                .init(
+                    chip: chip,
+                    isSelected: isSelected,
+                    dotMode: dotMode,
+                    compact: true,
+                    action: { [weak self] in
+                        self?.chipScrollView.selectedChipId = chip.id
+                        self?.chipScrollView.onSelectionChanged?(chip.id)
+                    },
+                    onDrop: { [weak self] model in
+                        self?.topVM?.assignModelToChip(model: model, chipId: chip.id) ?? false
+                    }
+                )
+            }
+        )
         chipScrollView.onSelectionChanged = { [weak self] id in
             self?.topVM?.setSelectChipId(chip: id)
             self?.onChipSelected?()
@@ -352,8 +372,6 @@ final class FloatingSearchField: NSSearchField {
         super.init(frame: frame)
         placeholderString = String(localized: .search)
         controlSize = .large
-        focusRingType = .default
-        font = .systemFont(ofSize: 13)
     }
 
     @available(*, unavailable)

@@ -216,25 +216,27 @@ final class ChipButton: NSView, NSTextFieldDelegate {
             return
         }
 
-        if config.chip.id == -1 {
-            let icon: NSImage? = NSImage(
-                systemSymbolName:
-                "clock.arrow.trianglehead.counterclockwise.rotate.90",
-                accessibilityDescription: nil
-            )
-            iconImageView.image = icon?.withSymbolConfiguration(
-                .init(pointSize: config.iconContainerSize, weight: .regular)
-            )
-            iconImageView.snp.remakeConstraints { make in
-                make.width.height.equalTo(config.iconContainerSize)
+        if !config.compact {
+            if config.chip.id == -1 {
+                let icon: NSImage? = NSImage(
+                    systemSymbolName:
+                    "clock.arrow.trianglehead.counterclockwise.rotate.90",
+                    accessibilityDescription: nil
+                )
+                iconImageView.image = icon?.withSymbolConfiguration(
+                    .init(pointSize: config.iconContainerSize, weight: .regular)
+                )
+                iconImageView.snp.remakeConstraints { make in
+                    make.width.height.equalTo(config.iconContainerSize)
+                }
+                stack.addArrangedSubview(iconImageView)
+            } else {
+                let colorIndex =
+                    config.isEditing
+                        ? config.editingColorIndex : config.chip.colorIndex
+                configureDot(colorIndex: colorIndex)
+                stack.addArrangedSubview(dotContainerView)
             }
-            stack.addArrangedSubview(iconImageView)
-        } else {
-            let colorIndex =
-                config.isEditing
-                    ? config.editingColorIndex : config.chip.colorIndex
-            configureDot(colorIndex: colorIndex)
-            stack.addArrangedSubview(dotContainerView)
         }
 
         nameField.stringValue = displayedName
@@ -318,6 +320,19 @@ final class ChipButton: NSView, NSTextFieldDelegate {
                 : .clear
         }
 
+        if config.compact {
+            let chipColor = compactChipColor()
+            if config.isSelected || config.isEditing {
+                return chipColor
+            }
+            if isHovering || isDraggingOver {
+                return isDark
+                    ? .quaternaryLabelColor.withAlphaComponent(0.06)
+                    : .labelColor.withAlphaComponent(0.06)
+            }
+            return .clear
+        }
+
         if config.isSelected || config.isEditing {
             return isDark
                 ? .quaternaryLabelColor : .labelColor.withAlphaComponent(0.1)
@@ -332,8 +347,17 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         return .clear
     }
 
+    private func compactChipColor() -> NSColor {
+        config.chip.id == -1
+            ? .controlAccentColor
+            : CategoryChip.nsColor(at: config.chip.colorIndex, alpha: 1.0)
+    }
+
     private func resolvedForegroundColor() -> NSColor {
-        .labelColor
+        if config.compact, config.isSelected || config.isEditing {
+            return .white
+        }
+        return .labelColor
     }
 
     override var intrinsicContentSize: NSSize {
