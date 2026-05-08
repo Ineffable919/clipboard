@@ -181,8 +181,13 @@ final class FloatingHeaderView: NSView {
         appendNewChipPlaceholder()
     }
 
-    private func commitNewChip() { endNewChip(commit: true) }
-    private func cancelNewChip() { endNewChip(commit: false) }
+    private func commitNewChip() {
+        endNewChip(commit: true)
+    }
+
+    private func cancelNewChip() {
+        endNewChip(commit: false)
+    }
 
     private func endNewChip(commit: Bool) {
         guard let topVM, topVM.editingNewChip else { return }

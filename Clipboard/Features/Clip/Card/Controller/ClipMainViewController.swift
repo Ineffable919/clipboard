@@ -21,6 +21,8 @@ final class ClipMainViewController: NSViewController {
     let db = PasteDataStore.main
     let store = CategoryChipStore.shared
 
+    let presenter = ClipListPresenter()
+
     var monitorToken: Any?
     var flagsMonitorToken: Any?
 
@@ -31,9 +33,6 @@ final class ClipMainViewController: NSViewController {
     private let pauseButton = NSButton()
     private var pauseTimer: Timer?
     private var appearanceObservation: NSKeyValueObservation?
-
-    var lastBackgroundType: Int = 0
-    var lastGlassMaterial: Int = 2
 
     // MARK: - Preview
 
@@ -71,76 +70,22 @@ final class ClipMainViewController: NSViewController {
 
     // MARK: - Views
 
-    lazy var effectView: NSView = buildEffectView()
-
-    private func buildEffectView() -> NSView {
-        if #available(macOS 26.0, *) {
-            let bgType = BackgroundType(rawValue: PasteUserDefaults.backgroundType) ?? .liquid
-            if bgType == .liquid {
-                let glassView = NSGlassEffectView()
-                glassView.frame = view.frame
-                glassView.cornerRadius = Const.windowRadis
-                glassView.contentView = contentView
-                return glassView
-            }
-        }
-
-        let visualEffect = NSVisualEffectView()
-        visualEffect.wantsLayer = true
-        visualEffect.frame = view.frame
-        visualEffect.state = .active
-        visualEffect.blendingMode = .behindWindow
-        if #available(macOS 26.0, *) {
-            visualEffect.layer?.cornerRadius = Const.windowRadis
-        }
-        let material = GlassMaterial(rawValue: PasteUserDefaults.glassMaterial) ?? .regular
-        visualEffect.material = material.nsMaterial
-        return visualEffect
-    }
-
-    func rebuildEffectView() {
-        contentView.removeFromSuperview()
-
-        let oldView = effectView
-        oldView.removeFromSuperview()
-
-        let newView = buildEffectView()
-        effectView = newView
-
-        view.addSubview(newView)
-
-        if newView is NSVisualEffectView {
-            newView.addSubview(contentView)
-            contentView.snp.makeConstraints { make in
-                make.edges.equalToSuperview()
-            }
-        }
-
+    lazy var bg: BackgroundEffectController = {
         let inner: CGFloat =
-            if #available(macOS 26.0, *) {
-                8.0
-            } else { 0.0 }
+            if #available(macOS 26.0, *) { 8.0 } else { 0.0 }
+        return BackgroundEffectController(
+            cornerRadius: Const.windowRadis,
+            innerPadding: inner
+        )
+    }()
 
-        newView.snp.makeConstraints { make in
-            make.leading.equalTo(inner)
-            make.trailing.equalTo(-inner)
-            make.top.equalToSuperview()
-            make.bottom.equalTo(-inner)
-        }
-
-        view.layoutSubtreeIfNeeded()
+    var effectView: NSView {
+        bg.effectView
     }
 
-    lazy var contentView: NSView = {
-        let view = NSView()
-        view.wantsLayer = true
-        view.layer?.backgroundColor = NSColor.clear.cgColor
-        if #available(macOS 26.0, *) {
-            view.layer?.cornerRadius = Const.windowRadis
-        }
-        view.layer?.masksToBounds = true
-        return view
-    }()
+    var contentView: NSView {
+        bg.contentContainer
+    }
 
     lazy var topBarView: TopBarView = {
         let bar = TopBarView()
@@ -227,6 +172,7 @@ extension ClipMainViewController {
         initView()
         initDiffableDataSource()
         initFocus()
+        initListPresenter()
         initObserve()
     }
 
@@ -296,30 +242,12 @@ extension ClipMainViewController {
 extension ClipMainViewController {
     func initView() {
         view.wantsLayer = true
-        view.addSubview(effectView)
-        if effectView is NSVisualEffectView {
-            effectView.addSubview(contentView)
-            contentView.snp.makeConstraints { make in
-                make.edges.equalToSuperview()
-            }
-        }
+        bg.install(in: view)
 
         contentView.addSubview(scrollView)
         contentView.addSubview(topBarView)
         contentView.addSubview(emptyStateView)
         setupPauseIndicator()
-
-        let inner: CGFloat =
-            if #available(macOS 26.0, *) {
-                8.0
-            } else { 0.0 }
-
-        effectView.snp.makeConstraints { make in
-            make.leading.equalTo(inner)
-            make.trailing.equalTo(-inner)
-            make.top.equalToSuperview()
-            make.bottom.equalTo(-inner)
-        }
 
         scrollView.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview()
@@ -416,21 +344,6 @@ extension ClipMainViewController {
         updateEmptyState()
     }
 
-    func applyLoadMoreSnapshot() {
-        var snapshot = diffableDataSource.snapshot()
-        let existingIds = Set(snapshot.itemIdentifiers.map(\.uniqueId))
-        let newItems = dataList.value.filter {
-            !existingIds.contains($0.uniqueId)
-        }
-        guard !newItems.isEmpty else {
-            updateEmptyState()
-            return
-        }
-        snapshot.appendItems(newItems, toSection: .main)
-        diffableDataSource.apply(snapshot, animatingDifferences: false)
-        updateEmptyState()
-    }
-
     func restoreSelection() {
         guard !dataList.value.isEmpty else { return }
         collectionView.selectionIndexPaths = [selectIndexPath]
@@ -482,18 +395,46 @@ extension ClipMainViewController {
     }
 }
 
+// MARK: - List Presenter
+
+extension ClipMainViewController {
+    func initListPresenter() {
+        presenter.applyFull = { [weak self] _, animating, completion in
+            self?.applySnapshot(animating: animating, completion: completion)
+        }
+        presenter.appendItems = { [weak self] newItems in
+            guard let self else { return }
+            var snapshot = diffableDataSource.snapshot()
+            snapshot.appendItems(newItems, toSection: .main)
+            diffableDataSource.apply(snapshot, animatingDifferences: false)
+            updateEmptyState()
+        }
+        presenter.currentSnapshotItems = { [weak self] in
+            self?.diffableDataSource.snapshot().itemIdentifiers ?? []
+        }
+        presenter.resetSelection = { [weak self] in
+            self?.resetSelectIndex()
+            self?.restoreSelection()
+        }
+        presenter.restoreSelection = { [weak self] in self?.restoreSelection() }
+        presenter.adjustAfterDelete = { [weak self] in self?.adjustSelectionAfterDelete() }
+        presenter.updateEmptyState = { [weak self] _ in self?.updateEmptyState() }
+
+        presenter.previewIsShown = { [weak self] in self?.previewPopover?.isShown == true }
+        presenter.closePreview = { [weak self] in self?.closePreviewPopover() }
+        presenter.reopenPreview = { [weak self] in self?.reopenPreviewForSelectedItem() }
+
+        presenter.isVerticalScroll = false
+        presenter.loadMoreThreshold = (Const.cardSize + Const.cardSpace) * 2
+
+        presenter.startObserving(scrollView: scrollView)
+    }
+}
+
 // MARK: - Observe
 
 extension ClipMainViewController {
     func initObserve() {
-        dataList
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                guard let self else { return }
-                handleDataChange(db.lastDataChangeType)
-            }
-            .store(in: &cancellables)
-
         topBarView.searchField.$text
             .removeDuplicates()
             .dropFirst()
@@ -520,36 +461,6 @@ extension ClipMainViewController {
                 topVM.performSearch()
             }
             .store(in: &cancellables)
-
-        scrollView.contentView.postsBoundsChangedNotifications = true
-
-        NotificationCenter.default.publisher(
-            for: NSView.boundsDidChangeNotification,
-            object: scrollView.contentView
-        )
-        .throttle(
-            for: .milliseconds(200),
-            scheduler: DispatchQueue.main,
-            latest: true
-        )
-        .sink { [weak self] _ in
-            self?.checkLoadMore()
-        }
-        .store(in: &cancellables)
-
-        Publishers.Merge(
-            UserDefaults.standard.publisher(for: \.backgroundType).map { _ in () },
-            UserDefaults.standard.publisher(for: \.glassMaterial).map { _ in () }
-        )
-        .receive(on: DispatchQueue.main)
-        .sink { [weak self] _ in
-            guard let self else { return }
-            handleEffectViewSettingsChange()
-        }
-        .store(in: &cancellables)
-
-        lastBackgroundType = PasteUserDefaults.backgroundType
-        lastGlassMaterial = PasteUserDefaults.glassMaterial
 
         topVM.$isPaused
             .receive(on: DispatchQueue.main)
@@ -595,56 +506,6 @@ extension ClipMainViewController {
         pauseTimer = nil
     }
 
-    private func handleEffectViewSettingsChange() {
-        let currentBgType = PasteUserDefaults.backgroundType
-        let currentMaterial = PasteUserDefaults.glassMaterial
-
-        guard currentBgType != lastBackgroundType || currentMaterial != lastGlassMaterial else {
-            return
-        }
-
-        let bgTypeChanged = currentBgType != lastBackgroundType
-        lastBackgroundType = currentBgType
-        lastGlassMaterial = currentMaterial
-
-        if !bgTypeChanged, let visualEffect = effectView as? NSVisualEffectView {
-            let material = GlassMaterial(rawValue: currentMaterial) ?? .regular
-            visualEffect.material = material.nsMaterial
-        } else {
-            rebuildEffectView()
-        }
-    }
-
-    ///  UI 刷新策略
-    private func handleDataChange(_ changeType: PasteDataStore.DataChangeType) {
-        let shouldDismissPreview = changeType != .loadMore && changeType != .update
-        let wasShowingPreview = previewPopover?.isShown == true
-
-        if shouldDismissPreview, wasShowingPreview {
-            closePreviewPopover()
-        }
-
-        switch changeType {
-        case .delete:
-            applySnapshot(animating: true) { [weak self] in
-                self?.adjustSelectionAfterDelete()
-            }
-        case .new, .searchFilter, .moveToFirst, .reset:
-            applySnapshot(animating: false)
-            resetSelectIndex()
-            restoreSelection()
-        case .loadMore:
-            applyLoadMoreSnapshot()
-        case .update:
-            applySnapshot(animating: false)
-            restoreSelection()
-        }
-
-        if changeType == .new || changeType == .update, wasShowingPreview {
-            reopenPreviewForSelectedItem()
-        }
-    }
-
     private func adjustSelectionAfterDelete() {
         guard !dataList.value.isEmpty else { return }
         let safeItem = min(selectIndexPath.item, dataList.value.count - 1)
@@ -659,17 +520,5 @@ extension ClipMainViewController {
         let isEmpty = dataList.value.isEmpty
         emptyStateView.isHidden = !isEmpty
         scrollView.isHidden = isEmpty
-    }
-
-    private func checkLoadMore() {
-        guard db.hasMoreData, !db.isLoadingPage else { return }
-
-        let clipView = scrollView.contentView
-        let contentWidth = collectionView.frame.width
-        let visibleMaxX = clipView.bounds.origin.x + clipView.bounds.width
-        let threshold = (Const.cardSize + Const.cardSpace) * 2
-
-        guard contentWidth - visibleMaxX < threshold else { return }
-        db.loadNextPage()
     }
 }

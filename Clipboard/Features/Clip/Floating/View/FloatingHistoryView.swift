@@ -110,6 +110,7 @@ final class FloatingHistoryView: NSView {
     private let pd = PasteDataStore.main
     private let env = AppEnvironment.shared
     private weak var topVM: TopBarViewModel?
+    private let presenter = ClipListPresenter()
 
     var dataList: [PasteboardModel] = []
     var selectedIndex: Int = 0
@@ -134,16 +135,56 @@ final class FloatingHistoryView: NSView {
 
     // MARK: - Public API
 
+    func setPreviewHooks(
+        isShown: @escaping () -> Bool,
+        close: @escaping () -> Void,
+        reopen: @escaping () -> Void
+    ) {
+        presenter.previewIsShown = isShown
+        presenter.closePreview = close
+        presenter.reopenPreview = reopen
+    }
+
     func configure(topVM: TopBarViewModel) {
         self.topVM = topVM
         dataList = pd.dataList.value
         env.focusRegion = .collection
-        applySnapshot(scrollToTop: true)
-        observeData()
+        applySnapshot()
+        resetToFirst()
+        configurePresenter()
         Task { @MainActor [weak self] in
             guard let self else { return }
             window?.makeFirstResponder(collectionView)
         }
+    }
+
+    private func configurePresenter() {
+        presenter.applyFull = { [weak self] items, animating, completion in
+            guard let self else { return }
+            dataList = items
+            applySnapshot(animating: animating)
+            completion?()
+        }
+        presenter.appendItems = { [weak self] newItems in
+            guard let self else { return }
+            dataList.append(contentsOf: newItems)
+            var snapshot = dataSource.snapshot()
+            snapshot.appendItems(newItems, toSection: 0)
+            dataSource.apply(snapshot, animatingDifferences: false)
+        }
+        presenter.currentSnapshotItems = { [weak self] in self?.dataList ?? [] }
+        presenter.resetSelection = { [weak self] in self?.resetToFirst() }
+        presenter.restoreSelection = { [weak self] in self?.restoreSelection() }
+        presenter.adjustAfterDelete = { [weak self] in self?.adjustSelectionAfterDelete() }
+        presenter.updateEmptyState = { [weak self] isEmpty in
+            self?.emptyStateView.isHidden = !isEmpty
+            self?.scrollView.isHidden = isEmpty
+        }
+
+        presenter.isVerticalScroll = true
+        presenter.loadMoreThreshold = (FloatConst.cardHeight + FloatConst.cardSpacing) * 5
+
+        presenter.startObserving(scrollView: scrollView)
     }
 
     func setFocusRegion(_ region: FocusRegion) {
@@ -320,15 +361,6 @@ final class FloatingHistoryView: NSView {
         emptyStateView.isHidden = true
         addSubview(emptyStateView)
 
-        scrollView.contentView.postsBoundsChangedNotifications = true
-        NotificationCenter.default.publisher(
-            for: NSView.boundsDidChangeNotification,
-            object: scrollView.contentView
-        )
-        .throttle(for: .milliseconds(200), scheduler: DispatchQueue.main, latest: true)
-        .sink { [weak self] _ in self?.checkLoadMore() }
-        .store(in: &cancellables)
-
         scrollView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
@@ -341,70 +373,17 @@ final class FloatingHistoryView: NSView {
 
     // MARK: - Data
 
-    private func observeData() {
-        pd.dataList
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                guard let self else { return }
-                handleDataChange(pd.lastDataChangeType)
-            }
-            .store(in: &cancellables)
-    }
-
-    private func handleDataChange(_ changeType: PasteDataStore.DataChangeType) {
-        let wasEmpty = dataList.isEmpty
-        dataList = pd.dataList.value
-
-        switch changeType {
-        case .new, .searchFilter, .reset, .moveToFirst:
-            applySnapshot(scrollToTop: true)
-        case .delete:
-            applySnapshot(animating: true)
-            adjustSelectionAfterDelete()
-        case .loadMore:
-            applyLoadMoreSnapshot()
-        case .update:
-            applySnapshot()
-            restoreSelection()
-        }
-
-        updateEmptyState()
-
-        if wasEmpty, !dataList.isEmpty {
-            selectRow(0)
-        }
-    }
-
-    private func applySnapshot(
-        scrollToTop: Bool = false,
-        animating: Bool = false
-    ) {
+    private func applySnapshot(animating: Bool = false) {
         var snapshot = NSDiffableDataSourceSnapshot<Int, PasteboardModel>()
         snapshot.appendSections([0])
         snapshot.appendItems(dataList, toSection: 0)
         dataSource.apply(snapshot, animatingDifferences: animating)
-        updateEmptyState()
-        if scrollToTop, !dataList.isEmpty {
-            selectRow(0)
-            collectionView.scroll(.zero)
-        } else {
-            restoreSelection()
-        }
     }
 
-    private func applyLoadMoreSnapshot() {
-        var snapshot = dataSource.snapshot()
-        let existingIds = Set(snapshot.itemIdentifiers.map(\.uniqueId))
-        let newItems = dataList.filter { !existingIds.contains($0.uniqueId) }
-        guard !newItems.isEmpty else { return }
-        snapshot.appendItems(newItems, toSection: 0)
-        dataSource.apply(snapshot, animatingDifferences: false)
-    }
-
-    private func updateEmptyState() {
-        let isEmpty = dataList.isEmpty
-        emptyStateView.isHidden = !isEmpty
-        scrollView.isHidden = isEmpty
+    private func resetToFirst() {
+        guard !dataList.isEmpty else { return }
+        selectRow(0)
+        collectionView.scroll(.zero)
     }
 
     private func adjustSelectionAfterDelete() {
@@ -429,18 +408,6 @@ final class FloatingHistoryView: NSView {
         collectionView.selectionIndexPaths = [
             IndexPath(item: index, section: 0),
         ]
-    }
-
-    // MARK: - Load More
-
-    private func checkLoadMore() {
-        guard pd.hasMoreData, !pd.isLoadingPage else { return }
-        let clipView = scrollView.contentView
-        let contentHeight = collectionView.frame.height
-        let visibleMaxY = clipView.bounds.origin.y + clipView.bounds.height
-        let threshold = (FloatConst.cardHeight + FloatConst.cardSpacing) * 5
-        guard contentHeight - visibleMaxY < threshold else { return }
-        pd.loadNextPage()
     }
 
     // MARK: - Scroll

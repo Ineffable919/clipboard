@@ -58,6 +58,15 @@ final class ClipFloatingViewController: NSViewController {
             self?.togglePreview(at: index)
         }
 
+        floatingContentView.historyView.setPreviewHooks(
+            isShown: { [weak self] in self?.previewPopover?.isShown == true },
+            close: { [weak self] in self?.closePreview() },
+            reopen: { [weak self] in
+                guard let self else { return }
+                openPreview(at: floatingContentView.historyView.selectedIndex)
+            }
+        )
+
         floatingContentView.headerView.onChipSelected = { [weak self] in
             self?.focusCollection()
         }
