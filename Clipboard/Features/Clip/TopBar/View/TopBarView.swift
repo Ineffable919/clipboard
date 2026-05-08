@@ -41,6 +41,7 @@ final class TopBarView: NSView {
     private(set) var isSearching = false
     private(set) var topVM: TopBarViewModel?
     private var cancellables = Set<AnyCancellable>()
+    private var shouldSkipNextTokenSync = false
 
     private lazy var chipController = TopBarChipController(
         topVM: topVM,
@@ -293,12 +294,19 @@ final class TopBarView: NSView {
 
     private func syncTokensToSearchField() {
         guard let topVM else { return }
+        if shouldSkipNextTokenSync {
+            shouldSkipNextTokenSync = false
+            updateChipSelection()
+            return
+        }
+
         searchField.clearTokensOnly()
         searchField.insertTokens(topVM.tags)
         updateChipSelection()
     }
 
     private func handleTokenDeletedFromSearchField(_ tag: InputTag) {
+        shouldSkipNextTokenSync = true
         topVM?.removeTag(tag)
     }
 
@@ -337,7 +345,7 @@ final class TopBarView: NSView {
 
         for char in text {
             if queryIndex < query.endIndex, char == query[queryIndex] {
-                text.formIndex(after: &queryIndex)
+                query.formIndex(after: &queryIndex)
             }
         }
 

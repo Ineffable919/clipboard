@@ -40,18 +40,13 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         tv.isEditable = true
         tv.isSelectable = true
         tv.font = .preferredFont(forTextStyle: .callout)
+        tv.textColor = .labelColor
         tv.writingToolsBehavior = .none
         tv.isAutomaticDataDetectionEnabled = false
         tv.isAutomaticLinkDetectionEnabled = false
 
-        let paragraphStyle = Self.fixedParagraphStyle
-
-        tv.typingAttributes = [
-            .font: tv.font as Any,
-            .foregroundColor: NSColor.labelColor,
-            .paragraphStyle: paragraphStyle,
-        ]
-        tv.defaultParagraphStyle = paragraphStyle
+        tv.applyTypingAttributes()
+        tv.defaultParagraphStyle = Self.fixedParagraphStyle
         tv.textContainerInset = NSSize(
             width: Metrics.horizontalInset,
             height: Metrics.verticalInset
@@ -87,6 +82,14 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         return style
     }()
 
+    private var plainTextAttributes: [NSAttributedString.Key: Any] {
+        [
+            .font: font as Any,
+            .foregroundColor: NSColor.labelColor,
+            .paragraphStyle: Self.fixedParagraphStyle,
+        ]
+    }
+
     override var typingAttributes: [NSAttributedString.Key: Any] {
         didSet {
             let current = typingAttributes[.paragraphStyle] as? NSParagraphStyle
@@ -109,7 +112,10 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         for tag in tags {
             let insertIndex = findTokenEndIndex()
             storage.insert(NSAttributedString.makeToken(for: tag), at: insertIndex)
-            storage.insert(NSAttributedString(string: " "), at: insertIndex + 1)
+            storage.insert(
+                NSAttributedString(string: " ", attributes: plainTextAttributes),
+                at: insertIndex + 1
+            )
         }
         storage.endEditing()
 
@@ -222,9 +228,32 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         onTextChanged?(getPlainText())
     }
 
+    private func applyTypingAttributes() {
+        typingAttributes = plainTextAttributes
+    }
+
+    private func updateTextAppearance() {
+        textColor = .labelColor
+        insertionPointColor = .labelColor
+        applyTypingAttributes()
+
+        guard let storage = textStorage, storage.length > 0 else { return }
+
+        let selectedRange = selectedRange()
+        let fullRange = NSRange(location: 0, length: storage.length)
+        storage.beginEditing()
+        storage.enumerateAttribute(.attachment, in: fullRange, options: []) { value, range, _ in
+            guard value == nil else { return }
+            storage.addAttributes(plainTextAttributes, range: range)
+        }
+        storage.endEditing()
+        setSelectedRange(selectedRange)
+    }
+
     private func moveCursorToEnd() {
         let end = textStorage?.length ?? 0
         setSelectedRange(NSRange(location: end, length: 0))
+        applyTypingAttributes()
         scrollRangeToVisible(selectedRange())
     }
 
@@ -340,6 +369,11 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
     override func didChangeText() {
         super.didChangeText()
         scrollRangeToVisible(selectedRange())
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        updateTextAppearance()
     }
 
     override func becomeFirstResponder() -> Bool {
