@@ -463,6 +463,12 @@ extension ClipMainViewController {
         guard region != focusRegion else { return }
         focusRegion = region
         updateSelectedItemBorder()
+        if region == .collection {
+            Task { @MainActor [weak self] in
+                guard let self, focusRegion == .collection else { return }
+                view.window?.makeFirstResponder(collectionView)
+            }
+        }
     }
 
     func updateSelectedItemBorder() {
