@@ -443,7 +443,11 @@ extension ClipMainViewController {
 extension ClipMainViewController {
     func initFocus() {
         topBarView.onFocusRegionChange = { [weak self] region in
-            self?.setFocusRegion(region)
+            guard let self else { return }
+            setFocusRegion(region)
+            if region == .collection {
+                view.window?.makeFirstResponder(collectionView)
+            }
         }
 
         topBarView.searchField.onBecomeFirstResponder = { [weak self] in
