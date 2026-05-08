@@ -47,10 +47,12 @@ final class FloatingHeaderView: NSView {
     var onChipEditingFocusChange: ((Bool) -> Void)?
 
     func isExcludedFromFocusGesture(_ view: NSView) -> Bool {
-        view === pinButton || view.isDescendant(of: pinButton) ||
+        let isEditingChip = topVM?.isEditingChip == true || topVM?.editingNewChip == true
+        return view === pinButton || view.isDescendant(of: pinButton) ||
             view === searchField || view.isDescendant(of: searchField) ||
             view === settingsBtn || view.isDescendant(of: settingsBtn) ||
-            view === addChipBtn || view.isDescendant(of: addChipBtn)
+            view === addChipBtn || view.isDescendant(of: addChipBtn) ||
+            (isEditingChip && view.isDescendant(of: chipScrollView))
     }
 
     func configure(topVM: TopBarViewModel) {
@@ -119,8 +121,75 @@ final class FloatingHeaderView: NSView {
         )
         chipScrollView.onSelectionChanged = { [weak self] id in
             self?.topVM?.setSelectChipId(chip: id)
+            self?.chipScrollView.scrollToChip(id: id)
             self?.onChipSelected?()
         }
+
+        if topVM.editingNewChip {
+            appendNewChipPlaceholder()
+        }
+    }
+
+    // MARK: - New Chip Creation
+
+    private func startCreatingChip() {
+        guard let topVM else { return }
+        if topVM.editingNewChip { commitNewChip() }
+        if topVM.editingChipId != nil { topVM.commitEditingChip() }
+        topVM.editingNewChip = true
+        topVM.newChipName = String(localized: .untitled)
+        reloadChips()
+    }
+
+    private func appendNewChipPlaceholder() {
+        guard let topVM else { return }
+        let placeholder = CategoryChip(
+            id: Int.min,
+            name: topVM.newChipName,
+            colorIndex: topVM.newChipColorIndex,
+            isSystem: false
+        )
+        let config = ChipButton.Config(
+            chip: placeholder,
+            isSelected: true,
+            dotMode: false,
+            compact: true,
+            isEditing: true,
+            editingName: topVM.newChipName,
+            editingColorIndex: topVM.newChipColorIndex,
+            action: {},
+            onColorChange: { [weak self] colorIndex in
+                self?.topVM?.newChipColorIndex = colorIndex
+                self?.refreshNewChipPlaceholder()
+            },
+            onEditingNameChange: { [weak self] text in
+                self?.topVM?.newChipName = text
+            },
+            onEditingSubmit: { [weak self] in self?.commitNewChip() },
+            onEditingCancel: { [weak self] in self?.cancelNewChip() },
+            onEditingFocusChange: { [weak self] focused in
+                self?.onChipEditingFocusChange?(focused)
+            }
+        )
+        chipScrollView.appendNewChipButton(config: config)
+        chipScrollView.scrollToEnd()
+    }
+
+    private func refreshNewChipPlaceholder() {
+        guard let topVM, topVM.editingNewChip else { return }
+        chipScrollView.removeNewChipButton()
+        appendNewChipPlaceholder()
+    }
+
+    private func commitNewChip() { endNewChip(commit: true) }
+    private func cancelNewChip() { endNewChip(commit: false) }
+
+    private func endNewChip(commit: Bool) {
+        guard let topVM, topVM.editingNewChip else { return }
+        topVM.editingNewChip = false
+        topVM.commitNewChipOrCancel(commitIfNonEmpty: commit)
+        reloadChips()
+        if commit { onChipSelected?() }
     }
 
     private func confirmDeleteChip(_ chip: CategoryChip) {
@@ -154,23 +223,21 @@ final class FloatingHeaderView: NSView {
     func commitKeyboardEditing() {
         guard let topVM else { return }
         if topVM.editingNewChip {
-            topVM.editingNewChip = false
-            topVM.commitNewChipOrCancel(commitIfNonEmpty: true)
+            commitNewChip()
         } else if topVM.editingChipId != nil {
             topVM.commitEditingChip()
+            reloadChips()
         }
-        reloadChips()
     }
 
     func cancelKeyboardEditing() {
         guard let topVM else { return }
         if topVM.editingNewChip {
-            topVM.editingNewChip = false
-            topVM.commitNewChipOrCancel(commitIfNonEmpty: false)
+            cancelNewChip()
         } else if topVM.editingChipId != nil {
             topVM.cancelEditingChip()
+            reloadChips()
         }
-        reloadChips()
     }
 
     func updateChipSelection() {
@@ -189,6 +256,7 @@ final class FloatingHeaderView: NSView {
         if let text, !text.isEmpty {
             searchField.stringValue = text
             topVM?.setQuery(text: text)
+            searchField.currentEditor()?.selectedRange = NSRange(location: text.utf16.count, length: 0)
         }
     }
 
@@ -246,8 +314,7 @@ final class FloatingHeaderView: NSView {
         }
 
         addChipBtn.action = { [weak self] in
-            self?.topVM?.editingNewChip = true
-            self?.reloadChips()
+            self?.startCreatingChip()
         }
 
         chipScrollView.snp.makeConstraints { make in

@@ -162,4 +162,22 @@ final class ChipScrollView: NSView {
         newChipButton = nil
         invalidateWidth()
     }
+
+    // MARK: - Scroll To Visible
+
+    func scrollToChip(id: Int) {
+        guard scrollMode,
+              let index = chips.firstIndex(where: { $0.id == id }),
+              index < chipButtons.count
+        else { return }
+        let btn = chipButtons[index]
+        Task { @MainActor in btn.scrollToVisible(btn.bounds) }
+    }
+
+    func scrollToEnd() {
+        guard scrollMode else { return }
+        let target = (newChipButton ?? chipButtons.last)
+        guard let target else { return }
+        Task { @MainActor in target.scrollToVisible(target.bounds) }
+    }
 }
