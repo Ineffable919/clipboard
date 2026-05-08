@@ -72,6 +72,11 @@ private final class FloatingCollectionItem: NSCollectionViewItem {
         set { cardView.onCopy = newValue }
     }
 
+    var onEdit: (() -> Void)? {
+        get { cardView.onEdit }
+        set { cardView.onEdit = newValue }
+    }
+
     var onDelete: (() -> Void)? {
         get { cardView.onDelete }
         set { cardView.onDelete = newValue }
@@ -80,6 +85,11 @@ private final class FloatingCollectionItem: NSCollectionViewItem {
     var onTogglePreview: (() -> Void)? {
         get { cardView.onTogglePreview }
         set { cardView.onTogglePreview = newValue }
+    }
+
+    var onAssignToChip: ((Int) -> Void)? {
+        get { cardView.onAssignToChip }
+        set { cardView.onAssignToChip = newValue }
     }
 }
 
@@ -351,9 +361,12 @@ final class FloatingHistoryView: NSView {
                 self?.pasteItem(at: row, isAttribute: false)
             }
             item.onCopy = { [weak self] in self?.copyItem(at: row) }
+            item.onEdit = { [weak self] in self?.openEditWindow(at: row) }
             item.onDelete = { [weak self] in self?.requestDelete(at: row) }
-            item.onTogglePreview = { [weak self] in
-                self?.onTogglePreview?(row)
+            item.onTogglePreview = { [weak self] in self?.onTogglePreview?(row) }
+            item.onAssignToChip = { [weak self] chipId in
+                guard let self, row < dataList.count else { return }
+                _ = self.topVM?.assignModelToChip(model: dataList[row], chipId: chipId)
             }
             return item
         }

@@ -45,8 +45,10 @@ final class FloatingCardRowView: NSView {
     var onPaste: (() -> Void)?
     var onPastePlainText: (() -> Void)?
     var onCopy: (() -> Void)?
+    var onEdit: (() -> Void)?
     var onDelete: (() -> Void)?
     var onTogglePreview: (() -> Void)?
+    var onAssignToChip: ((Int) -> Void)?
 
     // MARK: - Init
 
@@ -297,77 +299,41 @@ final class FloatingCardRowView: NSView {
 
     private func setupContextMenu() {
         let menu = NSMenu()
-
-        let pasteItem = NSMenuItem(
-            title: String(localized: .paste),
-            action: #selector(handlePaste),
-            keyEquivalent: ""
-        )
-        pasteItem.target = self
-        pasteItem.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: nil)
-        menu.addItem(pasteItem)
-
-        let pastePlainItem = NSMenuItem(
-            title: String(localized: .pastePlain),
-            action: #selector(handlePastePlain),
-            keyEquivalent: ""
-        )
-        pastePlainItem.target = self
-        pastePlainItem.image = NSImage(systemSymbolName: "text.alignleft", accessibilityDescription: nil)
-        menu.addItem(pastePlainItem)
-
-        let copyItem = NSMenuItem(
-            title: String(localized: .copy),
-            action: #selector(handleCopy),
-            keyEquivalent: ""
-        )
-        copyItem.target = self
-        copyItem.image = NSImage(systemSymbolName: "doc.on.doc", accessibilityDescription: nil)
-        menu.addItem(copyItem)
-
-        menu.addItem(.separator())
-
-        let deleteItem = NSMenuItem(
-            title: String(localized: .delete),
-            action: #selector(handleDelete),
-            keyEquivalent: ""
-        )
-        deleteItem.target = self
-        deleteItem.image = NSImage(systemSymbolName: "trash", accessibilityDescription: nil)
-        menu.addItem(deleteItem)
-
-        menu.addItem(.separator())
-
-        let previewItem = NSMenuItem(
-            title: String(localized: .preview),
-            action: #selector(handlePreview),
-            keyEquivalent: ""
-        )
-        previewItem.target = self
-        previewItem.image = NSImage(systemSymbolName: "eye", accessibilityDescription: nil)
-        menu.addItem(previewItem)
-
+        menu.delegate = self
         self.menu = menu
     }
 
-    @objc private func handlePaste() {
-        onPaste?()
+}
+
+// MARK: - ClipItemMenuActionable
+
+extension FloatingCardRowView: ClipItemMenuActionable {
+    func handleClipPaste() { onPaste?() }
+    func handleClipPastePlain() { onPastePlainText?() }
+    func handleClipCopy() { onCopy?() }
+    func handleClipEdit() { onEdit?() }
+    func handleClipDelete() { onDelete?() }
+    func handleClipPreview() { onTogglePreview?() }
+
+    func handleClipAssignToChip(_ sender: NSMenuItem) {
+        guard let model = currentModel, model.group != sender.tag else { return }
+        onAssignToChip?(sender.tag)
     }
 
-    @objc private func handlePastePlain() {
-        onPastePlainText?()
+    func handleClipUnpin() {
+        onAssignToChip?(-1)
     }
+}
 
-    @objc private func handleCopy() {
-        onCopy?()
-    }
+// MARK: - NSMenuDelegate
 
-    @objc private func handleDelete() {
-        onDelete?()
-    }
-
-    @objc private func handlePreview() {
-        onTogglePreview?()
+extension FloatingCardRowView: NSMenuDelegate {
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        menu.removeAllItems()
+        guard let model = currentModel else { return }
+        for item in buildClipItemMenu(for: model, pasteTitle: String(localized: .paste)).items {
+            menu.addItem(item)
+        }
     }
 }
 

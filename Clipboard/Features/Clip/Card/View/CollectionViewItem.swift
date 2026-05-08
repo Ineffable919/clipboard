@@ -149,7 +149,7 @@ extension CollectionViewItem {
     override func mouseDown(with event: NSEvent) {
         super.mouseDown(with: event)
         if event.type == .leftMouseDown, event.clickCount == 2 {
-            handlePaste()
+            handleClipPaste()
         }
     }
 
@@ -187,186 +187,51 @@ extension CollectionViewItem {
 
 // MARK: - Context Menu
 
-extension CollectionViewItem {
-    private func makeContextMenu(for model: PasteboardModel) -> NSMenu {
-        let menu = NSMenu()
-
-        menu.addItem(pasteItem(for: model))
-        menu.addItem(pastePlainItem())
-        menu.addItem(copyItem())
-        menu.addItem(.separator())
-
-        if model.pasteboardType.isText() {
-            menu.addItem(editItem())
-        }
-
-        menu.addItem(deleteItem())
-        menu.addItem(.separator())
-        menu.addItem(labelItem(for: model))
-        menu.addItem(.separator())
-        menu.addItem(previewItem())
-
-        return menu
-    }
-
-    private func pasteItem(for _: PasteboardModel) -> NSMenuItem {
-        let title = if let appName = delegate?.preApp?.localizedName, PasteUserDefaults.pasteDirect {
+extension CollectionViewItem: ClipItemMenuActionable {
+    private var pasteMenuTitle: String {
+        if let appName = delegate?.preApp?.localizedName, PasteUserDefaults.pasteDirect {
             String(localized: .pasteToApp(appName))
         } else {
             String(localized: .paste)
         }
-        let item = NSMenuItem(title: title, action: #selector(handlePaste), keyEquivalent: "\r")
-        item.keyEquivalentModifierMask = []
-        item.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: nil)
-        item.target = self
-        return item
     }
 
-    private func pastePlainItem() -> NSMenuItem {
-        let item = NSMenuItem(
-            title: String(localized: .pastePlain),
-            action: #selector(handlePastePlain),
-            keyEquivalent: "\r"
-        )
-        item.keyEquivalentModifierMask = .shift
-        item.image = NSImage(systemSymbolName: "text.alignleft", accessibilityDescription: nil)
-        item.target = self
-        return item
-    }
-
-    private func copyItem() -> NSMenuItem {
-        let item = NSMenuItem(
-            title: String(localized: .copy),
-            action: #selector(handleCopy),
-            keyEquivalent: "c"
-        )
-        item.keyEquivalentModifierMask = .command
-        item.image = NSImage(systemSymbolName: "doc.on.doc", accessibilityDescription: nil)
-        item.target = self
-        return item
-    }
-
-    private func editItem() -> NSMenuItem {
-        let item = NSMenuItem(
-            title: String(localized: .edit),
-            action: #selector(handleEdit),
-            keyEquivalent: "e"
-        )
-        item.keyEquivalentModifierMask = .command
-        item.image = NSImage(systemSymbolName: "pencil", accessibilityDescription: nil)
-        item.target = self
-        return item
-    }
-
-    private func deleteItem() -> NSMenuItem {
-        let item = NSMenuItem(
-            title: String(localized: .delete),
-            action: #selector(handleDelete),
-            keyEquivalent: "\u{08}" // backspace
-        )
-        item.keyEquivalentModifierMask = []
-        item.image = NSImage(systemSymbolName: "trash", accessibilityDescription: nil)
-        item.target = self
-        return item
-    }
-
-    private func labelItem(for model: PasteboardModel) -> NSMenuItem {
-        let parent = NSMenuItem(
-            title: String(localized: .pin),
-            action: nil,
-            keyEquivalent: ""
-        )
-        parent.image = NSImage(systemSymbolName: "pin", accessibilityDescription: nil)
-
-        let submenu = NSMenu()
-        let userChips = CategoryChipStore.shared.chips.filter { !$0.isSystem }
-        for chip in userChips {
-            let chipItem = NSMenuItem(title: chip.name, action: #selector(handleAssignToChip(_:)), keyEquivalent: "")
-            chipItem.target = self
-            chipItem.tag = chip.id
-            chipItem.state = model.group == chip.id ? .on : .off
-            chipItem.image = chipDotImage(colorIndex: chip.colorIndex)
-            submenu.addItem(chipItem)
-        }
-
-        if model.group != -1 {
-            submenu.addItem(.separator())
-            let unpinItem = NSMenuItem(
-                title: String(localized: .unpin),
-                action: #selector(handleUnpin),
-                keyEquivalent: ""
-            )
-            unpinItem.target = self
-            submenu.addItem(unpinItem)
-        }
-
-        parent.submenu = submenu
-        return parent
-    }
-
-    private func chipDotImage(colorIndex: Int) -> NSImage {
-        let size = NSSize(width: 12, height: 12)
-        let image = NSImage(size: size, flipped: false) { rect in
-            let color = CategoryChip.paletteNSColors[
-                min(max(colorIndex, 0), CategoryChip.paletteNSColors.count - 1)
-            ]
-            color.setFill()
-            NSBezierPath(ovalIn: rect.insetBy(dx: 0.5, dy: 0.5)).fill()
-            return true
-        }
-        image.isTemplate = false
-        return image
-    }
-
-    @objc private func handleAssignToChip(_ sender: NSMenuItem) {
-        guard let model = item else { return }
-        guard model.group != sender.tag else { return }
-        delegate?.assignToChip(model, chipId: sender.tag)
-    }
-
-    @objc private func handleUnpin() {
-        guard let model = item else { return }
-        delegate?.assignToChip(model, chipId: -1)
-    }
-
-    private func previewItem() -> NSMenuItem {
-        let item = NSMenuItem(
-            title: String(localized: .preview),
-            action: #selector(handlePreview),
-            keyEquivalent: " "
-        )
-        item.keyEquivalentModifierMask = []
-        item.image = NSImage(systemSymbolName: "eye", accessibilityDescription: nil)
-        item.target = self
-        return item
-    }
-
-    @objc private func handlePaste() {
+    func handleClipPaste() {
         guard let model = item else { return }
         delegate?.paste(model)
     }
 
-    @objc private func handlePastePlain() {
+    func handleClipPastePlain() {
         guard let model = item else { return }
         delegate?.pastePlain(model)
     }
 
-    @objc private func handleCopy() {
+    func handleClipCopy() {
         guard let model = item else { return }
         delegate?.copy(model)
     }
 
-    @objc private func handleEdit() {
+    func handleClipEdit() {
         guard let model = item else { return }
         delegate?.edit(model)
     }
 
-    @objc private func handleDelete() {
+    func handleClipDelete() {
         guard let model = item, let indexPath = collectionView?.indexPath(for: self) else { return }
         delegate?.delete(model, indexPath: indexPath)
     }
 
-    @objc private func handlePreview() {
+    func handleClipAssignToChip(_ sender: NSMenuItem) {
+        guard let model = item, model.group != sender.tag else { return }
+        delegate?.assignToChip(model, chipId: sender.tag)
+    }
+
+    func handleClipUnpin() {
+        guard let model = item else { return }
+        delegate?.assignToChip(model, chipId: -1)
+    }
+
+    func handleClipPreview() {
         guard let model = item else { return }
         delegate?.preview(model)
     }
@@ -431,7 +296,7 @@ extension CollectionViewItem: NSMenuDelegate {
         menu.removeAllItems()
         guard let model = item else { return }
         delegate?.itemDidRequestSelect(self)
-        for item in makeContextMenu(for: model).items {
+        for item in buildClipItemMenu(for: model, pasteTitle: pasteMenuTitle).items {
             menu.addItem(item)
         }
     }
