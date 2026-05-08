@@ -85,8 +85,6 @@ final class FloatingCardRowView: NSView {
         backgroundView.layer?.cornerRadius = Const.radius
         backgroundView.layer?.cornerCurve = .continuous
         backgroundView.layer?.masksToBounds = true
-        backgroundView.layer?.borderColor = NSColor.separatorColor.cgColor
-        backgroundView.layer?.borderWidth = 0.5
         selectionBorderView.addSubview(backgroundView)
 
         backgroundView.addSubview(appIconView)
@@ -110,9 +108,7 @@ final class FloatingCardRowView: NSView {
         backgroundView.addSubview(quickPasteBadge)
 
         selectionBorderView.snp.makeConstraints { make in
-            make.top.bottom.equalToSuperview()
-            make.leading.equalToSuperview().offset(FloatConst.floatSelectionBorderWidth)
-            make.trailing.equalToSuperview().offset(-FloatConst.floatSelectionBorderWidth)
+            make.edges.equalToSuperview()
         }
 
         backgroundView.snp.makeConstraints { make in
@@ -143,6 +139,7 @@ final class FloatingCardRowView: NSView {
         }
 
         setupContextMenu()
+        updateShadow()
     }
 
     // MARK: - Configure
@@ -205,6 +202,14 @@ final class FloatingCardRowView: NSView {
         layer.borderWidth = FloatConst.floatSelectionBorderWidth
     }
 
+    private func updateShadow() {
+        guard let layer = selectionBorderView.layer else { return }
+        layer.shadowColor = NSColor.shadowColor.cgColor
+        layer.shadowOpacity = 0.12
+        layer.shadowRadius = 2
+        layer.shadowOffset = CGSize(width: 0, height: -1)
+    }
+
     private func updateQuickPasteBadge() {
         if let idx = quickPasteIndex {
             quickPasteBadge.stringValue = "\(idx)"
@@ -237,7 +242,7 @@ final class FloatingCardRowView: NSView {
         super.viewDidChangeEffectiveAppearance()
         effectiveAppearance.performAsCurrentDrawingAppearance {
             applySelectionBorder()
-            backgroundView.layer?.borderColor = NSColor.separatorColor.cgColor
+            updateShadow()
             guard let model = currentModel else { return }
             let (bgColor, _) = model.colors()
             let resolvedBg: NSColor = model.cachedBackgroundColor != nil
@@ -617,7 +622,6 @@ private final class FloatingLinkContentView: NSView {
             urlLabel.attributedStringValue = model.highlightedPlainText(keyword: keyword)
         }
 
-        // 复用 CardLinkPreviewContentView 的元数据缓存
         if let cached = model.cachedLinkMetadata {
             applyMetadata(title: cached.title, icon: cached.iconImage, urlString: urlString)
         } else {
