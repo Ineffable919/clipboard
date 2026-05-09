@@ -279,7 +279,7 @@ extension ClipMainViewController {
             make.width.height.equalTo(16)
         }
 
-        pauseTimeLabel.font = .monospacedDigitSystemFont(ofSize: 13, weight: .regular)
+        pauseTimeLabel.font = .monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
         pauseTimeLabel.textColor = .secondaryLabelColor
 
         pauseStack.orientation = .horizontal

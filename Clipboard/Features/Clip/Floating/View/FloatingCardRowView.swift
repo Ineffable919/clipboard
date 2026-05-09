@@ -93,7 +93,7 @@ final class FloatingCardRowView: NSView {
         contentView.layer?.masksToBounds = true
         backgroundView.addSubview(contentView)
 
-        timestampLabel.font = .systemFont(ofSize: 10, weight: .regular)
+        timestampLabel.font = .systemFont(ofSize: NSFont.labelFontSize, weight: .regular)
         timestampLabel.textColor = .secondaryLabelColor
         timestampLabel.lineBreakMode = .byTruncatingTail
         timestampLabel.setContentHuggingPriority(.required, for: .horizontal)
@@ -101,7 +101,7 @@ final class FloatingCardRowView: NSView {
         backgroundView.addSubview(timestampLabel)
 
         // 快速粘贴角标
-        quickPasteBadge.font = .systemFont(ofSize: 12, weight: .regular)
+        quickPasteBadge.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .regular)
         quickPasteBadge.textColor = .labelColor
         quickPasteBadge.alignment = .right
         quickPasteBadge.isHidden = true
@@ -401,7 +401,7 @@ final class FloatingTextContentView: NSView {
 
     init(model: PasteboardModel, keyword: String) {
         super.init(frame: .zero)
-        textField.font = .systemFont(ofSize: 12, weight: .regular)
+        textField.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .regular)
         textField.lineBreakMode = .byTruncatingTail
         textField.cell?.truncatesLastVisibleLine = true
         addSubview(textField)
@@ -436,7 +436,7 @@ final class FloatingRichContentView: NSView {
 
     init(model: PasteboardModel, keyword: String) {
         super.init(frame: .zero)
-        textField.font = .systemFont(ofSize: 12, weight: .regular)
+        textField.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .regular)
         textField.lineBreakMode = .byTruncatingTail
         textField.maximumNumberOfLines = 2
         textField.cell?.truncatesLastVisibleLine = true
@@ -464,7 +464,7 @@ private final class FloatingColorContentView: NSView {
 
     init(model: PasteboardModel) {
         super.init(frame: .zero)
-        label.font = .monospacedSystemFont(ofSize: 12, weight: .medium)
+        label.font = .monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .medium)
         label.alignment = .center
         label.lineBreakMode = .byTruncatingTail
         label.textColor = model.colors().1
@@ -542,7 +542,7 @@ private final class FloatingFileContentView: NSView {
             make.width.height.equalTo(24)
         }
 
-        nameLabel.font = .systemFont(ofSize: 11, weight: .regular)
+        nameLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .regular)
         nameLabel.lineBreakMode = .byTruncatingMiddle
         nameLabel.maximumNumberOfLines = 1
         addSubview(nameLabel)
@@ -603,11 +603,11 @@ private final class FloatingLinkContentView: NSView {
             make.centerY.equalToSuperview()
         }
 
-        titleLabel.font = .systemFont(ofSize: 12, weight: .medium)
+        titleLabel.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .medium)
         titleLabel.lineBreakMode = .byTruncatingTail
         titleLabel.maximumNumberOfLines = 1
 
-        urlLabel.font = .systemFont(ofSize: 10, weight: .regular)
+        urlLabel.font = .systemFont(ofSize: NSFont.labelFontSize, weight: .regular)
         urlLabel.textColor = .secondaryLabelColor
         urlLabel.lineBreakMode = .byTruncatingMiddle
         urlLabel.maximumNumberOfLines = 1

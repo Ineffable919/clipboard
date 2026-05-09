@@ -79,7 +79,7 @@ final class CollectionViewItem: NSCollectionViewItem {
 
     private lazy var quickPasteLabel: NSTextField = {
         let label = NSTextField(labelWithString: "")
-        label.font = .systemFont(ofSize: 12, weight: .regular)
+        label.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .regular)
         label.textColor = .labelColor
         label.alignment = .right
         label.isHidden = true

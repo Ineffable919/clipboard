@@ -39,7 +39,7 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         }
 
         fileprivate var labelFontSize: CGFloat {
-            compact ? 12 : 13
+            compact ? NSFont.smallSystemFontSize : NSFont.systemFontSize
         }
 
         fileprivate var dotRadius: CGFloat {
@@ -262,7 +262,7 @@ final class ChipButton: NSView, NSTextFieldDelegate {
     }
 
     private func nameFieldDisplayWidth() -> CGFloat {
-        let font = nameField.font ?? .systemFont(ofSize: 13, weight: .regular)
+        let font = nameField.font ?? .systemFont(ofSize: NSFont.systemFontSize, weight: .regular)
         let text = displayedName.isEmpty ? " " : displayedName
         let width = (text as NSString).size(withAttributes: [.font: font]).width
         return ceil(width)
@@ -496,7 +496,7 @@ final class ChipButton: NSView, NSTextFieldDelegate {
             } else {
                 nameField.stringValue
             }
-        let font = nameField.font ?? .systemFont(ofSize: 13, weight: .regular)
+        let font = nameField.font ?? .systemFont(ofSize: NSFont.systemFontSize, weight: .regular)
         let text = displayText.isEmpty ? " " : displayText
         let width = ceil(
             (text as NSString).size(withAttributes: [.font: font]).width

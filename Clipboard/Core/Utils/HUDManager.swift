@@ -110,7 +110,7 @@ private extension HUDManager {
         }
 
         let label = NSTextField(labelWithString: text)
-        label.font = .systemFont(ofSize: 18, weight: .medium)
+        label.font = .systemFont(ofSize: NSFont.systemFontSize + 5, weight: .medium)
         label.textColor = .labelColor
         label.alignment = .center
         label.lineBreakMode = .byWordWrapping

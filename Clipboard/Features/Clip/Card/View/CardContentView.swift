@@ -238,7 +238,7 @@ final class CardRichContentView: NSView, PassthroughMouseEvents {
 final class CardColorContentView: NSView, PassthroughMouseEvents {
     private lazy var label: NSTextField = {
         let field = NSTextField(labelWithString: "")
-        field.font = .systemFont(ofSize: 17, weight: .medium)
+        field.font = .systemFont(ofSize: NSFont.systemFontSize + 4, weight: .medium)
         field.alignment = .center
         field.lineBreakMode = .byTruncatingTail
         return field

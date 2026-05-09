@@ -81,7 +81,7 @@ class FilterButton: NSView {
         }
 
         label.stringValue = title
-        label.font = .systemFont(ofSize: 13, weight: .regular)
+        label.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .regular)
         label.isBordered = false
         label.drawsBackground = false
         label.isEditable = false

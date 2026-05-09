@@ -46,7 +46,7 @@ final class FilterAppSectionView: NSStackView {
         spacing = Const.space8
 
         titleLabel.stringValue = String(localized: .app)
-        titleLabel.font = .systemFont(ofSize: 13, weight: .semibold)
+        titleLabel.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .semibold)
         titleLabel.textColor = .secondaryLabelColor
         titleLabel.isBordered = false
         titleLabel.drawsBackground = false

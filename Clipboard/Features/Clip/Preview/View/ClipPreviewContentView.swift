@@ -311,7 +311,7 @@ final class PreviewColorView: NSView {
         layer?.backgroundColor = bg.cgColor
 
         let label = NSTextField(labelWithString: model.colorDisplayText)
-        label.font = .systemFont(ofSize: 22, weight: .medium)
+        label.font = .systemFont(ofSize: NSFont.systemFontSize * 1.7, weight: .medium)
         label.alignment = .center
         label.lineBreakMode = .byTruncatingTail
         label.textColor = fg

@@ -21,7 +21,7 @@ final class CardHeadView: NSView {
     private lazy var typeLabel: NSTextField = {
         let field = NSTextField(labelWithString: "")
         field.textColor = .white
-        field.font = .systemFont(ofSize: 15)
+        field.font = .systemFont(ofSize: NSFont.systemFontSize + 2)
         field.lineBreakMode = .byTruncatingTail
         field.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         return field
@@ -29,7 +29,7 @@ final class CardHeadView: NSView {
 
     private lazy var timestampLabel: NSTextField = {
         let field = NSTextField(labelWithString: "")
-        field.font = .systemFont(ofSize: 12)
+        field.font = .systemFont(ofSize: NSFont.systemFontSize)
         field.textColor = NSColor.white.withAlphaComponent(0.85)
         field.lineBreakMode = .byTruncatingTail
         return field

@@ -36,7 +36,7 @@ class EmptyStateView: NSView {
         tf.textColor = .secondaryLabelColor
         tf.alignment = .center
         if style == .floating {
-            tf.font = .systemFont(ofSize: 13)
+            tf.font = .systemFont(ofSize: NSFont.systemFontSize)
         } else {
             tf.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         }

@@ -70,7 +70,7 @@ final class FloatingFooterView: NSView {
             make.top.equalToSuperview().offset(-Const.windowRadis)
         }
 
-        countLabel.font = .systemFont(ofSize: 12, weight: .regular)
+        countLabel.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .regular)
         countLabel.textColor = .secondaryLabelColor
         countLabel.alignment = .center
         addSubview(countLabel)
@@ -85,7 +85,7 @@ final class FloatingFooterView: NSView {
             make.width.height.equalTo(14)
         }
 
-        pauseTimeLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .medium)
+        pauseTimeLabel.font = .monospacedDigitSystemFont(ofSize: NSFont.smallSystemFontSize, weight: .medium)
         pauseTimeLabel.textColor = .secondaryLabelColor
 
         pauseStack.orientation = .horizontal

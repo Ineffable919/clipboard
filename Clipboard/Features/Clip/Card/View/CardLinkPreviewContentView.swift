@@ -51,7 +51,7 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
 
     private lazy var titleLabel: NSTextField = {
         let f = NSTextField(labelWithString: "")
-        f.font = .systemFont(ofSize: 13, weight: .semibold)
+        f.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .semibold)
         f.textColor = .labelColor
         f.lineBreakMode = .byTruncatingTail
         f.maximumNumberOfLines = 1
@@ -60,7 +60,7 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
 
     private lazy var urlLabel: NSTextField = {
         let f = NSTextField(labelWithString: "")
-        f.font = .systemFont(ofSize: 11)
+        f.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         f.textColor = .secondaryLabelColor
         f.lineBreakMode = .byTruncatingTail
         f.maximumNumberOfLines = 1
@@ -241,7 +241,7 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
         highlighted: NSAttributedString
     ) -> NSAttributedString {
         let baseAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 11),
+            .font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize),
             .foregroundColor: NSColor.secondaryLabelColor,
         ]
 

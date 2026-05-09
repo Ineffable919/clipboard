@@ -17,7 +17,7 @@ final class SearchSuggestionCellView: NSView {
         static let iconSize: CGFloat = 18
         static let horizontalPadding: CGFloat = 8
         static let iconTextGap: CGFloat = 6
-        static let fontSize: CGFloat = 12
+        static let fontSize: CGFloat = NSFont.systemFontSize
     }
 
     // MARK: - Subviews
