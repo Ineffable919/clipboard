@@ -147,9 +147,6 @@ enum PasteUserDefaults {
     /// 背景类型(仅macOS 26+, 0:液态玻璃 1:毛玻璃)
     @UserDefaultsWrapper(.backgroundType, defaultValue: 0)
     static var backgroundType
-    /// 玻璃材质强度(0-4, 默认为regular)
-    @UserDefaultsWrapper(.glassMaterial, defaultValue: 1)
-    static var glassMaterial
     /// tag 字段迁移标记
     @UserDefaultsWrapper(.tagFieldMigrated, defaultValue: false)
     static var tagFieldMigrated
@@ -241,11 +238,6 @@ extension UserDefaults {
     @objc dynamic var backgroundType: Int {
         get { integer(forKey: "backgroundType") }
         set { set(newValue, forKey: "backgroundType") }
-    }
-
-    @objc dynamic var glassMaterial: Int {
-        get { integer(forKey: "glassMaterial") }
-        set { set(newValue, forKey: "glassMaterial") }
     }
 
     @objc dynamic var displayMode: Int {

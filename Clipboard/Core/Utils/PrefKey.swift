@@ -51,8 +51,6 @@ enum PrefKey: String, CaseIterable {
     case removeTailingNewline
     /// 背景类型(仅macOS 26+)
     case backgroundType
-    /// 玻璃材质强度
-    case glassMaterial
     /// tag 字段迁移标记
     case tagFieldMigrated
     /// hidden 字段新增标记
@@ -171,25 +169,6 @@ enum BackgroundType: Int, CaseIterable {
         switch self {
         case .liquid: .settingAppearanceBackgroundTypeLiquid
         case .frosted: .settingAppearanceBackgroundTypeFrosted
-        }
-    }
-}
-
-/// 玻璃材质强度
-enum GlassMaterial: Int, CaseIterable {
-    case thin = 0
-    case regular = 1
-    case medium = 2
-    case thick = 3
-    case opaque = 4
-
-    var nsMaterial: NSVisualEffectView.Material {
-        switch self {
-        case .thin: .popover
-        case .regular: .menu
-        case .medium: .sidebar
-        case .thick: .headerView
-        case .opaque: .sheet
         }
     }
 }

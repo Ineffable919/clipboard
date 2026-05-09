@@ -21,7 +21,6 @@ final class FloatingFooterView: NSView {
 
     private var effectView: NSView = FloatingFooterView.buildEffectView()
     private var lastBackgroundType: Int = PasteUserDefaults.backgroundType
-    private var lastGlassMaterial: Int = PasteUserDefaults.glassMaterial
     private weak var topVM: TopBarViewModel?
     private var cancellables = Set<AnyCancellable>()
     private var displayTimer: Timer?
@@ -121,13 +120,10 @@ final class FloatingFooterView: NSView {
             make.edges.equalTo(pauseStack)
         }
 
-        Publishers.Merge(
-            UserDefaults.standard.publisher(for: \.backgroundType).map { _ in () },
-            UserDefaults.standard.publisher(for: \.glassMaterial).map { _ in () }
-        )
-        .receive(on: DispatchQueue.main)
-        .sink { [weak self] in self?.handleBackgroundSettingsChange() }
-        .store(in: &cancellables)
+        UserDefaults.standard.publisher(for: \.backgroundType)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.handleBackgroundSettingsChange() }
+            .store(in: &cancellables)
     }
 
     // MARK: - Background
@@ -147,8 +143,8 @@ final class FloatingFooterView: NSView {
         let ve = NSVisualEffectView()
         ve.wantsLayer = true
         ve.state = .active
-        ve.blendingMode = .behindWindow
-        ve.material = (GlassMaterial(rawValue: PasteUserDefaults.glassMaterial) ?? .regular).nsMaterial
+        ve.blendingMode = .withinWindow
+        ve.material = .popover
         ve.layer?.cornerRadius = Const.windowRadis
         ve.layer?.maskedCorners = bottomCorners
         ve.layer?.masksToBounds = true
@@ -157,16 +153,9 @@ final class FloatingFooterView: NSView {
 
     private func handleBackgroundSettingsChange() {
         let currentBgType = PasteUserDefaults.backgroundType
-        let currentMaterial = PasteUserDefaults.glassMaterial
-        guard currentBgType != lastBackgroundType || currentMaterial != lastGlassMaterial else { return }
-        let bgTypeChanged = currentBgType != lastBackgroundType
+        guard currentBgType != lastBackgroundType else { return }
         lastBackgroundType = currentBgType
-        lastGlassMaterial = currentMaterial
-        if !bgTypeChanged, let ve = effectView as? NSVisualEffectView {
-            ve.material = (GlassMaterial(rawValue: currentMaterial) ?? .regular).nsMaterial
-        } else {
-            rebuildEffectView()
-        }
+        rebuildEffectView()
     }
 
     private func rebuildEffectView() {

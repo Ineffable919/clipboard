@@ -78,13 +78,6 @@ struct AppearanceSettingsView: View {
                     }
                 }
 
-                if #available(macOS 26.0, *) {
-                    if backgroundType == .frosted {
-                        GlassMaterialSlider()
-                    }
-                } else {
-                    GlassMaterialSlider()
-                }
             }
             .padding(.horizontal, Const.space16)
             .padding(.vertical, Const.space8)
@@ -97,57 +90,6 @@ struct AppearanceSettingsView: View {
             maxHeight: Const.settingHeight,
             alignment: .topLeading
         )
-    }
-}
-
-// MARK: - 玻璃材质滑块
-
-struct GlassMaterialSlider: View {
-    @AppStorage(PrefKey.glassMaterial.rawValue)
-    private var glassMaterialRaw: Int = 2
-
-    private var glassMaterial: Double {
-        get { Double(glassMaterialRaw) }
-        nonmutating set { glassMaterialRaw = Int(newValue) }
-    }
-
-    private var range: ClosedRange<Double> = 0 ... 4
-
-    var body: some View {
-        HStack {
-            Text(.settingAppearanceGlassMaterialLabel)
-            Spacer()
-            HStack(spacing: Const.space8) {
-                Text(.settingAppearanceGlassMaterialTransparent)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                if #available(macOS 26.0, *) {
-                    Slider(
-                        value: Binding(
-                            get: { glassMaterial },
-                            set: { glassMaterial = $0 }
-                        ),
-                        in: range,
-                        step: 1
-                    )
-                    .tint(.accentColor)
-                } else {
-                    Slider(
-                        value: Binding(
-                            get: { glassMaterial },
-                            set: { glassMaterial = $0 }
-                        ),
-                        in: range
-                    )
-                    .tint(.accentColor)
-                }
-                Text(.settingAppearanceGlassMaterialBlurred)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-            }
-            .frame(width: 240.0)
-        }
-        .padding(.top, Const.space16)
     }
 }
 

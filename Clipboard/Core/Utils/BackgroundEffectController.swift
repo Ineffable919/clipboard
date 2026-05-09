@@ -20,7 +20,6 @@ final class BackgroundEffectController {
     private let innerPadding: CGFloat
 
     private var lastBackgroundType: Int = PasteUserDefaults.backgroundType
-    private var lastGlassMaterial: Int = PasteUserDefaults.glassMaterial
     private var cancellables = Set<AnyCancellable>()
 
     init(cornerRadius: CGFloat, innerPadding: CGFloat = 0) {
@@ -85,40 +84,22 @@ final class BackgroundEffectController {
         if #available(macOS 26.0, *) {
             visualEffect.layer?.cornerRadius = cornerRadius
         }
-        let material = GlassMaterial(rawValue: PasteUserDefaults.glassMaterial) ?? .regular
-        visualEffect.material = material.nsMaterial
+        visualEffect.material = .popover
         return visualEffect
     }
 
     private func observeSettings() {
-        Publishers.Merge(
-            UserDefaults.standard.publisher(for: \.backgroundType).map { _ in () },
-            UserDefaults.standard.publisher(for: \.glassMaterial).map { _ in () }
-        )
-        .receive(on: DispatchQueue.main)
-        .sink { [weak self] in
-            self?.handleSettingsChange()
-        }
-        .store(in: &cancellables)
+        UserDefaults.standard.publisher(for: \.backgroundType)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.handleSettingsChange() }
+            .store(in: &cancellables)
     }
 
     private func handleSettingsChange() {
         let currentBgType = PasteUserDefaults.backgroundType
-        let currentMaterial = PasteUserDefaults.glassMaterial
-
-        guard currentBgType != lastBackgroundType
-            || currentMaterial != lastGlassMaterial else { return }
-
-        let bgTypeChanged = currentBgType != lastBackgroundType
+        guard currentBgType != lastBackgroundType else { return }
         lastBackgroundType = currentBgType
-        lastGlassMaterial = currentMaterial
-
-        if !bgTypeChanged, let visualEffect = effectView as? NSVisualEffectView {
-            let material = GlassMaterial(rawValue: currentMaterial) ?? .regular
-            visualEffect.material = material.nsMaterial
-        } else {
-            rebuild()
-        }
+        rebuild()
     }
 
     private func rebuild() {
