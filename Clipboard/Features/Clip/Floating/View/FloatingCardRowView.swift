@@ -123,7 +123,7 @@ final class FloatingCardRowView: NSView {
 
         timestampLabel.snp.makeConstraints { make in
             make.trailing.equalToSuperview().offset(-Const.space6)
-            make.top.equalToSuperview().offset(Const.space4)
+            make.centerY.equalToSuperview()
         }
 
         quickPasteBadge.snp.makeConstraints { make in

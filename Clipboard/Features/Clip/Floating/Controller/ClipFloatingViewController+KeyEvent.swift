@@ -222,7 +222,8 @@ extension ClipFloatingViewController {
         historyView.selectAndScrollTo(index: index)
         ClipActionService.shared.paste(
             historyView.dataList[index],
-            isAttribute: true
+            checkPermissions: PasteUserDefaults.pasteDirect,
+            showTip: !PasteUserDefaults.pasteDirect
         )
     }
 }
