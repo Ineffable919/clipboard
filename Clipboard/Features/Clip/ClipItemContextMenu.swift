@@ -90,14 +90,18 @@ extension ClipItemMenuActionable where Self: NSObject {
         item.keyEquivalentModifierMask = modifiers
         item.target = self
         if let symbol {
-            item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
+            if #available(macOS 26.0, *) {
+                item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
+            }
         }
         return item
     }
 
     private func makePinMenuItem(for model: PasteboardModel) -> NSMenuItem {
         let parent = NSMenuItem(title: String(localized: .pin), action: nil, keyEquivalent: "")
-        parent.image = NSImage(systemSymbolName: "pin", accessibilityDescription: nil)
+        if #available(macOS 26.0, *) {
+            parent.image = NSImage(systemSymbolName: "pin", accessibilityDescription: nil)
+        }
 
         let submenu = NSMenu()
         let userChips = CategoryChipStore.shared.chips.filter { !$0.isSystem }
