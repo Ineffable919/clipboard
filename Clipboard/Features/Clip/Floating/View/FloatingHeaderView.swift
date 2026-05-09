@@ -312,7 +312,7 @@ final class FloatingHeaderView: NSView {
         }
 
         searchField.snp.makeConstraints { make in
-            make.leading.equalTo(pinButton.snp.trailing).offset(Const.space8)
+            make.leading.equalTo(pinButton.snp.trailing).offset(Const.space12)
             make.trailing.equalTo(settingsBtn.snp.leading).offset(-Const.space8)
             make.top.equalTo(dragHandle.snp.bottom).offset(Const.space8)
             make.centerY.equalTo(pinButton)
@@ -580,7 +580,7 @@ final class FloatingPinButton: NSButton {
 
     private func updateAppearance() {
         let symbolName = isPinned ? "pin.fill" : "pin"
-        let config = NSImage.SymbolConfiguration(pointSize: 16, weight: .medium)
+        let config = NSImage.SymbolConfiguration(pointSize: 16, weight: .regular)
         image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?
             .withSymbolConfiguration(config)
         contentTintColor = isPinned ? .controlAccentColor : .secondaryLabelColor
