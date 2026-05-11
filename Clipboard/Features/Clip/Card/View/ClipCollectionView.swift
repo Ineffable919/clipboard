@@ -6,9 +6,20 @@
 import AppKit
 
 final class ClipCollectionView: NSCollectionView {
+    var onMouseDownBeforeSelection: ((_ indexPath: IndexPath) -> Void)?
     var onBecomeFirstResponder: (() -> Void)?
     var onDragMoved: ((_ screenPoint: NSPoint) -> Void)?
     var onDragEnded: ((_ screenPoint: NSPoint) -> Void)?
+
+    override func mouseDown(with event: NSEvent) {
+        if event.type == .leftMouseDown {
+            let point = convert(event.locationInWindow, from: nil)
+            if let indexPath = indexPathForItem(at: point) {
+                onMouseDownBeforeSelection?(indexPath)
+            }
+        }
+        super.mouseDown(with: event)
+    }
 
     override func becomeFirstResponder() -> Bool {
         let result = super.becomeFirstResponder()

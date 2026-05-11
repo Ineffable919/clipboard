@@ -124,13 +124,20 @@ extension ClipMainViewController: CollectionViewItemDelegate {
     }
 
     func itemDidRequestSelect(_ item: CollectionViewItem) {
+        guard let indexPath = collectionView.indexPath(for: item),
+              indexPath != selectIndexPath
+        else {
+            if focusRegion != .collection {
+                setFocusRegion(.collection)
+                view.window?.makeFirstResponder(collectionView)
+            }
+            return
+        }
+        resetSelectIndex(indexPath)
         if focusRegion != .collection {
             setFocusRegion(.collection)
             view.window?.makeFirstResponder(collectionView)
         }
-        guard let indexPath = collectionView.indexPath(for: item),
-              indexPath != selectIndexPath else { return }
-        resetSelectIndex(indexPath)
     }
 
     func paste(_ item: PasteboardModel) {
