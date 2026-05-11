@@ -94,3 +94,4 @@ iOSInjectionProject/
 .vscode
 .claude
 /reference
+scripts/build.sh

@@ -68,14 +68,18 @@ extension ClipMainViewController {
         let padding = Const.cardSpace + Const.cardSize / 5
 
         guard event_isARepeat() else {
-            collectionView.scrollToVisible(
-                NSRect(
-                    x: attrs.frame.origin.x - padding,
-                    y: 0,
-                    width: attrs.frame.width + padding * 2,
-                    height: attrs.frame.height
+            NSAnimationContext.runAnimationGroup { ctx in
+                ctx.duration = 0.2
+                ctx.allowsImplicitAnimation = true
+                collectionView.scrollToVisible(
+                    NSRect(
+                        x: attrs.frame.origin.x - padding,
+                        y: 0,
+                        width: attrs.frame.width + padding * 2,
+                        height: attrs.frame.height
+                    )
                 )
-            )
+            }
             return
         }
 

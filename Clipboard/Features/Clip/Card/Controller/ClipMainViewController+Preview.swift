@@ -60,6 +60,4 @@ extension ClipMainViewController: NSPopoverDelegate {
             view.window?.makeFirstResponder(collectionView)
         }
     }
-
-    func popoverDidClose(_: Notification) {}
 }
