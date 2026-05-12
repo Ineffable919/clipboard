@@ -30,12 +30,13 @@ struct Col {
 actor PasteSQLManager {
     static let manager = PasteSQLManager()
 
-    private static var sandboxDatabaseDirectory: String {
-        URL.documentsDirectory.appending(path: "Clip").path
+    private static var databaseDirectory: URL {
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        return appSupport.appendingPathComponent(Bundle.main.bundleIdentifier ?? "Clip")
     }
 
-    private static var sandboxDatabasePath: String {
-        "\(sandboxDatabaseDirectory)/Clip.sqlite3"
+    private static var databasePath: String {
+        databaseDirectory.appendingPathComponent("Clip.sqlite3").path
     }
 
     private var _db: Connection?
@@ -47,12 +48,13 @@ actor PasteSQLManager {
     private var table: Table
 
     private init() {
-        let path = Self.sandboxDatabaseDirectory
+        let dirPath = Self.databaseDirectory.path
+        let fileManager = FileManager.default
         var isDir = ObjCBool(false)
-        let fileExists = FileManager.default.fileExists(atPath: path, isDirectory: &isDir)
-        if !fileExists || !isDir.boolValue {
+        let dirExists = fileManager.fileExists(atPath: dirPath, isDirectory: &isDir)
+        if !dirExists || !isDir.boolValue {
             do {
-                try FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: true)
+                try fileManager.createDirectory(atPath: dirPath, withIntermediateDirectories: true)
             } catch {
                 log.debug(error.localizedDescription)
             }
@@ -60,8 +62,8 @@ actor PasteSQLManager {
 
         var connection: Connection?
         do {
-            let conn = try Connection("\(path)/Clip.sqlite3")
-            log.info("数据库初始化 - 路径：\(path)/Clip.sqlite3")
+            let conn = try Connection(Self.databasePath)
+            log.info("数据库初始化 - 路径：\(Self.databasePath)")
             conn.busyTimeout = 5.0
             connection = conn
         } catch {
@@ -424,7 +426,7 @@ extension PasteSQLManager {
     }
 
     nonisolated func exportDatabase(to destinationURL: URL) async -> ImportExportResult {
-        let sourcePath = Self.sandboxDatabasePath
+        let sourcePath = Self.databasePath
 
         return await Task.detached(priority: .userInitiated) {
             guard FileManager.default.fileExists(atPath: sourcePath) else {
@@ -466,7 +468,7 @@ extension PasteSQLManager {
             return validationResult
         }
 
-        let destPath = Self.sandboxDatabasePath
+        let destPath = Self.databasePath
 
         let result = await Task.detached(priority: .userInitiated) {
             do {
