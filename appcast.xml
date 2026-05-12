@@ -8,7 +8,6 @@
         <item>
             <title>Version 1.1 (Apple Silicon (arm64))</title>
             <description sparkle:format="markdown">
-                <![CDATA[
                 ### Version 1.1
 
                 **数据迁移说明**
@@ -23,7 +22,6 @@
                 - 优化应用数据存储机制
                 - 解决启动时重复请求文稿访问权限的问题
                 - 修复若干已知问题并提升稳定性
-                ]]>
             </description>
             <sparkle:fullReleaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
@@ -43,7 +41,6 @@
         <item>
             <title>Version 1.1 (Intel (x86_64))</title>
             <description sparkle:format="markdown">
-                <![CDATA[
                 ### Version 1.1
 
                 **数据迁移说明**
@@ -58,7 +55,6 @@
                 - 优化应用数据存储机制
                 - 解决启动时重复请求文稿访问权限的问题
                 - 修复若干已知问题并提升稳定性
-                ]]>
             </description>
             <sparkle:fullReleaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
