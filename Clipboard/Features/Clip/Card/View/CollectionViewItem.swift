@@ -59,6 +59,7 @@ final class CollectionViewItem: NSCollectionViewItem {
         view.onAppearanceChange = { [weak self] in
             self?.updateSelectionBorder()
             self?.updateShadow()
+            self?.updateInfoIconAppearance()
         }
         return view
     }()
@@ -86,10 +87,43 @@ final class CollectionViewItem: NSCollectionViewItem {
         return label
     }()
 
+    // MARK: - Plain Text Indicator
+
+    var showPlainTextIndicator: Bool = false {
+        didSet {
+            infoIconBackgroundView.isHidden = !showPlainTextIndicator
+            updateInfoIconTrailingConstraint()
+        }
+    }
+
+    private let infoIconHeight: CGFloat = {
+        let field = NSTextField(labelWithString: "A")
+        field.font = .preferredFont(forTextStyle: .callout)
+        return field.intrinsicContentSize.height + 4
+    }()
+
+    private lazy var infoIconBackgroundView: NSView = {
+        let view = NSView()
+        view.wantsLayer = true
+        view.layer?.cornerRadius = 4.0
+        view.layer?.cornerCurve = .continuous
+        view.isHidden = true
+        return view
+    }()
+
+    private lazy var infoIconView: NSImageView = {
+        let iv = NSImageView()
+        iv.image = NSImage(systemSymbolName: "text.justify.leading", accessibilityDescription: nil)
+        iv.symbolConfiguration = NSImage.SymbolConfiguration(textStyle: .callout)
+        iv.imageScaling = .scaleProportionallyUpOrDown
+        return iv
+    }()
+
     func configure(with model: PasteboardModel, keyword: String = "") {
         item = model
         headView.configure(with: model)
         updateContentBackground()
+        updateInfoIconAppearance()
 
         cardContentView.configure(with: model, keyword: keyword)
         cardBottomView.configure(with: model, keyword: keyword)
@@ -117,6 +151,27 @@ final class CollectionViewItem: NSCollectionViewItem {
         updateSelectionBorder()
     }
 
+    private func updateInfoIconAppearance() {
+        guard let model = item else { return }
+        var backgroundCGColor: CGColor = NSColor.clear.cgColor
+        var tintColor: NSColor = .labelColor
+
+        infoIconBackgroundView.effectiveAppearance.performAsCurrentDrawingAppearance {
+            if model.type == .image {
+                backgroundCGColor = NSColor.unemphasizedSelectedContentBackgroundColor
+                    .withAlphaComponent(0.8).cgColor
+                tintColor = .secondaryLabelColor
+            } else {
+                let (base, textColor) = model.colors()
+                backgroundCGColor = base.cgColor
+                tintColor = textColor
+            }
+        }
+
+        infoIconBackgroundView.layer?.backgroundColor = backgroundCGColor
+        infoIconView.contentTintColor = tintColor
+    }
+
     private func updateQuickPasteLabel() {
         if let index = quickPasteIndex {
             quickPasteLabel.stringValue = "\(index)"
@@ -128,6 +183,19 @@ final class CollectionViewItem: NSCollectionViewItem {
             }
         } else {
             quickPasteLabel.isHidden = true
+        }
+        updateInfoIconTrailingConstraint()
+    }
+
+    private func updateInfoIconTrailingConstraint() {
+        infoIconBackgroundView.snp.remakeConstraints { make in
+            if quickPasteLabel.isHidden {
+                make.trailing.equalToSuperview().inset(Const.space8)
+            } else {
+                make.trailing.equalTo(quickPasteLabel.snp.leading).offset(-2)
+            }
+            make.bottom.equalTo(cardBottomView.snp.bottom).inset(Const.space8)
+            make.height.equalTo(infoIconHeight)
         }
     }
 }
@@ -253,7 +321,9 @@ extension CollectionViewItem {
         contentView.addSubview(headView)
         contentView.addSubview(cardContentView)
         contentView.addSubview(cardBottomView)
+        infoIconBackgroundView.addSubview(infoIconView)
         contentView.addSubview(quickPasteLabel)
+        contentView.addSubview(infoIconBackgroundView)
 
         selectionBorderView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
@@ -279,8 +349,19 @@ extension CollectionViewItem {
         }
 
         quickPasteLabel.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().inset(Const.space6)
-            make.bottom.equalToSuperview().inset(Const.space4)
+            make.trailing.equalToSuperview().inset(Const.space8)
+            make.bottom.equalTo(cardBottomView.snp.bottom).inset(Const.space8)
+        }
+
+        infoIconBackgroundView.snp.makeConstraints { make in
+            make.trailing.equalTo(quickPasteLabel.snp.leading).offset(-2)
+            make.bottom.equalTo(cardBottomView.snp.bottom).inset(Const.space8)
+            make.height.equalTo(infoIconHeight)
+        }
+
+        infoIconView.snp.makeConstraints { make in
+            make.top.bottom.equalToSuperview().inset(2)
+            make.leading.trailing.equalToSuperview().inset(Const.space4)
         }
 
         updateShadow()

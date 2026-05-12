@@ -77,7 +77,6 @@ struct AppearanceSettingsView: View {
                         }
                     }
                 }
-
             }
             .padding(.horizontal, Const.space16)
             .padding(.vertical, Const.space8)

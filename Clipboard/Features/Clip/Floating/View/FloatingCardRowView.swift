@@ -307,18 +307,34 @@ final class FloatingCardRowView: NSView {
         menu.delegate = self
         self.menu = menu
     }
-
 }
 
 // MARK: - ClipItemMenuActionable
 
 extension FloatingCardRowView: ClipItemMenuActionable {
-    func handleClipPaste() { onPaste?() }
-    func handleClipPastePlain() { onPastePlainText?() }
-    func handleClipCopy() { onCopy?() }
-    func handleClipEdit() { onEdit?() }
-    func handleClipDelete() { onDelete?() }
-    func handleClipPreview() { onTogglePreview?() }
+    func handleClipPaste() {
+        onPaste?()
+    }
+
+    func handleClipPastePlain() {
+        onPastePlainText?()
+    }
+
+    func handleClipCopy() {
+        onCopy?()
+    }
+
+    func handleClipEdit() {
+        onEdit?()
+    }
+
+    func handleClipDelete() {
+        onDelete?()
+    }
+
+    func handleClipPreview() {
+        onTogglePreview?()
+    }
 
     func handleClipAssignToChip(_ sender: NSMenuItem) {
         guard let model = currentModel, model.group != sender.tag else { return }

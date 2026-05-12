@@ -48,6 +48,14 @@ final class ClipMainViewController: NSViewController {
         }
     }
 
+    var isPlainTextModifierPressed: Bool = false {
+        didSet {
+            if oldValue != isPlainTextModifierPressed {
+                updatePlainTextIndicatorDisplay()
+            }
+        }
+    }
+
     // MARK: - Focus
 
     var focusRegion: FocusRegion {
@@ -238,6 +246,7 @@ extension ClipMainViewController {
             flagsMonitorToken = nil
         }
         isQuickPastePressed = false
+        isPlainTextModifierPressed = false
     }
 }
 

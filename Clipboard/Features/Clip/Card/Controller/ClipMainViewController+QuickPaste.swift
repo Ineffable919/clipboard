@@ -19,6 +19,7 @@ extension ClipMainViewController {
         }
 
         isQuickPastePressed = KeyCode.isQuickPasteModifierPressed()
+        isPlainTextModifierPressed = KeyCode.isModifierPressed(modifierIndex: PasteUserDefaults.plainTextModifier)
         return event
     }
 
@@ -29,6 +30,13 @@ extension ClipMainViewController {
                 continue
             }
             item.quickPasteIndex = quickPasteIndex(for: indexPath.item)
+        }
+    }
+
+    func updatePlainTextIndicatorDisplay() {
+        let visibleItems = collectionView.visibleItems()
+        for case let item as CollectionViewItem in visibleItems {
+            item.showPlainTextIndicator = isPlainTextModifierPressed
         }
     }
 

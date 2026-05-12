@@ -366,7 +366,7 @@ final class FloatingHistoryView: NSView {
             item.onTogglePreview = { [weak self] in self?.onTogglePreview?(row) }
             item.onAssignToChip = { [weak self] chipId in
                 guard let self, row < dataList.count else { return }
-                _ = self.topVM?.assignModelToChip(model: dataList[row], chipId: chipId)
+                _ = topVM?.assignModelToChip(model: dataList[row], chipId: chipId)
             }
             return item
         }

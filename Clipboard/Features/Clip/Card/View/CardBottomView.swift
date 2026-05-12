@@ -263,7 +263,7 @@ final class CardCommonBottomView: NSView, PassthroughMouseEvents {
         addSubview(label)
         label.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview().inset(Const.space12)
-            make.bottom.equalToSuperview().inset(Const.space12)
+            make.bottom.equalToSuperview().inset(Const.space8)
         }
     }
 
