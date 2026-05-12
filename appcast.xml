@@ -4,9 +4,45 @@
         <title>Clipboard 更新</title>
         <description>Clipboard 应用更新源</description>
         <language>zh-CN</language>
-
         <item>
             <title>Version 1.1 (Apple Silicon (arm64))</title>
+            <description>
+                <![CDATA[
+<h1>Clip 1.1</h1>
+
+<p><strong>数据迁移说明</strong></p>
+
+<p>
+本次更新调整了应用的数据存储位置，用于解决启动时频繁弹出「文稿访问授权」的问题。
+</p>
+
+<p>
+更新后如果发现历史数据未显示，请前往：
+<br>
+<strong>设置 → 存储</strong>
+<br>
+导入旧版本数据即可。
+</p>
+
+<p>
+旧数据默认位置：
+<br>
+<code>文稿 / Clip / Clip.sqlite3</code>
+</p>
+
+<p>
+数据导入完成后，可自行删除旧文件，或保留作为备份。
+</p>
+
+<h2>改进与修复</h2>
+
+<ul>
+    <li>优化应用数据存储机制</li>
+    <li>解决启动时重复请求文稿访问权限的问题</li>
+    <li>修复若干已知问题并提升稳定性</li>
+</ul>
+]]>
+            </description>
             <sparkle:releaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
             </sparkle:releaseNotesLink>
@@ -25,7 +61,6 @@
                 length="3544032"
                 type="application/octet-stream" />
         </item>
-
         <item>
             <title>Version 1.1 (Intel (x86_64))</title>
             <sparkle:releaseNotesLink>
@@ -45,7 +80,6 @@
                 length="3681232"
                 type="application/octet-stream" />
         </item>
-
         <item>
             <title>Version 1.0.0 (Apple Silicon (arm64))</title>
             <sparkle:releaseNotesLink>
@@ -64,7 +98,6 @@
                 length="3545414"
                 type="application/octet-stream" />
         </item>
-
         <item>
             <title>Version 0.5.1 (Apple Silicon (arm64))</title>
             <sparkle:releaseNotesLink>
@@ -83,7 +116,6 @@
                 length="3339886"
                 type="application/octet-stream" />
         </item>
-
         <item>
             <title>Version 1.0.0 (Intel (x86_64))</title>
             <sparkle:releaseNotesLink>
@@ -102,7 +134,6 @@
                 length="3682114"
                 type="application/octet-stream" />
         </item>
-
         <item>
             <title>Version 0.5.1 (Intel (x86_64))</title>
             <sparkle:releaseNotesLink>
@@ -121,7 +152,6 @@
                 length="3469733"
                 type="application/octet-stream" />
         </item>
-
         <item>
             <title>Version 0.5.0 (Apple Silicon (arm64))</title>
             <sparkle:releaseNotesLink>
@@ -140,7 +170,6 @@
                 length="3339322"
                 type="application/octet-stream" />
         </item>
-
         <item>
             <title>Version 0.5.0 (Intel (x86_64))</title>
             <sparkle:releaseNotesLink>
@@ -159,7 +188,6 @@
                 length="3468115"
                 type="application/octet-stream" />
         </item>
-
         <item>
             <title>Version 0.3.1 (Apple Silicon (arm64))</title>
             <sparkle:releaseNotesLink>
@@ -178,7 +206,6 @@
                 length="3140529"
                 type="application/octet-stream" />
         </item>
-
         <item>
             <title>Version 0.3.1 (Intel (x86_64))</title>
             <sparkle:releaseNotesLink>
@@ -197,7 +224,6 @@
                 length="3253761"
                 type="application/octet-stream" />
         </item>
-
         <item>
             <title>Version 0.3.0 (Apple Silicon (arm64))</title>
             <sparkle:releaseNotesLink>
@@ -216,7 +242,6 @@
                 length="3066886"
                 type="application/octet-stream" />
         </item>
-
         <item>
             <title>Version 0.3.0 (Intel (x86_64))</title>
             <sparkle:releaseNotesLink>
@@ -235,6 +260,5 @@
                 length="3138964"
                 type="application/octet-stream" />
         </item>
-
     </channel>
 </rss>
