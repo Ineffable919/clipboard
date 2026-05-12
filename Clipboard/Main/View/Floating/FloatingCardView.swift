@@ -111,7 +111,7 @@ struct FloatingCardView: View {
     }
 
     private var selectionColor: Color {
-        env.focusView == .history ? Color(.keyboardFocusIndicatorColor) : .gray
+        env.focusView == .history ? .accentColor : .gray
     }
 
     // MARK: - Context Menu
