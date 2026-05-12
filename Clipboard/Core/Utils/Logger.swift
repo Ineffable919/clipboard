@@ -93,8 +93,11 @@ private actor LoggerState {
         .year().month().day()
         .hour(.twoDigits(amPM: .omitted)).minute(.twoDigits).second(.twoDigits)
 
-    private static let fileDateFormat: Date.FormatStyle = .dateTime
-        .year().month().day()
+    private static let fileDateFormat = Date.VerbatimFormatStyle(
+        format: "\(year: .defaultDigits)\(month: .twoDigits)\(day: .twoDigits)",
+        timeZone: .current,
+        calendar: Calendar(identifier: .gregorian)
+    )
 
     #if DEBUG
         private var minimumLogLevel: LogLevel = .debug
