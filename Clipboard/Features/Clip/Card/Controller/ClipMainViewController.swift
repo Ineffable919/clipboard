@@ -190,7 +190,7 @@ extension ClipMainViewController {
 
         if focusRegion == .search, !topVM.hasInput {
             topBarView.deactivateSearch()
-            focusRegion = .collection
+            setFocusRegion(.collection)
         }
 
         updateSelectedItemBorder()
