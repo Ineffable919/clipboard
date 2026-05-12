@@ -31,6 +31,9 @@
             <sparkle:releaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
             </sparkle:releaseNotesLink>
+            <sparkle:fullReleaseNotesLink>
+                https://ineffable919.github.io/clipboard/scripts/release-note.html
+            </sparkle:fullReleaseNotesLink>
             <pubDate>Tue, 12 May 2026 17:56:41 +0800</pubDate>
             <sparkle:version>116</sparkle:version>
             <sparkle:shortVersionString>1.1</sparkle:shortVersionString>
