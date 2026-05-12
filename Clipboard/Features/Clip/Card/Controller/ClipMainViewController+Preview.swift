@@ -14,8 +14,8 @@ extension ClipMainViewController {
         relativeTo view: NSView
     ) {
         closePreviewPopover()
-        let popover = ClipPreviewPopover(model: model) {
-            self.setFocusRegion(.popover)
+        let popover = ClipPreviewPopover(model: model) { [weak self] in
+            self?.setFocusRegion(.popover)
         }
         popover.onPinToChip = { [weak self] model, chipId in
             _ = self?.topVM.assignModelToChip(model: model, chipId: chipId)
@@ -30,8 +30,8 @@ extension ClipMainViewController {
 
     func closePreviewPopover() {
         guard let popover = previewPopover else { return }
-        popover.onContentInteraction = nil
         previewPopover = nil
+        popover.cleanup()
         popover.close()
         if focusRegion == .popover {
             setFocusRegion(.collection)
@@ -53,8 +53,8 @@ extension ClipMainViewController: NSPopoverDelegate {
     func popoverWillClose(_ notification: Notification) {
         guard let closing = notification.object as? ClipPreviewPopover,
               closing === previewPopover else { return }
-        closing.onContentInteraction = nil
         previewPopover = nil
+        closing.cleanup()
         if focusRegion == .popover {
             setFocusRegion(.collection)
             view.window?.makeFirstResponder(collectionView)

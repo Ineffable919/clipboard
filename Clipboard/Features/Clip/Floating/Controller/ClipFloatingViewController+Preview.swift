@@ -34,6 +34,7 @@ extension ClipFloatingViewController {
     func closePreview() {
         guard let popover = previewPopover else { return }
         previewPopover = nil
+        popover.cleanup()
         popover.close()
         if focusRegion == .popover {
             focusRegion = .collection
@@ -48,6 +49,7 @@ extension ClipFloatingViewController: NSPopoverDelegate {
         guard let closing = notification.object as? ClipPreviewPopover,
               closing === previewPopover else { return }
         previewPopover = nil
+        closing.cleanup()
         if focusRegion == .popover {
             focusRegion = .collection
         }

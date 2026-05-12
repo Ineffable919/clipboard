@@ -11,6 +11,10 @@ import SnapKit
 import VisionKit
 import WebKit
 
+private protocol PreviewResettable {
+    func resetPreview()
+}
+
 // MARK: - ClipPreviewContentView
 
 final class ClipPreviewContentView: NSView {
@@ -59,8 +63,7 @@ final class ClipPreviewContentView: NSView {
     // MARK: - Public API
 
     func configure(with model: PasteboardModel) {
-        currentContentView?.removeFromSuperview()
-        currentContentView = nil
+        reset()
 
         let contentView = makeContentView(for: model)
         addSubview(contentView)
@@ -69,8 +72,7 @@ final class ClipPreviewContentView: NSView {
     }
 
     func reset() {
-        if let v = currentContentView as? PreviewImageView { v.cancelLoad() }
-        if let v = currentContentView as? PreviewWebView { v.stopLoading() }
+        (currentContentView as? PreviewResettable)?.resetPreview()
         currentContentView?.removeFromSuperview()
         currentContentView = nil
     }
@@ -332,7 +334,7 @@ final class PreviewColorView: NSView {
 
 // MARK: - PreviewImageView
 
-final class PreviewImageView: NSView {
+final class PreviewImageView: NSView, PreviewResettable {
     private let liveTextView: PreviewLiveTextView
 
     init(model: PasteboardModel) {
@@ -370,14 +372,16 @@ final class PreviewImageView: NSView {
         fatalError()
     }
 
-    func cancelLoad() {
-        liveTextView.cancelAnalysis()
+    func resetPreview() {
+        liveTextView.resetPreview()
     }
 }
 
 // MARK: - PreviewFileView
 
-final class PreviewFileView: NSView {
+final class PreviewFileView: NSView, PreviewResettable {
+    private var previewContentView: (NSView & PreviewResettable)?
+
     init(model: PasteboardModel) {
         super.init(frame: .zero)
         wantsLayer = true
@@ -385,6 +389,7 @@ final class PreviewFileView: NSView {
         if let paths = model.cachedFilePaths, !paths.isEmpty {
             if paths.count == 1, let first = paths.first {
                 let qlView = PreviewQuickLookView(filePath: first)
+                previewContentView = qlView
                 addSubview(qlView)
                 qlView.snp.makeConstraints { $0.edges.equalToSuperview() }
             } else {
@@ -409,11 +414,16 @@ final class PreviewFileView: NSView {
     required init?(coder _: NSCoder) {
         fatalError()
     }
+
+    func resetPreview() {
+        previewContentView?.resetPreview()
+        previewContentView = nil
+    }
 }
 
 // MARK: - PreviewQuickLookView
 
-final class PreviewQuickLookView: NSView {
+final class PreviewQuickLookView: NSView, PreviewResettable {
     private var qlView: QLPreviewView?
 
     init(filePath: String) {
@@ -438,6 +448,12 @@ final class PreviewQuickLookView: NSView {
     @available(*, unavailable)
     required init?(coder _: NSCoder) {
         fatalError()
+    }
+
+    func resetPreview() {
+        qlView?.previewItem = nil
+        qlView?.removeFromSuperview()
+        qlView = nil
     }
 
     private func showFallbackIcon(for url: URL) {
@@ -492,7 +508,7 @@ final class PreviewMultiFileView: NSView {
 
 // MARK: - PreviewWebView
 
-final class PreviewWebView: NSView, WKNavigationDelegate {
+final class PreviewWebView: NSView, WKNavigationDelegate, PreviewResettable {
     private let webView: WKWebView
     private let loadingIndicator: NSProgressIndicator
 
@@ -533,6 +549,10 @@ final class PreviewWebView: NSView, WKNavigationDelegate {
         webView.stopLoading()
         webView.navigationDelegate = nil
         webView.loadHTMLString("", baseURL: nil)
+    }
+
+    func resetPreview() {
+        stopLoading()
     }
 
     // MARK: WKNavigationDelegate
@@ -580,7 +600,10 @@ final class PreviewEmptyView: NSView {
 
 // MARK: - PreviewLiveTextView
 
-final class PreviewLiveTextView: NSView, ImageAnalysisOverlayViewDelegate {
+final class PreviewLiveTextView: NSView, ImageAnalysisOverlayViewDelegate, PreviewResettable {
+    @MainActor private static var activeAnalysisTask: Task<Void, Never>?
+    @MainActor private static var activeAnalysisGeneration = 0
+
     private let imageView: NSImageView = {
         let iv = NSImageView()
         iv.imageScaling = .scaleProportionallyUpOrDown
@@ -590,6 +613,8 @@ final class PreviewLiveTextView: NSView, ImageAnalysisOverlayViewDelegate {
 
     private let overlayView = ImageAnalysisOverlayView()
     private var analysisTask: Task<Void, Never>?
+
+    private static let analysisDelay: Duration = .milliseconds(400)
 
     private static let sharedAnalyzer: ImageAnalyzer? = {
         guard ImageAnalyzer.isSupported else { return nil }
@@ -611,9 +636,21 @@ final class PreviewLiveTextView: NSView, ImageAnalysisOverlayViewDelegate {
         analysisTask?.cancel()
     }
 
-    func cancelAnalysis() {
-        analysisTask?.cancel()
-        analysisTask = nil
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        if window == nil {
+            cancelAnalysis()
+        } else {
+            scheduleAnalysisIfNeeded()
+        }
+    }
+
+    func resetPreview() {
+        cancelAnalysis()
+        overlayView.analysis = nil
+        overlayView.trackingImageView = nil
+        overlayView.delegate = nil
+        imageView.image = nil
     }
 
     private func setupViews() {
@@ -629,7 +666,7 @@ final class PreviewLiveTextView: NSView, ImageAnalysisOverlayViewDelegate {
     private func loadImage(from data: Data) {
         if let image = NSImage(data: data) {
             imageView.image = image
-            analyzeImage(image)
+            scheduleAnalysisIfNeeded()
         } else {
             let config = NSImage.SymbolConfiguration(pointSize: 64, weight: .regular)
             imageView.image = NSImage(
@@ -641,27 +678,64 @@ final class PreviewLiveTextView: NSView, ImageAnalysisOverlayViewDelegate {
         }
     }
 
-    private func analyzeImage(_ image: NSImage) {
-        guard let analyzer = Self.sharedAnalyzer,
-              let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil)
+    private func cancelAnalysis() {
+        analysisTask?.cancel()
+        analysisTask = nil
+    }
+
+    private func scheduleAnalysisIfNeeded() {
+        guard window != nil,
+              imageView.image != nil,
+              overlayView.analysis == nil,
+              Self.sharedAnalyzer != nil
         else { return }
 
+        analysisTask?.cancel()
         analysisTask = Task { @MainActor [weak self] in
-            let configuration = ImageAnalyzer.Configuration([.text, .machineReadableCode])
             do {
-                let analysis = try await analyzer.analyze(
-                    cgImage,
-                    orientation: .up,
-                    configuration: configuration
-                )
-                guard !Task.isCancelled else { return }
-                self?.overlayView.analysis = analysis
-                self?.overlayView.trackingImageView = self?.imageView
-                self?.overlayView.setContentsRectNeedsUpdate()
+                try await Task.sleep(for: Self.analysisDelay)
             } catch {
-                guard !Task.isCancelled else { return }
-                log.warn("Live Text analysis failed: \(error)")
+                return
             }
+
+            guard let self,
+                  !Task.isCancelled,
+                  window != nil,
+                  let image = imageView.image
+            else { return }
+
+            Self.activeAnalysisTask?.cancel()
+            Self.activeAnalysisGeneration += 1
+            let generation = Self.activeAnalysisGeneration
+            Self.activeAnalysisTask = analysisTask
+            await analyzeImage(image)
+            if Self.activeAnalysisGeneration == generation {
+                Self.activeAnalysisTask = nil
+            }
+        }
+    }
+
+    private func analyzeImage(_ image: NSImage) async {
+        guard let analyzer = Self.sharedAnalyzer,
+              let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil),
+              !Task.isCancelled
+        else { return }
+
+        let configuration = ImageAnalyzer.Configuration([.text, .machineReadableCode])
+        do {
+            let analysis = try await analyzer.analyze(
+                cgImage,
+                orientation: .up,
+                configuration: configuration
+            )
+            guard !Task.isCancelled, window != nil else { return }
+            overlayView.analysis = analysis
+            overlayView.trackingImageView = imageView
+            overlayView.setContentsRectNeedsUpdate()
+        } catch is CancellationError {
+        } catch {
+            guard !Task.isCancelled else { return }
+            log.warn("Live Text analysis failed: \(error)")
         }
     }
 

@@ -56,7 +56,14 @@ final class ClipPreviewController: NSViewController {
 
     @discardableResult
     func configure(with model: PasteboardModel) -> NSSize {
+        metadataTask?.cancel()
+        metadataTask = nil
+
         self.model = model
+        appIcon = nil
+        defaultBrowserName = nil
+        defaultAppForFile = nil
+        fileSize = nil
 
         headerView.configure(model: model, appIcon: nil)
         contentView.configure(with: model)
@@ -81,6 +88,11 @@ final class ClipPreviewController: NSViewController {
     func cleanup() {
         metadataTask?.cancel()
         metadataTask = nil
+        model = nil
+        appIcon = nil
+        defaultBrowserName = nil
+        defaultAppForFile = nil
+        fileSize = nil
         contentView.reset()
     }
 

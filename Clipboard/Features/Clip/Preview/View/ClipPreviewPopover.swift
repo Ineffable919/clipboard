@@ -65,6 +65,13 @@ final class ClipPreviewPopover: NSPopover {
 
     func cleanup() {
         previewVC.cleanup()
+        previewVC.onContentInteraction = nil
+        previewVC.onDismiss = nil
+        previewVC.onPinToChip = nil
+        previewVC.onUnpin = nil
+        onContentInteraction = nil
+        onPinToChip = nil
+        onUnpin = nil
     }
 
     // MARK: - Size Calculation
