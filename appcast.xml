@@ -10,6 +10,9 @@
             <sparkle:releaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
             </sparkle:releaseNotesLink>
+            <sparkle:fullReleaseNotesLink>
+                https://ineffable919.github.io/clipboard/scripts/release-note.html
+            </sparkle:fullReleaseNotesLink>
             <pubDate>Tue, 12 May 2026 17:54:40 +0800</pubDate>
             <sparkle:version>116</sparkle:version>
             <sparkle:shortVersionString>1.1</sparkle:shortVersionString>
@@ -17,6 +20,7 @@
             <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
             <enclosure
                 url="https://github.com/Ineffable919/clipboard/releases/download/1.1/Clipboard-1.1-arm64.zip"
+                sparkle:arch="arm64"
                 sparkle:edSignature="iSDxco8EjYZHZh/EEaUltzWHCObF4jwsC5Uc4rxrT3mBXtlnfDBv5wo1zGwu9fi1tvKsqJQhHLdYTiUDrO55Dw=="
                 length="3544032"
                 type="application/octet-stream" />
@@ -31,11 +35,9 @@
             <sparkle:version>116</sparkle:version>
             <sparkle:shortVersionString>1.1</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
-            <sparkle:tags>
-                <sparkle:criticalUpdate sparkle:osType="x86_64" />
-            </sparkle:tags>
             <enclosure
                 url="https://github.com/Ineffable919/clipboard/releases/download/1.1/Clipboard-1.1-x86_64.zip"
+                sparkle:arch="x86_64"
                 sparkle:edSignature="ZR1JrtoEwxYVzzCRdVrETlJ9qrwfQH3HmRshHLU4Unn2aivxLD30+jkB4wMxavawcQ8UqmKck0nsRJ3u60GzDA=="
                 length="3681232"
                 type="application/octet-stream" />
