@@ -4,27 +4,25 @@
         <title>Clipboard 更新</title>
         <description>Clipboard 应用更新源</description>
         <language>zh-CN</language>
+        <!-- 1.1 -->
         <item>
             <title>Version 1.1 (Apple Silicon (arm64))</title>
-            <description>
+            <description sparkle:format="markdown">
                 <![CDATA[
-                <h3>Version 1.1</h3>
+                ### Version 1.1
 
-                <p><strong>数据迁移说明</strong></p>
+                **数据迁移说明**
 
-                <p>
-                本次更新调整了应用的数据存储位置，用于解决启动时频繁弹出「文稿访问授权」的问题。<br>
-                更新后如果发现历史数据未显示，请前往：<strong>设置 - 存储</strong>导入旧版本数据即可。<br>
-                旧数据默认位置：<code>文稿 / Clip / Clip.sqlite3</code><br>
-                数据导入完成后，可自行删除旧文件，或保留作为备份。<br>
-                </p>
+                本次更新调整了应用的数据存储位置，用于解决启动时频繁弹出「文稿访问授权」的问题。
+                更新后如果发现历史数据未显示，请前往：**设置 - 存储**导入旧版本数据即可。
+                旧数据默认位置：`文稿 / Clip / Clip.sqlite3`
+                数据导入完成后，可自行删除旧文件，或保留作为备份。
 
-                <p><strong>改进与修复</strong></p>
-                <ul>
-                    <li>优化应用数据存储机制</li>
-                    <li>解决启动时重复请求文稿访问权限的问题</li>
-                    <li>修复若干已知问题并提升稳定性</li>
-                </ul>
+                **改进与修复**
+
+                - 优化应用数据存储机制
+                - 解决启动时重复请求文稿访问权限的问题
+                - 修复若干已知问题并提升稳定性
                 ]]>
             </description>
             <sparkle:fullReleaseNotesLink>
@@ -44,6 +42,24 @@
         </item>
         <item>
             <title>Version 1.1 (Intel (x86_64))</title>
+            <description sparkle:format="markdown">
+                <![CDATA[
+                ### Version 1.1
+
+                **数据迁移说明**
+
+                本次更新调整了应用的数据存储位置，用于解决启动时频繁弹出「文稿访问授权」的问题。
+                更新后如果发现历史数据未显示，请前往：**设置 - 存储**导入旧版本数据即可。
+                旧数据默认位置：`文稿 / Clip / Clip.sqlite3`
+                数据导入完成后，可自行删除旧文件，或保留作为备份。
+
+                **改进与修复**
+
+                - 优化应用数据存储机制
+                - 解决启动时重复请求文稿访问权限的问题
+                - 修复若干已知问题并提升稳定性
+                ]]>
+            </description>
             <sparkle:fullReleaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
             </sparkle:fullReleaseNotesLink>
@@ -58,45 +74,41 @@
                 length="3681232"
                 type="application/octet-stream" />
         </item>
+
+        <!-- 1.0.0 -->
         <item>
             <title>Version 1.0.0 (Apple Silicon (arm64))</title>
-            <description>
-                <![CDATA[
-                <h3>Version 1.1</h3>
-
-                <p><strong>数据迁移说明</strong></p>
-
-                <p>
-                本次更新调整了应用的数据存储位置，用于解决启动时频繁弹出「文稿访问授权」的问题。<br>
-                更新后如果发现历史数据未显示，请前往：<strong>设置 - 存储</strong>导入旧版本数据即可。<br>
-                旧数据默认位置：<code>文稿 / Clip / Clip.sqlite3</code><br>
-                数据导入完成后，可自行删除旧文件，或保留作为备份。<br>
-                </p>
-
-                <p><strong>改进与修复</strong></p>
-                <ul>
-                    <li>优化应用数据存储机制</li>
-                    <li>解决启动时重复请求文稿访问权限的问题</li>
-                    <li>修复若干已知问题并提升稳定性</li>
-                </ul>
-                ]]>
-            </description>
-            <sparkle:releaseNotesLink>
+            <sparkle:fullReleaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
-            </sparkle:releaseNotesLink>
+            </sparkle:fullReleaseNotesLink>
             <pubDate>Fri, 24 Apr 2026 14:54:05 +0800</pubDate>
             <sparkle:version>115</sparkle:version>
             <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
-            <sparkle:tags>
-                <sparkle:criticalUpdate sparkle:osType="arm64" />
-            </sparkle:tags>
             <enclosure
                 url="https://github.com/Ineffable919/clipboard/releases/download/1.0.0/Clipboard-1.0.0-arm64.zip"
+                sparkle:arch="arm64"
                 sparkle:edSignature="A49hyz4dviOD9SbLX6zeWPPOiycQ5F2AoNFp0+QFB3wlrHbnrk+5dTEZaZ5kdxi6zsKnx87I5Kdgr3ZEGS1lAw=="
                 length="3545414"
                 type="application/octet-stream" />
         </item>
+        <item>
+            <title>Version 1.0.0 (Intel (x86_64))</title>
+            <sparkle:fullReleaseNotesLink>
+                https://ineffable919.github.io/clipboard/scripts/release-note.html
+            </sparkle:fullReleaseNotesLink>
+            <pubDate>Fri, 24 Apr 2026 14:55:29 +0800</pubDate>
+            <sparkle:version>115</sparkle:version>
+            <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://github.com/Ineffable919/clipboard/releases/download/1.0.0/Clipboard-1.0.0-x86_64.zip"
+                sparkle:arch="x86_64"
+                sparkle:edSignature="UxfJz85AmevJcZp++jXy1Dq6kPEBUVlbpO6c09N6gdNxjRkykx5aFjDV2kiYIBuJUjgENg5NLR0sDfkDbW7cAQ=="
+                length="3682114"
+                type="application/octet-stream" />
+        </item>
+
         <item>
             <title>Version 0.5.1 (Apple Silicon (arm64))</title>
             <sparkle:releaseNotesLink>
@@ -113,24 +125,6 @@
                 url="https://github.com/Ineffable919/clipboard/releases/download/0.5.1/Clipboard-0.5.1-arm64.zip"
                 sparkle:edSignature="+10RT2oh0xUi8a6CLDsb8dTw3bWIBwa8y1Joe7bTDfG2W0e5DajTfTHP7EIeanCptHEVIkNTNS+McEmqVk/vAg=="
                 length="3339886"
-                type="application/octet-stream" />
-        </item>
-        <item>
-            <title>Version 1.0.0 (Intel (x86_64))</title>
-            <sparkle:releaseNotesLink>
-                https://ineffable919.github.io/clipboard/scripts/release-note.html
-            </sparkle:releaseNotesLink>
-            <pubDate>Fri, 24 Apr 2026 14:55:29 +0800</pubDate>
-            <sparkle:version>115</sparkle:version>
-            <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <sparkle:tags>
-                <sparkle:criticalUpdate sparkle:osType="x86_64" />
-            </sparkle:tags>
-            <enclosure
-                url="https://github.com/Ineffable919/clipboard/releases/download/1.0.0/Clipboard-1.0.0-x86_64.zip"
-                sparkle:edSignature="UxfJz85AmevJcZp++jXy1Dq6kPEBUVlbpO6c09N6gdNxjRkykx5aFjDV2kiYIBuJUjgENg5NLR0sDfkDbW7cAQ=="
-                length="3682114"
                 type="application/octet-stream" />
         </item>
         <item>
