@@ -7,21 +7,26 @@
         <!-- 1.1 -->
         <item>
             <title>Version 1.1 (Apple Silicon (arm64))</title>
-            <description sparkle:format="markdown">
-                ### Version 1.1
+            <description>
+                <![CDATA[
+                <h3>Version 1.1</h3>
 
-                **数据迁移说明**
+                <p><strong>数据迁移说明</strong></p>
 
-                本次更新调整了应用的数据存储位置，用于解决启动时频繁弹出「文稿访问授权」的问题。
-                更新后如果发现历史数据未显示，请前往：**设置 - 存储**导入旧版本数据即可。
-                旧数据默认位置：`文稿 / Clip / Clip.sqlite3`
-                数据导入完成后，可自行删除旧文件，或保留作为备份。
+                <p>
+                本次更新调整了应用的数据存储位置，用于解决启动时频繁弹出「文稿访问授权」的问题。<br>
+                更新后如果发现历史数据未显示，请前往：<strong>设置 - 存储</strong>导入旧版本数据即可。<br>
+                旧数据默认位置：<code>文稿/Clip/Clip.sqlite3</code><br>
+                数据导入完成后，可自行删除旧文件，或保留作为备份。<br>
+                </p>
 
-                **改进与修复**
-
-                - 优化应用数据存储机制
-                - 解决启动时重复请求文稿访问权限的问题
-                - 修复若干已知问题并提升稳定性
+                <p><strong>改进与修复</strong></p>
+                <ul>
+                    <li>优化应用数据存储机制</li>
+                    <li>解决启动时重复请求文稿访问权限的问题</li>
+                    <li>修复若干已知问题并提升稳定性</li>
+                </ul>
+                ]]>
             </description>
             <sparkle:fullReleaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
@@ -40,21 +45,26 @@
         </item>
         <item>
             <title>Version 1.1 (Intel (x86_64))</title>
-            <description sparkle:format="markdown">
-                ### Version 1.1
+            <description>
+                <![CDATA[
+                <h3>Version 1.1</h3>
 
-                **数据迁移说明**
+                <p><strong>数据迁移说明</strong></p>
 
-                本次更新调整了应用的数据存储位置，用于解决启动时频繁弹出「文稿访问授权」的问题。
-                更新后如果发现历史数据未显示，请前往：**设置 - 存储**导入旧版本数据即可。
-                旧数据默认位置：`文稿 / Clip / Clip.sqlite3`
-                数据导入完成后，可自行删除旧文件，或保留作为备份。
+                <p>
+                本次更新调整了应用的数据存储位置，用于解决启动时频繁弹出「文稿访问授权」的问题。<br>
+                更新后如果发现历史数据未显示，请前往：<strong>设置 - 存储</strong>导入旧版本数据即可。<br>
+                旧数据默认位置：<code>文稿/Clip/Clip.sqlite3</code><br>
+                数据导入完成后，可自行删除旧文件，或保留作为备份。<br>
+                </p>
 
-                **改进与修复**
-
-                - 优化应用数据存储机制
-                - 解决启动时重复请求文稿访问权限的问题
-                - 修复若干已知问题并提升稳定性
+                <p><strong>改进与修复</strong></p>
+                <ul>
+                    <li>优化应用数据存储机制</li>
+                    <li>解决启动时重复请求文稿访问权限的问题</li>
+                    <li>修复若干已知问题并提升稳定性</li>
+                </ul>
+                ]]>
             </description>
             <sparkle:fullReleaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
