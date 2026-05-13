@@ -82,7 +82,7 @@ final class CollectionViewItem: NSCollectionViewItem {
         let label = NSTextField(labelWithString: "")
         label.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .regular)
         label.textColor = .labelColor
-        label.alignment = .right
+        label.alignment = .center
         label.isHidden = true
         return label
     }()
@@ -95,12 +95,6 @@ final class CollectionViewItem: NSCollectionViewItem {
             updateInfoIconTrailingConstraint()
         }
     }
-
-    private let infoIconHeight: CGFloat = {
-        let field = NSTextField(labelWithString: "A")
-        field.font = .preferredFont(forTextStyle: .callout)
-        return field.intrinsicContentSize.height + 4
-    }()
 
     private lazy var infoIconBackgroundView: NSView = {
         let view = NSView()
@@ -192,10 +186,9 @@ final class CollectionViewItem: NSCollectionViewItem {
             if quickPasteLabel.isHidden {
                 make.trailing.equalToSuperview().inset(Const.space8)
             } else {
-                make.trailing.equalTo(quickPasteLabel.snp.leading).offset(-2)
+                make.trailing.equalTo(quickPasteLabel.snp.leading)
             }
             make.bottom.equalTo(cardBottomView.snp.bottom).inset(Const.space8)
-            make.height.equalTo(infoIconHeight)
         }
     }
 }
@@ -354,13 +347,12 @@ extension CollectionViewItem {
         }
 
         infoIconBackgroundView.snp.makeConstraints { make in
-            make.trailing.equalTo(quickPasteLabel.snp.leading).offset(-2)
+            make.trailing.equalTo(quickPasteLabel.snp.leading)
             make.bottom.equalTo(cardBottomView.snp.bottom).inset(Const.space8)
-            make.height.equalTo(infoIconHeight)
         }
 
         infoIconView.snp.makeConstraints { make in
-            make.top.bottom.equalToSuperview().inset(2)
+            make.top.bottom.equalToSuperview().inset(4)
             make.leading.trailing.equalToSuperview().inset(Const.space4)
         }
 

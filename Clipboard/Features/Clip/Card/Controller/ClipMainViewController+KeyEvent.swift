@@ -39,7 +39,7 @@ extension ClipMainViewController: NSGestureRecognizerDelegate {
 
 extension ClipMainViewController {
     func keyDownEvent(_ event: NSEvent) -> NSEvent? {
-        log.debug("focusRegion: \(focusRegion)")
+        log.info("focusRegion: \(focusRegion),"firstResponder: \String(describing: view.window?.firstResponder)"")
         if focusRegion == .popover {
             if event.keyCode == KeyCode.escape {
                 closePreviewPopover()
@@ -100,9 +100,6 @@ extension ClipMainViewController {
         case KeyCode.space:
             return spaceKeyDown(event)
         default:
-            log.debug(
-                "firstResponder: \(String(describing: view.window?.firstResponder))"
-            )
             return event
         }
     }
