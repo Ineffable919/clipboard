@@ -11,13 +11,11 @@ struct HistoryView: View {
     @Environment(AppEnvironment.self) private var env
     @State private var historyVM = HistoryViewModel()
     @FocusState private var isFocused: Bool
-    @AppStorage(PrefKey.enableLinkPreview.rawValue)
-    private var enableLinkPreview: Bool = PasteUserDefaults.enableLinkPreview
     @AppStorage(PrefKey.displayMode.rawValue) private var displayModeRaw: Int = 0
     private let pd = PasteDataStore.main
 
     var body: some View {
-        VStack {
+        Group {
             if pd.dataList.isEmpty {
                 ClipboardEmptyStateView(style: .main)
             } else {
@@ -45,12 +43,7 @@ struct HistoryView: View {
         ScrollView(.horizontal) {
             LazyHStack(alignment: .top, spacing: Const.cardSpace) {
                 EnumeratedForEach(pd.dataList) { index, item in
-                    HistoryCardItemView(
-                        item: item,
-                        index: index,
-                        historyVM: historyVM,
-                        enableLinkPreview: enableLinkPreview
-                    )
+                    HistoryCardItemView(item: item, index: index, historyVM: historyVM)
                 }
             }
             .padding(.vertical, Const.space4)
@@ -58,28 +51,17 @@ struct HistoryView: View {
         .horizontalMouseWheelScroll()
         .scrollIndicators(.never)
         .scrollPosition($historyVM.scrollPosition)
-        .contentMargins(
-            .leading,
-            Const.cardLeadingSpace,
-            for: .scrollContent
-        )
-        .contentMargins(
-            .trailing,
-            Const.cardSpace,
-            for: .scrollContent
-        )
+        .contentMargins(.leading, Const.cardLeadingSpace, for: .scrollContent)
+        .contentMargins(.trailing, Const.cardSpace, for: .scrollContent)
         .focusable()
         .focused($isFocused)
         .focusEffectDisabled()
         .onChange(of: env.focusView) {
-            isFocused = (env.focusView == .history)
+            isFocused = env.focusView == .history
         }
         .onChange(of: historyVM.activeId) { _, newId in
             if let id = newId {
-                historyVM.scrollPosition.scrollTo(
-                    id: id,
-                    anchor: historyVM.scrollAnchor()
-                )
+                historyVM.scrollPosition.scrollTo(id: id, anchor: historyVM.scrollAnchor())
             }
         }
     }
@@ -91,9 +73,10 @@ private struct HistoryCardItemView: View {
     let item: PasteboardModel
     let index: Int
     let historyVM: HistoryViewModel
-    let enableLinkPreview: Bool
 
     @Environment(AppEnvironment.self) private var env
+    @AppStorage(PrefKey.enableLinkPreview.rawValue)
+    private var enableLinkPreview: Bool = PasteUserDefaults.enableLinkPreview
 
     var body: some View {
         ClipCardView(
@@ -104,9 +87,7 @@ private struct HistoryCardItemView: View {
             enableLinkPreview: enableLinkPreview,
             searchKeyword: historyVM.searchKeyword,
             onRequestDelete: { historyVM.requestDelete(at: index) },
-            onPaste: {
-                historyVM.pasteSelectedItems(checkPermissions: true)
-            },
+            onPaste: { historyVM.pasteSelectedItems(checkPermissions: true) },
             onPastePlainText: {
                 historyVM.pasteSelectedItems(
                     isAttribute: false,
@@ -117,12 +98,7 @@ private struct HistoryCardItemView: View {
             onTogglePreview: { historyVM.togglePreview(for: item.id) },
             onClosePreview: { historyVM.closePreview() }
         )
-        .transition(
-            .asymmetric(
-                insertion: .identity,
-                removal: .opacity.combined(with: .scale(scale: 0.92))
-            )
-        )
+        .transition(.cardRemoval)
         .contentShape(.rect)
         .onTapGesture {
             historyVM.handleOptimisticTap(on: item, index: index)
@@ -138,4 +114,13 @@ private struct HistoryCardItemView: View {
             historyVM.loadNextPageIfNeeded(at: index)
         }
     }
+}
+
+// MARK: - Transitions
+
+private extension AnyTransition {
+    static let cardRemoval = asymmetric(
+        insertion: .identity,
+        removal: .opacity.combined(with: .scale(scale: 0.92))
+    )
 }
