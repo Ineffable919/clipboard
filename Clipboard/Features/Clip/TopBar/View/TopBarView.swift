@@ -211,6 +211,14 @@ final class TopBarView: NSView {
         addSubview(settingBtn)
     }
 
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        let result = super.hitTest(point)
+        if isSearching, result === searchRow {
+            return nil
+        }
+        return result
+    }
+
     // MARK: - Settings Menu
 
     private func showSettingsMenu() {
