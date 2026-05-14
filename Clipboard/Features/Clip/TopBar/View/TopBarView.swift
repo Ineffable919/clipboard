@@ -441,13 +441,7 @@ final class TopBarView: NSView {
         }
     }
 
-    // MARK: - App Suggestions Cache
-
-    private struct AppSuggestionInfo {
-        let name: String
-        let path: String
-        let icon: NSImage?
-    }
+    // MARK: - App Suggestions
 
     private static var _cachedAppSuggestions: [AppSuggestionInfo]?
 
