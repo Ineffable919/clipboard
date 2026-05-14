@@ -370,6 +370,7 @@ final class TopBarView: NSView {
         // 类型
         let allTypes: [PasteModelType] = [.color, .file, .image, .link, .string]
         for type in allTypes {
+            guard topVM?.selectedTypes.contains(type) != true else { continue }
             let (icon, label) = type.iconAndLabel
             guard fuzzyMatch(label, query: query) else { continue }
             let image = NSImage(systemSymbolName: icon, accessibilityDescription: nil)
@@ -382,6 +383,7 @@ final class TopBarView: NSView {
 
         // 日期
         for option in DateFilterOption.allCases {
+            guard topVM?.selectedDateFilter != option else { continue }
             let label = option.displayName
             guard fuzzyMatch(label, query: query) else { continue }
             let image = NSImage(systemSymbolName: "calendar", accessibilityDescription: nil)
@@ -395,6 +397,7 @@ final class TopBarView: NSView {
         // 标签（用户自定义分组）
         let userChips = CategoryChipStore.shared.chips.filter { !$0.isSystem }
         for chip in userChips {
+            guard topVM?.selectedGroupId != chip.id else { continue }
             guard fuzzyMatch(chip.name, query: query) else { continue }
             let dotIcon = makeChipDotIcon(colorIndex: chip.colorIndex)
             result.append(SearchSuggestionItem(
@@ -407,6 +410,7 @@ final class TopBarView: NSView {
         // 应用
         if let cachedApps = cachedAppSuggestions {
             for app in cachedApps {
+                guard topVM?.selectedAppNames.contains(app.name) != true else { continue }
                 guard fuzzyMatch(app.name, query: query) else { continue }
                 result.append(SearchSuggestionItem(
                     title: app.name,
