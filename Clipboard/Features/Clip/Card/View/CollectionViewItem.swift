@@ -76,27 +76,16 @@ final class CollectionViewItem: NSCollectionViewItem {
     private lazy var cardContentView = CardContentView()
     private lazy var cardBottomView = CardBottomView()
 
-    // MARK: - Quick Paste Label
-
-    private lazy var quickPasteLabel: NSTextField = {
-        let label = NSTextField(labelWithString: "")
-        label.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .regular)
-        label.textColor = .labelColor
-        label.alignment = .center
-        label.isHidden = true
-        return label
-    }()
-
-    // MARK: - Plain Text Indicator
+    // MARK: - Badge (Plain Text Indicator + Quick Paste)
 
     var showPlainTextIndicator: Bool = false {
         didSet {
-            infoIconBackgroundView.isHidden = !showPlainTextIndicator
-            updateInfoIconTrailingConstraint()
+            infoIconView.isHidden = !showPlainTextIndicator
+            updateBadgeVisibility()
         }
     }
 
-    private lazy var infoIconBackgroundView: NSView = {
+    private lazy var badgeBgView: NSView = {
         let view = NSView()
         view.wantsLayer = true
         view.layer?.cornerRadius = 4.0
@@ -105,12 +94,34 @@ final class CollectionViewItem: NSCollectionViewItem {
         return view
     }()
 
+    private lazy var badgeStackView: NSStackView = {
+        let stack = NSStackView()
+        stack.orientation = .horizontal
+        stack.spacing = 0
+        stack.distribution = .fill
+        return stack
+    }()
+
     private lazy var infoIconView: NSImageView = {
         let iv = NSImageView()
         iv.image = NSImage(systemSymbolName: "text.justify.leading", accessibilityDescription: nil)
         iv.symbolConfiguration = NSImage.SymbolConfiguration(textStyle: .callout)
         iv.imageScaling = .scaleProportionallyUpOrDown
+        iv.isHidden = true
+        iv.setContentHuggingPriority(.required, for: .horizontal)
+        iv.setContentCompressionResistancePriority(.required, for: .horizontal)
         return iv
+    }()
+
+    private lazy var quickPasteLabel: NSTextField = {
+        let label = NSTextField(labelWithString: "")
+        label.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .regular)
+        label.textColor = .labelColor
+        label.alignment = .center
+        label.isHidden = true
+        label.setContentHuggingPriority(.required, for: .horizontal)
+        label.setContentCompressionResistancePriority(.required, for: .horizontal)
+        return label
     }()
 
     func configure(with model: PasteboardModel, keyword: String = "") {
@@ -150,7 +161,7 @@ final class CollectionViewItem: NSCollectionViewItem {
         var backgroundCGColor: CGColor = NSColor.clear.cgColor
         var tintColor: NSColor = .labelColor
 
-        infoIconBackgroundView.effectiveAppearance.performAsCurrentDrawingAppearance {
+        badgeBgView.effectiveAppearance.performAsCurrentDrawingAppearance {
             if model.type == .image {
                 backgroundCGColor = NSColor.unemphasizedSelectedContentBackgroundColor
                     .withAlphaComponent(0.8).cgColor
@@ -162,34 +173,23 @@ final class CollectionViewItem: NSCollectionViewItem {
             }
         }
 
-        infoIconBackgroundView.layer?.backgroundColor = backgroundCGColor
+        badgeBgView.layer?.backgroundColor = backgroundCGColor
         infoIconView.contentTintColor = tintColor
+        quickPasteLabel.textColor = tintColor
     }
 
     private func updateQuickPasteLabel() {
         if let index = quickPasteIndex {
             quickPasteLabel.stringValue = "\(index)"
             quickPasteLabel.isHidden = false
-
-            if let model = item {
-                let (_, textColor) = model.colors()
-                quickPasteLabel.textColor = textColor
-            }
         } else {
             quickPasteLabel.isHidden = true
         }
-        updateInfoIconTrailingConstraint()
+        updateBadgeVisibility()
     }
 
-    private func updateInfoIconTrailingConstraint() {
-        infoIconBackgroundView.snp.remakeConstraints { make in
-            if quickPasteLabel.isHidden {
-                make.trailing.equalToSuperview().inset(Const.space8)
-            } else {
-                make.trailing.equalTo(quickPasteLabel.snp.leading)
-            }
-            make.bottom.equalTo(cardBottomView.snp.bottom).inset(Const.space8)
-        }
+    private func updateBadgeVisibility() {
+        badgeBgView.isHidden = infoIconView.isHidden && quickPasteLabel.isHidden
     }
 }
 
@@ -329,9 +329,10 @@ extension CollectionViewItem {
         contentView.addSubview(headView)
         contentView.addSubview(cardContentView)
         contentView.addSubview(cardBottomView)
-        infoIconBackgroundView.addSubview(infoIconView)
-        contentView.addSubview(quickPasteLabel)
-        contentView.addSubview(infoIconBackgroundView)
+        badgeBgView.addSubview(badgeStackView)
+        badgeStackView.addArrangedSubview(infoIconView)
+        badgeStackView.addArrangedSubview(quickPasteLabel)
+        contentView.addSubview(badgeBgView)
 
         selectionBorderView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
@@ -356,18 +357,14 @@ extension CollectionViewItem {
             make.height.equalTo(Const.bottomSize)
         }
 
-        quickPasteLabel.snp.makeConstraints { make in
+        badgeBgView.snp.makeConstraints { make in
             make.trailing.equalToSuperview().inset(Const.space8)
             make.bottom.equalTo(cardBottomView.snp.bottom).inset(Const.space8)
+            make.height.equalTo(18)
         }
 
-        infoIconBackgroundView.snp.makeConstraints { make in
-            make.trailing.equalTo(quickPasteLabel.snp.leading)
-            make.bottom.equalTo(cardBottomView.snp.bottom).inset(Const.space8)
-        }
-
-        infoIconView.snp.makeConstraints { make in
-            make.top.bottom.equalToSuperview().inset(4)
+        badgeStackView.snp.makeConstraints { make in
+            make.centerY.equalToSuperview()
             make.leading.trailing.equalToSuperview().inset(Const.space4)
         }
 

@@ -48,7 +48,7 @@ extension String {
             return false
         }
 
-        return url.absoluteString == trimmedString
+        return true
     }
 
     func asCompleteURL() -> URL? {

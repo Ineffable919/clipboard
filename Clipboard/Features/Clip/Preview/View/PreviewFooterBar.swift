@@ -107,20 +107,14 @@ final class PreviewFooterBar: NSView {
             && model.isLink
 
         if isSingleFile, let path = model.cachedFilePaths?.first {
-            let suffix = fileSize.map { " · \($0)" } ?? ""
-            let maxWidth = (Const.maxPreviewWidth - Const.space12 * 2) * 0.7
-            let font = firstLineLabel.font ?? .systemFont(ofSize: NSFont.systemFontSize)
-            let (line1, line2) = splitPathIntoTwoLines(
-                path, suffix: suffix, font: font, maxWidth: maxWidth
-            )
-            firstLineLabel.stringValue = line1
-            secondLineLabel.stringValue = line2
-            secondLineLabel.isHidden = line2.isEmpty
+            setWrappedText(path, suffix: fileSize.map { " · \($0)" } ?? "")
         } else if model.pasteboardType.isText(), !showLinkPreview {
             let stats = TextStatistics(from: model.plainText)
             firstLineLabel.stringValue = stats.displayString
             secondLineLabel.stringValue = ""
             secondLineLabel.isHidden = true
+        } else if model.type == .link {
+            setWrappedText(model.introString())
         } else {
             firstLineLabel.stringValue = model.introString()
             secondLineLabel.stringValue = ""
@@ -139,6 +133,15 @@ final class PreviewFooterBar: NSView {
 
     // MARK: - Private
 
+    private func setWrappedText(_ text: String, suffix: String = "") {
+        let maxWidth = (Const.maxPreviewWidth - Const.space12 * 2) * 0.7
+        let font = firstLineLabel.font ?? .systemFont(ofSize: NSFont.systemFontSize)
+        let (line1, line2) = splitPathIntoTwoLines(text, suffix: suffix, font: font, maxWidth: maxWidth)
+        firstLineLabel.stringValue = line1
+        secondLineLabel.stringValue = line2
+        secondLineLabel.isHidden = line2.isEmpty
+    }
+
     private func splitPathIntoTwoLines(
         _ text: String,
         suffix: String,
@@ -148,12 +151,10 @@ final class PreviewFooterBar: NSView {
         let attrs: [NSAttributedString.Key: Any] = [.font: font]
         let fullText = text + suffix
 
-        // 整体一行放得下，直接返回
         guard (fullText as NSString).size(withAttributes: attrs).width > maxWidth else {
             return (fullText, "")
         }
 
-        // 先只对路径做分行
         let chars = Array(text)
         var lo = 0
         var hi = chars.count

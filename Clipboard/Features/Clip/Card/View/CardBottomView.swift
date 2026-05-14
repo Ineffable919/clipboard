@@ -6,17 +6,22 @@
 //
 
 import AppKit
+import Combine
 import SnapKit
 
 // MARK: - CardBottomView
 
 final class CardBottomView: NSView, PassthroughMouseEvents {
     private var currentView: NSView?
+    private nonisolated(unsafe) var currentModel: PasteboardModel?
+    private nonisolated(unsafe) var currentKeyword: String = ""
+    private var linkPreviewCancellable: AnyCancellable?
 
     override init(frame: NSRect) {
         super.init(frame: frame)
         wantsLayer = true
         layer?.masksToBounds = false
+        observeLinkPreviewSetting()
     }
 
     @available(*, unavailable)
@@ -25,16 +30,41 @@ final class CardBottomView: NSView, PassthroughMouseEvents {
     }
 
     func configure(with model: PasteboardModel, keyword: String = "") {
-        currentView?.removeFromSuperview()
-        currentView = nil
+        guard currentModel?.uniqueId != model.uniqueId || currentKeyword != keyword else { return }
+        currentModel = model
+        currentKeyword = keyword
+        replaceBottomView(for: model, keyword: keyword)
+    }
 
+    func reset() {
+        clearCurrentView()
+        currentModel = nil
+        currentKeyword = ""
+    }
+
+    private func observeLinkPreviewSetting() {
+        linkPreviewCancellable = UserDefaults.standard
+            .publisher(for: \.enableLinkPreview)
+            .removeDuplicates()
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                guard let self,
+                      let model = currentModel,
+                      model.type == .link
+                else { return }
+                replaceBottomView(for: model, keyword: currentKeyword)
+            }
+    }
+
+    private func replaceBottomView(for model: PasteboardModel, keyword: String) {
+        clearCurrentView()
         guard let view = makeBottomView(for: model, keyword: keyword) else { return }
         addSubview(view)
         view.snp.makeConstraints { $0.edges.equalToSuperview() }
         currentView = view
     }
 
-    func reset() {
+    private func clearCurrentView() {
         currentView?.removeFromSuperview()
         currentView = nil
     }
