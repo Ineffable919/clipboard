@@ -18,6 +18,9 @@ import AppKit
     func handleClipAssignToChip(_ sender: NSMenuItem)
     func handleClipUnpin()
     func handleClipPreview()
+    func handleClipRevealInFinder()
+    func handleClipOpenInBrowser()
+    func handleClipOpenWithDefaultApp()
 }
 
 // MARK: - Default Menu Builder
@@ -25,6 +28,45 @@ import AppKit
 extension ClipItemMenuActionable where Self: NSObject {
     func buildClipItemMenu(for model: PasteboardModel, pasteTitle: String) -> NSMenu {
         let menu = NSMenu()
+
+        if model.type == .file {
+            if let filePath = model.cachedFilePaths?.first {
+                let fileURL = URL(fileURLWithPath: filePath)
+                let appURL = NSWorkspace.shared.urlForApplication(toOpen: fileURL)
+                let appName = appURL.flatMap { bundleDisplayName(for: $0) } ?? "App"
+                let openItem = NSMenuItem(
+                    title: String(localized: .openInApp(appName)),
+                    action: #selector(ClipItemMenuActionable.handleClipOpenWithDefaultApp),
+                    keyEquivalent: ""
+                )
+                openItem.target = self
+                openItem.image = NSImage(systemSymbolName: "arrow.up.right.square", accessibilityDescription: nil)
+                menu.addItem(openItem)
+            }
+            let finderItem = NSMenuItem(
+                title: String(localized: .showInFinder),
+                action: #selector(ClipItemMenuActionable.handleClipRevealInFinder),
+                keyEquivalent: ""
+            )
+            finderItem.target = self
+            finderItem.image = NSImage(systemSymbolName: "finder", accessibilityDescription: nil)
+            menu.addItem(finderItem)
+            menu.addItem(.separator())
+        } else if model.type == .link {
+            let browserURL = NSWorkspace.shared.urlForApplication(
+                toOpen: URL(string: "https://")!
+            )
+            let browserName = browserURL.flatMap { bundleDisplayName(for: $0) } ?? "Browser"
+            let item = NSMenuItem(
+                title: String(localized: .openInApp(browserName)),
+                action: #selector(ClipItemMenuActionable.handleClipOpenInBrowser),
+                keyEquivalent: ""
+            )
+            item.target = self
+            item.image = NSImage(systemSymbolName: "arrow.up.right.square", accessibilityDescription: nil)
+            menu.addItem(item)
+            menu.addItem(.separator())
+        }
 
         menu.addItem(makeMenuItem(
             title: pasteTitle,
@@ -78,6 +120,12 @@ extension ClipItemMenuActionable where Self: NSObject {
     }
 
     // MARK: - Item Factories
+
+    private func bundleDisplayName(for appURL: URL) -> String? {
+        let b = Bundle(url: appURL)
+        return b?.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
+            ?? b?.object(forInfoDictionaryKey: "CFBundleName") as? String
+    }
 
     private func makeMenuItem(
         title: String,

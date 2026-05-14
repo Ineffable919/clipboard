@@ -344,6 +344,21 @@ extension FloatingCardRowView: ClipItemMenuActionable {
     func handleClipUnpin() {
         onAssignToChip?(-1)
     }
+
+    func handleClipRevealInFinder() {
+        guard let paths = currentModel?.cachedFilePaths, !paths.isEmpty else { return }
+        NSWorkspace.shared.activateFileViewerSelecting(paths.map { URL(fileURLWithPath: $0) })
+    }
+
+    func handleClipOpenInBrowser() {
+        guard let model = currentModel, let url = URL(string: model.plainText) else { return }
+        NSWorkspace.shared.open(url)
+    }
+
+    func handleClipOpenWithDefaultApp() {
+        guard let path = currentModel?.cachedFilePaths?.first else { return }
+        NSWorkspace.shared.open(URL(fileURLWithPath: path))
+    }
 }
 
 // MARK: - NSMenuDelegate

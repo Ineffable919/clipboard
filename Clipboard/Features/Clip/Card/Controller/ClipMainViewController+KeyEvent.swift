@@ -215,7 +215,7 @@ extension ClipMainViewController {
         else {
             return false
         }
-        log.info("chipTab check: prev=\(previousTabInfo.shortcut.keyCode)/enabled=\(previousTabInfo.isEnabled) next=\(nextTabInfo.shortcut.keyCode)/enabled=\(nextTabInfo.isEnabled) event=\(event.keyCode)")
+        log.info("chipTab check: prev=\(previousTabInfo.shortcut.keyCode)/mod=\(previousTabInfo.shortcut.modifiersRawValue)/enabled=\(previousTabInfo.isEnabled) next=\(nextTabInfo.shortcut.keyCode)/mod=\(nextTabInfo.shortcut.modifiersRawValue)/enabled=\(nextTabInfo.isEnabled) event=\(event.keyCode)/mod=\(event.modifierFlags.rawValue)/eventRelevant=\(event.modifierFlags.intersection([.command, .option, .control, .shift]).rawValue)")
 
         let relevantModifiers: NSEvent.ModifierFlags = [
             .command, .option, .control, .shift,

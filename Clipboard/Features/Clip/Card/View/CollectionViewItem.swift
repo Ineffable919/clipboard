@@ -296,6 +296,21 @@ extension CollectionViewItem: ClipItemMenuActionable {
         guard let model = item else { return }
         delegate?.preview(model)
     }
+
+    func handleClipRevealInFinder() {
+        guard let paths = item?.cachedFilePaths, !paths.isEmpty else { return }
+        NSWorkspace.shared.activateFileViewerSelecting(paths.map { URL(fileURLWithPath: $0) })
+    }
+
+    func handleClipOpenInBrowser() {
+        guard let model = item, let url = URL(string: model.plainText) else { return }
+        NSWorkspace.shared.open(url)
+    }
+
+    func handleClipOpenWithDefaultApp() {
+        guard let path = item?.cachedFilePaths?.first else { return }
+        NSWorkspace.shared.open(URL(fileURLWithPath: path))
+    }
 }
 
 // MARK: - UI
