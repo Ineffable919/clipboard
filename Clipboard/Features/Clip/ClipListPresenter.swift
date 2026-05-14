@@ -30,6 +30,11 @@ final class ClipListPresenter {
     var restoreSelection: () -> Void = {}
     var adjustAfterDelete: () -> Void = {}
 
+    // MARK: - Reconfigure
+
+    /// 强制刷新指定条目的 cell 内容（属性变更但 identity 未变时使用，如 group 变更）。
+    var reconfigureItems: (_ items: [PasteboardModel]) -> Void = { _ in }
+
     // MARK: - Empty State
 
     var updateEmptyState: (_ isEmpty: Bool) -> Void = { _ in }
@@ -89,7 +94,7 @@ final class ClipListPresenter {
             let newItems = items.filter { !existingIds.contains($0.uniqueId) }
             if !newItems.isEmpty { appendItems(newItems) }
         case .update:
-            applyFull(items, false, nil)
+            reconfigureItems(items)
             restoreSelection()
             if wasShowingPreview { reopenPreview() }
         }

@@ -138,15 +138,34 @@ extension PasteSQLManager {
         }
     }
 
-    func insert(item: PasteboardModel) async -> Int64 {
-        let query = table
-        await delete(filter: Col.uniqueId == item.uniqueId && Col.group == -1)
-        let insert = await query.insert(
+    func insert(item: PasteboardModel, timestamp: Int64) async -> (Int64, Int?) {
+        let existing = await search(
+            filter: Col.uniqueId == item.uniqueId,
+            select: [Col.id, Col.group],
+            order: [],
+            limit: 1
+        ).first
+
+        if let row = existing,
+           let existingId = try? row.get(Col.id)
+        {
+            let existingGroup = (try? row.get(Col.group)) ?? -1
+            let query = table.filter(Col.id == existingId)
+            do {
+                try db?.run(query.update(Col.ts <- timestamp, Col.hidden <- 0))
+                log.debug("更新时间戳成功：\(existingId)")
+            } catch {
+                log.error("更新时间戳失败：\(error)")
+            }
+            return (existingId, existingGroup)
+        }
+
+        let insert = await table.insert(
             Col.uniqueId <- item.uniqueId,
             Col.type <- item.pasteboardType.rawValue,
             Col.data <- item.data,
             Col.showData <- item.showData,
-            Col.ts <- item.timestamp,
+            Col.ts <- timestamp,
             Col.appPath <- item.appPath,
             Col.appName <- item.appName,
             Col.searchText <- item.searchText,
@@ -158,11 +177,11 @@ extension PasteSQLManager {
         do {
             let rowId = try db?.run(insert)
             log.debug("插入成功：\(String(describing: rowId))")
-            return rowId ?? -1
+            return (rowId ?? -1, nil)
         } catch {
             log.error("插入失败：\(error)")
         }
-        return -1
+        return (-1, nil)
     }
 
     func delete(filter: Expression<Bool>) async {

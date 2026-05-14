@@ -287,6 +287,5 @@ extension PasteboardModel: Equatable {
 extension PasteboardModel: Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(uniqueId)
-        hasher.combine(group)
     }
 }

@@ -190,6 +190,20 @@ final class FloatingHistoryView: NSView {
             self?.emptyStateView.isHidden = !isEmpty
             self?.scrollView.isHidden = isEmpty
         }
+        presenter.reconfigureItems = { [weak self] items in
+            guard let self else { return }
+            let ids = Set(items.map(\.uniqueId))
+            let indexPaths = Set(
+                dataSource.snapshot().itemIdentifiers
+                    .enumerated()
+                    .compactMap { idx, item in
+                        ids.contains(item.uniqueId)
+                            ? IndexPath(item: idx, section: 0) : nil
+                    }
+            )
+            guard !indexPaths.isEmpty else { return }
+            collectionView.reloadItems(at: indexPaths)
+        }
 
         presenter.isVerticalScroll = true
         presenter.loadMoreThreshold = (FloatConst.cardHeight + FloatConst.cardSpacing) * 5

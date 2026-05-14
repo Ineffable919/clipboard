@@ -39,7 +39,7 @@ extension ClipMainViewController: NSGestureRecognizerDelegate {
 
 extension ClipMainViewController {
     func keyDownEvent(_ event: NSEvent) -> NSEvent? {
-        log.info("focusRegion: \(focusRegion), firstResponder: \(String(describing: view.window?.firstResponder))")
+        log.info("keyDown keyCode=\(event.keyCode) modifiers=\(event.modifierFlags.rawValue) focusRegion=\(focusRegion)")
         if focusRegion == .popover {
             if event.keyCode == KeyCode.escape {
                 closePreviewPopover()
@@ -66,6 +66,7 @@ extension ClipMainViewController {
         }
 
         if let index = handleQuickPasteShortcut(event) {
+            log.info("keyDown keyCode=\(event.keyCode) → consumed by quickPaste index=\(index)")
             performQuickPaste(at: index)
             return nil
         }
@@ -74,6 +75,7 @@ extension ClipMainViewController {
            !topBarView.searchField.isFirstResponder,
            focusRegion != .search
         {
+            log.info("keyDown keyCode=\(event.keyCode) → consumed by triggerSearch")
             if let characters = event.characters, !characters.isEmpty {
                 topBarView.activateSearch(with: characters)
             }
@@ -83,6 +85,7 @@ extension ClipMainViewController {
         }
 
         if handleChipTab(event, viewModel: topVM) {
+            log.info("keyDown keyCode=\(event.keyCode) → consumed by chipTab")
             return nil
         }
 
@@ -212,6 +215,7 @@ extension ClipMainViewController {
         else {
             return false
         }
+        log.info("chipTab check: prev=\(previousTabInfo.shortcut.keyCode)/enabled=\(previousTabInfo.isEnabled) next=\(nextTabInfo.shortcut.keyCode)/enabled=\(nextTabInfo.isEnabled) event=\(event.keyCode)")
 
         let relevantModifiers: NSEvent.ModifierFlags = [
             .command, .option, .control, .shift,

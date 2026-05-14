@@ -95,7 +95,6 @@ final class PasteBoard {
             }
             RunLoop.main.add(resumeTimer!, forMode: .common)
         }
-
     }
 
     func resume() {
@@ -532,4 +531,3 @@ extension NSMutableAttributedString {
         }
     }
 }
-

@@ -267,10 +267,16 @@ extension PasteDataStore {
     }
 
     func insertModel(_ model: PasteboardModel) async {
-        let itemId = await sqlManager.insert(item: model)
+        let (itemId, existingGroup) = await sqlManager.insert(
+            item: model,
+            timestamp: model.timestamp
+        )
         let count = await sqlManager.getTotalCount()
 
         model.id = itemId
+        if let group = existingGroup {
+            model.updateGroup(val: group)
+        }
         totalCount = count
 
         if isInFilterMode, let filter = currentFilter {

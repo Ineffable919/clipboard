@@ -432,6 +432,20 @@ extension ClipMainViewController {
         presenter.restoreSelection = { [weak self] in self?.restoreSelection() }
         presenter.adjustAfterDelete = { [weak self] in self?.adjustSelectionAfterDelete() }
         presenter.updateEmptyState = { [weak self] _ in self?.updateEmptyState() }
+        presenter.reconfigureItems = { [weak self] items in
+            guard let self else { return }
+            let ids = Set(items.map(\.uniqueId))
+            let indexPaths = Set(
+                diffableDataSource.snapshot().itemIdentifiers
+                    .enumerated()
+                    .compactMap { idx, item in
+                        ids.contains(item.uniqueId)
+                            ? IndexPath(item: idx, section: 0) : nil
+                    }
+            )
+            guard !indexPaths.isEmpty else { return }
+            collectionView.reloadItems(at: indexPaths)
+        }
 
         presenter.previewIsShown = { [weak self] in self?.previewPopover?.isShown == true }
         presenter.closePreview = { [weak self] in self?.closePreviewPopover() }
