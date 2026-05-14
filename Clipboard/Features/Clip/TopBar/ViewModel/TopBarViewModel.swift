@@ -48,10 +48,6 @@ final class TopBarViewModel {
     var editingChipName: String = ""
     var editingChipColorIndex: Int = 0
 
-    // MARK: - State
-
-    private var pauseDisplayTimer: Timer?
-
     // MARK: - Filter Properties
 
     /// 类型筛选：支持多选
@@ -571,25 +567,10 @@ extension TopBarViewModel {
     }
 
     var formattedRemainingTime: String {
-        let time = PasteBoard.main.remainingPauseTime ?? 0
-        guard time > 0 else { return String(localized: .paused) }
-        return Duration.seconds(time).formatted(.time(pattern: .hourMinuteSecond))
-    }
-
-    // MARK: - Timer
-
-    func startDisplayTimer() {
-        stopDisplayTimer()
-        pauseDisplayTimer = Timer.scheduledTimer(
-            withTimeInterval: 1,
-            repeats: true
-        ) { _ in }
-        RunLoop.main.add(pauseDisplayTimer!, forMode: .common)
-    }
-
-    func stopDisplayTimer() {
-        pauseDisplayTimer?.invalidate()
-        pauseDisplayTimer = nil
+        guard let endTime = PasteBoard.main.pauseEndTime else { return String(localized: .paused) }
+        let remaining = max(0, endTime.timeIntervalSinceNow)
+        guard remaining > 0 else { return String(localized: .paused) }
+        return Duration.seconds(remaining).formatted(.time(pattern: .hourMinuteSecond))
     }
 
     // MARK: - Actions

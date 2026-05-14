@@ -31,7 +31,7 @@ final class ClipMainViewController: NSViewController {
     private let pauseStack = NSStackView()
     private let pauseTimeLabel = NSTextField(labelWithString: "")
     private let pauseButton = NSButton()
-    private var pauseTimer: Timer?
+    private var pauseTimerCancellable: AnyCancellable?
     private var appearanceObservation: NSKeyValueObservation?
 
     // MARK: - Preview
@@ -509,28 +509,17 @@ extension ClipMainViewController {
         pauseStack.isHidden = !isPaused
         if isPaused {
             pauseTimeLabel.stringValue = topVM.formattedRemainingTime
-            startPauseTimer()
+            pauseTimerCancellable = Timer.publish(every: 1, on: .main, in: .common)
+                .autoconnect()
+                .sink { [weak self] _ in
+                    self?.pauseTimeLabel.stringValue = self?.topVM.formattedRemainingTime ?? ""
+                }
         } else {
-            stopPauseTimer()
+            pauseTimerCancellable = nil
         }
         view.effectiveAppearance.performAsCurrentDrawingAppearance {
             pauseStack.layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.1).cgColor
         }
-    }
-
-    private func startPauseTimer() {
-        guard pauseTimer == nil else { return }
-        pauseTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                self?.pauseTimeLabel.stringValue = self?.topVM.formattedRemainingTime ?? ""
-            }
-        }
-        RunLoop.main.add(pauseTimer!, forMode: .common)
-    }
-
-    private func stopPauseTimer() {
-        pauseTimer?.invalidate()
-        pauseTimer = nil
     }
 
     private func adjustSelectionAfterDelete() {

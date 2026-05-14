@@ -23,7 +23,7 @@ final class FloatingFooterView: NSView {
     private var lastBackgroundType: Int = PasteUserDefaults.backgroundType
     private weak var topVM: TopBarViewModel?
     private var cancellables = Set<AnyCancellable>()
-    private var displayTimer: Timer?
+    private var timerCancellable: AnyCancellable?
 
     // MARK: - Init
 
@@ -36,8 +36,6 @@ final class FloatingFooterView: NSView {
     required init?(coder _: NSCoder) {
         fatalError()
     }
-
-    // Timer 在 stopDisplayTimer 中 invalidate，deinit 时 Timer 会自动失效
 
     // MARK: - Public API
 
@@ -177,9 +175,13 @@ final class FloatingFooterView: NSView {
 
         if isPaused {
             pauseTimeLabel.stringValue = topVM.formattedRemainingTime
-            startDisplayTimer()
+            timerCancellable = Timer.publish(every: 1, on: .main, in: .common)
+                .autoconnect()
+                .sink { [weak self] _ in
+                    self?.pauseTimeLabel.stringValue = self?.topVM?.formattedRemainingTime ?? ""
+                }
         } else {
-            stopDisplayTimer()
+            timerCancellable = nil
         }
 
         updatePauseBackground()
@@ -190,21 +192,6 @@ final class FloatingFooterView: NSView {
             pauseStack.layer?.backgroundColor = NSColor.controlAccentColor
                 .withAlphaComponent(0.1).cgColor
         }
-    }
-
-    private func startDisplayTimer() {
-        guard displayTimer == nil else { return }
-        displayTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                self?.pauseTimeLabel.stringValue = self?.topVM?.formattedRemainingTime ?? ""
-            }
-        }
-        RunLoop.main.add(displayTimer!, forMode: .common)
-    }
-
-    private func stopDisplayTimer() {
-        displayTimer?.invalidate()
-        displayTimer = nil
     }
 
     override func viewDidChangeEffectiveAppearance() {

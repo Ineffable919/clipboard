@@ -109,15 +109,6 @@ final class PasteBoard {
         startListening()
     }
 
-    /// 剩余暂停时间（秒）
-    var remainingPauseTime: TimeInterval? {
-        guard isPaused, let pausedAt, let pauseDuration else {
-            return nil
-        }
-        let elapsed = Date().timeIntervalSince(pausedAt)
-        return max(0, pauseDuration - elapsed)
-    }
-
     var pauseEndTime: Date? {
         guard isPaused, let pausedAt, let pauseDuration else {
             return nil
