@@ -475,7 +475,7 @@ extension ClipMainViewController {
             }
             .store(in: &cancellables)
 
-        topVM.$isPaused
+        PasteBoard.main.$isPaused
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.updatePauseState() }
             .store(in: &cancellables)
@@ -491,7 +491,7 @@ extension ClipMainViewController {
     }
 
     private func updatePauseState() {
-        let isPaused = topVM.isPaused
+        let isPaused = PasteBoard.main.isPaused
         pauseStack.isHidden = !isPaused
         if isPaused {
             pauseTimeLabel.stringValue = topVM.formattedRemainingTime

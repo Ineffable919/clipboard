@@ -45,7 +45,7 @@ final class FloatingFooterView: NSView {
 
     func configure(topVM: TopBarViewModel) {
         self.topVM = topVM
-        topVM.$isPaused
+        PasteBoard.main.$isPaused
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.updatePauseState() }
             .store(in: &cancellables)
@@ -171,7 +171,7 @@ final class FloatingFooterView: NSView {
 
     private func updatePauseState() {
         guard let topVM else { return }
-        let isPaused = topVM.isPaused
+        let isPaused = PasteBoard.main.isPaused
 
         pauseStack.isHidden = !isPaused
 

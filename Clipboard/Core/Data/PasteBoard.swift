@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import Combine
 import Foundation
 
 final class PasteBoard {
@@ -19,7 +20,7 @@ final class PasteBoard {
 
     // MARK: - 暂停功能
 
-    private(set) var isPaused: Bool = false
+    @Published private(set) var isPaused: Bool = false
     private(set) var pausedAt: Date?
     /// 暂停持续时长（秒），nil 表示无限期
     private var pauseDuration: TimeInterval?
@@ -95,10 +96,6 @@ final class PasteBoard {
             RunLoop.main.add(resumeTimer!, forMode: .common)
         }
 
-        NotificationCenter.default.post(
-            name: .pasteboardPauseStateChanged,
-            object: nil
-        )
     }
 
     func resume() {
@@ -111,11 +108,6 @@ final class PasteBoard {
         pausedAt = nil
         pauseDuration = nil
         startListening()
-
-        NotificationCenter.default.post(
-            name: .pasteboardPauseStateChanged,
-            object: nil
-        )
     }
 
     /// 剩余暂停时间（秒）
@@ -541,10 +533,3 @@ extension NSMutableAttributedString {
     }
 }
 
-// MARK: - Notification
-
-extension Notification.Name {
-    static let pasteboardPauseStateChanged = Notification.Name(
-        "pasteboardPauseStateChanged"
-    )
-}

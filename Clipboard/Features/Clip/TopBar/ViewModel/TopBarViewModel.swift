@@ -50,8 +50,6 @@ final class TopBarViewModel {
 
     // MARK: - State
 
-    @Published private(set) var isPaused: Bool = false
-
     private var pauseDisplayTimer: Timer?
 
     // MARK: - Filter Properties
@@ -102,7 +100,6 @@ final class TopBarViewModel {
 
     init() {
         query = ""
-        setupObserver()
     }
 
     // MARK: - Category Management
@@ -568,7 +565,7 @@ extension TopBarViewModel {
     // MARK: - Computed
 
     var pauseMenuTitle: String {
-        guard isPaused else { return String(localized: .pause) }
+        guard PasteBoard.main.isPaused else { return String(localized: .pause) }
         guard let endTime = PasteBoard.main.pauseEndTime else { return String(localized: .paused) }
         return String(localized: .pauseUntil(pauseTimeString(from: endTime)))
     }
@@ -583,16 +580,10 @@ extension TopBarViewModel {
 
     func startDisplayTimer() {
         stopDisplayTimer()
-        updateState()
-
         pauseDisplayTimer = Timer.scheduledTimer(
             withTimeInterval: 1,
             repeats: true
-        ) { [weak self] _ in
-            MainActor.assumeIsolated {
-                self?.updateState()
-            }
-        }
+        ) { _ in }
         RunLoop.main.add(pauseDisplayTimer!, forMode: .common)
     }
 
@@ -616,22 +607,6 @@ extension TopBarViewModel {
     }
 
     // MARK: - Private
-
-    private func setupObserver() {
-        NotificationCenter.default.addObserver(
-            forName: .pasteboardPauseStateChanged,
-            object: nil,
-            queue: .main
-        ) { [weak self] _ in
-            Task { @MainActor in
-                self?.updateState()
-            }
-        }
-    }
-
-    private func updateState() {
-        isPaused = PasteBoard.main.isPaused
-    }
 
     private func pauseTimeString(from date: Date) -> String {
         date.formatted(
