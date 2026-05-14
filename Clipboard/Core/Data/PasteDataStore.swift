@@ -469,7 +469,8 @@ extension PasteDataStore {
         if let deadDate = Calendar.current.date(byAdding: dateCom, to: Date()) {
             let deadTime = Int64(deadDate.timeIntervalSince1970)
             log.info("清理过期数据，截止时间戳：\(deadTime)")
-            dataList.value = dataList.value.filter { $0.timestamp > deadTime }
+            let filteredList = dataList.value.filter { $0.timestamp > deadTime }
+            updateData(with: filteredList)
             deleteItems(filter: Col.ts < deadTime && Col.group == -1)
         }
     }
