@@ -365,7 +365,7 @@ extension CollectionViewItem {
 
         badgeStackView.snp.makeConstraints { make in
             make.centerY.equalToSuperview()
-            make.leading.trailing.equalToSuperview().inset(Const.space4)
+            make.leading.trailing.equalToSuperview().inset(Const.space2)
         }
 
         updateShadow()
