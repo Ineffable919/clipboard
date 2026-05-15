@@ -34,37 +34,28 @@ extension ClipItemMenuActionable where Self: NSObject {
                 let fileURL = URL(fileURLWithPath: filePath)
                 let appURL = NSWorkspace.shared.urlForApplication(toOpen: fileURL)
                 let appName = appURL.flatMap { bundleDisplayName(for: $0) } ?? "App"
-                let openItem = NSMenuItem(
+                menu.addItem(makeMenuItem(
                     title: String(localized: .openInApp(appName)),
-                    action: #selector(ClipItemMenuActionable.handleClipOpenWithDefaultApp),
-                    keyEquivalent: ""
-                )
-                openItem.target = self
-                openItem.image = NSImage(systemSymbolName: "arrow.up.right.square", accessibilityDescription: nil)
-                menu.addItem(openItem)
+                    symbol: "arrow.up.right.square",
+                    action: #selector(ClipItemMenuActionable.handleClipOpenWithDefaultApp)
+                ))
             }
-            let finderItem = NSMenuItem(
+            menu.addItem(makeMenuItem(
                 title: String(localized: .showInFinder),
-                action: #selector(ClipItemMenuActionable.handleClipRevealInFinder),
-                keyEquivalent: ""
-            )
-            finderItem.target = self
-            finderItem.image = NSImage(systemSymbolName: "finder", accessibilityDescription: nil)
-            menu.addItem(finderItem)
+                symbol: "finder",
+                action: #selector(ClipItemMenuActionable.handleClipRevealInFinder)
+            ))
             menu.addItem(.separator())
         } else if model.type == .link {
             let browserURL = NSWorkspace.shared.urlForApplication(
                 toOpen: URL(string: "https://")!
             )
             let browserName = browserURL.flatMap { bundleDisplayName(for: $0) } ?? "Browser"
-            let item = NSMenuItem(
+            menu.addItem(makeMenuItem(
                 title: String(localized: .openInApp(browserName)),
-                action: #selector(ClipItemMenuActionable.handleClipOpenInBrowser),
-                keyEquivalent: ""
-            )
-            item.target = self
-            item.image = NSImage(systemSymbolName: "arrow.up.right.square", accessibilityDescription: nil)
-            menu.addItem(item)
+                symbol: "arrow.up.right.square",
+                action: #selector(ClipItemMenuActionable.handleClipOpenInBrowser)
+            ))
             menu.addItem(.separator())
         }
 
