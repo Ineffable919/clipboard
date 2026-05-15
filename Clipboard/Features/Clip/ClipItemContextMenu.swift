@@ -50,13 +50,15 @@ extension ClipItemMenuActionable where Self: NSObject {
             let browserURL = NSWorkspace.shared.urlForApplication(
                 toOpen: URL(string: "https://")!
             )
-            let browserName = browserURL.flatMap { bundleDisplayName(for: $0) } ?? "Browser"
-            menu.addItem(makeMenuItem(
-                title: String(localized: .openInApp(browserName)),
-                symbol: "arrow.up.right.square",
-                action: #selector(ClipItemMenuActionable.handleClipOpenInBrowser)
-            ))
-            menu.addItem(.separator())
+            let browserName = browserURL.flatMap { bundleDisplayName(for: $0) } ?? ""
+            if !browserName.isEmpty {
+                menu.addItem(makeMenuItem(
+                    title: String(localized: .openInApp(browserName)),
+                    symbol: "arrow.up.right.square",
+                    action: #selector(ClipItemMenuActionable.handleClipOpenInBrowser)
+                ))
+                menu.addItem(.separator())
+            }
         }
 
         menu.addItem(makeMenuItem(

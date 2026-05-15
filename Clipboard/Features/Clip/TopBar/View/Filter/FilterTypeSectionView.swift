@@ -92,7 +92,11 @@ final class FilterTypeSectionView: NSStackView {
             let button: FilterButton
             if type == .string {
                 // 文本按钮同时代表 .string 和 .rich，选中态任一存在即高亮
-                button = FilterButton(icon: "doc.text", title: String(localized: .text))
+                var iconText = "doc.text"
+                if #available(macOS 15.0, *) {
+                    iconText = "text.document"
+                }
+                button = FilterButton(icon: iconText, title: String(localized: .text))
                 button.action = { [weak self] in
                     self?.onTypeToggle?(.string)
                     self?.onTypeToggle?(.rich)
