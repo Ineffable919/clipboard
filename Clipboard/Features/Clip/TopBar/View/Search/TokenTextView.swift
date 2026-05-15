@@ -41,7 +41,9 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         tv.isSelectable = true
         tv.font = .preferredFont(forTextStyle: .callout)
         tv.textColor = .labelColor
-        tv.writingToolsBehavior = .none
+        if #available(macOS 15.0, *) {
+            tv.writingToolsBehavior = .none
+        }
         tv.isAutomaticDataDetectionEnabled = false
         tv.isAutomaticLinkDetectionEnabled = false
 

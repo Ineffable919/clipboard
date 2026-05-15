@@ -482,8 +482,6 @@ final class CardImageContentView: NSView, PassthroughMouseEvents {
     private var isFillMode: Bool = false
     private var currentImageSize: CGSize?
 
-    private var fillModeCache: [CGSize: Bool] = [:]
-
     private let maxFillCropRatio: CGFloat = 0.15
 
     private static let containerSize = CGSize(width: Const.cardSize, height: Const.cntSize)

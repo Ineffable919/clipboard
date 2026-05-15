@@ -16,7 +16,12 @@ final class ClipMainWindowController: NSWindowController {
     }
 
     private let db = PasteDataStore.main
-    var isAnimating = false
+
+    // toggleWindow 看 intent 而非 window.isVisible，因为隐藏动画期间 isVisible 仍是 true。
+    // dismiss completion 用 intentVersion 防止在动画中被新的 show 抢占后仍把窗口隐藏掉。
+    private enum Intent { case shown, hidden }
+    private var intent: Intent = .hidden
+    private var intentVersion: Int = 0
 
     init() {
         let panel = ClipWindowView(
@@ -67,9 +72,10 @@ final class ClipMainWindowController: NSWindowController {
         _ frame: NSRect? = nil,
         _ completionHandler: (@MainActor () -> Void)? = nil
     ) {
-        if isVisible {
+        switch intent {
+        case .shown:
             dismiss(completionHandler)
-        } else {
+        case .hidden:
             show(in: frame)
         }
     }
@@ -77,29 +83,59 @@ final class ClipMainWindowController: NSWindowController {
 
 extension ClipMainWindowController {
     func dismiss(_ completionHandler: (@MainActor () -> Void)? = nil) {
-        guard isVisible else { return }
+        guard intent == .shown else {
+            completionHandler?()
+            return
+        }
+
+        intent = .hidden
+        intentVersion &+= 1
+        let myVersion = intentVersion
 
         let view = window?.contentViewController?.view
+        let height = view?.bounds.height ?? Const.defaultHeight
+
         NSAnimationContext.runAnimationGroup({ context in
             context.duration = Const.hideDuration
-            view?.animator().setFrameOrigin(
-                NSPoint(x: 0, y: -(view?.bounds.height ?? Const.defaultHeight))
-            )
-        }) {
+            view?.animator().setFrameOrigin(NSPoint(x: 0, y: -height))
+        }) { [weak self] in
             Task { @MainActor in
-                self.window?.resignFirstResponder()
-                self.window?.setIsVisible(false)
+                guard let self else { return }
+                if self.intentVersion == myVersion {
+                    self.window?.resignFirstResponder()
+                    self.window?.setIsVisible(false)
+                    if #unavailable(macOS 15.0) {
+                        AppEnvironment.shared.previousApp?.activate(options: [])
+                    }
+                }
                 completionHandler?()
             }
         }
     }
 
     func show(in frame: NSRect?) {
-        let frame = frame ?? NSScreen.main?.frame ?? .zero
-        AppEnvironment.shared.previousApp = NSWorkspace.shared.frontmostApplication
-        window?.setFrame(frame, display: true)
-        window?.setIsVisible(true)
-        window?.makeKeyAndOrderFront(nil)
+        intent = .shown
+        intentVersion &+= 1
+
+        if window?.isVisible != true {
+            let frame = frame ?? NSScreen.main?.frame ?? .zero
+            AppEnvironment.shared.previousApp = NSWorkspace.shared.frontmostApplication
+            if #unavailable(macOS 15.0) {
+                NSApp.activate(ignoringOtherApps: true)
+            }
+            window?.setFrame(frame, display: true)
+            window?.setIsVisible(true)
+            window?.makeKeyAndOrderFront(nil)
+        } else {
+            window?.makeKeyAndOrderFront(nil)
+        }
+
+        let view = window?.contentViewController?.view
+
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = Const.showDuration
+            view?.animator().setFrameOrigin(.zero)
+        }
     }
 }
 

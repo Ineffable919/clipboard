@@ -140,7 +140,7 @@ final class ClipMainViewController: NSViewController {
             let visibleRect = effectView.convert(effectView.bounds, to: nil)
             let screenRect = window.convertToScreen(visibleRect)
             if !screenRect.contains(screenPoint), WindowManager.shared.isVisible {
-                WindowManager.shared.toggleWindow()
+                ClipMainWindowController.shared.dismiss()
             }
         }
         collectionView.onDragEnded = { [weak self] screenPoint in

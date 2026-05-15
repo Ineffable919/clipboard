@@ -83,8 +83,25 @@ struct HotKeyInfo: Codable, Identifiable, Equatable {
 class HotKeyManager {
     static let shared = HotKeyManager()
 
-    private var hotKeys: [String: EventHotKeyRef?] = [:]
+    /// 'CLIP' four-char code; Carbon EventHotKeyID.signature 标识本 app。
+    private static let hotKeySignature: OSType = 0x434C_4950
+
+    private struct Registration {
+        let key: String
+        let id: UInt32
+        let ref: EventHotKeyRef
+    }
+
+    private var registrationsByID: [UInt32: Registration] = [:]
+    private var registrationsByKey: [String: Registration] = [:]
+    private var nextHotKeyID: UInt32 = 1
+
     private var handlers: [String: () -> Void] = [:]
+
+    /// 边沿过滤：macOS 14 上 Carbon 会按 key-repeat 速率派发多次 Pressed，
+    /// 只在"从未按下 → 按下"的瞬间触发 handler，直到 Released 才解除。
+    private var pressedKeys: Set<String> = []
+
     private var isInitialized = false
     private var eventHandlerRef: EventHandlerRef?
 
@@ -100,10 +117,16 @@ class HotKeyManager {
     }
 
     private func installGlobalEventHandler() {
-        var eventType = EventTypeSpec(
-            eventClass: OSType(kEventClassKeyboard),
-            eventKind: UInt32(kEventHotKeyPressed)
-        )
+        var eventTypes = [
+            EventTypeSpec(
+                eventClass: OSType(kEventClassKeyboard),
+                eventKind: UInt32(kEventHotKeyPressed)
+            ),
+            EventTypeSpec(
+                eventClass: OSType(kEventClassKeyboard),
+                eventKind: UInt32(kEventHotKeyReleased)
+            ),
+        ]
 
         InstallEventHandler(
             GetEventDispatcherTarget(),
@@ -122,18 +145,27 @@ class HotKeyManager {
                 let manager = Unmanaged<HotKeyManager>.fromOpaque(userData!)
                     .takeUnretainedValue()
 
-                let receivedHash = Int(truncatingIfNeeded: hotKeyID.signature)
-                if let handler = manager.handlers.first(where: { key, _ in
-                    let keyHash = abs(key.hashValue) % Int(UInt32.max)
-                    return keyHash == receivedHash
-                })?.value {
-                    handler()
+                guard let reg = manager.registrationsByID[hotKeyID.id] else {
+                    return noErr
                 }
 
+                let kind = GetEventKind(event)
+                if kind == UInt32(kEventHotKeyReleased) {
+                    manager.pressedKeys.remove(reg.key)
+                    return noErr
+                }
+
+                // kEventHotKeyPressed：只在"从未按下 → 按下"边沿触发。
+                // 后续的 auto-repeat Pressed 事件直到收到 Released 之前一律丢弃。
+                guard !manager.pressedKeys.contains(reg.key) else {
+                    return noErr
+                }
+                manager.pressedKeys.insert(reg.key)
+                manager.handlers[reg.key]?()
                 return noErr
             },
-            1,
-            &eventType,
+            2,
+            &eventTypes,
             Unmanaged.passUnretained(self).toOpaque(),
             &eventHandlerRef
         )
@@ -345,14 +377,14 @@ class HotKeyManager {
         info: HotKeyInfo,
         handler _: @escaping () -> Void
     ) -> Bool {
+        // 同一个 key 重新注册时，先清掉旧 ref，避免叠加。
+        unregisterSystemHotKey(key: info.key)
+
+        let id = nextHotKeyID
+        nextHotKeyID &+= 1
+        let hotKeyID = EventHotKeyID(signature: Self.hotKeySignature, id: id)
+
         var hotKeyRef: EventHotKeyRef?
-
-        let hashValue = abs(info.key.hashValue) % Int(UInt32.max)
-        let hotKeyID = EventHotKeyID(
-            signature: OSType(truncatingIfNeeded: hashValue),
-            id: UInt32(truncatingIfNeeded: hashValue)
-        )
-
         let status = RegisterEventHotKey(
             UInt32(info.shortcut.keyCode),
             info.carbonModifierFlags,
@@ -362,26 +394,28 @@ class HotKeyManager {
             &hotKeyRef
         )
 
-        guard status == noErr else {
+        guard status == noErr, let ref = hotKeyRef else {
             log.error("注册快捷键失败: \(info.key), status: \(status)")
             return false
         }
 
-        hotKeys[info.key] = hotKeyRef
-        log.info("注册快捷键成功: \(info.key) - \(info.displayText)")
+        let reg = Registration(key: info.key, id: id, ref: ref)
+        registrationsByID[id] = reg
+        registrationsByKey[info.key] = reg
+        log.info("注册快捷键成功: \(info.key) - \(info.displayText) (id=\(id))")
         return true
     }
 
     private func unregisterSystemHotKey(key: String) {
-        if let hotKeyRef = hotKeys[key], let ref = hotKeyRef {
-            UnregisterEventHotKey(ref)
-            hotKeys.removeValue(forKey: key)
-            log.info("注销快捷键成功：\(key)")
-        }
+        guard let reg = registrationsByKey.removeValue(forKey: key) else { return }
+        registrationsByID.removeValue(forKey: reg.id)
+        pressedKeys.remove(key)
+        UnregisterEventHotKey(reg.ref)
+        log.info("注销快捷键成功：\(key)")
     }
 
     private func unregisterAllHotKeys() {
-        for key in hotKeys.keys {
+        for key in Array(registrationsByKey.keys) {
             unregisterSystemHotKey(key: key)
         }
     }
