@@ -54,12 +54,12 @@ struct AppearanceSettingsView: View {
             }
             .settingsStyle()
 
-            Text(.settingAppearanceBackgroundSectionTitle)
-                .font(.headline)
-                .bold()
+            if #available(macOS 26.0, *) {
+                Text(.settingAppearanceBackgroundSectionTitle)
+                    .font(.headline)
+                    .bold()
 
-            VStack(spacing: 0) {
-                if #available(macOS 26.0, *) {
+                VStack(spacing: 0) {
                     HStack {
                         Text(.settingAppearanceBackgroundTypeLabel)
                         Spacer()
@@ -77,11 +77,11 @@ struct AppearanceSettingsView: View {
                         }
                     }
                 }
+                .padding(.horizontal, Const.space16)
+                .padding(.vertical, Const.space8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .settingsStyle()
             }
-            .padding(.horizontal, Const.space16)
-            .padding(.vertical, Const.space8)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .settingsStyle()
         }
         .padding(Const.space24)
         .frame(
