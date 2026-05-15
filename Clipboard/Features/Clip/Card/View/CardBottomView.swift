@@ -91,6 +91,14 @@ final class CardBottomView: NSView, PassthroughMouseEvents {
 // MARK: - CardImageBottomView
 
 private final class CardImageBottomView: NSView, PassthroughMouseEvents {
+    private lazy var labelBg: NSView = {
+        let view = NSView()
+        view.wantsLayer = true
+        view.layer?.cornerRadius = 4.0
+        view.layer?.cornerCurve = .continuous
+        return view
+    }()
+
     private lazy var label: PaddedTextField = {
         let field = PaddedTextField(padding: NSEdgeInsets(
             top: 2, left: Const.space6,
@@ -99,9 +107,6 @@ private final class CardImageBottomView: NSView, PassthroughMouseEvents {
         field.font = .preferredFont(forTextStyle: .callout)
         field.textColor = .secondaryLabelColor
         field.lineBreakMode = .byTruncatingTail
-        field.wantsLayer = true
-        field.layer?.cornerRadius = 6.0
-        field.layer?.cornerCurve = .continuous
         return field
     }()
 
@@ -109,12 +114,17 @@ private final class CardImageBottomView: NSView, PassthroughMouseEvents {
         super.init(frame: .zero)
         label.stringValue = introString
 
-        addSubview(label)
-        label.snp.makeConstraints { make in
+        addSubview(labelBg)
+        labelBg.addSubview(label)
+
+        labelBg.snp.makeConstraints { make in
             make.bottom.equalToSuperview().inset(Const.space8)
             make.centerX.equalToSuperview()
             make.leading.greaterThanOrEqualToSuperview()
             make.trailing.lessThanOrEqualToSuperview()
+        }
+        label.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
         }
 
         updateLabelBackground()
@@ -132,7 +142,7 @@ private final class CardImageBottomView: NSView, PassthroughMouseEvents {
 
     private func updateLabelBackground() {
         effectiveAppearance.performAsCurrentDrawingAppearance {
-            label.layer?.backgroundColor = NSColor.unemphasizedSelectedContentBackgroundColor
+            labelBg.layer?.backgroundColor = NSColor.unemphasizedSelectedContentBackgroundColor
                 .withAlphaComponent(0.8).cgColor
         }
     }
