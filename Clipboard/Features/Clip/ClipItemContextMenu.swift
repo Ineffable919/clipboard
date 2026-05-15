@@ -67,7 +67,7 @@ extension ClipItemMenuActionable where Self: NSObject {
         ))
         menu.addItem(makeMenuItem(
             title: String(localized: .pastePlain),
-            symbol: "text.alignleft",
+            symbol: "text.justify.leading",
             action: #selector(ClipItemMenuActionable.handleClipPastePlain),
             keyEquivalent: "\r",
             modifiers: .shift

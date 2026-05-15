@@ -108,11 +108,11 @@ final class FloatingCardRowView: NSView {
         backgroundView.addSubview(quickPasteBadge)
 
         selectionBorderView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+            make.edges.equalToSuperview().priority(999)
         }
 
         backgroundView.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(FloatConst.floatSelectionBorderWidth)
+            make.edges.equalToSuperview().inset(FloatConst.floatSelectionBorderWidth).priority(999)
         }
 
         appIconView.snp.makeConstraints { make in

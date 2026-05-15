@@ -27,7 +27,6 @@ final class ChipScrollView: NSView {
 
     var onSelectionChanged: ((Int) -> Void)?
 
-    /// 浮动窗口场景：宽度由父视图约束决定，内容超出时滚动；主窗口默认 false（展开到内容宽度）
     var scrollMode: Bool = false
 
     // MARK: - Init

@@ -196,18 +196,7 @@ final class ChipButton: NSView, NSTextFieldDelegate {
 
         if config.dotMode {
             if config.chip.isSystem {
-                let icon: NSImage? = NSImage(
-                    systemSymbolName:
-                    "clock.arrow.trianglehead.counterclockwise.rotate.90",
-                    accessibilityDescription: nil
-                )
-                iconImageView.image = icon?.withSymbolConfiguration(
-                    .init(pointSize: config.smallIconPt, weight: .medium)
-                )
-                iconImageView.snp.remakeConstraints { make in
-                    make.width.height.equalTo(config.iconContainerSize)
-                }
-                stack.addArrangedSubview(iconImageView)
+                addSystemClockIcon(pointSize: config.smallIconPt, weight: .medium)
             } else {
                 configureDot(colorIndex: config.chip.colorIndex)
                 stack.addArrangedSubview(dotContainerView)
@@ -218,18 +207,7 @@ final class ChipButton: NSView, NSTextFieldDelegate {
 
         if !config.compact {
             if config.chip.id == -1 {
-                let icon: NSImage? = NSImage(
-                    systemSymbolName:
-                    "clock.arrow.trianglehead.counterclockwise.rotate.90",
-                    accessibilityDescription: nil
-                )
-                iconImageView.image = icon?.withSymbolConfiguration(
-                    .init(pointSize: config.iconContainerSize, weight: .regular)
-                )
-                iconImageView.snp.remakeConstraints { make in
-                    make.width.height.equalTo(config.iconContainerSize)
-                }
-                stack.addArrangedSubview(iconImageView)
+                addSystemClockIcon(pointSize: config.iconContainerSize, weight: .regular)
             } else {
                 let colorIndex =
                     config.isEditing
@@ -259,6 +237,20 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         }
 
         invalidateIntrinsicContentSize()
+    }
+
+    private func addSystemClockIcon(pointSize: CGFloat, weight: NSFont.Weight) {
+        let symbolName = if #available(macOS 15.0, *) {
+            "clock.arrow.trianglehead.counterclockwise.rotate.90"
+        } else {
+            "clock.arrow.circlepath"
+        }
+        let icon = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)
+        iconImageView.image = icon?.withSymbolConfiguration(.init(pointSize: pointSize, weight: weight))
+        iconImageView.snp.remakeConstraints { make in
+            make.width.height.equalTo(config.iconContainerSize)
+        }
+        stack.addArrangedSubview(iconImageView)
     }
 
     private func nameFieldDisplayWidth() -> CGFloat {
@@ -413,29 +405,8 @@ final class ChipButton: NSView, NSTextFieldDelegate {
 
         let menu = NSMenu()
 
-        let editItem = NSMenuItem(
-            title: String(localized: .rename),
-            action: #selector(handleEditAction),
-            keyEquivalent: ""
-        )
-        editItem.target = self
-        editItem.image = NSImage(
-            systemSymbolName: "pencil",
-            accessibilityDescription: nil
-        )
-        menu.addItem(editItem)
-
-        let deleteItem = NSMenuItem(
-            title: String(localized: .delete),
-            action: #selector(handleDeleteAction),
-            keyEquivalent: ""
-        )
-        deleteItem.target = self
-        deleteItem.image = NSImage(
-            systemSymbolName: "trash",
-            accessibilityDescription: nil
-        )
-        menu.addItem(deleteItem)
+        menu.addItem(makeMenuItem(title: String(localized: .rename), action: #selector(handleEditAction), symbolName: "pencil"))
+        menu.addItem(makeMenuItem(title: String(localized: .delete), action: #selector(handleDeleteAction), symbolName: "trash"))
 
         menu.addItem(.separator())
 
@@ -450,6 +421,13 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         menu.addItem(colorItem)
 
         NSMenu.popUpContextMenu(menu, with: event, for: self)
+    }
+
+    private func makeMenuItem(title: String, action: Selector, symbolName: String) -> NSMenuItem {
+        let item = NSMenuItem(title: title, action: action, keyEquivalent: "")
+        item.target = self
+        item.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)
+        return item
     }
 
     @objc private func handleClick() {
