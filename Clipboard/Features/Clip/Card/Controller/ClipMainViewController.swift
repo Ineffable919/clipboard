@@ -478,6 +478,7 @@ extension ClipMainViewController {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] in
                 guard let self else { return }
+                topBarView.reloadChips()
                 applySnapshot(animating: false)
                 restoreSelection()
             }

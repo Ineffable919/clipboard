@@ -106,6 +106,18 @@ final class CategoryChipStore {
         return chip.isSystem ? -1 : chip.id
     }
 
+    func mergeImportedChips(from data: Data?) {
+        guard let data,
+              let importedChips = try? JSONDecoder().decode([CategoryChip].self, from: data)
+        else { return }
+        let existingIds = Set(PasteUserDefaults.userCategoryChip.map(\.id))
+        let newChips = importedChips.filter { !existingIds.contains($0.id) }
+        guard !newChips.isEmpty else { return }
+        PasteUserDefaults.userCategoryChip += newChips
+        loadCategories()
+        chipsContentDidChange.send()
+    }
+
     // MARK: - Private Methods
 
     private func saveUserCategories() {

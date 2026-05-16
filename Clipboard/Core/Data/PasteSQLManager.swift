@@ -431,7 +431,11 @@ extension PasteSQLManager {
         let success: Bool
         let message: String
         var importedAppInfo: [(name: String, path: String)] = []
+        var importedChipsData: Data? = nil
     }
+
+    private static let metaTable = "clip_meta"
+    private static let metaChipsKey = "user_chips"
 
     private nonisolated static func localize(
         _ key: String,
@@ -446,7 +450,7 @@ extension PasteSQLManager {
         return String(format: format, locale: .current, arguments: arguments)
     }
 
-    nonisolated func exportDatabase(to destinationURL: URL) async -> ImportExportResult {
+    nonisolated func exportDatabase(to destinationURL: URL, userChipsData: Data?) async -> ImportExportResult {
         let sourcePath = Self.databasePath
 
         return await Task.detached(priority: .userInitiated) {
@@ -469,6 +473,17 @@ extension PasteSQLManager {
                     atPath: sourcePath,
                     toPath: destinationURL.path
                 )
+
+                if let data = userChipsData, let json = String(data: data, encoding: .utf8) {
+                    let destDb = try Connection(destinationURL.path)
+                    try destDb.execute(
+                        "CREATE TABLE IF NOT EXISTS \(Self.metaTable) (key TEXT PRIMARY KEY, value TEXT NOT NULL)"
+                    )
+                    try destDb.run(
+                        "INSERT OR REPLACE INTO \(Self.metaTable) (key, value) VALUES (?, ?)",
+                        [Self.metaChipsKey, json]
+                    )
+                }
 
                 return ImportExportResult(
                     success: true,
@@ -555,7 +570,30 @@ extension PasteSQLManager {
                 let message = Self.localize("importResult", importedCount, skippedText)
 
                 let appInfo = appInfoDict.map { (name: $0.key, path: $0.value) }
-                return ImportExportResult(success: true, message: message, importedAppInfo: appInfo)
+
+                var chipsData: Data? = nil
+                let metaExists = (try? sourceDb.scalar(
+                    "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='\(Self.metaTable)'"
+                ) as? Int64) ?? 0
+                if metaExists > 0,
+                   let rows = try? sourceDb.prepare(
+                       "SELECT value FROM \(Self.metaTable) WHERE key='\(Self.metaChipsKey)'"
+                   )
+                {
+                    for row in rows {
+                        if let json = row[0] as? String {
+                            chipsData = json.data(using: .utf8)
+                        }
+                        break
+                    }
+                }
+
+                return ImportExportResult(
+                    success: true,
+                    message: message,
+                    importedAppInfo: appInfo,
+                    importedChipsData: chipsData
+                )
             } catch {
                 return ImportExportResult(
                     success: false,

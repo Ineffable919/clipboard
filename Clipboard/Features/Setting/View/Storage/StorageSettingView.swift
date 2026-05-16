@@ -113,8 +113,10 @@ struct StorageSettingView: View {
 
         isExporting = true
 
+        let chipsData = try? JSONEncoder().encode(PasteUserDefaults.userCategoryChip)
+
         Task.detached(priority: .userInitiated) {
-            let result = await PasteSQLManager.manager.exportDatabase(to: url)
+            let result = await PasteSQLManager.manager.exportDatabase(to: url, userChipsData: chipsData)
 
             await MainActor.run {
                 isExporting = false
@@ -162,6 +164,8 @@ struct StorageSettingView: View {
                     log.info("数据库导入成功: \(result.message)")
                     alertTitle = String(localized: .settingStorageImportSuccessTitle)
                     alertMessage = result.message
+
+                    CategoryChipStore.shared.mergeImportedChips(from: result.importedChipsData)
 
                     Task {
                         await AppColorService.shared.extractMissingColors(appInfo: result.importedAppInfo)
