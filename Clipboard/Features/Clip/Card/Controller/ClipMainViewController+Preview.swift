@@ -23,6 +23,10 @@ extension ClipMainViewController {
         popover.onUnpin = { [weak self] model in
             _ = self?.topVM.assignModelToChip(model: model, chipId: -1)
         }
+        popover.onCreateChip = { [weak self] model in
+            self?.closePreviewPopover()
+            self?.topBarView.startCreatingChip(pinModel: model)
+        }
         popover.delegate = self
         previewPopover = popover
         popover.show(relativeTo: view.bounds, of: view, preferredEdge: .maxY)

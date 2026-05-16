@@ -14,6 +14,7 @@ final class ClipPreviewPopover: NSPopover {
     var onContentInteraction: (() -> Void)?
     var onPinToChip: ((PasteboardModel, Int) -> Void)?
     var onUnpin: ((PasteboardModel) -> Void)?
+    var onCreateChip: ((PasteboardModel) -> Void)?
 
     private let previewVC = ClipPreviewController()
     private nonisolated(unsafe) var keyMonitor: Any?
@@ -61,6 +62,9 @@ final class ClipPreviewPopover: NSPopover {
         previewVC.onUnpin = { [weak self] model in
             self?.onUnpin?(model)
         }
+        previewVC.onCreateChip = { [weak self] model in
+            self?.onCreateChip?(model)
+        }
     }
 
     func cleanup() {
@@ -69,9 +73,11 @@ final class ClipPreviewPopover: NSPopover {
         previewVC.onDismiss = nil
         previewVC.onPinToChip = nil
         previewVC.onUnpin = nil
+        previewVC.onCreateChip = nil
         onContentInteraction = nil
         onPinToChip = nil
         onUnpin = nil
+        onCreateChip = nil
     }
 
     // MARK: - Size Calculation

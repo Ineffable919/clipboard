@@ -26,6 +26,7 @@ final class ClipPreviewController: NSViewController {
     var onDismiss: (() -> Void)?
     var onPinToChip: ((PasteboardModel, Int) -> Void)?
     var onUnpin: ((PasteboardModel) -> Void)?
+    var onCreateChip: ((PasteboardModel) -> Void)?
 
     // MARK: - Subviews
 
@@ -145,6 +146,10 @@ final class ClipPreviewController: NSViewController {
             guard let model = self?.model else { return }
             self?.onUnpin?(model)
             self?.headerView.configure(model: model, appIcon: self?.appIcon)
+        }
+        headerView.onCreateChip = { [weak self] in
+            guard let model = self?.model else { return }
+            self?.onCreateChip?(model)
         }
         footerView.onShowInFinder = { [weak self] in
             guard let path = self?.model?.cachedFilePaths?.first else { return }

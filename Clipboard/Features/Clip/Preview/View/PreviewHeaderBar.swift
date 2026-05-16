@@ -18,6 +18,7 @@ final class PreviewHeaderBar: NSView {
     var onOpenWithApp: (() -> Void)?
     var onPinToChip: ((Int) -> Void)?
     var onUnpin: (() -> Void)?
+    var onCreateChip: (() -> Void)?
 
     // MARK: - Subviews
 
@@ -78,6 +79,7 @@ final class PreviewHeaderBar: NSView {
         openWithButton.onAction = { [weak self] in self?.onOpenWithApp?() }
         pinButton.onPinToChip = { [weak self] chipId in self?.onPinToChip?(chipId) }
         pinButton.onUnpin = { [weak self] in self?.onUnpin?() }
+        pinButton.onCreateChip = { [weak self] in self?.onCreateChip?() }
         setupLayout()
     }
 
@@ -153,6 +155,7 @@ final class PreviewHeaderBar: NSView {
 private final class PinChipButton: NSView {
     var onPinToChip: ((Int) -> Void)?
     var onUnpin: (() -> Void)?
+    var onCreateChip: (() -> Void)?
 
     private var currentGroup: Int = -1
 
@@ -324,15 +327,28 @@ private final class PinChipButton: NSView {
             item.image = chipDotImage(colorIndex: chip.colorIndex)
             menu.addItem(item)
         }
-        if currentGroup != -1 {
+
+        let createItem = NSMenuItem(
+            title: String(localized: .createTag),
+            action: #selector(handleCreateChip),
+            keyEquivalent: ""
+        )
+        createItem.target = self
+
+        if userChips.isEmpty {
+            menu.addItem(createItem)
+        } else {
             menu.addItem(.separator())
-            let unpin = NSMenuItem(
-                title: String(localized: .unpin),
-                action: #selector(handleUnpin),
-                keyEquivalent: ""
-            )
-            unpin.target = self
-            menu.addItem(unpin)
+            if currentGroup != -1 {
+                let unpin = NSMenuItem(
+                    title: String(localized: .unpin),
+                    action: #selector(handleUnpin),
+                    keyEquivalent: ""
+                )
+                unpin.target = self
+                menu.addItem(unpin)
+            }
+            menu.addItem(createItem)
         }
         NSMenu.popUpContextMenu(menu, with: event, for: self)
     }
@@ -358,6 +374,10 @@ private final class PinChipButton: NSView {
 
     @objc private func handleUnpin() {
         onUnpin?()
+    }
+
+    @objc private func handleCreateChip() {
+        onCreateChip?()
     }
 }
 
