@@ -128,7 +128,7 @@ private actor LoggerState {
             return cachedLogFileURL
         }
         let calendar = Calendar(identifier: .gregorian)
-        let nextDay = calendar.startOfDay(for: now).addingTimeInterval(86_400)
+        let nextDay = calendar.startOfDay(for: now).addingTimeInterval(86400)
         let url = logsDirectory.appending(path: "clip-\(now.formatted(Self.fileDateFormat)).log")
         cachedLogFileURL = url
         cachedDayBoundary = nextDay.timeIntervalSinceReferenceDate

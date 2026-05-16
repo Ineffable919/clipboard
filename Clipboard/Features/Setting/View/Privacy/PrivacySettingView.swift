@@ -13,14 +13,30 @@ import UniformTypeIdentifiers
 struct PrivacySettingView: View {
     @Environment(\.colorScheme) var colorScheme
 
+    @AppStorage(PrefKey.showDuringScreenShare.rawValue)
+    private var showDuringScreenShare = true
+
+    @AppStorage(PrefKey.enableLinkPreview.rawValue)
+    private var enableLinkPreview = true
+
+    @AppStorage(PrefKey.ignoreSensitiveContent.rawValue)
+    private var ignoreSensitiveContent = true
+
+    @AppStorage(PrefKey.ignoreEphemeralContent.rawValue)
+    private var ignoreEphemeralContent = true
+
+    @AppStorage(PrefKey.delConfirm.rawValue)
+    private var delConfirm = false
+
     @State private var selectedApp: String? = nil
-    @State private var ignoredApps: [IgnoredAppInfo] = PasteUserDefaults
-        .ignoredApps
-    @AppStorage(PrefKey.showDuringScreenShare.rawValue) private var showDuringScreenShare = true
-    @AppStorage(PrefKey.enableLinkPreview.rawValue) private var enableLinkPreview = true
-    @AppStorage(PrefKey.ignoreSensitiveContent.rawValue) private var ignoreSensitiveContent = true
-    @AppStorage(PrefKey.ignoreEphemeralContent.rawValue) private var ignoreEphemeralContent = true
-    @AppStorage(PrefKey.delConfirm.rawValue) private var delConfirm = false
+    @State private var ignoredApps: [IgnoredAppInfo] = {
+        var list = PasteUserDefaults.ignoredApps
+        if #unavailable(macOS 15.0) {
+            list.removeAll { $0.bundleIdentifier == "com.apple.Passwords" }
+        }
+        return list
+    }()
+
     @State private var hasAccessibilityPermission: Bool = AXIsProcessTrusted()
     @State private var permissionTimer: Timer?
 

@@ -68,14 +68,16 @@ class EmptyStateView: NSView {
         addSubview(titleLabel)
         addSubview(hintLabel)
 
-        if #available(macOS 26.0, *) {
-            iconImageView.image = NSImage(
-                systemSymbolName: "heart.text.clipboard.fill",
-                accessibilityDescription: nil
-            )
+        let symbolName = if #available(macOS 15.0, *) {
+            "heart.text.clipboard.fill"
         } else {
-            iconImageView.image = NSImage(named: "heart.text.clipboard.fill")
+            "list.clipboard.fill"
         }
+
+        iconImageView.image = NSImage(
+            systemSymbolName: symbolName,
+            accessibilityDescription: nil
+        )
 
         if let symbolImage = iconImageView.image {
             iconImageView.image = symbolImage.withSymbolConfiguration(

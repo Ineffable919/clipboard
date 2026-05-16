@@ -413,9 +413,16 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
             y: textContainerInset.height + topPadding
         )
 
+        let placeholderColor: NSColor = {
+            if #available(macOS 26, *) {
+                return .secondaryLabelColor
+            }
+            return .labelColor.withAlphaComponent(0.55)
+        }()
+
         let attrs: [NSAttributedString.Key: Any] = [
             .font: font,
-            .foregroundColor: NSColor.secondaryLabelColor,
+            .foregroundColor: placeholderColor,
         ]
         (placeholder as NSString).draw(at: origin, withAttributes: attrs)
     }
