@@ -102,7 +102,7 @@ extension ClipMainWindowController {
             Task { @MainActor in
                 guard let self else { return }
                 if self.intentVersion == myVersion {
-                    self.window?.resignFirstResponder()
+                    self.window?.makeFirstResponder(nil)
                     self.window?.setIsVisible(false)
                     if #unavailable(macOS 15.0) {
                         AppEnvironment.shared.previousApp?.activate(options: [])
