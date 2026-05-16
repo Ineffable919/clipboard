@@ -1,5 +1,5 @@
 //
-//  FilterLabelButton.swift
+//  FilterTagButton.swift
 //  Clipboard
 //
 //  标签筛选按钮：左边颜色圆点 + 右边文案
@@ -8,7 +8,7 @@
 import AppKit
 import SnapKit
 
-final class FilterLabelButton: FilterButton {
+final class FilterTagButton: FilterButton {
     let groupId: Int
 
     init(colorIndex: Int, title: String, groupId: Int) {

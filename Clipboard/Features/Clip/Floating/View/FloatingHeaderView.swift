@@ -132,11 +132,16 @@ final class FloatingHeaderView: NSView {
     // MARK: - New Chip Creation
 
     private func startCreatingChip() {
+        startCreatingChip(pinModel: nil)
+    }
+
+    func startCreatingChip(pinModel: PasteboardModel?) {
         guard let topVM else { return }
         if topVM.editingNewChip { commitNewChip() }
         if topVM.editingChipId != nil { topVM.commitEditingChip() }
         topVM.editingNewChip = true
         topVM.newChipName = String(localized: .untitled)
+        topVM.pendingPinModel = pinModel
         reloadChips()
     }
 

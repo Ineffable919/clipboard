@@ -78,7 +78,7 @@ final class TopBarChipController {
 
     // MARK: - New Chip Creation
 
-    func startCreatingChip() {
+    func startCreatingChip(pinModel: PasteboardModel? = nil) {
         guard let topVM else { return }
         if topVM.editingNewChip {
             commitNewChip()
@@ -88,6 +88,7 @@ final class TopBarChipController {
         }
         topVM.editingNewChip = true
         topVM.newChipName = String(localized: .untitled)
+        topVM.pendingPinModel = pinModel
         appendNewChipPlaceholder()
     }
 

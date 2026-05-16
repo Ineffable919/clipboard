@@ -64,6 +64,9 @@ final class FloatingWindowContentView: NSView {
         historyView.onActivateSearch = { [weak self] text in
             self?.headerView.activateSearch(with: text)
         }
+        historyView.onCreateChip = { [weak self] model in
+            self?.headerView.startCreatingChip(pinModel: model)
+        }
         headerView.onSearchBecameFirstResponder = { [weak self] in
             self?.historyView.setFocusRegion(.search)
         }

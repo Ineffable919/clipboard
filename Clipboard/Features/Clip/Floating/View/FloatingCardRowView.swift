@@ -49,6 +49,7 @@ final class FloatingCardRowView: NSView {
     var onDelete: (() -> Void)?
     var onTogglePreview: (() -> Void)?
     var onAssignToChip: ((Int) -> Void)?
+    var onCreateChip: ((PasteboardModel) -> Void)?
 
     // MARK: - Init
 
@@ -339,6 +340,11 @@ extension FloatingCardRowView: ClipItemMenuActionable {
     func handleClipAssignToChip(_ sender: NSMenuItem) {
         guard let model = currentModel, model.group != sender.tag else { return }
         onAssignToChip?(sender.tag)
+    }
+
+    func handleClipCreateChip() {
+        guard let model = currentModel else { return }
+        onCreateChip?(model)
     }
 
     func handleClipUnpin() {

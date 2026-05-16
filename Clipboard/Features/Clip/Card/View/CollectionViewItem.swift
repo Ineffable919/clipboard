@@ -21,6 +21,7 @@ protocol CollectionViewItemDelegate: NSObjectProtocol {
     func edit(_ item: PasteboardModel)
     func delete(_ item: PasteboardModel, indexPath: IndexPath)
     func assignToChip(_ item: PasteboardModel, chipId: Int)
+    func createChip(pinning item: PasteboardModel)
     func preview(_ item: PasteboardModel)
 }
 
@@ -285,6 +286,11 @@ extension CollectionViewItem: ClipItemMenuActionable {
     func handleClipAssignToChip(_ sender: NSMenuItem) {
         guard let model = item, model.group != sender.tag else { return }
         delegate?.assignToChip(model, chipId: sender.tag)
+    }
+
+    func handleClipCreateChip() {
+        guard let model = item else { return }
+        delegate?.createChip(pinning: model)
     }
 
     func handleClipUnpin() {

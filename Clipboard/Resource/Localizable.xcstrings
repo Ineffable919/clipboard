@@ -384,6 +384,24 @@
         }
       }
     },
+    "createTag" : {
+      "comment" : "Menu item: create a new tag and pin the clip to it",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Tag…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新建标签…"
+          }
+        }
+      }
+    },
     "copyLater" : {
       "comment" : "Copy to clipboard later action in accessibility permission alert",
       "extractionState" : "manual",
@@ -1104,14 +1122,14 @@
         }
       }
     },
-    "label" : {
-      "comment" : "Label filter section title",
+    "tag" : {
+      "comment" : "Tag filter section title",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Labels"
+            "state" : "translated",
+            "value" : "Tags"
           }
         },
         "zh-Hans" : {

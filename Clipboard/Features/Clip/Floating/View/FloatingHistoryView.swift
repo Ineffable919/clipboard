@@ -91,6 +91,11 @@ private final class FloatingCollectionItem: NSCollectionViewItem {
         get { cardView.onAssignToChip }
         set { cardView.onAssignToChip = newValue }
     }
+
+    var onCreateChip: ((PasteboardModel) -> Void)? {
+        get { cardView.onCreateChip }
+        set { cardView.onCreateChip = newValue }
+    }
 }
 
 // MARK: - FloatingHistoryView
@@ -128,6 +133,7 @@ final class FloatingHistoryView: NSView {
 
     var onActivateSearch: ((String?) -> Void)?
     var onTogglePreview: ((Int) -> Void)?
+    var onCreateChip: ((PasteboardModel) -> Void)?
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -381,6 +387,9 @@ final class FloatingHistoryView: NSView {
             item.onAssignToChip = { [weak self] chipId in
                 guard let self, row < dataList.count else { return }
                 _ = topVM?.assignModelToChip(model: dataList[row], chipId: chipId)
+            }
+            item.onCreateChip = { [weak self] model in
+                self?.onCreateChip?(model)
             }
             return item
         }

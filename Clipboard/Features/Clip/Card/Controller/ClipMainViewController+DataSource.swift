@@ -182,6 +182,10 @@ extension ClipMainViewController: CollectionViewItemDelegate {
         _ = topVM.assignModelToChip(model: item, chipId: chipId)
     }
 
+    func createChip(pinning item: PasteboardModel) {
+        topBarView.startCreatingChip(pinModel: item)
+    }
+
     func preview(_ item: PasteboardModel) {
         if previewPopover != nil {
             closePreviewPopover()

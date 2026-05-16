@@ -42,6 +42,7 @@ final class TopBarViewModel {
     var editingNewChip: Bool = false
     var newChipName: String = .init(localized: .untitled)
     var newChipColorIndex: Int = 1
+    var pendingPinModel: PasteboardModel?
 
     // Edit Chip State
     var editingChipId: Int?
@@ -171,9 +172,14 @@ final class TopBarViewModel {
             in: .whitespacesAndNewlines
         )
         let colorIndex = newChipColorIndex
+        let pinTarget = pendingPinModel
+        pendingPinModel = nil
         resetNewChipState()
         if commitIfNonEmpty, !trimmed.isEmpty {
             addChip(name: trimmed, colorIndex: colorIndex)
+            if let pinTarget, let newChipId = chipStore.chips.last?.id {
+                _ = assignModelToChip(model: pinTarget, chipId: newChipId)
+            }
         }
     }
 

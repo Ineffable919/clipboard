@@ -16,6 +16,7 @@ import AppKit
     func handleClipEdit()
     func handleClipDelete()
     func handleClipAssignToChip(_ sender: NSMenuItem)
+    func handleClipCreateChip()
     func handleClipUnpin()
     func handleClipPreview()
     func handleClipRevealInFinder()
@@ -146,6 +147,7 @@ extension ClipItemMenuActionable where Self: NSObject {
 
         let submenu = NSMenu()
         let userChips = CategoryChipStore.shared.chips.filter { !$0.isSystem }
+
         for chip in userChips {
             let chipItem = NSMenuItem(
                 title: chip.name,
@@ -159,15 +161,27 @@ extension ClipItemMenuActionable where Self: NSObject {
             submenu.addItem(chipItem)
         }
 
-        if model.group != -1 {
+        let createTagItem = NSMenuItem(
+            title: String(localized: .createTag),
+            action: #selector(ClipItemMenuActionable.handleClipCreateChip),
+            keyEquivalent: ""
+        )
+        createTagItem.target = self
+
+        if userChips.isEmpty {
+            submenu.addItem(createTagItem)
+        } else {
             submenu.addItem(.separator())
-            let unpinItem = NSMenuItem(
-                title: String(localized: .unpin),
-                action: #selector(ClipItemMenuActionable.handleClipUnpin),
-                keyEquivalent: ""
-            )
-            unpinItem.target = self
-            submenu.addItem(unpinItem)
+            if model.group != -1 {
+                let unpinItem = NSMenuItem(
+                    title: String(localized: .unpin),
+                    action: #selector(ClipItemMenuActionable.handleClipUnpin),
+                    keyEquivalent: ""
+                )
+                unpinItem.target = self
+                submenu.addItem(unpinItem)
+            }
+            submenu.addItem(createTagItem)
         }
 
         parent.submenu = submenu

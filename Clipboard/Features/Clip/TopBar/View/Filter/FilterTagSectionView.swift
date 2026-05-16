@@ -1,5 +1,5 @@
 //
-//  FilterLabelSectionView.swift
+//  FilterTagSectionView.swift
 //  Clipboard
 //
 //  分组筛选区域：管理分组按钮的创建、布局和选中状态（单选）
@@ -8,7 +8,7 @@
 import AppKit
 import SnapKit
 
-final class FilterLabelSectionView: NSStackView {
+final class FilterTagSectionView: NSStackView {
     // MARK: - Callbacks
 
     var onGroupToggle: ((Int?) -> Void)?
@@ -17,7 +17,7 @@ final class FilterLabelSectionView: NSStackView {
 
     private var selectedGroupId: Int?
     private var availableGroups: [CategoryChip] = []
-    private var groupButtons: [Int: FilterLabelButton] = [:]
+    private var groupButtons: [Int: FilterTagButton] = [:]
 
     // MARK: - Views
 
@@ -43,7 +43,7 @@ final class FilterLabelSectionView: NSStackView {
         alignment = .leading
         spacing = Const.space8
 
-        titleLabel.stringValue = String(localized: .label)
+        titleLabel.stringValue = String(localized: .tag)
         titleLabel.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .semibold)
         titleLabel.textColor = .secondaryLabelColor
         titleLabel.isBordered = false
@@ -88,7 +88,7 @@ final class FilterLabelSectionView: NSStackView {
 
         var buttons: [FilterButton] = []
         for chip in availableGroups {
-            let button = FilterLabelButton(
+            let button = FilterTagButton(
                 colorIndex: chip.colorIndex,
                 title: chip.name,
                 groupId: chip.id

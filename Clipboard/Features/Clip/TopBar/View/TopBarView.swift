@@ -93,6 +93,13 @@ final class TopBarView: NSView {
         chipController.reloadChips()
     }
 
+    func startCreatingChip(pinModel: PasteboardModel? = nil) {
+        if isSearching {
+            deactivateSearch()
+        }
+        chipController.startCreatingChip(pinModel: pinModel)
+    }
+
     func updateChipSelection() {
         chipController.updateChipSelection()
     }
