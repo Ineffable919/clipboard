@@ -125,14 +125,14 @@ private final class TokenAttachmentCell: NSTextAttachmentCell {
             x += iconSize + gap
         }
 
+        let font = chipFont()
         let textAttrs: [NSAttributedString.Key: Any] = [
-            .font: chipFont(),
+            .font: font,
             .foregroundColor: NSColor.labelColor,
         ]
-        let textSize = labelSize()
         let textOrigin = NSPoint(
             x: x,
-            y: cellFrame.midY - textSize.height / 2
+            y: cellFrame.midY - font.ascender + font.capHeight / 2
         )
         (inputTag.label as NSString).draw(at: textOrigin, withAttributes: textAttrs)
     }
