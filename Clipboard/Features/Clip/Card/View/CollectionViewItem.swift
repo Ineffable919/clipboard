@@ -86,8 +86,8 @@ final class CollectionViewItem: NSCollectionViewItem {
         }
     }
 
-    private lazy var badgeBgView: NSView = {
-        let view = NSView()
+    private lazy var badgeBgView: BadgeBackgroundView = {
+        let view = BadgeBackgroundView()
         view.wantsLayer = true
         view.layer?.cornerRadius = 4.0
         view.layer?.cornerCurve = .continuous
@@ -159,22 +159,23 @@ final class CollectionViewItem: NSCollectionViewItem {
 
     private func updateInfoIconAppearance() {
         guard let model = item else { return }
-        var backgroundCGColor: CGColor = NSColor.clear.cgColor
-        var tintColor: NSColor = .labelColor
+        let backgroundColor: NSColor
+        let backgroundAlpha: CGFloat
+        let tintColor: NSColor
 
-        badgeBgView.effectiveAppearance.performAsCurrentDrawingAppearance {
-            if model.type == .image {
-                backgroundCGColor = NSColor.unemphasizedSelectedContentBackgroundColor
-                    .withAlphaComponent(0.8).cgColor
-                tintColor = .secondaryLabelColor
-            } else {
-                let (base, textColor) = model.colors()
-                backgroundCGColor = base.cgColor
-                tintColor = textColor
-            }
+        if model.type == .image {
+            backgroundColor = .unemphasizedSelectedContentBackgroundColor
+            backgroundAlpha = 0.8
+            tintColor = .secondaryLabelColor
+        } else {
+            let (base, textColor) = model.colors()
+            backgroundColor = base
+            backgroundAlpha = 1.0
+            tintColor = textColor
         }
 
-        badgeBgView.layer?.backgroundColor = backgroundCGColor
+        badgeBgView.dynamicBackgroundColor = backgroundColor
+        badgeBgView.backgroundAlpha = backgroundAlpha
         infoIconView.contentTintColor = tintColor
         quickPasteLabel.textColor = tintColor
     }
@@ -401,5 +402,31 @@ private final class AppearanceObservingView: NSView {
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
         onAppearanceChange?()
+    }
+}
+
+// MARK: - BadgeBackgroundView
+
+private final class BadgeBackgroundView: NSView {
+    var dynamicBackgroundColor: NSColor = .clear {
+        didSet { needsDisplay = true }
+    }
+
+    var backgroundAlpha: CGFloat = 1.0 {
+        didSet { needsDisplay = true }
+    }
+
+    override var wantsUpdateLayer: Bool { true }
+
+    override func updateLayer() {
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            layer?.backgroundColor = dynamicBackgroundColor
+                .withAlphaComponent(backgroundAlpha).cgColor
+        }
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        needsDisplay = true
     }
 }
