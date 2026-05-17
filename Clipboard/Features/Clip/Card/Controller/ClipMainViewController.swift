@@ -121,6 +121,7 @@ final class ClipMainViewController: NSViewController {
         collectionView.wantsLayer = true
         collectionView.delegate = self
         collectionView.allowsEmptySelection = false
+        collectionView.allowsMultipleSelection = true
         collectionView.backgroundColors = [.clear]
         collectionView.collectionViewLayout = flowLayout
         collectionView.isSelectable = true
@@ -134,6 +135,24 @@ final class ClipMainViewController: NSViewController {
         }
         collectionView.onBecomeFirstResponder = { [weak self] in
             self?.setFocusRegion(.collection)
+        }
+        collectionView.onShiftClick = { [weak self] clickedPath in
+            guard let self else { return }
+            if focusRegion != .collection {
+                setFocusRegion(.collection)
+                view.window?.makeFirstResponder(collectionView)
+            }
+            let lo = min(selectIndexPath.item, clickedPath.item)
+            let hi = max(selectIndexPath.item, clickedPath.item)
+            let paths = Set((lo ... hi).map { IndexPath(item: $0, section: 0) })
+            collectionView.selectionIndexPaths = paths
+            updateSelectedItemBorder()
+        }
+        collectionView.onCollapseToSingle = { [weak self] indexPath in
+            guard let self else { return }
+            resetSelectIndex(indexPath)
+            setFocusRegion(.collection)
+            view.window?.makeFirstResponder(collectionView)
         }
         collectionView.onDragMoved = { [weak self] screenPoint in
             guard let self, let window = view.window else { return }
@@ -400,8 +419,11 @@ extension ClipMainViewController {
     }
 
     func updateSelectedItemBorder() {
-        (collectionView.item(at: selectIndexPath) as? CollectionViewItem)?
-            .setFocused(focusRegion == .collection)
+        let isFocused = focusRegion == .collection
+        for indexPath in collectionView.selectionIndexPaths {
+            (collectionView.item(at: indexPath) as? CollectionViewItem)?
+                .setFocused(isFocused)
+        }
     }
 
     @objc func handleContentViewClick(_: NSClickGestureRecognizer) {

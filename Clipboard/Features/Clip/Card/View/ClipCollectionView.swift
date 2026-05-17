@@ -10,11 +10,28 @@ final class ClipCollectionView: NSCollectionView {
     var onBecomeFirstResponder: (() -> Void)?
     var onDragMoved: ((_ screenPoint: NSPoint) -> Void)?
     var onDragEnded: ((_ screenPoint: NSPoint) -> Void)?
+    var onShiftClick: ((_ indexPath: IndexPath) -> Void)?
+    var onCollapseToSingle: ((_ indexPath: IndexPath) -> Void)?
 
     override func mouseDown(with event: NSEvent) {
         if event.type == .leftMouseDown {
             let point = convert(event.locationInWindow, from: nil)
+            let modifiers = event.modifierFlags
+
             if let indexPath = indexPathForItem(at: point) {
+                if modifiers.contains(.shift), !modifiers.contains(.command) {
+                    onShiftClick?(indexPath)
+                    return
+                }
+
+                if !modifiers.contains(.command),
+                   selectionIndexPaths.count > 1,
+                   selectionIndexPaths.contains(indexPath)
+                {
+                    onCollapseToSingle?(indexPath)
+                    return
+                }
+
                 onMouseDownBeforeSelection?(indexPath)
             }
         }

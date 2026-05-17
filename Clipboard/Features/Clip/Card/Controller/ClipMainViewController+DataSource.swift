@@ -12,13 +12,32 @@ import Combine
 
 extension ClipMainViewController: NSCollectionViewDelegate {
     func collectionView(_: NSCollectionView, shouldSelectItemsAt indexPaths: Set<IndexPath>) -> Set<IndexPath> {
+        let modifiers = NSApp.currentEvent?.modifierFlags ?? []
+        let isMultiSelect = modifiers.contains(.command) || modifiers.contains(.shift)
+
+        if isMultiSelect {
+            if let path = indexPaths.min() {
+                selectIndexPath = path
+            }
+            return indexPaths
+        }
+
         if let indexPath = indexPaths.first {
             resetSelectIndex(indexPath)
-            // if previewPopover != nil, indexPath.item < dataList.value.count {
-            //     reopenPreviewForSelectedItem()
-            // }
         }
         return [selectIndexPath]
+    }
+
+    func collectionView(_: NSCollectionView, shouldDeselectItemsAt indexPaths: Set<IndexPath>) -> Set<IndexPath> {
+        indexPaths
+    }
+
+    func collectionView(_: NSCollectionView, didSelectItemsAt _: Set<IndexPath>) {
+        updateSelectedItemBorder()
+    }
+
+    func collectionView(_: NSCollectionView, didDeselectItemsAt _: Set<IndexPath>) {
+        updateSelectedItemBorder()
     }
 
     func collectionView(_: NSCollectionView, canDragItemsAt _: Set<IndexPath>, with _: NSEvent) -> Bool {
@@ -27,6 +46,19 @@ extension ClipMainViewController: NSCollectionViewDelegate {
 
     func collectionView(_: NSCollectionView, pasteboardWriterForItemAt indexPath: IndexPath) -> (any NSPasteboardWriting)? {
         dataList.value[indexPath.item].writeItem
+    }
+}
+
+// MARK: - Multi Selection
+
+extension ClipMainViewController {
+    var selectedModels: [PasteboardModel] {
+        collectionView.selectionIndexPaths
+            .sorted()
+            .compactMap { path in
+                guard path.item < dataList.value.count else { return nil }
+                return dataList.value[path.item]
+            }
     }
 }
 

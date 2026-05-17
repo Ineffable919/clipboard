@@ -321,6 +321,10 @@ extension PasteDataStore {
     }
 
     func deleteItems(_ items: PasteboardModel...) {
+        deleteItems(items)
+    }
+
+    func deleteItems(_ items: [PasteboardModel]) {
         let deleteSet = Set(items.compactMap(\.id))
         var list = dataList.value
         list.removeAll { item in

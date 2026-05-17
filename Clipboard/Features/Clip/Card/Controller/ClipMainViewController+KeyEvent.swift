@@ -143,19 +143,20 @@ extension ClipMainViewController {
         guard !topBarView.searchField.isFirstResponder,
               focusRegion != .chipEditing
         else { return event }
-        if selectIndexPath.item < dataList.value.count {
-            let item = dataList.value[selectIndexPath.item]
-            delete(item, indexPath: selectIndexPath)
-            return nil
-        }
-        return event
+
+        let items = selectedModels
+        guard !items.isEmpty else { return event }
+        guard !PasteUserDefaults.delConfirm else { return nil }
+        cardVM.deleteMultiple(items)
+        return nil
     }
 
     private func returnKeyDown(_ event: NSEvent) -> NSEvent? {
         guard focusRegion == .collection else { return event }
-        let item = dataList.value[selectIndexPath.item]
-        ClipActionService.shared.paste(
-            item,
+        let items = selectedModels
+        guard !items.isEmpty else { return nil }
+        ClipActionService.shared.pasteMultiple(
+            items,
             isAttribute: !hasPlainTextModifier(event),
             checkPermissions: PasteUserDefaults.pasteDirect,
             showTip: !PasteUserDefaults.pasteDirect
@@ -179,6 +180,11 @@ extension ClipMainViewController {
         }
 
         switch event.keyCode {
+        case KeyCode.a:
+            collectionView.selectAll(nil)
+            updateSelectedItemBorder()
+            return nil
+
         case KeyCode.c:
             return handleCopy()
 
@@ -191,9 +197,14 @@ extension ClipMainViewController {
     }
 
     private func handleCopy() -> NSEvent? {
-        guard selectIndexPath.item < dataList.value.count else { return nil }
-        let item = dataList.value[selectIndexPath.item]
-        copy(item)
+        let items = selectedModels
+        guard !items.isEmpty else { return nil }
+        if items.count == 1 {
+            copy(items[0])
+        } else {
+            ClipActionService.shared.copyMultiple(items)
+            WindowManager.shared.toggleWindow()
+        }
         return nil
     }
 
