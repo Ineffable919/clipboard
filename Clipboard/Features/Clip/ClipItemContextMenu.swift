@@ -7,6 +7,20 @@
 
 import AppKit
 
+private final class ClipShareAction: NSObject {
+    private let service: NSSharingService
+    private let items: [Any]
+
+    init(service: NSSharingService, items: [Any]) {
+        self.service = service
+        self.items = items
+    }
+
+    @objc func shareNow() {
+        service.perform(withItems: items)
+    }
+}
+
 // MARK: - Actionable Protocol
 
 @objc protocol ClipItemMenuActionable: AnyObject {
@@ -110,10 +124,38 @@ extension ClipItemMenuActionable where Self: NSObject {
             keyEquivalent: " "
         ))
 
+        if let shareItem = makeShareMenuItem(for: model) {
+            menu.addItem(shareItem)
+        }
+
         return menu
     }
 
     // MARK: - Item Factories
+
+    private func makeShareMenuItem(for model: PasteboardModel) -> NSMenuItem? {
+        let items = model.shareableItems
+        guard !items.isEmpty else { return nil }
+        let services = NSSharingService.sharingServices(forItems: items)
+        guard !services.isEmpty else { return nil }
+
+        let parent = NSMenuItem(title: String(localized: .share), action: nil, keyEquivalent: "")
+        if #available(macOS 26.0, *) {
+            parent.image = NSImage(systemSymbolName: "square.and.arrow.up", accessibilityDescription: nil)
+        }
+
+        let submenu = NSMenu()
+        for service in services {
+            let action = ClipShareAction(service: service, items: items)
+            let item = NSMenuItem(title: service.menuItemTitle, action: #selector(ClipShareAction.shareNow), keyEquivalent: "")
+            item.image = service.image
+            item.target = action
+            item.representedObject = action
+            submenu.addItem(item)
+        }
+        parent.submenu = submenu
+        return parent
+    }
 
     private func bundleDisplayName(for appURL: URL) -> String? {
         let b = Bundle(url: appURL)

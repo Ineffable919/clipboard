@@ -14,6 +14,7 @@ final class PreviewHeaderBar: NSView {
     // MARK: - Callbacks
 
     var onClose: (() -> Void)?
+    var onShare: ((NSView) -> Void)?
     var onEdit: (() -> Void)?
     var onOpenWithApp: (() -> Void)?
     var onPinToChip: ((Int) -> Void)?
@@ -27,7 +28,7 @@ final class PreviewHeaderBar: NSView {
         btn.bezelStyle = .inline
         btn.isBordered = false
         btn.refusesFirstResponder = true
-        btn.image = NSImage(systemSymbolName: "xmark.circle.fill", accessibilityDescription: nil)
+        btn.image = NSImage(systemSymbolName: "xmark.circle.fill", accessibilityDescription: String(localized: .close))
         btn.contentTintColor = .secondaryLabelColor
         return btn
     }()
@@ -59,10 +60,15 @@ final class PreviewHeaderBar: NSView {
         return btn
     }()
 
+    private let shareButton = PreviewIconButton(
+        systemSymbol: "square.and.arrow.up",
+        accessibilityDescription: String(localized: .share)
+    )
+
     private let pinButton = PinChipButton()
 
     private lazy var rightStack: NSStackView = {
-        let stack = NSStackView(views: [pinButton, editButton, openWithButton])
+        let stack = NSStackView(views: [pinButton, shareButton, editButton, openWithButton])
         stack.orientation = .horizontal
         stack.spacing = Const.space8
         stack.alignment = .centerY
@@ -75,8 +81,14 @@ final class PreviewHeaderBar: NSView {
         super.init(frame: frame)
         closeButton.target = self
         closeButton.action = #selector(closeTapped)
+        shareButton.toolTip = String(localized: .share)
+        shareButton.onAction = { [weak self] in
+            guard let self else { return }
+            onShare?(shareButton)
+        }
         editButton.onAction = { [weak self] in self?.onEdit?() }
         openWithButton.onAction = { [weak self] in self?.onOpenWithApp?() }
+        pinButton.toolTip = String(localized: .pin)
         pinButton.onPinToChip = { [weak self] chipId in self?.onPinToChip?(chipId) }
         pinButton.onUnpin = { [weak self] in self?.onUnpin?() }
         pinButton.onCreateChip = { [weak self] in self?.onCreateChip?() }
@@ -164,9 +176,9 @@ private final class PinChipButton: NSView {
         let iv = NSImageView()
         iv.image = NSImage(
             systemSymbolName: "chevron.down",
-            accessibilityDescription: nil
+            accessibilityDescription: String(localized: .pin)
         )?.withSymbolConfiguration(.init(pointSize: 8, weight: .medium))
-        iv.contentTintColor = .secondaryLabelColor
+        iv.contentTintColor = .controlTextColor
         return iv
     }()
 
@@ -410,7 +422,7 @@ private final class PinCircleView: NSView {
             color.setFill()
             path.fill()
         } else {
-            NSColor.secondaryLabelColor.setStroke()
+            NSColor.controlTextColor.setStroke()
             path.lineWidth = 1.5
             path.setLineDash([2.5, 2], count: 2, phase: 0)
             path.stroke()

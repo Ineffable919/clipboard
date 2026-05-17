@@ -1,105 +1,65 @@
 //
-//  PreviewPillButton.swift
+//  PreviewIconButton.swift
 //  Clipboard
 //
-//  预览区域通用胶囊按钮
+//  预览区域通用图标按钮（带 hover 背景效果）
 //
 
 import AppKit
 import SnapKit
 
-// MARK: - PreviewPillButton
-
-final class PreviewPillButton: NSView {
-    // MARK: - Public
-
-    var title: String {
-        get { label.stringValue }
-        set { label.stringValue = newValue }
-    }
-
+final class PreviewIconButton: NSView {
     var onAction: (() -> Void)?
 
-    // MARK: - Private
-
-    private let label: NSTextField = {
-        let f = NSTextField(labelWithString: "")
-        f.font = .systemFont(ofSize: NSFont.systemFontSize)
-        f.textColor = .controlTextColor
-        f.lineBreakMode = .byTruncatingTail
-        f.cell?.truncatesLastVisibleLine = true
-        return f
-    }()
-
+    private let imageView = NSImageView()
     private let backgroundLayer = CALayer()
     private var trackingArea: NSTrackingArea?
     private var isHovering = false
 
-    // MARK: - Init
-
-    init(title: String = "") {
+    init(systemSymbol: String, accessibilityDescription: String? = nil) {
         super.init(frame: .zero)
-        label.stringValue = title
+        imageView.image = NSImage(systemSymbolName: systemSymbol, accessibilityDescription: accessibilityDescription)
+        imageView.contentTintColor = .controlTextColor
         setup()
     }
 
     @available(*, unavailable)
-    required init?(coder _: NSCoder) {
-        fatalError()
-    }
-
-    // MARK: - Setup
+    required init?(coder _: NSCoder) { fatalError() }
 
     private func setup() {
         wantsLayer = true
-
         backgroundLayer.cornerRadius = Const.btnRadius
         backgroundLayer.cornerCurve = .continuous
-        layer?.cornerRadius = Const.btnRadius
-        layer?.cornerCurve = .continuous
-        layer?.borderWidth = 0.5
         layer?.insertSublayer(backgroundLayer, at: 0)
 
-        addSubview(label)
-        label.snp.makeConstraints { make in
-            make.centerY.equalToSuperview()
-            make.leading.trailing.equalToSuperview().inset(Const.space10)
+        addSubview(imageView)
+        imageView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.width.height.equalTo(16)
         }
-
         snp.makeConstraints { make in
-            make.height.equalTo(22)
+            make.width.height.equalTo(24)
         }
-
         updateAppearance(animated: false)
     }
 
-    // MARK: - First Responder
-
-    override var acceptsFirstResponder: Bool {
-        false
-    }
-
-    // MARK: - Layout
+    override var acceptsFirstResponder: Bool { false }
 
     override func layout() {
         super.layout()
         backgroundLayer.frame = bounds
     }
 
-    // MARK: - Appearance
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        updateAppearance(animated: false)
+    }
 
     private func updateAppearance(animated: Bool) {
         let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-
         let bgColor: NSColor = isHovering
             ? (isDark ? .white.withAlphaComponent(0.08) : .black.withAlphaComponent(0.06))
             : .clear
-
-        let borderColor: NSColor = isDark
-            ? .white.withAlphaComponent(0.2)
-            : .separatorColor
-
-        layer?.borderColor = borderColor.cgColor
 
         if animated {
             NSAnimationContext.runAnimationGroup { ctx in
@@ -114,13 +74,6 @@ final class PreviewPillButton: NSView {
             CATransaction.commit()
         }
     }
-
-    override func viewDidChangeEffectiveAppearance() {
-        super.viewDidChangeEffectiveAppearance()
-        updateAppearance(animated: false)
-    }
-
-    // MARK: - Tracking
 
     override func updateTrackingAreas() {
         super.updateTrackingAreas()
@@ -147,8 +100,6 @@ final class PreviewPillButton: NSView {
         NSCursor.pop()
     }
 
-    // MARK: - Click
-
     override func mouseDown(with event: NSEvent) {
         let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
         let pressedColor: NSColor = isDark
@@ -163,11 +114,8 @@ final class PreviewPillButton: NSView {
 
     override func mouseUp(with event: NSEvent) {
         updateAppearance(animated: false)
-
         let loc = convert(event.locationInWindow, from: nil)
-        if bounds.contains(loc) {
-            onAction?()
-        }
+        if bounds.contains(loc) { onAction?() }
         super.mouseUp(with: event)
     }
 }

@@ -294,6 +294,24 @@
         }
       }
     },
+    "close" : {
+      "comment" : "Accessibility description for close button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭"
+          }
+        }
+      }
+    },
     "collapse" : {
       "comment" : "Collapse action",
       "extractionState" : "manual",
@@ -1802,6 +1820,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "保存"
+          }
+        }
+      }
+    },
+    "share" : {
+      "comment" : "Share action",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分享"
           }
         }
       }

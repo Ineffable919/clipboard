@@ -128,6 +128,13 @@ final class ClipPreviewController: NSViewController {
         headerView.onClose = { [weak self] in
             self?.onDismiss?()
         }
+        headerView.onShare = { [weak self] sourceView in
+            guard let model = self?.model else { return }
+            let items = model.shareableItems
+            guard !items.isEmpty else { return }
+            let picker = NSSharingServicePicker(items: items)
+            picker.show(relativeTo: sourceView.bounds, of: sourceView, preferredEdge: .minY)
+        }
         headerView.onEdit = { [weak self] in
             guard let model = self?.model else { return }
             self?.onDismiss?()
