@@ -431,7 +431,7 @@ extension PasteSQLManager {
         let success: Bool
         let message: String
         var importedAppInfo: [(name: String, path: String)] = []
-        var importedChipsData: Data? = nil
+        var importedChipsData: Data?
     }
 
     private static let metaTable = "clip_meta"

@@ -24,7 +24,9 @@ final class PreviewIconButton: NSView {
     }
 
     @available(*, unavailable)
-    required init?(coder _: NSCoder) { fatalError() }
+    required init?(coder _: NSCoder) {
+        fatalError()
+    }
 
     private func setup() {
         wantsLayer = true
@@ -43,7 +45,9 @@ final class PreviewIconButton: NSView {
         updateAppearance(animated: false)
     }
 
-    override var acceptsFirstResponder: Bool { false }
+    override var acceptsFirstResponder: Bool {
+        false
+    }
 
     override func layout() {
         super.layout()
