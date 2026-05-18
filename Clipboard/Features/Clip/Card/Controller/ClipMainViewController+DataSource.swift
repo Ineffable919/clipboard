@@ -74,10 +74,13 @@ extension ClipMainViewController {
             scrollTo(indexPath: selectIndexPath)
             return
         }
-        collectionView.item(at: selectIndexPath)?.isSelected = false
+        if selectIndexPath != indexPath {
+            collectionView.item(at: selectIndexPath)?.isSelected = false
+        }
         selectIndexPath = indexPath
         guard !dataList.value.isEmpty else { return }
         collectionView.selectionIndexPaths = [selectIndexPath]
+        collectionView.item(at: selectIndexPath)?.isSelected = true
         scrollTo(indexPath: selectIndexPath)
         updateSelectedItemBorder()
     }
