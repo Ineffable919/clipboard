@@ -17,8 +17,6 @@ final class ClipMainWindowController: NSWindowController {
 
     private let db = PasteDataStore.main
 
-    // toggleWindow 看 intent 而非 window.isVisible，因为隐藏动画期间 isVisible 仍是 true。
-    // dismiss completion 用 intentVersion 防止在动画中被新的 show 抢占后仍把窗口隐藏掉。
     private enum Intent { case shown, hidden }
     private var intent: Intent = .hidden
     private var intentVersion: Int = 0
@@ -101,12 +99,10 @@ extension ClipMainWindowController {
         }) { [weak self] in
             Task { @MainActor in
                 guard let self else { return }
-                if self.intentVersion == myVersion {
-                    self.window?.makeFirstResponder(nil)
-                    self.window?.setIsVisible(false)
-                    if #unavailable(macOS 15.0) {
-                        AppEnvironment.shared.previousApp?.activate(options: [])
-                    }
+                guard self.intentVersion == myVersion else { return }
+                self.window?.setIsVisible(false)
+                if #unavailable(macOS 15.0) {
+                    AppEnvironment.shared.previousApp?.activate(options: [])
                 }
                 completionHandler?()
             }
@@ -117,20 +113,24 @@ extension ClipMainWindowController {
         intent = .shown
         intentVersion &+= 1
 
+        let view = window?.contentViewController?.view
+
         if window?.isVisible != true {
-            let frame = frame ?? NSScreen.main?.frame ?? .zero
             AppEnvironment.shared.previousApp = NSWorkspace.shared.frontmostApplication
+
+            let targetFrame = frame ?? NSScreen.main?.frame ?? .zero
             if #unavailable(macOS 15.0) {
                 NSApp.activate(ignoringOtherApps: true)
             }
-            window?.setFrame(frame, display: true)
-            window?.setIsVisible(true)
+            if window?.frame != targetFrame {
+                window?.setFrame(targetFrame, display: false)
+            }
+            let height = view?.bounds.height ?? Const.defaultHeight
+            view?.setFrameOrigin(NSPoint(x: 0, y: -height))
             window?.makeKeyAndOrderFront(nil)
         } else {
             window?.makeKeyAndOrderFront(nil)
         }
-
-        let view = window?.contentViewController?.view
 
         NSAnimationContext.runAnimationGroup { context in
             context.duration = Const.showDuration

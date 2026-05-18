@@ -143,11 +143,24 @@ extension ClipMainViewController {
         guard !topBarView.searchField.isFirstResponder,
               focusRegion != .chipEditing
         else { return event }
+        guard !PasteUserDefaults.delConfirm else { return nil }
 
         let items = selectedModels
-        guard !items.isEmpty else { return event }
-        guard !PasteUserDefaults.delConfirm else { return nil }
-        cardVM.deleteMultiple(items)
+        if items.count > 1 {
+            let minIndex = collectionView.selectionIndexPaths
+                .map(\.item).min() ?? selectIndexPath.item
+            let countAfterDelete = dataList.value.count - items.count
+            if countAfterDelete > 0 {
+                let newItem = min(minIndex, countAfterDelete - 1)
+                selectIndexPath = IndexPath(item: newItem, section: 0)
+            }
+            cardVM.deleteMultiple(items)
+            return nil
+        }
+
+        guard selectIndexPath.item < dataList.value.count else { return nil }
+        let item = dataList.value[selectIndexPath.item]
+        deleteItem(item, indexPath: selectIndexPath)
         return nil
     }
 
