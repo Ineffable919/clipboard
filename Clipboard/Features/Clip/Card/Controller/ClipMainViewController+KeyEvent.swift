@@ -53,12 +53,10 @@ extension ClipMainViewController {
             case KeyCode.escape:
                 topBarView.cancelKeyboardEditing()
                 setFocusRegion(.collection)
-                view.window?.makeFirstResponder(collectionView)
                 return nil
             case KeyCode.return:
                 topBarView.commitKeyboardEditing()
                 setFocusRegion(.collection)
-                view.window?.makeFirstResponder(collectionView)
                 return nil
             default:
                 return event

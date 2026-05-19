@@ -164,14 +164,12 @@ extension ClipMainViewController: CollectionViewItemDelegate {
         else {
             if focusRegion != .collection {
                 setFocusRegion(.collection)
-                view.window?.makeFirstResponder(collectionView)
             }
             return
         }
         resetSelectIndex(indexPath)
         if focusRegion != .collection {
             setFocusRegion(.collection)
-            view.window?.makeFirstResponder(collectionView)
         }
     }
 

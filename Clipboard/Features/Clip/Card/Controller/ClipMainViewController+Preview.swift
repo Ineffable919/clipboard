@@ -61,7 +61,6 @@ extension ClipMainViewController: NSPopoverDelegate {
         closing.cleanup()
         if focusRegion == .popover {
             setFocusRegion(.collection)
-            view.window?.makeFirstResponder(collectionView)
         }
     }
 }

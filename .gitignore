@@ -94,6 +94,7 @@ iOSInjectionProject/
 .vscode
 .claude
 .air
+.codex
 /reference
 scripts/build.sh
 scripts/sign_update.sh

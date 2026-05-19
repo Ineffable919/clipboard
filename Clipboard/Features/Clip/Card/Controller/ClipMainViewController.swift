@@ -140,7 +140,6 @@ final class ClipMainViewController: NSViewController {
             guard let self else { return }
             if focusRegion != .collection {
                 setFocusRegion(.collection)
-                view.window?.makeFirstResponder(collectionView)
             }
             let lo = min(selectIndexPath.item, clickedPath.item)
             let hi = max(selectIndexPath.item, clickedPath.item)
@@ -152,7 +151,6 @@ final class ClipMainViewController: NSViewController {
             guard let self else { return }
             resetSelectIndex(indexPath)
             setFocusRegion(.collection)
-            view.window?.makeFirstResponder(collectionView)
         }
         collectionView.onDragMoved = { [weak self] screenPoint in
             guard let self, let window = view.window else { return }
@@ -252,7 +250,6 @@ extension ClipMainViewController {
         topBarView.reloadChips()
         db.resetToDefault()
         setFocusRegion(.collection)
-        view.window?.makeFirstResponder(collectionView)
     }
 
     override func viewDidDisappear() {
@@ -428,7 +425,6 @@ extension ClipMainViewController {
 
     @objc func handleContentViewClick(_: NSClickGestureRecognizer) {
         setFocusRegion(.collection)
-        view.window?.makeFirstResponder(collectionView)
     }
 }
 
