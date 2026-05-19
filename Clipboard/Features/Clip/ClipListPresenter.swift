@@ -83,10 +83,12 @@ final class ClipListPresenter {
 
         switch changeType {
         case .new, .searchFilter, .moveToFirst, .reset:
-            applyFull(items, false, nil)
-            resetSelection()
-            // .new 时 preview 关闭后重新定位到新选中项（与 .update 行为一致）
-            if wasShowingPreview, changeType == .new { reopenPreview() }
+            applyFull(items, false) { [weak self] in
+                guard let self else { return }
+                resetSelection()
+                // .new 时 preview 关闭后重新定位到新选中项（与 .update 行为一致）
+                if wasShowingPreview, changeType == .new { reopenPreview() }
+            }
         case .delete:
             applyFull(items, true) { [weak self] in self?.adjustAfterDelete() }
         case .loadMore:
