@@ -377,7 +377,7 @@ extension ClipMainViewController {
 
     func restoreSelection() {
         guard !dataList.value.isEmpty else { return }
-        collectionView.selectionIndexPaths = [selectIndexPath]
+        setSelection(to: selectIndexPath)
         updateSelectedItemBorder()
     }
 }
@@ -548,7 +548,7 @@ extension ClipMainViewController {
         let safeItem = min(selectIndexPath.item, dataList.value.count - 1)
         let safePath = IndexPath(item: safeItem, section: 0)
         selectIndexPath = safePath
-        collectionView.selectionIndexPaths = [safePath]
+        setSelection(to: safePath)
         scrollTo(indexPath: safePath)
         updateSelectedItemBorder()
     }

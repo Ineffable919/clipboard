@@ -23,7 +23,7 @@ extension ClipMainViewController: NSCollectionViewDelegate {
         }
 
         if let indexPath = indexPaths.first {
-            resetSelectIndex(indexPath)
+            selectIndexPath = indexPath
         }
         return [selectIndexPath]
     }
@@ -33,6 +33,7 @@ extension ClipMainViewController: NSCollectionViewDelegate {
     }
 
     func collectionView(_: NSCollectionView, didSelectItemsAt _: Set<IndexPath>) {
+        scrollTo(indexPath: selectIndexPath)
         updateSelectedItemBorder()
     }
 
@@ -65,22 +66,21 @@ extension ClipMainViewController {
 // MARK: - Selection & Scroll
 
 extension ClipMainViewController {
+    func setSelection(to indexPath: IndexPath) {
+        let target: Set<IndexPath> = [indexPath]
+        let toDeselect = collectionView.selectionIndexPaths.subtracting(target)
+        if !toDeselect.isEmpty {
+            collectionView.deselectItems(at: toDeselect)
+        }
+        collectionView.selectItems(at: target, scrollPosition: [])
+    }
+
     func resetSelectIndex(
         _ indexPath: IndexPath = IndexPath(item: 0, section: 0)
     ) {
-        let zero = IndexPath(item: 0, section: 0)
-        if indexPath == zero, selectIndexPath == zero {
-            guard !dataList.value.isEmpty else { return }
-            scrollTo(indexPath: selectIndexPath)
-            return
-        }
-        //if selectIndexPath != indexPath {
-        //    collectionView.item(at: selectIndexPath)?.isSelected = false
-        //}
         selectIndexPath = indexPath
         guard !dataList.value.isEmpty else { return }
-        collectionView.selectionIndexPaths = [selectIndexPath]
-        //collectionView.item(at: selectIndexPath)?.isSelected = true
+        setSelection(to: selectIndexPath)
         scrollTo(indexPath: selectIndexPath)
         updateSelectedItemBorder()
     }

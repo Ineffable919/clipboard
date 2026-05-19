@@ -210,10 +210,11 @@ extension CollectionViewItem {
     }
 
     override func mouseDown(with event: NSEvent) {
-        super.mouseDown(with: event)
         if event.type == .leftMouseDown, event.clickCount == 2 {
             handleClipPaste()
+            return
         }
+        super.mouseDown(with: event)
     }
 
     override func prepareForReuse() {
