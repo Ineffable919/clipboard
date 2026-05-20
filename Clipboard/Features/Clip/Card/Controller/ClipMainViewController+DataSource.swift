@@ -11,7 +11,10 @@ import Combine
 // MARK: - NSCollectionViewDelegate
 
 extension ClipMainViewController: NSCollectionViewDelegate {
-    func collectionView(_: NSCollectionView, shouldSelectItemsAt indexPaths: Set<IndexPath>) -> Set<IndexPath> {
+    func collectionView(
+        _: NSCollectionView,
+        shouldSelectItemsAt indexPaths: Set<IndexPath>
+    ) -> Set<IndexPath> {
         if isMultiSelect {
             if let path = indexPaths.min() {
                 selectIndexPath = path
@@ -25,11 +28,17 @@ extension ClipMainViewController: NSCollectionViewDelegate {
         return [selectIndexPath]
     }
 
-    func collectionView(_: NSCollectionView, shouldDeselectItemsAt indexPaths: Set<IndexPath>) -> Set<IndexPath> {
+    func collectionView(
+        _: NSCollectionView,
+        shouldDeselectItemsAt indexPaths: Set<IndexPath>
+    ) -> Set<IndexPath> {
         indexPaths
     }
 
-    func collectionView(_: NSCollectionView, didSelectItemsAt indexPaths: Set<IndexPath>) {
+    func collectionView(
+        _: NSCollectionView,
+        didSelectItemsAt indexPaths: Set<IndexPath>
+    ) {
         log.debug("didSelectItemsAt \(indexPaths.count)")
 
         if indexPaths.count > 1 {
@@ -41,15 +50,25 @@ extension ClipMainViewController: NSCollectionViewDelegate {
         updateSelectedItemBorder()
     }
 
-    func collectionView(_: NSCollectionView, didDeselectItemsAt _: Set<IndexPath>) {
+    func collectionView(
+        _: NSCollectionView,
+        didDeselectItemsAt _: Set<IndexPath>
+    ) {
         updateSelectedItemBorder()
     }
 
-    func collectionView(_: NSCollectionView, canDragItemsAt _: Set<IndexPath>, with _: NSEvent) -> Bool {
+    func collectionView(
+        _: NSCollectionView,
+        canDragItemsAt _: Set<IndexPath>,
+        with _: NSEvent
+    ) -> Bool {
         true
     }
 
-    func collectionView(_: NSCollectionView, pasteboardWriterForItemAt indexPath: IndexPath) -> (any NSPasteboardWriting)? {
+    func collectionView(
+        _: NSCollectionView,
+        pasteboardWriterForItemAt indexPath: IndexPath
+    ) -> (any NSPasteboardWriting)? {
         dataList.value[indexPath.item].writeItem
     }
 }
@@ -127,7 +146,9 @@ extension ClipMainViewController {
             return
         }
 
-        guard let scrollView = collectionView.enclosingScrollView else { return }
+        guard let scrollView = collectionView.enclosingScrollView else {
+            return
+        }
 
         let clipView = scrollView.contentView
         let visibleRect = clipView.documentVisibleRect
@@ -207,10 +228,20 @@ extension ClipMainViewController: CollectionViewItemDelegate {
         EditWindowController.shared.openWindow(with: item)
     }
 
+    func confirmDelete() -> Bool {
+        NSAlert.runConfirm(
+            title: String(localized: .deleteTitle),
+            message: String(localized: .deleteMessage)
+        )
+    }
+
     func delete(_ item: PasteboardModel, indexPath: IndexPath) {
         guard PasteUserDefaults.delConfirm else {
             deleteItem(item, indexPath: indexPath)
             return
+        }
+        if confirmDelete() {
+            deleteItem(item, indexPath: indexPath)
         }
     }
 

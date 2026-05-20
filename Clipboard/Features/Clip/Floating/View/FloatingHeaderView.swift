@@ -212,18 +212,10 @@ final class FloatingHeaderView: NSView {
                 return
             }
 
-            let alert = NSAlert()
-            alert.messageText = String(localized: .deleteChipTitle(chip.name))
-            alert.informativeText = String(localized: .deleteChipMessage(chip.name))
-            alert.alertStyle = .warning
-            alert.addButton(withTitle: String(localized: .commonConfirm))
-            alert.addButton(withTitle: String(localized: .commonCancel))
-
-            AppEnvironment.shared.suppressResignKey = true
-            let response = alert.runModal()
-            AppEnvironment.shared.suppressResignKey = false
-
-            guard response == .alertFirstButtonReturn else { return }
+            guard NSAlert.runConfirm(
+                title: String(localized: .deleteChipTitle(chip.name)),
+                message: String(localized: .deleteChipMessage(chip.name))
+            ) else { return }
             topVM?.removeChip(chip)
             reloadChips()
         }

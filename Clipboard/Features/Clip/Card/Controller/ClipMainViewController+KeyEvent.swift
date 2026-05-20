@@ -138,10 +138,10 @@ extension ClipMainViewController {
         guard !topBarView.searchField.isFirstResponder,
               focusRegion != .chipEditing
         else { return event }
-        guard !PasteUserDefaults.delConfirm else { return nil }
 
         let items = selectedModels
         if items.count > 1 {
+            guard confirmDelete() else { return nil }
             let minIndex = collectionView.selectionIndexPaths
                 .map(\.item).min() ?? selectIndexPath.item
             let countAfterDelete = dataList.value.count - items.count
@@ -155,7 +155,7 @@ extension ClipMainViewController {
 
         guard selectIndexPath.item < dataList.value.count else { return nil }
         let item = dataList.value[selectIndexPath.item]
-        deleteItem(item, indexPath: selectIndexPath)
+        delete(item, indexPath: selectIndexPath)
         return nil
     }
 
