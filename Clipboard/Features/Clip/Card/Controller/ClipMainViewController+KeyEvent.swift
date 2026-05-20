@@ -64,7 +64,6 @@ extension ClipMainViewController {
         }
 
         if let index = handleQuickPasteShortcut(event) {
-            log.info("keyDown keyCode=\(event.keyCode) → consumed by quickPaste index=\(index)")
             performQuickPaste(at: index)
             return nil
         }
@@ -73,7 +72,6 @@ extension ClipMainViewController {
            !topBarView.searchField.isFirstResponder,
            focusRegion != .search
         {
-            log.info("keyDown keyCode=\(event.keyCode) → consumed by triggerSearch")
             if let characters = event.characters, !characters.isEmpty {
                 topBarView.activateSearch(with: characters)
             }
@@ -83,7 +81,6 @@ extension ClipMainViewController {
         }
 
         if handleChipTab(event, viewModel: topVM) {
-            log.info("keyDown keyCode=\(event.keyCode) → consumed by chipTab")
             return nil
         }
 
@@ -192,6 +189,7 @@ extension ClipMainViewController {
 
         switch event.keyCode {
         case KeyCode.a:
+            guard focusRegion == .collection else { return event }
             collectionView.selectAll(nil)
             updateSelectedItemBorder()
             return nil
