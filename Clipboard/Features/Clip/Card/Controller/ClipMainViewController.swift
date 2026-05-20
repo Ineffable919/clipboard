@@ -138,14 +138,12 @@ final class ClipMainViewController: NSViewController {
         }
         collectionView.onShiftClick = { [weak self] clickedPath in
             guard let self else { return }
-            if focusRegion != .collection {
-                setFocusRegion(.collection)
-            }
+            setFocusRegion(.collection)
             let lo = min(selectIndexPath.item, clickedPath.item)
             let hi = max(selectIndexPath.item, clickedPath.item)
             let paths = Set((lo ... hi).map { IndexPath(item: $0, section: 0) })
             collectionView.selectionIndexPaths = paths
-            updateSelectedItemBorder()
+            scrollTo(indexPath: clickedPath)
         }
         collectionView.onCollapseToSingle = { [weak self] indexPath in
             guard let self else { return }

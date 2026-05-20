@@ -12,9 +12,6 @@ import Combine
 
 extension ClipMainViewController: NSCollectionViewDelegate {
     func collectionView(_: NSCollectionView, shouldSelectItemsAt indexPaths: Set<IndexPath>) -> Set<IndexPath> {
-        let modifiers = NSApp.currentEvent?.modifierFlags ?? []
-        let isMultiSelect = modifiers.contains(.command) || modifiers.contains(.shift)
-
         if isMultiSelect {
             if let path = indexPaths.min() {
                 selectIndexPath = path
@@ -32,7 +29,14 @@ extension ClipMainViewController: NSCollectionViewDelegate {
         indexPaths
     }
 
-    func collectionView(_: NSCollectionView, didSelectItemsAt _: Set<IndexPath>) {
+    func collectionView(_: NSCollectionView, didSelectItemsAt indexPaths: Set<IndexPath>) {
+        log.debug("didSelectItemsAt \(indexPaths.count)")
+
+        if indexPaths.count > 1 {
+            updateSelectedItemBorder()
+            return
+        }
+
         scrollTo(indexPath: selectIndexPath)
         updateSelectedItemBorder()
     }
@@ -61,6 +65,11 @@ extension ClipMainViewController {
                 return dataList.value[path.item]
             }
     }
+
+    var isMultiSelect: Bool {
+        let modifiers = NSApp.currentEvent?.modifierFlags ?? []
+        return modifiers.contains(.command) || modifiers.contains(.shift)
+    }
 }
 
 // MARK: - Selection & Scroll
@@ -85,7 +94,7 @@ extension ClipMainViewController {
         updateSelectedItemBorder()
     }
 
-    private func event_isARepeat() -> Bool {
+    private func eventIsRepeat() -> Bool {
         guard let event = NSApp.currentEvent else { return false }
 
         switch event.type {
@@ -102,7 +111,7 @@ extension ClipMainViewController {
         else { return }
         let padding = Const.cardSpace + Const.cardSize / 5
 
-        guard event_isARepeat() else {
+        guard eventIsRepeat() else {
             NSAnimationContext.runAnimationGroup { ctx in
                 ctx.duration = 0.2
                 ctx.allowsImplicitAnimation = true
@@ -174,7 +183,11 @@ extension ClipMainViewController: CollectionViewItemDelegate {
     }
 
     func paste(_ item: PasteboardModel) {
-        ClipActionService.shared.paste(item, checkPermissions: PasteUserDefaults.pasteDirect, showTip: !PasteUserDefaults.pasteDirect)
+        ClipActionService.shared.paste(
+            item,
+            checkPermissions: PasteUserDefaults.pasteDirect,
+            showTip: !PasteUserDefaults.pasteDirect
+        )
     }
 
     func pastePlain(_ item: PasteboardModel) {
