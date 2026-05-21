@@ -68,17 +68,17 @@ final class ClipMainWindowController: NSWindowController {
         _ frame: NSRect? = nil,
         _ completionHandler: (@MainActor () -> Void)? = nil
     ) {
-        targetVisible.toggle()
         if targetVisible {
-            show(in: frame)
-        } else {
             dismiss(completionHandler)
+        } else {
+            show(in: frame)
         }
     }
 }
 
 extension ClipMainWindowController {
     func dismiss(_ completionHandler: (@MainActor () -> Void)? = nil) {
+        targetVisible = false
         guard let window, window.isVisible else { return }
 
         let view = window.contentViewController?.view
@@ -103,6 +103,7 @@ extension ClipMainWindowController {
     }
 
     func show(in frame: NSRect?) {
+        targetVisible = true
         guard let window else { return }
 
         if !window.isVisible {
@@ -138,8 +139,6 @@ extension ClipMainWindowController {
 extension ClipMainWindowController: NSWindowDelegate {
     func windowDidResignKey(_: Notification) {
         guard !AppEnvironment.shared.suppressResignKey else { return }
-        guard targetVisible else { return }
-        targetVisible = false
         dismiss()
     }
 }
