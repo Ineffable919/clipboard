@@ -325,6 +325,12 @@ final class TopBarView: NSView {
         topVM?.removeTag(tag)
     }
 
+    func dismissFilterPopoverIfVisible() -> Bool {
+        guard filterPopover?.isShowingPopover == true else { return false }
+        togglePopover()
+        return true
+    }
+
     private func togglePopover() {
         guard let filterPopover else { return }
 

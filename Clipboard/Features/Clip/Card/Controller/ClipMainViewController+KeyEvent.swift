@@ -106,6 +106,9 @@ extension ClipMainViewController {
 
     private func escapeKeyDown(_: NSEvent) -> NSEvent? {
         let field = topBarView.searchField
+        if topBarView.dismissFilterPopoverIfVisible() {
+            return nil
+        }
         if field.isFirstResponder {
             if field.suggestionWindow.isVisible {
                 field.suggestionWindow.hide()
