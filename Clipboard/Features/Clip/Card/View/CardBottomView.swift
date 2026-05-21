@@ -191,7 +191,7 @@ private final class CardFileBottomView: NSView, PassthroughMouseEvents {
             secondLineLabel.isHidden = true
         } else {
             let text: String = model.introString()
-            let maxWidth = Const.cardSize - Const.space12 * 2
+            let maxWidth = Const.cardSize - Const.selectionBorderWidth * 2 - Const.space12 * 2
             let font = firstLineLabel.font ?? .preferredFont(forTextStyle: .callout)
             let (line1, line2) = splitTextIntoTwoLines(text, font: font, maxWidth: maxWidth)
 
