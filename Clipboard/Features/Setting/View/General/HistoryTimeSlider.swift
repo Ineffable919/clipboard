@@ -101,7 +101,7 @@ struct HistoryTimeSlider: View {
                             ) { index, label in
                                 Text(label)
                                     .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(.primary)
                                     .frame(width: 30)
                                     .offset(
                                         x: tickPosition(

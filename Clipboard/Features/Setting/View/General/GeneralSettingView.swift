@@ -97,8 +97,8 @@ struct GeneralSettingView: View {
                     .font(.headline)
                     .bold()
 
-                VStack(alignment: .leading, spacing: 12) {
-                    VStack(spacing: 4) {
+                VStack(alignment: .leading, spacing: Const.space12) {
+                    VStack(spacing: Const.space4) {
                         ForEach(PasteTargetMode.allCases, id: \.rawValue) {
                             mode in
                             PasteTargetModeRow(

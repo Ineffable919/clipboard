@@ -112,7 +112,7 @@ struct SettingToggleRow: View {
                 .controlSize(.mini)
                 .labelsHidden()
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, Const.space8)
     }
 }
 
@@ -123,7 +123,7 @@ struct HelpCenterButton: View {
         Button(action: {
             if let url = URL(
                 string:
-                "https://github.com/Ineffable919/clipboard/blob/master/README.md"
+                    "https://github.com/Ineffable919/clipboard/blob/master/README.md"
             ) {
                 NSWorkspace.shared.open(url)
             }
@@ -141,6 +141,8 @@ struct HelpCenterButton: View {
 }
 
 #Preview {
+    let viewModel = SettingViewModel()
     SettingView()
         .frame(width: Const.settingWidth, height: Const.settingHeight)
+        .environment(viewModel)
 }
