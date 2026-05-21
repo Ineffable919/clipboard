@@ -11,15 +11,13 @@ import Combine
 final class ClipMainWindowController: NSWindowController {
     static let shared = ClipMainWindowController()
 
+    private var isShowing = false
+
     var isVisible: Bool {
-        window?.isVisible ?? false
+        isShowing
     }
 
     private let db = PasteDataStore.main
-
-    private enum Intent { case shown, hidden }
-    private var intent: Intent = .hidden
-    private var intentVersion: Int = 0
 
     init() {
         let panel = ClipWindowView(
@@ -70,10 +68,9 @@ final class ClipMainWindowController: NSWindowController {
         _ frame: NSRect? = nil,
         _ completionHandler: (@MainActor () -> Void)? = nil
     ) {
-        switch intent {
-        case .shown:
+        if isVisible {
             dismiss(completionHandler)
-        case .hidden:
+        } else {
             show(in: frame)
         }
     }
@@ -81,60 +78,39 @@ final class ClipMainWindowController: NSWindowController {
 
 extension ClipMainWindowController {
     func dismiss(_ completionHandler: (@MainActor () -> Void)? = nil) {
-        guard intent == .shown else {
-            completionHandler?()
-            return
-        }
-
-        intent = .hidden
-        intentVersion &+= 1
-        let myVersion = intentVersion
-
-        let view = window?.contentViewController?.view
-        let height = view?.bounds.height ?? Const.defaultHeight
-
+        guard isShowing, let window else { return }
+        isShowing = false
+        let view = window.contentViewController?.view
         NSAnimationContext.runAnimationGroup({ context in
             context.duration = Const.hideDuration
-            view?.animator().setFrameOrigin(NSPoint(x: 0, y: -height))
-        }) { [weak self] in
+            view?.animator().setFrameOrigin(
+                NSPoint(x: 0, y: -(view?.bounds.height ?? Const.defaultHeight))
+            )
+        }) {
             Task { @MainActor in
-                guard let self else { return }
-                guard self.intentVersion == myVersion else { return }
                 self.window?.setIsVisible(false)
                 if #unavailable(macOS 15.0) {
                     AppEnvironment.shared.previousApp?.activate(options: [])
                 }
+                self.window?.orderOut(nil)
                 completionHandler?()
             }
         }
     }
 
     func show(in frame: NSRect?) {
-        intent = .shown
-        intentVersion &+= 1
-
-        let view = window?.contentViewController?.view
-
-        if window?.isVisible != true {
-            AppEnvironment.shared.previousApp = NSWorkspace.shared.frontmostApplication
-
-            let targetFrame = frame ?? NSScreen.main?.frame ?? .zero
-            if #unavailable(macOS 15.0) {
-                NSApp.activate(ignoringOtherApps: true)
-            }
-            if window?.frame != targetFrame {
-                window?.setFrame(targetFrame, display: false)
-            }
-            let height = view?.bounds.height ?? Const.defaultHeight
-            view?.setFrameOrigin(NSPoint(x: 0, y: -height))
-            window?.makeKeyAndOrderFront(nil)
-        } else {
-            window?.makeKeyAndOrderFront(nil)
+        guard let window else { return }
+        guard !isShowing else {
+            return
         }
-
-        NSAnimationContext.runAnimationGroup { context in
-            context.duration = Const.showDuration
-            view?.animator().setFrameOrigin(.zero)
+        isShowing = true
+        let frame = frame ?? NSScreen.main?.frame ?? .zero
+        AppEnvironment.shared.previousApp = NSWorkspace.shared.frontmostApplication
+        window.setFrame(frame, display: true)
+        window.setIsVisible(true)
+        window.makeKeyAndOrderFront(nil)
+        if #unavailable(macOS 15.0) {
+            NSApp.activate(ignoringOtherApps: true)
         }
     }
 }
