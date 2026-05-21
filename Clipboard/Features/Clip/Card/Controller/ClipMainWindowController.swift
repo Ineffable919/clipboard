@@ -11,10 +11,10 @@ import Combine
 final class ClipMainWindowController: NSWindowController {
     static let shared = ClipMainWindowController()
 
-    private var isShowing = false
+    private var targetVisible = false
 
     var isVisible: Bool {
-        isShowing
+        targetVisible
     }
 
     private let db = PasteDataStore.main
@@ -68,26 +68,30 @@ final class ClipMainWindowController: NSWindowController {
         _ frame: NSRect? = nil,
         _ completionHandler: (@MainActor () -> Void)? = nil
     ) {
-        if isVisible {
-            dismiss(completionHandler)
-        } else {
+        targetVisible.toggle()
+        if targetVisible {
             show(in: frame)
+        } else {
+            dismiss(completionHandler)
         }
     }
 }
 
 extension ClipMainWindowController {
     func dismiss(_ completionHandler: (@MainActor () -> Void)? = nil) {
-        guard isShowing, let window else { return }
-        isShowing = false
+        guard let window, window.isVisible else { return }
+
         let view = window.contentViewController?.view
+        let height = view?.bounds.height ?? Const.defaultHeight
+
+        snapToPresentedPosition(view)
+
         NSAnimationContext.runAnimationGroup({ context in
             context.duration = Const.hideDuration
-            view?.animator().setFrameOrigin(
-                NSPoint(x: 0, y: -(view?.bounds.height ?? Const.defaultHeight))
-            )
+            view?.animator().setFrameOrigin(NSPoint(x: 0, y: -height))
         }) {
             Task { @MainActor in
+                guard !self.targetVisible else { return }
                 self.window?.setIsVisible(false)
                 if #unavailable(macOS 15.0) {
                     AppEnvironment.shared.previousApp?.activate(options: [])
@@ -100,24 +104,42 @@ extension ClipMainWindowController {
 
     func show(in frame: NSRect?) {
         guard let window else { return }
-        guard !isShowing else {
-            return
+
+        if !window.isVisible {
+            let frame = frame ?? NSScreen.main?.frame ?? .zero
+            AppEnvironment.shared.previousApp = NSWorkspace.shared.frontmostApplication
+            window.setFrame(frame, display: true)
+            window.setIsVisible(true)
+            let view = window.contentViewController?.view
+            view?.setFrameOrigin(NSPoint(x: 0, y: -(view?.bounds.height ?? Const.defaultHeight)))
+        } else {
+            snapToPresentedPosition(window.contentViewController?.view)
         }
-        isShowing = true
-        let frame = frame ?? NSScreen.main?.frame ?? .zero
-        AppEnvironment.shared.previousApp = NSWorkspace.shared.frontmostApplication
-        window.setFrame(frame, display: true)
-        window.setIsVisible(true)
+
         window.makeKeyAndOrderFront(nil)
         if #unavailable(macOS 15.0) {
             NSApp.activate(ignoringOtherApps: true)
         }
+
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = Const.showDuration
+            window.contentViewController?.view.animator().setFrameOrigin(.zero)
+        }
+    }
+
+    private func snapToPresentedPosition(_ view: NSView?) {
+        guard let view else { return }
+        let y = view.layer?.presentation()?.frame.origin.y ?? view.frame.origin.y
+        view.layer?.removeAllAnimations()
+        view.setFrameOrigin(NSPoint(x: 0, y: y))
     }
 }
 
 extension ClipMainWindowController: NSWindowDelegate {
     func windowDidResignKey(_: Notification) {
         guard !AppEnvironment.shared.suppressResignKey else { return }
+        guard targetVisible else { return }
+        targetVisible = false
         dismiss()
     }
 }
