@@ -63,7 +63,11 @@ final class ClipFloatingViewController: NSViewController {
             close: { [weak self] in self?.closePreview() },
             reopen: { [weak self] in
                 guard let self else { return }
-                openPreview(at: floatingContentView.historyView.selectedIndex)
+                if let existing = previewPopover, existing.isShown {
+                    existing.refreshHeader()
+                } else {
+                    openPreview(at: floatingContentView.historyView.selectedIndex)
+                }
             }
         )
 

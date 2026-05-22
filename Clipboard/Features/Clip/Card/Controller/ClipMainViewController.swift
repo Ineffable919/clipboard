@@ -452,22 +452,18 @@ extension ClipMainViewController {
         presenter.updateEmptyState = { [weak self] _ in self?.updateEmptyState() }
         presenter.reconfigureItems = { [weak self] items in
             guard let self else { return }
-            let ids = Set(items.map(\.uniqueId))
-            let indexPaths = Set(
-                diffableDataSource.snapshot().itemIdentifiers
-                    .enumerated()
-                    .compactMap { idx, item in
-                        ids.contains(item.uniqueId)
-                            ? IndexPath(item: idx, section: 0) : nil
-                    }
-            )
-            guard !indexPaths.isEmpty else { return }
-            collectionView.reloadItems(at: indexPaths)
+            let identifiers = diffableDataSource.snapshot().itemIdentifiers
+            let indexMap = Dictionary(uniqueKeysWithValues: identifiers.enumerated().map { ($1.uniqueId, $0) })
+            for item in items {
+                guard let idx = indexMap[item.uniqueId] else { continue }
+                (collectionView.item(at: IndexPath(item: idx, section: 0)) as? CollectionViewItem)?
+                    .configure(with: item, keyword: topVM.query)
+            }
         }
 
         presenter.previewIsShown = { [weak self] in self?.previewPopover?.isShown == true }
         presenter.closePreview = { [weak self] in self?.closePreviewPopover() }
-        presenter.reopenPreview = { [weak self] in self?.reopenPreviewForSelectedItem() }
+        presenter.reopenPreview = { [weak self] in self?.updatePreviewForSelectedItem() }
 
         presenter.isVerticalScroll = false
         presenter.loadMoreThreshold = (Const.cardSize + Const.cardSpace) * 2
