@@ -106,12 +106,12 @@ extension ClipMainWindowController {
         targetVisible = true
         guard let window else { return }
 
+        let view = window.contentViewController?.view
         if !window.isVisible {
             let frame = frame ?? NSScreen.main?.frame ?? .zero
             AppEnvironment.shared.previousApp = NSWorkspace.shared.frontmostApplication
             window.setFrame(frame, display: true)
             window.setIsVisible(true)
-            let view = window.contentViewController?.view
             view?.setFrameOrigin(NSPoint(x: 0, y: -(view?.bounds.height ?? Const.defaultHeight)))
         } else {
             snapToPresentedPosition(window.contentViewController?.view)
@@ -124,7 +124,7 @@ extension ClipMainWindowController {
 
         NSAnimationContext.runAnimationGroup { context in
             context.duration = Const.showDuration
-            window.contentViewController?.view.animator().setFrameOrigin(.zero)
+            view?.animator().setFrameOrigin(.zero)
         }
     }
 
