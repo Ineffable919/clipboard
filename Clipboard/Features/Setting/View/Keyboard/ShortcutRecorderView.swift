@@ -38,10 +38,10 @@ struct ShortcutRecorder: View {
         _displayText = State(initialValue: saved.displayString)
         _value =
             binding
-                ?? Binding(
-                    get: { saved },
-                    set: { _ in }
-                )
+            ?? Binding(
+                get: { saved },
+                set: { _ in }
+            )
     }
 
     var body: some View {
@@ -54,7 +54,9 @@ struct ShortcutRecorder: View {
             if !shortcut.isEmpty, !isRecording {
                 Button {
                     shortcut = KeyboardShortcut.empty
-                    displayText = String(localized: .settingKeyboardShortcutPlaceholder)
+                    displayText = String(
+                        localized: .settingKeyboardShortcutPlaceholder
+                    )
                     save()
                 } label: {
                     Image(systemName: "xmark")
@@ -94,7 +96,9 @@ struct ShortcutRecorder: View {
         .onAppear {
             value = shortcut
             if shortcut.isEmpty {
-                displayText = String(localized: .settingKeyboardShortcutPlaceholder)
+                displayText = String(
+                    localized: .settingKeyboardShortcutPlaceholder
+                )
             }
         }
         .onDisappear {
@@ -111,8 +115,8 @@ struct ShortcutRecorder: View {
 
     private var borderColor: Color {
         isRecording
-            ? .accentColor.opacity(0.4)
-            : Color(NSColor.tertiaryLabelColor).opacity(0.2)
+            ? Color(.keyboardFocusIndicatorColor)
+            : .clear
     }
 
     private var borderSize: CGFloat {
@@ -137,14 +141,17 @@ struct ShortcutRecorder: View {
         uninstallEventHandle()
     }
 
-    // MARK: - 注册EventHandle
+    // MARK: - EventHandle
 
     private func installEventHandle() {
-        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) {
+            event in
             handleKeyEvent(event)
         }
 
-        mouseMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { event in
+        mouseMonitor = NSEvent.addLocalMonitorForEvents(
+            matching: .leftMouseDown
+        ) { event in
             handleMouseEvent(event)
         }
     }
@@ -163,7 +170,7 @@ struct ShortcutRecorder: View {
     private func handleMouseEvent(_ event: NSEvent) -> NSEvent? {
         guard isRecording else { return event }
         guard let window = event.window,
-              window === SettingWindowController.shared.window
+            window === SettingWindowController.shared.window
         else {
             return event
         }
@@ -222,16 +229,17 @@ struct ShortcutRecorder: View {
             0x67: "F11", 0x6F: "F12",
         ]
 
-        let displayKey: String = if let special = specialMap[keyCode] {
-            special
-        } else if let eventChars = event.charactersIgnoringModifiers,
-                  !eventChars.isEmpty,
-                  eventChars.unicodeScalars.allSatisfy({ $0.value >= 32 })
-        {
-            eventChars.uppercased()
-        } else {
-            keyCodeToDisplayString(keyCode)
-        }
+        let displayKey: String =
+            if let special = specialMap[keyCode] {
+                special
+            } else if let eventChars = event.charactersIgnoringModifiers,
+                !eventChars.isEmpty,
+                eventChars.unicodeScalars.allSatisfy({ $0.value >= 32 })
+            {
+                eventChars.uppercased()
+            } else {
+                keyCodeToDisplayString(keyCode)
+            }
 
         guard !displayKey.isEmpty else {
             return event
