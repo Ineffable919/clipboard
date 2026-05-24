@@ -402,24 +402,6 @@
         }
       }
     },
-    "createTag" : {
-      "comment" : "Menu item: create a new tag and pin the clip to it",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "New Tag…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "新建标签…"
-          }
-        }
-      }
-    },
     "copyLater" : {
       "comment" : "Copy to clipboard later action in accessibility permission alert",
       "extractionState" : "manual",
@@ -434,6 +416,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "稍后设置，复制到剪贴板"
+          }
+        }
+      }
+    },
+    "createTag" : {
+      "comment" : "Menu item: create a new tag and pin the clip to it",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Tag…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新建标签…"
           }
         }
       }
@@ -618,20 +618,20 @@
         }
       }
     },
-    "emptyHistory" : {
-      "comment" : "Empty state title when there is no clipboard history",
+    "emptyRecord" : {
+      "comment" : "Empty state title when there is no clipboard record",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "No clipboard history"
+            "state" : "needs_review",
+            "value" : "No clipboard record"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "没有剪贴板历史"
+            "value" : "没有剪贴板记录"
           }
         }
       }
@@ -1136,24 +1136,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "钥匙串访问"
-          }
-        }
-      }
-    },
-    "tag" : {
-      "comment" : "Tag filter section title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tags"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "标签"
           }
         }
       }
@@ -1820,24 +1802,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "保存"
-          }
-        }
-      }
-    },
-    "share" : {
-      "comment" : "Share action",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Share"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "分享"
           }
         }
       }
@@ -3732,6 +3696,24 @@
         }
       }
     },
+    "share" : {
+      "comment" : "Share action",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分享"
+          }
+        }
+      }
+    },
     "showInFinder" : {
       "comment" : "Action title to reveal a file in Finder",
       "extractionState" : "manual",
@@ -3764,6 +3746,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "跳过"
+          }
+        }
+      }
+    },
+    "tag" : {
+      "comment" : "Tag filter section title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tags"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "标签"
           }
         }
       }

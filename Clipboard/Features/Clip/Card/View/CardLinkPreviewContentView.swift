@@ -100,9 +100,8 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
             ?? urlString
 
         urlLabel.attributedStringValue = makeURLAttributedString(
-            urlString: url?.absoluteString ?? urlString,
-            keyword: keyword,
-            highlighted: model.highlightedPlainText(keyword: keyword)
+            urlString: urlString,
+            keyword: keyword
         )
 
         if let meta = model.cachedLinkMetadata {
@@ -237,22 +236,23 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
 
     private func makeURLAttributedString(
         urlString: String,
-        keyword: String,
-        highlighted: NSAttributedString
+        keyword: String
     ) -> NSAttributedString {
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineBreakMode = .byTruncatingTail
         let baseAttrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize),
             .foregroundColor: NSColor.secondaryLabelColor,
+            .paragraphStyle: paragraphStyle,
         ]
 
+        let mutable = NSMutableAttributedString(string: urlString, attributes: baseAttrs)
+
         guard !keyword.isEmpty else {
-            return NSAttributedString(string: urlString, attributes: baseAttrs)
+            return mutable
         }
 
-        let mutable = NSMutableAttributedString(attributedString: highlighted)
-        mutable.addAttributes(baseAttrs, range: NSRange(location: 0, length: mutable.length))
-
-        let plain = highlighted.string as NSString
+        let plain = urlString as NSString
         let options: NSString.CompareOptions = [.caseInsensitive, .diacriticInsensitive, .widthInsensitive]
         var searchRange = NSRange(location: 0, length: plain.length)
 

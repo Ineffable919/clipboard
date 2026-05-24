@@ -97,10 +97,10 @@ final class StatusBarController: NSObject {
         )
 
         let symbolName = if #available(macOS 15.0, *) {
-            "heart.text.clipboard.fill"
-        } else {
-            "list.clipboard.fill"
-        }
+                "heart.text.clipboard.fill"
+            } else {
+                "list.clipboard.fill"
+            }
         let icon: NSImage? = NSImage(
             systemSymbolName: symbolName,
             accessibilityDescription: nil

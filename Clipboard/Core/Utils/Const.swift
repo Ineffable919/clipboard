@@ -44,7 +44,7 @@ enum Const {
 
     static let topRadius: CGFloat =
         if #available(macOS 26.0, *) {
-            18.0
+            16.0
         } else {
             8.0
         }

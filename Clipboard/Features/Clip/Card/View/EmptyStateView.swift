@@ -25,7 +25,7 @@ class EmptyStateView: NSView {
     }()
 
     private lazy var titleLabel: NSTextField = {
-        let tf = NSTextField(labelWithString: String(localized: .emptyHistory))
+        let tf = NSTextField(labelWithString: String(localized: .emptyRecord))
         tf.textColor = .secondaryLabelColor
         tf.alignment = .center
         return tf
@@ -68,11 +68,14 @@ class EmptyStateView: NSView {
         addSubview(titleLabel)
         addSubview(hintLabel)
 
-        let symbolName = if #available(macOS 15.0, *) {
-            "heart.text.clipboard.fill"
-        } else {
-            "list.clipboard.fill"
-        }
+        let symbolName =
+            if #available(macOS 26.0, *) {
+                "sparkle.text.clipboard"
+            } else if #available(macOS 15.0, *) {
+                "heart.text.clipboard"
+            } else {
+                "list.clipboard"
+            }
 
         iconImageView.image = NSImage(
             systemSymbolName: symbolName,
@@ -101,7 +104,7 @@ class EmptyStateView: NSView {
         hintLabel.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
             make.top.equalTo(titleLabel.snp.bottom).offset(Const.space20)
-            make.bottom.lessThanOrEqualToSuperview().offset(-20)
+            make.bottom.lessThanOrEqualToSuperview()
         }
     }
 
