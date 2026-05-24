@@ -198,17 +198,14 @@ final class FloatingHistoryView: NSView {
         }
         presenter.reconfigureItems = { [weak self] items in
             guard let self else { return }
-            let ids = Set(items.map(\.uniqueId))
-            let indexPaths = Set(
-                dataSource.snapshot().itemIdentifiers
-                    .enumerated()
-                    .compactMap { idx, item in
-                        ids.contains(item.uniqueId)
-                            ? IndexPath(item: idx, section: 0) : nil
-                    }
-            )
-            guard !indexPaths.isEmpty else { return }
-            collectionView.reloadItems(at: indexPaths)
+            let identifiers = dataSource.snapshot().itemIdentifiers
+            let indexMap = Dictionary(uniqueKeysWithValues: identifiers.enumerated().map { ($1.uniqueId, $0) })
+            let focused = env.focusRegion == .collection
+            for item in items {
+                guard let idx = indexMap[item.uniqueId] else { continue }
+                (collectionView.item(at: IndexPath(item: idx, section: 0)) as? FloatingCollectionItem)?
+                    .configure(with: item, keyword: topVM?.query ?? "", isFocused: focused, quickPasteIndex: quickPasteDisplayIndex(for: idx))
+            }
         }
 
         presenter.isVerticalScroll = true

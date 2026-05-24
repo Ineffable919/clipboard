@@ -26,6 +26,16 @@ extension ClipFloatingViewController {
         let popover = ClipPreviewPopover(model: model) { [weak self] in
             self?.focusRegion = .popover
         }
+        popover.onPinToChip = { [weak self] model, chipId in
+            _ = self?.floatingContentView.topVM.assignModelToChip(model: model, chipId: chipId)
+        }
+        popover.onUnpin = { [weak self] model in
+            _ = self?.floatingContentView.topVM.assignModelToChip(model: model, chipId: -1)
+        }
+        popover.onCreateChip = { [weak self] model in
+            self?.closePreview()
+            self?.floatingContentView.headerView.startCreatingChip(pinModel: model)
+        }
         popover.delegate = self
         previewPopover = popover
         popover.show(relativeTo: anchorView.bounds, of: anchorView, preferredEdge: .maxX)

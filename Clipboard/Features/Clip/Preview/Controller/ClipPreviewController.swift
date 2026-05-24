@@ -86,6 +86,11 @@ final class ClipPreviewController: NSViewController {
         return size
     }
 
+    func refreshHeader() {
+        guard let model else { return }
+        headerView.configure(model: model, appIcon: appIcon)
+    }
+
     func cleanup() {
         metadataTask?.cancel()
         metadataTask = nil

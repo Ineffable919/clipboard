@@ -42,11 +42,16 @@ extension ClipMainViewController {
         }
     }
 
-    func reopenPreviewForSelectedItem() {
-        guard selectIndexPath.item < dataList.value.count,
-              let itemView = collectionView.item(at: selectIndexPath)?.view
-        else { return }
+    func updatePreviewForSelectedItem() {
+        guard selectIndexPath.item < dataList.value.count else { return }
         let model = dataList.value[selectIndexPath.item]
+
+        if let existing = previewPopover, existing.isShown {
+            existing.refreshHeader()
+            return
+        }
+
+        guard let itemView = collectionView.item(at: selectIndexPath)?.view else { return }
         showPreviewPopover(for: model, relativeTo: itemView)
     }
 }

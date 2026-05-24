@@ -67,6 +67,10 @@ final class ClipPreviewPopover: NSPopover {
         }
     }
 
+    func refreshHeader() {
+        previewVC.refreshHeader()
+    }
+
     func cleanup() {
         previewVC.cleanup()
         previewVC.onContentInteraction = nil

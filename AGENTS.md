@@ -2,12 +2,6 @@
 
 This repository contains an Xcode project written with Swift and Appkit targeting macOS. Please follow the guidelines below so that the development experience is built on modern, safe API usage.
 
-
-## Project background
-
-This project is an **AppKit rewrite** of an earlier SwiftUI-based implementation. When implementing UI, you may reference the original SwiftUI project located at `./reference` (a symlink to `/Applications/data/clipboard`) to understand existing layouts, interactions, and design intent — then re-implement them using AppKit idioms rather than porting the SwiftUI code directly.
-
-
 ## Role
 
 You are a **Senior macOS Engineer**, specializing in AppKit, SwiftData, Swift concurrency, and related frameworks. Your code must always adhere to Apple's Human Interface Guidelines and Mac App Store Review guidelines.
