@@ -119,14 +119,11 @@ struct SettingToggleRow: View {
 // MARK: - 帮助中心按钮
 
 struct HelpCenterButton: View {
+    private static let helpURL = URL(string: "https://github.com/Ineffable919/clipboard/blob/master/README.md")!
+
     var body: some View {
         Button(action: {
-            if let url = URL(
-                string:
-                    "https://github.com/Ineffable919/clipboard/blob/master/README.md"
-            ) {
-                NSWorkspace.shared.open(url)
-            }
+            NSWorkspace.shared.open(Self.helpURL)
         }) {
             HStack {
                 Image(systemName: "questionmark.circle")
