@@ -108,11 +108,12 @@ extension ClipMainWindowController {
 
         let view = window.contentViewController?.view
         if !window.isVisible {
-            let frame = frame ?? NSScreen.main?.frame ?? .zero
+            let screenFrame = frame ?? NSScreen.main?.frame ?? .zero
             AppEnvironment.shared.previousApp = NSWorkspace.shared.frontmostApplication
-            window.setFrame(frame, display: true)
+            let panelFrame = NSRect(x: screenFrame.minX, y: screenFrame.minY, width: screenFrame.width, height: Const.defaultHeight)
+            view?.setFrameOrigin(NSPoint(x: 0, y: -Const.defaultHeight))
+            window.setFrame(panelFrame, display: false)
             window.setIsVisible(true)
-            view?.setFrameOrigin(NSPoint(x: 0, y: -(view?.bounds.height ?? Const.defaultHeight)))
         } else {
             snapToPresentedPosition(window.contentViewController?.view)
         }
