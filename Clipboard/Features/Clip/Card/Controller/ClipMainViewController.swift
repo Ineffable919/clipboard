@@ -112,9 +112,9 @@ final class ClipMainViewController: NSViewController {
         flowLayout.scrollDirection = .horizontal
         flowLayout.sectionInset = NSEdgeInsets(
             top: 0,
-            left: Const.space24,
+            left: Const.space20,
             bottom: 0,
-            right: Const.space24
+            right: Const.space20
         )
 
         let collectionView = ClipCollectionView()
