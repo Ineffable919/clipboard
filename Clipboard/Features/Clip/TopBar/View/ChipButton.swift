@@ -312,25 +312,34 @@ final class ChipButton: NSView, NSTextFieldDelegate {
                 : .clear
         }
 
+        let isFrostedGlass: Bool = {
+            if #available(macOS 26, *) {
+                return BackgroundType(rawValue: PasteUserDefaults.backgroundType) == .frosted
+            }
+            return false
+        }()
+
         if config.compact {
             let chipColor = compactChipColor()
             if config.isSelected || config.isEditing {
                 return chipColor
             }
             if isHovering || isDraggingOver {
+                if isDark && isFrostedGlass { return NSColor(white: 1.0, alpha: 0.10) }
                 return isDark
-                    ? .quaternaryLabelColor.withAlphaComponent(0.06)
-                    : .labelColor.withAlphaComponent(0.06)
+                    ? .quaternaryLabelColor
+                    : .labelColor.withAlphaComponent(0.08)
             }
             return .clear
         }
 
         if config.isSelected || config.isEditing {
-            return isDark
-                ? .quaternaryLabelColor : .labelColor.withAlphaComponent(0.1)
+            if isDark && isFrostedGlass { return NSColor(white: 1.0, alpha: 0.2) }
+            return isDark ? .quaternaryLabelColor : .labelColor.withAlphaComponent(0.1)
         }
 
         if isHovering || isDraggingOver {
+            if isDark && isFrostedGlass { return NSColor(white: 1.0, alpha: 0.10) }
             return isDark
                 ? .quaternaryLabelColor.withAlphaComponent(0.06)
                 : .labelColor.withAlphaComponent(0.06)
