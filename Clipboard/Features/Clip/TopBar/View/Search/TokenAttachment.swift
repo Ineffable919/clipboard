@@ -121,7 +121,16 @@ private final class TokenAttachmentCell: NSTextAttachmentCell {
                 width: iconSize,
                 height: iconSize
             )
-            icon.draw(in: iconRect)
+            let displayIcon: NSImage
+            if icon.isTemplate,
+               let colored = icon.withSymbolConfiguration(
+                   .init(paletteColors: [.labelColor])
+               ) {
+                displayIcon = colored
+            } else {
+                displayIcon = icon
+            }
+            displayIcon.draw(in: iconRect)
             x += iconSize + gap
         }
 
