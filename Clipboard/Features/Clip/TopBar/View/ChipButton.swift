@@ -316,7 +316,7 @@ final class ChipButton: NSView, NSTextFieldDelegate {
             if #available(macOS 26, *) {
                 return BackgroundType(rawValue: PasteUserDefaults.backgroundType) == .frosted
             }
-            return false
+            return true
         }()
 
         if config.compact {
