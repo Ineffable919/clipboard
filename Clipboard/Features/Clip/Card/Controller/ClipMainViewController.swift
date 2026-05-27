@@ -25,6 +25,7 @@ final class ClipMainViewController: NSViewController {
 
     var monitorToken: Any?
     var flagsMonitorToken: Any?
+    var dragSourceApp: NSRunningApplication?
 
     // MARK: - Pause Indicator
 

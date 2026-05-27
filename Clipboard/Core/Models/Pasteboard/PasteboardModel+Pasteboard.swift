@@ -8,7 +8,7 @@
 import AppKit
 
 extension PasteboardModel {
-    convenience init?(with pasteboard: NSPasteboard) {
+    convenience init?(with pasteboard: NSPasteboard, sourceApp: NSRunningApplication? = nil) {
         guard let items = pasteboard.pasteboardItems, !items.isEmpty
         else { return nil }
         let item = items[0]
@@ -64,7 +64,7 @@ extension PasteboardModel {
             content: content ?? Data()
         )
 
-        let app = NSWorkspace.shared.frontmostApplication
+        let app = sourceApp ?? NSWorkspace.shared.frontmostApplication
 
         self.init(
             pasteboardType: type,

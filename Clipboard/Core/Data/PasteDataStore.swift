@@ -239,8 +239,9 @@ extension PasteDataStore {
         }
     }
 
-    func addNewItem(_ item: NSPasteboard) {
-        guard let model = PasteboardModel(with: item) else { return }
+    @discardableResult
+    func addNewItem(_ item: NSPasteboard, sourceApp: NSRunningApplication? = nil) -> Bool {
+        guard let model = PasteboardModel(with: item, sourceApp: sourceApp) else { return false }
 
         AppColorService.shared.updateColor(for: model)
         PasteMetadataCache.shared.invalidateAppInfoCache(model)
@@ -250,6 +251,7 @@ extension PasteDataStore {
             await insertModel(model)
             await runOCRIfNeeded(model)
         }
+        return true
     }
 
     func runOCRIfNeeded(_ model: PasteboardModel) async {

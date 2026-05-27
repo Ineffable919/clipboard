@@ -71,6 +71,32 @@ extension ClipMainViewController: NSCollectionViewDelegate {
     ) -> (any NSPasteboardWriting)? {
         dataList.value[indexPath.item].writeItem
     }
+
+    func collectionView(
+        _: NSCollectionView,
+        validateDrop draggingInfo: any NSDraggingInfo,
+        proposedIndexPath _: AutoreleasingUnsafeMutablePointer<NSIndexPath>,
+        dropOperation _: UnsafeMutablePointer<NSCollectionView.DropOperation>
+    ) -> NSDragOperation {
+        guard !(draggingInfo.draggingSource is NSCollectionView) else { return [] }
+        let pb = draggingInfo.draggingPasteboard
+        guard pb.canReadItem(withDataConformingToTypes: Self.dropSupportedTypes) else { return [] }
+        dragSourceApp = NSWorkspace.shared.frontmostApplication
+        return .copy
+    }
+
+    func collectionView(
+        _: NSCollectionView,
+        acceptDrop draggingInfo: any NSDraggingInfo,
+        indexPath _: IndexPath,
+        dropOperation _: NSCollectionView.DropOperation
+    ) -> Bool {
+        let accepted = db.addNewItem(draggingInfo.draggingPasteboard, sourceApp: dragSourceApp)
+        dragSourceApp = nil
+        return accepted
+    }
+
+    private static let dropSupportedTypes = PasteboardType.supportTypes.map(\.rawValue)
 }
 
 // MARK: - Multi Selection
