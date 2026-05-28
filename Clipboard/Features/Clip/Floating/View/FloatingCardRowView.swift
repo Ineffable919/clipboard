@@ -24,6 +24,7 @@ final class FloatingCardRowView: NSView {
 
     private let timestampLabel = NSTextField(labelWithString: "")
     private let quickPasteBadge = NSTextField(labelWithString: "")
+    private let chipTagIcon = NSImageView()
 
     // MARK: - State
 
@@ -108,6 +109,11 @@ final class FloatingCardRowView: NSView {
         quickPasteBadge.isHidden = true
         backgroundView.addSubview(quickPasteBadge)
 
+        chipTagIcon.imageScaling = .scaleProportionallyUpOrDown
+        chipTagIcon.image = NSImage(systemSymbolName: "tag.fill", accessibilityDescription: nil)
+        chipTagIcon.isHidden = true
+        backgroundView.addSubview(chipTagIcon)
+
         selectionBorderView.snp.makeConstraints { make in
             make.edges.equalToSuperview().priority(999)
         }
@@ -130,6 +136,12 @@ final class FloatingCardRowView: NSView {
         quickPasteBadge.snp.makeConstraints { make in
             make.trailing.equalToSuperview().offset(-Const.space6)
             make.bottom.equalToSuperview().offset(-Const.space4)
+        }
+
+        chipTagIcon.snp.makeConstraints { make in
+            make.trailing.equalToSuperview().offset(-Const.space4)
+            make.top.equalToSuperview().offset(Const.space4)
+            make.width.height.equalTo(10)
         }
 
         contentView.snp.makeConstraints { make in
@@ -171,6 +183,13 @@ final class FloatingCardRowView: NSView {
 
         if modelChanged {
             appIconView.configure(appPath: model.appPath)
+        }
+
+        if let chip = model.getGroupChip() {
+            chipTagIcon.contentTintColor = CategoryChip.nsColor(at: chip.colorIndex)
+            chipTagIcon.isHidden = false
+        } else {
+            chipTagIcon.isHidden = true
         }
 
         if modelChanged {

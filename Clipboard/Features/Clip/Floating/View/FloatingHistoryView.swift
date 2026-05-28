@@ -456,6 +456,7 @@ final class FloatingHistoryView: NSView {
         }
         selectedIndex = min(selectedIndex, dataList.count - 1)
         restoreSelection()
+        scrollTo(index: selectedIndex)
     }
 
     private func restoreSelection() {
