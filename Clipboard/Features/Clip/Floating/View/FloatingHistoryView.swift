@@ -195,7 +195,6 @@ final class FloatingHistoryView: NSView {
         presenter.adjustAfterDelete = { [weak self] in self?.adjustSelectionAfterDelete() }
         presenter.updateEmptyState = { [weak self] isEmpty in
             self?.emptyStateView.isHidden = !isEmpty
-            self?.scrollView.isHidden = isEmpty
         }
         presenter.reconfigureItems = { [weak self] items in
             guard let self else { return }

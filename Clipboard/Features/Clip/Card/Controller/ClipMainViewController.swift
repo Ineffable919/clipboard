@@ -549,12 +549,6 @@ extension ClipMainViewController {
     }
 
     func updateEmptyState() {
-        let isEmpty = dataList.value.isEmpty
-        emptyStateView.isHidden = !isEmpty
-        let wasHidden = scrollView.isHidden
-        scrollView.isHidden = isEmpty
-        if wasHidden, !isEmpty, focusRegion == .collection {
-            view.window?.makeFirstResponder(collectionView)
-        }
+        emptyStateView.isHidden = !dataList.value.isEmpty
     }
 }
