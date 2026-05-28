@@ -708,7 +708,7 @@ private final class ChipColorPaletteMenuView: NSView {
         super.init(frame: .zero)
         stack.orientation = .horizontal
         stack.alignment = .centerY
-        stack.spacing = 12
+        stack.spacing = 4
 
         addSubview(stack)
         stack.snp.makeConstraints { make in
@@ -723,7 +723,7 @@ private final class ChipColorPaletteMenuView: NSView {
             )
             stack.addArrangedSubview(circle)
             circle.snp.makeConstraints { make in
-                make.width.height.equalTo(16)
+                make.width.height.equalTo(24)
             }
         }
 
@@ -788,16 +788,24 @@ private final class ChipColorCircleView: NSView {
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
 
-        let rect = bounds.insetBy(dx: 1, dy: 1)
-        let path = NSBezierPath(ovalIn: rect)
-        color.setFill()
-        path.fill()
+        let isActive = isSelected || isHovering
 
-        if isSelected || isHovering {
-            NSColor.white.withAlphaComponent(0.8).setStroke()
-            path.lineWidth = isSelected ? 2 : 1.5
-            path.stroke()
+        if isActive {
+            if isSelected {
+                let gapPath = NSBezierPath(ovalIn: bounds.insetBy(dx: 1.5, dy: 1.5))
+                NSColor.controlBackgroundColor.withAlphaComponent(0.6).setFill()
+                gapPath.fill()
+            }
+
+            let ringPath = NSBezierPath(ovalIn: bounds.insetBy(dx: 0.75, dy: 0.75))
+            NSColor.secondaryLabelColor.withAlphaComponent(0.12).setStroke()
+            ringPath.lineWidth = 1.5
+            ringPath.stroke()
         }
+
+        let dotPath = NSBezierPath(ovalIn: bounds.insetBy(dx: 5.0, dy: 5.0))
+        color.setFill()
+        dotPath.fill()
     }
 
     @objc private func handleTap() {
