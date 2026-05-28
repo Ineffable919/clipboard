@@ -240,8 +240,12 @@ extension PasteDataStore {
     }
 
     @discardableResult
-    func addNewItem(_ item: NSPasteboard, sourceApp: NSRunningApplication? = nil) -> Bool {
+    func addNewItem(_ item: NSPasteboard, sourceApp: NSRunningApplication? = nil, chipId: Int = -1) -> Bool {
         guard let model = PasteboardModel(with: item, sourceApp: sourceApp) else { return false }
+
+        if chipId != -1 {
+            model.updateGroup(val: chipId)
+        }
 
         AppColorService.shared.updateColor(for: model)
         PasteMetadataCache.shared.invalidateAppInfoCache(model)
@@ -283,12 +287,11 @@ extension PasteDataStore {
 
         if isInFilterMode, let filter = currentFilter {
             filteredCount = await sqlManager.getCount(filter: filter)
+            guard let id = model.id,
+                  await sqlManager.getCount(filter: filter && Col.id == id) > 0
+            else { return }
         } else {
             filteredCount = count
-        }
-
-        if isInFilterMode {
-            return
         }
 
         var list = dataList.value

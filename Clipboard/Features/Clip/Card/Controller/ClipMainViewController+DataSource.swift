@@ -91,7 +91,7 @@ extension ClipMainViewController: NSCollectionViewDelegate {
         indexPath _: IndexPath,
         dropOperation _: NSCollectionView.DropOperation
     ) -> Bool {
-        let accepted = db.addNewItem(draggingInfo.draggingPasteboard, sourceApp: dragSourceApp)
+        let accepted = db.addNewItem(draggingInfo.draggingPasteboard, sourceApp: dragSourceApp, chipId: store.selectedChipId)
         dragSourceApp = nil
         return accepted
     }
