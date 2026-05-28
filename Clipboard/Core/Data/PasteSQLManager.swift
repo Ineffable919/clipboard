@@ -138,7 +138,7 @@ extension PasteSQLManager {
         }
     }
 
-    func insert(item: PasteboardModel, timestamp: Int64) async -> (Int64, Int?) {
+    func insert(item: PasteboardModel, timestamp: Int64, group: Int = -1) async -> (Int64, Int?) {
         let existing = await search(
             filter: Col.uniqueId == item.uniqueId,
             select: [Col.id, Col.group],
@@ -152,12 +152,17 @@ extension PasteSQLManager {
             let existingGroup = (try? row.get(Col.group)) ?? -1
             let query = table.filter(Col.id == existingId)
             do {
-                try db?.run(query.update(Col.ts <- timestamp, Col.hidden <- 0))
+                var updates: [Setter] = [Col.ts <- timestamp, Col.hidden <- 0]
+                if group != -1, group != existingGroup {
+                    updates.append(Col.group <- group)
+                }
+                try db?.run(query.update(updates))
                 log.debug("更新时间戳成功：\(existingId)")
             } catch {
                 log.error("更新时间戳失败：\(error)")
             }
-            return (existingId, existingGroup)
+            let effectiveGroup = group != -1 ? group : existingGroup
+            return (existingId, effectiveGroup)
         }
 
         let insert = await table.insert(
@@ -266,6 +271,7 @@ extension PasteSQLManager {
 
     func updateItemContent(
         id: Int64,
+        type: PasteboardType,
         data: Data,
         showData: Data?,
         searchText: String,
@@ -275,6 +281,7 @@ extension PasteSQLManager {
         let query = table.filter(Col.id == id)
         let timestamp = Int64(Date().timeIntervalSince1970)
         let update = query.update(
+            Col.type <- type.rawValue,
             Col.data <- data,
             Col.showData <- showData,
             Col.searchText <- searchText,

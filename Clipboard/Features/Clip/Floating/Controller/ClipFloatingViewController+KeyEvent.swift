@@ -134,9 +134,13 @@ extension ClipFloatingViewController {
             event,
             modifierIndex: PasteUserDefaults.plainTextModifier
         )
-        historyView.pasteItem(
-            at: historyView.selectedIndex,
-            isAttribute: isAttribute
+        let items = historyView.selectedModels
+        guard !items.isEmpty else { return nil }
+        ClipActionService.shared.pasteMultiple(
+            items,
+            isAttribute: isAttribute,
+            checkPermissions: PasteUserDefaults.pasteDirect,
+            showTip: !PasteUserDefaults.pasteDirect
         )
         return nil
     }
@@ -149,8 +153,20 @@ extension ClipFloatingViewController {
 
         let historyView = floatingContentView.historyView
         switch event.keyCode {
+        case KeyCode.a:
+            guard focusRegion == .collection else { return event }
+            historyView.collectionView.selectAll(nil)
+            historyView.updateSelectedItemBorder()
+            return nil
         case KeyCode.c:
-            historyView.copyItem(at: historyView.selectedIndex)
+            let items = historyView.selectedModels
+            guard !items.isEmpty else { return nil }
+            if items.count == 1 {
+                historyView.copyItem(at: historyView.selectedIndex)
+            } else {
+                ClipActionService.shared.copyMultiple(items)
+                ClipFloatingWindowController.shared.toggleWindow()
+            }
             return nil
         case KeyCode.e:
             historyView.openEditWindow(at: historyView.selectedIndex)

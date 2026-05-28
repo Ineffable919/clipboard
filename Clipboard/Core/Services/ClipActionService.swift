@@ -32,12 +32,14 @@ final class ClipActionService {
             log.debug(
                 "Accessibility permission not granted, cannot send keyboard events"
             )
-            Task { @MainActor in
-                requestAccessibilityPermission(
-                    item: item,
-                    isAttribute: isAttribute,
-                    showTip: true
-                )
+            WindowManager.shared.toggleWindow {
+                Task { @MainActor in
+                    self.requestAccessibilityPermission(
+                        items: [item],
+                        isAttribute: isAttribute,
+                        showTip: true
+                    )
+                }
             }
             return
         }
@@ -64,12 +66,15 @@ final class ClipActionService {
         WindowManager.shared.toggleWindow()
     }
 
-    /// 将多个项目合并写入剪贴板
     func copyMultiple(_ items: [PasteboardModel], isAttribute: Bool = true) {
-        pasteBoard.pasteMultipleData(items, isAttribute: isAttribute)
+        pasteBoard.pasteMultipleData(
+            items,
+            isAttribute: isAttribute,
+            showTip: true,
+            copy: true
+        )
     }
 
-    /// 将多个项目合并写入剪贴板并粘贴
     func pasteMultiple(
         _ items: [PasteboardModel],
         isAttribute: Bool = true,
@@ -99,8 +104,15 @@ final class ClipActionService {
             log.debug(
                 "Accessibility permission not granted, cannot send keyboard events"
             )
-            pasteBoard.pasteMultipleData(items, isAttribute: isAttribute)
-            WindowManager.shared.toggleWindow()
+            WindowManager.shared.toggleWindow {
+                Task { @MainActor in
+                    self.requestAccessibilityPermission(
+                        items: items,
+                        isAttribute: isAttribute,
+                        showTip: true
+                    )
+                }
+            }
             return
         }
 
@@ -111,7 +123,7 @@ final class ClipActionService {
     }
 
     private func requestAccessibilityPermission(
-        item: PasteboardModel,
+        items: [PasteboardModel],
         isAttribute: Bool = true,
         showTip: Bool = false
     ) {
@@ -128,13 +140,13 @@ final class ClipActionService {
         case .alertFirstButtonReturn:
             if let url = URL(
                 string:
-                "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
+                    "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
             ) {
                 NSWorkspace.shared.open(url)
             }
         case .alertSecondButtonReturn:
             pasteBoard.pasteMultipleData(
-                [item],
+                items,
                 isAttribute: isAttribute,
                 showTip: showTip
             )

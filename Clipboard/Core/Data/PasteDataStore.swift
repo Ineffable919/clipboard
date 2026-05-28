@@ -275,7 +275,8 @@ extension PasteDataStore {
     func insertModel(_ model: PasteboardModel) async {
         let (itemId, existingGroup) = await sqlManager.insert(
             item: model,
-            timestamp: model.timestamp
+            timestamp: model.timestamp,
+            group: model.group
         )
         let count = await sqlManager.getTotalCount()
 
@@ -512,6 +513,7 @@ extension PasteDataStore {
     /// 编辑更新
     func updateItemContent(
         id: Int64,
+        newType: PasteboardType,
         newData: Data,
         newShowData: Data?,
         newSearchText: String,
@@ -522,6 +524,7 @@ extension PasteDataStore {
 
         await sqlManager.updateItemContent(
             id: id,
+            type: newType,
             data: newData,
             showData: newShowData,
             searchText: normalizedSearchText,
@@ -533,7 +536,7 @@ extension PasteDataStore {
         if let index = list.firstIndex(where: { $0.id == id }) {
             let oldModel = list[index]
             let newModel = PasteboardModel(
-                pasteboardType: oldModel.pasteboardType,
+                pasteboardType: newType,
                 data: newData,
                 showData: newShowData,
                 timestamp: Int64(Date().timeIntervalSince1970),

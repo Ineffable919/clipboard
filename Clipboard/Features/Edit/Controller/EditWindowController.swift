@@ -220,6 +220,7 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
             Task {
                 await PasteDataStore.main.updateItemContent(
                     id: itemId,
+                    newType: actualType,
                     newData: newData,
                     newShowData: showData,
                     newSearchText: plainText,

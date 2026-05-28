@@ -373,7 +373,13 @@ extension FloatingCardRowView: NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
         guard let model = currentModel else { return }
-        for item in buildClipItemMenu(for: model, pasteTitle: String(localized: .paste)).items {
+        let pasteTitle: String
+        if let appName = AppEnvironment.shared.previousApp?.localizedName, PasteUserDefaults.pasteDirect {
+            pasteTitle = String(localized: .pasteToApp(appName))
+        } else {
+            pasteTitle = String(localized: .paste)
+        }
+        for item in buildClipItemMenu(for: model, pasteTitle: pasteTitle).items {
             menu.addItem(item)
         }
     }

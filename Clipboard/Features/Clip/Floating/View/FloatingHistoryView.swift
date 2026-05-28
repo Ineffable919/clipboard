@@ -130,6 +130,7 @@ final class FloatingHistoryView: NSView {
     var dataList: [PasteboardModel] = []
     var selectedIndex: Int = 0
     var isQuickPastePressed: Bool = false
+    private var dragSourceApp: NSRunningApplication?
 
     var onActivateSearch: ((String?) -> Void)?
     var onTogglePreview: ((Int) -> Void)?
@@ -267,14 +268,26 @@ final class FloatingHistoryView: NSView {
     }
 
     func requestDelete(at index: Int) {
+        let items = selectedModels
+        if items.count > 1 {
+            guard NSAlert.runConfirm(
+                title: String(localized: .deleteTitle),
+                message: String(localized: .deleteMessage)
+            ) else { return }
+            let minIndex = collectionView.selectionIndexPaths.map(\.item).min() ?? index
+            let countAfterDelete = dataList.count - items.count
+            if countAfterDelete > 0 {
+                selectedIndex = min(minIndex, countAfterDelete - 1)
+            }
+            pd.deleteItems(items)
+            return
+        }
         guard index < dataList.count else { return }
         let item = dataList[index]
-
         guard PasteUserDefaults.delConfirm else {
             pd.deleteItems(item)
             return
         }
-
         if NSAlert.runConfirm(title: String(localized: .deleteTitle), message: String(localized: .deleteMessage)) {
             pd.deleteItems(item)
         }
@@ -289,6 +302,21 @@ final class FloatingHistoryView: NSView {
 
     func activateSearchField(with text: String?) {
         onActivateSearch?(text)
+    }
+
+    // MARK: - Multi Selection
+
+    private var isMultiSelect: Bool {
+        let modifiers = NSApp.currentEvent?.modifierFlags ?? []
+        return modifiers.contains(.command) || modifiers.contains(.shift)
+    }
+
+    var selectedModels: [PasteboardModel] {
+        collectionView.selectionIndexPaths.sorted()
+            .compactMap { path in
+                guard path.item < dataList.count else { return nil }
+                return dataList[path.item]
+            }
     }
 
     // MARK: - Setup
@@ -310,7 +338,7 @@ final class FloatingHistoryView: NSView {
         collectionView.backgroundColors = [.clear]
         collectionView.isSelectable = true
         collectionView.allowsEmptySelection = false
-        collectionView.allowsMultipleSelection = false
+        collectionView.allowsMultipleSelection = true
         collectionView.focusRingType = .none
         collectionView.delegate = self
         collectionView.register(
@@ -328,6 +356,17 @@ final class FloatingHistoryView: NSView {
         }
         collectionView.onDragEnded = { [weak self] screenPoint in
             self?.handleDragEnded(screenPoint)
+        }
+        collectionView.onShiftClick = { [weak self] clickedPath in
+            guard let self else { return }
+            let lo = min(selectedIndex, clickedPath.item)
+            let hi = max(selectedIndex, clickedPath.item)
+            collectionView.selectionIndexPaths = Set((lo ... hi).map { IndexPath(item: $0, section: 0) })
+            scrollTo(index: clickedPath.item)
+        }
+        collectionView.onCollapseToSingle = { [weak self] indexPath in
+            guard let self else { return }
+            resetSelectIndex(indexPath)
         }
 
         let clickGesture = NSClickGestureRecognizer(
@@ -506,6 +545,12 @@ extension FloatingHistoryView: NSCollectionViewDelegate {
         _: NSCollectionView,
         shouldSelectItemsAt indexPaths: Set<IndexPath>
     ) -> Set<IndexPath> {
+        if isMultiSelect {
+            if let path = indexPaths.min() {
+                selectedIndex = path.item
+            }
+            return indexPaths
+        }
         if let indexPath = indexPaths.first {
             resetSelectIndex(indexPath)
         }
@@ -527,6 +572,36 @@ extension FloatingHistoryView: NSCollectionViewDelegate {
         guard indexPath.item < dataList.count else { return nil }
         return dataList[indexPath.item].writeItem
     }
+
+    func collectionView(
+        _: NSCollectionView,
+        validateDrop draggingInfo: any NSDraggingInfo,
+        proposedIndexPath _: AutoreleasingUnsafeMutablePointer<NSIndexPath>,
+        dropOperation _: UnsafeMutablePointer<NSCollectionView.DropOperation>
+    ) -> NSDragOperation {
+        guard !(draggingInfo.draggingSource is NSCollectionView) else { return [] }
+        let pb = draggingInfo.draggingPasteboard
+        guard pb.canReadItem(withDataConformingToTypes: Self.dropSupportedTypes) else { return [] }
+        dragSourceApp = NSWorkspace.shared.frontmostApplication
+        return .copy
+    }
+
+    func collectionView(
+        _: NSCollectionView,
+        acceptDrop draggingInfo: any NSDraggingInfo,
+        indexPath _: IndexPath,
+        dropOperation _: NSCollectionView.DropOperation
+    ) -> Bool {
+        let accepted = pd.addNewItem(
+            draggingInfo.draggingPasteboard,
+            sourceApp: dragSourceApp,
+            chipId: CategoryChipStore.shared.selectedChipId
+        )
+        dragSourceApp = nil
+        return accepted
+    }
+
+    private static let dropSupportedTypes = PasteboardType.supportTypes.map(\.rawValue)
 
     private func resetSelectIndex(_ indexPath: IndexPath) {
         guard indexPath.item < dataList.count else { return }

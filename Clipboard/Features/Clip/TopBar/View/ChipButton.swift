@@ -723,7 +723,7 @@ private final class ChipColorPaletteMenuView: NSView {
             )
             stack.addArrangedSubview(circle)
             circle.snp.makeConstraints { make in
-                make.width.height.equalTo(18)
+                make.width.height.equalTo(16)
             }
         }
 
