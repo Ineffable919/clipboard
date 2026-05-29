@@ -20,12 +20,6 @@ final class HorizontalScrollView: NSScrollView {
 
     // MARK: - Focus Ring
 
-    /// 焦点环的形状参照视图。设置后,`NSScrollView` 会在它的 document view 成为第一
-    /// 响应者时自动调用 `drawFocusRingMask`,据此把系统焦点环画在该视图范围上
-    // (滚动视图本身不被裁剪,所以环不会被裁掉)。
-    ///
-    /// 仅在设置了本属性的实例上启用焦点环;未设置时保持系统默认行为,
-    /// 避免给共用本类的其它滚动视图意外加上焦点环。
     weak var focusRingMaskView: NSView? {
         didSet { noteFocusRingMaskChanged() }
     }
