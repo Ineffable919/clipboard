@@ -14,14 +14,13 @@ final class FilterPopover: NSPopover {
 
     // MARK: - State
 
-    private(set) var isShowingPopover = false
+    var isShowingPopover: Bool { isShown }
 
     // MARK: - Init
 
     init(viewModel: TopBarViewModel) {
         super.init()
         behavior = .transient
-        animates = true
         contentViewController = FilterPopoverViewController(viewModel: viewModel)
         delegate = self
     }
@@ -34,13 +33,11 @@ final class FilterPopover: NSPopover {
     // MARK: - Public API
 
     func toggle(relativeTo positioningRect: NSRect, of positioningView: NSView) {
-        if isShowingPopover {
-            isShowingPopover = false
+        if isShown {
             close()
             return
         }
 
-        isShowingPopover = true
         show(relativeTo: positioningRect, of: positioningView, preferredEdge: .maxY)
 
         Task { @MainActor in
@@ -53,7 +50,6 @@ final class FilterPopover: NSPopover {
 
 extension FilterPopover: NSPopoverDelegate {
     func popoverDidClose(_: Notification) {
-        isShowingPopover = false
         onDidClose?()
     }
 }

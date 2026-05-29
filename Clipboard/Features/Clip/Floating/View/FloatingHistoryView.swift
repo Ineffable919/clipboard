@@ -48,6 +48,10 @@ private final class FloatingCollectionItem: NSCollectionViewItem {
         cardView.quickPasteIndex = index
     }
 
+    func setShowPlainTextIndicator(_ show: Bool) {
+        cardView.showPlainTextIndicator = show
+    }
+
     override var isSelected: Bool {
         didSet {
             cardView.updateSelection(
@@ -130,6 +134,7 @@ final class FloatingHistoryView: NSView {
     var dataList: [PasteboardModel] = []
     var selectedIndex: Int = 0
     var isQuickPastePressed: Bool = false
+    var isPlainTextModifierPressed: Bool = false
     private var dragSourceApp: NSRunningApplication?
 
     var onActivateSearch: ((String?) -> Void)?
@@ -237,6 +242,12 @@ final class FloatingHistoryView: NSView {
     func resetQuickPasteState() {
         isQuickPastePressed = false
         updateQuickPasteDisplay()
+    }
+
+    func setIsPlainTextModifierPressed(_ pressed: Bool) {
+        guard pressed != isPlainTextModifierPressed else { return }
+        isPlainTextModifierPressed = pressed
+        updatePlainTextIndicatorDisplay()
     }
 
     func selectAndScrollTo(index: Int) {
@@ -535,6 +546,12 @@ final class FloatingHistoryView: NSView {
     private func quickPasteDisplayIndex(for rowIndex: Int) -> Int? {
         guard isQuickPastePressed, rowIndex < 9 else { return nil }
         return rowIndex + 1
+    }
+
+    private func updatePlainTextIndicatorDisplay() {
+        for case let item as FloatingCollectionItem in collectionView.visibleItems() {
+            item.setShowPlainTextIndicator(isPlainTextModifierPressed)
+        }
     }
 }
 

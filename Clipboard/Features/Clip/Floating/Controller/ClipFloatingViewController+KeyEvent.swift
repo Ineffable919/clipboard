@@ -94,6 +94,7 @@ extension ClipFloatingViewController {
         else { return event }
 
         isQuickPastePressed = KeyCode.isQuickPasteModifierPressed()
+        isPlainTextModifierPressed = KeyCode.isModifierPressed(modifierIndex: PasteUserDefaults.plainTextModifier)
         return event
     }
 

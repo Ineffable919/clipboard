@@ -23,8 +23,48 @@ final class FloatingCardRowView: NSView {
     private var contentSubview: NSView?
 
     private let timestampLabel = NSTextField(labelWithString: "")
-    private let quickPasteBadge = NSTextField(labelWithString: "")
     private let chipTagIcon = NSImageView()
+
+    // MARK: - Badge (Plain Text Indicator + Quick Paste)
+
+    private let badgeBgView: BadgeBackgroundView = {
+        let view = BadgeBackgroundView()
+        view.wantsLayer = true
+        view.layer?.cornerRadius = 4.0
+        view.layer?.cornerCurve = .continuous
+        view.isHidden = true
+        return view
+    }()
+
+    private let badgeStackView: NSStackView = {
+        let stack = NSStackView()
+        stack.orientation = .horizontal
+        stack.spacing = 0
+        stack.distribution = .fill
+        return stack
+    }()
+
+    private let plainTextIcon: NSImageView = {
+        let iv = NSImageView()
+        iv.image = NSImage(systemSymbolName: "text.justify.leading", accessibilityDescription: nil)
+        iv.symbolConfiguration = NSImage.SymbolConfiguration(textStyle: .caption1)
+        iv.imageScaling = .scaleProportionallyUpOrDown
+        iv.isHidden = true
+        iv.setContentHuggingPriority(.required, for: .horizontal)
+        iv.setContentCompressionResistancePriority(.required, for: .horizontal)
+        return iv
+    }()
+
+    private let quickPasteBadge: NSTextField = {
+        let label = NSTextField(labelWithString: "")
+        label.font = .systemFont(ofSize: NSFont.labelFontSize, weight: .regular)
+        label.textColor = .labelColor
+        label.alignment = .center
+        label.isHidden = true
+        label.setContentHuggingPriority(.required, for: .horizontal)
+        label.setContentCompressionResistancePriority(.required, for: .horizontal)
+        return label
+    }()
 
     // MARK: - State
 
@@ -39,6 +79,13 @@ final class FloatingCardRowView: NSView {
 
     var quickPasteIndex: Int? {
         didSet { updateQuickPasteBadge() }
+    }
+
+    var showPlainTextIndicator: Bool = false {
+        didSet {
+            plainTextIcon.isHidden = !showPlainTextIndicator
+            updateBadgeVisibility()
+        }
     }
 
     // MARK: - Callbacks
@@ -102,12 +149,10 @@ final class FloatingCardRowView: NSView {
         timestampLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         backgroundView.addSubview(timestampLabel)
 
-        // 快速粘贴角标
-        quickPasteBadge.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .regular)
-        quickPasteBadge.textColor = .labelColor
-        quickPasteBadge.alignment = .right
-        quickPasteBadge.isHidden = true
-        backgroundView.addSubview(quickPasteBadge)
+        badgeBgView.addSubview(badgeStackView)
+        badgeStackView.addArrangedSubview(plainTextIcon)
+        badgeStackView.addArrangedSubview(quickPasteBadge)
+        backgroundView.addSubview(badgeBgView)
 
         chipTagIcon.imageScaling = .scaleProportionallyUpOrDown
         chipTagIcon.image = NSImage(systemSymbolName: "tag.fill", accessibilityDescription: nil)
@@ -133,9 +178,15 @@ final class FloatingCardRowView: NSView {
             make.centerY.equalToSuperview()
         }
 
-        quickPasteBadge.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().offset(-Const.space6)
-            make.bottom.equalToSuperview().offset(-Const.space4)
+        badgeBgView.snp.makeConstraints { make in
+            make.trailing.equalToSuperview().inset(Const.space6)
+            make.bottom.equalToSuperview().inset(Const.space4)
+            make.height.equalTo(16)
+        }
+
+        badgeStackView.snp.makeConstraints { make in
+            make.centerY.equalToSuperview()
+            make.leading.trailing.equalToSuperview().inset(Const.space2)
         }
 
         chipTagIcon.snp.makeConstraints { make in
@@ -198,6 +249,8 @@ final class FloatingCardRowView: NSView {
             updateKeywordInContentSubview(keyword: keyword, model: model)
         }
 
+        updateBadgeAppearance(for: model)
+
         self.quickPasteIndex = quickPasteIndex
 
         updateSelection(isSelected: isSelected, isFocused: isFocused)
@@ -234,12 +287,21 @@ final class FloatingCardRowView: NSView {
         if let idx = quickPasteIndex {
             quickPasteBadge.stringValue = "\(idx)"
             quickPasteBadge.isHidden = false
-            if let model = currentModel {
-                quickPasteBadge.textColor = model.colors().1
-            }
         } else {
             quickPasteBadge.isHidden = true
         }
+        updateBadgeVisibility()
+    }
+
+    private func updateBadgeVisibility() {
+        badgeBgView.isHidden = plainTextIcon.isHidden && quickPasteBadge.isHidden
+    }
+
+    private func updateBadgeAppearance(for model: PasteboardModel) {
+        let (bgColor, tintColor) = model.colors()
+        badgeBgView.dynamicBackgroundColor = bgColor
+        plainTextIcon.contentTintColor = tintColor
+        quickPasteBadge.textColor = tintColor
     }
 
     override func mouseDown(with event: NSEvent) {

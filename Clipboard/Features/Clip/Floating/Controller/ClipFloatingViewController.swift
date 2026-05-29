@@ -38,6 +38,13 @@ final class ClipFloatingViewController: NSViewController {
         }
     }
 
+    var isPlainTextModifierPressed: Bool = false {
+        didSet {
+            guard oldValue != isPlainTextModifierPressed else { return }
+            floatingContentView.historyView.setIsPlainTextModifierPressed(isPlainTextModifierPressed)
+        }
+    }
+
     override func loadView() {
         view = NSView()
     }
@@ -121,6 +128,7 @@ final class ClipFloatingViewController: NSViewController {
         }
         closePreview()
         isQuickPastePressed = false
+        isPlainTextModifierPressed = false
         PasteDataStore.main.clearExpiredData()
     }
 }
