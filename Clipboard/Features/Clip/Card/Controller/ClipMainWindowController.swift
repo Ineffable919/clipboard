@@ -13,6 +13,8 @@ final class ClipMainWindowController: NSWindowController {
 
     private var targetVisible = false
 
+    private var slideAnimationGeneration = 0
+
     var isVisible: Bool {
         targetVisible
     }
@@ -86,6 +88,9 @@ extension ClipMainWindowController {
 
         snapToPresentedPosition(view)
 
+        suppressSearchFocusRing(true)
+        slideAnimationGeneration += 1
+
         NSAnimationContext.runAnimationGroup({ context in
             context.duration = Const.hideDuration
             view?.animator().setFrameOrigin(NSPoint(x: 0, y: -height))
@@ -123,10 +128,24 @@ extension ClipMainWindowController {
             NSApp.activate(ignoringOtherApps: true)
         }
 
+        suppressSearchFocusRing(true)
+        slideAnimationGeneration += 1
+        let generation = slideAnimationGeneration
+
         NSAnimationContext.runAnimationGroup { context in
             context.duration = Const.showDuration
             view?.animator().setFrameOrigin(.zero)
+        } completionHandler: { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self, generation == self.slideAnimationGeneration, self.targetVisible else { return }
+                self.suppressSearchFocusRing(false)
+            }
         }
+    }
+
+    private func suppressSearchFocusRing(_ suppressed: Bool) {
+        (contentViewController as? ClipMainViewController)?
+            .setSearchFocusRingSuppressed(suppressed)
     }
 
     private func snapToPresentedPosition(_ view: NSView?) {

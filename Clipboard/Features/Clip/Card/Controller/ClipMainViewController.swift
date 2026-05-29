@@ -236,11 +236,10 @@ extension ClipMainViewController {
                 self?.flagsChangedEvent(event)
             }
         }
+    }
 
-        NSAnimationContext.runAnimationGroup { context in
-            context.duration = Const.showDuration
-            self.view.animator().setFrameOrigin(.zero)
-        }
+    func setSearchFocusRingSuppressed(_ suppressed: Bool) {
+        topBarView.searchField.setFocusRingSuppressed(suppressed)
     }
 
     func resetState() {
