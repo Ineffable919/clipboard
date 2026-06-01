@@ -190,6 +190,17 @@ final class ClipMainViewController: NSViewController {
         view.isHidden = true
         return view
     }()
+
+    lazy var dropOverlayView: ClipDropOverlayView = {
+        let view = ClipDropOverlayView()
+        view.canAcceptDrag = { [weak self] draggingInfo in
+            self?.canAcceptExternalDrop(draggingInfo) == true
+        }
+        view.acceptDrag = { [weak self] draggingInfo in
+            self?.acceptExternalDrop(draggingInfo) == true
+        }
+        return view
+    }()
 }
 
 // MARK: - 生命周期
@@ -263,6 +274,7 @@ extension ClipMainViewController {
         }
         isQuickPastePressed = false
         isPlainTextModifierPressed = false
+        dropOverlayView.resetDragState()
     }
 }
 
@@ -276,6 +288,7 @@ extension ClipMainViewController {
         contentView.addSubview(scrollView)
         contentView.addSubview(topBarView)
         contentView.addSubview(emptyStateView)
+        contentView.addSubview(dropOverlayView)
         setupPauseIndicator()
 
         scrollView.snp.makeConstraints { make in
@@ -295,6 +308,10 @@ extension ClipMainViewController {
             make.center.equalTo(scrollView)
             make.leading.greaterThanOrEqualTo(scrollView).offset(16)
             make.trailing.lessThanOrEqualTo(scrollView).offset(-16)
+        }
+
+        dropOverlayView.snp.makeConstraints { make in
+            make.edges.equalTo(scrollView)
         }
     }
 

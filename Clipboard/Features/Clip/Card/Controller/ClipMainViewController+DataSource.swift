@@ -78,10 +78,11 @@ extension ClipMainViewController: NSCollectionViewDelegate {
         proposedIndexPath _: AutoreleasingUnsafeMutablePointer<NSIndexPath>,
         dropOperation _: UnsafeMutablePointer<NSCollectionView.DropOperation>
     ) -> NSDragOperation {
-        guard !(draggingInfo.draggingSource is NSCollectionView) else { return [] }
-        let pb = draggingInfo.draggingPasteboard
-        guard pb.canReadItem(withDataConformingToTypes: Self.dropSupportedTypes) else { return [] }
-        dragSourceApp = NSWorkspace.shared.frontmostApplication
+        guard canAcceptExternalDrop(draggingInfo) else {
+            dropOverlayView.resetDragState()
+            return []
+        }
+        dropOverlayView.setOverlayVisible(true)
         return .copy
     }
 
@@ -91,12 +92,33 @@ extension ClipMainViewController: NSCollectionViewDelegate {
         indexPath _: IndexPath,
         dropOperation _: NSCollectionView.DropOperation
     ) -> Bool {
-        let accepted = db.addNewItem(draggingInfo.draggingPasteboard, sourceApp: dragSourceApp, chipId: store.selectedChipId)
-        dragSourceApp = nil
-        return accepted
+        acceptExternalDrop(draggingInfo)
     }
 
     private static let dropSupportedTypes = PasteboardType.supportTypes.map(\.rawValue)
+}
+
+// MARK: - External Drop
+
+extension ClipMainViewController {
+    func canAcceptExternalDrop(_ draggingInfo: any NSDraggingInfo) -> Bool {
+        guard !(draggingInfo.draggingSource is NSCollectionView) else { return false }
+        let pasteboard = draggingInfo.draggingPasteboard
+        guard pasteboard.canReadItem(withDataConformingToTypes: Self.dropSupportedTypes) else { return false }
+        dragSourceApp = NSWorkspace.shared.frontmostApplication
+        return true
+    }
+
+    func acceptExternalDrop(_ draggingInfo: any NSDraggingInfo) -> Bool {
+        let accepted = db.addNewItem(
+            draggingInfo.draggingPasteboard,
+            sourceApp: dragSourceApp,
+            chipId: store.selectedChipId
+        )
+        dragSourceApp = nil
+        dropOverlayView.resetDragState()
+        return accepted
+    }
 }
 
 // MARK: - Multi Selection

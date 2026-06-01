@@ -600,6 +600,42 @@
         }
       }
     },
+    "dropOverlaySubtitle" : {
+      "comment" : "Drop overlay subtitle shown while dragging content into the main list",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supports text, files, images, and more"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支持文本、文件、图片等所有类型"
+          }
+        }
+      }
+    },
+    "dropOverlayTitle" : {
+      "comment" : "Drop overlay title shown while dragging content into the main list",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drop here to save"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拖拽到此以保存"
+          }
+        }
+      }
+    },
     "emptyHint" : {
       "comment" : "Empty state hint when there is no clipboard history",
       "extractionState" : "manual",

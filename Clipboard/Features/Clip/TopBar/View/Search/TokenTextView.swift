@@ -413,7 +413,7 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
             y: textContainerInset.height + topPadding
         )
 
-        let placeholderColor = NSColor.labelColor.withAlphaComponent(0.35)
+        let placeholderColor = NSColor.secondaryLabelColor
 
         let attrs: [NSAttributedString.Key: Any] = [
             .font: font,
