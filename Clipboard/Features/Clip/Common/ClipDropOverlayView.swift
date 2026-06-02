@@ -127,9 +127,11 @@ final class ClipDropOverlayView: NSView {
     }
 
     private func updateColors() {
-        dimmingView.layer?.backgroundColor = NSColor.windowBackgroundColor
-            .withAlphaComponent(0.78)
-            .cgColor
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            dimmingView.layer?.backgroundColor = NSColor.windowBackgroundColor
+                .withAlphaComponent(0.78)
+                .cgColor
+        }
         titleLabel.textColor = .labelColor
         subtitleLabel.textColor = .secondaryLabelColor
         dropZoneView.updateColors()
@@ -192,13 +194,15 @@ private final class DropZoneView: NSView {
     }
 
     func updateColors() {
-        fillLayer.backgroundColor = NSColor.controlBackgroundColor
-            .withAlphaComponent(0.86)
-            .cgColor
-        fillLayer.shadowColor = NSColor.controlAccentColor.cgColor
-        borderLayer.strokeColor = NSColor.controlAccentColor
-            .withAlphaComponent(0.86)
-            .cgColor
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            fillLayer.backgroundColor = NSColor.controlBackgroundColor
+                .withAlphaComponent(0.86)
+                .cgColor
+            fillLayer.shadowColor = NSColor.controlAccentColor.cgColor
+            borderLayer.strokeColor = NSColor.controlAccentColor
+                .withAlphaComponent(0.86)
+                .cgColor
+        }
     }
 
     private func setupLayers() {
@@ -259,10 +263,12 @@ private final class DropIllustrationView: NSView {
     }
 
     func updateColors() {
-        glowView.layer?.backgroundColor = NSColor.controlAccentColor
-            .withAlphaComponent(0.14)
-            .cgColor
-        glowView.layer?.shadowColor = NSColor.controlAccentColor.cgColor
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            glowView.layer?.backgroundColor = NSColor.controlAccentColor
+                .withAlphaComponent(0.14)
+                .cgColor
+            glowView.layer?.shadowColor = NSColor.controlAccentColor.cgColor
+        }
         folderView.needsDisplay = true
         imageBadge.updateColors()
         documentBadge.updateColors()
@@ -298,8 +304,8 @@ private final class DropIllustrationView: NSView {
         glowView.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
             make.bottom.equalToSuperview().offset(-3)
-            make.width.equalTo(86)
-            make.height.equalTo(58)
+            make.width.equalTo(88)
+            make.height.equalTo(64)
         }
 
         folderView.snp.makeConstraints { make in
@@ -317,21 +323,21 @@ private final class DropIllustrationView: NSView {
 
         documentBadge.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.top.equalToSuperview()
+            make.top.equalToSuperview().offset(-16)
             make.width.equalTo(32)
             make.height.equalTo(40)
         }
 
         imageBadge.snp.makeConstraints { make in
-            make.centerX.equalTo(documentBadge).offset(-36)
-            make.centerY.equalTo(documentBadge).offset(24)
+            make.centerX.equalTo(documentBadge).offset(-45)
+            make.centerY.equalTo(documentBadge).offset(12)
             make.width.equalTo(32)
             make.height.equalTo(40)
         }
 
         textBadge.snp.makeConstraints { make in
-            make.centerX.equalTo(documentBadge).offset(48)
-            make.centerY.equalTo(documentBadge)
+            make.centerX.equalTo(documentBadge).offset(45)
+            make.centerY.equalTo(documentBadge).offset(12)
             make.width.equalTo(32)
             make.height.equalTo(40)
         }
@@ -342,7 +348,9 @@ private final class DropFolderView: NSView {
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         wantsLayer = true
-        layer?.shadowColor = NSColor.controlAccentColor.cgColor
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            layer?.shadowColor = NSColor.controlAccentColor.cgColor
+        }
         layer?.shadowOpacity = 0.20
         layer?.shadowRadius = 18
         layer?.shadowOffset = CGSize(width: 0, height: 10)
@@ -355,7 +363,9 @@ private final class DropFolderView: NSView {
 
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
-        layer?.shadowColor = NSColor.controlAccentColor.cgColor
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            layer?.shadowColor = NSColor.controlAccentColor.cgColor
+        }
         needsDisplay = true
     }
 
@@ -445,18 +455,31 @@ private final class FloatingBadgeView: NSView {
         updateColors()
     }
 
-    override func layout() {
-        super.layout()
-        frameCenterRotation = rotation
+    override var wantsUpdateLayer: Bool { true }
+
+    override func updateLayer() {
+        let backgroundAlpha: CGFloat = prominence == .soft ? 0.08 : 0.13
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            layer?.backgroundColor = NSColor.controlAccentColor
+                .withAlphaComponent(backgroundAlpha)
+                .cgColor
+        }
+        guard bounds.size != .zero else { return }
+        let cx = bounds.midX, cy = bounds.midY
+        let angle = rotation * .pi / 180
+        var t = CATransform3DTranslate(CATransform3DIdentity, cx, cy, 0)
+        t = CATransform3DRotate(t, angle, 0, 0, 1)
+        t = CATransform3DTranslate(t, -cx, -cy, 0)
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        layer?.transform = t
+        CATransaction.commit()
     }
 
     func updateColors() {
-        let backgroundAlpha: CGFloat = prominence == .soft ? 0.08 : 0.13
         let symbolAlpha: CGFloat = prominence == .soft ? 0.34 : 0.68
-        layer?.backgroundColor = NSColor.controlAccentColor
-            .withAlphaComponent(backgroundAlpha)
-            .cgColor
         imageView.contentTintColor = NSColor.controlAccentColor.withAlphaComponent(symbolAlpha)
+        needsDisplay = true
     }
 
     private func setupView() {
