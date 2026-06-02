@@ -62,10 +62,10 @@ final class ClipPreviewContentView: NSView {
 
     // MARK: - Public API
 
-    func configure(with model: PasteboardModel) {
+    func configure(with model: PasteboardModel, maxContentH: CGFloat = Const.maxTextheight) {
         reset()
 
-        let contentView = makeContentView(for: model)
+        let contentView = makeContentView(for: model, maxContentH: maxContentH)
         addSubview(contentView)
         contentView.snp.makeConstraints { $0.edges.equalToSuperview() }
         currentContentView = contentView
@@ -79,8 +79,8 @@ final class ClipPreviewContentView: NSView {
 
     // MARK: - Size Hint
 
-    /// 根据 model 类型计算内容区域的理想高度
-    static func preferredContentHeight(for model: PasteboardModel, width: CGFloat) -> CGFloat {
+    /// 根据 model 类型计算内容区域的理想高度，maxImageH 由调用侧传入屏幕可用内容高度
+    static func preferredContentHeight(for model: PasteboardModel, width: CGFloat, maxImageH: CGFloat = Const.maxTextheight) -> CGFloat {
         switch model.type {
         case .color:
             return 270
@@ -92,7 +92,7 @@ final class ClipPreviewContentView: NSView {
             }
             return textContentHeight(for: model, width: width)
         case .image:
-            return imageContentHeight(for: model)
+            return imageContentHeight(for: model, maxH: maxImageH)
         case .string, .rich:
             return textContentHeight(for: model, width: width)
         case .none:
@@ -127,23 +127,23 @@ final class ClipPreviewContentView: NSView {
         return model.attributeString
     }
 
-    private static func imageContentHeight(for model: PasteboardModel) -> CGFloat {
+    private static func imageContentHeight(for model: PasteboardModel, maxH: CGFloat) -> CGFloat {
         guard let size = model.cachedImageSize, size.width > 0, size.height > 0 else {
             return 270.0
         }
         let availableW = Const.maxPreviewWidth - Const.space12 * 2
-        let scale = min(availableW / size.width, 480.0 / size.height, 1.0)
+        let scale = min(availableW / size.width, maxH / size.height, 1.0)
         return ceil(size.height * scale)
     }
 
     // MARK: - Factory
 
-    private func makeContentView(for model: PasteboardModel) -> NSView {
+    private func makeContentView(for model: PasteboardModel, maxContentH: CGFloat) -> NSView {
         switch model.type {
         case .color:
             PreviewColorView(model: model)
         case .image:
-            PreviewImageView(model: model)
+            PreviewImageView(model: model, maxContentH: maxContentH)
         case .file:
             PreviewFileView(model: model)
         case .link:
@@ -337,7 +337,7 @@ final class PreviewColorView: NSView {
 final class PreviewImageView: NSView, PreviewResettable {
     private let liveTextView: PreviewLiveTextView
 
-    init(model: PasteboardModel) {
+    init(model: PasteboardModel, maxContentH: CGFloat = Const.maxTextheight) {
         liveTextView = PreviewLiveTextView(imageData: model.data)
         super.init(frame: .zero)
         wantsLayer = true
@@ -350,7 +350,7 @@ final class PreviewImageView: NSView, PreviewResettable {
 
         if let size = model.cachedImageSize, size.width > 0, size.height > 0 {
             let availableW = Const.maxPreviewWidth - Const.space12 * 2
-            let scale = min(availableW / size.width, Const.maxContentHeight / size.height, 1.0)
+            let scale = min(availableW / size.width, maxContentH / size.height, 1.0)
             let displayW = ceil(size.width * scale)
             let displayH = ceil(size.height * scale)
             liveTextView.snp.makeConstraints { make in

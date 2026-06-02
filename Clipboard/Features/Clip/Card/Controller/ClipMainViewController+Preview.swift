@@ -13,8 +13,16 @@ extension ClipMainViewController {
         for model: PasteboardModel,
         relativeTo view: NSView
     ) {
+        let maxHeight: CGFloat
+        if let window = view.window, let screen = window.screen {
+            let anchorOnScreen = window.convertToScreen(view.convert(view.bounds, to: nil))
+            maxHeight = screen.visibleFrame.maxY - anchorOnScreen.maxY
+        } else {
+            maxHeight = Const.maxPreviewHeight
+        }
+
         closePreviewPopover()
-        let popover = ClipPreviewPopover(model: model) { [weak self] in
+        let popover = ClipPreviewPopover(model: model, maxHeight: maxHeight) { [weak self] in
             self?.setFocusRegion(.popover)
         }
         popover.onPinToChip = { [weak self] model, chipId in

@@ -56,7 +56,7 @@ final class ClipPreviewController: NSViewController {
     // MARK: - Public API
 
     @discardableResult
-    func configure(with model: PasteboardModel) -> NSSize {
+    func configure(with model: PasteboardModel, maxHeight: CGFloat = Const.maxPreviewHeight) -> NSSize {
         metadataTask?.cancel()
         metadataTask = nil
 
@@ -66,8 +66,11 @@ final class ClipPreviewController: NSViewController {
         defaultAppForFile = nil
         fileSize = nil
 
+        let cappedH = min(Const.maxPreviewHeight, maxHeight)
+        let maxContentH = max(cappedH - ClipPreviewPopover.chrome, 0)
+
         headerView.configure(model: model, appIcon: nil)
-        contentView.configure(with: model)
+        contentView.configure(with: model, maxContentH: maxContentH)
         footerView.configure(
             model: model,
             fileSize: nil,
@@ -75,7 +78,7 @@ final class ClipPreviewController: NSViewController {
             defaultAppForFile: nil
         )
 
-        let size = ClipPreviewPopover.fitSize(for: model)
+        let size = ClipPreviewPopover.fitSize(for: model, maxHeight: maxHeight)
         view.frame = NSRect(origin: .zero, size: size)
         view.layoutSubtreeIfNeeded()
 

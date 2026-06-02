@@ -21,7 +21,7 @@ final class ClipPreviewPopover: NSPopover {
 
     // MARK: - Init
 
-    init(model: PasteboardModel, onContentInteraction: (() -> Void)? = nil) {
+    init(model: PasteboardModel, maxHeight: CGFloat = Const.maxPreviewHeight, onContentInteraction: (() -> Void)? = nil) {
         self.onContentInteraction = onContentInteraction
         super.init()
         behavior = .transient
@@ -30,7 +30,7 @@ final class ClipPreviewPopover: NSPopover {
 
         _ = previewVC.view
 
-        configure(with: model)
+        configure(with: model, maxHeight: maxHeight)
         installKeyMonitor()
     }
 
@@ -46,8 +46,8 @@ final class ClipPreviewPopover: NSPopover {
 
     // MARK: - Public API
 
-    func configure(with model: PasteboardModel) {
-        let size = previewVC.configure(with: model)
+    func configure(with model: PasteboardModel, maxHeight: CGFloat = Const.maxPreviewHeight) {
+        let size = previewVC.configure(with: model, maxHeight: maxHeight)
         contentSize = size
 
         previewVC.onContentInteraction = { [weak self] in
@@ -86,22 +86,28 @@ final class ClipPreviewPopover: NSPopover {
 
     // MARK: - Size Calculation
 
-    /// 根据 model 类型计算 Popover 的最佳尺寸
-    static func fitSize(for model: PasteboardModel) -> NSSize {
-        let width = clampedWidth(for: model)
+    // header(24) + space8 + space8 + footer(24) + inset*2(12+12)
+    static let chrome: CGFloat = 24 + Const.space8 + Const.space8 + 24 + Const.space12 * 2
+
+    /// 根据 model 类型计算 Popover 的最佳尺寸，maxHeight 由调用侧传入可用屏幕高度
+    static func fitSize(for model: PasteboardModel, maxHeight: CGFloat = Const.maxPreviewHeight) -> NSSize {
+        let cap = min(Const.maxPreviewHeight, maxHeight)
+        let contentMaxH = max(cap - chrome, 0)
+
+        let width = clampedWidth(for: model, contentMaxH: contentMaxH)
         let contentH = ClipPreviewContentView.preferredContentHeight(
             for: model,
-            width: width
+            width: width,
+            maxImageH: contentMaxH
         )
-        // header(24) + space8 + content + space8 + footer(24) + 上下 inset(space12 * 2)
-        let totalH = 24 + Const.space8 + contentH + Const.space8 + 24 + Const.space12 * 2
-        let clampedH = min(max(totalH, Const.minPreviewHeight), Const.maxPreviewHeight)
+        let totalH = chrome + contentH
+        let clampedH = min(max(totalH, Const.minPreviewHeight), cap)
         return NSSize(width: width, height: clampedH)
     }
 
     // MARK: - Width Calculation
 
-    private static func clampedWidth(for model: PasteboardModel) -> CGFloat {
+    private static func clampedWidth(for model: PasteboardModel, contentMaxH: CGFloat = Const.maxTextheight) -> CGFloat {
         switch model.type {
         case .color:
             return 400
@@ -113,7 +119,7 @@ final class ClipPreviewPopover: NSPopover {
             }
             let scale = min(
                 Const.maxPreviewWidth / size.width,
-                Const.maxContentHeight / size.height,
+                contentMaxH / size.height,
                 1.0
             )
             let displayW = ceil(size.width * scale) + Const.space12 * 2

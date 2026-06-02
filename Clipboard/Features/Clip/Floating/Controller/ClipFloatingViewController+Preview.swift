@@ -22,8 +22,21 @@ extension ClipFloatingViewController {
         let model = historyView.dataList[index]
         let anchorView = historyView.anchorViewForItem(at: index)
 
+        let maxHeight: CGFloat
+        let preferredEdge: NSRectEdge
+        if let window = anchorView.window, let screen = window.screen {
+            maxHeight = screen.visibleFrame.height
+            let anchorOnScreen = window.convertToScreen(anchorView.convert(anchorView.bounds, to: nil))
+            let spaceRight = screen.visibleFrame.maxX - anchorOnScreen.maxX
+            let spaceLeft = anchorOnScreen.minX - screen.visibleFrame.minX
+            preferredEdge = spaceRight >= spaceLeft ? .maxX : .minX
+        } else {
+            maxHeight = Const.maxPreviewHeight
+            preferredEdge = .maxX
+        }
+
         closePreview()
-        let popover = ClipPreviewPopover(model: model) { [weak self] in
+        let popover = ClipPreviewPopover(model: model, maxHeight: maxHeight) { [weak self] in
             self?.focusRegion = .popover
         }
         popover.onPinToChip = { [weak self] model, chipId in
@@ -38,7 +51,7 @@ extension ClipFloatingViewController {
         }
         popover.delegate = self
         previewPopover = popover
-        popover.show(relativeTo: anchorView.bounds, of: anchorView, preferredEdge: .maxX)
+        popover.show(relativeTo: anchorView.bounds, of: anchorView, preferredEdge: preferredEdge)
     }
 
     func closePreview() {
