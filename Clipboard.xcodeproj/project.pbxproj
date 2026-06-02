@@ -34,7 +34,7 @@
 		B1222F9B2FCF039B00FF7C3D /* Exceptions for "Clipboard" folder in "clip-mcp" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Shared/ClipboardSchema.swift,
+				Core/Shared/ClipboardSchema.swift,
 			);
 			target = B1222F8C2FCF029B00FF7C3D /* clip-mcp */;
 		};

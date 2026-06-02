@@ -90,7 +90,7 @@ struct SettingView: View {
                 case .storage:
                     StorageSettingView()
                 case .ai:
-                    MCPSettingsView()
+                    AISettingsView()
                 case .about:
                     AboutSettingView()
                 }

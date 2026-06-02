@@ -1,6 +1,5 @@
 // ClipboardSchema.swift
-// Shared between App and clip-mcp targets. Both targets must include this file.
-// Do not add AppKit/SwiftUI imports — keeps this pure Foundation + SQLite.
+// Shared between App and clip-mcp targets.
 
 import Foundation
 import SQLite

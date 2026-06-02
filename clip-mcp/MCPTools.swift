@@ -36,7 +36,7 @@ struct MCPTools {
 
     func call(params: [String: Any]) -> [String: Any] {
         guard FileManager.default.fileExists(atPath: ClipboardPaths.mcpEnableFlag) else {
-            return mcpError("MCP is disabled. Enable it in Clipboard → Settings → MCP.")
+            return mcpError("MCP is disabled. Enable it in Clipboard → Settings → AI.")
         }
         guard let name = params["name"] as? String,
               let arguments = params["arguments"] as? [String: Any]

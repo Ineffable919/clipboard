@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct MCPSettingsView: View {
+struct AISettingsView: View {
     @State private var isEnabled = MCPEnableFlag.isEnabled
     @State private var copiedKey: String? = nil
 
@@ -71,7 +71,7 @@ struct MCPSettingsView: View {
 
                         VStack(spacing: 0) {
                             ForEach(Array(clients.enumerated()), id: \.offset) { index, client in
-                                MCPClientRow(
+                                AIClientRow(
                                     label: client.label,
                                     content: client.content,
                                     note: client.note,
@@ -97,9 +97,9 @@ struct MCPSettingsView: View {
     }
 }
 
-// MARK: - MCPClientRow
+// MARK: - AIClientRow
 
-private struct MCPClientRow: View {
+private struct AIClientRow: View {
     let label: String
     let content: String
     let note: String?
@@ -161,6 +161,6 @@ private struct MCPClientRow: View {
 }
 
 #Preview {
-    MCPSettingsView()
+    AISettingsView()
         .frame(width: Const.settingWidth - 150, height: Const.settingHeight)
 }
