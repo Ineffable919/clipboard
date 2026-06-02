@@ -21,6 +21,20 @@
                ReferencedContainer = "container:Clipboard.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "B1222F8C2FCF029B00FF7C3D"
+               BuildableName = "clip-mcp"
+               BlueprintName = "clip-mcp"
+               ReferencedContainer = "container:Clipboard.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction

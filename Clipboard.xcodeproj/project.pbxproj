@@ -7,16 +7,37 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B1222F9E2FCF03D700FF7C3D /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = B1222F9D2FCF03D700FF7C3D /* SQLite */; };
 		B166C0812ECB2A330068A689 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = B166C0802ECB2A330068A689 /* Sparkle */; settings = {ATTRIBUTES = (Required, ); }; };
 		B1A59D1A2F876C7E00AFCF52 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = B1A59D192F876C7E00AFCF52 /* SnapKit */; };
 		B1B4ECAF2F2AFBAD00AFE657 /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = B1B4ECAE2F2AFBAD00AFE657 /* SQLite */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		B1222F8B2FCF029B00FF7C3D /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		B1222F8D2FCF029B00FF7C3D /* clip-mcp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "clip-mcp"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B1FADD402E7E92B3005CEFCF /* Clipboard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Clipboard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		B1222F9B2FCF039B00FF7C3D /* Exceptions for "Clipboard" folder in "clip-mcp" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Shared/ClipboardSchema.swift,
+			);
+			target = B1222F8C2FCF029B00FF7C3D /* clip-mcp */;
+		};
 		B165A7C52E9FE5B700A75787 /* Exceptions for "Clipboard" folder in "Clipboard" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -27,10 +48,16 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		B1222F8E2FCF029B00FF7C3D /* clip-mcp */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "clip-mcp";
+			sourceTree = "<group>";
+		};
 		B1FADD422E7E92B3005CEFCF /* Clipboard */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				B165A7C52E9FE5B700A75787 /* Exceptions for "Clipboard" folder in "Clipboard" target */,
+				B1222F9B2FCF039B00FF7C3D /* Exceptions for "Clipboard" folder in "clip-mcp" target */,
 			);
 			path = Clipboard;
 			sourceTree = "<group>";
@@ -38,6 +65,14 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		B1222F8A2FCF029B00FF7C3D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B1222F9E2FCF03D700FF7C3D /* SQLite in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B1FADD3D2E7E92B3005CEFCF /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -51,10 +86,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		B1222F9C2FCF03D700FF7C3D /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		B1FADD372E7E92B3005CEFCF = {
 			isa = PBXGroup;
 			children = (
 				B1FADD422E7E92B3005CEFCF /* Clipboard */,
+				B1222F8E2FCF029B00FF7C3D /* clip-mcp */,
+				B1222F9C2FCF03D700FF7C3D /* Frameworks */,
 				B1FADD412E7E92B3005CEFCF /* Products */,
 			);
 			sourceTree = "<group>";
@@ -63,6 +107,7 @@
 			isa = PBXGroup;
 			children = (
 				B1FADD402E7E92B3005CEFCF /* Clipboard.app */,
+				B1222F8D2FCF029B00FF7C3D /* clip-mcp */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,6 +115,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		B1222F8C2FCF029B00FF7C3D /* clip-mcp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B1222F912FCF029B00FF7C3D /* Build configuration list for PBXNativeTarget "clip-mcp" */;
+			buildPhases = (
+				B1222F892FCF029B00FF7C3D /* Sources */,
+				B1222F8A2FCF029B00FF7C3D /* Frameworks */,
+				B1222F8B2FCF029B00FF7C3D /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				B1222F8E2FCF029B00FF7C3D /* clip-mcp */,
+			);
+			name = "clip-mcp";
+			packageProductDependencies = (
+				B1222F9D2FCF03D700FF7C3D /* SQLite */,
+			);
+			productName = "clip-mcp";
+			productReference = B1222F8D2FCF029B00FF7C3D /* clip-mcp */;
+			productType = "com.apple.product-type.tool";
+		};
 		B1FADD3F2E7E92B3005CEFCF /* Clipboard */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = B1FADD4B2E7E92B3005CEFCF /* Build configuration list for PBXNativeTarget "Clipboard" */;
@@ -102,9 +170,12 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 2600;
+				LastSwiftUpdateCheck = 2650;
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
+					B1222F8C2FCF029B00FF7C3D = {
+						CreatedOnToolsVersion = 26.5;
+					};
 					B1FADD3F2E7E92B3005CEFCF = {
 						CreatedOnToolsVersion = 26.0;
 					};
@@ -130,6 +201,7 @@
 			projectRoot = "";
 			targets = (
 				B1FADD3F2E7E92B3005CEFCF /* Clipboard */,
+				B1222F8C2FCF029B00FF7C3D /* clip-mcp */,
 			);
 		};
 /* End PBXProject section */
@@ -145,6 +217,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		B1222F892FCF029B00FF7C3D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B1FADD3C2E7E92B3005CEFCF /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -155,6 +234,30 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		B1222F922FCF029B00FF7C3D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		B1222F932FCF029B00FF7C3D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 		B1FADD492E7E92B3005CEFCF /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -386,6 +489,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		B1222F912FCF029B00FF7C3D /* Build configuration list for PBXNativeTarget "clip-mcp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B1222F922FCF029B00FF7C3D /* Debug */,
+				B1222F932FCF029B00FF7C3D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		B1FADD3B2E7E92B3005CEFCF /* Build configuration list for PBXProject "Clipboard" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -434,6 +546,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		B1222F9D2FCF03D700FF7C3D /* SQLite */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B1B4ECAD2F2AFBAD00AFE657 /* XCRemoteSwiftPackageReference "SQLite" */;
+			productName = SQLite;
+		};
 		B166C0802ECB2A330068A689 /* Sparkle */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = B166C07F2ECB2A330068A689 /* XCRemoteSwiftPackageReference "Sparkle" */;

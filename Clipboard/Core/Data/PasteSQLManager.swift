@@ -9,23 +9,7 @@ import AppKit
 import Foundation
 import SQLite
 
-struct Col {
-    nonisolated static let id = Expression<Int64>("id")
-    nonisolated static let uniqueId = Expression<String>("unique_id")
-    nonisolated static let type = Expression<String>("type")
-    nonisolated static let data = Expression<Data>("data")
-    nonisolated static let showData = Expression<Data?>("show_data")
-    nonisolated static let ts = Expression<Int64>("timestamp")
-    nonisolated static let appPath = Expression<String>("app_path")
-    nonisolated static let appName = Expression<String>("app_name")
-    nonisolated static let searchText = Expression<String>("search_text")
-    nonisolated static let length = Expression<Int>("length")
-    nonisolated static let group = Expression<Int>("group")
-    nonisolated static let tag = Expression<String?>("tag")
-    nonisolated static let hidden = Expression<Int>("hidden")
-
-    private init() {}
-}
+// Col is defined in Clipboard/Shared/ClipboardSchema.swift (shared with clip-mcp target)
 
 actor PasteSQLManager {
     static let manager = PasteSQLManager()
@@ -75,6 +59,7 @@ actor PasteSQLManager {
         table = tab
 
         if let conn = connection {
+            try? conn.execute("PRAGMA journal_mode=WAL")
             Self.createTable(on: conn, table: tab)
         }
     }
