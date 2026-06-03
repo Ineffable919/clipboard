@@ -30,8 +30,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "B1222F8C2FCF029B00FF7C3D"
-               BuildableName = "clip-mcp"
-               BlueprintName = "clip-mcp"
+               BuildableName = "clipmcp"
+               BlueprintName = "clipmcp"
                ReferencedContainer = "container:Clipboard.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>

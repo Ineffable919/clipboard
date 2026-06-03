@@ -172,7 +172,7 @@ struct MCPTools {
     }
 }
 
-// MARK: - SHA-256 (mirrors Data+Extension.swift, local to clip-mcp)
+// MARK: - SHA-256 (mirrors Data+Extension.swift, local to clipmcp)
 
 private extension Data {
     var sha256Hex: String {

@@ -24,6 +24,16 @@
         }
       }
     },
+    "%lld of %lld on" : {
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld on"
+          }
+        }
+      }
+    },
     "aboutApp" : {
       "comment" : "Menu item: About app with app name",
       "extractionState" : "manual",
@@ -293,6 +303,9 @@
           }
         }
       }
+    },
+    "Clipboard MCP" : {
+
     },
     "close" : {
       "comment" : "Accessibility description for close button",
@@ -1212,19 +1225,36 @@
         }
       }
     },
+    "mcpAddTo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add to"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加到"
+          }
+        }
+      }
+    },
     "mcpAddToTools" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add to AI Tools"
+            "value" : "Connected Al Tools"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "添加到 AI 工具"
+            "value" : "连接到 AI 工具"
           }
         }
       }
@@ -1242,6 +1272,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "粘贴到："
+          }
+        }
+      }
+    },
+    "mcpConnected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已连接"
           }
         }
       }
@@ -1286,13 +1333,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Allow AI tools like Claude Code and Codex to read and write your clipboard history."
+            "value" : "Allow AI tools like Claude Code and Codex to access your clipboard history."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "允许 Claude Code、Codex 等 AI 工具读写剪贴板历史。"
+            "value" : "允许 Claude Code、Codex 等 AI 工具访问剪贴板历史。"
           }
         }
       }
@@ -1303,13 +1350,64 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Enable AI Tools"
+            "value" : "Enable MCP"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "启用 AI 工具"
+            "value" : "启用 MCP"
+          }
+        }
+      }
+    },
+    "mcpExposedTools" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exposed tools"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已开放工具"
+          }
+        }
+      }
+    },
+    "mcpRunning" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Running"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "运行中"
+          }
+        }
+      }
+    },
+    "mcpStopped" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stopped"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已停止"
           }
         }
       }
@@ -1961,6 +2059,9 @@
           }
         }
       }
+    },
+    "server stopped · 0 tools exposed" : {
+
     },
     "settingAboutAutomaticallyCheckUpdates" : {
       "comment" : "Toggle label: automatically check for updates",
@@ -3904,6 +4005,9 @@
           }
         }
       }
+    },
+    "stdio · @clipboard/mcp · %lld tools exposed" : {
+
     },
     "tag" : {
       "comment" : "Tag filter section title",

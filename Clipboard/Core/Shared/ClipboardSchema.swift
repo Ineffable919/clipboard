@@ -1,5 +1,5 @@
 // ClipboardSchema.swift
-// Shared between App and clip-mcp targets.
+// Shared between App and clipmcp targets.
 
 import Foundation
 import SQLite

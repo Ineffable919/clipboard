@@ -26,17 +26,17 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		B1222F8D2FCF029B00FF7C3D /* clip-mcp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "clip-mcp"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B1222F8D2FCF029B00FF7C3D /* clipmcp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "clipmcp"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B1FADD402E7E92B3005CEFCF /* Clipboard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Clipboard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		B1222F9B2FCF039B00FF7C3D /* Exceptions for "Clipboard" folder in "clip-mcp" target */ = {
+		B1222F9B2FCF039B00FF7C3D /* Exceptions for "Clipboard" folder in "clipmcp" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Core/Shared/ClipboardSchema.swift,
 			);
-			target = B1222F8C2FCF029B00FF7C3D /* clip-mcp */;
+			target = B1222F8C2FCF029B00FF7C3D /* clipmcp */;
 		};
 		B165A7C52E9FE5B700A75787 /* Exceptions for "Clipboard" folder in "Clipboard" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
@@ -48,16 +48,16 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		B1222F8E2FCF029B00FF7C3D /* clip-mcp */ = {
+		B1222F8E2FCF029B00FF7C3D /* clipmcp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "clip-mcp";
+			path = "clipmcp";
 			sourceTree = "<group>";
 		};
 		B1FADD422E7E92B3005CEFCF /* Clipboard */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				B165A7C52E9FE5B700A75787 /* Exceptions for "Clipboard" folder in "Clipboard" target */,
-				B1222F9B2FCF039B00FF7C3D /* Exceptions for "Clipboard" folder in "clip-mcp" target */,
+				B1222F9B2FCF039B00FF7C3D /* Exceptions for "Clipboard" folder in "clipmcp" target */,
 			);
 			path = Clipboard;
 			sourceTree = "<group>";
@@ -97,7 +97,7 @@
 			isa = PBXGroup;
 			children = (
 				B1FADD422E7E92B3005CEFCF /* Clipboard */,
-				B1222F8E2FCF029B00FF7C3D /* clip-mcp */,
+				B1222F8E2FCF029B00FF7C3D /* clipmcp */,
 				B1222F9C2FCF03D700FF7C3D /* Frameworks */,
 				B1FADD412E7E92B3005CEFCF /* Products */,
 			);
@@ -107,7 +107,7 @@
 			isa = PBXGroup;
 			children = (
 				B1FADD402E7E92B3005CEFCF /* Clipboard.app */,
-				B1222F8D2FCF029B00FF7C3D /* clip-mcp */,
+				B1222F8D2FCF029B00FF7C3D /* clipmcp */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -115,9 +115,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		B1222F8C2FCF029B00FF7C3D /* clip-mcp */ = {
+		B1222F8C2FCF029B00FF7C3D /* clipmcp */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = B1222F912FCF029B00FF7C3D /* Build configuration list for PBXNativeTarget "clip-mcp" */;
+			buildConfigurationList = B1222F912FCF029B00FF7C3D /* Build configuration list for PBXNativeTarget "clipmcp" */;
 			buildPhases = (
 				B1222F892FCF029B00FF7C3D /* Sources */,
 				B1222F8A2FCF029B00FF7C3D /* Frameworks */,
@@ -128,14 +128,14 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				B1222F8E2FCF029B00FF7C3D /* clip-mcp */,
+				B1222F8E2FCF029B00FF7C3D /* clipmcp */,
 			);
-			name = "clip-mcp";
+			name = "clipmcp";
 			packageProductDependencies = (
 				B1222F9D2FCF03D700FF7C3D /* SQLite */,
 			);
-			productName = "clip-mcp";
-			productReference = B1222F8D2FCF029B00FF7C3D /* clip-mcp */;
+			productName = "clipmcp";
+			productReference = B1222F8D2FCF029B00FF7C3D /* clipmcp */;
 			productType = "com.apple.product-type.tool";
 		};
 		B1FADD3F2E7E92B3005CEFCF /* Clipboard */ = {
@@ -201,7 +201,7 @@
 			projectRoot = "";
 			targets = (
 				B1FADD3F2E7E92B3005CEFCF /* Clipboard */,
-				B1222F8C2FCF029B00FF7C3D /* clip-mcp */,
+				B1222F8C2FCF029B00FF7C3D /* clipmcp */,
 			);
 		};
 /* End PBXProject section */
@@ -489,7 +489,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		B1222F912FCF029B00FF7C3D /* Build configuration list for PBXNativeTarget "clip-mcp" */ = {
+		B1222F912FCF029B00FF7C3D /* Build configuration list for PBXNativeTarget "clipmcp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				B1222F922FCF029B00FF7C3D /* Debug */,

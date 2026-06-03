@@ -1,12 +1,45 @@
 import SwiftUI
 
+// MARK: - Tool metadata
+
+private struct MCPToolInfo: Identifiable {
+    let id = UUID()
+    let name: String
+    let description: String
+    let icon: String
+    let color: Color
+
+    static let all: [MCPToolInfo] = [
+        .init(
+            name: "search_clipboard",
+            description: "Search clipboard history by keyword",
+            icon: "magnifyingglass",
+            color: .blue
+        ),
+        .init(
+            name: "write_clipboard",
+            description: "Write plain text to the system clipboard",
+            icon: "bolt.fill",
+            color: .green
+        ),
+    ]
+}
+
+// MARK: - AISettingsView
+
 struct AISettingsView: View {
-    @State private var isEnabled = MCPEnableFlag.isEnabled
+    @State private var isEnabled: Bool
+    @State private var selectedClientIndex = 0
     @State private var copiedKey: String? = nil
+    @State private var enabledTools: Set<String> = Set(MCPToolInfo.all.map(\.name))
+
+    init(initialEnabled: Bool = MCPEnableFlag.isEnabled) {
+        _isEnabled = State(initialValue: initialEnabled)
+    }
 
     private var helperPath: String {
         Bundle.main.bundleURL
-            .appending(path: "Contents/MacOS/clip-mcp")
+            .appending(path: "Contents/MacOS/clipmcp")
             .path
     }
 
@@ -14,12 +47,12 @@ struct AISettingsView: View {
         [
             (
                 label: "Claude Code",
-                content: "claude mcp add --transport stdio clipboard -- \(helperPath)",
+                content: "$ claude mcp add --transport stdio clipboard \\\n  -- \(helperPath)",
                 note: nil
             ),
             (
                 label: "Codex",
-                content: "codex mcp add clipboard -- \(helperPath)",
+                content: "$ codex mcp add clipboard -- \(helperPath)",
                 note: nil
             ),
             (
@@ -41,52 +74,10 @@ struct AISettingsView: View {
     var body: some View {
         ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: Const.space24) {
-
-                // MARK: - Toggle + description
-
-                VStack(alignment: .leading, spacing: Const.space8) {
-                    SettingToggleRow(
-                        title: String(localized: .mcpEnable),
-                        isOn: $isEnabled
-                    )
-                    .onChange(of: isEnabled) { _, newValue in
-                        MCPEnableFlag.setEnabled(newValue)
-                    }
-
-                    Text(.mcpDescription)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .padding(.bottom, Const.space4)
-                }
-                .padding(.horizontal, Const.space16)
-                .settingsStyle()
-
-                // MARK: - Install commands
-
+                headerInstallCard
                 if isEnabled {
-                    VStack(alignment: .leading, spacing: Const.space12) {
-                        Text(.mcpAddToTools)
-                            .font(.headline)
-                            .bold()
-
-                        VStack(spacing: 0) {
-                            ForEach(Array(clients.enumerated()), id: \.offset) { index, client in
-                                AIClientRow(
-                                    label: client.label,
-                                    content: client.content,
-                                    note: client.note,
-                                    copiedKey: $copiedKey
-                                )
-                                if index < clients.count - 1 {
-                                    Divider()
-                                        .padding(.leading, Const.space12)
-                                }
-                            }
-                        }
-                        .settingsStyle()
-                    }
+                    toolsSection
                 }
-
                 Spacer(minLength: 0)
             }
             .padding(Const.space24)
@@ -95,72 +86,257 @@ struct AISettingsView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .animation(.easeInOut(duration: 0.2), value: isEnabled)
     }
-}
 
-// MARK: - AIClientRow
+    // MARK: - Header + Install Card
 
-private struct AIClientRow: View {
-    let label: String
-    let content: String
-    let note: String?
-    @Binding var copiedKey: String?
+    @ViewBuilder private var headerInstallCard: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: Const.space12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(isEnabled ? Color.blue : Color.secondary.opacity(0.25))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: "link")
+                        .font(.title3.bold())
+                        .foregroundStyle(isEnabled ? Color.white : Color.secondary)
+                }
+                .animation(.easeInOut(duration: 0.2), value: isEnabled)
 
-    private var isCopied: Bool { copiedKey == label }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Const.space8) {
-            Text(label)
-                .font(.caption)
-                .fontWeight(.medium)
-                .foregroundStyle(.secondary)
-
-            ZStack(alignment: .topTrailing) {
-                Text(content)
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundStyle(.primary)
-                    .textSelection(.enabled)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, Const.space10)
-                    .padding(.vertical, Const.space10)
-                    .padding(.trailing, Const.space24)
-                    .background(.quaternary.opacity(0.6), in: RoundedRectangle(cornerRadius: 7))
-
-                Button {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(content, forType: .string)
-                    copiedKey = label
-                    Task {
-                        try? await Task.sleep(for: .seconds(2))
-                        if copiedKey == label { copiedKey = nil }
+                VStack(alignment: .leading, spacing: Const.space4) {
+                    HStack(spacing: Const.space8) {
+                        Text("Clipboard MCP")
+                            .font(.headline)
+                            .lineLimit(1)
+                        StatusBadge(
+                            label: isEnabled
+                                ? String(localized: "mcpRunning", table: "Localizable")
+                                : String(localized: "mcpStopped", table: "Localizable"),
+                            color: isEnabled ? .green : .secondary
+                        )
                     }
-                } label: {
-                    Image(systemName: isCopied ? "checkmark" : "doc.on.doc")
-                        .font(.system(size: 11))
-                        .foregroundStyle(isCopied ? Color.accentColor : .secondary)
-                        .frame(width: 28, height: 28)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .animation(.easeInOut(duration: 0.15), value: isCopied)
-            }
-
-            if let note {
-                HStack(spacing: Const.space4) {
-                    Text(.mcpClaudeDesktopConfigPath)
-                    Text(note)
-                        .textSelection(.enabled)
+                    Text(isEnabled
+                         ? "stdio · @clipboard/mcp · \(MCPToolInfo.all.count) tools exposed"
+                         : "server stopped · 0 tools exposed")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                         .lineLimit(1)
-                        .truncationMode(.middle)
                 }
-                .font(.caption)
-                .foregroundStyle(.secondary)
+
+                Spacer()
+
+                Toggle("", isOn: $isEnabled)
+                    .toggleStyle(.switch)
+                    .controlSize(.mini)
+                    .labelsHidden()
+                    .onChange(of: isEnabled) { _, newValue in
+                        //MCPEnableFlag.setEnabled(newValue)
+                    }
+            }
+            .padding(Const.space16)
+
+            if isEnabled {
+                Divider()
+
+                VStack(alignment: .leading, spacing: Const.space12) {
+                    HStack(spacing: Const.space12) {
+                        Text(String(localized: "mcpAddTo", table: "Localizable"))
+                            .font(.subheadline)
+
+                        clientTabBar
+                    }
+
+                    let client = clients[selectedClientIndex]
+                    commandBlock(client: client)
+
+                    if let note = client.note {
+                        HStack(spacing: Const.space4) {
+                            Text(.mcpClaudeDesktopConfigPath)
+                            Text(note)
+                                .textSelection(.enabled)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(Const.space16)
             }
         }
-        .padding(Const.space12)
+        .settingsStyle()
+    }
+
+    @ViewBuilder private var clientTabBar: some View {
+        HStack(spacing: Const.space2) {
+            ForEach(Array(clients.enumerated()), id: \.offset) { index, client in
+                Button {
+                    selectedClientIndex = index
+                } label: {
+                    Text(client.label)
+                        .font(.subheadline)
+                        .foregroundStyle(selectedClientIndex == index ? .primary : .secondary)
+                        .padding(.horizontal, Const.space10)
+                        .padding(.vertical, Const.space6)
+                        .background(
+                            selectedClientIndex == index
+                                ? Color(nsColor: .controlBackgroundColor)
+                                : Color.clear,
+                            in: RoundedRectangle(cornerRadius: Const.settingsRadius)
+                        )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(Const.space4)
+        .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 8))
+    }
+
+    @ViewBuilder private func commandBlock(client: (label: String, content: String, note: String?)) -> some View {
+        ZStack(alignment: .topTrailing) {
+            Text(client.content)
+                .font(.system(size: 11, design: .monospaced))
+                .foregroundStyle(.primary)
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, Const.space12)
+                .padding(.vertical, Const.space12)
+                .padding(.trailing, Const.space32)
+                .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 8))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.primary.opacity(0.06)))
+
+            let isCopied = copiedKey == client.label
+            Button {
+                let raw = client.content.hasPrefix("$ ")
+                    ? String(client.content.dropFirst(2))
+                    : client.content
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(raw, forType: .string)
+                copiedKey = client.label
+                Task {
+                    try? await Task.sleep(for: .seconds(2))
+                    if copiedKey == client.label { copiedKey = nil }
+                }
+            } label: {
+                Image(systemName: isCopied ? "checkmark.circle" : "doc.on.doc")
+                    .font(.callout)
+                    .foregroundStyle(isCopied ? Color.accentColor : .secondary)
+                    .frame(width: Const.space32, height: Const.space32)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .animation(.easeInOut(duration: 0.15), value: isCopied)
+        }
+    }
+
+    // MARK: - Exposed Tools Section
+
+    @ViewBuilder private var toolsSection: some View {
+        VStack(alignment: .leading, spacing: Const.space12) {
+            HStack {
+                Text(String(localized: "mcpExposedTools", table: "Localizable"))
+                    .font(.subheadline.bold())
+                    .foregroundStyle(.blue)
+                Spacer()
+                Text("\(enabledTools.count) of \(MCPToolInfo.all.count) on")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+
+            LazyVGrid(
+                columns: [GridItem(.flexible()), GridItem(.flexible())],
+                spacing: Const.space12
+            ) {
+                ForEach(MCPToolInfo.all) { tool in
+                    MCPToolCard(
+                        tool: tool,
+                        mcpEnabled: isEnabled,
+                        isToolEnabled: enabledTools.contains(tool.name)
+                    ) { enabled in
+                        if enabled { enabledTools.insert(tool.name) }
+                        else { enabledTools.remove(tool.name) }
+                    }
+                }
+            }
+        }
     }
 }
 
-#Preview {
-    AISettingsView()
+// MARK: - MCPToolCard
+
+private struct MCPToolCard: View {
+    let tool: MCPToolInfo
+    let mcpEnabled: Bool
+    let isToolEnabled: Bool
+    let onToggle: (Bool) -> Void
+
+    private var showConnected: Bool { mcpEnabled && isToolEnabled }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Const.space8) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(tool.color)
+                    .frame(width: 36, height: 36)
+                Image(systemName: tool.icon)
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(.white)
+            }
+
+            Text(tool.name)
+                .font(.system(size: 12, design: .monospaced).bold())
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+
+            Text(tool.description)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+
+            HStack {
+                StatusBadge(
+                    label: showConnected ? String(localized: "mcpConnected", table: "Localizable") : "Off",
+                    color: showConnected ? .green : .secondary
+                )
+                Spacer()
+                Toggle("", isOn: Binding(get: { isToolEnabled }, set: { onToggle($0) }))
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+                    .scaleEffect(0.8, anchor: .trailing)
+            }
+        }
+        .padding(Const.space12)
+        .settingsStyle()
+    }
+}
+
+// MARK: - StatusBadge
+
+private struct StatusBadge: View {
+    let label: String
+    let color: Color
+
+    var body: some View {
+        HStack(spacing: Const.space4) {
+            Circle()
+                .fill(color)
+                .frame(width: Const.space6, height: Const.space6)
+            Text(label)
+                .font(.caption.weight(.medium))
+                .foregroundStyle(color)
+        }
+        .padding(.horizontal, Const.space8)
+        .padding(.vertical, 3)
+        .background(color.opacity(0.12), in: Capsule())
+    }
+}
+
+#Preview("Disabled") {
+    AISettingsView(initialEnabled: false)
+        .frame(width: Const.settingWidth - 150, height: Const.settingHeight)
+}
+
+#Preview("Enabled") {
+    AISettingsView(initialEnabled: true)
         .frame(width: Const.settingWidth - 150, height: Const.settingHeight)
 }
