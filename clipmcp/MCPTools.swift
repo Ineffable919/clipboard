@@ -6,7 +6,12 @@ import SQLite
 struct MCPTools {
     // MARK: - Tool schema (returned by tools/list)
 
-    static let definitions: [[String: Any]] = [
+    static var definitions: [[String: Any]] {
+        let disabled = MCPDisabledTools.load()
+        return allDefinitions.filter { ($0["name"] as? String).map { !disabled.contains($0) } ?? true }
+    }
+
+    private static let allDefinitions: [[String: Any]] = [
         [
             "name": "search_clipboard",
             "description": "Search clipboard history by keyword. Returns matching items with text content, type, and timestamp.",
@@ -42,6 +47,10 @@ struct MCPTools {
               let arguments = params["arguments"] as? [String: Any]
         else {
             return mcpError("Invalid tool call params")
+        }
+
+        guard !MCPDisabledTools.load().contains(name) else {
+            return mcpError("Tool \(name) is disabled.")
         }
 
         switch name {

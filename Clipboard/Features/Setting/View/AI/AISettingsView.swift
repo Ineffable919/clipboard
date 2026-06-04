@@ -31,10 +31,11 @@ struct AISettingsView: View {
     @State private var isEnabled: Bool
     @State private var selectedClientIndex = 0
     @State private var copiedKey: String? = nil
-    @State private var enabledTools: Set<String> = Set(MCPToolInfo.all.map(\.name))
+    @State private var enabledTools: Set<String>
 
     init(initialEnabled: Bool = MCPEnableFlag.isEnabled) {
         _isEnabled = State(initialValue: initialEnabled)
+        _enabledTools = State(initialValue: Set(MCPToolInfo.all.map(\.name)).subtracting(MCPDisabledTools.load()))
     }
 
     private var helperPath: String {
@@ -47,7 +48,7 @@ struct AISettingsView: View {
         [
             (
                 label: "Claude Code",
-                content: "$ claude mcp add --transport stdio clipboard \\\n  -- \(helperPath)",
+                content: "$ claude mcp add --transport stdio clipboard -- \(helperPath)",
                 note: nil
             ),
             (
@@ -94,11 +95,11 @@ struct AISettingsView: View {
             HStack(spacing: Const.space12) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 10)
-                        .fill(isEnabled ? Color.blue : Color.secondary.opacity(0.25))
+                        .fill(isEnabled ? Color.accentColor.opacity(0.12) : Color.secondary.opacity(0.1))
                         .frame(width: 44, height: 44)
                     Image(systemName: "link")
                         .font(.title3.bold())
-                        .foregroundStyle(isEnabled ? Color.white : Color.secondary)
+                        .foregroundStyle(isEnabled ? Color.accentColor : Color.secondary)
                 }
                 .animation(.easeInOut(duration: 0.2), value: isEnabled)
 
@@ -115,7 +116,7 @@ struct AISettingsView: View {
                         )
                     }
                     Text(isEnabled
-                         ? "stdio · @clipboard/mcp · \(MCPToolInfo.all.count) tools exposed"
+                         ? "stdio · @clipboard/mcp · \(enabledTools.count) tools exposed"
                          : "server stopped · 0 tools exposed")
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -129,8 +130,8 @@ struct AISettingsView: View {
                     .controlSize(.mini)
                     .labelsHidden()
                     .onChange(of: isEnabled) { _, newValue in
-                        //MCPEnableFlag.setEnabled(newValue)
-                    }
+                        MCPEnableFlag.setEnabled(newValue)
+                }
             }
             .padding(Const.space16)
 
@@ -235,7 +236,6 @@ struct AISettingsView: View {
             HStack {
                 Text(String(localized: "mcpExposedTools", table: "Localizable"))
                     .font(.subheadline.bold())
-                    .foregroundStyle(.blue)
                 Spacer()
                 Text("\(enabledTools.count) of \(MCPToolInfo.all.count) on")
                     .font(.subheadline)
@@ -254,6 +254,7 @@ struct AISettingsView: View {
                     ) { enabled in
                         if enabled { enabledTools.insert(tool.name) }
                         else { enabledTools.remove(tool.name) }
+                        MCPDisabledTools.save(Set(MCPToolInfo.all.map(\.name)).subtracting(enabledTools))
                     }
                 }
             }
@@ -275,12 +276,13 @@ private struct MCPToolCard: View {
         VStack(alignment: .leading, spacing: Const.space8) {
             ZStack {
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(tool.color)
+                    .fill(isToolEnabled ? tool.color.opacity(0.12) : Color.secondary.opacity(0.1))
                     .frame(width: 36, height: 36)
                 Image(systemName: tool.icon)
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(isToolEnabled ? tool.color : Color.secondary)
             }
+            .animation(.easeInOut(duration: 0.2), value: isToolEnabled)
 
             Text(tool.name)
                 .font(.system(size: 12, design: .monospaced).bold())

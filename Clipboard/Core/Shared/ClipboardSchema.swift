@@ -44,4 +44,25 @@ enum ClipboardPaths {
     static var mcpEnableFlag: String {
         appSupportDir.appending(path: "mcp_enabled").path
     }
+
+    /// JSON array of disabled tool names.
+    static var mcpDisabledTools: String {
+        appSupportDir.appending(path: "mcp_disabled_tools").path
+    }
+}
+
+// MARK: - Per-tool enable flag (shared between App and clipmcp targets)
+
+enum MCPDisabledTools {
+    static func load() -> Set<String> {
+        guard let data = FileManager.default.contents(atPath: ClipboardPaths.mcpDisabledTools),
+              let names = try? JSONDecoder().decode([String].self, from: data)
+        else { return [] }
+        return Set(names)
+    }
+
+    static func save(_ disabled: Set<String>) {
+        guard let data = try? JSONEncoder().encode(Array(disabled)) else { return }
+        FileManager.default.createFile(atPath: ClipboardPaths.mcpDisabledTools, contents: data)
+    }
 }
