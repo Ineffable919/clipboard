@@ -55,6 +55,8 @@ enum PrefKey: String, CaseIterable {
     case tagFieldMigrated
     /// hidden 字段新增标记
     case hiddenFieldMigrated
+    /// unique_id 重算与去重迁移标记
+    case uniqueIdMigrated
     /// 显示模式（抽屉式/窗口式）
     case displayMode
     /// 窗口位置模式（中心/鼠标/上次位置）

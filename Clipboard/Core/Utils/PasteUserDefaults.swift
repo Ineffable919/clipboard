@@ -155,6 +155,9 @@ enum PasteUserDefaults {
     /// hidden 字段新增标记
     @UserDefaultsWrapper(.hiddenFieldMigrated, defaultValue: false)
     static var hiddenFieldMigrated
+    /// unique_id 重算与去重迁移标记
+    @UserDefaultsWrapper(.uniqueIdMigrated, defaultValue: false)
+    static var uniqueIdMigrated
     /// 状态栏图标
     @UserDefaultsWrapper(.showMenuBarIcon, defaultValue: true)
     static var showMenuBarIcon

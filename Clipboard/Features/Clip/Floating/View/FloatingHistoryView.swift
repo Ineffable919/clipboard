@@ -189,9 +189,14 @@ final class FloatingHistoryView: NSView {
         }
         presenter.appendItems = { [weak self] newItems in
             guard let self else { return }
-            dataList.append(contentsOf: newItems)
             var snapshot = dataSource.snapshot()
-            snapshot.appendItems(newItems, toSection: 0)
+            let existing = Set(snapshot.itemIdentifiers.map(\.uniqueId))
+            let appended = newItems
+                .deduplicatedByUniqueId()
+                .filter { !existing.contains($0.uniqueId) }
+            guard !appended.isEmpty else { return }
+            dataList.append(contentsOf: appended)
+            snapshot.appendItems(appended, toSection: 0)
             dataSource.apply(snapshot, animatingDifferences: false)
         }
         presenter.currentSnapshotItems = { [weak self] in self?.dataList ?? [] }
@@ -449,7 +454,7 @@ final class FloatingHistoryView: NSView {
     private func applySnapshot(animating: Bool = false) {
         var snapshot = NSDiffableDataSourceSnapshot<Int, PasteboardModel>()
         snapshot.appendSections([0])
-        snapshot.appendItems(dataList, toSection: 0)
+        snapshot.appendItems(dataList.deduplicatedByUniqueId(), toSection: 0)
         dataSource.apply(snapshot, animatingDifferences: animating)
     }
 

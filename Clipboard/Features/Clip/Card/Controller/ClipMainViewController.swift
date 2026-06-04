@@ -383,7 +383,7 @@ extension ClipMainViewController {
     func applySnapshot(animating: Bool = true, completion: (() -> Void)? = nil) {
         var snapshot = NSDiffableDataSourceSnapshot<ClipSection, PasteboardModel>()
         snapshot.appendSections([.main])
-        snapshot.appendItems(dataList.value)
+        snapshot.appendItems(dataList.value.deduplicatedByUniqueId())
         diffableDataSource.apply(snapshot, animatingDifferences: animating) {
             completion?()
         }
@@ -453,7 +453,12 @@ extension ClipMainViewController {
         presenter.appendItems = { [weak self] newItems in
             guard let self else { return }
             var snapshot = diffableDataSource.snapshot()
-            snapshot.appendItems(newItems, toSection: .main)
+            let existing = Set(snapshot.itemIdentifiers.map(\.uniqueId))
+            let appended = newItems
+                .deduplicatedByUniqueId()
+                .filter { !existing.contains($0.uniqueId) }
+            guard !appended.isEmpty else { return }
+            snapshot.appendItems(appended, toSection: .main)
             diffableDataSource.apply(snapshot, animatingDifferences: false)
             updateEmptyState()
         }

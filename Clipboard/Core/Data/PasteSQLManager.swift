@@ -92,6 +92,7 @@ actor PasteSQLManager {
             performIndexCreation()
             migrateTagFieldAsync()
             migrateHiddenFieldAsync()
+            migrateUniqueIdAsync()
         }
     }
 
@@ -775,6 +776,113 @@ extension PasteSQLManager {
             try db.run("ALTER TABLE Clip ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0")
         } catch {
             log.warn("新增 hidden 字段失败（可能已存在）: \(error)")
+        }
+    }
+}
+
+// MARK: - unique_id 重算与去重迁移
+
+extension PasteSQLManager {
+    /// 历史版本 `generateUniqueId` 算法变更后，旧行存储的 `unique_id` 与运行时重算值不一致：
+    /// 既会绕过插入去重产生内容相同的多行，又会让 diffable data source 因重复标识符崩溃。
+    /// 本迁移用当前算法重算全表 `unique_id`，合并重复行（保留时间戳最新的），并修正存储值。
+    func migrateUniqueIdAsync() {
+        Task {
+            let alreadyMigrated = await MainActor.run { PasteUserDefaults.uniqueIdMigrated }
+            guard !alreadyMigrated else {
+                log.debug("unique_id 已迁移，跳过")
+                return
+            }
+            await performUniqueIdMigration()
+            await MainActor.run {
+                PasteUserDefaults.uniqueIdMigrated = true
+                log.info("unique_id 迁移完成")
+            }
+        }
+    }
+
+    private struct UniqueIdRowInfo {
+        let id: Int64
+        let storedUniqueId: String
+        let correctUniqueId: String
+        let timestamp: Int64
+        let group: Int
+    }
+
+    private func performUniqueIdMigration() async {
+        guard let db else { return }
+        log.info("开始重算 unique_id 并清理重复行")
+
+        // 1. 流式读取全表，用当前算法重算 unique_id（仅保留小体积信息，及时释放 data blob）
+        var infos: [UniqueIdRowInfo] = []
+        do {
+            let query = table.select(Col.id, Col.uniqueId, Col.type, Col.data, Col.ts, Col.group)
+            for row in try db.prepare(query) {
+                let type = PasteboardType(row[Col.type])
+                let correct = await PasteboardModel.generateUniqueId(for: type, data: row[Col.data])
+                infos.append(UniqueIdRowInfo(
+                    id: row[Col.id],
+                    storedUniqueId: row[Col.uniqueId],
+                    correctUniqueId: correct,
+                    timestamp: row[Col.ts],
+                    group: row[Col.group]
+                ))
+            }
+        } catch {
+            log.error("读取数据失败，跳过 unique_id 迁移: \(error)")
+            return
+        }
+
+        // 2. 按重算后的 unique_id 分组，保留时间戳最新的一行，合并分组信息
+        var groups: [String: [UniqueIdRowInfo]] = [:]
+        for info in infos {
+            groups[info.correctUniqueId, default: []].append(info)
+        }
+
+        var idsToDelete: [Int64] = []
+        var updates: [(id: Int64, uniqueId: String, group: Int?)] = []
+
+        for (correctId, rows) in groups {
+            let sorted = rows.sorted { $0.timestamp > $1.timestamp }
+            let keeper = sorted[0]
+            idsToDelete.append(contentsOf: sorted.dropFirst().map(\.id))
+
+            // 分组不能丢：保留行为 -1 时继承重复行里最新的非默认分组，仅在此时才写 group
+            let mergedGroup = sorted.first(where: { $0.group != -1 })?.group
+            let needGroupUpdate = mergedGroup != nil && mergedGroup != keeper.group
+            if keeper.storedUniqueId != correctId || needGroupUpdate {
+                updates.append((keeper.id, correctId, needGroupUpdate ? mergedGroup : nil))
+            }
+        }
+
+        guard !idsToDelete.isEmpty || !updates.isEmpty else {
+            log.info("unique_id 无需迁移")
+            return
+        }
+
+        // 3. 在事务内：先删重复行，再分两步更新（先写临时值，再写最终值），
+        //    避免更新顺序与 unique_id 上的 UNIQUE 索引冲突
+        do {
+            try db.run("BEGIN TRANSACTION")
+            for id in idsToDelete {
+                try db.run(table.filter(Col.id == id).delete())
+            }
+            for update in updates {
+                try db.run(table.filter(Col.id == update.id)
+                    .update(Col.uniqueId <- "__migrating__\(update.id)"))
+            }
+            for update in updates {
+                var setters: [Setter] = [Col.uniqueId <- update.uniqueId]
+                if let group = update.group {
+                    setters.append(Col.group <- group)
+                }
+                try db.run(table.filter(Col.id == update.id).update(setters))
+            }
+            try db.run("COMMIT")
+            log.info("unique_id 迁移：删除重复 \(idsToDelete.count) 行，修正 \(updates.count) 行")
+        } catch {
+            _ = try? db.run("ROLLBACK")
+            log.error("unique_id 迁移失败: \(error)")
         }
     }
 }
