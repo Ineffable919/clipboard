@@ -512,7 +512,8 @@ extension PasteSQLManager {
                 var skippedCount = 0
                 var appInfoDict: [String: String] = [:]
 
-                try destDb.transaction {
+                try destDb.run("BEGIN TRANSACTION")
+                do {
                     for row in rows {
                         guard !Task.isCancelled else {
                             throw NSError(
@@ -522,7 +523,12 @@ extension PasteSQLManager {
                             )
                         }
 
-                        let uniqueId = try row.get(Col.uniqueId)
+                        let typeRaw = try row.get(Col.type)
+                        let data = try row.get(Col.data)
+                        let uniqueId = await PasteboardModel.generateUniqueId(
+                            for: PasteboardType(typeRaw),
+                            data: data
+                        )
                         let existingQuery = destTable.filter(Col.uniqueId == uniqueId)
                         let existingCount = try destDb.scalar(existingQuery.count)
 
@@ -536,8 +542,8 @@ extension PasteSQLManager {
 
                         let insert = try destTable.insert(
                             Col.uniqueId <- uniqueId,
-                            Col.type <- row.get(Col.type),
-                            Col.data <- row.get(Col.data),
+                            Col.type <- typeRaw,
+                            Col.data <- data,
                             Col.showData <- row.get(Col.showData),
                             Col.ts <- row.get(Col.ts),
                             Col.appPath <- appPath,
@@ -555,6 +561,10 @@ extension PasteSQLManager {
                             appInfoDict[appName] = appPath
                         }
                     }
+                    try destDb.run("COMMIT")
+                } catch {
+                    _ = try? destDb.run("ROLLBACK")
+                    throw error
                 }
 
                 let skippedText = skippedCount > 0
@@ -813,7 +823,6 @@ extension PasteSQLManager {
         guard let db else { return }
         log.info("开始重算 unique_id 并清理重复行")
 
-        // 1. 流式读取全表，用当前算法重算 unique_id（仅保留小体积信息，及时释放 data blob）
         var infos: [UniqueIdRowInfo] = []
         do {
             let query = table.select(Col.id, Col.uniqueId, Col.type, Col.data, Col.ts, Col.group)
@@ -833,7 +842,6 @@ extension PasteSQLManager {
             return
         }
 
-        // 2. 按重算后的 unique_id 分组，保留时间戳最新的一行，合并分组信息
         var groups: [String: [UniqueIdRowInfo]] = [:]
         for info in infos {
             groups[info.correctUniqueId, default: []].append(info)
@@ -860,8 +868,6 @@ extension PasteSQLManager {
             return
         }
 
-        // 3. 在事务内：先删重复行，再分两步更新（先写临时值，再写最终值），
-        //    避免更新顺序与 unique_id 上的 UNIQUE 索引冲突
         do {
             try db.run("BEGIN TRANSACTION")
             for id in idsToDelete {

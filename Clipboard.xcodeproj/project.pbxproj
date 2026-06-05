@@ -26,7 +26,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		B1222F8D2FCF029B00FF7C3D /* clipmcp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "clipmcp"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B1222F8D2FCF029B00FF7C3D /* clipmcp */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = clipmcp; sourceTree = BUILT_PRODUCTS_DIR; };
 		B1FADD402E7E92B3005CEFCF /* Clipboard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Clipboard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -50,7 +50,7 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		B1222F8E2FCF029B00FF7C3D /* clipmcp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "clipmcp";
+			path = clipmcp;
 			sourceTree = "<group>";
 		};
 		B1FADD422E7E92B3005CEFCF /* Clipboard */ = {
@@ -130,11 +130,11 @@
 			fileSystemSynchronizedGroups = (
 				B1222F8E2FCF029B00FF7C3D /* clipmcp */,
 			);
-			name = "clipmcp";
+			name = clipmcp;
 			packageProductDependencies = (
 				B1222F9D2FCF03D700FF7C3D /* SQLite */,
 			);
-			productName = "clipmcp";
+			productName = clipmcp;
 			productReference = B1222F8D2FCF029B00FF7C3D /* clipmcp */;
 			productType = "com.apple.product-type.tool";
 		};

@@ -25,7 +25,6 @@ final class DynamicBackgroundView: NSView {
                 ? NSColor.secondaryLabelColor.withAlphaComponent(0.05).cgColor
                 : NSColor.black.withAlphaComponent(0.06).cgColor
         }
-        layer?.borderWidth = 0.8
     }
 
     override func viewDidChangeEffectiveAppearance() {
