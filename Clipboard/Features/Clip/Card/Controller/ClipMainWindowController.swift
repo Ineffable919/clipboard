@@ -93,6 +93,7 @@ extension ClipMainWindowController {
 
         NSAnimationContext.runAnimationGroup({ context in
             context.duration = Const.hideDuration
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
             view?.animator().setFrameOrigin(NSPoint(x: 0, y: -height))
         }) {
             Task { @MainActor in
@@ -134,6 +135,7 @@ extension ClipMainWindowController {
 
         NSAnimationContext.runAnimationGroup { context in
             context.duration = Const.showDuration
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
             view?.animator().setFrameOrigin(.zero)
         } completionHandler: { [weak self] in
             MainActor.assumeIsolated {

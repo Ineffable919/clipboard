@@ -25,6 +25,7 @@ struct KeyboardSettingView: View {
                 VStack(spacing: 0) {
                     PreviousTabView()
                     Divider()
+                        .padding(.horizontal, Const.space10)
                     NextTabView()
                 }
                 .settingsStyle()
@@ -43,15 +44,20 @@ struct KeyboardSettingView: View {
 
                 HStack {
                     Spacer()
-                    SystemButton(title: String(localized: .settingKeyboardResetShortcuts)) {
+                    SystemButton(
+                        title: String(localized: .settingKeyboardResetShortcuts)
+                    ) {
                         resetIsPresented = true
                     }
                     .confirmationDialog(
-                        String(localized: .settingKeyboardResetConfirmationMessage),
+                        String(
+                            localized: .settingKeyboardResetConfirmationMessage
+                        ),
                         isPresented: $resetIsPresented
                     ) {
                         if #available(macOS 26.0, *) {
-                            Button(.settingKeyboardResetButton, role: .confirm) {
+                            Button(.settingKeyboardResetButton, role: .confirm)
+                            {
                                 HotKeyManager.shared.resetToDefaults()
                                 refreshID = UUID()
                             }
@@ -135,7 +141,8 @@ struct NextTabView: View {
 // MARK: - 快速粘贴修饰键视图
 
 struct QuickPasteModifierView: View {
-    @State private var selectedModifier: Int = PasteUserDefaults.quickPasteModifier
+    @State private var selectedModifier: Int = PasteUserDefaults
+        .quickPasteModifier
     @Binding var refreshID: UUID
 
     private let modifiers = [
@@ -174,7 +181,8 @@ struct QuickPasteModifierView: View {
 // MARK: - 纯文本粘贴修饰键视图
 
 struct PlainTextModifierView: View {
-    @State private var selectedModifier: Int = PasteUserDefaults.plainTextModifier
+    @State private var selectedModifier: Int = PasteUserDefaults
+        .plainTextModifier
     @Binding var refreshID: UUID
 
     private let modifiers = [
