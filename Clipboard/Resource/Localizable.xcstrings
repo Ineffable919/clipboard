@@ -304,9 +304,6 @@
         }
       }
     },
-    "Clipboard MCP" : {
-
-    },
     "close" : {
       "comment" : "Accessibility description for close button",
       "extractionState" : "manual",
@@ -1225,6 +1222,9 @@
         }
       }
     },
+    "MCP" : {
+
+    },
     "mcpAddTo" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1408,6 +1408,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已停止"
+          }
+        }
+      }
+    },
+    "mcpToolDescListCategories" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "List available content types and user-defined tags for clipboard search"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "列出可用的内容类型和用户自定义标签"
+          }
+        }
+      }
+    },
+    "mcpToolDescSearchClipboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search clipboard history by keyword, content type, or user tag"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按关键词、内容类型或标签搜索剪贴板历史"
+          }
+        }
+      }
+    },
+    "mcpToolDescWriteClipboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Write plain text to the system clipboard"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将纯文本写入系统剪贴板"
           }
         }
       }

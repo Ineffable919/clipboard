@@ -11,31 +11,43 @@ struct MCPTools {
         return allDefinitions.filter { ($0["name"] as? String).map { !disabled.contains($0) } ?? true }
     }
 
-    private static let allDefinitions: [[String: Any]] = [
-        [
-            "name": "search_clipboard",
-            "description": "Search clipboard history by keyword. Returns matching items with text content, type, and timestamp.",
-            "inputSchema": [
-                "type": "object",
-                "properties": [
-                    "query": ["type": "string", "description": "Search keyword"],
-                    "limit": ["type": "integer", "description": "Max results, default 20, max 50"],
+    private static let inputSchemas: [String: [String: Any]] = [
+        "search_clipboard": [
+            "type": "object",
+            "properties": [
+                "query": [
+                    "type": "string",
+                    "description": "Search keyword (optional if filtering by type or tag)",
                 ],
-                "required": ["query"],
+                "type": [
+                    "type": "string",
+                    "enum": ["text", "link", "image", "file", "color", "rich"],
+                    "description": "Filter by content type: text (plain text), link (URL), image (PNG/TIFF), file (file path), color (hex color), rich (formatted/RTF text)",
+                ],
+                "tag": [
+                    "type": "string",
+                    "description": "Filter by user-defined tag name. Call list_tags first to see available names.",
+                ],
+                "limit": ["type": "integer", "description": "Max results, default 20, max 50"],
             ],
         ],
-        [
-            "name": "write_clipboard",
-            "description": "Write plain text to the system clipboard and save it to clipboard history.",
-            "inputSchema": [
-                "type": "object",
-                "properties": [
-                    "content": ["type": "string", "description": "Plain text to write"],
-                ],
-                "required": ["content"],
+        "write_clipboard": [
+            "type": "object",
+            "properties": [
+                "content": ["type": "string", "description": "Plain text to write"],
             ],
+            "required": ["content"],
+        ],
+        "list_tags": [
+            "type": "object",
+            "properties": [:],
         ],
     ]
+
+    private static let allDefinitions: [[String: Any]] = MCPToolDefinition.all.compactMap { def in
+        guard let schema = inputSchemas[def.name] else { return nil }
+        return ["name": def.name, "description": def.description, "inputSchema": schema]
+    }
 
     // MARK: - Dispatch
 
@@ -56,6 +68,7 @@ struct MCPTools {
         switch name {
         case "search_clipboard": return searchClipboard(arguments)
         case "write_clipboard":  return writeClipboard(arguments)
+        case "list_tags":        return listTags()
         default:                 return mcpError("Unknown tool: \(name)")
         }
     }
@@ -63,49 +76,111 @@ struct MCPTools {
     // MARK: - search_clipboard
 
     private func searchClipboard(_ args: [String: Any]) -> [String: Any] {
-        guard let query = args["query"] as? String, !query.isEmpty else {
-            return mcpError("query is required")
-        }
+        let query = args["query"] as? String ?? ""
+        let typeFilter = args["type"] as? String
+        let tagName = args["tag"] as? String
         let limit = min(args["limit"] as? Int ?? 20, 50)
+
+        guard !query.isEmpty || typeFilter != nil || tagName != nil else {
+            return mcpError("Provide at least one of: query, type, or tag")
+        }
 
         guard let db = try? Connection(ClipboardPaths.database, readonly: true) else {
             return mcpError("Cannot open clipboard database")
         }
 
         let table = Table("Clip")
-        let queryExpr = table
-            .select(Col.id, Col.type, Col.showData, Col.searchText, Col.ts)
-            .filter(Col.searchText.like("%\(query)%") && Col.hidden == 0)
+        var queryExpr = table
+            .select(Col.type, Col.data, Col.searchText, Col.ts, Col.tag)
+            .filter(Col.hidden == 0)
             .order(Col.ts.desc)
             .limit(limit)
 
-        var lines: [String] = []
+        if !query.isEmpty {
+            queryExpr = queryExpr.filter(Col.searchText.like("%\(query)%"))
+        }
+
+        if let typeFilter {
+            queryExpr = queryExpr.filter(Col.tag == tagForType(typeFilter))
+        }
+
+        if let tagName {
+            guard let groupId = resolveCategory(name: tagName) else {
+                return mcpError("Tag \"\(tagName)\" not found. Use list_tags to see available tags.")
+            }
+            queryExpr = queryExpr.filter(Col.group == groupId)
+        }
+
+        var contentBlocks: [[String: Any]] = []
+        var count = 0
+
         if let rows = try? db.prepare(queryExpr) {
             for row in rows {
-                let id = (try? row.get(Col.id)) ?? 0
+                if count > 0 {
+                    contentBlocks.append(["type": "text", "text": "---"])
+                }
+
                 let type = (try? row.get(Col.type)) ?? ""
+                let tag = (try? row.get(Col.tag)) ?? ""
                 let ts = (try? row.get(Col.ts)) ?? 0
                 let date = Date(timeIntervalSince1970: TimeInterval(ts))
                     .formatted(date: .abbreviated, time: .shortened)
+                let typeLabel = labelForTag(tag)
+                let header = "[\(typeLabel)] \(date)"
 
-                let content: String
-                if let showData = try? row.get(Col.showData),
-                   let text = String(data: showData, encoding: .utf8)
-                {
-                    content = String(text.prefix(300))
+                if tag == "image" {
+                    contentBlocks.append(["type": "text", "text": header])
+                    if let data = try? row.get(Col.data) {
+                        let mimeType = type == "public.tiff" ? "image/tiff" : "image/png"
+                        contentBlocks.append([
+                            "type": "image",
+                            "data": data.base64EncodedString(),
+                            "mimeType": mimeType,
+                        ])
+                    }
                 } else {
-                    content = String(((try? row.get(Col.searchText)) ?? "").prefix(300))
+                    let body = extractText(from: row, type: type)
+                    contentBlocks.append(["type": "text", "text": "\(header)\n\(body)"])
                 }
 
-                lines.append("[\(id)] [\(type)] \(date)\n\(content)")
+                count += 1
             }
         }
 
-        let text = lines.isEmpty
-            ? "No results for \"\(query)\""
-            : lines.joined(separator: "\n\n---\n\n")
+        if contentBlocks.isEmpty {
+            let desc = query.isEmpty ? "with current filters" : "for \"\(query)\""
+            return ["content": [["type": "text", "text": "No results \(desc)"]]]
+        }
 
-        return ["content": [["type": "text", "text": text]]]
+        return ["content": contentBlocks]
+    }
+
+    // MARK: - list_tags
+
+    private func listTags() -> [String: Any] {
+        var lines: [String] = []
+
+        lines.append("Content types (use the 'type' parameter):")
+        for t in ["text", "rich", "link", "image", "file", "color"] {
+            lines.append("  \(t)")
+        }
+
+        let userDefaults = UserDefaults(suiteName: ClipboardPaths.appBundleId)
+        if let data = userDefaults?.data(forKey: "userCategoryChip"),
+           let chips = try? JSONDecoder().decode([MCPCategoryChip].self, from: data),
+           !chips.isEmpty
+        {
+            lines.append("")
+            lines.append("User-defined tags (use the 'tag' parameter):")
+            for chip in chips {
+                lines.append("  \(chip.name)")
+            }
+        } else {
+            lines.append("")
+            lines.append("No user-defined tags.")
+        }
+
+        return ["content": [["type": "text", "text": lines.joined(separator: "\n")]]]
     }
 
     // MARK: - write_clipboard
@@ -143,31 +218,78 @@ struct MCPTools {
                 table.filter(Col.id == existingId)
                     .update(Col.ts <- timestamp, Col.hidden <- 0)
             )
-            return ["content": [["type": "text", "text": "Clipboard updated (id: \(existingId))"]]]
+            return ["content": [["type": "text", "text": "Clipboard updated"]]]
         }
 
         let insert = table.insert(
-            Col.uniqueId  <- uniqueId,
-            Col.type      <- NSPasteboard.PasteboardType.string.rawValue,
-            Col.data      <- contentData,
-            Col.showData  <- showData,
-            Col.ts        <- timestamp,
-            Col.appPath   <- "",
-            Col.appName   <- "AI",
+            Col.uniqueId   <- uniqueId,
+            Col.type       <- NSPasteboard.PasteboardType.string.rawValue,
+            Col.data       <- contentData,
+            Col.showData   <- showData,
+            Col.ts         <- timestamp,
+            Col.appPath    <- "",
+            Col.appName    <- "AI",
             Col.searchText <- content.trimmingCharacters(in: .whitespacesAndNewlines),
-            Col.length    <- content.count,
-            Col.group     <- -1,
-            Col.tag       <- tagValue(for: content),
-            Col.hidden    <- 0
+            Col.length     <- content.count,
+            Col.group      <- -1,
+            Col.tag        <- tagValue(for: content),
+            Col.hidden     <- 0
         )
 
-        if let rowId = try? db.run(insert) {
-            return ["content": [["type": "text", "text": "Written to clipboard (id: \(rowId))"]]]
+        if (try? db.run(insert)) != nil {
+            return ["content": [["type": "text", "text": "Written to clipboard"]]]
         }
         return mcpError("Failed to write to database")
     }
 
     // MARK: - Helpers
+
+    private func tagForType(_ type: String) -> String {
+        switch type {
+        case "text":  return "string"
+        case "rich":  return "rich"
+        case "link":  return "link"
+        case "image": return "image"
+        case "file":  return "file"
+        case "color": return "color"
+        default:      return type
+        }
+    }
+
+    private func labelForTag(_ tag: String) -> String {
+        switch tag {
+        case "string": return "Text"
+        case "rich":   return "Rich Text"
+        case "link":   return "Link"
+        case "image":  return "Image"
+        case "file":   return "File"
+        case "color":  return "Color"
+        default:       return "Text"
+        }
+    }
+
+    private func extractText(from row: Row, type: String) -> String {
+        guard let data = try? row.get(Col.data) else {
+            return (try? row.get(Col.searchText)) ?? ""
+        }
+
+        switch type {
+        case "public.rtf":
+            return NSAttributedString(rtf: data, documentAttributes: nil)?.string ?? ""
+        case "com.apple.rtfd":
+            return NSAttributedString(rtfd: data, documentAttributes: nil)?.string ?? ""
+        default:
+            return String(data: data, encoding: .utf8) ?? ""
+        }
+    }
+
+    private func resolveCategory(name: String) -> Int? {
+        let userDefaults = UserDefaults(suiteName: ClipboardPaths.appBundleId)
+        guard let data = userDefaults?.data(forKey: "userCategoryChip"),
+              let chips = try? JSONDecoder().decode([MCPCategoryChip].self, from: data)
+        else { return nil }
+        return chips.first { $0.name.localizedCaseInsensitiveCompare(name) == .orderedSame }?.id
+    }
 
     private func tagValue(for text: String) -> String {
         if let url = URL(string: text), url.scheme?.hasPrefix("http") == true {
@@ -179,6 +301,13 @@ struct MCPTools {
     private func mcpError(_ message: String) -> [String: Any] {
         ["content": [["type": "text", "text": message]], "isError": true]
     }
+}
+
+// MARK: - Minimal category chip for reading app UserDefaults
+
+private struct MCPCategoryChip: Codable {
+    let id: Int
+    let name: String
 }
 
 // MARK: - SHA-256 (mirrors Data+Extension.swift, local to clipmcp)

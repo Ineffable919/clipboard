@@ -9,20 +9,20 @@ private struct MCPToolInfo: Identifiable {
     let icon: String
     let color: Color
 
-    static let all: [MCPToolInfo] = [
-        .init(
-            name: "search_clipboard",
-            description: "Search clipboard history by keyword",
-            icon: "magnifyingglass",
-            color: .blue
-        ),
-        .init(
-            name: "write_clipboard",
-            description: "Write plain text to the system clipboard",
-            icon: "bolt.fill",
-            color: .green
-        ),
-    ]
+    static let all: [MCPToolInfo] = MCPToolDefinition.all.map {
+        .init(name: $0.name, description: $0.localizedDescription, icon: $0.icon, color: Color(hex: $0.colorHex))
+    }
+}
+
+private extension MCPToolDefinition {
+    var localizedDescription: String {
+        switch name {
+        case "search_clipboard": String(localized: .mcpToolDescSearchClipboard)
+        case "write_clipboard":  String(localized: .mcpToolDescWriteClipboard)
+        case "list_tags":        String(localized: .mcpToolDescListCategories)
+        default:                 description
+        }
+    }
 }
 
 // MARK: - AISettingsView
@@ -105,7 +105,7 @@ struct AISettingsView: View {
 
                 VStack(alignment: .leading, spacing: Const.space4) {
                     HStack(spacing: Const.space8) {
-                        Text("Clipboard MCP")
+                        Text("MCP")
                             .font(.headline)
                             .lineLimit(1)
                         StatusBadge(
@@ -236,10 +236,6 @@ struct AISettingsView: View {
             HStack {
                 Text(String(localized: "mcpExposedTools", table: "Localizable"))
                     .font(.subheadline.bold())
-                Spacer()
-                Text("\(enabledTools.count) of \(MCPToolInfo.all.count) on")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
             }
 
             LazyVGrid(
@@ -293,8 +289,9 @@ private struct MCPToolCard: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
+                .help(tool.description)
 
+            Spacer(minLength: 0)
             HStack {
                 StatusBadge(
                     label: showConnected ? String(localized: "mcpConnected", table: "Localizable") : "Off",
@@ -308,6 +305,7 @@ private struct MCPToolCard: View {
             }
         }
         .padding(Const.space12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .settingsStyle()
     }
 }
