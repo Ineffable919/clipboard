@@ -19,8 +19,9 @@ struct SettingsStyleModifier: ViewModifier {
             .background(
                 RoundedRectangle(cornerRadius: Const.settingsRadius)
                     .fill(
-                        colorScheme == .light
-                            ? Const.lightBackground : Const.darkBackground
+                        colorScheme == .dark
+                            ? AnyShapeStyle(Const.darkBackground)
+                            : AnyShapeStyle(.fill.quaternary)
                     )
             )
             .overlay(

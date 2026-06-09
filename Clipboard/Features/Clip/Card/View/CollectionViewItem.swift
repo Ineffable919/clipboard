@@ -231,6 +231,7 @@ extension CollectionViewItem {
     private func updateSelectionBorder() {
         guard isSelected else {
             selectionBorderView.layer?.borderWidth = 0
+            updateShadow()
             return
         }
         let color: NSColor = isFocused
@@ -238,14 +239,19 @@ extension CollectionViewItem {
             : .gray.withAlphaComponent(0.5)
         selectionBorderView.layer?.borderColor = color.cgColor
         selectionBorderView.layer?.borderWidth = Const.selectionBorderWidth
+        updateShadow()
     }
 
     private func updateShadow() {
         guard let layer = selectionBorderView.layer else { return }
-        layer.shadowColor = NSColor.shadowColor.withAlphaComponent(0.1).cgColor
-        layer.shadowOpacity = 1
-        layer.shadowRadius = 2
-        layer.shadowOffset = CGSize(width: 0, height: -1)
+        if isSelected {
+            layer.shadowOpacity = 0
+        } else {
+            layer.shadowColor = NSColor.shadowColor.withAlphaComponent(0.1).cgColor
+            layer.shadowOpacity = 1
+            layer.shadowRadius = 2
+            layer.shadowOffset = CGSize(width: 0, height: -1)
+        }
     }
 }
 

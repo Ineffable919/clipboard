@@ -17,7 +17,7 @@ extension PasteboardModel {
 
     func colors() -> (NSColor, NSColor) {
         (
-            cachedBackgroundColor ?? .controlBackgroundColor,
+            cachedBackgroundColor ?? .textBackgroundColor,
             cachedForegroundColor ?? .secondaryLabelColor
         )
     }
@@ -37,7 +37,8 @@ extension PasteboardModel {
         }
 
         if attributeString.length > 0,
-           let bg = attributeString.attribute(.backgroundColor, at: 0, effectiveRange: nil) as? NSColor
+           let bg = attributeString.attribute(.backgroundColor, at: 0, effectiveRange: nil) as? NSColor,
+           (bg.usingColorSpace(.sRGB) ?? bg).alphaComponent > 0.1
         {
             return (bg, contrastingNSColor(for: bg), true)
         }

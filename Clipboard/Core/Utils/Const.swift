@@ -49,7 +49,13 @@ enum Const {
             8.0
         }
 
-    static let settingsRadius: CGFloat = 6.0
+    static let settingsRadius: CGFloat =
+        if #available(macOS 26.0, *) {
+            10.0
+        } else {
+            6.0
+        }
+
     static let selectionBorderWidth: CGFloat = 4.0
 
     static let topBarHeight: CGFloat = 54.0

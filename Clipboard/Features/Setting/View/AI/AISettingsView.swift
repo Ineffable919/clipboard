@@ -93,21 +93,10 @@ struct AISettingsView: View {
     @ViewBuilder private var headerInstallCard: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: Const.space12) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(isEnabled ? Color.accentColor.opacity(0.12) : Color.secondary.opacity(0.1))
-                        .frame(width: 44, height: 44)
-                    Image(systemName: "link")
-                        .font(.title3.bold())
-                        .foregroundStyle(isEnabled ? Color.accentColor : Color.secondary)
-                }
-                .animation(.easeInOut(duration: 0.2), value: isEnabled)
-
                 VStack(alignment: .leading, spacing: Const.space4) {
                     HStack(spacing: Const.space8) {
                         Text("MCP")
                             .font(.headline)
-                            .lineLimit(1)
                         StatusBadge(
                             label: isEnabled
                                 ? String(localized: "mcpRunning", table: "Localizable")
