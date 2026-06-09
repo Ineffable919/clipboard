@@ -160,8 +160,9 @@ struct PrivacySettingView: View {
                     }
                     .padding(.horizontal, Const.space4)
                 }
-                .padding(24)
+                .padding([.horizontal, .bottom], Const.space24)
             }
+            .scrollIndicators(.hidden)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onChange(of: showDuringScreenShare) { _, _ in

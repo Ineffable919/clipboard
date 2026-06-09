@@ -31,7 +31,7 @@ class SettingWindowController: NSWindowController {
         window.center()
         window.isReleasedWhenClosed = false
         window.titlebarSeparatorStyle = .none
-        window.titlebarAppearsTransparent = true
+        window.titlebarAppearsTransparent = false
 
         let settingView = SettingView()
             .environment(viewModel)

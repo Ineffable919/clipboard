@@ -96,6 +96,7 @@ struct SettingView: View {
                 }
             }
             .navigationTitle(Text(vm.selectedPage.title))
+            .toolbarTitleDisplayMode(.inline)
         }
         .onAppear {
             isSidebarFocused = true

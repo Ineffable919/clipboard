@@ -24,16 +24,6 @@
         }
       }
     },
-    "%lld of %lld on" : {
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld of %2$lld on"
-          }
-        }
-      }
-    },
     "aboutApp" : {
       "comment" : "Menu item: About app with app name",
       "extractionState" : "manual",

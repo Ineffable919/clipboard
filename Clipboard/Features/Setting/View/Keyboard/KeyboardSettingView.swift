@@ -74,7 +74,7 @@ struct KeyboardSettingView: View {
                 }
             }
         }
-        .padding(Const.space24)
+        .padding([.horizontal, .bottom], Const.space24)
         .frame(
             maxWidth: .infinity,
             maxHeight: .infinity,

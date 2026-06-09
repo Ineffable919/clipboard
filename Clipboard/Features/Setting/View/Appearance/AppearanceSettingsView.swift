@@ -83,7 +83,7 @@ struct AppearanceSettingsView: View {
                 .settingsStyle()
             }
         }
-        .padding(Const.space24)
+        .padding([.horizontal, .bottom], Const.space24)
         .frame(
             maxWidth: .infinity,
             maxHeight: Const.settingHeight,

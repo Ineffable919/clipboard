@@ -81,7 +81,7 @@ struct AISettingsView: View {
                 }
                 Spacer(minLength: 0)
             }
-            .padding(Const.space24)
+            .padding([.horizontal, .bottom], Const.space24)
         }
         .scrollIndicators(.hidden)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
