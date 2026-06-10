@@ -13,10 +13,8 @@ final class ClipFloatingViewController: NSViewController {
 
     var env = AppEnvironment()
 
-    private lazy var hostingView: NSHostingView<some View> = {
-        let contentView = FloatingView()
-            .environment(env)
-        let v = NSHostingView(rootView: contentView)
+    private lazy var hostingView: NSHostingView<AnyView> = {
+        let v = NSHostingView(rootView: AnyView(FloatingView().environment(env)))
         v.translatesAutoresizingMaskIntoConstraints = false
         v.wantsLayer = true
         v.layer?.backgroundColor = NSColor.clear.cgColor
