@@ -32,7 +32,7 @@ struct FloatingDragPreviewCardView: View {
             width: Const.cardSize,
             height: FloatConst.cardHeight
         )
-        .background(model.backgroundColor)
+        .background(model.displayBackgroundColor)
         .clipShape(.rect(cornerRadius: Const.radius))
     }
 

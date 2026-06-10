@@ -23,6 +23,14 @@ extension PasteboardModel {
         return NSColor(cached)
     }
 
+    var displayBackgroundColor: Color {
+        if type == .rich, let nsColor = nsBackgroundColor {
+            let srgb = nsColor.usingColorSpace(.sRGB) ?? nsColor
+            return srgb.alphaComponent > 0.01 ? Color(nsColor) : Color(.textBackgroundColor)
+        }
+        return cachedBackgroundColor ?? Color(.controlBackgroundColor)
+    }
+
     var colorDisplayText: String {
         let raw = attributeString.string
         return raw.hasPrefix("#") ? raw : "#\(raw)"
@@ -31,7 +39,13 @@ extension PasteboardModel {
     // MARK: - 纯函数：根据模型给出背景与前景色
 
     func colors() -> (Color, Color) {
-        (
+        if type == .rich, let nsColor = nsBackgroundColor {
+            let srgb = nsColor.usingColorSpace(.sRGB) ?? nsColor
+            if srgb.alphaComponent <= 0.01 {
+                return (Color(.textBackgroundColor), .secondary)
+            }
+        }
+        return (
             cachedBackgroundColor ?? Color(.controlBackgroundColor),
             cachedForegroundColor ?? .secondary
         )

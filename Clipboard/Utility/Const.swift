@@ -27,7 +27,7 @@ class Const {
 
     static let topRadius: CGFloat =
         if #available(macOS 26.0, *) {
-            23.0
+            20.0
         } else {
             8.0
         }

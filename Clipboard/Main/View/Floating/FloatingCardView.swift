@@ -105,7 +105,7 @@ struct FloatingCardView: View {
             maxHeight: FloatConst.cardHeight
         )
         .background {
-            model.backgroundColor
+            model.displayBackgroundColor
         }
         .clipShape(.rect(cornerRadius: Const.radius))
     }

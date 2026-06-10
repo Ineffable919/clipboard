@@ -57,10 +57,7 @@ struct ClipCardView: View {
     }
 
     private var cardBackgroundColor: Color {
-        if model.type == .rich, let nsColor = model.nsBackgroundColor {
-            return Color(nsColor)
-        }
-        return model.backgroundColor
+        model.displayBackgroundColor
     }
 
     private var cardContent: some View {

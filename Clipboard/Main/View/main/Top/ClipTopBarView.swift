@@ -33,17 +33,14 @@ struct ClipTopBarView: View {
                 }
             if inSearch {
                 searchField
-                    .transition(.identity)
             } else {
                 searchIcon
-                    .transition(.identity)
             }
             typeView
             Spacer()
             SettingsMenuView(topBarVM: topBarVM)
                 .padding(.trailing)
         }
-        .animation(nil, value: inSearch)
         .overlay(alignment: .leading) {
             if topBarVM.isPaused {
                 PauseIndicatorView(topBarVM: topBarVM)
@@ -70,7 +67,7 @@ struct ClipTopBarView: View {
     private var searchField: some View {
         HStack(spacing: 0) {
             Image(systemName: "magnifyingglass")
-                .font(.system(size: Const.iconSize14, weight: .regular))
+                .font(.system(size: Const.iconSize16, weight: .regular))
                 .foregroundStyle(.primary.opacity(0.8))
                 .padding(.horizontal, Const.space6)
 
@@ -89,7 +86,7 @@ struct ClipTopBarView: View {
 
             filterIcon
         }
-        .padding(Const.space4)
+        .padding(Const.space6)
         .frame(width: Const.topBarWidth, height: 32.0)
         .background {
             colorScheme == .dark

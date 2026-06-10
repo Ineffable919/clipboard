@@ -369,7 +369,7 @@ private struct PreviewRichTextView: View {
                 )
         } else {
             ZStack {
-                model.backgroundColor
+                model.displayBackgroundColor
                 ScrollView(.vertical) {
                     PreviewRichTextContent(model: model)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -394,10 +394,15 @@ private struct PreviewRichTextContent: View {
 
     var body: some View {
         if model.hasBgColor {
+            let safeBg: NSColor? = {
+                guard let nsColor = model.nsBackgroundColor else { return nil }
+                let srgb = nsColor.usingColorSpace(.sRGB) ?? nsColor
+                return srgb.alphaComponent > 0.01 ? nsColor : nil
+            }()
             CardTextView(
                 attributedString: model.highlightedRichText(keyword: ""),
                 isSelectable: true,
-                backgroundColor: model.nsBackgroundColor
+                backgroundColor: safeBg
             )
         } else {
             Text(extractedText)

@@ -51,8 +51,7 @@ struct LargeTextView: NSViewRepresentable {
             } else {
                 // 富文本 (RTF/RTFD)
                 if model.hasBgColor {
-                    let bgColor = NSColor(model.backgroundColor)
-                    textView.backgroundColor = bgColor
+                    textView.backgroundColor = NSColor(model.displayBackgroundColor)
                     if let attributedString = NSAttributedString(
                         with: model.data,
                         type: model.pasteboardType

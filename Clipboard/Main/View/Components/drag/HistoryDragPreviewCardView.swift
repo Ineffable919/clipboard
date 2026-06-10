@@ -52,7 +52,7 @@ struct HistoryDragPreviewCardView: View {
                 maxHeight: .infinity,
                 alignment: model.pasteboardType.isText() ? .topLeading : .center
             )
-            .background(model.backgroundColor)
+            .background(model.displayBackgroundColor)
             .clipShape(Const.contentShape)
         }
         .frame(width: Const.cardSize, height: Const.cardSize)

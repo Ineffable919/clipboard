@@ -57,10 +57,10 @@ struct FloatingHeaderView: View {
         let isInInputMode = env.isInInputMode()
 
         if !isInInputMode,
-           EventDispatcher.shared.handleTab(
-               event,
-               viewModel: topBarVM
-           )
+            EventDispatcher.shared.handleTab(
+                event,
+                viewModel: topBarVM
+            )
         {
             return nil
         }
@@ -272,7 +272,7 @@ private struct ChipScrollList: View {
                         onCycleColor: {
                             let nextIndex =
                                 (topBarVM.newChipColorIndex + 1)
-                                    % CategoryChip.palette.count
+                                % CategoryChip.palette.count
                             topBarVM.newChipColorIndex = nextIndex
                         }
                     )
@@ -536,6 +536,7 @@ private struct SearchFieldView: View {
                         : Color.clear,
                     lineWidth: 3.0
                 )
+                .padding(-1)
         }
     }
 }
