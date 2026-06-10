@@ -1,5 +1,7 @@
 import Foundation
 
+guard FileManager.default.fileExists(atPath: ClipboardPaths.mcpEnableFlag) else { exit(0) }
+
 let handler = MCPHandler()
 
 while let line = readLine(strippingNewline: true) {

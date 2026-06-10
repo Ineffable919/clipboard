@@ -222,17 +222,15 @@ struct AISettingsView: View {
 
     @ViewBuilder private var toolsSection: some View {
         VStack(alignment: .leading, spacing: Const.space12) {
-            HStack {
-                Text(String(localized: "mcpExposedTools", table: "Localizable"))
-                    .font(.subheadline.bold())
-            }
+            Text(String(localized: "mcpExposedTools", table: "Localizable"))
+                .font(.subheadline.bold())
 
-            LazyVGrid(
-                columns: [GridItem(.flexible()), GridItem(.flexible())],
-                spacing: Const.space12
-            ) {
-                ForEach(MCPToolInfo.all) { tool in
-                    MCPToolCard(
+            VStack(spacing: 0) {
+                ForEach(Array(MCPToolInfo.all.enumerated()), id: \.element.id) { index, tool in
+                    if index > 0 {
+                        Divider().padding(.leading, 52)
+                    }
+                    MCPToolRow(
                         tool: tool,
                         mcpEnabled: isEnabled,
                         isToolEnabled: enabledTools.contains(tool.name)
@@ -243,13 +241,14 @@ struct AISettingsView: View {
                     }
                 }
             }
+            .settingsStyle()
         }
     }
 }
 
-// MARK: - MCPToolCard
+// MARK: - MCPToolRow
 
-private struct MCPToolCard: View {
+private struct MCPToolRow: View {
     let tool: MCPToolInfo
     let mcpEnabled: Bool
     let isToolEnabled: Bool
@@ -258,44 +257,41 @@ private struct MCPToolCard: View {
     private var showConnected: Bool { mcpEnabled && isToolEnabled }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Const.space8) {
+        HStack(spacing: Const.space12) {
             ZStack {
-                RoundedRectangle(cornerRadius: 8)
+                RoundedRectangle(cornerRadius: 6)
                     .fill(isToolEnabled ? tool.color.opacity(0.12) : Color.secondary.opacity(0.1))
-                    .frame(width: 36, height: 36)
+                    .frame(width: 28, height: 28)
                 Image(systemName: tool.icon)
-                    .font(.system(size: 16, weight: .medium))
+                    .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(isToolEnabled ? tool.color : Color.secondary)
             }
             .animation(.easeInOut(duration: 0.2), value: isToolEnabled)
 
-            Text(tool.name)
-                .font(.system(size: 12, design: .monospaced).bold())
-                .foregroundStyle(.primary)
-                .lineLimit(1)
-
-            Text(tool.description)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .lineLimit(2)
-                .help(tool.description)
-
-            Spacer(minLength: 0)
-            HStack {
-                StatusBadge(
-                    label: showConnected ? String(localized: "mcpConnected", table: "Localizable") : "Off",
-                    color: showConnected ? .green : .secondary
-                )
-                Spacer()
-                Toggle("", isOn: Binding(get: { isToolEnabled }, set: { onToggle($0) }))
-                    .toggleStyle(.switch)
-                    .labelsHidden()
-                    .scaleEffect(0.8, anchor: .trailing)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(tool.name)
+                    .font(.system(size: 12, design: .monospaced).bold())
+                    .foregroundStyle(.primary)
+                Text(tool.description)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .help(tool.description)
             }
+
+            Spacer()
+
+            StatusBadge(
+                label: showConnected ? String(localized: .mcpToolEnabled) : String(localized: .mcpToolDisabled),
+                color: showConnected ? .green : .secondary
+            )
+            Toggle("", isOn: Binding(get: { isToolEnabled }, set: { onToggle($0) }))
+                .toggleStyle(.switch)
+                .labelsHidden()
+                .controlSize(.mini)
         }
-        .padding(Const.space12)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .settingsStyle()
+        .padding(.horizontal, Const.space16)
+        .padding(.vertical, Const.space10)
     }
 }
 

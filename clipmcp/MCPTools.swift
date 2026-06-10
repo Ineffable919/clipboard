@@ -7,6 +7,7 @@ struct MCPTools {
     // MARK: - Tool schema (returned by tools/list)
 
     static var definitions: [[String: Any]] {
+        guard FileManager.default.fileExists(atPath: ClipboardPaths.mcpEnableFlag) else { return [] }
         let disabled = MCPDisabledTools.load()
         return allDefinitions.filter { ($0["name"] as? String).map { !disabled.contains($0) } ?? true }
     }
