@@ -21,8 +21,15 @@ private struct MCPClientInfo: Identifiable {
         if let appIcon {
             return appIcon
         }
-        let config = NSImage.SymbolConfiguration(pointSize: 14, weight: .regular)
-        guard let base = NSImage(systemSymbolName: icon, accessibilityDescription: nil)?
+        let config = NSImage.SymbolConfiguration(
+            pointSize: 14,
+            weight: .regular
+        )
+        guard
+            let base = NSImage(
+                systemSymbolName: icon,
+                accessibilityDescription: nil
+            )?
             .withSymbolConfiguration(config)
         else { return nil }
         let rect = NSRect(origin: .zero, size: base.size)
@@ -39,7 +46,9 @@ private struct MCPClientInfo: Identifiable {
     static func loadAppIcon(bundleID: String?, appName: String?) -> NSImage? {
         var appPath: String?
         if let bundleID,
-           let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID)
+            let url = NSWorkspace.shared.urlForApplication(
+                withBundleIdentifier: bundleID
+            )
         {
             appPath = url.path
         } else if let appName {
@@ -138,7 +147,8 @@ struct AISettingsView: View {
                 subtitle: configSubtitle,
                 command: configCommand,
                 footer: nil,
-                configNote: "~/Library/Application Support/Claude/claude_desktop_config.json"
+                configNote:
+                    "~/Library/Application Support/Claude/claude_desktop_config.json"
             ),
             MCPClientInfo(
                 name: "Claude Code",
@@ -149,7 +159,8 @@ struct AISettingsView: View {
                     appName: "Claude"
                 ),
                 subtitle: cliSubtitle,
-                command: "claude mcp add --transport stdio clipboard -- \(helperPath)",
+                command:
+                    "claude mcp add --transport stdio clipboard -- \(helperPath)",
                 footer: String(localized: .mcpClientFooterClaudeCode),
                 configNote: nil
             ),
@@ -311,7 +322,6 @@ struct AISettingsView: View {
 private struct MCPClientDetailSheet: View {
     let client: MCPClientInfo
     @Environment(\.dismiss) private var dismiss
-    @State private var copied = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -399,20 +409,14 @@ private struct MCPClientDetailSheet: View {
             Button {
                 NSPasteboard.general.clearContents()
                 NSPasteboard.general.setString(client.command, forType: .string)
-                copied = true
-                Task {
-                    try? await Task.sleep(for: .seconds(2))
-                    copied = false
-                }
             } label: {
-                Image(systemName: copied ? "checkmark.circle" : "doc.on.doc")
+                Image(systemName: "doc.on.doc")
                     .font(.callout)
-                    .foregroundStyle(copied ? Color.accentColor : .secondary)
+                    .foregroundStyle(.secondary)
                     .frame(width: Const.space32, height: Const.space32)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .animation(.easeInOut(duration: 0.15), value: copied)
         }
     }
 }
