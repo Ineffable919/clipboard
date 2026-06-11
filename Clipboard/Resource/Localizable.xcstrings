@@ -150,6 +150,23 @@
         }
       }
     },
+    "cancelButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消"
+          }
+        }
+      }
+    },
     "checkUpdates" : {
       "comment" : "Menu item: check for updates",
       "extractionState" : "manual",
@@ -1232,23 +1249,6 @@
         }
       }
     },
-    "mcpAddToTools" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connected Al Tools"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "连接到 AI 工具"
-          }
-        }
-      }
-    },
     "mcpClaudeDesktopConfigPath" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1262,6 +1262,91 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "粘贴到："
+          }
+        }
+      }
+    },
+    "mcpClientFooterClaudeCode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Launch Claude Code, type /mcp, then select Clipboard to complete setup."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启动 Claude Code，输入 /mcp，然后选择 Clipboard 并完成认证。"
+          }
+        }
+      }
+    },
+    "mcpClientSubtitleCLI" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run this command in Terminal:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在\"终端\"中运行此命令："
+          }
+        }
+      }
+    },
+    "mcpClientSubtitleConfig" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste into the config file shown below:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粘贴到下方配置文件中："
+          }
+        }
+      }
+    },
+    "mcpConnectAITools" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Connect AI Tools"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接 AI 工具…"
+          }
+        }
+      }
+    },
+    "mcpConnectFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connect %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接 %@"
           }
         }
       }
@@ -1351,40 +1436,6 @@
         }
       }
     },
-    "mcpRunning" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Running"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "运行中"
-          }
-        }
-      }
-    },
-    "mcpStopped" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Stopped"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已停止"
-          }
-        }
-      }
-    },
     "mcpToolDescListCategories" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1432,40 +1483,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "将纯文本写入系统剪贴板"
-          }
-        }
-      }
-    },
-    "mcpToolDisabled" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Disabled"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已关闭"
-          }
-        }
-      }
-    },
-    "mcpToolEnabled" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enabled"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已开启"
           }
         }
       }

@@ -1,6 +1,38 @@
 import SwiftUI
 
-// MARK: - Tool metadata
+// MARK: - MCPClientInfo
+
+private struct MCPClientInfo: Identifiable {
+    let id = UUID()
+    let name: String
+    let icon: String
+    let iconColor: Color
+    let appIcon: NSImage?
+    let subtitle: String
+    let command: String
+    let footer: String?
+    let configNote: String?
+
+    static func loadAppIcon(bundleID: String?, appName: String?) -> NSImage? {
+        var appPath: String?
+        if let bundleID,
+           let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID)
+        {
+            appPath = url.path
+        } else if let appName {
+            let path = "/Applications/\(appName).app"
+            if FileManager.default.fileExists(atPath: path) {
+                appPath = path
+            }
+        }
+        guard let appPath else { return nil }
+        let icon = NSWorkspace.shared.icon(forFile: appPath)
+        icon.size = NSSize(width: 18, height: 18)
+        return icon
+    }
+}
+
+// MARK: - MCPToolInfo
 
 private struct MCPToolInfo: Identifiable {
     let id = UUID()
@@ -34,9 +66,8 @@ extension MCPToolDefinition {
 
 struct AISettingsView: View {
     @State private var isEnabled: Bool
-    @State private var selectedClientIndex = 0
-    @State private var copiedKey: String? = nil
     @State private var enabledTools: Set<String>
+    @State private var selectedClient: MCPClientInfo?
 
     init(initialEnabled: Bool = MCPEnableFlag.isEnabled) {
         _isEnabled = State(initialValue: initialEnabled)
@@ -47,47 +78,129 @@ struct AISettingsView: View {
         )
     }
 
-    private var helperPath: String {
-        Bundle.main.bundleURL
+    private static let clients: [MCPClientInfo] = {
+        let helperPath = Bundle.main.bundleURL
             .appending(path: "Contents/MacOS/clipmcp")
             .path
-    }
-
-    private var clients: [(label: String, content: String, note: String?)] {
-        [
-            (
-                label: "Claude Code",
-                content:
-                    "$ claude mcp add --transport stdio clipboard -- \(helperPath)",
-                note: nil
-            ),
-            (
-                label: "Codex",
-                content: "$ codex mcp add clipboard -- \(helperPath)",
-                note: nil
-            ),
-            (
-                label: "Claude Desktop",
-                content: """
-                {
-                  "mcpServers": {
-                    "clipboard": {
-                      "command": "\(helperPath)"
-                    }
-                  }
+        let cliSubtitle = String(localized: .mcpClientSubtitleCLI)
+        let configSubtitle = String(localized: .mcpClientSubtitleConfig)
+        let configCommand = """
+            {
+              "mcpServers": {
+                "clipboard": {
+                  "command": "\(helperPath)"
                 }
-                """,
-                note:
-                    "~/Library/Application Support/Claude/claude_desktop_config.json"
+              }
+            }
+            """
+        let vsCodeCommand = """
+            {
+              "servers": {
+                "clipboard": {
+                  "type": "stdio",
+                  "command": "\(helperPath)"
+                }
+              }
+            }
+            """
+        return [
+            MCPClientInfo(
+                name: "Claude Desktop",
+                icon: "sparkle",
+                iconColor: Color(hex: "E8714A"),
+                appIcon: MCPClientInfo.loadAppIcon(
+                    bundleID: "com.anthropic.claudefordesktop",
+                    appName: "Claude"
+                ),
+                subtitle: configSubtitle,
+                command: configCommand,
+                footer: nil,
+                configNote: "~/Library/Application Support/Claude/claude_desktop_config.json"
+            ),
+            MCPClientInfo(
+                name: "Claude Code",
+                icon: "terminal",
+                iconColor: Color(hex: "E8714A"),
+                appIcon: MCPClientInfo.loadAppIcon(
+                    bundleID: "com.anthropic.claudefordesktop",
+                    appName: "Claude"
+                ),
+                subtitle: cliSubtitle,
+                command: "claude mcp add --transport stdio clipboard -- \(helperPath)",
+                footer: String(localized: .mcpClientFooterClaudeCode),
+                configNote: nil
+            ),
+            MCPClientInfo(
+                name: "Codex",
+                icon: "bolt.fill",
+                iconColor: Color(hex: "5B8EF0"),
+                appIcon: MCPClientInfo.loadAppIcon(
+                    bundleID: "com.openai.codex",
+                    appName: "Codex"
+                ),
+                subtitle: cliSubtitle,
+                command: "codex mcp add clipboard -- \(helperPath)",
+                footer: nil,
+                configNote: nil
+            ),
+            MCPClientInfo(
+                name: "Cursor",
+                icon: "cursorarrow.rays",
+                iconColor: Color(hex: "1A1A1A"),
+                appIcon: MCPClientInfo.loadAppIcon(
+                    bundleID: "com.todesktop.230313mzl4w4u92",
+                    appName: "Cursor"
+                ),
+                subtitle: configSubtitle,
+                command: configCommand,
+                footer: nil,
+                configNote: "~/.cursor/mcp.json"
+            ),
+            MCPClientInfo(
+                name: "VS Code",
+                icon: "chevron.left.forwardslash.chevron.right",
+                iconColor: Color(hex: "007ACC"),
+                appIcon: MCPClientInfo.loadAppIcon(
+                    bundleID: "com.microsoft.VSCode",
+                    appName: "Visual Studio Code"
+                ),
+                subtitle: configSubtitle,
+                command: vsCodeCommand,
+                footer: nil,
+                configNote: "~/.vscode/mcp.json"
             ),
         ]
-    }
+    }()
 
     var body: some View {
         ScrollView(.vertical) {
-            VStack(alignment: .leading, spacing: Const.space24) {
-                headerInstallCard
+            VStack(alignment: .leading, spacing: Const.space12) {
+                headerCard
                 if isEnabled {
+                    HStack {
+                        Spacer()
+                        Menu {
+                            ForEach(Self.clients) { client in
+                                Button {
+                                    selectedClient = client
+                                } label: {
+                                    Label {
+                                        Text(client.name)
+                                    } icon: {
+                                        if let appIcon = client.appIcon {
+                                            Image(nsImage: appIcon)
+                                        } else {
+                                            Image(systemName: client.icon)
+                                        }
+                                    }
+                                }
+                            }
+                        } label: {
+                            Text(String(localized: .mcpConnectAITools))
+                                .font(.system(size: 13, design: .default))
+                        }
+                        .fixedSize()
+                    }
                     toolsSection
                 }
                 Spacer(minLength: 0)
@@ -97,168 +210,43 @@ struct AISettingsView: View {
         .scrollIndicators(.hidden)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .animation(.easeInOut(duration: 0.2), value: isEnabled)
+        .sheet(item: $selectedClient) { client in
+            MCPClientDetailSheet(client: client)
+        }
     }
 
-    // MARK: - Header + Install Card
+    // MARK: - Header Card
 
-    @ViewBuilder private var headerInstallCard: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: Const.space12) {
-                VStack(alignment: .leading, spacing: Const.space4) {
-                    HStack(spacing: Const.space8) {
-                        Text("MCP")
-                            .font(.headline)
-                        StatusBadge(
-                            label: isEnabled
-                                ? String(
-                                    localized: "mcpRunning",
-                                    table: "Localizable"
-                                )
-                                : String(
-                                    localized: "mcpStopped",
-                                    table: "Localizable"
-                                ),
-                            color: isEnabled ? .green : .secondary
-                        )
-                    }
-                    Text(
-                        isEnabled
-                            ? "stdio · @clipboard/mcp · \(enabledTools.count) tools exposed"
-                            : "server stopped · 0 tools exposed"
-                    )
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                }
-
-                Spacer()
-
-                Toggle("", isOn: $isEnabled)
-                    .toggleStyle(.switch)
-                    .controlSize(.mini)
-                    .labelsHidden()
-                    .onChange(of: isEnabled) { _, newValue in
-                        MCPEnableFlag.setEnabled(newValue)
-                    }
+    @ViewBuilder private var headerCard: some View {
+        HStack(spacing: Const.space12) {
+            VStack(alignment: .leading, spacing: Const.space4) {
+                Text("MCP")
+                    .font(.headline)
+                Text(
+                    isEnabled
+                        ? "stdio · @clipboard/mcp · \(enabledTools.count) tools exposed"
+                        : "server stopped · 0 tools exposed"
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
             }
-            .padding(Const.space16)
 
-            if isEnabled {
-                Divider()
+            Spacer()
 
-                VStack(alignment: .leading, spacing: Const.space12) {
-                    HStack(spacing: Const.space12) {
-                        Text(
-                            String(localized: "mcpAddTo", table: "Localizable")
-                        )
-                        .font(.subheadline)
-
-                        clientTabBar
-                    }
-
-                    let client = clients[selectedClientIndex]
-                    commandBlock(client: client)
-
-                    if let note = client.note {
-                        HStack(spacing: Const.space4) {
-                            Text(.mcpClaudeDesktopConfigPath)
-                            Text(note)
-                                .textSelection(.enabled)
-                                .lineLimit(1)
-                                .truncationMode(.middle)
-                        }
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    }
+            Toggle("", isOn: $isEnabled)
+                .toggleStyle(.switch)
+                .controlSize(.mini)
+                .labelsHidden()
+                .onChange(of: isEnabled) { _, newValue in
+                    MCPEnableFlag.setEnabled(newValue)
                 }
-                .padding(Const.space16)
-            }
         }
+        .padding(Const.space16)
         .settingsStyle()
     }
 
-    @ViewBuilder private var clientTabBar: some View {
-        HStack(spacing: Const.space2) {
-            ForEach(Array(clients.enumerated()), id: \.offset) {
-                index,
-                client in
-                Button {
-                    selectedClientIndex = index
-                } label: {
-                    Text(client.label)
-                        .font(.subheadline)
-                        .foregroundStyle(
-                            selectedClientIndex == index ? .primary : .secondary
-                        )
-                        .padding(.horizontal, Const.space10)
-                        .padding(.vertical, Const.space6)
-                        .background(
-                            selectedClientIndex == index
-                                ? Color(nsColor: .controlBackgroundColor)
-                                : Color.clear,
-                            in: RoundedRectangle(
-                                cornerRadius: Const.settingsRadius
-                            )
-                        )
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(Const.space4)
-        .background(
-            Color.primary.opacity(0.06),
-            in: RoundedRectangle(cornerRadius: 8)
-        )
-    }
-
-    @ViewBuilder private func commandBlock(
-        client: (label: String, content: String, note: String?)
-    ) -> some View {
-        ZStack(alignment: .topTrailing) {
-            Text(client.content)
-                .font(.system(size: 11, design: .monospaced))
-                .foregroundStyle(.primary)
-                .textSelection(.enabled)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, Const.space12)
-                .padding(.vertical, Const.space12)
-                .padding(.trailing, Const.space32)
-                .background(
-                    Color(nsColor: .controlBackgroundColor),
-                    in: RoundedRectangle(cornerRadius: 8)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8).stroke(
-                        Color.primary.opacity(0.06)
-                    )
-                )
-
-            let isCopied = copiedKey == client.label
-            Button {
-                let raw =
-                    client.content.hasPrefix("$ ")
-                    ? String(client.content.dropFirst(2))
-                    : client.content
-                NSPasteboard.general.clearContents()
-                NSPasteboard.general.setString(raw, forType: .string)
-                copiedKey = client.label
-                Task {
-                    try? await Task.sleep(for: .seconds(2))
-                    if copiedKey == client.label { copiedKey = nil }
-                }
-            } label: {
-                Image(systemName: isCopied ? "checkmark.circle" : "doc.on.doc")
-                    .font(.callout)
-                    .foregroundStyle(isCopied ? Color.accentColor : .secondary)
-                    .frame(width: Const.space32, height: Const.space32)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .animation(.easeInOut(duration: 0.15), value: isCopied)
-        }
-    }
-
-    // MARK: - Exposed Tools Section
+    // MARK: - Tools Section
 
     @ViewBuilder private var toolsSection: some View {
         VStack(alignment: .leading, spacing: Const.space12) {
@@ -275,7 +263,6 @@ struct AISettingsView: View {
                     }
                     MCPToolRow(
                         tool: tool,
-                        mcpEnabled: isEnabled,
                         isToolEnabled: enabledTools.contains(tool.name)
                     ) { enabled in
                         if enabled {
@@ -296,15 +283,123 @@ struct AISettingsView: View {
     }
 }
 
+// MARK: - MCPClientDetailSheet
+
+private struct MCPClientDetailSheet: View {
+    let client: MCPClientInfo
+    @Environment(\.dismiss) private var dismiss
+    @State private var copied = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            clientIcon
+                .padding(.bottom, Const.space16)
+
+            Text(String(localized: .mcpConnectFormat(client.name)))
+                .font(.title2.bold())
+                .padding(.bottom, Const.space4)
+
+            Text(client.subtitle)
+                .padding(.bottom, Const.space16)
+
+            commandBlock
+                .padding(
+                    .bottom,
+                    client.configNote != nil ? Const.space8 : Const.space16
+                )
+
+            if let note = client.configNote {
+                HStack(spacing: Const.space4) {
+                    Text(.mcpClaudeDesktopConfigPath)
+                    Text(note)
+                        .textSelection(.enabled)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+                .padding(.bottom, Const.space16)
+            }
+
+            if let footer = client.footer {
+                Text(footer)
+                    .padding(.bottom, Const.space16)
+            }
+
+            HStack {
+                Spacer()
+                Button(String(localized: .cancelButton)) {
+                    dismiss()
+                }
+                .buttonStyle(.bordered)
+            }
+        }
+        .padding(Const.space24)
+        .frame(width: 440)
+    }
+
+    @ViewBuilder private var clientIcon: some View {
+        if let appIcon = client.appIcon {
+            Image(nsImage: appIcon)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 44, height: 44)
+        } else {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(client.iconColor)
+                    .frame(width: 40, height: 40)
+                Image(systemName: client.icon)
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(.white)
+            }
+        }
+    }
+
+    @ViewBuilder private var commandBlock: some View {
+        ZStack(alignment: .topTrailing) {
+            Text(client.command)
+                .font(.system(size: 12, design: .monospaced))
+                .foregroundStyle(.primary)
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, Const.space12)
+                .padding(.vertical, Const.space12)
+                .padding(.trailing, Const.space32)
+                .background(
+                    .quaternary,
+                    in: RoundedRectangle(cornerRadius: Const.space8)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: Const.space8)
+                        .stroke(Color.primary.opacity(0.06))
+                )
+
+            Button {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(client.command, forType: .string)
+                copied = true
+                Task {
+                    try? await Task.sleep(for: .seconds(2))
+                    copied = false
+                }
+            } label: {
+                Image(systemName: copied ? "checkmark.circle" : "doc.on.doc")
+                    .font(.callout)
+                    .foregroundStyle(copied ? Color.accentColor : .secondary)
+                    .frame(width: Const.space32, height: Const.space32)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .animation(.easeInOut(duration: 0.15), value: copied)
+        }
+    }
+}
+
 // MARK: - MCPToolRow
 
 private struct MCPToolRow: View {
     let tool: MCPToolInfo
-    let mcpEnabled: Bool
     let isToolEnabled: Bool
     let onToggle: (Bool) -> Void
-
-    private var showConnected: Bool { mcpEnabled && isToolEnabled }
 
     var body: some View {
         HStack(spacing: Const.space12) {
@@ -326,8 +421,7 @@ private struct MCPToolRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(tool.name)
-                    .font(.system(size: 12, design: .monospaced).bold())
-                    .foregroundStyle(.primary)
+                    .font(.system(size: 12, design: .default))
                 Text(tool.description)
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -337,12 +431,6 @@ private struct MCPToolRow: View {
 
             Spacer()
 
-            StatusBadge(
-                label: showConnected
-                    ? String(localized: .mcpToolEnabled)
-                    : String(localized: .mcpToolDisabled),
-                color: showConnected ? .green : .secondary
-            )
             Toggle(
                 "",
                 isOn: Binding(get: { isToolEnabled }, set: { onToggle($0) })
@@ -353,27 +441,6 @@ private struct MCPToolRow: View {
         }
         .padding(.horizontal, Const.space16)
         .padding(.vertical, Const.space10)
-    }
-}
-
-// MARK: - StatusBadge
-
-private struct StatusBadge: View {
-    let label: String
-    let color: Color
-
-    var body: some View {
-        HStack(spacing: Const.space4) {
-            Circle()
-                .fill(color)
-                .frame(width: Const.space6, height: Const.space6)
-            Text(label)
-                .font(.caption.weight(.medium))
-                .foregroundStyle(color)
-        }
-        .padding(.horizontal, Const.space8)
-        .padding(.vertical, 3)
-        .background(color.opacity(0.12), in: Capsule())
     }
 }
 
