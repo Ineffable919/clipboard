@@ -13,6 +13,29 @@ private struct MCPClientInfo: Identifiable {
     let footer: String?
     let configNote: String?
 
+    /// Menu icon as an `NSImage` that always renders via the same path as the
+    /// app icon. The app icon (a non-template colored bitmap) shows fine in the
+    /// menu, but a bare SF Symbol / template image does not. So the fallback
+    /// bakes the symbol into a non-template colored bitmap too.
+    var menuIcon: NSImage? {
+        if let appIcon {
+            return appIcon
+        }
+        let config = NSImage.SymbolConfiguration(pointSize: 14, weight: .regular)
+        guard let base = NSImage(systemSymbolName: icon, accessibilityDescription: nil)?
+            .withSymbolConfiguration(config)
+        else { return nil }
+        let rect = NSRect(origin: .zero, size: base.size)
+        let image = NSImage(size: base.size)
+        image.lockFocus()
+        base.draw(in: rect)
+        NSColor.labelColor.set()
+        rect.fill(using: .sourceAtop)
+        image.unlockFocus()
+        image.isTemplate = false
+        return image
+    }
+
     static func loadAppIcon(bundleID: String?, appName: String?) -> NSImage? {
         var appPath: String?
         if let bundleID,
@@ -187,8 +210,8 @@ struct AISettingsView: View {
                                     Label {
                                         Text(client.name)
                                     } icon: {
-                                        if let appIcon = client.appIcon {
-                                            Image(nsImage: appIcon)
+                                        if let menuIcon = client.menuIcon {
+                                            Image(nsImage: menuIcon)
                                         } else {
                                             Image(systemName: client.icon)
                                         }

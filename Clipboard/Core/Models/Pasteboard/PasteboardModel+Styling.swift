@@ -15,8 +15,18 @@ extension PasteboardModel {
 
     // MARK: - 颜色
 
+    /// 富文本背景色，alpha ≤ 0.01 的视为透明返回 nil
+    var safeBgColor: NSColor? {
+        guard let c = cachedBackgroundColor else { return nil }
+        let srgb = c.usingColorSpace(.sRGB) ?? c
+        return srgb.alphaComponent > 0.01 ? srgb : nil
+    }
+
     func colors() -> (NSColor, NSColor) {
-        (
+        if type == .rich, cachedBackgroundColor != nil, safeBgColor == nil {
+            return (.textBackgroundColor, .secondaryLabelColor)
+        }
+        return (
             cachedBackgroundColor ?? .textBackgroundColor,
             cachedForegroundColor ?? .secondaryLabelColor
         )
@@ -37,8 +47,7 @@ extension PasteboardModel {
         }
 
         if attributeString.length > 0,
-           let bg = attributeString.attribute(.backgroundColor, at: 0, effectiveRange: nil) as? NSColor,
-           (bg.usingColorSpace(.sRGB) ?? bg).alphaComponent > 0.1
+           let bg = attributeString.attribute(.backgroundColor, at: 0, effectiveRange: nil) as? NSColor
         {
             return (bg, contrastingNSColor(for: bg), true)
         }

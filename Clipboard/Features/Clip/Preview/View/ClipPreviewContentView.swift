@@ -193,7 +193,7 @@ final class PreviewTextContentView: NSView {
     private let fixedBgColor: NSColor?
 
     init(model: PasteboardModel) {
-        if model.type == .rich, model.hasBgColor, let bg = model.cachedBackgroundColor {
+        if model.type == .rich, let bg = model.safeBgColor {
             fixedBgColor = bg
         } else {
             fixedBgColor = nil

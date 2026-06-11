@@ -213,7 +213,7 @@ final class CardRichContentView: NSView, PassthroughMouseEvents {
     init(model: PasteboardModel, keyword: String) {
         super.init(frame: .zero)
 
-        if model.hasBgColor, let bgColor = model.cachedBackgroundColor {
+        if let bgColor = model.safeBgColor {
             textView.drawsBackground = true
             textView.backgroundColor = bgColor
         }
