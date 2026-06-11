@@ -14,6 +14,9 @@ final class StatusBarController: NSObject {
 
     private var menuBarItem: NSStatusItem?
     private var menuBarIconObserver: NSObjectProtocol?
+    private var rightClickMonitor: Any?
+    private var isMenuVisible = false
+    private var menuCloseUptime: TimeInterval = 0
 
     private var onCheckUpdateClick: (() -> Void)?
     private var menu: NSMenu?
@@ -44,6 +47,10 @@ final class StatusBarController: NSObject {
         if let observer = menuBarIconObserver {
             NotificationCenter.default.removeObserver(observer)
             menuBarIconObserver = nil
+        }
+        if let monitor = rightClickMonitor {
+            NSEvent.removeMonitor(monitor)
+            rightClickMonitor = nil
         }
     }
 
@@ -86,6 +93,7 @@ final class StatusBarController: NSObject {
         menuBarItem?.isVisible = shouldShow
 
         configureMenuBarButton()
+        setupRightClickMonitor()
     }
 
     private func configureMenuBarButton() {
@@ -109,7 +117,13 @@ final class StatusBarController: NSObject {
         button.image = icon?.withSymbolConfiguration(config)
         button.target = self
         button.action = #selector(statusBarClick)
-        button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+        if #available(macOS 27.0, *) {
+            // macOS 27 不再向状态栏按钮投递右键事件，
+            // 右键改由 global monitor 处理（见 setupRightClickMonitor）
+            button.sendAction(on: [.leftMouseUp])
+        } else {
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+        }
     }
 
     private func observeMenuBarIconVisibility() {
@@ -138,6 +152,29 @@ final class StatusBarController: NSObject {
             menuBarItem?.menu = menu
             sender.performClick(nil)
             menuBarItem?.menu = nil
+        }
+    }
+
+    private func setupRightClickMonitor() {
+        guard #available(macOS 27.0, *) else { return }
+        if let monitor = rightClickMonitor {
+            NSEvent.removeMonitor(monitor)
+        }
+        rightClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: .rightMouseDown) { [weak self] event in
+            let eventTimestamp = event.timestamp
+            Task { @MainActor [weak self] in
+                guard let self,
+                      let buttonWindow = self.menuBarItem?.button?.window,
+                      buttonWindow.frame.contains(NSEvent.mouseLocation),
+                      let menu = self.menu else { return }
+                if self.isMenuVisible {
+                    menu.cancelTracking()
+                } else if eventTimestamp > self.menuCloseUptime {
+                    self.isMenuVisible = true
+                    self.menuBarItem?.menu = menu
+                    self.menuBarItem?.button?.performClick(nil)
+                }
+            }
         }
     }
 
@@ -363,6 +400,12 @@ final class StatusBarController: NSObject {
 // MARK: - NSMenuDelegate
 
 extension StatusBarController: NSMenuDelegate {
+    func menuDidClose(_ menu: NSMenu) {
+        menuBarItem?.menu = nil
+        isMenuVisible = false
+        menuCloseUptime = ProcessInfo.processInfo.systemUptime
+    }
+
     func menuNeedsUpdate(_ menu: NSMenu) {
         if let pauseItem = menu.items.first(where: {
             $0.tag == Self.pauseMenuTag
