@@ -32,8 +32,14 @@ private struct MCPClientInfo: Identifiable {
             )?
             .withSymbolConfiguration(config)
         else { return nil }
-        let rect = NSRect(origin: .zero, size: base.size)
-        let image = NSImage(size: base.size)
+        let size = NSSize(width: 18, height: 18)
+        let rect = NSRect(
+            x: (size.width - base.size.width) / 2,
+            y: (size.height - base.size.height) / 2,
+            width: base.size.width,
+            height: base.size.height
+        )
+        let image = NSImage(size: size)
         image.lockFocus()
         base.draw(in: rect)
         NSColor.labelColor.set()
@@ -251,7 +257,7 @@ struct AISettingsView: View {
 
     // MARK: - Header Card
 
-    @ViewBuilder private var headerCard: some View {
+    private var headerCard: some View {
         HStack(spacing: Const.space12) {
             VStack(alignment: .leading, spacing: Const.space4) {
                 Text("MCP")
@@ -282,7 +288,7 @@ struct AISettingsView: View {
 
     // MARK: - Tools Section
 
-    @ViewBuilder private var toolsSection: some View {
+    private var toolsSection: some View {
         VStack(alignment: .leading, spacing: Const.space12) {
             Text(String(localized: "mcpExposedTools", table: "Localizable"))
                 .font(.subheadline.bold())
@@ -343,11 +349,17 @@ private struct MCPClientDetailSheet: View {
 
             if let note = client.configNote {
                 HStack(spacing: Const.space4) {
-                    Text(.mcpClaudeDesktopConfigPath)
-                    Text(note)
-                        .textSelection(.enabled)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
+                    Text(.mcpConfigPasteInto)
+                    Button {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(note, forType: .string)
+                    } label: {
+                        Text(note)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
+                    .buttonStyle(.plain)
+                    .help(note)
                 }
                 .padding(.bottom, Const.space16)
             }
@@ -374,7 +386,7 @@ private struct MCPClientDetailSheet: View {
             Image(nsImage: appIcon)
                 .resizable()
                 .scaledToFit()
-                .frame(width: 44, height: 44)
+                .frame(width: 40, height: 40)
         } else {
             ZStack {
                 RoundedRectangle(cornerRadius: 10)
@@ -387,11 +399,10 @@ private struct MCPClientDetailSheet: View {
         }
     }
 
-    @ViewBuilder private var commandBlock: some View {
+    private var commandBlock: some View {
         ZStack(alignment: .topTrailing) {
             Text(client.command)
                 .font(.system(size: 12, design: .monospaced))
-                .foregroundStyle(.primary)
                 .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, Const.space12)

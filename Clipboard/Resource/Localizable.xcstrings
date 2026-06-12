@@ -1249,23 +1249,6 @@
         }
       }
     },
-    "mcpClaudeDesktopConfigPath" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Paste into:"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "粘贴到："
-          }
-        }
-      }
-    },
     "mcpClientFooterClaudeCode" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1313,6 +1296,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "粘贴到下方配置文件中："
+          }
+        }
+      }
+    },
+    "mcpConfigPasteInto" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste into:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粘贴到："
           }
         }
       }
