@@ -6,95 +6,108 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Release Notes</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            line-height: 1.6;
-            margin: 10px auto;
-            padding: 20px;
-            color: #333;
-            max-width: 600px;
-            background-color: #fff;
-            font-size: 14px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
-            border-radius: 8px;
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 40px;
+            background-color: #ffffff;
+            color: #000000;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        h5 {
-            color: #2c3e50;
-            margin-top: 20px;
-            margin-bottom: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            letter-spacing: 0.2px;
-            padding-left: 18px;
+        section {
             position: relative;
-            text-transform: none;
-            text-rendering: optimizeLegibility;
+            margin-bottom: 64px;
         }
 
-        h5.improvements::before {
-            content: "";
+        section::after {
+            content: '';
             position: absolute;
-            left: 2px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 14px;
-            height: 14px;
-            mask-size: cover;
-            -webkit-mask-size: cover;
+            left: 0;
+            bottom: -32px;
+            width: 100%;
+            height: 1px;
+            background: rgba(0, 0, 0, 0.08);
         }
 
-        h5.bug-fixes::before {
-            content: "";
-            position: absolute;
-            left: 2px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 14px;
-            height: 14px;
-            mask-size: cover;
-            -webkit-mask-size: cover;
+        .release-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
         }
 
-        h5.feature::before {
-            content: "";
-            position: absolute;
-            left: 2px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 14px;
-            height: 14px;
-            mask-size: cover;
-            -webkit-mask-size: cover;
+        .release-version {
+            font-size: 18px;
+            line-height: 24px;
+            font-weight: 500;
+            color: #000000;
+            display: flex;
+            align-items: center;
+        }
+
+        .release-version span {
+            display: inline-flex;
+            align-items: center;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #000000;
+            background: #d7f59d;
+            padding: 2px 10px;
+            border-radius: 12px;
+            margin-left: 12px;
+            font-weight: 500;
+        }
+
+        .release-date {
+            font-size: 16px;
+            line-height: 1.5;
+            color: rgba(0, 0, 0, 0.6);
+        }
+
+        h3 {
+            font-size: 16px;
+            line-height: 1.5;
+            font-weight: 400;
+            color: rgba(0, 0, 0, 0.8);
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 16px;
+            line-height: 1.6;
+            color: rgba(0, 0, 0, 0.6);
+            margin-bottom: 20px;
+            text-indent: 2em;
         }
 
         ul {
-            padding-left: 20px;
-            margin-left: 0;
-            margin-right: 0;
-            list-style: none;
+            padding-left: 16px;
+            margin-bottom: 24px;
+            list-style: disc;
         }
 
         li {
+            font-size: 16px;
+            line-height: 1.5;
+            color: rgba(0, 0, 0, 0.6);
             margin-bottom: 8px;
-            color: #555;
-            position: relative;
-            padding-left: 15px;
         }
 
-        li:before {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 8px;
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background-color: black;
+        li::marker {
+            color: #90b842;
         }
 
         a {
-            color: #1765D9;
+            color: #90b842;
             text-decoration: none;
         }
 
@@ -102,208 +115,213 @@
             text-decoration: underline;
         }
 
-        .release-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            box-sizing: border-box;
-            width: 100%;
-            border-bottom: 1px solid #eee;
-            margin-left: 0;
-            margin-top: 0;
-            margin-bottom: 15px;
-        }
-
-        .release-version {
-            margin: 0;
-            font-size: 16px;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-
-        .release-date {
-            margin-top: 10px;
-            font-size: 14px;
-            color: #7f8c8d;
-        }
-
-        .emoji {
-            margin-right: 5px;
+        .warning-box {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #856404;
         }
     </style>
 </head>
 
 <body>
-    <div class="release-header">
-        <span class="release-version">1.1</span>
-        <span class="release-date">2026-05-12</span>
-    </div>
+    <section>
+        <div class="release-header">
+            <h2 class="release-version">
+                v1.2
+                <span>Latest</span>
+            </h2>
+            <time class="release-date">2026-06-12</time>
+        </div>
+        <p>1.0 版本在 SwiftUI 框架下已趋于稳定，但在性能和体验上仍有提升空间。为此，我决定对整个应用进行彻底重构。
+            2.0 版本采用不同的技术架构，在启动速度、流畅度和体验方面都有显著优化，带来更加极致的使用体验。
+        </p>
 
-    <div
-        style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 12px 15px; margin: 15px 0; border-radius: 4px; font-size: 13px; color: #856404;">
-        <strong>注意：</strong>应用启动没有数据是因为该版本修改了数据存储位置，避免每次启动都提示文稿授权弹窗，<br> 只需在 设置 - 存储页面导入旧数据即可，旧数据存储位置：文稿 - Clip - Clip.sqlite3，<br> 后续可删除旧数据，或保留备份
-    </div>
+    </section>
 
-    <h5 class="bug-fixes">Bug Fixes</h5>
-    <ul>
-        <li>解决了一些已知问题</li>
-    </ul>
+    <section>
+        <div class="release-header">
+            <h2 class="release-version">v1.1</h2>
+            <time class="release-date">2026-05-12</time>
+        </div>
 
-    <!-- 1.0.0 -->
-    <div class="release-header">
-        <span class="release-version">1.0.0</span>
-        <span class="release-date">2026-04-24</span>
-    </div>
-    <h5 class="feature">What's new</h5>
-    <ul>
-        <li>本地化支持</li>
-        <li>列表支持多选 <a href="https://github.com/Ineffable919/clipboard/issues/16">#16</a></li>
-    </ul>
-    <h5 class="improvements">Improvements</h5>
-    <ul>
-        <li>支持在列表使用鼠标滚轮进行横向滚动 <a href="https://github.com/Ineffable919/clipboard/pull/18">#18</a> (感谢 <a
-                href="https://github.com/fleyi">fleyi</a> 提交 pull)</li>
-        <li>系统版本支持提升至 macOS 15</li>
+        <div class="warning-box">
+            <strong>注意：</strong>应用启动没有数据是因为该版本修改了数据存储位置，避免每次启动都提示文稿授权弹窗，<br> 只需在 设置 - 存储页面导入旧数据即可，旧数据存储位置：文稿 - Clip -
+            Clip.sqlite3，<br> 后续可删除旧数据，或保留备份
+        </div>
 
-    </ul>
-    <h5 class="bug-fixes">Bug Fixes</h5>
-    <ul>
-        <li>解决了一些已知问题</li>
-    </ul>
+        <h3>Bug Fixes</h3>
+        <ul>
+            <li>解决了一些已知问题</li>
+        </ul>
+    </section>
 
-    <!-- 0.5.1 -->
-    <div class="release-header">
-        <span class="release-version">0.5.1</span>
-        <span class="release-date">2026-03-03</span>
-    </div>
-    <h5 class="bug-fixes">Bug Fixes</h5>
-    <ul>
-        <li>解决了一些已知问题</li>
-    </ul>
+    <section>
+        <div class="release-header">
+            <h2 class="release-version">v1.0.0</h2>
+            <time class="release-date">2026-04-24</time>
+        </div>
+        <h3>What's new</h3>
+        <ul>
+            <li>本地化支持</li>
+            <li>列表支持多选 <a href="https://github.com/Ineffable919/clipboard/issues/16">#16</a></li>
+        </ul>
+        <h3>Improvements</h3>
+        <ul>
+            <li>支持在列表使用鼠标滚轮进行横向滚动 <a href="https://github.com/Ineffable919/clipboard/pull/18">#18</a> (感谢 <a
+                    href="https://github.com/fleyi">fleyi</a> 提交 pull)</li>
+            <li>系统版本支持提升至 macOS 15</li>
+        </ul>
+        <h3>Bug Fixes</h3>
+        <ul>
+            <li>解决了一些已知问题</li>
+        </ul>
+    </section>
 
-    <!-- 0.5.0 -->
-    <div class="release-header">
-        <span class="release-version">0.5.0</span>
-        <span class="release-date">2026-02-26</span>
-    </div>
-    <h5 class="feature">What's new</h5>
-    <ul>
-        <li>支持窗口展示</li>
-        <li>抽屉输入支持@类型过滤，例如输入@image、@文件、@file等等</li>
-        <li>状态栏图标支持隐藏</li>
-    </ul>
+    <section>
+        <div class="release-header">
+            <h2 class="release-version">v0.5.1</h2>
+            <time class="release-date">2026-03-03</time>
+        </div>
+        <h3>Bug Fixes</h3>
+        <ul>
+            <li>解决了一些已知问题</li>
+        </ul>
+    </section>
 
-    <!-- 0.3.1 -->
-    <div class="release-header">
-        <span class="release-version">0.3.1</span>
-        <span class="release-date">2026-01-23</span>
-    </div>
-    <h5 class="feature">What's new</h5>
-    <ul>
-        <li>图片内容支持搜索（仅限于新的图片历史内容），预览支持OCR</li>
-        <li>设置页面新增存储栏目，支持数据备份、导入，日志查看</li>
-    </ul>
-    <h5 class="bug-fixes">Bug Fixes</h5>
-    <ul>
-        <li>修复重新安装或更新后辅助权限丢失的问题（仅支持后续版本）</li>
-        <li>修复了一些已知问题</li>
-    </ul>
+    <section>
+        <div class="release-header">
+            <h2 class="release-version">v0.5.0</h2>
+            <time class="release-date">2026-02-26</time>
+        </div>
+        <h3>What's new</h3>
+        <ul>
+            <li>支持窗口展示</li>
+            <li>抽屉输入支持@类型过滤，例如输入@image、@文件、@file等等</li>
+            <li>状态栏图标支持隐藏</li>
+        </ul>
+    </section>
 
-    <!-- 0.3.0 -->
-    <div class="release-header">
-        <span class="release-version">0.3.0</span>
-        <span class="release-date">2026-01-01</span>
-    </div>
-    <!-- <div style="background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 12px 15px; margin: 15px 0; border-radius: 4px; font-size: 13px; color: #856404;">
-        <strong>⚠️ 重要提示：</strong>本版本包含数据库及结构更新。首次启动时，应用将自动迁移您的剪贴板历史记录到新格式。迁移过程可能需要几秒钟，请勿强制退出应用。
-    </div> -->
-    <h5 class="feature">What's new</h5>
-    <ul>
-        <li>提供按类型、应用或日期更丰富的过滤方式，以便于更好的查询历史记录</li>
-        <li>关键字搜索支持高亮展示</li>
-        <li>文本支持编辑并保存</li>
-        <li>支持暂停并恢复剪贴板记录</li>
-    </ul>
-    <h5 class="improvements">Improvements</h5>
-    <ul>
-        <li>改进链接、图片卡片展示</li>
-        <li>预览窗口体验优化</li>
-        <li>设置-关于界面的图标支持直接拖拽获取权限</li>
-        <li>更好的检测应用更新</li>
-        <li>兼容macOS Sonoma</li>
-    </ul>
-    <h5 class="bug-fixes">Bug Fixes</h5>
-    <ul>
-        <li>修复了一些已知问题</li>
-    </ul>
+    <section>
+        <div class="release-header">
+            <h2 class="release-version">v0.3.1</h2>
+            <time class="release-date">2026-01-23</time>
+        </div>
+        <h3>What's new</h3>
+        <ul>
+            <li>图片内容支持搜索（仅限于新的图片历史内容），预览支持OCR</li>
+            <li>设置页面新增存储栏目，支持数据备份、导入，日志查看</li>
+        </ul>
+        <h3>Bug Fixes</h3>
+        <ul>
+            <li>修复重新安装或更新后辅助权限丢失的问题（仅支持后续版本）</li>
+            <li>修复了一些已知问题</li>
+        </ul>
+    </section>
 
-    <!-- 0.2.5 -->
-    <div class="release-header">
-        <span class="release-version">0.2.5</span>
-        <span class="release-date">2025-12-10</span>
-    </div>
-    <h5 class="feature">What's new</h5>
-    <ul>
-        <li>增加了一些设置项</li>
-    </ul>
-    <h5 class="improvements">Improvements</h5>
-    <ul>
-        <li>优化预览相关的操作</li>
-        <li>调整样式，提升整体视觉一致性</li>
-    </ul>
-    <h5 class="bug-fixes">Bug Fixes</h5>
-    <ul>
-        <li>修复了一些已知问题</li>
-    </ul>
+    <section>
+        <div class="release-header">
+            <h2 class="release-version">v0.3.0</h2>
+            <time class="release-date">2026-01-01</time>
+        </div>
+        <h3>What's new</h3>
+        <ul>
+            <li>提供按类型、应用或日期更丰富的过滤方式，以便于更好的查询历史记录</li>
+            <li>关键字搜索支持高亮展示</li>
+            <li>文本支持编辑并保存</li>
+            <li>支持暂停并恢复剪贴板记录</li>
+        </ul>
+        <h3>Improvements</h3>
+        <ul>
+            <li>改进链接、图片卡片展示</li>
+            <li>预览窗口体验优化</li>
+            <li>设置-关于界面的图标支持直接拖拽获取权限</li>
+            <li>更好的检测应用更新</li>
+            <li>兼容macOS Sonoma</li>
+        </ul>
+        <h3>Bug Fixes</h3>
+        <ul>
+            <li>修复了一些已知问题</li>
+        </ul>
+    </section>
 
-    <div class="release-header">
-        <span class="release-version">0.2.4</span>
-        <span class="release-date">2025-11-29</span>
-    </div>
-    <h5 class="improvements">Improvements</h5>
-    <ul>
-        <li>修改删除快捷键为 Del，避免其它误操作 <a href="https://github.com/Ineffable919/clipboard/issues/3">#3</a></li>
-        <li>调整样式，提升整体视觉一致性</li>
-    </ul>
-    <h5 class="bug-fixes">Bug Fixes</h5>
-    <ul>
-        <li>修复拖动卡片到访达显示问题 <a href="https://github.com/Ineffable919/clipboard/issues/1">#1</a></li>
-        <li>修复了一些已知问题</li>
-    </ul>
+    <section>
+        <div class="release-header">
+            <h2 class="release-version">v0.2.5</h2>
+            <time class="release-date">2025-12-10</time>
+        </div>
+        <h3>What's new</h3>
+        <ul>
+            <li>增加了一些设置项</li>
+        </ul>
+        <h3>Improvements</h3>
+        <ul>
+            <li>优化预览相关的操作</li>
+            <li>调整样式，提升整体视觉一致性</li>
+        </ul>
+        <h3>Bug Fixes</h3>
+        <ul>
+            <li>修复了一些已知问题</li>
+        </ul>
+    </section>
 
-    <div class="release-header">
-        <span class="release-version">0.2.3</span>
-        <span class="release-date">2025-11-25</span>
-    </div>
-    <h5 class="improvements">Improvements</h5>
-    <ul>
-        <li>移除了暂未生效的控制项</li>
-        <li>调整UI元素的间距和样式，提升整体视觉一致性</li>
-    </ul>
-    <h5 class="bug-fixes">Bug Fixes</h5>
-    <ul>
-        <li>修复某些情况下应用崩溃的问题</li>
-    </ul>
+    <section>
+        <div class="release-header">
+            <h2 class="release-version">v0.2.4</h2>
+            <time class="release-date">2025-11-29</time>
+        </div>
+        <h3>Improvements</h3>
+        <ul>
+            <li>修改删除快捷键为 Del，避免其它误操作 <a href="https://github.com/Ineffable919/clipboard/issues/3">#3</a></li>
+            <li>调整样式，提升整体视觉一致性</li>
+        </ul>
+        <h3>Bug Fixes</h3>
+        <ul>
+            <li>修复拖动卡片到访达显示问题 <a href="https://github.com/Ineffable919/clipboard/issues/1">#1</a></li>
+            <li>修复了一些已知问题</li>
+        </ul>
+    </section>
 
-    <div class="release-header">
-        <span class="release-version">0.2.2</span>
-        <span class="release-date">2025-11-21</span>
-    </div>
-    <h5 class="feature">What's new</h5>
-    <ul>
-        <li>状态栏新增“检查更新”菜单项，允许用户手动检查更新。</li>
-        <li>增加显示更新设置，确保用户能够方便地管理更新选项。</li>
-        <li>支持 Intel 架构。</li>
-    </ul>
-    <h5 class="improvements">Improvements</h5>
-    <ul>
-        <li>禁用了自动更新</li>
-        <li>调整UI元素的间距和样式，提升整体视觉一致性</li>
-    </ul>
-    <h5 class="bug-fixes">Bug Fixes</h5>
-    <ul>
-        <li>修复在某些情况下粘贴内容后选中状态丢失的问题。</li>
-    </ul>
+    <section>
+        <div class="release-header">
+            <h2 class="release-version">v0.2.3</h2>
+            <time class="release-date">2025-11-25</time>
+        </div>
+        <h3>Improvements</h3>
+        <ul>
+            <li>移除了暂未生效的控制项</li>
+            <li>调整UI元素的间距和样式，提升整体视觉一致性</li>
+        </ul>
+        <h3>Bug Fixes</h3>
+        <ul>
+            <li>修复某些情况下应用崩溃的问题</li>
+        </ul>
+    </section>
+
+    <section>
+        <div class="release-header">
+            <h2 class="release-version">v0.2.2</h2>
+            <time class="release-date">2025-11-21</time>
+        </div>
+        <h3>What's new</h3>
+        <ul>
+            <li>状态栏新增"检查更新"菜单项，允许用户手动检查更新。</li>
+            <li>增加显示更新设置，确保用户能够方便地管理更新选项。</li>
+            <li>支持 Intel 架构。</li>
+        </ul>
+        <h3>Improvements</h3>
+        <ul>
+            <li>禁用了自动更新</li>
+            <li>调整UI元素的间距和样式，提升整体视觉一致性</li>
+        </ul>
+        <h3>Bug Fixes</h3>
+        <ul>
+            <li>修复在某些情况下粘贴内容后选中状态丢失的问题。</li>
+        </ul>
+    </section>
 </body>
 
 </html>

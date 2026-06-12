@@ -19,15 +19,9 @@ struct TagView: View {
                 .frame(width: iconSize, height: iconSize)
 
             Text(tag.label)
-                .font(.system(size: 12, weight: .regular, design: .monospaced))
+                .font(.system(size: 12, weight: .regular, design: .default))
                 .lineLimit(1)
 
-            // Button(action: onDelete) {
-            //     Image(systemName: "xmark.circle.fill")
-            //         .font(.system(size: 10.0, weight: .medium))
-            //         .foregroundStyle(.secondary)
-            // }
-            // .buttonStyle(.plain)
         }
         .padding(.horizontal, Const.space8)
         .frame(height: 20.0)
