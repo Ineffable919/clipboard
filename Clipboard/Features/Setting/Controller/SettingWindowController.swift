@@ -68,10 +68,6 @@ class SettingWindowController: NSWindowController {
         }
 
         window.makeKeyAndOrderFront(nil)
-
-        Task { @MainActor [viewModel] in
-            viewModel.requestSidebarFocus()
-        }
     }
 
     func toggleWindow(page: SettingPage) {

@@ -98,8 +98,10 @@ struct SettingView: View {
             .navigationTitle(Text(vm.selectedPage.title))
             .toolbarTitleDisplayMode(.inline)
         }
-        .onChange(of: viewModel.focusSidebarTrigger) {
-            isSidebarFocused = true
+        .onAppear{
+            Task { @MainActor in
+                isSidebarFocused = true
+            }
         }
     }
 }
