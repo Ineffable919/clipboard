@@ -111,7 +111,10 @@ extension PasteboardModel {
             NSPasteboard.PasteboardType.rtf.rawValue,
             NSPasteboard.PasteboardType.rtfd.rawValue,
             "public.utf8-plain-text",
+            "public.html",
         ]
+        let hasTextContent = item.types.contains { skipTypes.contains($0.rawValue) }
+        guard !hasTextContent else { return nil }
         for itemType in item.types where !skipTypes.contains(itemType.rawValue) {
             if let str = item.string(forType: itemType) ?? (item.propertyList(forType: itemType) as? String) {
                 let paths = str.components(separatedBy: "\n")
