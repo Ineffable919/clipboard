@@ -20,8 +20,7 @@ class AppDelegate: NSObject {
         userDriverDelegate: self
     )
 
-    private lazy var windowManager = WindowManager.shared
-    private lazy var settingWinController = SettingWindowController.shared
+    private var monitorToken: Any?
 }
 
 extension AppDelegate: NSApplicationDelegate {
@@ -44,15 +43,17 @@ extension AppDelegate: NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_: Notification) {
+        if let token = monitorToken {
+            NSEvent.removeMonitor(token)
+            monitorToken = nil
+        }
         StatusBarController.shared.cleanup()
-        EventDispatcher.shared.stop()
         AppIconCache.shared.clearCache()
+        HotKeyManager.shared.clear()
     }
 
     func applicationShouldHandleReopen(_: NSApplication, hasVisibleWindows _: Bool) -> Bool {
-        if !windowManager.isVisible {
-            toggleWindow()
-        }
+        WindowManager.shared.toggleWindow(frame: NSScreen.main?.frame)
         return true
     }
 
@@ -91,7 +92,7 @@ extension AppDelegate {
 
         PasteDataStore.main.setup()
 
-        initEvent()
+        initLocalEvent()
 
         HotKeyManager.shared.initialize()
 
@@ -110,21 +111,13 @@ extension AppDelegate {
 }
 
 extension AppDelegate {
-    func toggleWindow(_ completionHandler: (() -> Void)? = nil) {
-        windowManager.toggleWindow(completionHandler)
-    }
-
-    private func initEvent() {
-        EventDispatcher.shared.start()
-
-        EventDispatcher.shared.registerHandler(
-            matching: .keyDown,
-            key: "setting"
-        ) { [weak self] event in
+    private func initLocalEvent() {
+        monitorToken = NSEvent.addLocalMonitorForEvents(matching: .keyDown) {
+            event in
             if event.modifierFlags.contains(.command) {
                 let modifiers = event.charactersIgnoringModifiers
                 if modifiers == "," || modifiers == "，" {
-                    self?.settingWinController.toggleWindow()
+                    SettingWindowController.shared.toggleWindow(page: .general)
                     return nil
                 }
                 if modifiers == "q" || modifiers == "Q" {
@@ -204,5 +197,4 @@ extension AppDelegate: SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
 
 extension Notification.Name {
     static let menuBarIconVisibilityChanged = Notification.Name("menuBarIconVisibilityChanged")
-    static let navigateToSettingPage = Notification.Name("navigateToSettingPage")
 }

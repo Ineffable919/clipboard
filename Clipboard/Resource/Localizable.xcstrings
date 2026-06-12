@@ -150,6 +150,23 @@
         }
       }
     },
+    "cancelButton" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消"
+          }
+        }
+      }
+    },
     "checkUpdates" : {
       "comment" : "Menu item: check for updates",
       "extractionState" : "manual",
@@ -247,13 +264,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cleared data cannot be recovered.\nThe app will quit after clearing. Please reopen it."
+            "value" : "Can't recover after clearing data, confirm deletion?"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "清空数据后无法恢复\n清空后会退出应用，请重新打开。"
+            "value" : "清空数据后无法恢复，确认删除吗？"
           }
         }
       }
@@ -290,6 +307,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "剪贴板"
+          }
+        }
+      }
+    },
+    "close" : {
+      "comment" : "Accessibility description for close button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭"
           }
         }
       }
@@ -398,6 +433,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "稍后设置，复制到剪贴板"
+          }
+        }
+      }
+    },
+    "createTag" : {
+      "comment" : "Menu item: create a new tag and pin the clip to it",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Tag…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新建标签…"
           }
         }
       }
@@ -546,6 +599,42 @@
         }
       }
     },
+    "dropOverlaySubtitle" : {
+      "comment" : "Drop overlay subtitle shown while dragging content into the main list",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supports text, files, images, and more"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "支持文本、文件、图片等所有类型"
+          }
+        }
+      }
+    },
+    "dropOverlayTitle" : {
+      "comment" : "Drop overlay title shown while dragging content into the main list",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drop here to save"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "拖拽到此以保存"
+          }
+        }
+      }
+    },
     "edit" : {
       "comment" : "Edit action",
       "extractionState" : "manual",
@@ -582,20 +671,20 @@
         }
       }
     },
-    "emptyHistory" : {
-      "comment" : "Empty state title when there is no clipboard history",
+    "emptyRecord" : {
+      "comment" : "Empty state title when there is no clipboard record",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "No clipboard history"
+            "state" : "needs_review",
+            "value" : "No clipboard record"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "没有剪贴板历史"
+            "value" : "没有剪贴板记录"
           }
         }
       }
@@ -870,6 +959,42 @@
         }
       }
     },
+    "hudCopySucceeded" : {
+      "comment" : "HUD: copy succeeded",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copied"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已复制"
+          }
+        }
+      }
+    },
+    "hudPasteSucceeded" : {
+      "comment" : "HUD: paste succeeded",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pasted"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已粘贴"
+          }
+        }
+      }
+    },
     "image" : {
       "comment" : "Image type label",
       "extractionState" : "manual",
@@ -1100,6 +1225,264 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "链接"
+          }
+        }
+      }
+    },
+    "MCP" : {
+
+    },
+    "mcpAddTo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add to"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加到"
+          }
+        }
+      }
+    },
+    "mcpClientFooterClaudeCode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Launch Claude Code, type /mcp, then select Clipboard to complete setup."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启动 Claude Code，输入 /mcp，然后选择 Clipboard 并完成认证。"
+          }
+        }
+      }
+    },
+    "mcpClientSubtitleCLI" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Run this command in Terminal:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在\"终端\"中运行此命令："
+          }
+        }
+      }
+    },
+    "mcpClientSubtitleConfig" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste into the config file shown below:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粘贴到下方配置文件中："
+          }
+        }
+      }
+    },
+    "mcpConfigPasteInto" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste into:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粘贴到："
+          }
+        }
+      }
+    },
+    "mcpConnectAITools" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Connect AI Tools"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接 AI 工具"
+          }
+        }
+      }
+    },
+    "mcpConnectFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connect %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接 %@"
+          }
+        }
+      }
+    },
+    "mcpCopied" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copied"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已复制"
+          }
+        }
+      }
+    },
+    "mcpCopy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制"
+          }
+        }
+      }
+    },
+    "mcpDescription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow AI tools like Claude Code and Codex to access your clipboard history."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "允许 Claude Code、Codex 等 AI 工具访问剪贴板历史。"
+          }
+        }
+      }
+    },
+    "mcpEnable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable MCP"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启用 MCP"
+          }
+        }
+      }
+    },
+    "mcpExposedTools" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exposed tools"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已开放工具"
+          }
+        }
+      }
+    },
+    "mcpToolDescListCategories" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "List available content types and user-defined tags for clipboard search"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "列出可用的内容类型和用户自定义标签"
+          }
+        }
+      }
+    },
+    "mcpToolDescSearchClipboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search clipboard history by keyword, content type, or user tag"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按关键词、内容类型或标签搜索剪贴板历史"
+          }
+        }
+      }
+    },
+    "mcpToolDescWriteClipboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Write plain text to the system clipboard"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将纯文本写入系统剪贴板"
           }
         }
       }
@@ -1567,7 +1950,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "置顶"
+            "value" : "固定"
           }
         }
       }
@@ -1662,6 +2045,24 @@
         }
       }
     },
+    "rename" : {
+      "comment" : "Rename action",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rename"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重命名"
+          }
+        }
+      }
+    },
     "resume" : {
       "comment" : "Menu item: resume clipboard monitoring",
       "extractionState" : "manual",
@@ -1733,6 +2134,9 @@
           }
         }
       }
+    },
+    "server stopped · 0 tools exposed" : {
+
     },
     "settingAboutAutomaticallyCheckUpdates" : {
       "comment" : "Toggle label: automatically check for updates",
@@ -2778,6 +3182,23 @@
         }
       }
     },
+    "settingPageMcp" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI"
+          }
+        }
+      }
+    },
     "settingPagePrivacy" : {
       "comment" : "Settings sidebar item: Privacy",
       "extractionState" : "manual",
@@ -3606,6 +4027,24 @@
         }
       }
     },
+    "share" : {
+      "comment" : "Share action",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分享"
+          }
+        }
+      }
+    },
     "showInFinder" : {
       "comment" : "Action title to reveal a file in Finder",
       "extractionState" : "manual",
@@ -3638,6 +4077,27 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "跳过"
+          }
+        }
+      }
+    },
+    "stdio · @clipboard/mcp · %lld tools exposed" : {
+
+    },
+    "tag" : {
+      "comment" : "Tag filter section title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tags"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "标签"
           }
         }
       }
@@ -3799,7 +4259,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "取消置顶"
+            "value" : "取消固定"
           }
         }
       }

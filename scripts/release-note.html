@@ -131,15 +131,28 @@
     <section>
         <div class="release-header">
             <h2 class="release-version">
-                v1.2
+                v2.0
                 <span>Latest</span>
             </h2>
             <time class="release-date">2026-06-12</time>
         </div>
-        <p>1.0 版本在 SwiftUI 框架下已趋于稳定，但在性能和体验上仍有提升空间。为此，我决定对整个应用进行彻底重构。
-            2.0 版本采用不同的技术架构，在启动速度、流畅度和体验方面都有显著优化，带来更加极致的使用体验。
+        <p>1.0 版本在 SwiftUI 框架下已趋于稳定，为了追求更极致的性能和体验，我决定对整个应用进行彻底重构。
+            2.0 版本采用 AppKit 架构重写，在启动速度、流畅度和响应速度方面都有显著提升，带来更加流畅的使用体验。
         </p>
-
+        <h3>What's new</h3>
+        <ul>
+            <li>新增MCP支持（Beta）</li>
+            <li>历史记录列表完整支持多选操作 <a href="https://github.com/Ineffable919/clipboard/issues/16">#16</a></li>
+            <li>支持直接拖拽文本、文件等到剪贴板</li>
+            <li>更丰富的卡片菜单</li>
+            <li>初步适配macOS 27</li>
+        </ul>
+        <h3>Improvements</h3>
+        <ul>
+            <li>优化识别复制的内容，比如在IntelliJ IDEA复制文件，现在能准确识别</li>
+            <li>最低支持版本降低为 macOS 14</li>
+            <li>修复了一些已知问题</li>
+        </ul>
     </section>
 
     <section>
