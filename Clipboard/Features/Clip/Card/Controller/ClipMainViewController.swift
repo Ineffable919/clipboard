@@ -565,7 +565,7 @@ extension ClipMainViewController {
         let safePath = IndexPath(item: safeItem, section: 0)
         selectIndexPath = safePath
         setSelection(to: safePath)
-        scrollTo(indexPath: safePath)
+        scrollTo(indexPath: safePath, animated: false)
         updateSelectedItemBorder()
     }
 
