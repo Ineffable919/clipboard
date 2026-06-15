@@ -421,6 +421,10 @@ extension ClipMainViewController {
     func setFocusRegion(_ region: FocusRegion) {
         guard region != focusRegion else { return }
         focusRegion = region
+        if region != .collection {
+            isQuickPastePressed = false
+            isPlainTextModifierPressed = false
+        }
         updateSelectedItemBorder()
         if region == .collection {
             Task { @MainActor [weak self] in
