@@ -55,6 +55,25 @@ final class FilterIconButton: NSButton {
         updateAppearance()
     }
 
+    override func mouseDown(with event: NSEvent) {
+        animateScale(to: 1.05)
+        super.mouseDown(with: event)
+        animateScale(to: 1.0)
+    }
+
+    private func animateScale(to scale: CGFloat) {
+        guard let layer else { return }
+        let anim = CASpringAnimation(keyPath: "transform.scale")
+        anim.toValue = scale
+        anim.damping = 12
+        anim.initialVelocity = 8
+        anim.duration = anim.settlingDuration
+        anim.fillMode = .forwards
+        anim.isRemovedOnCompletion = false
+        layer.add(anim, forKey: "scale")
+        layer.transform = CATransform3DMakeScale(scale, scale, 1)
+    }
+
     @objc private func handleClick() {
         onTap?()
     }
