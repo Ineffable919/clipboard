@@ -58,9 +58,7 @@ final class FilterTagSectionView: NSStackView {
     // MARK: - Public API
 
     func setAvailableGroups(_ groups: [CategoryChip]) {
-        let newIds = groups.map(\.id)
-        let oldIds = availableGroups.map(\.id)
-        guard newIds != oldIds else { return }
+        guard groups != availableGroups else { return }
 
         availableGroups = groups
         rebuildGrid()

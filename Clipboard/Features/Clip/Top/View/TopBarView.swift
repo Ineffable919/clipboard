@@ -315,6 +315,12 @@ final class TopBarView: NSView {
                 self?.searchField.clearTextSilently()
             }
             .store(in: &cancellables)
+
+        CategoryChipStore.shared.chipsContentDidChange
+            .sink { [weak self] in
+                self?.topVM?.refreshGroupTag()
+            }
+            .store(in: &cancellables)
     }
 
     private func syncTokensToSearchField() {
