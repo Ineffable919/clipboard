@@ -11,7 +11,7 @@ import UniformTypeIdentifiers
 // MARK: - 隐私设置视图
 
 struct PrivacySettingView: View {
-    @Environment(\.colorScheme) var colorScheme
+    @Environment(\.colorScheme) private var colorScheme
 
     @AppStorage(PrefKey.showDuringScreenShare.rawValue)
     private var showDuringScreenShare = true
@@ -312,11 +312,12 @@ struct IgnoredAppRow: View {
     let appInfo: IgnoredAppInfo
     let isSelected: Bool
     let onSelect: () -> Void
+    @State private var cachedIcon: NSImage?
 
     var body: some View {
         HStack(spacing: 10) {
-            if let appIcon = getAppIcon(for: appInfo) {
-                Image(nsImage: appIcon)
+            if let icon = cachedIcon {
+                Image(nsImage: icon)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 32, height: 32)
@@ -339,6 +340,9 @@ struct IgnoredAppRow: View {
         .contentShape(Rectangle())
         .onTapGesture {
             onSelect()
+        }
+        .task(id: appInfo.id) {
+            cachedIcon = getAppIcon(for: appInfo)
         }
     }
 

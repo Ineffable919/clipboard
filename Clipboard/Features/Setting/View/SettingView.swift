@@ -109,7 +109,7 @@ struct SettingView: View {
 // MARK: - 设置开关行
 
 struct SettingToggleRow: View {
-    let title: String
+    let title: LocalizedStringResource
     @Binding var isOn: Bool
 
     var body: some View {

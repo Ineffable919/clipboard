@@ -215,7 +215,7 @@ struct AISettingsView: View {
     var body: some View {
         ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: Const.space12) {
-                headerCard
+                MCPHeaderCard(isEnabled: $isEnabled, enabledToolCount: enabledTools.count)
                 if isEnabled {
                     HStack {
                         Spacer()
@@ -241,7 +241,7 @@ struct AISettingsView: View {
                         }
                         .fixedSize()
                     }
-                    toolsSection
+                    MCPToolsSection(enabledTools: $enabledTools)
                 }
                 Spacer(minLength: 0)
             }
@@ -254,17 +254,22 @@ struct AISettingsView: View {
             MCPClientDetailSheet(client: client)
         }
     }
+}
 
-    // MARK: - Header Card
+// MARK: - Header Card
 
-    private var headerCard: some View {
+private struct MCPHeaderCard: View {
+    @Binding var isEnabled: Bool
+    let enabledToolCount: Int
+
+    var body: some View {
         HStack(spacing: Const.space12) {
             VStack(alignment: .leading, spacing: Const.space4) {
                 Text("MCP")
                     .font(.headline)
                 Text(
                     isEnabled
-                        ? "stdio · @clipboard/mcp · \(enabledTools.count) tools exposed"
+                        ? "stdio · @clipboard/mcp · \(enabledToolCount) tools exposed"
                         : "server stopped · 0 tools exposed"
                 )
                 .font(.caption)
@@ -285,40 +290,51 @@ struct AISettingsView: View {
         .padding(Const.space16)
         .settingsStyle()
     }
+}
 
-    // MARK: - Tools Section
+// MARK: - Tools Section
 
-    private var toolsSection: some View {
+private extension Binding where Value == Set<String> {
+    subscript(contains element: String) -> Binding<Bool> {
+        Binding<Bool>(
+            get: { wrappedValue.contains(element) },
+            set: { newValue in
+                var updated = wrappedValue
+                if newValue { updated.insert(element) } else { updated.remove(element) }
+                wrappedValue = updated
+            }
+        )
+    }
+}
+
+private struct MCPToolsSection: View {
+    @Binding var enabledTools: Set<String>
+
+    private func isEnabledBinding(for name: String) -> Binding<Bool> {
+        $enabledTools[contains: name]
+    }
+
+    var body: some View {
         VStack(alignment: .leading, spacing: Const.space12) {
             Text(String(localized: "mcpExposedTools", table: "Localizable"))
                 .font(.subheadline.bold())
 
             VStack(spacing: 0) {
                 ForEach(Array(MCPToolInfo.all.enumerated()), id: \.element.id) {
-                    index,
-                    tool in
+                    index, tool in
                     if index > 0 {
                         Divider()
                             .padding(.horizontal, Const.space24)
                     }
-                    MCPToolRow(
-                        tool: tool,
-                        isToolEnabled: enabledTools.contains(tool.name)
-                    ) { enabled in
-                        if enabled {
-                            enabledTools.insert(tool.name)
-                        } else {
-                            enabledTools.remove(tool.name)
-                        }
-                        MCPDisabledTools.save(
-                            Set(MCPToolInfo.all.map(\.name)).subtracting(
-                                enabledTools
-                            )
-                        )
-                    }
+                    MCPToolRow(tool: tool, isEnabled: isEnabledBinding(for: tool.name))
                 }
             }
             .settingsStyle()
+            .onChange(of: enabledTools) { _, newValue in
+                MCPDisabledTools.save(
+                    Set(MCPToolInfo.all.map(\.name)).subtracting(newValue)
+                )
+            }
         }
     }
 }
@@ -436,15 +452,14 @@ private struct MCPClientDetailSheet: View {
 
 private struct MCPToolRow: View {
     let tool: MCPToolInfo
-    let isToolEnabled: Bool
-    let onToggle: (Bool) -> Void
+    @Binding var isEnabled: Bool
 
     var body: some View {
         HStack(spacing: Const.space12) {
             ZStack {
                 RoundedRectangle(cornerRadius: 6)
                     .fill(
-                        isToolEnabled
+                        isEnabled
                             ? tool.color.opacity(0.12)
                             : Color.secondary.opacity(0.1)
                     )
@@ -452,10 +467,10 @@ private struct MCPToolRow: View {
                 Image(systemName: tool.icon)
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(
-                        isToolEnabled ? tool.color : Color.secondary
+                        isEnabled ? tool.color : Color.secondary
                     )
             }
-            .animation(.easeInOut(duration: 0.2), value: isToolEnabled)
+            .animation(.easeInOut(duration: 0.2), value: isEnabled)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(tool.name)
@@ -469,13 +484,10 @@ private struct MCPToolRow: View {
 
             Spacer()
 
-            Toggle(
-                "",
-                isOn: Binding(get: { isToolEnabled }, set: { onToggle($0) })
-            )
-            .toggleStyle(.switch)
-            .labelsHidden()
-            .controlSize(.mini)
+            Toggle("", isOn: $isEnabled)
+                .toggleStyle(.switch)
+                .labelsHidden()
+                .controlSize(.mini)
         }
         .padding(.horizontal, Const.space16)
         .padding(.vertical, Const.space10)

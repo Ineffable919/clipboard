@@ -223,7 +223,7 @@ extension ClipMainViewController {
             height: Const.defaultHeight
         )
 
-        if focusRegion == .search, !topVM.hasInput {
+        if topBarView.isSearching, !topVM.hasInput {
             topBarView.deactivateSearch()
             setFocusRegion(.collection)
         } else if focusRegion == .collection {

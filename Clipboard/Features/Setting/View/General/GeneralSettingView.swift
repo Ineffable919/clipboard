@@ -41,7 +41,7 @@ struct GeneralSettingView: View {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 4) {
                     SettingToggleRow(
-                        title: String(localized: .settingGeneralLaunchAtLogin),
+                        title: .settingGeneralLaunchAtLogin,
                         isOn: $launchAtLogin
                     )
                     .onChange(of: launchAtLogin) { _, newValue in
@@ -61,7 +61,7 @@ struct GeneralSettingView: View {
                     Divider()
 
                     SettingToggleRow(
-                        title: String(localized: .settingGeneralMenuBarIcon),
+                        title: .settingGeneralMenuBarIcon,
                         isOn: $showMenuBarIcon
                     )
                     .onChange(of: showMenuBarIcon) { _, newValue in
@@ -74,7 +74,7 @@ struct GeneralSettingView: View {
                     Divider()
 
                     SettingToggleRow(
-                        title: String(localized: .settingGeneralDockIcon),
+                        title: .settingGeneralDockIcon,
                         isOn: $showDockIcon
                     )
                     .onChange(of: showDockIcon) { _, newValue in
@@ -86,7 +86,7 @@ struct GeneralSettingView: View {
                     Divider()
 
                     SettingToggleRow(
-                        title: String(localized: .settingGeneralSound),
+                        title: .settingGeneralSound,
                         isOn: $soundEnabled
                     )
                 }
