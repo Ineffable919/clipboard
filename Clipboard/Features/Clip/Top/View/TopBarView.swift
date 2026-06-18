@@ -31,6 +31,13 @@ final class TopBarView: NSView {
     // MARK: - Popover
 
     private var filterPopover: FilterPopover?
+    private enum FilterPopoverCloseDestination {
+        case search
+        case collection
+    }
+
+    private var explicitFilterPopoverCloseDestination: FilterPopoverCloseDestination?
+    private var filterPopoverMouseMonitor: Any?
 
     // MARK: - Callbacks
 
@@ -67,6 +74,9 @@ final class TopBarView: NSView {
         self.topVM = topVM
 
         filterPopover = FilterPopover(viewModel: topVM)
+        filterPopover?.onWillClose = { [weak self] in
+            self?.handlePopoverWillClose()
+        }
         filterPopover?.onDidClose = { [weak self] in
             self?.handlePopoverDidClose()
         }
@@ -166,7 +176,7 @@ final class TopBarView: NSView {
         searchField.onResignFirstResponder = { [weak self] in
             guard let self, let topVM else { return }
 
-            if filterPopover?.isShowingPopover == true {
+            if filterPopover?.isShown == true {
                 return
             }
 
@@ -326,35 +336,106 @@ final class TopBarView: NSView {
     }
 
     func dismissFilterPopoverIfVisible() -> Bool {
-        guard filterPopover?.isShowingPopover == true else { return false }
+        guard filterPopover?.isShown == true else { return false }
+        explicitFilterPopoverCloseDestination = .search
         togglePopover()
         return true
     }
 
     private func togglePopover() {
         guard let filterPopover else { return }
-
+        let wasClosing = filterPopover.isShown || filterPopover.isClosing
+        if wasClosing {
+            explicitFilterPopoverCloseDestination = .search
+        } else {
+            explicitFilterPopoverCloseDestination = nil
+        }
         filterPopover.toggle(
             relativeTo: searchField.filterButton.bounds,
             of: searchField.filterButton
         )
-
-        if filterPopover.isShowingPopover {
+        if filterPopover.isShown, !filterPopover.isClosing {
+            installFilterPopoverMouseMonitor()
             onFocusRegionChange?(.filter)
         }
     }
 
-    private func handlePopoverDidClose() {
-        guard isSearching, let topVM else { return }
+    private func installFilterPopoverMouseMonitor() {
+        removeFilterPopoverMouseMonitor()
+        filterPopoverMouseMonitor = NSEvent.addLocalMonitorForEvents(
+            matching: .leftMouseDown
+        ) { [weak self] event in
+            guard let self,
+                  filterPopover?.isShown == true,
+                  event.window === window,
+                  let hitView = window?.contentView?.hitTest(event.locationInWindow)
+            else {
+                return event
+            }
 
-        Task { @MainActor [weak self] in
-            guard let self, isSearching, !topVM.hasInput else { return }
+            if hitView === searchField || hitView.isDescendant(of: searchField) {
+                explicitFilterPopoverCloseDestination = .search
+            } else {
+                explicitFilterPopoverCloseDestination = .collection
+            }
 
-            if !searchField.isFirstResponder {
+            return event
+        }
+    }
+
+    private func removeFilterPopoverMouseMonitor() {
+        guard let filterPopoverMouseMonitor else { return }
+        NSEvent.removeMonitor(filterPopoverMouseMonitor)
+        self.filterPopoverMouseMonitor = nil
+    }
+
+    private func handlePopoverWillClose() {
+        guard isSearching else {
+            explicitFilterPopoverCloseDestination = nil
+            return
+        }
+        let closeDestination = currentPopoverCloseDestination()
+        if closeDestination == .collection {
+            window?.makeFirstResponder(nil)
+            if topVM?.hasInput == false {
                 deactivateSearch()
+            }
+            onFocusRegionChange?(.collection)
+            explicitFilterPopoverCloseDestination = nil
+            return
+        }
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            defer { explicitFilterPopoverCloseDestination = nil }
+            guard isSearching else { return }
+            switch closeDestination {
+            case .search:
+                window?.makeFirstResponder(searchField)
+                onFocusRegionChange?(.search)
+            case .collection:
                 onFocusRegionChange?(.collection)
             }
         }
+    }
+
+    private func handlePopoverDidClose() {
+        removeFilterPopoverMouseMonitor()
+    }
+
+    private func currentPopoverCloseDestination() -> FilterPopoverCloseDestination {
+        guard let event = NSApp.currentEvent,
+              event.type == .leftMouseDown,
+              event.window === window,
+              let hitView = window?.contentView?.hitTest(event.locationInWindow)
+        else {
+            return explicitFilterPopoverCloseDestination ?? .collection
+        }
+
+        if hitView === searchField || hitView.isDescendant(of: searchField) {
+            return .search
+        }
+
+        return .collection
     }
 
     // MARK: - Fuzzy Match

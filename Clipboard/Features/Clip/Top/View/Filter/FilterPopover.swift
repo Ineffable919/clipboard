@@ -8,40 +8,42 @@
 import AppKit
 
 final class FilterPopover: NSPopover {
-    // MARK: - Callbacks
+    // MARK: - Properties
 
+    var onWillClose: (() -> Void)?
     var onDidClose: (() -> Void)?
 
-    // MARK: - State
-
-    var isShowingPopover: Bool { isShown }
+    private let filterViewController: FilterPopoverViewController
+    private(set) var isClosing = false
 
     // MARK: - Init
 
     init(viewModel: TopBarViewModel) {
+        filterViewController = FilterPopoverViewController(viewModel: viewModel)
         super.init()
         behavior = .transient
-        contentViewController = FilterPopoverViewController(viewModel: viewModel)
+        contentViewController = filterViewController
         delegate = self
     }
 
     @available(*, unavailable)
     required init?(coder _: NSCoder) {
-        fatalError()
+        fatalError("init(coder:) has not been implemented")
     }
 
     // MARK: - Public API
 
     func toggle(relativeTo positioningRect: NSRect, of positioningView: NSView) {
-        if isShown {
-            close()
+        if isShown || isClosing {
+            if !isClosing { close() }
             return
         }
 
         show(relativeTo: positioningRect, of: positioningView, preferredEdge: .maxY)
 
         Task { @MainActor in
-            contentViewController?.view.window?.makeFirstResponder(contentViewController?.view)
+            guard let window = filterViewController.view.window else { return }
+            window.makeFirstResponder(filterViewController.view)
         }
     }
 }
@@ -49,7 +51,14 @@ final class FilterPopover: NSPopover {
 // MARK: - NSPopoverDelegate
 
 extension FilterPopover: NSPopoverDelegate {
+    func popoverWillClose(_: Notification) {
+        guard !isClosing else { return }
+        isClosing = true
+        onWillClose?()
+    }
+
     func popoverDidClose(_: Notification) {
+        isClosing = false
         onDidClose?()
     }
 }
