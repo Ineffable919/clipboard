@@ -7,32 +7,53 @@
     <title>Release Notes</title>
     <style>
         :root {
-            --bg: #ffffff;
-            --text: #000000;
-            --text-secondary: rgba(0, 0, 0, 0.6);
-            --text-heading: rgba(0, 0, 0, 0.8);
-            --divider: rgba(0, 0, 0, 0.08);
-            --badge-bg: #d7f59d;
-            --badge-text: #000000;
-            --accent: #90b842;
-            --warning-bg: #fff3cd;
+            --bg: #f8f9fa;
+            --surface: #ffffff;
+            --text: #1a1a2e;
+            --text-secondary: #4a4a6a;
+            --text-muted: #8888a0;
+            --text-heading: #16213e;
+            --divider: rgba(0, 0, 0, 0.06);
+            --badge-bg: #e8f5e9;
+            --badge-text: #2e7d32;
+            --badge-dot: #43a047;
+            --accent: #5c8a3f;
+            --accent-light: rgba(92, 138, 63, 0.08);
+            --accent-hover: #4a7332;
+            --link-color: #5c8a3f;
+            --warning-bg: #fff8e1;
             --warning-border: #ffc107;
-            --warning-text: #856404;
+            --warning-text: #7d5f00;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --font-mono: "SF Mono", "Fira Code", "Cascadia Code", monospace;
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
-                --bg: #1c1c1e;
-                --text: #ffffff;
-                --text-secondary: rgba(255, 255, 255, 0.6);
-                --text-heading: rgba(255, 255, 255, 0.8);
-                --divider: rgba(255, 255, 255, 0.08);
-                --badge-bg: #2d4a0e;
-                --badge-text: #a8e063;
+                --bg: #0f0f1a;
+                --surface: #1a1a2e;
+                --text: #e8e8f0;
+                --text-secondary: #a0a0c0;
+                --text-muted: #6a6a8a;
+                --text-heading: #f0f0ff;
+                --divider: rgba(255, 255, 255, 0.06);
+                --badge-bg: rgba(46, 125, 50, 0.2);
+                --badge-text: #81c784;
+                --badge-dot: #66bb6a;
                 --accent: #a8e063;
-                --warning-bg: #3d2e00;
+                --accent-light: rgba(168, 224, 99, 0.1);
+                --accent-hover: #b8f070;
+                --link-color: #a8e063;
+                --warning-bg: rgba(255, 193, 7, 0.12);
                 --warning-border: #ffc107;
                 --warning-text: #ffd666;
+                --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+                --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.3);
             }
         }
 
@@ -43,328 +64,659 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            max-width: 720px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            max-width: 740px;
             margin: 0 auto;
-            padding: 40px;
+            padding: 48px 32px 80px;
             background-color: var(--bg);
             color: var(--text);
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            line-height: 1.6;
+            min-height: 100vh;
         }
 
-        section {
+        /* Page header */
+        .page-header {
+            margin-bottom: 56px;
+            text-align: center;
             position: relative;
-            margin-bottom: 64px;
         }
 
-        section::after {
+        .page-header::after {
+            content: '';
+            position: absolute;
+            bottom: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 48px;
+            height: 3px;
+            background: var(--accent);
+            border-radius: 2px;
+            opacity: 0.5;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            color: var(--text-heading);
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            font-size: 15px;
+            color: var(--text-muted);
+            font-weight: 400;
+            text-indent: 0;
+        }
+
+        /* Release section */
+        .release {
+            position: relative;
+            margin-bottom: 48px;
+            padding: 28px 28px 28px 32px;
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--divider);
+            transition: box-shadow var(--transition), transform var(--transition);
+        }
+
+        .release:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+
+        /* Version timeline dot */
+        .release::before {
+            content: '';
+            position: absolute;
+            left: -1px;
+            top: 32px;
+            width: 3px;
+            height: calc(100% - 64px);
+            background: var(--divider);
+            border-radius: 2px;
+        }
+
+        .release:last-child::before {
+            display: none;
+        }
+
+        /* Accent bar on left */
+        .release::after {
             content: '';
             position: absolute;
             left: 0;
-            bottom: -32px;
-            width: 100%;
-            height: 1px;
-            background: var(--divider);
+            top: 28px;
+            width: 3px;
+            height: 32px;
+            background: var(--accent);
+            border-radius: 0 2px 2px 0;
+            opacity: 0.5;
+            transition: opacity var(--transition), height var(--transition);
+        }
+
+        .release:hover::after {
+            opacity: 1;
+            height: 40px;
         }
 
         .release-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 24px;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+            gap: 8px;
         }
 
         .release-version {
-            font-size: 18px;
-            line-height: 24px;
-            font-weight: 500;
-            color: var(--text);
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-heading);
             display: flex;
             align-items: center;
+            gap: 12px;
+            letter-spacing: -0.01em;
         }
 
-        .release-version span {
+        .release-version .version-number {
+            font-family: var(--font-mono);
+        }
+
+        .badge-latest {
             display: inline-flex;
             align-items: center;
-            font-size: 14px;
-            line-height: 1.5;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 500;
             color: var(--badge-text);
             background: var(--badge-bg);
-            padding: 2px 10px;
-            border-radius: 12px;
-            margin-left: 12px;
-            font-weight: 500;
+            padding: 3px 12px 3px 10px;
+            border-radius: 20px;
+            letter-spacing: 0.02em;
+            position: relative;
+        }
+
+        .badge-latest::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--badge-dot);
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.6;
+                transform: scale(0.85);
+            }
         }
 
         .release-date {
-            font-size: 16px;
-            line-height: 1.5;
-            color: var(--text-secondary);
-        }
-
-        h3 {
-            font-size: 16px;
-            line-height: 1.5;
+            font-size: 14px;
+            color: var(--text-muted);
             font-weight: 400;
-            color: var(--text-heading);
-            margin-bottom: 10px;
+            font-family: var(--font-mono);
+            letter-spacing: 0.01em;
+            padding: 2px 10px;
+            background: var(--accent-light);
+            border-radius: var(--radius-sm);
+            transition: background var(--transition);
         }
 
-        p {
-            font-size: 16px;
-            line-height: 1.6;
+        .release:hover .release-date {
+            background: var(--accent-light);
+        }
+
+        .release-description {
+            font-size: 15px;
+            line-height: 1.7;
             color: var(--text-secondary);
             margin-bottom: 20px;
-            text-indent: 2em;
+            padding-left: 0;
+            text-indent: 0;
+            background: var(--accent-light);
+            padding: 14px 18px;
+            border-radius: var(--radius-sm);
+            border-left: 3px solid var(--accent);
+            opacity: 0.85;
+            transition: opacity var(--transition);
+        }
+
+        .release:hover .release-description {
+            opacity: 1;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-heading);
+            margin-bottom: 12px;
+            margin-top: 24px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+
+        .section-title:first-of-type {
+            margin-top: 0;
+        }
+
+        .section-title::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 16px;
+            background: var(--accent);
+            border-radius: 2px;
+            opacity: 0.6;
         }
 
         ul {
-            padding-left: 16px;
-            margin-bottom: 24px;
-            list-style: disc;
+            padding-left: 0;
+            margin-bottom: 0;
+            list-style: none;
         }
 
         li {
-            font-size: 16px;
-            line-height: 1.5;
+            font-size: 15px;
+            line-height: 1.6;
             color: var(--text-secondary);
-            margin-bottom: 8px;
+            margin-bottom: 6px;
+            padding-left: 20px;
+            position: relative;
+            transition: color var(--transition);
         }
 
-        li::marker {
-            color: var(--accent);
+        li::before {
+            content: '';
+            position: absolute;
+            left: 4px;
+            top: 10px;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--accent);
+            opacity: 0.5;
+            transition: opacity var(--transition), transform var(--transition);
+        }
+
+        li:hover::before {
+            opacity: 1;
+            transform: scale(1.3);
+        }
+
+        li:hover {
+            color: var(--text);
+        }
+
+        li+li {
+            margin-top: 2px;
         }
 
         a {
-            color: var(--accent);
+            color: var(--link-color);
             text-decoration: none;
+            font-weight: 500;
+            border-bottom: 1px solid transparent;
+            transition: border-color var(--transition), color var(--transition);
         }
 
         a:hover {
-            text-decoration: underline;
+            color: var(--accent-hover);
+            border-bottom-color: var(--accent);
+            text-decoration: none;
         }
 
         .warning-box {
-            background-color: var(--warning-bg);
-            border-left: 4px solid var(--warning-border);
-            padding: 12px 15px;
-            margin: 15px 0;
-            border-radius: 4px;
-            font-size: 13px;
+            background: var(--warning-bg);
+            border-left: 3px solid var(--warning-border);
+            padding: 14px 18px;
+            margin: 16px 0 4px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
             color: var(--warning-text);
+            line-height: 1.7;
+        }
+
+        .warning-box strong {
+            font-weight: 600;
+            color: var(--warning-text);
+        }
+
+        .warning-box br {
+            display: none;
+        }
+
+        .warning-box .warning-line {
+            display: block;
+        }
+
+        .warning-box .warning-line+.warning-line {
+            margin-top: 4px;
+        }
+
+        /* List spacing */
+        .release ul:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Section spacing */
+        .release .section-title+.section-title {
+            margin-top: 28px;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            body {
+                padding: 24px 16px 64px;
+            }
+
+            .page-header {
+                margin-bottom: 40px;
+            }
+
+            .page-header h1 {
+                font-size: 22px;
+            }
+
+            .release {
+                padding: 20px 16px 20px 20px;
+                margin-bottom: 32px;
+            }
+
+            .release::before {
+                top: 24px;
+                height: calc(100% - 48px);
+            }
+
+            .release::after {
+                top: 20px;
+                height: 28px;
+            }
+
+            .release-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+
+            .release-version {
+                font-size: 18px;
+            }
+
+            .release-date {
+                font-size: 13px;
+            }
+
+            .release-description {
+                font-size: 14px;
+                padding: 12px 14px;
+            }
+
+            li {
+                font-size: 14px;
+                padding-left: 18px;
+            }
+
+            li::before {
+                left: 2px;
+                top: 8.5px;
+                width: 5px;
+                height: 5px;
+            }
+
+            .warning-box {
+                font-size: 13px;
+                padding: 12px 14px;
+            }
+
+            .warning-box br {
+                display: inline;
+            }
+
+            .section-title {
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .release {
+                padding: 16px 12px 16px 16px;
+            }
+
+            .release-version {
+                font-size: 16px;
+                flex-wrap: wrap;
+            }
+
+            .badge-latest {
+                font-size: 11px;
+                padding: 2px 10px 2px 8px;
+            }
+        }
+
+        /* Smooth scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Accent selection */
+        ::selection {
+            background: var(--accent);
+            color: #fff;
         }
     </style>
 </head>
 
 <body>
-    <section>
+    <header class="page-header">
+        <h1>Release Notes</h1>
+        <p>Clip 的每一次更新，都为了更好的体验</p>
+    </header>
+
+    <article class="release">
         <div class="release-header">
             <h2 class="release-version">
-                v2.0
-                <span>Latest</span>
+                <span class="version-number">v2.0</span>
+                <span class="badge-latest">Latest</span>
             </h2>
             <time class="release-date">2026-06-12</time>
         </div>
-        <p>1.0 版本在 SwiftUI 框架下已趋于稳定，为了追求更极致的性能和体验，我决定对整个应用进行彻底重构。
-            2.0 版本采用 AppKit 架构重写，在启动速度、流畅度和响应速度方面都有显著提升，带来更加流畅的使用体验。
+        <p class="release-description">
+            1.0 版本在 SwiftUI 框架下已趋于稳定，为了追求更极致的性能和体验，我决定对整个应用进行彻底重构。2.0 版本采用 AppKit
+            架构重写，在启动速度、流畅度和响应速度方面都有显著提升，带来更加流畅的使用体验。
         </p>
-        <h3>What's new</h3>
+        <h3 class="section-title">What's new</h3>
         <ul>
-            <li>新增MCP支持（Beta）</li>
+            <li>新增 MCP 支持（Beta）</li>
             <li>历史记录列表完整支持多选操作 <a href="https://github.com/Ineffable919/clipboard/issues/16">#16</a></li>
             <li>支持直接拖拽文本、文件等到剪贴板</li>
             <li>更丰富的卡片菜单</li>
-            <li>初步适配macOS 27</li>
+            <li>初步适配 macOS 27</li>
         </ul>
-        <h3>Improvements</h3>
+        <h3 class="section-title">Improvements</h3>
         <ul>
-            <li>优化识别复制的内容，比如在IntelliJ IDEA复制文件，现在能准确识别</li>
+            <li>优化识别复制的内容，比如在 IntelliJ IDEA 复制文件，现在能准确识别</li>
             <li>最低支持版本降低为 macOS 14</li>
             <li>修复了一些已知问题</li>
         </ul>
-    </section>
+    </article>
 
-    <section>
+    <article class="release">
         <div class="release-header">
-            <h2 class="release-version">v1.1</h2>
+            <h2 class="release-version">
+                <span class="version-number">v1.1</span>
+            </h2>
             <time class="release-date">2026-05-12</time>
         </div>
 
         <div class="warning-box">
-            <strong>注意：</strong>应用启动没有数据是因为该版本修改了数据存储位置，避免每次启动都提示文稿授权弹窗，<br> 只需在 设置 - 存储页面导入旧数据即可，旧数据存储位置：文稿 - Clip -
-            Clip.sqlite3，<br> 后续可删除旧数据，或保留备份
+            <strong>注意：</strong>应用启动没有数据是因为该版本修改了数据存储位置，避免每次启动都提示文稿授权弹窗，
+            <span class="warning-line">只需在 设置 – 存储页面导入旧数据即可，旧数据存储位置：文稿 – Clip – Clip.sqlite3，</span>
+            <span class="warning-line">后续可删除旧数据，或保留备份</span>
         </div>
 
-        <h3>Bug Fixes</h3>
+        <h3 class="section-title">Bug Fixes</h3>
         <ul>
             <li>解决了一些已知问题</li>
         </ul>
-    </section>
+    </article>
 
-    <section>
+    <article class="release">
         <div class="release-header">
-            <h2 class="release-version">v1.0.0</h2>
+            <h2 class="release-version">
+                <span class="version-number">v1.0.0</span>
+            </h2>
             <time class="release-date">2026-04-24</time>
         </div>
-        <h3>What's new</h3>
+        <h3 class="section-title">What's new</h3>
         <ul>
             <li>本地化支持</li>
             <li>列表支持多选 <a href="https://github.com/Ineffable919/clipboard/issues/16">#16</a></li>
         </ul>
-        <h3>Improvements</h3>
+        <h3 class="section-title">Improvements</h3>
         <ul>
-            <li>支持在列表使用鼠标滚轮进行横向滚动 <a href="https://github.com/Ineffable919/clipboard/pull/18">#18</a> (感谢 <a
-                    href="https://github.com/fleyi">fleyi</a> 提交 pull)</li>
+            <li>支持在列表使用鼠标滚轮进行横向滚动 <a href="https://github.com/Ineffable919/clipboard/pull/18">#18</a>（感谢 <a
+                    href="https://github.com/fleyi">fleyi</a> 提交 pull）</li>
             <li>系统版本支持提升至 macOS 15</li>
         </ul>
-        <h3>Bug Fixes</h3>
+        <h3 class="section-title">Bug Fixes</h3>
         <ul>
             <li>解决了一些已知问题</li>
         </ul>
-    </section>
+    </article>
 
-    <section>
+    <article class="release">
         <div class="release-header">
-            <h2 class="release-version">v0.5.1</h2>
+            <h2 class="release-version">
+                <span class="version-number">v0.5.1</span>
+            </h2>
             <time class="release-date">2026-03-03</time>
         </div>
-        <h3>Bug Fixes</h3>
+        <h3 class="section-title">Bug Fixes</h3>
         <ul>
             <li>解决了一些已知问题</li>
         </ul>
-    </section>
+    </article>
 
-    <section>
+    <article class="release">
         <div class="release-header">
-            <h2 class="release-version">v0.5.0</h2>
+            <h2 class="release-version">
+                <span class="version-number">v0.5.0</span>
+            </h2>
             <time class="release-date">2026-02-26</time>
         </div>
-        <h3>What's new</h3>
+        <h3 class="section-title">What's new</h3>
         <ul>
             <li>支持窗口展示</li>
-            <li>抽屉输入支持@类型过滤，例如输入@image、@文件、@file等等</li>
+            <li>抽屉输入支持 @ 类型过滤，例如输入 @image、@文件、@file 等等</li>
             <li>状态栏图标支持隐藏</li>
         </ul>
-    </section>
+    </article>
 
-    <section>
+    <article class="release">
         <div class="release-header">
-            <h2 class="release-version">v0.3.1</h2>
+            <h2 class="release-version">
+                <span class="version-number">v0.3.1</span>
+            </h2>
             <time class="release-date">2026-01-23</time>
         </div>
-        <h3>What's new</h3>
+        <h3 class="section-title">What's new</h3>
         <ul>
-            <li>图片内容支持搜索（仅限于新的图片历史内容），预览支持OCR</li>
+            <li>图片内容支持搜索（仅限于新的图片历史内容），预览支持 OCR</li>
             <li>设置页面新增存储栏目，支持数据备份、导入，日志查看</li>
         </ul>
-        <h3>Bug Fixes</h3>
+        <h3 class="section-title">Bug Fixes</h3>
         <ul>
             <li>修复重新安装或更新后辅助权限丢失的问题（仅支持后续版本）</li>
             <li>修复了一些已知问题</li>
         </ul>
-    </section>
+    </article>
 
-    <section>
+    <article class="release">
         <div class="release-header">
-            <h2 class="release-version">v0.3.0</h2>
+            <h2 class="release-version">
+                <span class="version-number">v0.3.0</span>
+            </h2>
             <time class="release-date">2026-01-01</time>
         </div>
-        <h3>What's new</h3>
+        <h3 class="section-title">What's new</h3>
         <ul>
             <li>提供按类型、应用或日期更丰富的过滤方式，以便于更好的查询历史记录</li>
             <li>关键字搜索支持高亮展示</li>
             <li>文本支持编辑并保存</li>
             <li>支持暂停并恢复剪贴板记录</li>
         </ul>
-        <h3>Improvements</h3>
+        <h3 class="section-title">Improvements</h3>
         <ul>
             <li>改进链接、图片卡片展示</li>
             <li>预览窗口体验优化</li>
             <li>设置-关于界面的图标支持直接拖拽获取权限</li>
             <li>更好的检测应用更新</li>
-            <li>兼容macOS Sonoma</li>
+            <li>兼容 macOS Sonoma</li>
         </ul>
-        <h3>Bug Fixes</h3>
+        <h3 class="section-title">Bug Fixes</h3>
         <ul>
             <li>修复了一些已知问题</li>
         </ul>
-    </section>
+    </article>
 
-    <section>
+    <article class="release">
         <div class="release-header">
-            <h2 class="release-version">v0.2.5</h2>
+            <h2 class="release-version">
+                <span class="version-number">v0.2.5</span>
+            </h2>
             <time class="release-date">2025-12-10</time>
         </div>
-        <h3>What's new</h3>
+        <h3 class="section-title">What's new</h3>
         <ul>
             <li>增加了一些设置项</li>
         </ul>
-        <h3>Improvements</h3>
+        <h3 class="section-title">Improvements</h3>
         <ul>
             <li>优化预览相关的操作</li>
             <li>调整样式，提升整体视觉一致性</li>
         </ul>
-        <h3>Bug Fixes</h3>
+        <h3 class="section-title">Bug Fixes</h3>
         <ul>
             <li>修复了一些已知问题</li>
         </ul>
-    </section>
+    </article>
 
-    <section>
+    <article class="release">
         <div class="release-header">
-            <h2 class="release-version">v0.2.4</h2>
+            <h2 class="release-version">
+                <span class="version-number">v0.2.4</span>
+            </h2>
             <time class="release-date">2025-11-29</time>
         </div>
-        <h3>Improvements</h3>
+        <h3 class="section-title">Improvements</h3>
         <ul>
             <li>修改删除快捷键为 Del，避免其它误操作 <a href="https://github.com/Ineffable919/clipboard/issues/3">#3</a></li>
             <li>调整样式，提升整体视觉一致性</li>
         </ul>
-        <h3>Bug Fixes</h3>
+        <h3 class="section-title">Bug Fixes</h3>
         <ul>
             <li>修复拖动卡片到访达显示问题 <a href="https://github.com/Ineffable919/clipboard/issues/1">#1</a></li>
             <li>修复了一些已知问题</li>
         </ul>
-    </section>
+    </article>
 
-    <section>
+    <article class="release">
         <div class="release-header">
-            <h2 class="release-version">v0.2.3</h2>
+            <h2 class="release-version">
+                <span class="version-number">v0.2.3</span>
+            </h2>
             <time class="release-date">2025-11-25</time>
         </div>
-        <h3>Improvements</h3>
+        <h3 class="section-title">Improvements</h3>
         <ul>
             <li>移除了暂未生效的控制项</li>
-            <li>调整UI元素的间距和样式，提升整体视觉一致性</li>
+            <li>调整 UI 元素的间距和样式，提升整体视觉一致性</li>
         </ul>
-        <h3>Bug Fixes</h3>
+        <h3 class="section-title">Bug Fixes</h3>
         <ul>
             <li>修复某些情况下应用崩溃的问题</li>
         </ul>
-    </section>
+    </article>
 
-    <section>
+    <article class="release">
         <div class="release-header">
-            <h2 class="release-version">v0.2.2</h2>
+            <h2 class="release-version">
+                <span class="version-number">v0.2.2</span>
+            </h2>
             <time class="release-date">2025-11-21</time>
         </div>
-        <h3>What's new</h3>
+        <h3 class="section-title">What's new</h3>
         <ul>
-            <li>状态栏新增"检查更新"菜单项，允许用户手动检查更新。</li>
+            <li>状态栏新增“检查更新”菜单项，允许用户手动检查更新。</li>
             <li>增加显示更新设置，确保用户能够方便地管理更新选项。</li>
             <li>支持 Intel 架构。</li>
         </ul>
-        <h3>Improvements</h3>
+        <h3 class="section-title">Improvements</h3>
         <ul>
             <li>禁用了自动更新</li>
-            <li>调整UI元素的间距和样式，提升整体视觉一致性</li>
+            <li>调整 UI 元素的间距和样式，提升整体视觉一致性</li>
         </ul>
-        <h3>Bug Fixes</h3>
+        <h3 class="section-title">Bug Fixes</h3>
         <ul>
             <li>修复在某些情况下粘贴内容后选中状态丢失的问题。</li>
         </ul>
-    </section>
+    </article>
 </body>
 
 </html>
