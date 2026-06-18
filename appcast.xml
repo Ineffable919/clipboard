@@ -4,117 +4,8 @@
         <title>Clipboard 更新</title>
         <description>Clipboard 应用更新源</description>
         <language>zh-CN</language>
-        <!-- 1.1 -->
-        <item>
-            <title>Version 1.1 (Apple Silicon (arm64))</title>
-            <description>
-                <![CDATA[
-                <h3>Version 1.1</h3>
-
-                <p><strong>数据迁移说明</strong></p>
-
-                <p>
-                本次更新调整了应用的数据存储位置，用于解决启动时频繁弹出「文稿访问授权」的问题。<br>
-                更新后如果发现历史数据未显示，请前往：<strong>设置 - 存储</strong>导入旧版本数据即可。<br>
-                旧数据默认位置：<code>文稿/Clip/Clip.sqlite3</code><br>
-                数据导入完成后，可自行删除旧文件，或保留作为备份。<br>
-                </p>
-
-                <p><strong>改进与修复</strong></p>
-                <ul>
-                    <li>优化应用数据存储机制</li>
-                    <li>解决启动时重复请求文稿访问权限的问题</li>
-                    <li>修复若干已知问题并提升稳定性</li>
-                </ul>
-                ]]>
-            </description>
-            <sparkle:fullReleaseNotesLink>
-                https://ineffable919.github.io/clipboard/scripts/release-note.html
-            </sparkle:fullReleaseNotesLink>
-            <pubDate>Tue, 12 May 2026 17:54:40 +0800</pubDate>
-            <sparkle:version>116</sparkle:version>
-            <sparkle:shortVersionString>1.1</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
-            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
-            <enclosure
-                url="https://github.com/Ineffable919/clipboard/releases/download/1.1/Clipboard-1.1-arm64.zip"
-                sparkle:arch="arm64"
-                sparkle:edSignature="iSDxco8EjYZHZh/EEaUltzWHCObF4jwsC5Uc4rxrT3mBXtlnfDBv5wo1zGwu9fi1tvKsqJQhHLdYTiUDrO55Dw=="
-                length="3544032"
-                type="application/octet-stream" />
-        </item>
-        <item>
-            <title>Version 1.1 (Intel (x86_64))</title>
-            <description>
-                <![CDATA[
-                <h3>Version 1.1</h3>
-
-                <p><strong>数据迁移说明</strong></p>
-
-                <p>
-                本次更新调整了应用的数据存储位置，用于解决启动时频繁弹出「文稿访问授权」的问题。<br>
-                更新后如果发现历史数据未显示，请前往：<strong>设置 - 存储</strong>导入旧版本数据即可。<br>
-                旧数据默认位置：<code>文稿/Clip/Clip.sqlite3</code><br>
-                数据导入完成后，可自行删除旧文件，或保留作为备份。<br>
-                </p>
-
-                <p><strong>改进与修复</strong></p>
-                <ul>
-                    <li>优化应用数据存储机制</li>
-                    <li>解决启动时重复请求文稿访问权限的问题</li>
-                    <li>修复若干已知问题并提升稳定性</li>
-                </ul>
-                ]]>
-            </description>
-            <sparkle:fullReleaseNotesLink>
-                https://ineffable919.github.io/clipboard/scripts/release-note.html
-            </sparkle:fullReleaseNotesLink>
-            <pubDate>Tue, 12 May 2026 17:56:41 +0800</pubDate>
-            <sparkle:version>116</sparkle:version>
-            <sparkle:shortVersionString>1.1</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
-            <enclosure
-                url="https://github.com/Ineffable919/clipboard/releases/download/1.1/Clipboard-1.1-x86_64.zip"
-                sparkle:arch="x86_64"
-                sparkle:edSignature="ZR1JrtoEwxYVzzCRdVrETlJ9qrwfQH3HmRshHLU4Unn2aivxLD30+jkB4wMxavawcQ8UqmKck0nsRJ3u60GzDA=="
-                length="3681232"
-                type="application/octet-stream" />
-        </item>
-
-        <!-- 1.0.0 -->
-        <item>
-            <title>Version 1.0.0 (Apple Silicon (arm64))</title>
-            <sparkle:fullReleaseNotesLink>
-                https://ineffable919.github.io/clipboard/scripts/release-note.html
-            </sparkle:fullReleaseNotesLink>
-            <pubDate>Fri, 24 Apr 2026 14:54:05 +0800</pubDate>
-            <sparkle:version>115</sparkle:version>
-            <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
-            <enclosure
-                url="https://github.com/Ineffable919/clipboard/releases/download/1.0.0/Clipboard-1.0.0-arm64.zip"
-                sparkle:arch="arm64"
-                sparkle:edSignature="A49hyz4dviOD9SbLX6zeWPPOiycQ5F2AoNFp0+QFB3wlrHbnrk+5dTEZaZ5kdxi6zsKnx87I5Kdgr3ZEGS1lAw=="
-                length="3545414"
-                type="application/octet-stream" />
-        </item>
-        <item>
-            <title>Version 1.0.0 (Intel (x86_64))</title>
-            <sparkle:fullReleaseNotesLink>
-                https://ineffable919.github.io/clipboard/scripts/release-note.html
-            </sparkle:fullReleaseNotesLink>
-            <pubDate>Fri, 24 Apr 2026 14:55:29 +0800</pubDate>
-            <sparkle:version>115</sparkle:version>
-            <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>
-            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <enclosure
-                url="https://github.com/Ineffable919/clipboard/releases/download/1.0.0/Clipboard-1.0.0-x86_64.zip"
-                sparkle:arch="x86_64"
-                sparkle:edSignature="UxfJz85AmevJcZp++jXy1Dq6kPEBUVlbpO6c09N6gdNxjRkykx5aFjDV2kiYIBuJUjgENg5NLR0sDfkDbW7cAQ=="
-                length="3682114"
-                type="application/octet-stream" />
-        </item>
-
+        
+        <!-- 2.0 -->
         <item>
             <title>Version 2.0 (Apple Silicon (arm64))</title>
             <description>
@@ -122,13 +13,13 @@
                 <h3>Version 2.0</h3>
 
                 <p>
-                1.0 版本在 SwiftUI 框架下已趋于稳定，为了追求更极致的性能和体验，我决定对整个应用进行彻底重构。<br>
-                2.0 版本采用 AppKit 架构重写，在启动速度、流畅度和响应速度方面都有显著提升，带来更加流畅的使用体验。
+                1.0 版本在 SwiftUI 框架下已趋于稳定,为了追求更极致的性能和体验,我决定对整个应用进行彻底重构。<br>
+                2.0 版本采用 AppKit 架构重写,在启动速度、流畅度和响应速度方面都有显著提升,带来更加流畅的使用体验。
                 </p>
 
                 <p><strong>What's new</strong></p>
                 <ul>
-                    <li>新增 MCP 支持（Beta）</li>
+                    <li>新增 MCP 支持(Beta)</li>
                     <li>历史记录列表完整支持多选操作 <a href="https://github.com/Ineffable919/clipboard/issues/16">#16</a></li>
                     <li>支持直接拖拽文本、文件等到剪贴板</li>
                     <li>更丰富的卡片菜单</li>
@@ -137,7 +28,7 @@
 
                 <p><strong>Improvements</strong></p>
                 <ul>
-                    <li>优化识别复制的内容，比如在 IntelliJ IDEA 复制文件，现在能准确识别</li>
+                    <li>优化识别复制的内容,比如在 IntelliJ IDEA 复制文件,现在能准确识别</li>
                     <li>最低支持版本降低为 macOS 14</li>
                     <li>修复了一些已知问题</li>
                 </ul>
@@ -158,7 +49,6 @@
                 length="3902383"
                 type="application/octet-stream" />
         </item>
-
         <item>
             <title>Version 2.0 (Intel (x86_64))</title>
             <description>
@@ -166,13 +56,13 @@
                 <h3>Version 2.0</h3>
 
                 <p>
-                1.0 版本在 SwiftUI 框架下已趋于稳定，为了追求更极致的性能和体验，我决定对整个应用进行彻底重构。<br>
-                2.0 版本采用 AppKit 架构重写，在启动速度、流畅度和响应速度方面都有显著提升，带来更加流畅的使用体验。
+                1.0 版本在 SwiftUI 框架下已趋于稳定,为了追求更极致的性能和体验,我决定对整个应用进行彻底重构。<br>
+                2.0 版本采用 AppKit 架构重写,在启动速度、流畅度和响应速度方面都有显著提升,带来更加流畅的使用体验。
                 </p>
 
                 <p><strong>What's new</strong></p>
                 <ul>
-                    <li>新增 MCP 支持（Beta）</li>
+                    <li>新增 MCP 支持(Beta)</li>
                     <li>历史记录列表完整支持多选操作 <a href="https://github.com/Ineffable919/clipboard/issues/16">#16</a></li>
                     <li>支持直接拖拽文本、文件等到剪贴板</li>
                     <li>更丰富的卡片菜单</li>
@@ -181,7 +71,7 @@
 
                 <p><strong>Improvements</strong></p>
                 <ul>
-                    <li>优化识别复制的内容，比如在 IntelliJ IDEA 复制文件，现在能准确识别</li>
+                    <li>优化识别复制的内容,比如在 IntelliJ IDEA 复制文件,现在能准确识别</li>
                     <li>最低支持版本降低为 macOS 14</li>
                     <li>修复了一些已知问题</li>
                 </ul>
@@ -212,10 +102,10 @@
                 <p><strong>数据迁移说明</strong></p>
 
                 <p>
-                本次更新调整了应用的数据存储位置，用于解决启动时频繁弹出「文稿访问授权」的问题。<br>
-                更新后如果发现历史数据未显示，请前往：<strong>设置 - 存储</strong>导入旧版本数据即可。<br>
-                旧数据默认位置：<code>文稿/Clip/Clip.sqlite3</code><br>
-                数据导入完成后，可自行删除旧文件，或保留作为备份。<br>
+                本次更新调整了应用的数据存储位置,用于解决启动时频繁弹出「文稿访问授权」的问题。<br>
+                更新后如果发现历史数据未显示,请前往:<strong>设置 - 存储</strong>导入旧版本数据即可。<br>
+                旧数据默认位置:<code>文稿/Clip/Clip.sqlite3</code><br>
+                数据导入完成后,可自行删除旧文件,或保留作为备份。<br>
                 </p>
 
                 <p><strong>改进与修复</strong></p>
@@ -250,10 +140,10 @@
                 <p><strong>数据迁移说明</strong></p>
 
                 <p>
-                本次更新调整了应用的数据存储位置，用于解决启动时频繁弹出「文稿访问授权」的问题。<br>
-                更新后如果发现历史数据未显示，请前往：<strong>设置 - 存储</strong>导入旧版本数据即可。<br>
-                旧数据默认位置：<code>文稿/Clip/Clip.sqlite3</code><br>
-                数据导入完成后，可自行删除旧文件，或保留作为备份。<br>
+                本次更新调整了应用的数据存储位置,用于解决启动时频繁弹出「文稿访问授权」的问题。<br>
+                更新后如果发现历史数据未显示,请前往:<strong>设置 - 存储</strong>导入旧版本数据即可。<br>
+                旧数据默认位置:<code>文稿/Clip/Clip.sqlite3</code><br>
+                数据导入完成后,可自行删除旧文件,或保留作为备份。<br>
                 </p>
 
                 <p><strong>改进与修复</strong></p>
@@ -313,6 +203,7 @@
                 type="application/octet-stream" />
         </item>
 
+        <!-- 0.5.1 -->
         <item>
             <title>Version 0.5.1 (Apple Silicon (arm64))</title>
             <sparkle:releaseNotesLink>
@@ -349,6 +240,8 @@
                 length="3469733"
                 type="application/octet-stream" />
         </item>
+
+        <!-- 0.5.0 -->
         <item>
             <title>Version 0.5.0 (Apple Silicon (arm64))</title>
             <sparkle:releaseNotesLink>
@@ -385,6 +278,8 @@
                 length="3468115"
                 type="application/octet-stream" />
         </item>
+
+        <!-- 0.3.1 -->
         <item>
             <title>Version 0.3.1 (Apple Silicon (arm64))</title>
             <sparkle:releaseNotesLink>
@@ -421,6 +316,8 @@
                 length="3253761"
                 type="application/octet-stream" />
         </item>
+
+        <!-- 0.3.0 -->
         <item>
             <title>Version 0.3.0 (Apple Silicon (arm64))</title>
             <sparkle:releaseNotesLink>

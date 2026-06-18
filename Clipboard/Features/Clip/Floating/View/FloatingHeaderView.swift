@@ -334,6 +334,18 @@ final class FloatingHeaderView: NSView {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.handleBackgroundSettingsChange() }
             .store(in: &cancellables)
+
+        observeUpdateBadge()
+    }
+
+    private func observeUpdateBadge() {
+        withObservationTracking {
+            settingsBtn.showBadge = UpdateManager.shared.hasUpdate
+        } onChange: { [weak self] in
+            Task { @MainActor [weak self] in
+                self?.observeUpdateBadge()
+            }
+        }
     }
 
     // MARK: - Background

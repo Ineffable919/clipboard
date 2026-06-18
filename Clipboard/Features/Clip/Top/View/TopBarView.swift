@@ -133,6 +133,7 @@ final class TopBarView: NSView {
         setupSettingBtn()
         layoutRows()
         applyMode()
+        observeUpdateBadge()
     }
 
     private func setupDefaultRow() {
@@ -234,6 +235,18 @@ final class TopBarView: NSView {
             return nil
         }
         return result
+    }
+
+    // MARK: - Update Badge
+
+    private func observeUpdateBadge() {
+        withObservationTracking {
+            settingBtn.showBadge = UpdateManager.shared.hasUpdate
+        } onChange: { [weak self] in
+            Task { @MainActor [weak self] in
+                self?.observeUpdateBadge()
+            }
+        }
     }
 
     // MARK: - Settings Menu
