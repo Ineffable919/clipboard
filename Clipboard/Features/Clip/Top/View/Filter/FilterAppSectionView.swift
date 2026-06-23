@@ -66,7 +66,8 @@ final class FilterAppSectionView: NSStackView {
 
         appInfoList = apps
         showAllApps = false
-        rebuildGrid()
+        rebuildButtons()
+        layoutGrid()
     }
 
     func updateSelection(_ apps: Set<String>) {
@@ -78,37 +79,34 @@ final class FilterAppSectionView: NSStackView {
 
     // MARK: - Grid
 
-    private func rebuildGrid() {
-        gridContainer.subviews.forEach { $0.removeFromSuperview() }
+    /// 仅在应用列表变化时调用：创建全部应用按钮并缓存，供展开/收起复用。
+    private func rebuildButtons() {
         appButtons.removeAll()
-        moreButton = nil
 
-        guard !appInfoList.isEmpty else {
-            isHidden = true
-            return
-        }
-
-        isHidden = false
-
-        let totalCount = appInfoList.count
-        let shouldShowMore = totalCount > 9
-
-        // 根据当前展开状态决定显示多少条
-        let displayedApps = shouldShowMore && !showAllApps
-            ? Array(appInfoList.prefix(8))
-            : appInfoList
-
-        var buttons: [FilterButton] = []
-
-        for appInfo in displayedApps {
+        for appInfo in appInfoList {
             let button = AppFilterButton(icon: appInfo.icon, title: appInfo.name)
             button.action = { [weak self] in
                 self?.onAppToggle?(appInfo.name, appInfo.path)
             }
             button.isSelected = selectedApps.contains(appInfo.name)
             appButtons.append(button)
-            buttons.append(button)
         }
+    }
+
+    private func layoutGrid() {
+        guard !appButtons.isEmpty else {
+            isHidden = true
+            return
+        }
+
+        isHidden = false
+
+        let shouldShowMore = appButtons.count > 9
+        let displayed: [AppFilterButton] = shouldShowMore && !showAllApps
+            ? Array(appButtons.prefix(8))
+            : appButtons
+
+        var buttons: [FilterButton] = displayed
 
         if shouldShowMore {
             let more = FilterButton(
@@ -127,6 +125,6 @@ final class FilterAppSectionView: NSStackView {
 
     private func toggleShowAllApps() {
         showAllApps.toggle()
-        rebuildGrid()
+        layoutGrid()
     }
 }

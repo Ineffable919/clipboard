@@ -39,7 +39,7 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         tv.drawsBackground = false
         tv.isEditable = true
         tv.isSelectable = true
-        tv.font = .preferredFont(forTextStyle: .callout)
+        tv.font = .preferredFont(forTextStyle: .body)
         tv.textColor = .labelColor
         if #available(macOS 15.0, *) {
             tv.writingToolsBehavior = .none
@@ -75,7 +75,7 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
 
     // MARK: - Layout Constants
 
-    private static let baselineFont: NSFont = .preferredFont(forTextStyle: .callout)
+    private static let baselineFont: NSFont = .preferredFont(forTextStyle: .body)
 
     private static let fixedParagraphStyle: NSParagraphStyle = {
         let style = NSMutableParagraphStyle()

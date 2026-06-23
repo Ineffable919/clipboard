@@ -31,7 +31,7 @@ enum FilterGridLayout {
 
         var currentRow: [NSView] = []
         for (index, button) in buttons.enumerated() {
-            button.snp.makeConstraints { make in
+            button.snp.remakeConstraints { make in
                 make.width.equalTo(buttonWidth)
                 make.height.equalTo(buttonHeight)
             }

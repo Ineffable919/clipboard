@@ -64,7 +64,7 @@ private final class TokenAttachmentCell: NSTextAttachmentCell {
     // MARK: - Sizing
 
     private func chipFont() -> NSFont {
-        .preferredFont(forTextStyle: .callout)
+        .preferredFont(forTextStyle: .body)
     }
 
     private nonisolated func labelSize() -> NSSize {

@@ -20,6 +20,7 @@ class FilterButton: NSView {
 
     var isSelected: Bool = false {
         didSet {
+            guard oldValue != isSelected else { return }
             updateAppearance(animated: true)
         }
     }
