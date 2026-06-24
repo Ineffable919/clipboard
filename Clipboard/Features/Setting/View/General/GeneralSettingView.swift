@@ -35,6 +35,9 @@ struct GeneralSettingView: View {
         .init(rawValue: PasteUserDefaults.historyTime)
 
     @State private var launchAtLoginTimer: Timer?
+    // 防抖：快速连点会触发多次 .accessory↔.regular 切换并堆积幽灵 Dock 图标，
+    // 用一个可取消的延迟任务把连续切换合并为最终状态的一次应用。
+    @State private var dockIconTask: Task<Void, Never>?
 
     var body: some View {
         ScrollView(.vertical) {
@@ -78,9 +81,7 @@ struct GeneralSettingView: View {
                         isOn: $showDockIcon
                     )
                     .onChange(of: showDockIcon) { _, newValue in
-                        NSApp.setActivationPolicy(
-                            newValue ? .regular : .accessory
-                        )
+                        scheduleDockIconUpdate(visible: newValue)
                     }
 
                     Divider()
@@ -185,6 +186,25 @@ struct GeneralSettingView: View {
             )
         ) { _ in
             stopLaunchAtLoginTimer()
+        }
+    }
+
+    // MARK: - Dock 图标显隐
+
+    private func scheduleDockIconUpdate(visible: Bool) {
+        dockIconTask?.cancel()
+        dockIconTask = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(350))
+            guard !Task.isCancelled else { return }
+
+            let target: NSApplication.ActivationPolicy =
+                visible ? .regular : .accessory
+            guard NSApp.activationPolicy() != target else { return }
+
+            NSApp.setActivationPolicy(target)
+            if visible {
+                NSApp.activate(ignoringOtherApps: true)
+            }
         }
     }
 
