@@ -419,7 +419,13 @@ final class TopBarView: NSView {
             if topVM?.hasInput == false {
                 deactivateSearch()
             }
-            onFocusRegionChange?(.collection)
+            if NSApp.currentEvent?.type == .leftMouseDown {
+                Task { @MainActor [weak self] in
+                    self?.onFocusRegionChange?(.collection)
+                }
+            } else {
+                onFocusRegionChange?(.collection)
+            }
             explicitFilterPopoverCloseDestination = nil
             return
         }
