@@ -6,7 +6,6 @@
 //
 
 import AppKit
-import SwiftUI
 
 @MainActor
 final class EditWindowController: NSWindowController, NSWindowDelegate {
@@ -17,7 +16,7 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
 
     private(set) var currentModel: PasteboardModel?
 
-    private var editState: EditWindowState?
+    private var editContentView: EditContentView?
 
     var onSave: ((PasteboardModel, NSAttributedString) -> Void)?
 
@@ -92,20 +91,7 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
 
         isNewItem = true
         currentModel = emptyModel
-        editState = EditWindowState(model: emptyModel)
-
-        if let state = editState {
-            let editView = TextEditView(
-                state: state,
-                onCancel: { [weak self] in
-                    self?.closeWindow()
-                },
-                onSave: { [weak self] content in
-                    self?.saveContent(content)
-                }
-            )
-            window?.contentView = NSHostingView(rootView: editView)
-        }
+        installContentView(for: emptyModel)
 
         NSApp.activate(ignoringOtherApps: true)
         window?.makeKeyAndOrderFront(nil)
@@ -119,29 +105,28 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
 
         isNewItem = false
         currentModel = model
-        editState = EditWindowState(model: model)
-
-        if let state = editState {
-            let editView = TextEditView(
-                state: state,
-                onCancel: { [weak self] in
-                    self?.closeWindow()
-                },
-                onSave: { [weak self] content in
-                    self?.saveContent(content)
-                }
-            )
-            window?.contentView = NSHostingView(rootView: editView)
-        }
+        installContentView(for: model)
 
         NSApp.activate(ignoringOtherApps: true)
         window?.makeKeyAndOrderFront(nil)
     }
 
+    private func installContentView(for model: PasteboardModel) {
+        let contentView = EditContentView(model: model)
+        contentView.onCancel = { [weak self] in
+            self?.closeWindow()
+        }
+        contentView.onSave = { [weak self] content in
+            self?.saveContent(content)
+        }
+        window?.contentView = contentView
+        editContentView = contentView
+    }
+
     func closeWindow() {
         window?.orderOut(nil)
         currentModel = nil
-        editState = nil
+        editContentView = nil
         isNewItem = false
     }
 
@@ -149,15 +134,15 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
 
     func windowWillClose(_: Notification) {
         currentModel = nil
-        editState = nil
+        editContentView = nil
         isNewItem = false
     }
 
     private func saveFromState() {
-        guard let state = editState else {
+        guard let contentView = editContentView else {
             return
         }
-        saveContent(state.currentContent)
+        saveContent(contentView.currentContent)
     }
 
     func saveContent(_ content: NSAttributedString) {

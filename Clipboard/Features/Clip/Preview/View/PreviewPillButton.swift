@@ -11,6 +11,13 @@ import SnapKit
 // MARK: - PreviewPillButton
 
 final class PreviewPillButton: NSView {
+    // MARK: - Style
+
+    enum Style {
+        case secondary
+        case primary
+    }
+
     // MARK: - Public
 
     var title: String {
@@ -21,6 +28,8 @@ final class PreviewPillButton: NSView {
     var onAction: (() -> Void)?
 
     // MARK: - Private
+
+    private let style: Style
 
     private let label: NSTextField = {
         let f = NSTextField(labelWithString: "")
@@ -37,9 +46,11 @@ final class PreviewPillButton: NSView {
 
     // MARK: - Init
 
-    init(title: String = "") {
+    init(title: String = "", style: Style = .secondary) {
+        self.style = style
         super.init(frame: .zero)
         label.stringValue = title
+        label.textColor = style == .primary ? .white : .controlTextColor
         setup()
     }
 
@@ -57,7 +68,7 @@ final class PreviewPillButton: NSView {
         backgroundLayer.cornerCurve = .continuous
         layer?.cornerRadius = Const.btnRadius
         layer?.cornerCurve = .continuous
-        layer?.borderWidth = 0.5
+        layer?.borderWidth = style == .secondary ? 0.5 : 0
         layer?.insertSublayer(backgroundLayer, at: 0)
 
         addSubview(label)
@@ -91,15 +102,21 @@ final class PreviewPillButton: NSView {
     private func updateAppearance(animated: Bool) {
         let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
 
-        let bgColor: NSColor = isHovering
-            ? (isDark ? .white.withAlphaComponent(0.08) : .black.withAlphaComponent(0.06))
-            : .clear
-
-        let borderColor: NSColor = isDark
-            ? .white.withAlphaComponent(0.2)
-            : .separatorColor
-
-        layer?.borderColor = borderColor.cgColor
+        let bgColor: NSColor
+        switch style {
+        case .secondary:
+            bgColor = isHovering
+                ? (isDark ? .white.withAlphaComponent(0.08) : .black.withAlphaComponent(0.06))
+                : .clear
+            let borderColor: NSColor = isDark
+                ? .white.withAlphaComponent(0.2)
+                : .separatorColor
+            layer?.borderColor = borderColor.cgColor
+        case .primary:
+            bgColor = isHovering
+                ? .controlAccentColor.blended(withFraction: 0.12, of: .black) ?? .controlAccentColor
+                : .controlAccentColor
+        }
 
         if animated {
             NSAnimationContext.runAnimationGroup { ctx in
@@ -151,9 +168,15 @@ final class PreviewPillButton: NSView {
 
     override func mouseDown(with event: NSEvent) {
         let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        let pressedColor: NSColor = isDark
-            ? .white.withAlphaComponent(0.14)
-            : .black.withAlphaComponent(0.10)
+        let pressedColor: NSColor
+        switch style {
+        case .secondary:
+            pressedColor = isDark
+                ? .white.withAlphaComponent(0.14)
+                : .black.withAlphaComponent(0.10)
+        case .primary:
+            pressedColor = .controlAccentColor.blended(withFraction: 0.2, of: .black) ?? .controlAccentColor
+        }
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         backgroundLayer.backgroundColor = pressedColor.cgColor
