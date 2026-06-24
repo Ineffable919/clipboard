@@ -116,7 +116,7 @@ struct ShortcutRecorder: View {
     private var borderColor: Color {
         isRecording
             ? Color(.keyboardFocusIndicatorColor)
-            : .clear
+            : Color(.separatorColor)
     }
 
     private var borderSize: CGFloat {
