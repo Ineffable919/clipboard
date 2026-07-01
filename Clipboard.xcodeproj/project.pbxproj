@@ -35,6 +35,10 @@
 		B1222F9B2FCF039B00FF7C3D /* Exceptions for "Clipboard" folder in "clipmcp" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				AI/main.swift,
+				AI/MCPHandler.swift,
+				AI/MCPTools.swift,
+				AI/MCPTypes.swift,
 				Core/Shared/ClipboardSchema.swift,
 			);
 			target = B1222F8C2FCF029B00FF7C3D /* clipmcp */;
@@ -42,6 +46,10 @@
 		B165A7C52E9FE5B700A75787 /* Exceptions for "Clipboard" folder in "Clipboard" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				AI/main.swift,
+				AI/MCPHandler.swift,
+				AI/MCPTools.swift,
+				AI/MCPTypes.swift,
 				Info.plist,
 			);
 			target = B1FADD3F2E7E92B3005CEFCF /* Clipboard */;
@@ -49,11 +57,6 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		B1222F8E2FCF029B00FF7C3D /* clipmcp */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = clipmcp;
-			sourceTree = "<group>";
-		};
 		B1FADD422E7E92B3005CEFCF /* Clipboard */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -99,7 +102,6 @@
 			isa = PBXGroup;
 			children = (
 				B1FADD422E7E92B3005CEFCF /* Clipboard */,
-				B1222F8E2FCF029B00FF7C3D /* clipmcp */,
 				B1222F9C2FCF03D700FF7C3D /* Frameworks */,
 				B1FADD412E7E92B3005CEFCF /* Products */,
 			);
@@ -128,9 +130,6 @@
 			buildRules = (
 			);
 			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				B1222F8E2FCF029B00FF7C3D /* clipmcp */,
 			);
 			name = clipmcp;
 			packageProductDependencies = (
@@ -399,7 +398,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 125;
+				CURRENT_PROJECT_VERSION = 126;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_APP_SANDBOX = NO;
@@ -451,7 +450,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 125;
+				CURRENT_PROJECT_VERSION = 126;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_APP_SANDBOX = NO;

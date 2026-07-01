@@ -13,7 +13,7 @@ private struct MCPClientInfo: Identifiable {
     let configNote: String?
 
     var menuIconImage: NSImage? {
-        iconImage(size: NSSize(width: 18, height: 18))
+        iconImage(size: NSSize(width: 16, height: 16))
     }
 
     var detailIconImage: NSImage? {
