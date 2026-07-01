@@ -105,10 +105,10 @@ final class StatusBarController: NSObject {
         )
 
         let symbolName = if #available(macOS 15.0, *) {
-                "heart.text.clipboard.fill"
-            } else {
-                "list.clipboard.fill"
-            }
+            "heart.text.clipboard.fill"
+        } else {
+            "list.clipboard.fill"
+        }
         let icon: NSImage? = NSImage(
             systemSymbolName: symbolName,
             accessibilityDescription: nil
@@ -118,8 +118,7 @@ final class StatusBarController: NSObject {
         button.target = self
         button.action = #selector(statusBarClick)
         if #available(macOS 27.0, *) {
-            // macOS 27 不再向状态栏按钮投递右键事件，
-            // 右键改由 global monitor 处理（见 setupRightClickMonitor）
+            button.menu = nil
             button.sendAction(on: [.leftMouseUp])
         } else {
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
@@ -157,25 +156,62 @@ final class StatusBarController: NSObject {
 
     private func setupRightClickMonitor() {
         guard #available(macOS 27.0, *) else { return }
+
         if let monitor = rightClickMonitor {
             NSEvent.removeMonitor(monitor)
         }
-        rightClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: .rightMouseDown) { [weak self] event in
-            let eventTimestamp = event.timestamp
-            Task { @MainActor [weak self] in
-                guard let self,
-                      let buttonWindow = self.menuBarItem?.button?.window,
-                      buttonWindow.frame.contains(NSEvent.mouseLocation),
-                      let menu = self.menu else { return }
-                if self.isMenuVisible {
-                    menu.cancelTracking()
-                } else if eventTimestamp > self.menuCloseUptime {
-                    self.isMenuVisible = true
-                    self.menuBarItem?.menu = menu
-                    self.menuBarItem?.button?.performClick(nil)
-                }
+
+        rightClickMonitor = NSEvent.addLocalMonitorForEvents(matching: .rightMouseDown) { [weak self] event in
+            guard let self,
+                  self.isMouseOverMenuBarButton()
+            else {
+                return event
             }
+
+            guard !self.isMenuVisible,
+                  ProcessInfo.processInfo.systemUptime - self.menuCloseUptime > 0.2
+            else {
+                return event
+            }
+
+            self.showStatusMenu()
+            return nil
         }
+    }
+
+    private func showStatusMenu() {
+        guard let button = menuBarItem?.button,
+              let window = button.window,
+              let menu else { return }
+
+        isMenuVisible = true
+        let buttonFrameInWindow = button.convert(
+            button.bounds,
+            to: nil
+        )
+        let buttonFrameOnScreen = window.convertToScreen(buttonFrameInWindow)
+        menu.popUp(
+            positioning: nil,
+            at: NSPoint(
+                x: buttonFrameOnScreen.minX,
+                y: buttonFrameOnScreen.minY
+            ),
+            in: nil
+        )
+    }
+
+    private func isMouseOverMenuBarButton() -> Bool {
+        guard let button = menuBarItem?.button,
+              let window = button.window else { return false }
+
+        let mouseLocationInWindow = window.convertPoint(
+            fromScreen: NSEvent.mouseLocation
+        )
+        let mouseLocationInButton = button.convert(
+            mouseLocationInWindow,
+            from: nil
+        )
+        return button.bounds.contains(mouseLocationInButton)
     }
 
     private static let appName: String =
@@ -400,10 +436,12 @@ final class StatusBarController: NSObject {
 // MARK: - NSMenuDelegate
 
 extension StatusBarController: NSMenuDelegate {
-    func menuDidClose(_ menu: NSMenu) {
+    func menuDidClose(_: NSMenu) {
         menuBarItem?.menu = nil
-        isMenuVisible = false
-        menuCloseUptime = ProcessInfo.processInfo.systemUptime
+        if #available(macOS 27.0, *) {
+            isMenuVisible = false
+            menuCloseUptime = ProcessInfo.processInfo.systemUptime
+        }
     }
 
     func menuNeedsUpdate(_ menu: NSMenu) {
