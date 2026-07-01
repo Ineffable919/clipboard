@@ -3,70 +3,31 @@ import SwiftUI
 // MARK: - MCPClientInfo
 
 private struct MCPClientInfo: Identifiable {
-    let id = UUID()
+    var id: String { name }
+
     let name: String
-    let icon: String
-    let iconColor: Color
-    let appIcon: NSImage?
+    let iconImageName: String
     let subtitle: String
     let command: String
     let footer: String?
     let configNote: String?
 
-    /// Menu icon as an `NSImage` that always renders via the same path as the
-    /// app icon. The app icon (a non-template colored bitmap) shows fine in the
-    /// menu, but a bare SF Symbol / template image does not. So the fallback
-    /// bakes the symbol into a non-template colored bitmap too.
-    var menuIcon: NSImage? {
-        if let appIcon {
-            return appIcon
-        }
-        let config = NSImage.SymbolConfiguration(
-            pointSize: 14,
-            weight: .regular
-        )
-        guard
-            let base = NSImage(
-                systemSymbolName: icon,
-                accessibilityDescription: nil
-            )?
-            .withSymbolConfiguration(config)
-        else { return nil }
-        let size = NSSize(width: 18, height: 18)
-        let rect = NSRect(
-            x: (size.width - base.size.width) / 2,
-            y: (size.height - base.size.height) / 2,
-            width: base.size.width,
-            height: base.size.height
-        )
-        let image = NSImage(size: size)
-        image.lockFocus()
-        base.draw(in: rect)
-        NSColor.labelColor.set()
-        rect.fill(using: .sourceAtop)
-        image.unlockFocus()
-        image.isTemplate = false
-        return image
+    var menuIconImage: NSImage? {
+        iconImage(size: NSSize(width: 18, height: 18))
     }
 
-    static func loadAppIcon(bundleID: String?, appName: String?) -> NSImage? {
-        var appPath: String?
-        if let bundleID,
-            let url = NSWorkspace.shared.urlForApplication(
-                withBundleIdentifier: bundleID
-            )
-        {
-            appPath = url.path
-        } else if let appName {
-            let path = "/Applications/\(appName).app"
-            if FileManager.default.fileExists(atPath: path) {
-                appPath = path
-            }
-        }
-        guard let appPath else { return nil }
-        let icon = NSWorkspace.shared.icon(forFile: appPath)
-        icon.size = NSSize(width: 18, height: 18)
-        return icon
+    var detailIconImage: NSImage? {
+        iconImage(size: NSSize(width: 40, height: 40))
+    }
+
+    private func iconImage(size: NSSize) -> NSImage? {
+        guard
+            let image = NSImage(named: iconImageName),
+            let copy = image.copy() as? NSImage
+        else { return nil }
+        copy.size = size
+        copy.isTemplate = false
+        return copy
     }
 }
 
@@ -144,12 +105,7 @@ struct AISettingsView: View {
         return [
             MCPClientInfo(
                 name: "Claude Desktop",
-                icon: "sparkle",
-                iconColor: Color(hex: "E8714A"),
-                appIcon: MCPClientInfo.loadAppIcon(
-                    bundleID: "com.anthropic.claudefordesktop",
-                    appName: "Claude"
-                ),
+                iconImageName: "MCPClaudeIcon",
                 subtitle: configSubtitle,
                 command: configCommand,
                 footer: nil,
@@ -158,12 +114,7 @@ struct AISettingsView: View {
             ),
             MCPClientInfo(
                 name: "Claude Code",
-                icon: "terminal",
-                iconColor: Color(hex: "E8714A"),
-                appIcon: MCPClientInfo.loadAppIcon(
-                    bundleID: "com.anthropic.claudefordesktop",
-                    appName: "Claude"
-                ),
+                iconImageName: "MCPClaudeIcon",
                 subtitle: cliSubtitle,
                 command:
                     "claude mcp add --transport stdio clipboard -- \(helperPath)",
@@ -172,12 +123,7 @@ struct AISettingsView: View {
             ),
             MCPClientInfo(
                 name: "Codex",
-                icon: "bolt.fill",
-                iconColor: Color(hex: "5B8EF0"),
-                appIcon: MCPClientInfo.loadAppIcon(
-                    bundleID: "com.openai.codex",
-                    appName: "Codex"
-                ),
+                iconImageName: "MCPCodexIcon",
                 subtitle: cliSubtitle,
                 command: "codex mcp add clipboard -- \(helperPath)",
                 footer: nil,
@@ -185,12 +131,7 @@ struct AISettingsView: View {
             ),
             MCPClientInfo(
                 name: "Cursor",
-                icon: "cursorarrow.rays",
-                iconColor: Color(hex: "1A1A1A"),
-                appIcon: MCPClientInfo.loadAppIcon(
-                    bundleID: "com.todesktop.230313mzl4w4u92",
-                    appName: "Cursor"
-                ),
+                iconImageName: "MCPCursorIcon",
                 subtitle: configSubtitle,
                 command: configCommand,
                 footer: nil,
@@ -198,12 +139,7 @@ struct AISettingsView: View {
             ),
             MCPClientInfo(
                 name: "VS Code",
-                icon: "chevron.left.forwardslash.chevron.right",
-                iconColor: Color(hex: "007ACC"),
-                appIcon: MCPClientInfo.loadAppIcon(
-                    bundleID: "com.microsoft.VSCode",
-                    appName: "Visual Studio Code"
-                ),
+                iconImageName: "MCPVSCodeIcon",
                 subtitle: configSubtitle,
                 command: vsCodeCommand,
                 footer: nil,
@@ -224,14 +160,14 @@ struct AISettingsView: View {
                                 Button {
                                     selectedClient = client
                                 } label: {
-                                    Label {
-                                        Text(client.name)
-                                    } icon: {
-                                        if let menuIcon = client.menuIcon {
-                                            Image(nsImage: menuIcon)
-                                        } else {
-                                            Image(systemName: client.icon)
+                                    if let iconImage = client.menuIconImage {
+                                        Label {
+                                            Text(client.name)
+                                        } icon: {
+                                            Image(nsImage: iconImage)
                                         }
+                                    } else {
+                                        Text(client.name)
                                     }
                                 }
                             }
@@ -251,7 +187,10 @@ struct AISettingsView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .animation(.easeInOut(duration: 0.2), value: isEnabled)
         .sheet(item: $selectedClient) { client in
-            MCPClientDetailSheet(client: client)
+            MCPClientDetailSheet(
+                client: client,
+                iconImage: client.detailIconImage
+            )
         }
     }
 }
@@ -343,12 +282,12 @@ private struct MCPToolsSection: View {
 
 private struct MCPClientDetailSheet: View {
     let client: MCPClientInfo
+    let iconImage: NSImage?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             clientIcon
-                .padding(.bottom, Const.space16)
 
             Text(String(localized: .mcpConnectFormat(client.name)))
                 .font(.title2.bold())
@@ -398,20 +337,12 @@ private struct MCPClientDetailSheet: View {
     }
 
     @ViewBuilder private var clientIcon: some View {
-        if let appIcon = client.appIcon {
-            Image(nsImage: appIcon)
+        if let iconImage {
+            Image(nsImage: iconImage)
                 .resizable()
                 .scaledToFit()
                 .frame(width: 40, height: 40)
-        } else {
-            ZStack {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(client.iconColor)
-                    .frame(width: 40, height: 40)
-                Image(systemName: client.icon)
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(.white)
-            }
+                .padding(.bottom, Const.space16)
         }
     }
 
