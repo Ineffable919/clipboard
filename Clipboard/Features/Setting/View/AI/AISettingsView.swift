@@ -3,7 +3,9 @@ import SwiftUI
 // MARK: - MCPClientInfo
 
 private struct MCPClientInfo: Identifiable {
-    var id: String { name }
+    var id: String {
+        name
+    }
 
     let name: String
     let iconImageName: String
@@ -13,21 +15,31 @@ private struct MCPClientInfo: Identifiable {
     let configNote: String?
 
     var menuIconImage: NSImage? {
-        iconImage(size: NSSize(width: 16, height: 16))
+        iconImage(size: NSSize(width: 16, height: 16), cornerRadius: 3)
     }
 
     var detailIconImage: NSImage? {
-        iconImage(size: NSSize(width: 40, height: 40))
+        iconImage(size: NSSize(width: 40, height: 40), cornerRadius: 8)
     }
 
-    private func iconImage(size: NSSize) -> NSImage? {
+    private func iconImage(size: NSSize, cornerRadius: CGFloat) -> NSImage? {
         guard
             let image = NSImage(named: iconImageName),
-            let copy = image.copy() as? NSImage
+            let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil)
         else { return nil }
-        copy.size = size
-        copy.isTemplate = false
-        return copy
+
+        let roundedImage = NSImage(size: size, flipped: false) { bounds in
+            guard let context = NSGraphicsContext.current?.cgContext else { return false }
+
+            let path = NSBezierPath(roundedRect: bounds, xRadius: cornerRadius, yRadius: cornerRadius)
+            path.addClip()
+
+            context.draw(cgImage, in: bounds)
+            return true
+        }
+
+        roundedImage.isTemplate = false
+        return roundedImage
     }
 }
 
@@ -50,8 +62,8 @@ private struct MCPToolInfo: Identifiable {
     }
 }
 
-extension MCPToolDefinition {
-    fileprivate var localizedDescription: String {
+private extension MCPToolDefinition {
+    var localizedDescription: String {
         switch name {
         case "search_clipboard": String(localized: .mcpToolDescSearchClipboard)
         case "write_clipboard": String(localized: .mcpToolDescWriteClipboard)
@@ -84,24 +96,24 @@ struct AISettingsView: View {
         let cliSubtitle = String(localized: .mcpClientSubtitleCLI)
         let configSubtitle = String(localized: .mcpClientSubtitleConfig)
         let configCommand = """
-            {
-              "mcpServers": {
-                "clipboard": {
-                  "command": "\(helperPath)"
-                }
-              }
+        {
+          "mcpServers": {
+            "clipboard": {
+              "command": "\(helperPath)"
             }
-            """
+          }
+        }
+        """
         let vsCodeCommand = """
-            {
-              "servers": {
-                "clipboard": {
-                  "type": "stdio",
-                  "command": "\(helperPath)"
-                }
-              }
+        {
+          "servers": {
+            "clipboard": {
+              "type": "stdio",
+              "command": "\(helperPath)"
             }
-            """
+          }
+        }
+        """
         return [
             MCPClientInfo(
                 name: "Claude Desktop",
@@ -110,14 +122,14 @@ struct AISettingsView: View {
                 command: configCommand,
                 footer: nil,
                 configNote:
-                    "~/Library/Application Support/Claude/claude_desktop_config.json"
+                "~/Library/Application Support/Claude/claude_desktop_config.json"
             ),
             MCPClientInfo(
                 name: "Claude Code",
                 iconImageName: "MCPClaudeIcon",
                 subtitle: cliSubtitle,
                 command:
-                    "claude mcp add --transport stdio clipboard -- \(helperPath)",
+                "claude mcp add --transport stdio clipboard -- \(helperPath)",
                 footer: String(localized: .mcpClientFooterClaudeCode),
                 configNote: nil
             ),
