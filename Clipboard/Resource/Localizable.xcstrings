@@ -1,6 +1,42 @@
 {
   "sourceLanguage" : "zh-Hans",
   "strings" : {
+    "previewViewRendered" : {
+      "comment" : "Preview toolbar: switch back to rendered markdown",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View rendered"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查看渲染"
+          }
+        }
+      }
+    },
+    "previewViewSource" : {
+      "comment" : "Preview toolbar: view raw markdown source",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View source"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查看原文"
+          }
+        }
+      }
+    },
     "" : {
 
     },

@@ -11,6 +11,7 @@
 		B166C0812ECB2A330068A689 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = B166C0802ECB2A330068A689 /* Sparkle */; settings = {ATTRIBUTES = (Required, ); }; };
 		B1A59D1A2F876C7E00AFCF52 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = B1A59D192F876C7E00AFCF52 /* SnapKit */; };
 		B1B4ECAF2F2AFBAD00AFE657 /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = B1B4ECAE2F2AFBAD00AFE657 /* SQLite */; };
+		B1D0000000000000000000A3 /* Markdown in Frameworks */ = {isa = PBXBuildFile; productRef = B1D0000000000000000000A2 /* Markdown */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -78,6 +79,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B1A59D1A2F876C7E00AFCF52 /* SnapKit in Frameworks */,
+				B1D0000000000000000000A3 /* Markdown in Frameworks */,
 				B1B4ECAF2F2AFBAD00AFE657 /* SQLite in Frameworks */,
 				B166C0812ECB2A330068A689 /* Sparkle in Frameworks */,
 			);
@@ -158,6 +160,7 @@
 				B166C0802ECB2A330068A689 /* Sparkle */,
 				B1B4ECAE2F2AFBAD00AFE657 /* SQLite */,
 				B1A59D192F876C7E00AFCF52 /* SnapKit */,
+				B1D0000000000000000000A2 /* Markdown */,
 			);
 			productName = Clipboard;
 			productReference = B1FADD402E7E92B3005CEFCF /* Clipboard.app */;
@@ -194,6 +197,7 @@
 				B166C07F2ECB2A330068A689 /* XCRemoteSwiftPackageReference "Sparkle" */,
 				B1B4ECAD2F2AFBAD00AFE657 /* XCRemoteSwiftPackageReference "SQLite" */,
 				B1A59D182F876C7E00AFCF52 /* XCRemoteSwiftPackageReference "SnapKit" */,
+				B1D0000000000000000000A1 /* XCRemoteSwiftPackageReference "swift-markdown" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B1FADD412E7E92B3005CEFCF /* Products */;
@@ -545,6 +549,14 @@
 				minimumVersion = 0.15.5;
 			};
 		};
+		B1D0000000000000000000A1 /* XCRemoteSwiftPackageReference "swift-markdown" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-markdown.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.8.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -567,6 +579,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B1B4ECAD2F2AFBAD00AFE657 /* XCRemoteSwiftPackageReference "SQLite" */;
 			productName = SQLite;
+		};
+		B1D0000000000000000000A2 /* Markdown */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B1D0000000000000000000A1 /* XCRemoteSwiftPackageReference "swift-markdown" */;
+			productName = Markdown;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

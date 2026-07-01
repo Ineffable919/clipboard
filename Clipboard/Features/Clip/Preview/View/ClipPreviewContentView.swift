@@ -120,6 +120,9 @@ final class ClipPreviewContentView: NSView {
     }
 
     static func measuringAttributedString(for model: PasteboardModel) -> NSAttributedString {
+        if model.usesMarkdownPreview {
+            return MarkdownAttributedRenderer.renderSync(model.markdownSource)
+        }
         if model.type == .rich {
             return NSAttributedString(with: model.data, type: model.pasteboardType)
                 ?? model.attributeString
@@ -155,10 +158,29 @@ final class ClipPreviewContentView: NSView {
                 PreviewTextContentView(model: model)
             }
         case .string, .rich:
-            PreviewTextContentView(model: model)
+            if model.usesMarkdownPreview {
+                PreviewMarkdownView(model: model)
+            } else {
+                PreviewTextContentView(model: model)
+            }
         case .none:
             PreviewEmptyView()
         }
+    }
+
+    // MARK: - Markdown Toggle
+
+    /// 当前是否为 markdown 渲染内容
+    var isMarkdownContent: Bool {
+        currentContentView is PreviewMarkdownView
+    }
+
+    /// 切换 markdown 渲染/原文，返回切换后是否为渲染态
+    func toggleMarkdownMode() -> Bool {
+        guard let markdownView = currentContentView as? PreviewMarkdownView else {
+            return true
+        }
+        return markdownView.toggleRendered()
     }
 
     // MARK: - Mouse Monitor

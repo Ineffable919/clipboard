@@ -39,19 +39,7 @@ final class PasteboardModel: Identifiable, Codable {
     private(set) var group: Int
     let tag: String
     private(set) var hidden: Bool
-    var cachedThumbnail: NSImage?
-    var cachedImageSize: CGSize?
-    var cachedBackgroundColor: NSColor?
-    var cachedForegroundColor: NSColor?
-    var cachedFilePaths: [String]?
-    var cachedOCRRegions: [OCRTextRegion]?
-    var cachedOCRKeyword: String?
-    var cachedHasBackgroundColor: Bool = false
-    var cachedNeedsBottomMask: Bool?
-    var cachedDragPreviewRichImage: NSImage?
-    var thumbnailLoadTask: Task<NSImage?, Never>?
-    /// 链接预览元数据缓存
-    var cachedLinkMetadata: LinkPreviewMetadata?
+    var runtimeCache = PasteboardModelRuntimeCache()
 
     var hasBgColor: Bool {
         cachedHasBackgroundColor

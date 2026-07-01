@@ -28,6 +28,10 @@ final class PreviewIconButton: NSView {
         fatalError()
     }
 
+    func updateSymbol(_ name: String, accessibilityDescription: String? = nil) {
+        imageView.image = NSImage(systemSymbolName: name, accessibilityDescription: accessibilityDescription)
+    }
+
     private func setup() {
         wantsLayer = true
         backgroundLayer.cornerRadius = Const.btnRadius
