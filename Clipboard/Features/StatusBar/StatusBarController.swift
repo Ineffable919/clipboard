@@ -14,9 +14,6 @@ final class StatusBarController: NSObject {
 
     private var menuBarItem: NSStatusItem?
     private var menuBarIconObserver: NSObjectProtocol?
-    private var rightClickMonitor: Any?
-    private var isMenuVisible = false
-    private var menuCloseUptime: TimeInterval = 0
 
     private var onCheckUpdateClick: (() -> Void)?
     private var menu: NSMenu?
@@ -48,9 +45,9 @@ final class StatusBarController: NSObject {
             NotificationCenter.default.removeObserver(observer)
             menuBarIconObserver = nil
         }
-        if let monitor = rightClickMonitor {
-            NSEvent.removeMonitor(monitor)
-            rightClickMonitor = nil
+        if let menuBarItem {
+            NSStatusBar.system.removeStatusItem(menuBarItem)
+            self.menuBarItem = nil
         }
     }
 
@@ -93,7 +90,6 @@ final class StatusBarController: NSObject {
         menuBarItem?.isVisible = shouldShow
 
         configureMenuBarButton()
-        setupRightClickMonitor()
     }
 
     private func configureMenuBarButton() {
@@ -104,25 +100,22 @@ final class StatusBarController: NSObject {
             weight: .semibold
         )
 
-        let symbolName = if #available(macOS 15.0, *) {
-            "heart.text.clipboard.fill"
-        } else {
-            "list.clipboard.fill"
-        }
-        let icon: NSImage? = NSImage(
+        let symbolName =
+            if #available(macOS 15.0, *) {
+                "heart.text.clipboard.fill"
+            } else {
+                "list.clipboard.fill"
+            }
+        let icon = NSImage(
             systemSymbolName: symbolName,
             accessibilityDescription: nil
-        )
+        )?.withSymbolConfiguration(config)
 
-        button.image = icon?.withSymbolConfiguration(config)
+        icon?.isTemplate = true
+        button.image = icon
         button.target = self
         button.action = #selector(statusBarClick)
-        if #available(macOS 27.0, *) {
-            button.menu = nil
-            button.sendAction(on: [.leftMouseUp])
-        } else {
-            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
-        }
+        button.sendAction(on: [.leftMouseUp, .rightMouseUp])
     }
 
     private func observeMenuBarIconVisibility() {
@@ -142,76 +135,25 @@ final class StatusBarController: NSObject {
     private func statusBarClick(sender: NSStatusBarButton) {
         guard let event = NSApplication.shared.currentEvent else { return }
 
-        if event.type == .leftMouseUp {
+        switch event.type {
+        case .leftMouseUp:
             WindowManager.shared.toggleWindow(
                 frame: sender.window?.screen?.frame
             )
-        } else if event.type == .rightMouseUp {
+
+        case .rightMouseUp:
             guard let menu else { return }
+
             menuBarItem?.menu = menu
+            defer {
+                menuBarItem?.menu = nil
+            }
+
             sender.performClick(nil)
-            menuBarItem?.menu = nil
+
+        default:
+            break
         }
-    }
-
-    private func setupRightClickMonitor() {
-        guard #available(macOS 27.0, *) else { return }
-
-        if let monitor = rightClickMonitor {
-            NSEvent.removeMonitor(monitor)
-        }
-
-        rightClickMonitor = NSEvent.addLocalMonitorForEvents(matching: .rightMouseDown) { [weak self] event in
-            guard let self,
-                  self.isMouseOverMenuBarButton()
-            else {
-                return event
-            }
-
-            guard !self.isMenuVisible,
-                  ProcessInfo.processInfo.systemUptime - self.menuCloseUptime > 0.2
-            else {
-                return event
-            }
-
-            self.showStatusMenu()
-            return nil
-        }
-    }
-
-    private func showStatusMenu() {
-        guard let button = menuBarItem?.button,
-              let window = button.window,
-              let menu else { return }
-
-        isMenuVisible = true
-        let buttonFrameInWindow = button.convert(
-            button.bounds,
-            to: nil
-        )
-        let buttonFrameOnScreen = window.convertToScreen(buttonFrameInWindow)
-        menu.popUp(
-            positioning: nil,
-            at: NSPoint(
-                x: buttonFrameOnScreen.minX,
-                y: buttonFrameOnScreen.minY
-            ),
-            in: nil
-        )
-    }
-
-    private func isMouseOverMenuBarButton() -> Bool {
-        guard let button = menuBarItem?.button,
-              let window = button.window else { return false }
-
-        let mouseLocationInWindow = window.convertPoint(
-            fromScreen: NSEvent.mouseLocation
-        )
-        let mouseLocationInButton = button.convert(
-            mouseLocationInWindow,
-            from: nil
-        )
-        return button.bounds.contains(mouseLocationInButton)
     }
 
     private static let appName: String =
@@ -436,14 +378,6 @@ final class StatusBarController: NSObject {
 // MARK: - NSMenuDelegate
 
 extension StatusBarController: NSMenuDelegate {
-    func menuDidClose(_: NSMenu) {
-        menuBarItem?.menu = nil
-        if #available(macOS 27.0, *) {
-            isMenuVisible = false
-            menuCloseUptime = ProcessInfo.processInfo.systemUptime
-        }
-    }
-
     func menuNeedsUpdate(_ menu: NSMenu) {
         if let pauseItem = menu.items.first(where: {
             $0.tag == Self.pauseMenuTag
