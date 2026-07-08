@@ -108,7 +108,7 @@ final class TopBarIconButton: NSView {
         let bgColor: NSColor =
             isHovering
                 ? (isDark
-                    ? .quinaryLabel
+                    ? .quinaryLabelColor
                     : .labelColor.withAlphaComponent(0.06))
                 : .clear
 
