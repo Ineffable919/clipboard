@@ -13,7 +13,7 @@ struct TextStatistics: Equatable {
     let wordCount: Int
     let lineCount: Int
 
-    init(from text: String) {
+    nonisolated init(from text: String) {
         characterCount = text.count
 
         if text.isEmpty {

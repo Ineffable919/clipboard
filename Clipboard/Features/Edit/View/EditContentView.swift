@@ -93,7 +93,7 @@ final class EditContentView: NSVisualEffectView {
         }
 
         editor.onTextChange = { [weak self] in
-            self?.scheduleStatisticsUpdate()
+            self?.scheduleStatsUpdate()
         }
     }
 
@@ -113,25 +113,35 @@ final class EditContentView: NSVisualEffectView {
 
         editor.setContent(attributedString)
 
-        let text = attributedString.string
-        lastStatisticsText = text
-        statisticsBar.update(TextStatistics(from: text))
+        updateStats(for: attributedString.string)
     }
 
     // MARK: - Statistics
 
-    private func scheduleStatisticsUpdate() {
-        let currentText = currentContent.string
-        guard currentText != lastStatisticsText else { return }
-
+    private func updateStats(for text: String) {
         statisticsTask?.cancel()
-        statisticsTask = Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(300))
-            guard !Task.isCancelled else { return }
-
-            let text = currentText
+        statisticsTask = Task { @MainActor [weak self] in
             let stats = await Task.detached(priority: .utility) {
-                await TextStatistics(from: text)
+                TextStatistics(from: text)
+            }.value
+
+            guard let self, !Task.isCancelled else { return }
+            lastStatisticsText = text
+            statisticsBar.update(stats)
+        }
+    }
+
+    private func scheduleStatsUpdate() {
+        statisticsTask?.cancel()
+        statisticsTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(300))
+            guard let self, !Task.isCancelled else { return }
+
+            let text = editor.currentText
+            guard text != lastStatisticsText else { return }
+
+            let stats = await Task.detached(priority: .utility) {
+                TextStatistics(from: text)
             }.value
 
             guard !Task.isCancelled else { return }

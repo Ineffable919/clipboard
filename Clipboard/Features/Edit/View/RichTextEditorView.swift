@@ -32,6 +32,10 @@ final class RichTextEditorView: NSView {
         textView.attributedString()
     }
 
+    var currentText: String {
+        textView.string
+    }
+
     // MARK: - Init
 
     override init(frame frameRect: NSRect) {
@@ -70,6 +74,7 @@ final class RichTextEditorView: NSView {
         textView.textContainer?.widthTracksTextView = true
         textView.isHorizontallyResizable = false
         textView.isVerticallyResizable = true
+        textView.layoutManager?.allowsNonContiguousLayout = true
 
         textView.backgroundColor = .clear
         textView.drawsBackground = false
@@ -92,8 +97,7 @@ final class RichTextEditorView: NSView {
     // MARK: - Content
 
     func setContent(_ attributedString: NSAttributedString) {
-        let cleaned = Self.removeColorAttributes(from: attributedString)
-        let adapted = Self.applyAdaptiveTextColor(to: cleaned)
+        let adapted = Self.applyAdaptiveColors(to: attributedString)
         textView.textStorage?.setAttributedString(adapted)
     }
 
@@ -203,29 +207,18 @@ final class RichTextEditorView: NSView {
 
     // MARK: - Color Helpers
 
-    private static func removeColorAttributes(
-        from attributedString: NSAttributedString
-    ) -> NSAttributedString {
-        let mutable = NSMutableAttributedString(attributedString: attributedString)
-        let fullRange = NSRange(location: 0, length: mutable.length)
-
-        mutable.removeAttribute(.foregroundColor, range: fullRange)
-        mutable.removeAttribute(.backgroundColor, range: fullRange)
-
-        return mutable
-    }
-
-    private static func applyAdaptiveTextColor(
+    private static func applyAdaptiveColors(
         to attributedString: NSAttributedString
     ) -> NSAttributedString {
         let mutable = NSMutableAttributedString(attributedString: attributedString)
         let fullRange = NSRange(location: 0, length: mutable.length)
 
-        mutable.enumerateAttribute(.foregroundColor, in: fullRange, options: []) { value, range, _ in
-            if value == nil {
-                mutable.addAttribute(.foregroundColor, value: NSColor.labelColor, range: range)
-            }
-        }
+        mutable.removeAttribute(.backgroundColor, range: fullRange)
+        mutable.addAttribute(
+            .foregroundColor,
+            value: NSColor.labelColor,
+            range: fullRange
+        )
 
         return mutable
     }
