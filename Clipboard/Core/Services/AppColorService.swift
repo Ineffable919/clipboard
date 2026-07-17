@@ -261,10 +261,18 @@ private extension AppColorService {
         let maxC = max(r, max(g, b))
         let saturation = maxC > 0 ? Float(maxC - min(r, min(g, b))) / Float(maxC) : 0
 
-        if brightness < 50, saturation > 0.1 { return true }
-        if brightness > 240 { return false }
-        if saturation < 0.08 { return false }
-        if saturation > 0.95, brightness > 180 { return false }
+        if brightness < 50, saturation > 0.1 {
+            return true
+        }
+        if brightness > 240 {
+            return false
+        }
+        if saturation < 0.08 {
+            return false
+        }
+        if saturation > 0.95, brightness > 180 {
+            return false
+        }
         return true
     }
 
@@ -277,7 +285,9 @@ private extension AppColorService {
 
         let isNearCorner = (x < width / 4 || x >= width * 3 / 4)
             && (y < height / 4 || y >= height * 3 / 4)
-        if isNearCorner { weight *= 1.3 }
+        if isNearCorner {
+            weight *= 1.3
+        }
         return weight
     }
 
@@ -287,12 +297,19 @@ private extension AppColorService {
         let brightness = Float(r + g + b) / 3.0
         var score: Float = 1.0
 
-        if saturation > 0.3 { score *= 1.8 }
-        else if saturation > 0.15 { score *= 1.2 }
-        else if saturation < 0.1 { score *= 0.3 }
+        if saturation > 0.3 {
+            score *= 1.8
+        } else if saturation > 0.15 {
+            score *= 1.2
+        } else if saturation < 0.1 {
+            score *= 0.3
+        }
 
-        if brightness > 30 && brightness < 230 { score *= 1.1 }
-        else if brightness < 20 || brightness > 240 { score *= 0.8 }
+        if brightness > 30 && brightness < 230 {
+            score *= 1.1
+        } else if brightness < 20 || brightness > 240 {
+            score *= 0.8
+        }
 
         return score
     }

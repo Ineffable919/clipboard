@@ -56,8 +56,7 @@ struct KeyboardSettingView: View {
                         isPresented: $resetIsPresented
                     ) {
                         if #available(macOS 26.0, *) {
-                            Button(.settingKeyboardResetButton, role: .confirm)
-                            {
+                            Button(.settingKeyboardResetButton, role: .confirm) {
                                 HotKeyManager.shared.resetToDefaults()
                                 refreshID = UUID()
                             }

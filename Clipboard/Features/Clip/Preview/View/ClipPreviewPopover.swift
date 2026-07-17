@@ -41,7 +41,9 @@ final class ClipPreviewPopover: NSPopover {
 
     deinit {
         let monitor = keyMonitor
-        if let monitor { NSEvent.removeMonitor(monitor) }
+        if let monitor {
+            NSEvent.removeMonitor(monitor)
+        }
     }
 
     // MARK: - Public API
@@ -86,7 +88,7 @@ final class ClipPreviewPopover: NSPopover {
 
     // MARK: - Size Calculation
 
-    // header(24) + space8 + space8 + footer(24) + inset*2(12+12)
+    /// header(24) + space8 + space8 + footer(24) + inset*2(12+12)
     static let chrome: CGFloat = 24 + Const.space8 + Const.space8 + 24 + Const.space12 * 2
 
     /// 根据 model 类型计算 Popover 的最佳尺寸，maxHeight 由调用侧传入可用屏幕高度
@@ -136,7 +138,9 @@ final class ClipPreviewPopover: NSPopover {
     }
 
     private static func estimatedTextWidth(for model: PasteboardModel) -> CGFloat {
-        if model.length > Const.maxTextSize { return Const.maxTextWidth }
+        if model.length > Const.maxTextSize {
+            return Const.maxTextWidth
+        }
 
         let attributed = ClipPreviewContentView.measuringAttributedString(for: model)
         guard attributed.length > 0 else { return Const.minPreviewWidth }

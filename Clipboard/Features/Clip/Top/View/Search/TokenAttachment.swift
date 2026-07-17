@@ -78,7 +78,9 @@ private final class TokenAttachmentCell: NSTextAttachmentCell {
         MainActor.assumeIsolated {
             let textSize = labelSize()
             var width = hPad * 2 + textSize.width
-            if inputTag.icon != nil { width += iconSize + gap }
+            if inputTag.icon != nil {
+                width += iconSize + gap
+            }
             return NSSize(width: ceil(width), height: TokenAttachment.lineHeight)
         }
     }
@@ -121,14 +123,14 @@ private final class TokenAttachmentCell: NSTextAttachmentCell {
                 width: iconSize,
                 height: iconSize
             )
-            let displayIcon: NSImage
-            if icon.isTemplate,
-               let colored = icon.withSymbolConfiguration(
-                   .init(paletteColors: [.labelColor])
-               ) {
-                displayIcon = colored
+            let displayIcon: NSImage = if icon.isTemplate,
+                                          let colored = icon.withSymbolConfiguration(
+                                              .init(paletteColors: [.labelColor])
+                                          )
+            {
+                colored
             } else {
-                displayIcon = icon
+                icon
             }
             displayIcon.draw(in: iconRect)
             x += iconSize + gap

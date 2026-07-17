@@ -103,7 +103,9 @@ final class ClipPreviewContentView: NSView {
     // MARK: - Private Size Helpers
 
     private static func textContentHeight(for model: PasteboardModel, width: CGFloat) -> CGFloat {
-        if model.length > Const.maxTextSize { return Const.maxTextheight }
+        if model.length > Const.maxTextSize {
+            return Const.maxTextheight
+        }
 
         let inset: CGFloat = Const.space8 * 2
         let textWidth = width - inset * 2

@@ -38,10 +38,10 @@ struct ShortcutRecorder: View {
         _displayText = State(initialValue: saved.displayString)
         _value =
             binding
-            ?? Binding(
-                get: { saved },
-                set: { _ in }
-            )
+                ?? Binding(
+                    get: { saved },
+                    set: { _ in }
+                )
     }
 
     var body: some View {
@@ -170,7 +170,7 @@ struct ShortcutRecorder: View {
     private func handleMouseEvent(_ event: NSEvent) -> NSEvent? {
         guard isRecording else { return event }
         guard let window = event.window,
-            window === SettingWindowController.shared.window
+              window === SettingWindowController.shared.window
         else {
             return event
         }
@@ -233,8 +233,8 @@ struct ShortcutRecorder: View {
             if let special = specialMap[keyCode] {
                 special
             } else if let eventChars = event.charactersIgnoringModifiers,
-                !eventChars.isEmpty,
-                eventChars.unicodeScalars.allSatisfy({ $0.value >= 32 })
+                      !eventChars.isEmpty,
+                      eventChars.unicodeScalars.allSatisfy({ $0.value >= 32 })
             {
                 eventChars.uppercased()
             } else {

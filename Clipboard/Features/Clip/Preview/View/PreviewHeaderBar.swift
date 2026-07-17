@@ -320,7 +320,9 @@ private final class PinChipButton: NSView {
 
     override func updateTrackingAreas() {
         super.updateTrackingAreas()
-        if let old = trackingArea { removeTrackingArea(old) }
+        if let old = trackingArea {
+            removeTrackingArea(old)
+        }
         let area = NSTrackingArea(
             rect: bounds,
             options: [.mouseEnteredAndExited, .activeInKeyWindow],

@@ -159,7 +159,9 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         var rangesToDelete: [NSRange] = []
 
         storage.enumerateAttribute(.attachment, in: fullRange, options: []) { value, range, _ in
-            if value is NSTextAttachment { rangesToDelete.append(range) }
+            if value is NSTextAttachment {
+                rangesToDelete.append(range)
+            }
         }
 
         storage.beginEditing()
@@ -199,7 +201,9 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         var rangesToDelete: [NSRange] = []
 
         storage.enumerateAttribute(.attachment, in: fullRange, options: []) { value, range, _ in
-            if value is NSTextAttachment { rangesToDelete.append(range) }
+            if value is NSTextAttachment {
+                rangesToDelete.append(range)
+            }
         }
 
         for range in rangesToDelete.reversed() {
@@ -262,7 +266,9 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
     // MARK: - Overrides
 
     override func keyDown(with event: NSEvent) {
-        if let onKeyDown, onKeyDown(event) { return }
+        if let onKeyDown, onKeyDown(event) {
+            return
+        }
         super.keyDown(with: event)
     }
 
@@ -390,7 +396,9 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
     override func resignFirstResponder() -> Bool {
         let result = super.resignFirstResponder()
         if result {
-            if #unavailable(macOS 26) { syncTokenSelectionState() }
+            if #unavailable(macOS 26) {
+                syncTokenSelectionState()
+            }
             onResignFirstResponder?()
         }
         return result
@@ -424,7 +432,9 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
 
     override func setSelectedRanges(_ ranges: [NSValue], affinity: NSSelectionAffinity, stillSelecting: Bool) {
         super.setSelectedRanges(ranges, affinity: affinity, stillSelecting: stillSelecting)
-        if #unavailable(macOS 26) { syncTokenSelectionState() }
+        if #unavailable(macOS 26) {
+            syncTokenSelectionState()
+        }
     }
 
     private func syncTokenSelectionState() {

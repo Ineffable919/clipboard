@@ -87,7 +87,7 @@ extension PasteboardModel {
     }
 }
 
-extension Array where Element == PasteboardModel {
+extension [PasteboardModel] {
     /// 按 `uniqueId` 去重，保留首次出现的元素。
     /// diffable data source 以 `uniqueId` 作为标识符，重复标识符会直接崩溃，
     /// 历史脏数据（存储 unique_id 与运行时重算值不一致）可能产生内容相同的多行，

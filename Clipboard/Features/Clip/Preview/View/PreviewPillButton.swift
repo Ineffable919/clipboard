@@ -141,7 +141,9 @@ final class PreviewPillButton: NSView {
 
     override func updateTrackingAreas() {
         super.updateTrackingAreas()
-        if let old = trackingArea { removeTrackingArea(old) }
+        if let old = trackingArea {
+            removeTrackingArea(old)
+        }
         let area = NSTrackingArea(
             rect: bounds,
             options: [.mouseEnteredAndExited, .activeInKeyWindow],
@@ -168,14 +170,13 @@ final class PreviewPillButton: NSView {
 
     override func mouseDown(with event: NSEvent) {
         let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        let pressedColor: NSColor
-        switch style {
+        let pressedColor: NSColor = switch style {
         case .secondary:
-            pressedColor = isDark
+            isDark
                 ? .white.withAlphaComponent(0.14)
                 : .black.withAlphaComponent(0.10)
         case .primary:
-            pressedColor = .controlAccentColor.blended(withFraction: 0.2, of: .black) ?? .controlAccentColor
+            .controlAccentColor.blended(withFraction: 0.2, of: .black) ?? .controlAccentColor
         }
         CATransaction.begin()
         CATransaction.setDisableActions(true)

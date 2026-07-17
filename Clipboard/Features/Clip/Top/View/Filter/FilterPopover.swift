@@ -35,7 +35,9 @@ final class FilterPopover: NSPopover {
 
     func toggle(relativeTo positioningRect: NSRect, of positioningView: NSView) {
         if isShown || isClosing {
-            if !isClosing { close() }
+            if !isClosing {
+                close()
+            }
             return
         }
 

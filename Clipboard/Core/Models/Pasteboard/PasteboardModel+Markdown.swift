@@ -11,8 +11,8 @@ import Foundation
 extension PasteboardModel {
     var usesMarkdownPreview: Bool {
         switch type {
-        case .string, .rich: return isMarkdown
-        default: return false
+        case .string, .rich: isMarkdown
+        default: false
         }
     }
 
@@ -24,7 +24,9 @@ extension PasteboardModel {
     }
 
     var isMarkdown: Bool {
-        if let cachedIsMarkdown { return cachedIsMarkdown }
+        if let cachedIsMarkdown {
+            return cachedIsMarkdown
+        }
         let result = Self.detectMarkdown(in: markdownSource)
         cachedIsMarkdown = result
         return result
@@ -71,7 +73,9 @@ extension PasteboardModel {
         var score = 0
         for (pattern, weight) in weightedPatterns where text.contains(pattern) {
             score += weight
-            if score >= 3 { return true }
+            if score >= 3 {
+                return true
+            }
         }
         return false
     }

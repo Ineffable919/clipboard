@@ -35,8 +35,8 @@ struct GeneralSettingView: View {
         .init(rawValue: PasteUserDefaults.historyTime)
 
     @State private var launchAtLoginTimer: Timer?
-    // 防抖：快速连点会触发多次 .accessory↔.regular 切换并堆积幽灵 Dock 图标，
-    // 用一个可取消的延迟任务把连续切换合并为最终状态的一次应用。
+    /// 防抖：快速连点会触发多次 .accessory↔.regular 切换并堆积幽灵 Dock 图标，
+    /// 用一个可取消的延迟任务把连续切换合并为最终状态的一次应用。
     @State private var dockIconTask: Task<Void, Never>?
 
     var body: some View {

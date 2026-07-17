@@ -37,10 +37,18 @@ struct KeyboardShortcut: Codable, Equatable, Hashable {
 extension NSEvent.ModifierFlags {
     var symbols: String {
         var s = ""
-        if contains(.command) { s += "⌘" }
-        if contains(.option) { s += "⌥" }
-        if contains(.control) { s += "⌃" }
-        if contains(.shift) { s += "⇧" }
+        if contains(.command) {
+            s += "⌘"
+        }
+        if contains(.option) {
+            s += "⌥"
+        }
+        if contains(.control) {
+            s += "⌃"
+        }
+        if contains(.shift) {
+            s += "⇧"
+        }
         return s
     }
 }
@@ -292,7 +300,9 @@ class HotKeyManager {
         let oldInfo = hotKeyList[index]
         let newShortcut = shortcut ?? oldInfo.shortcut
 
-        if let shortcut, shortcut.isEmpty { return nil }
+        if let shortcut, shortcut.isEmpty {
+            return nil
+        }
 
         if let otherIndex = hotKeyList.firstIndex(where: { $0.key != key && $0.shortcut == newShortcut }) {
             log.warn("快捷键组合与 \(hotKeyList[otherIndex].key) 冲突")
@@ -451,10 +461,18 @@ class HotKeyManager {
 extension NSEvent.ModifierFlags {
     var carbonModifierFlags: UInt32 {
         var flags: UInt32 = 0
-        if contains(.command) { flags |= UInt32(cmdKey) }
-        if contains(.option) { flags |= UInt32(optionKey) }
-        if contains(.control) { flags |= UInt32(controlKey) }
-        if contains(.shift) { flags |= UInt32(shiftKey) }
+        if contains(.command) {
+            flags |= UInt32(cmdKey)
+        }
+        if contains(.option) {
+            flags |= UInt32(optionKey)
+        }
+        if contains(.control) {
+            flags |= UInt32(controlKey)
+        }
+        if contains(.shift) {
+            flags |= UInt32(shiftKey)
+        }
         return flags
     }
 }

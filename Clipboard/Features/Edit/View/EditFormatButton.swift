@@ -61,7 +61,9 @@ final class EditFormatButton: NSView {
         updateAppearance(animated: false)
     }
 
-    override var acceptsFirstResponder: Bool { false }
+    override var acceptsFirstResponder: Bool {
+        false
+    }
 
     // MARK: - Layout
 
@@ -102,7 +104,9 @@ final class EditFormatButton: NSView {
 
     override func updateTrackingAreas() {
         super.updateTrackingAreas()
-        if let old = trackingArea { removeTrackingArea(old) }
+        if let old = trackingArea {
+            removeTrackingArea(old)
+        }
         let area = NSTrackingArea(
             rect: bounds,
             options: [.mouseEnteredAndExited, .activeInKeyWindow],

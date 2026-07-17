@@ -17,7 +17,7 @@ extension ClipMainViewController: NSGestureRecognizerDelegate {
     ) -> Bool {
         guard
             let hitView = view.window?.contentView?
-                .hitTest(event.locationInWindow)
+            .hitTest(event.locationInWindow)
         else {
             return true
         }
@@ -71,8 +71,8 @@ extension ClipMainViewController {
         }
 
         if KeyCode.shouldTriggerSearch(for: event),
-            !topBarView.searchField.isFirstResponder,
-            focusRegion != .search
+           !topBarView.searchField.isFirstResponder,
+           focusRegion != .search
         {
             if let characters = event.characters, !characters.isEmpty {
                 topBarView.activateSearch(with: characters)
@@ -129,8 +129,8 @@ extension ClipMainViewController {
 
     private func spaceKeyDown(_ event: NSEvent) -> NSEvent? {
         guard !topBarView.searchField.isFirstResponder,
-            focusRegion != .chipEditing,
-            focusRegion == .collection
+              focusRegion != .chipEditing,
+              focusRegion == .collection
         else { return event }
 
         guard selectIndexPath.item < dataList.value.count else { return nil }
@@ -141,7 +141,7 @@ extension ClipMainViewController {
 
     private func deleteKeyDown(_ event: NSEvent) -> NSEvent? {
         guard !topBarView.searchField.isFirstResponder,
-            focusRegion != .chipEditing
+              focusRegion != .chipEditing
         else { return event }
 
         let items = selectedModels
@@ -149,7 +149,7 @@ extension ClipMainViewController {
             guard confirmDelete() else { return nil }
             let minIndex =
                 collectionView.selectionIndexPaths.map(\.item).min()
-                ?? selectIndexPath.item
+                    ?? selectIndexPath.item
             let countAfterDelete = dataList.value.count - items.count
             if countAfterDelete > 0 {
                 let newItem = min(minIndex, countAfterDelete - 1)
@@ -248,11 +248,11 @@ extension ClipMainViewController {
         let eventModifiers = event.modifierFlags.intersection(relevantModifiers)
 
         if previousTabInfo.isEnabled,
-            event.keyCode == previousTabInfo.shortcut.keyCode,
-            eventModifiers
-                == previousTabInfo.shortcut.modifiers.intersection(
-                    relevantModifiers
-                )
+           event.keyCode == previousTabInfo.shortcut.keyCode,
+           eventModifiers
+           == previousTabInfo.shortcut.modifiers.intersection(
+               relevantModifiers
+           )
         {
             viewModel.selectPreviousChip()
             topBarView.updateChipSelection()
@@ -260,11 +260,11 @@ extension ClipMainViewController {
         }
 
         if nextTabInfo.isEnabled,
-            event.keyCode == nextTabInfo.shortcut.keyCode,
-            eventModifiers
-                == nextTabInfo.shortcut.modifiers.intersection(
-                    relevantModifiers
-                )
+           event.keyCode == nextTabInfo.shortcut.keyCode,
+           eventModifiers
+           == nextTabInfo.shortcut.modifiers.intersection(
+               relevantModifiers
+           )
         {
             viewModel.selectNextChip()
             topBarView.updateChipSelection()

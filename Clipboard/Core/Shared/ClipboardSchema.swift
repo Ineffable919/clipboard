@@ -61,8 +61,8 @@ struct MCPToolDefinition {
 
     static let all: [MCPToolDefinition] = [
         .init(name: "search_clipboard", description: "Search clipboard history by keyword, content type, or user category", icon: "magnifyingglass", colorHex: "#007AFF"),
-        .init(name: "write_clipboard",  description: "Write plain text to the system clipboard", icon: "bolt.fill", colorHex: "#34C759"),
-        .init(name: "list_tags",  description: "List available content types and user-defined tags for clipboard search", icon: "tag.fill", colorHex: "#FF9500"),
+        .init(name: "write_clipboard", description: "Write plain text to the system clipboard", icon: "bolt.fill", colorHex: "#34C759"),
+        .init(name: "list_tags", description: "List available content types and user-defined tags for clipboard search", icon: "tag.fill", colorHex: "#FF9500"),
     ]
 }
 

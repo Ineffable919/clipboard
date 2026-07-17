@@ -109,7 +109,9 @@ extension PasteboardModel {
     // MARK: - Bottom mask
 
     func needsBottomMask(compute: () -> Bool) -> Bool {
-        if let cachedNeedsBottomMask { return cachedNeedsBottomMask }
+        if let cachedNeedsBottomMask {
+            return cachedNeedsBottomMask
+        }
         let value = compute()
         cachedNeedsBottomMask = value
         return value

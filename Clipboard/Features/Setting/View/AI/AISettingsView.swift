@@ -251,7 +251,11 @@ private extension Binding where Value == Set<String> {
             get: { wrappedValue.contains(element) },
             set: { newValue in
                 var updated = wrappedValue
-                if newValue { updated.insert(element) } else { updated.remove(element) }
+                if newValue {
+                    updated.insert(element)
+                } else {
+                    updated.remove(element)
+                }
                 wrappedValue = updated
             }
         )

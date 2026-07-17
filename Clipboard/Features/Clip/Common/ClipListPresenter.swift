@@ -79,7 +79,9 @@ final class ClipListPresenter {
 
         let wasShowingPreview = previewIsShown()
         let shouldDismissPreview = changeType != .loadMore && changeType != .update
-        if shouldDismissPreview, wasShowingPreview { closePreview() }
+        if shouldDismissPreview, wasShowingPreview {
+            closePreview()
+        }
 
         switch changeType {
         case .new, .searchFilter, .moveToFirst, .reset:
@@ -87,18 +89,24 @@ final class ClipListPresenter {
                 guard let self else { return }
                 resetSelection()
                 // .new 时 preview 关闭后重新定位到新选中项（与 .update 行为一致）
-                if wasShowingPreview, changeType == .new { reopenPreview() }
+                if wasShowingPreview, changeType == .new {
+                    reopenPreview()
+                }
             }
         case .delete:
             applyFull(items, true) { [weak self] in self?.adjustAfterDelete() }
         case .loadMore:
             let existingIds = Set(currentSnapshotItems().map(\.uniqueId))
             let newItems = items.filter { !existingIds.contains($0.uniqueId) }
-            if !newItems.isEmpty { appendItems(newItems) }
+            if !newItems.isEmpty {
+                appendItems(newItems)
+            }
         case .update:
             reconfigureItems(items)
             restoreSelection()
-            if wasShowingPreview { reopenPreview() }
+            if wasShowingPreview {
+                reopenPreview()
+            }
         }
 
         updateEmptyState(items.isEmpty)

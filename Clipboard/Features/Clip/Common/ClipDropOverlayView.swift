@@ -414,7 +414,7 @@ private final class DropFolderView: NSView {
         NSGraphicsContext.saveGraphicsState()
         let gradient = NSGradient(colors: [
             accent.withAlphaComponent(0.54),
-            accent.withAlphaComponent(0.74)
+            accent.withAlphaComponent(0.74),
         ])
         gradient?.draw(in: path, angle: -82)
         NSGraphicsContext.restoreGraphicsState()
@@ -455,7 +455,9 @@ private final class FloatingBadgeView: NSView {
         updateColors()
     }
 
-    override var wantsUpdateLayer: Bool { true }
+    override var wantsUpdateLayer: Bool {
+        true
+    }
 
     override func updateLayer() {
         let backgroundAlpha: CGFloat = prominence == .soft ? 0.08 : 0.13

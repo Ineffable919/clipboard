@@ -80,7 +80,9 @@ final class AppLogger: Sendable {
             print("\(timestamp) [\(level.rawValue)] [\(fileName):\(line)] \(message)")
         #else
             let logMessage = "[\(fileName):\(line)] \(function) - \(message)"
-            if level == .error { osLogger.error("\(logMessage)") }
+            if level == .error {
+                osLogger.error("\(logMessage)")
+            }
             Task { await _state.write(logMessage, level: level, timestamp: timestamp) }
         #endif
     }

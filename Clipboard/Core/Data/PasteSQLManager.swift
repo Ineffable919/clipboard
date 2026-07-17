@@ -302,13 +302,17 @@ extension PasteSQLManager {
         let ord = order ?? [Col.ts.desc]
 
         var query = table.select(sel).order(ord)
-        if let f = filter { query = query.filter(f) }
+        if let f = filter {
+            query = query.filter(f)
+        }
         if let l = limit {
             query = query.limit(l, offset: offset ?? 0)
         }
 
         do {
-            if let result = try db?.prepare(query) { return Array(result) }
+            if let result = try db?.prepare(query) {
+                return Array(result)
+            }
             return []
         } catch {
             log.error("查询失败：\(error)")
@@ -724,7 +728,9 @@ extension PasteSQLManager {
                 let rows = try db.prepare(query)
                 let rowsArray = Array(rows)
 
-                if rowsArray.isEmpty { break }
+                if rowsArray.isEmpty {
+                    break
+                }
 
                 try db.run("BEGIN TRANSACTION")
                 for row in rowsArray {

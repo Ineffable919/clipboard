@@ -176,7 +176,11 @@ struct AppearanceSettingsRow: View {
             Text(.settingLanguageRestartConfirmTitle),
             isPresented: Binding(
                 get: { pendingLanguage != nil },
-                set: { if !$0 { pendingLanguage = nil } }
+                set: {
+                    if !$0 {
+                        pendingLanguage = nil
+                    }
+                }
             )
         ) {
             Button(.commonCancel, role: .cancel) {

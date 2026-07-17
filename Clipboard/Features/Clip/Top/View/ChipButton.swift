@@ -325,7 +325,9 @@ final class ChipButton: NSView, NSTextFieldDelegate {
                 return chipColor
             }
             if isHovering || isDraggingOver {
-                if isDark && isFrostedGlass { return NSColor(white: 1.0, alpha: 0.10) }
+                if isDark && isFrostedGlass {
+                    return NSColor(white: 1.0, alpha: 0.10)
+                }
                 return isDark
                     ? .quaternaryLabelColor
                     : .labelColor.withAlphaComponent(0.08)
@@ -334,12 +336,16 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         }
 
         if config.isSelected || config.isEditing {
-            if isDark && isFrostedGlass { return NSColor(white: 1.0, alpha: 0.2) }
+            if isDark && isFrostedGlass {
+                return NSColor(white: 1.0, alpha: 0.2)
+            }
             return isDark ? .quaternaryLabelColor : .labelColor.withAlphaComponent(0.1)
         }
 
         if isHovering || isDraggingOver {
-            if isDark && isFrostedGlass { return NSColor(white: 1.0, alpha: 0.10) }
+            if isDark && isFrostedGlass {
+                return NSColor(white: 1.0, alpha: 0.10)
+            }
             return isDark
                 ? .quaternaryLabelColor.withAlphaComponent(0.06)
                 : .labelColor.withAlphaComponent(0.06)

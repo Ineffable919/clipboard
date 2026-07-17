@@ -452,7 +452,9 @@ extension PasteDataStore {
     func clearExpiredData() {
         let lastDate = PasteUserDefaults.lastClearDate
         let dateStr = Date().formatted(date: .numeric, time: .omitted)
-        if lastDate == dateStr { return }
+        if lastDate == dateStr {
+            return
+        }
         PasteUserDefaults.lastClearDate = dateStr
 
         let currentValue = PasteUserDefaults.historyTime

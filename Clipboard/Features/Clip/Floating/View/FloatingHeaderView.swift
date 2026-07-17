@@ -137,8 +137,12 @@ final class FloatingHeaderView: NSView {
 
     func startCreatingChip(pinModel: PasteboardModel?) {
         guard let topVM else { return }
-        if topVM.editingNewChip { commitNewChip() }
-        if topVM.editingChipId != nil { topVM.commitEditingChip() }
+        if topVM.editingNewChip {
+            commitNewChip()
+        }
+        if topVM.editingChipId != nil {
+            topVM.commitEditingChip()
+        }
         topVM.editingNewChip = true
         topVM.newChipName = String(localized: .untitled)
         topVM.pendingPinModel = pinModel
@@ -198,7 +202,9 @@ final class FloatingHeaderView: NSView {
         topVM.editingNewChip = false
         topVM.commitNewChipOrCancel(commitIfNonEmpty: commit)
         reloadChips()
-        if commit { onChipSelected?() }
+        if commit {
+            onChipSelected?()
+        }
     }
 
     private func confirmDeleteChip(_ chip: CategoryChip) {
@@ -535,7 +541,9 @@ final class FloatingSearchField: NSSearchField {
 
     override func becomeFirstResponder() -> Bool {
         let result = super.becomeFirstResponder()
-        if result { onBecomeFirstResponder?() }
+        if result {
+            onBecomeFirstResponder?()
+        }
         return result
     }
 }

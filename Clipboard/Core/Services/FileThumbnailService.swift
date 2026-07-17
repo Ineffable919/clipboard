@@ -28,7 +28,9 @@ final class FileThumbnailService: @unchecked Sendable {
 
     func generateThumbnail(for fileURL: URL) async -> NSImage {
         let key = fileURL.absoluteString as NSString
-        if let cached = memoryCache.object(forKey: key) { return cached }
+        if let cached = memoryCache.object(forKey: key) {
+            return cached
+        }
 
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
             return systemIcon(for: fileURL)
@@ -77,13 +79,17 @@ final class FileThumbnailService: @unchecked Sendable {
         guard let contentType = try? fileURL.resourceValues(forKeys: [.contentTypeKey]).contentType else {
             return .thumbnail
         }
-        if contentType.conforms(to: .image) { return .thumbnail }
+        if contentType.conforms(to: .image) {
+            return .thumbnail
+        }
         if contentType.conforms(to: .text) || contentType.conforms(to: .pdf)
             || contentType.conforms(to: .rtf) || contentType.conforms(to: .sourceCode)
         {
             return [.thumbnail, .icon]
         }
-        if contentType.conforms(to: .folder) { return .icon }
+        if contentType.conforms(to: .folder) {
+            return .icon
+        }
         return .thumbnail
     }
 }

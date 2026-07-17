@@ -103,7 +103,9 @@ extension PasteboardModel {
             let lines = str.components(separatedBy: "\n")
                 .dropFirst()
             let paths = lines.compactMap { extractPathFromFileURL($0) }
-            if !paths.isEmpty { return paths }
+            if !paths.isEmpty {
+                return paths
+            }
         }
 
         let skipTypes: Set<String> = [
@@ -119,7 +121,9 @@ extension PasteboardModel {
             if let str = item.string(forType: itemType) ?? (item.propertyList(forType: itemType) as? String) {
                 let paths = str.components(separatedBy: "\n")
                     .compactMap { extractPathFromFileURL($0) }
-                if !paths.isEmpty { return paths }
+                if !paths.isEmpty {
+                    return paths
+                }
             }
         }
 

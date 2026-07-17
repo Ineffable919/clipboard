@@ -32,12 +32,12 @@ class SettingWindowController: NSWindowController {
         window.isReleasedWhenClosed = false
         window.titlebarSeparatorStyle = .none
 
-       if #available(macOS 27, *) {
-           window.titlebarAppearsTransparent = false
-       } else {
-           window.titlebarAppearsTransparent = true
-       }
-        
+        if #available(macOS 27, *) {
+            window.titlebarAppearsTransparent = false
+        } else {
+            window.titlebarAppearsTransparent = true
+        }
+
         let settingView = SettingView()
             .environment(viewModel)
         window.contentView = NSHostingView(rootView: settingView)

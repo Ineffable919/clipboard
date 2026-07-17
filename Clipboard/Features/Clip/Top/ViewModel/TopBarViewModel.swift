@@ -568,7 +568,9 @@ final class TopBarViewModel {
             selectedGroupId: selectedGroupId
         )
 
-        if criteria == lastSearchCriteria { return }
+        if criteria == lastSearchCriteria {
+            return
+        }
         lastSearchCriteria = criteria
 
         if criteria.isEmpty {

@@ -81,7 +81,11 @@ final class ClipMainViewController: NSViewController {
 
     lazy var bg: BackgroundEffectController = {
         let inner: CGFloat =
-            if #available(macOS 26.0, *) { 8.0 } else { 0.0 }
+            if #available(macOS 26.0, *) {
+                8.0
+            } else {
+                0.0
+            }
         return BackgroundEffectController(
             cornerRadius: Const.windowRadis,
             innerPadding: inner

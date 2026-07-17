@@ -233,8 +233,13 @@ struct MarkdownAttributedRenderer: MarkupVisitor {
     private let blockSpacing = NSFont.systemFontSize * 0.7
     private let listIndent: CGFloat = 22
 
-    private var bodyFont: NSFont { .systemFont(ofSize: baseFontSize) }
-    private var codeFont: NSFont { .monospacedSystemFont(ofSize: baseFontSize - 1, weight: .regular) }
+    private var bodyFont: NSFont {
+        .systemFont(ofSize: baseFontSize)
+    }
+
+    private var codeFont: NSFont {
+        .monospacedSystemFont(ofSize: baseFontSize - 1, weight: .regular)
+    }
 
     private var listLevel = 0
 
@@ -400,7 +405,9 @@ struct MarkdownAttributedRenderer: MarkupVisitor {
 
     mutating func visitCodeBlock(_ codeBlock: CodeBlock) -> NSAttributedString {
         var code = codeBlock.code
-        if code.hasSuffix("\n") { code.removeLast() }
+        if code.hasSuffix("\n") {
+            code.removeLast()
+        }
 
         let style = blockParagraphStyle()
         style.firstLineHeadIndent = Const.space8
@@ -560,11 +567,10 @@ struct MarkdownAttributedRenderer: MarkupVisitor {
             let style = NSMutableParagraphStyle()
             style.textBlocks = [block]
 
-            let cellContent: NSMutableAttributedString
-            if column < cells.count {
-                cellContent = inlineChildren(of: cells[column])
+            let cellContent: NSMutableAttributedString = if column < cells.count {
+                inlineChildren(of: cells[column])
             } else {
-                cellContent = NSMutableAttributedString()
+                NSMutableAttributedString()
             }
             if cellContent.length == 0 {
                 cellContent.append(NSAttributedString(string: " ", attributes: baseAttributes()))

@@ -20,8 +20,11 @@ final class CardViewModel {
 
         for item in items {
             if isInGroup {
-                if item.hidden { toPermDelete.append(item) }
-                else { toUngroup.append(item) }
+                if item.hidden {
+                    toPermDelete.append(item)
+                } else {
+                    toUngroup.append(item)
+                }
             } else if item.group != -1 {
                 toHide.append(item)
             } else {

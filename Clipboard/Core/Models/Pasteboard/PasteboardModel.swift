@@ -163,7 +163,9 @@ final class PasteboardModel: Identifiable, Codable {
     }
 
     func loadThumbnail() async -> NSImage? {
-        if let cachedThumbnail { return cachedThumbnail }
+        if let cachedThumbnail {
+            return cachedThumbnail
+        }
 
         if let existingTask = thumbnailLoadTask {
             return await existingTask.value
