@@ -59,7 +59,6 @@ final class CollectionViewItem: NSCollectionViewItem {
         view.layer?.borderWidth = 0
         view.onAppearanceChange = { [weak self] in
             self?.updateSelectionBorder()
-            self?.updateShadow()
             self?.updateInfoIconAppearance()
         }
         return view
@@ -203,6 +202,11 @@ extension CollectionViewItem {
         initSubView()
     }
 
+    override func viewDidLayout() {
+        super.viewDidLayout()
+        updateShadowPath()
+    }
+
     override var isSelected: Bool {
         didSet {
             updateSelectionBorder()
@@ -252,6 +256,15 @@ extension CollectionViewItem {
             layer.shadowRadius = 2
             layer.shadowOffset = CGSize(width: 0, height: -1)
         }
+    }
+
+    private func updateShadowPath() {
+        selectionBorderView.layer?.shadowPath = CGPath(
+            roundedRect: contentView.frame,
+            cornerWidth: Const.radius,
+            cornerHeight: Const.radius,
+            transform: nil
+        )
     }
 }
 
@@ -353,7 +366,7 @@ extension CollectionViewItem {
         }
 
         contentView.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(Const.selectionBorderWidth)
+            make.edges.equalToSuperview().inset(Const.selectionBorderWidth - 0.5)
         }
 
         headView.snp.makeConstraints { make in
