@@ -47,13 +47,12 @@ final class PasteDataStore {
     private var searchTask: Task<Void, Error>?
     private var loadPageTask: Task<Void, Never>?
 
-    func setup() {
-        Task {
-            await resetDefaultList()
-            let count = await sqlManager.getTotalCount()
-            totalCount = count
-            filteredCount = count
-        }
+    func setup() async {
+        await sqlManager.setup()
+        await resetDefaultList()
+        let count = await sqlManager.getTotalCount()
+        totalCount = count
+        filteredCount = count
     }
 
     func notifyCategoryChipsChanged() {

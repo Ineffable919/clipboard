@@ -149,12 +149,6 @@ enum PasteUserDefaults {
     /// 背景类型(仅macOS 26+, 0:液态玻璃 1:毛玻璃)
     @UserDefaultsWrapper(.backgroundType, defaultValue: 0)
     static var backgroundType
-    /// tag 字段迁移标记
-    @UserDefaultsWrapper(.tagFieldMigrated, defaultValue: false)
-    static var tagFieldMigrated
-    /// hidden 字段新增标记
-    @UserDefaultsWrapper(.hiddenFieldMigrated, defaultValue: false)
-    static var hiddenFieldMigrated
     /// unique_id 重算与去重迁移标记
     @UserDefaultsWrapper(.uniqueIdMigrated, defaultValue: false)
     static var uniqueIdMigrated

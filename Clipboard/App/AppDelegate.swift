@@ -88,9 +88,9 @@ extension AppDelegate: NSApplicationDelegate {
 
 extension AppDelegate {
     private func initClipboardAsync() async {
-        PasteBoard.main.startListening()
+        await PasteDataStore.main.setup()
 
-        PasteDataStore.main.setup()
+        PasteBoard.main.startListening()
 
         initLocalEvent()
 

@@ -51,10 +51,6 @@ enum PrefKey: String, CaseIterable {
     case removeTailingNewline
     /// 背景类型(仅macOS 26+)
     case backgroundType
-    /// tag 字段迁移标记
-    case tagFieldMigrated
-    /// hidden 字段新增标记
-    case hiddenFieldMigrated
     /// unique_id 重算与去重迁移标记
     case uniqueIdMigrated
     /// 显示模式（抽屉式/窗口式）
