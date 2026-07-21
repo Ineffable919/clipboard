@@ -8,7 +8,7 @@
 import Foundation
 
 /// 文本统计信息（字符数 / 词数 / 行数）
-struct TextStatistics: Equatable {
+struct TextStatistics: Equatable, Sendable {
     let characterCount: Int
     let wordCount: Int
     let lineCount: Int

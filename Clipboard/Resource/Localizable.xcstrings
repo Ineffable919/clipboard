@@ -1,6 +1,254 @@
 {
   "sourceLanguage" : "zh-Hans",
   "strings" : {
+    "jsonAddEscapes" : {
+      "comment" : "JSON editor menu item: add escaping",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add Escapes" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加转义" } }
+      }
+    },
+    "jsonCompact" : {
+      "comment" : "JSON editor toolbar action: compact JSON",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Compact" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "压缩" } }
+      }
+    },
+    "jsonDecodeUnicode" : {
+      "comment" : "JSON editor menu item: decode Unicode escapes",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Unicode to Text" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Unicode 转中文" } }
+      }
+    },
+    "jsonDuplicateKey" : {
+      "comment" : "JSON editor error when renamed keys collide",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Duplicate key after renaming: %@" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "键命名后出现重复键：%@" } }
+      }
+    },
+    "jsonEncodeUnicode" : {
+      "comment" : "JSON editor menu item: encode text as Unicode escapes",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Text to Unicode" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "中文转 Unicode" } }
+      }
+    },
+    "jsonEscape" : {
+      "comment" : "JSON editor escape menu title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Escape" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "转义" } }
+      }
+    },
+    "jsonFormat" : {
+      "comment" : "JSON editor toolbar action: format JSON",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Format" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "格式化" } }
+      }
+    },
+    "jsonIndentNone" : {
+      "comment" : "JSON editor indentation option with line breaks and no leading spaces",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No Indent" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无缩进" } }
+      }
+    },
+    "jsonIndentSpaces" : {
+      "comment" : "JSON editor indentation option; argument is number of spaces",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Indent %lld Spaces" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "缩进空格 %lld" } }
+      }
+    },
+    "jsonInvalid" : {
+      "comment" : "JSON editor validation status",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Invalid JSON" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "JSON 无效" } }
+      }
+    },
+    "jsonKeyCamel" : {
+      "comment" : "JSON key naming style",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "camelCase" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "camelCase" } }
+      }
+    },
+    "jsonKeyKebab" : {
+      "comment" : "JSON key naming style",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "kebab-case" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "kebab-case" } }
+      }
+    },
+    "jsonKeyPascal" : {
+      "comment" : "JSON key naming style",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "CamelCase" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "CamelCase" } }
+      }
+    },
+    "jsonKeyScreamingSnake" : {
+      "comment" : "JSON key naming style",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "SNAKE_CASE" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "SNAKE_CASE" } }
+      }
+    },
+    "jsonKeySnake" : {
+      "comment" : "JSON key naming style",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "snake_case" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "snake_case" } }
+      }
+    },
+    "jsonKeySpace" : {
+      "comment" : "JSON key naming style",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "space case" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "space case" } }
+      }
+    },
+    "jsonKeyTitle" : {
+      "comment" : "JSON key naming style",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Camel Case" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Camel Case" } }
+      }
+    },
+    "jsonLineColumn" : {
+      "comment" : "JSON editor cursor position; arguments are line and column",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Line %1$lld, Column %2$lld" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "第 %1$lld 行，第 %2$lld 列" } }
+      }
+    },
+    "jsonModeTooltip" : {
+      "comment" : "Tooltip for switching to JSON editing mode",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Switch to JSON mode" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "切换到 JSON 模式" } }
+      }
+    },
+    "jsonProcessing" : {
+      "comment" : "JSON editor processing status",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Processing…" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "处理中…" } }
+      }
+    },
+    "jsonRemoveEscapes" : {
+      "comment" : "JSON editor menu item: remove escaping",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove Escapes" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "取消转义" } }
+      }
+    },
+    "jsonRenameKeys" : {
+      "comment" : "JSON editor key naming menu title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Key Naming" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "键命名" } }
+      }
+    },
+    "jsonRichFormatWarningMessage" : {
+      "comment" : "JSON mode switch warning message",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Switching to JSON mode removes formatting added during this edit." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "切换到 JSON 模式会移除本次编辑中添加的富文本格式。" } }
+      }
+    },
+    "jsonRichFormatWarningTitle" : {
+      "comment" : "JSON mode switch warning title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove Text Formatting?" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "移除文本格式？" } }
+      }
+    },
+    "jsonSortAscending" : {
+      "comment" : "JSON editor key sort option",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Ascending" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "升序" } }
+      }
+    },
+    "jsonSortDescending" : {
+      "comment" : "JSON editor key sort option",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Descending" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "降序" } }
+      }
+    },
+    "jsonSortKeys" : {
+      "comment" : "JSON editor key sorting menu title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sort Keys" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "键排序" } }
+      }
+    },
+    "jsonTransformFailed" : {
+      "comment" : "JSON editor transformation failure",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Transformation failed. Check the JSON syntax." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "转换失败，请检查 JSON 格式" } }
+      }
+    },
+    "jsonUnicode" : {
+      "comment" : "JSON editor Unicode conversion menu title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Unicode" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Unicode" } }
+      }
+    },
+    "jsonValid" : {
+      "comment" : "JSON editor validation status",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Valid JSON" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "JSON 有效" } }
+      }
+    },
+    "textModeTooltip" : {
+      "comment" : "Tooltip for switching to text editing mode",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Switch to text mode" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "切换到文本模式" } }
+      }
+    },
     "previewViewRendered" : {
       "comment" : "Preview toolbar: switch back to rendered markdown",
       "extractionState" : "manual",

@@ -14,6 +14,9 @@ final class EditToolbarView: NSView {
     var onCancel: (() -> Void)?
     var onSave: (() -> Void)?
     var onFormat: ((FormatAction) -> Void)?
+    var onModeChange: ((EditMode) -> Void)?
+    var onJSONAction: ((JSONToolAction) -> Void)?
+    var onIndentationChange: ((JSONIndentation) -> Void)?
 
     // MARK: - Subviews
 
@@ -27,6 +30,9 @@ final class EditToolbarView: NSView {
         style: .primary
     )
 
+    private let modeButton = EditFormatButton(symbolName: "curlybraces")
+    private let jsonToolbar = JSONToolbarView()
+
     private lazy var formatStack: NSStackView = {
         let stack = NSStackView(views: [
             makeFormatButton(symbol: "bold", action: .bold),
@@ -39,6 +45,8 @@ final class EditToolbarView: NSView {
         stack.alignment = .centerY
         return stack
     }()
+
+    private var mode = EditMode.text
 
     // MARK: - Init
 
@@ -57,13 +65,25 @@ final class EditToolbarView: NSView {
     private func setup() {
         cancelButton.onAction = { [weak self] in self?.onCancel?() }
         saveButton.onAction = { [weak self] in self?.onSave?() }
+        modeButton.action = { [weak self] in self?.toggleMode() }
+        jsonToolbar.onAction = { [weak self] action in
+            self?.onJSONAction?(action)
+        }
+        jsonToolbar.onIndentationChange = { [weak self] indentation in
+            self?.onIndentationChange?(indentation)
+        }
 
         addSubview(cancelButton)
-        addSubview(formatStack)
+        addSubview(modeButton)
         addSubview(saveButton)
 
         cancelButton.snp.makeConstraints { make in
             make.leading.equalToSuperview().inset(Const.space12)
+            make.centerY.equalToSuperview()
+        }
+
+        modeButton.snp.makeConstraints { make in
+            make.leading.equalTo(cancelButton.snp.trailing).offset(Const.space8)
             make.centerY.equalToSuperview()
         }
 
@@ -72,14 +92,45 @@ final class EditToolbarView: NSView {
             make.centerY.equalToSuperview()
         }
 
-        formatStack.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-        }
+        setMode(.text)
     }
 
     private func makeFormatButton(symbol: String, action: FormatAction) -> EditFormatButton {
         let button = EditFormatButton(symbolName: symbol)
         button.action = { [weak self] in self?.onFormat?(action) }
         return button
+    }
+
+    func setMode(_ mode: EditMode) {
+        self.mode = mode
+        let isJSON = mode == .json
+        installModeToolbar(isJSON ? jsonToolbar : formatStack)
+        let modeTooltip = isJSON
+            ? String(localized: .textModeTooltip)
+            : String(localized: .jsonModeTooltip)
+        modeButton.toolTip = modeTooltip
+        modeButton.setAccessibilityLabel(modeTooltip)
+        modeButton.setSymbol(isJSON ? "square.and.pencil" : "curlybraces")
+    }
+
+    private func installModeToolbar(_ toolbar: NSView) {
+        guard toolbar.superview !== self else { return }
+
+        formatStack.removeFromSuperview()
+        jsonToolbar.removeFromSuperview()
+        addSubview(toolbar)
+        toolbar.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.leading.greaterThanOrEqualTo(modeButton.snp.trailing).offset(Const.space8)
+            make.trailing.lessThanOrEqualTo(saveButton.snp.leading).offset(-Const.space8)
+        }
+    }
+
+    func setJSONToolsEnabled(_ enabled: Bool) {
+        jsonToolbar.setEnabled(enabled)
+    }
+
+    private func toggleMode() {
+        onModeChange?(mode == .text ? .json : .text)
     }
 }

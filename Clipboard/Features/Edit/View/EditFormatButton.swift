@@ -27,6 +27,14 @@ final class EditFormatButton: NSView {
         setup(symbolName: symbolName)
     }
 
+    func setSymbol(_ symbolName: String) {
+        let config = NSImage.SymbolConfiguration(pointSize: 15, weight: .medium)
+        imageView.image = NSImage(
+            systemSymbolName: symbolName,
+            accessibilityDescription: toolTip
+        )?.withSymbolConfiguration(config)
+    }
+
     @available(*, unavailable)
     required init?(coder _: NSCoder) {
         fatalError()
@@ -41,11 +49,7 @@ final class EditFormatButton: NSView {
         backgroundLayer.cornerCurve = .continuous
         layer?.addSublayer(backgroundLayer)
 
-        let config = NSImage.SymbolConfiguration(pointSize: 15, weight: .medium)
-        imageView.image = NSImage(
-            systemSymbolName: symbolName,
-            accessibilityDescription: nil
-        )?.withSymbolConfiguration(config)
+        setSymbol(symbolName)
         imageView.contentTintColor = .labelColor
         imageView.imageScaling = .scaleProportionallyDown
         addSubview(imageView)

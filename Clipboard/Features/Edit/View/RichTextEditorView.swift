@@ -36,6 +36,31 @@ final class RichTextEditorView: NSView {
         textView.string
     }
 
+    var hasRichFormatting: Bool {
+        let content = textView.attributedString()
+        guard content.length > 0 else { return false }
+        let range = NSRange(location: 0, length: content.length)
+        var found = false
+
+        content.enumerateAttributes(in: range, options: []) { attributes, _, stop in
+            if let underline = attributes[.underlineStyle] as? Int, underline != 0 {
+                found = true
+            } else if let strikethrough = attributes[.strikethroughStyle] as? Int,
+                      strikethrough != 0
+            {
+                found = true
+            } else if let font = attributes[.font] as? NSFont {
+                let traits = font.fontDescriptor.symbolicTraits
+                found = traits.contains(.bold) || traits.contains(.italic)
+            }
+
+            if found {
+                stop.pointee = true
+            }
+        }
+        return found
+    }
+
     // MARK: - Init
 
     override init(frame frameRect: NSRect) {
@@ -78,6 +103,7 @@ final class RichTextEditorView: NSView {
 
         textView.backgroundColor = .clear
         textView.drawsBackground = false
+        textView.font = .systemFont(ofSize: 13)
         textView.textColor = .labelColor
         textView.textContainerInset = NSSize(width: 8, height: 8)
         textView.delegate = self
@@ -96,9 +122,19 @@ final class RichTextEditorView: NSView {
 
     // MARK: - Content
 
-    func setContent(_ attributedString: NSAttributedString) {
-        let adapted = Self.applyAdaptiveColors(to: attributedString)
-        textView.textStorage?.setAttributedString(adapted)
+    func setText(_ text: String) {
+        textView.undoManager?.disableUndoRegistration()
+        textView.typingAttributes = [
+            .font: NSFont.systemFont(ofSize: 13),
+            .foregroundColor: NSColor.labelColor,
+        ]
+        textView.string = text
+        textView.undoManager?.enableUndoRegistration()
+        textView.undoManager?.removeAllActions()
+    }
+
+    func focus() {
+        window?.makeFirstResponder(textView)
     }
 
     // MARK: - Format Actions
@@ -203,24 +239,6 @@ final class RichTextEditorView: NSView {
                 range: range
             )
         }
-    }
-
-    // MARK: - Color Helpers
-
-    private static func applyAdaptiveColors(
-        to attributedString: NSAttributedString
-    ) -> NSAttributedString {
-        let mutable = NSMutableAttributedString(attributedString: attributedString)
-        let fullRange = NSRange(location: 0, length: mutable.length)
-
-        mutable.removeAttribute(.backgroundColor, range: fullRange)
-        mutable.addAttribute(
-            .foregroundColor,
-            value: NSColor.labelColor,
-            range: fullRange
-        )
-
-        return mutable
     }
 }
 
