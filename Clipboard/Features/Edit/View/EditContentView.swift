@@ -13,7 +13,8 @@ final class EditContentView: NSVisualEffectView {
 
     var onCancel: (() -> Void)?
     var onSave: ((EditedContent) -> Void)?
-    var onModeChange: ((EditMode) -> Void)?
+    var onModeChange: ((EditMode, Bool) -> Void)?
+    var onInitialContentReady: (() -> Void)?
 
     /// 当前编辑内容
     var currentContent: EditedContent {
@@ -139,6 +140,7 @@ final class EditContentView: NSVisualEffectView {
 
         jsonEditor.isHidden = true
         toolbar.setMode(.text)
+        toolbar.setModeToggleVisible(false)
         statisticsBar.setMode(.text)
     }
 
@@ -149,16 +151,30 @@ final class EditContentView: NSVisualEffectView {
         let typeRawValue = model.pasteboardType.rawValue
         contentTask?.cancel()
         contentTask = Task { @MainActor [weak self] in
-            let text = await Task.detached(priority: .userInitiated) {
-                EditTextLoader.load(data: data, typeRawValue: typeRawValue)
-            }.value
+            let worker = Task.detached(priority: .userInitiated) {
+                let text = EditTextLoader.load(
+                    data: data,
+                    typeRawValue: typeRawValue
+                )
+                let isJSON = JSONTransformer.looksLikeJSON(text)
+                let lineStarts = isJSON ? JSONLineIndex.build(for: text) : nil
+                return (text: text, isJSON: isJSON, lineStarts: lineStarts)
+            }
+            let loaded = await withTaskCancellationHandler {
+                await worker.value
+            } onCancel: {
+                worker.cancel()
+            }
 
             guard let self, !Task.isCancelled else { return }
-            let initialMode: EditMode = JSONTransformer.looksLikeJSON(text)
-                ? .json
-                : .text
+            let initialMode: EditMode = loaded.isJSON ? .json : .text
             isLoaded = true
-            applyMode(initialMode, text: text)
+            toolbar.setModeToggleVisible(loaded.isJSON)
+            applyMode(
+                initialMode,
+                text: loaded.text,
+                initialLineStarts: loaded.lineStarts
+            )
         }
     }
 
@@ -186,7 +202,11 @@ final class EditContentView: NSVisualEffectView {
         applyMode(newMode)
     }
 
-    private func applyMode(_ newMode: EditMode, text initialText: String? = nil) {
+    private func applyMode(
+        _ newMode: EditMode,
+        text initialText: String? = nil,
+        initialLineStarts: [Int]? = nil
+    ) {
         transformTask?.cancel()
         jsonAnalysisTask?.cancel()
         jsonEditor.isBusy = false
@@ -203,14 +223,17 @@ final class EditContentView: NSVisualEffectView {
 
         mode = newMode
         let isJSON = newMode == .json
-        // 先切换可见性再装载文本，避免隐藏状态下 TextKit 只完成存储，
-        // 却没有为首次显示的可见区域建立绘制状态。
+        let isInitialLoad = initialText != nil
+        let animated = !isInitialLoad
+        if isInitialLoad {
+            onModeChange?(newMode, false)
+        }
         textEditor.isHidden = isJSON
         jsonEditor.isHidden = !isJSON
 
         if isJSON {
             textEditor.setText("")
-            jsonEditor.setText(text)
+            jsonEditor.setText(text, lineStarts: initialLineStarts)
         } else {
             jsonEditor.setText("")
             textEditor.setText(text)
@@ -218,14 +241,27 @@ final class EditContentView: NSVisualEffectView {
 
         toolbar.setMode(newMode)
         statisticsBar.setMode(newMode)
-        onModeChange?(newMode)
+        if !isInitialLoad {
+            onModeChange?(newMode, animated)
+        }
 
         if isJSON {
             scheduleJSONAnalysis(immediately: true)
-            jsonEditor.focus()
+            jsonEditor.focus(revealingSelection: !isInitialLoad)
         } else {
             updateStats(for: text)
             textEditor.focus()
+        }
+        scrollActiveEditorToTop()
+        if isInitialLoad {
+            onInitialContentReady?()
+        }
+    }
+
+    func scrollActiveEditorToTop() {
+        switch mode {
+        case .text: textEditor.scrollToTop()
+        case .json: jsonEditor.scrollToTop()
         }
     }
 
@@ -293,7 +329,6 @@ final class EditContentView: NSVisualEffectView {
         transformTask?.cancel()
         jsonAnalysisTask?.cancel()
         jsonEditor.isBusy = true
-        toolbar.setJSONToolsEnabled(false)
         statisticsBar.setProcessing()
 
         transformTask = Task { @MainActor [weak self] in
@@ -316,12 +351,13 @@ final class EditContentView: NSVisualEffectView {
 
             guard let self, !Task.isCancelled else { return }
             jsonEditor.isBusy = false
-            toolbar.setJSONToolsEnabled(true)
 
             switch result {
             case let .success(text):
-                jsonEditor.replaceText(text, in: target.range)
-                jsonEditor.focus(revealingSelection: false)
+                let changed = jsonEditor.replaceText(text, in: target.range)
+                if !changed {
+                    scheduleJSONAnalysis(immediately: true)
+                }
             case let .failure(error):
                 switch error {
                 case let .duplicateKey(key):

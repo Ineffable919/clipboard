@@ -32,11 +32,7 @@ final class JSONEditorView: NSView {
         textView.string
     }
 
-    var isBusy: Bool = false {
-        didSet {
-            textView.isEditable = !isBusy
-        }
-    }
+    var isBusy = false
 
     // MARK: - Text System
 
@@ -131,8 +127,6 @@ final class JSONEditorView: NSView {
         scrollView.autohidesScrollers = true
         scrollView.borderType = .noBorder
         scrollView.drawsBackground = false
-        // 系统 verticalRulerView 在透明分层窗口中会覆盖 documentView 的正文层。
-        // 行号改为独立兄弟视图，保留同步滚动但绕开 NSScrollView 的 ruler 合成。
         scrollView.hasVerticalRuler = false
         scrollView.rulersVisible = false
         scrollView.contentView.postsBoundsChangedNotifications = true
@@ -157,7 +151,8 @@ final class JSONEditorView: NSView {
 
     // MARK: - Content
 
-    func setText(_ text: String) {
+    func setText(_ text: String, lineStarts: [Int]? = nil) {
+        lineTask?.cancel()
         highlightTask?.cancel()
         if highlightedRange.length > 0,
            let layoutManager = textView.layoutManager
@@ -177,18 +172,21 @@ final class JSONEditorView: NSView {
         highlightedRange = NSRange(location: 0, length: 0)
         suppressChanges = true
         textView.undoManager?.disableUndoRegistration()
-        // 语法高亮只使用临时属性。先为全文建立可见的基础属性，确保
-        // 无法识别的无效 JSON 片段仍按原文显示，而不是依赖相邻 token 的属性。
         textView.typingAttributes = baseTextAttributes
         textView.string = text
         textView.typingAttributes = baseTextAttributes
         textView.setSelectedRange(NSRange(location: 0, length: 0))
-        textView.scrollRangeToVisible(NSRange(location: 0, length: 0))
         textView.undoManager?.enableUndoRegistration()
         textView.undoManager?.removeAllActions()
         suppressChanges = false
         generation += 1
-        rebuildLineIndex(for: text, generation: generation)
+        if let lineStarts {
+            lineIndex.replace(with: lineStarts)
+            isLineIndexReady = true
+            updateCursor()
+        } else {
+            rebuildLineIndex(for: text, generation: generation)
+        }
         invalidateTextDisplay()
         scheduleHighlight()
     }
@@ -201,9 +199,21 @@ final class JSONEditorView: NSView {
         return (text, range)
     }
 
-    func replaceText(_ text: String, in range: NSRange) {
+    @discardableResult
+    func replaceText(_ text: String, in range: NSRange) -> Bool {
+        let source = textView.string as NSString
+        guard range.location <= source.length,
+              NSMaxRange(range) <= source.length
+        else { return false }
+
+        let previousText = source.substring(with: range)
+        guard previousText != text,
+              let textStorage = textView.textStorage
+        else { return false }
+
         let originalSelection = textView.selectedRange()
-        let visibleOrigin = scrollView.contentView.bounds.origin
+        let clipView = scrollView.contentView
+        let visibleOrigin = clipView.bounds.origin
         let replacementLength = text.utf16.count
         let restoredSelection = selectionAfterReplacing(
             range,
@@ -211,15 +221,41 @@ final class JSONEditorView: NSView {
             originalSelection: originalSelection
         )
 
-        if replacementLength > 65536 {
-            shouldRebuildLineIndex = true
-            pendingEdit = nil
+        window?.disableScreenUpdatesUntilFlush()
+        highlightTask?.cancel()
+        suppressChanges = true
+        let replacement = NSAttributedString(
+            string: text,
+            attributes: baseTextAttributes
+        )
+        textStorage.beginEditing()
+        textStorage.replaceCharacters(in: range, with: replacement)
+        textStorage.endEditing()
+        suppressChanges = false
+
+        textView.undoManager?.registerUndo(withTarget: self) { target in
+            target.replaceText(
+                previousText,
+                in: NSRange(location: range.location, length: replacementLength)
+            )
         }
-        textView.insertText(text, replacementRange: range)
+
+        generation += 1
+        pendingEdit = nil
+        shouldRebuildLineIndex = false
+        rebuildLineIndex(for: textView.string, generation: generation)
         textView.setSelectedRange(restoredSelection)
-        scrollView.contentView.scroll(to: visibleOrigin)
-        scrollView.reflectScrolledClipView(scrollView.contentView)
+        var targetBounds = clipView.bounds
+        targetBounds.origin = visibleOrigin
+        let constrainedBounds = clipView.constrainBoundsRect(targetBounds)
+        clipView.scroll(to: constrainedBounds.origin)
+        scrollView.reflectScrolledClipView(clipView)
         lineRuler.needsDisplay = true
+        invalidateTextDisplay()
+        scheduleHighlight()
+        onTextChange?()
+        window?.contentView?.needsDisplay = true
+        return true
     }
 
     func focus(revealingSelection: Bool = true) {
@@ -229,6 +265,16 @@ final class JSONEditorView: NSView {
         }
         invalidateTextDisplay()
         scheduleHighlight()
+    }
+
+    /// 直接重置 clip view，不触发选区定位或全文布局。
+    func scrollToTop() {
+        let clipView = scrollView.contentView
+        var targetBounds = clipView.bounds
+        targetBounds.origin = .zero
+        let constrainedBounds = clipView.constrainBoundsRect(targetBounds)
+        clipView.scroll(to: constrainedBounds.origin)
+        scrollView.reflectScrolledClipView(clipView)
     }
 
     private func selectionAfterReplacing(
@@ -456,6 +502,7 @@ extension JSONEditorView: NSTextViewDelegate {
         shouldChangeTextIn affectedCharRange: NSRange,
         replacementString: String?
     ) -> Bool {
+        guard !isBusy else { return false }
         let replacement = replacementString ?? ""
         if replacement.utf16.count > 65536 {
             shouldRebuildLineIndex = true

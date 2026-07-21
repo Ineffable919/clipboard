@@ -137,6 +137,15 @@ final class RichTextEditorView: NSView {
         window?.makeFirstResponder(textView)
     }
 
+    func scrollToTop() {
+        let clipView = scrollView.contentView
+        var targetBounds = clipView.bounds
+        targetBounds.origin = .zero
+        let constrainedBounds = clipView.constrainBoundsRect(targetBounds)
+        clipView.scroll(to: constrainedBounds.origin)
+        scrollView.reflectScrolledClipView(clipView)
+    }
+
     // MARK: - Format Actions
 
     func applyFormat(_ action: FormatAction) {

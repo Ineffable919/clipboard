@@ -14,6 +14,7 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
     private static let minWidth: CGFloat = 400.0
     private static let minHeight: CGFloat = 300.0
     private static let jsonWidth: CGFloat = 800.0
+    private static let jsonHeight: CGFloat = 600.0
     private static let modeResizeDuration = 0.18
 
     private(set) var currentModel: PasteboardModel?
@@ -22,6 +23,7 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
     private var stableWindowCenter: NSPoint?
     private var resizeGeneration = 0
     private var isResizingForMode = false
+    private var needsInitialPresentation = false
 
     var onSave: ((PasteboardModel, EditedContent) -> Void)?
 
@@ -97,10 +99,8 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
 
         isNewItem = true
         currentModel = emptyModel
+        needsInitialPresentation = true
         installContentView(for: emptyModel)
-
-        NSApp.activate(ignoringOtherApps: true)
-        window?.makeKeyAndOrderFront(nil)
     }
 
     func openWindow(with model: PasteboardModel) {
@@ -111,10 +111,8 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
 
         isNewItem = false
         currentModel = model
+        needsInitialPresentation = true
         installContentView(for: model)
-
-        NSApp.activate(ignoringOtherApps: true)
-        window?.makeKeyAndOrderFront(nil)
     }
 
     private func installContentView(for model: PasteboardModel) {
@@ -125,8 +123,11 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
         contentView.onSave = { [weak self] content in
             self?.saveContent(content)
         }
-        contentView.onModeChange = { [weak self] mode in
-            self?.updateWindow(for: mode)
+        contentView.onModeChange = { [weak self] mode, animated in
+            self?.updateWindow(for: mode, animated: animated)
+        }
+        contentView.onInitialContentReady = { [weak self] in
+            self?.presentPreparedWindow()
         }
         window?.contentView = contentView
         editContentView = contentView
@@ -138,6 +139,7 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
         currentModel = nil
         editContentView = nil
         isNewItem = false
+        needsInitialPresentation = false
         window?.minSize = NSSize(width: Self.minWidth, height: Self.minHeight)
     }
 
@@ -148,6 +150,7 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
         currentModel = nil
         editContentView = nil
         isNewItem = false
+        needsInitialPresentation = false
         window?.minSize = NSSize(width: Self.minWidth, height: Self.minHeight)
     }
 
@@ -157,6 +160,10 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
 
     func windowDidResize(_: Notification) {
         updateStableWindowCenter()
+    }
+
+    func windowShouldZoom(_: NSWindow, toFrame _: NSRect) -> Bool {
+        false
     }
 
     private func saveFromState() {
@@ -254,26 +261,76 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
         }
     }
 
-    private func updateWindow(for mode: EditMode) {
+    /// 在装载文本前根据模式同步设定尺寸并居中于当前屏幕。
+    private func prepareInitialWindow(for mode: EditMode) {
         guard let window else { return }
+        needsInitialPresentation = false
+        resizeGeneration += 1
+        isResizingForMode = false
+
         let targetWidth = mode == .json ? Self.jsonWidth : Self.minWidth
+        let targetHeight = mode == .json ? Self.jsonHeight : Self.minHeight
+        window.minSize = NSSize(width: targetWidth, height: targetHeight)
+
+        let screen = window.screen ?? NSScreen.main
+        var frame = window.frame
+        frame.size.width = targetWidth
+        frame.size.height = targetHeight
+        if let visible = screen?.visibleFrame {
+            frame.origin.x = visible.midX - targetWidth / 2
+            frame.origin.y = visible.midY - targetHeight / 2
+        }
+        window.setFrame(frame, display: true)
+        window.layoutIfNeeded()
+        stableWindowCenter = Self.center(of: frame)
+    }
+
+    /// 文本、行号宽度和约束都稳定后再显示窗口，首帧即为文档顶部。
+    private func presentPreparedWindow() {
+        guard let window, !needsInitialPresentation else { return }
+        window.layoutIfNeeded()
+        editContentView?.scrollActiveEditorToTop()
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+    }
+
+    private func updateWindow(for mode: EditMode, animated: Bool) {
+        guard let window else { return }
+
+        if needsInitialPresentation {
+            prepareInitialWindow(for: mode)
+            return
+        }
+
+        let targetWidth = mode == .json ? Self.jsonWidth : Self.minWidth
+        let targetHeight = mode == .json ? Self.jsonHeight : Self.minHeight
         let center = stableWindowCenter ?? Self.center(of: window.frame)
 
         resizeGeneration += 1
         let generation = resizeGeneration
         isResizingForMode = true
-        window.minSize = NSSize(width: targetWidth, height: Self.minHeight)
+        window.minSize = NSSize(width: targetWidth, height: targetHeight)
 
         var frame = window.frame
         frame.size.width = targetWidth
+        frame.size.height = targetHeight
         frame.origin.x = center.x - targetWidth / 2
-        frame.origin.y = center.y - frame.height / 2
+        frame.origin.y = center.y - targetHeight / 2
         if let screen = window.screen {
             frame = window.constrainFrameRect(frame, to: screen)
         }
 
         guard window.frame != frame else {
             isResizingForMode = false
+            editContentView?.scrollActiveEditorToTop()
+            return
+        }
+
+        guard animated else {
+            window.setFrame(frame, display: true)
+            isResizingForMode = false
+            stableWindowCenter = Self.center(of: window.frame)
+            editContentView?.scrollActiveEditorToTop()
             return
         }
 
@@ -285,6 +342,7 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
             Task { @MainActor in
                 guard let self, generation == self.resizeGeneration else { return }
                 self.isResizingForMode = false
+                self.editContentView?.scrollActiveEditorToTop()
             }
         }
     }

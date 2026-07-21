@@ -130,6 +130,10 @@ final class EditToolbarView: NSView {
         jsonToolbar.setEnabled(enabled)
     }
 
+    func setModeToggleVisible(_ visible: Bool) {
+        modeButton.isHidden = !visible
+    }
+
     private func toggleMode() {
         onModeChange?(mode == .text ? .json : .text)
     }
