@@ -110,11 +110,15 @@ final class SearchSuggestionWindow: NSPanel {
     // MARK: - Mouse Events
 
     override func sendEvent(_ event: NSEvent) {
-        if event.type == .leftMouseDown {
+        switch event.type {
+        case .leftMouseDown:
+            return
+        case .leftMouseUp:
             suggestionVC.handleClick(at: event.locationInWindow)
             return
+        default:
+            super.sendEvent(event)
         }
-        super.sendEvent(event)
     }
 
     // MARK: - Key Handling
