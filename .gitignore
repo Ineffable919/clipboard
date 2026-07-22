@@ -94,6 +94,7 @@ iOSInjectionProject/
 .vscode
 .claude
 .air
+.idea
 .codex
 /reference
 scripts/build.sh
