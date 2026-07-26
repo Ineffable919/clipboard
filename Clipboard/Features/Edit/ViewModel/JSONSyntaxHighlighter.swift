@@ -29,6 +29,9 @@ enum JSONSyntaxHighlighter {
         var index = 0
 
         while index < source.length {
+            if shouldCancel(at: index) {
+                return []
+            }
             let character = source.character(at: index)
 
             if character == CharacterCode.quote {
@@ -36,6 +39,9 @@ enum JSONSyntaxHighlighter {
                 index += 1
                 var escaped = false
                 while index < source.length {
+                    if shouldCancel(at: index) {
+                        return []
+                    }
                     let current = source.character(at: index)
                     index += 1
                     if escaped {
@@ -103,6 +109,11 @@ enum JSONSyntaxHighlighter {
         }
 
         return result
+    }
+
+    private nonisolated static func shouldCancel(at index: Int) -> Bool {
+        index.isMultiple(of: 4096)
+            && withUnsafeCurrentTask { $0?.isCancelled ?? false }
     }
 
     private nonisolated static func isWhitespace(_ value: unichar) -> Bool {

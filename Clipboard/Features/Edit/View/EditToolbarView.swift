@@ -30,7 +30,12 @@ final class EditToolbarView: NSView {
         style: .primary
     )
 
-    private let modeButton = EditFormatButton(symbolName: "curlybraces")
+    private lazy var modeButton: JSONToolbarButton = {
+        let button = JSONToolbarButton(title: "")
+        button.target = self
+        button.action = #selector(toggleMode)
+        return button
+    }()
     private let jsonToolbar = JSONToolbarView()
 
     private lazy var formatStack: NSStackView = {
@@ -65,7 +70,6 @@ final class EditToolbarView: NSView {
     private func setup() {
         cancelButton.onAction = { [weak self] in self?.onCancel?() }
         saveButton.onAction = { [weak self] in self?.onSave?() }
-        modeButton.action = { [weak self] in self?.toggleMode() }
         jsonToolbar.onAction = { [weak self] action in
             self?.onJSONAction?(action)
         }
@@ -110,7 +114,20 @@ final class EditToolbarView: NSView {
             : String(localized: .jsonModeTooltip)
         modeButton.toolTip = modeTooltip
         modeButton.setAccessibilityLabel(modeTooltip)
-        modeButton.setSymbol(isJSON ? "square.and.pencil" : "curlybraces")
+        if isJSON {
+            modeButton.title = String(localized: .edit)
+            modeButton.image = nil
+            modeButton.imagePosition = .noImage
+        } else {
+            let configuration = NSImage.SymbolConfiguration(pointSize: 15, weight: .medium)
+            modeButton.title = ""
+            modeButton.image = NSImage(
+                systemSymbolName: "curlybraces",
+                accessibilityDescription: modeTooltip
+            )?.withSymbolConfiguration(configuration)
+            modeButton.imagePosition = .imageOnly
+        }
+        modeButton.invalidateIntrinsicContentSize()
     }
 
     private func installModeToolbar(_ toolbar: NSView) {
@@ -134,7 +151,7 @@ final class EditToolbarView: NSView {
         modeButton.isHidden = !visible
     }
 
-    private func toggleMode() {
+    @objc private func toggleMode() {
         onModeChange?(mode == .text ? .json : .text)
     }
 }

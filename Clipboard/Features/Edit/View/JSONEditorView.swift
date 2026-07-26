@@ -47,10 +47,17 @@ final class JSONEditorView: NSView {
     // MARK: - Tasks
 
     private var lineTask: Task<Void, Never>?
+    private var lineNumberTask: Task<Void, Never>?
     private var highlightTask: Task<Void, Never>?
+    private var highlightRequestID = 0
+    private var highlightWorkerID = 0
     private var generation = 0
+    private var lineNumberViewportSize = NSSize.zero
     private var highlightedRange = NSRange(location: 0, length: 0)
+    private var reportedSelection = NSRange(location: NSNotFound, length: 0)
     private var pendingEdit: (range: NSRange, replacement: String)?
+    private var lineIndexRevision = 0
+    private var reportedLineIndexRevision = -1
     private var shouldRebuildLineIndex = false
     private var suppressChanges = false
     private var isLineIndexReady = false
@@ -83,6 +90,7 @@ final class JSONEditorView: NSView {
 
     deinit {
         lineTask?.cancel()
+        lineNumberTask?.cancel()
         highlightTask?.cancel()
         NotificationCenter.default.removeObserver(self)
     }
@@ -121,6 +129,7 @@ final class JSONEditorView: NSView {
         textView.isVerticallyResizable = true
         textView.layoutManager?.allowsNonContiguousLayout = true
         textView.delegate = self
+        textView.textStorage?.delegate = self
 
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = false
@@ -149,11 +158,26 @@ final class JSONEditorView: NSView {
         }
     }
 
+    override func layout() {
+        super.layout()
+
+        let viewportSize = scrollView.contentView.bounds.size
+        guard viewportSize.width > 0,
+              viewportSize.height > 0,
+              viewportSize != lineNumberViewportSize
+        else { return }
+
+        lineNumberViewportSize = viewportSize
+        scheduleLineNumberRefresh(immediately: true)
+    }
+
     // MARK: - Content
 
     func setText(_ text: String, lineStarts: [Int]? = nil) {
         lineTask?.cancel()
-        highlightTask?.cancel()
+        lineNumberTask?.cancel()
+        cancelHighlight()
+        pendingEdit = nil
         if highlightedRange.length > 0,
            let layoutManager = textView.layoutManager
         {
@@ -182,6 +206,7 @@ final class JSONEditorView: NSView {
         generation += 1
         if let lineStarts {
             lineIndex.replace(with: lineStarts)
+            lineIndexRevision &+= 1
             isLineIndexReady = true
             updateCursor()
         } else {
@@ -222,7 +247,7 @@ final class JSONEditorView: NSView {
         )
 
         window?.disableScreenUpdatesUntilFlush()
-        highlightTask?.cancel()
+        cancelHighlight()
         suppressChanges = true
         let replacement = NSAttributedString(
             string: text,
@@ -250,7 +275,6 @@ final class JSONEditorView: NSView {
         let constrainedBounds = clipView.constrainBoundsRect(targetBounds)
         clipView.scroll(to: constrainedBounds.origin)
         scrollView.reflectScrolledClipView(clipView)
-        lineRuler.needsDisplay = true
         invalidateTextDisplay()
         scheduleHighlight()
         onTextChange?()
@@ -324,6 +348,8 @@ final class JSONEditorView: NSView {
     private func rebuildLineIndex(for text: String, generation: Int) {
         isLineIndexReady = false
         lineTask?.cancel()
+        lineNumberTask?.cancel()
+        lineRuler.clearVisibleLines()
         lineTask = Task { @MainActor [weak self] in
             let worker = Task.detached(priority: .utility) {
                 JSONLineIndex.build(for: text)
@@ -339,86 +365,135 @@ final class JSONEditorView: NSView {
             else { return }
 
             lineIndex.replace(with: starts)
+            lineIndexRevision &+= 1
             isLineIndexReady = true
             updateCursor()
         }
     }
 
-    private func applyPendingEdit() {
+    private func updateLineIndexAfterTextChange() {
         if shouldRebuildLineIndex {
             shouldRebuildLineIndex = false
-            pendingEdit = nil
             rebuildLineIndex(for: textView.string, generation: generation)
             return
         }
 
-        guard let pendingEdit else { return }
-        self.pendingEdit = nil
-
-        if isLineIndexReady {
-            lineIndex.applyReplacement(
-                range: pendingEdit.range,
-                replacement: pendingEdit.replacement
-            )
-            updateCursor()
-        } else {
+        guard isLineIndexReady else {
             rebuildLineIndex(for: textView.string, generation: generation)
+            return
+        }
+
+        if textView.selectedRange() != reportedSelection
+            || lineIndexRevision != reportedLineIndexRevision
+        {
+            updateCursor()
         }
     }
 
     private func updateCursor() {
-        let location = min(textView.selectedRange().location, textView.string.utf16.count)
+        let selection = textView.selectedRange()
+        reportedSelection = selection
+        reportedLineIndexRevision = lineIndexRevision
+        let location = min(selection.location, textView.string.utf16.count)
         let position = lineIndex.lineAndColumn(at: location)
         lineRuler.update(lineCount: lineIndex.lineCount, currentLine: position.line)
         onCursorChange?(position.line, position.column)
+        scheduleLineNumberRefresh()
+    }
+
+    private func scheduleLineNumberRefresh(immediately: Bool = false) {
+        lineNumberTask?.cancel()
+        lineNumberTask = Task { @MainActor [weak self] in
+            if immediately {
+                await Task.yield()
+            } else {
+                try? await Task.sleep(for: .milliseconds(16))
+            }
+            guard let self,
+                  !Task.isCancelled,
+                  isLineIndexReady,
+                  !isHidden
+            else { return }
+
+            lineRuler.refreshVisibleLines()
+        }
     }
 
     // MARK: - Highlighting
 
     @objc private func handleScroll() {
         scheduleHighlight()
-        lineRuler.needsDisplay = true
+        scheduleLineNumberRefresh(immediately: true)
+    }
+
+    private func cancelHighlight() {
+        highlightRequestID &+= 1
+        highlightWorkerID &+= 1
+        highlightTask?.cancel()
+        highlightTask = nil
     }
 
     private func scheduleHighlight() {
-        guard let range = highlightScanRange() else { return }
-        let source = textView.string as NSString
-        let segment = source.substring(with: range)
-        let generation = generation
+        highlightRequestID &+= 1
+        guard highlightTask == nil else { return }
 
-        highlightTask?.cancel()
+        highlightWorkerID &+= 1
+        let workerID = highlightWorkerID
         highlightTask = Task { @MainActor [weak self] in
-            try? await Task.sleep(for: .milliseconds(80))
-            guard !Task.isCancelled else { return }
-
-            let spans = await Task.detached(priority: .utility) {
-                JSONSyntaxHighlighter.spans(in: segment, offset: range.location)
-            }.value
-
-            guard let self,
-                  !Task.isCancelled,
-                  generation == self.generation,
-                  let layoutManager = textView.layoutManager
-            else { return }
-
-            let textLength = textView.string.utf16.count
-            let currentRange = NSRange(location: 0, length: textLength)
-            let removableRange = NSIntersectionRange(highlightedRange, currentRange)
-            if removableRange.length > 0 {
-                layoutManager.removeTemporaryAttribute(
-                    .foregroundColor,
-                    forCharacterRange: removableRange
-                )
+            guard let self else { return }
+            defer {
+                if workerID == highlightWorkerID {
+                    highlightTask = nil
+                }
             }
 
-            for span in spans where NSMaxRange(span.range) <= textLength {
-                layoutManager.addTemporaryAttribute(
-                    .foregroundColor,
-                    value: color(for: span.kind),
-                    forCharacterRange: span.range
-                )
+            while !Task.isCancelled {
+                let requestID = highlightRequestID
+                let generation = generation
+                try? await Task.sleep(for: .milliseconds(80))
+                guard !Task.isCancelled else { return }
+                guard requestID == highlightRequestID,
+                      generation == self.generation
+                else { continue }
+                guard let range = highlightScanRange() else { return }
+
+                let source = textView.string as NSString
+                let segment = source.substring(with: range)
+                let worker = Task.detached(priority: .utility) {
+                    JSONSyntaxHighlighter.spans(in: segment, offset: range.location)
+                }
+                let spans = await withTaskCancellationHandler {
+                    await worker.value
+                } onCancel: {
+                    worker.cancel()
+                }
+
+                guard !Task.isCancelled else { return }
+                guard requestID == highlightRequestID,
+                      generation == self.generation
+                else { continue }
+                guard let layoutManager = textView.layoutManager else { return }
+
+                let textLength = textView.string.utf16.count
+                let currentRange = NSRange(location: 0, length: textLength)
+                let removableRange = NSIntersectionRange(highlightedRange, currentRange)
+                if removableRange.length > 0 {
+                    layoutManager.removeTemporaryAttribute(
+                        .foregroundColor,
+                        forCharacterRange: removableRange
+                    )
+                }
+
+                for span in spans where NSMaxRange(span.range) <= textLength {
+                    layoutManager.addTemporaryAttribute(
+                        .foregroundColor,
+                        value: color(for: span.kind),
+                        forCharacterRange: span.range
+                    )
+                }
+                highlightedRange = range
+                return
             }
-            highlightedRange = range
         }
     }
 
@@ -503,12 +578,8 @@ extension JSONEditorView: NSTextViewDelegate {
         replacementString: String?
     ) -> Bool {
         guard !isBusy else { return false }
-        let replacement = replacementString ?? ""
-        if replacement.utf16.count > 65536 {
-            shouldRebuildLineIndex = true
-            pendingEdit = nil
-        } else {
-            pendingEdit = (affectedCharRange, replacement)
+        pendingEdit = replacementString.map {
+            (range: affectedCharRange, replacement: $0)
         }
         return true
     }
@@ -516,13 +587,16 @@ extension JSONEditorView: NSTextViewDelegate {
     func textDidChange(_: Notification) {
         guard !suppressChanges else { return }
         generation += 1
-        applyPendingEdit()
+        updateLineIndexAfterTextChange()
         scheduleHighlight()
         onTextChange?()
     }
 
     func textViewDidChangeSelection(_: Notification) {
-        guard isLineIndexReady else { return }
+        guard isLineIndexReady,
+              textView.selectedRange() != reportedSelection
+                || lineIndexRevision != reportedLineIndexRevision
+        else { return }
         updateCursor()
     }
 
@@ -537,5 +611,72 @@ extension JSONEditorView: NSTextViewDelegate {
         default:
             return false
         }
+    }
+}
+
+// MARK: - NSTextStorageDelegate
+
+extension JSONEditorView: NSTextStorageDelegate {
+    func textStorage(
+        _ textStorage: NSTextStorage,
+        didProcessEditing editedMask: NSTextStorageEditActions,
+        range _: NSRange,
+        changeInLength delta: Int
+    ) {
+        guard !suppressChanges,
+              editedMask.contains(.editedCharacters)
+        else { return }
+
+        let edit: (range: NSRange, replacement: String)?
+        if let pendingEdit,
+           pendingEdit.replacement.utf16.count - pendingEdit.range.length == delta
+        {
+            edit = pendingEdit
+        } else {
+            let markedRange = textView.markedRange()
+            let replacedRange = markedRange.location == NSNotFound
+                ? textView.selectedRange()
+                : markedRange
+            let replacementLength = replacedRange.length + delta
+            guard delta != 0,
+                  replacementLength >= 0
+            else {
+                self.pendingEdit = nil
+                return
+            }
+
+            let replacementRange = NSRange(
+                location: replacedRange.location,
+                length: replacementLength
+            )
+            guard replacementRange.location <= textStorage.length,
+                  NSMaxRange(replacementRange) <= textStorage.length
+            else {
+                self.pendingEdit = nil
+                shouldRebuildLineIndex = true
+                return
+            }
+
+            edit = (
+                range: replacedRange,
+                replacement: textStorage.attributedSubstring(from: replacementRange).string
+            )
+        }
+        self.pendingEdit = nil
+
+        guard let edit else { return }
+        guard isLineIndexReady,
+              edit.range.location <= textStorage.length,
+              max(edit.range.length, edit.replacement.utf16.count) <= 65536
+        else {
+            shouldRebuildLineIndex = true
+            return
+        }
+
+        lineIndex.applyReplacement(
+            range: edit.range,
+            replacement: edit.replacement
+        )
+        lineIndexRevision &+= 1
     }
 }
