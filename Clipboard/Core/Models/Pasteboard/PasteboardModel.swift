@@ -64,7 +64,8 @@ final class PasteboardModel: Identifiable, Codable {
         length: Int,
         group: Int,
         tag: String,
-        hidden: Bool = false
+        hidden: Bool = false,
+        uniqueId: String? = nil
     ) {
         self.pasteboardType = pasteboardType
         self.data = data
@@ -78,7 +79,7 @@ final class PasteboardModel: Identifiable, Codable {
         self.tag = tag
         self.hidden = hidden
 
-        uniqueId = Self.generateUniqueId(
+        self.uniqueId = uniqueId ?? Self.generateUniqueId(
             for: pasteboardType,
             data: data
         )
@@ -259,7 +260,8 @@ final class PasteboardModel: Identifiable, Codable {
             length: container.decode(Int.self, forKey: .length),
             group: container.decode(Int.self, forKey: .group),
             tag: container.decode(String.self, forKey: .tag),
-            hidden: container.decode(Bool.self, forKey: .hidden)
+            hidden: container.decode(Bool.self, forKey: .hidden),
+            uniqueId: container.decode(String.self, forKey: .uniqueId)
         )
 
         id = try container.decodeIfPresent(Int64.self, forKey: .id)

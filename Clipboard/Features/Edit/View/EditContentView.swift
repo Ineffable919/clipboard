@@ -156,9 +156,17 @@ final class EditContentView: NSVisualEffectView {
                     data: data,
                     typeRawValue: typeRawValue
                 )
-                let isJSON = JSONTransformer.looksLikeJSON(text)
-                let lineStarts = isJSON ? JSONLineIndex.build(for: text) : nil
-                return (text: text, isJSON: isJSON, lineStarts: lineStarts)
+                let looksLikeJSON = JSONTransformer.looksLikeJSON(text)
+                let isValidJSON = looksLikeJSON
+                    && JSONTransformer.isValid(text)
+                let lineStarts = isValidJSON
+                    ? JSONLineIndex.build(for: text)
+                    : nil
+                return (
+                    text: text,
+                    isValidJSON: isValidJSON,
+                    lineStarts: lineStarts
+                )
             }
             let loaded = await withTaskCancellationHandler {
                 await worker.value
@@ -167,9 +175,9 @@ final class EditContentView: NSVisualEffectView {
             }
 
             guard let self, !Task.isCancelled else { return }
-            let initialMode: EditMode = loaded.isJSON ? .json : .text
+            let initialMode: EditMode = loaded.isValidJSON ? .json : .text
             isLoaded = true
-            toolbar.setModeToggleVisible(loaded.isJSON)
+            toolbar.setModeToggleVisible(loaded.isValidJSON)
             applyMode(
                 initialMode,
                 text: loaded.text,
@@ -246,7 +254,10 @@ final class EditContentView: NSVisualEffectView {
         }
 
         if isJSON {
-            scheduleJSONAnalysis(immediately: true)
+            scheduleJSONAnalysis(
+                immediately: true,
+                knownValidity: isInitialLoad ? true : nil
+            )
             jsonEditor.focus(revealingSelection: !isInitialLoad)
         } else {
             updateStats(for: text)
@@ -296,7 +307,10 @@ final class EditContentView: NSVisualEffectView {
         }
     }
 
-    private func scheduleJSONAnalysis(immediately: Bool = false) {
+    private func scheduleJSONAnalysis(
+        immediately: Bool = false,
+        knownValidity: Bool? = nil
+    ) {
         jsonAnalysisTask?.cancel()
         jsonAnalysisTask = Task { @MainActor [weak self] in
             if !immediately {
@@ -307,7 +321,8 @@ final class EditContentView: NSVisualEffectView {
             statisticsBar.setProcessing()
             let worker = Task.detached(priority: .utility) {
                 let stats = TextStatistics(from: text)
-                let isValid = JSONTransformer.isValid(text)
+                let isValid = knownValidity
+                    ?? JSONTransformer.isValid(text)
                 return (stats, isValid)
             }
             let result = await withTaskCancellationHandler {

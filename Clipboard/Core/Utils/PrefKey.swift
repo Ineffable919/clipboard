@@ -51,8 +51,6 @@ enum PrefKey: String, CaseIterable {
     case removeTailingNewline
     /// 背景类型(仅macOS 26+)
     case backgroundType
-    /// unique_id 重算与去重迁移标记
-    case uniqueIdMigrated
     /// 显示模式（抽屉式/窗口式）
     case displayMode
     /// 窗口位置模式（中心/鼠标/上次位置）

@@ -134,7 +134,7 @@ final class JSONLineIndex {
         guard let deferredShiftStartIndex,
               deferredShiftDelta != 0
         else {
-            self.deferredShiftStartIndex = nil
+            deferredShiftStartIndex = nil
             deferredShiftDelta = 0
             return
         }

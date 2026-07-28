@@ -133,8 +133,7 @@ extension ClipMainViewController {
               focusRegion == .collection
         else { return event }
 
-        guard selectIndexPath.item < dataList.value.count else { return nil }
-        let item = dataList.value[selectIndexPath.item]
+        guard let item = displayedModel(at: selectIndexPath) else { return nil }
         preview(item)
         return nil
     }
@@ -150,7 +149,7 @@ extension ClipMainViewController {
             let minIndex =
                 collectionView.selectionIndexPaths.map(\.item).min()
                     ?? selectIndexPath.item
-            let countAfterDelete = dataList.value.count - items.count
+            let countAfterDelete = displayedItemCount - items.count
             if countAfterDelete > 0 {
                 let newItem = min(minIndex, countAfterDelete - 1)
                 selectIndexPath = IndexPath(item: newItem, section: 0)
@@ -159,8 +158,7 @@ extension ClipMainViewController {
             return nil
         }
 
-        guard selectIndexPath.item < dataList.value.count else { return nil }
-        let item = dataList.value[selectIndexPath.item]
+        guard let item = displayedModel(at: selectIndexPath) else { return nil }
         delete(item, indexPath: selectIndexPath)
         return nil
     }
@@ -224,8 +222,7 @@ extension ClipMainViewController {
     }
 
     private func handleEdit() -> NSEvent? {
-        guard selectIndexPath.item < dataList.value.count else { return nil }
-        let item = dataList.value[selectIndexPath.item]
+        guard let item = displayedModel(at: selectIndexPath) else { return nil }
         edit(item)
         return nil
     }

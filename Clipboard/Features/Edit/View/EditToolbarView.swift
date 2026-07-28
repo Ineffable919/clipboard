@@ -36,6 +36,7 @@ final class EditToolbarView: NSView {
         button.action = #selector(toggleMode)
         return button
     }()
+
     private let jsonToolbar = JSONToolbarView()
 
     private lazy var formatStack: NSStackView = {

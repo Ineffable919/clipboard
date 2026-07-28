@@ -18,7 +18,10 @@ final class PreviewIconButton: NSView {
 
     init(systemSymbol: String, accessibilityDescription: String? = nil) {
         super.init(frame: .zero)
-        imageView.image = NSImage(systemSymbolName: systemSymbol, accessibilityDescription: accessibilityDescription)
+        imageView.image = NSImage(
+            systemSymbolName: systemSymbol,
+            accessibilityDescription: accessibilityDescription
+        )?.withSymbolConfiguration(.init(pointSize: 14, weight: .regular))
         imageView.contentTintColor = .controlTextColor
         setup()
     }
@@ -29,7 +32,10 @@ final class PreviewIconButton: NSView {
     }
 
     func updateSymbol(_ name: String, accessibilityDescription: String? = nil) {
-        imageView.image = NSImage(systemSymbolName: name, accessibilityDescription: accessibilityDescription)
+        imageView.image = NSImage(
+            systemSymbolName: name,
+            accessibilityDescription: accessibilityDescription
+        )?.withSymbolConfiguration(.init(pointSize: 14, weight: .regular))
     }
 
     private func setup() {

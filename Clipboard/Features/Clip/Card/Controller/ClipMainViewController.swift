@@ -387,15 +387,23 @@ extension ClipMainViewController {
     func applySnapshot(animating: Bool = true, completion: (() -> Void)? = nil) {
         var snapshot = NSDiffableDataSourceSnapshot<ClipSection, PasteboardModel>()
         snapshot.appendSections([.main])
-        snapshot.appendItems(dataList.value.deduplicatedByUniqueId())
+        snapshot.appendItems(dataList.value)
         diffableDataSource.apply(snapshot, animatingDifferences: animating) {
             completion?()
         }
         updateEmptyState()
     }
 
+    func displayedModel(at indexPath: IndexPath) -> PasteboardModel? {
+        diffableDataSource.itemIdentifier(for: indexPath)
+    }
+
+    var displayedItemCount: Int {
+        collectionView.numberOfItems(inSection: 0)
+    }
+
     func restoreSelection() {
-        guard !dataList.value.isEmpty else { return }
+        guard displayedItemCount > 0 else { return }
         setSelection(to: selectIndexPath)
         updateSelectedItemBorder()
     }
@@ -463,7 +471,6 @@ extension ClipMainViewController {
             var snapshot = diffableDataSource.snapshot()
             let existing = Set(snapshot.itemIdentifiers.map(\.uniqueId))
             let appended = newItems
-                .deduplicatedByUniqueId()
                 .filter { !existing.contains($0.uniqueId) }
             guard !appended.isEmpty else { return }
             snapshot.appendItems(appended, toSection: .main)
@@ -568,8 +575,8 @@ extension ClipMainViewController {
     }
 
     private func adjustSelectionAfterDelete() {
-        guard !dataList.value.isEmpty else { return }
-        let safeItem = min(selectIndexPath.item, dataList.value.count - 1)
+        guard displayedItemCount > 0 else { return }
+        let safeItem = min(selectIndexPath.item, displayedItemCount - 1)
         let safePath = IndexPath(item: safeItem, section: 0)
         selectIndexPath = safePath
         setSelection(to: safePath)

@@ -595,7 +595,7 @@ extension JSONEditorView: NSTextViewDelegate {
     func textViewDidChangeSelection(_: Notification) {
         guard isLineIndexReady,
               textView.selectedRange() != reportedSelection
-                || lineIndexRevision != reportedLineIndexRevision
+              || lineIndexRevision != reportedLineIndexRevision
         else { return }
         updateCursor()
     }
@@ -641,7 +641,7 @@ extension JSONEditorView: NSTextStorageDelegate {
             guard delta != 0,
                   replacementLength >= 0
             else {
-                self.pendingEdit = nil
+                pendingEdit = nil
                 return
             }
 
@@ -652,7 +652,7 @@ extension JSONEditorView: NSTextStorageDelegate {
             guard replacementRange.location <= textStorage.length,
                   NSMaxRange(replacementRange) <= textStorage.length
             else {
-                self.pendingEdit = nil
+                pendingEdit = nil
                 shouldRebuildLineIndex = true
                 return
             }
@@ -662,7 +662,7 @@ extension JSONEditorView: NSTextStorageDelegate {
                 replacement: textStorage.attributedSubstring(from: replacementRange).string
             )
         }
-        self.pendingEdit = nil
+        pendingEdit = nil
 
         guard let edit else { return }
         guard isLineIndexReady,

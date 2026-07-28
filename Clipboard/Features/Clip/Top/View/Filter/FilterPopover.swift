@@ -33,6 +33,10 @@ final class FilterPopover: NSPopover {
 
     // MARK: - Public API
 
+    func prepare() {
+        filterViewController.prepare()
+    }
+
     func toggle(relativeTo positioningRect: NSRect, of positioningView: NSView) {
         if isShown || isClosing {
             if !isClosing {

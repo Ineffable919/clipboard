@@ -291,6 +291,10 @@ final class TopBarView: NSView {
         loadAppSuggestionsIfNeeded()
         window?.makeFirstResponder(searchField)
         onFocusRegionChange?(.search)
+        Task { @MainActor [weak self] in
+            await Task.yield()
+            self?.filterPopover?.prepare()
+        }
     }
 
     func activateSearch(with character: String) {

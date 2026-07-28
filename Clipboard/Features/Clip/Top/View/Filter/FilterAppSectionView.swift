@@ -18,13 +18,21 @@ final class FilterAppSectionView: NSStackView {
     private var selectedApps: Set<String> = []
     private var appInfoList: [(name: String, path: String, icon: NSImage?)] = []
     private var appButtons: [AppFilterButton] = []
-    private var moreButton: FilterButton?
     private var showAllApps = false
 
     // MARK: - Views
 
     private let titleLabel = NSTextField()
     private let gridContainer = NSView()
+    private let gridView = PersistentFilterGridView()
+    private let expandButton = FilterButton(
+        icon: "chevron.down.circle",
+        title: String(localized: .more)
+    )
+    private let collapseButton = FilterButton(
+        icon: "chevron.up.circle",
+        title: String(localized: .collapse)
+    )
 
     // MARK: - Init
 
@@ -41,6 +49,7 @@ final class FilterAppSectionView: NSStackView {
     // MARK: - Setup
 
     private func setup() {
+        isHidden = true
         orientation = .vertical
         alignment = .leading
         spacing = Const.space8
@@ -55,6 +64,18 @@ final class FilterAppSectionView: NSStackView {
 
         addArrangedSubview(titleLabel)
         addArrangedSubview(gridContainer)
+
+        gridContainer.addSubview(gridView)
+        gridView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+
+        expandButton.action = { [weak self] in
+            self?.toggleShowAllApps()
+        }
+        collapseButton.action = { [weak self] in
+            self?.toggleShowAllApps()
+        }
     }
 
     // MARK: - Public API
@@ -62,7 +83,9 @@ final class FilterAppSectionView: NSStackView {
     func setAvailableApps(_ apps: [(name: String, path: String, icon: NSImage?)]) {
         let newAppNames = apps.map(\.name)
         let oldAppNames = appInfoList.map(\.name)
-        guard newAppNames != oldAppNames else { return }
+        let newAppPaths = apps.map(\.path)
+        let oldAppPaths = appInfoList.map(\.path)
+        guard newAppNames != oldAppNames || newAppPaths != oldAppPaths else { return }
 
         appInfoList = apps
         showAllApps = false
@@ -77,6 +100,21 @@ final class FilterAppSectionView: NSStackView {
         }
     }
 
+    func updateIcon(_ icon: NSImage, forAppNamed appName: String, path: String) {
+        guard let button = appButtons.first(where: {
+            $0.appName == appName && $0.appPath == path
+        }) else {
+            return
+        }
+
+        button.updateIcon(icon)
+        if let index = appInfoList.firstIndex(where: {
+            $0.name == appName && $0.path == path
+        }) {
+            appInfoList[index].icon = icon
+        }
+    }
+
     // MARK: - Grid
 
     /// 仅在应用列表变化时调用：创建全部应用按钮并缓存，供展开/收起复用。
@@ -84,7 +122,11 @@ final class FilterAppSectionView: NSStackView {
         appButtons.removeAll()
 
         for appInfo in appInfoList {
-            let button = AppFilterButton(icon: appInfo.icon, title: appInfo.name)
+            let button = AppFilterButton(
+                icon: appInfo.icon,
+                title: appInfo.name,
+                path: appInfo.path
+            )
             button.action = { [weak self] in
                 self?.onAppToggle?(appInfo.name, appInfo.path)
             }
@@ -96,6 +138,13 @@ final class FilterAppSectionView: NSStackView {
     private func layoutGrid() {
         guard !appButtons.isEmpty else {
             isHidden = true
+            gridView.setItems(
+                [
+                    .init(button: expandButton, position: 8),
+                    .init(button: collapseButton, position: 0),
+                ],
+                visible: []
+            )
             return
         }
 
@@ -106,21 +155,21 @@ final class FilterAppSectionView: NSStackView {
             ? Array(appButtons.prefix(8))
             : appButtons
 
-        var buttons: [FilterButton] = displayed
-
+        var visibleButtons: [FilterButton] = displayed
         if shouldShowMore {
-            let more = FilterButton(
-                icon: showAllApps ? "chevron.up.circle" : "chevron.down.circle",
-                title: showAllApps ? String(localized: .collapse) : String(localized: .more)
-            )
-            more.action = { [weak self] in
-                self?.toggleShowAllApps()
-            }
-            moreButton = more
-            buttons.append(more)
+            visibleButtons.append(showAllApps ? collapseButton : expandButton)
         }
 
-        FilterGridLayout.layoutThreeColumnGrid(buttons: buttons, in: gridContainer)
+        let items = appButtons.enumerated().map {
+            PersistentFilterGridView.Item(button: $0.element, position: $0.offset)
+        } + [
+            .init(button: expandButton, position: 8),
+            .init(button: collapseButton, position: appButtons.count),
+        ]
+        gridView.setItems(
+            items,
+            visible: visibleButtons
+        )
     }
 
     private func toggleShowAllApps() {

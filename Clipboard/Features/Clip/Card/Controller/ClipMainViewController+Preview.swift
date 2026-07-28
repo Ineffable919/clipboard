@@ -51,8 +51,7 @@ extension ClipMainViewController {
     }
 
     func updatePreviewForSelectedItem() {
-        guard selectIndexPath.item < dataList.value.count else { return }
-        let model = dataList.value[selectIndexPath.item]
+        guard let model = displayedModel(at: selectIndexPath) else { return }
 
         if let existing = previewPopover, existing.isShown {
             existing.refreshHeader()

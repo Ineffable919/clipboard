@@ -13,6 +13,7 @@ import SQLite
 
 actor PasteSQLManager {
     static let manager = PasteSQLManager()
+    private static let uniqueIdMigrationVersion = 1
 
     private static var databaseDirectory: URL {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
@@ -249,6 +250,7 @@ extension PasteSQLManager {
     func update(id: Int64, item: PasteboardModel) async {
         let query = table.filter(Col.id == id)
         let update = await query.update(
+            Col.uniqueId <- item.uniqueId,
             Col.type <- item.pasteboardType.rawValue,
             Col.data <- item.data,
             Col.showData <- item.showData,
@@ -299,23 +301,69 @@ extension PasteSQLManager {
         searchText: String,
         length: Int,
         tag: String
-    ) async {
-        let query = table.filter(Col.id == id)
-        let timestamp = Int64(Date().timeIntervalSince1970)
-        let update = query.update(
-            Col.type <- type.rawValue,
-            Col.data <- data,
-            Col.showData <- showData,
-            Col.searchText <- searchText,
-            Col.length <- length,
-            Col.tag <- tag,
-            Col.ts <- timestamp
+    ) async -> Bool {
+        guard let db else { return false }
+        let uniqueId = await PasteboardModel.generateUniqueId(
+            for: type,
+            data: data
         )
+        let timestamp = Int64(Date().timeIntervalSince1970)
+
         do {
-            let count = try db?.run(update)
-            log.debug("更新文本内容成功，影响行数：\(String(describing: count))")
+            guard let currentRow = try db.pluck(
+                table
+                    .select(Col.group)
+                    .filter(Col.id == id)
+            ) else {
+                log.error("更新文本内容失败：记录不存在，id：\(id)")
+                return false
+            }
+
+            let duplicateRow = try db.pluck(
+                table
+                    .select(Col.id, Col.group)
+                    .filter(Col.uniqueId == uniqueId && Col.id != id)
+            )
+            let duplicateId = duplicateRow?[Col.id]
+            let currentGroup = currentRow[Col.group]
+            let duplicateGroup = duplicateRow?[Col.group] ?? -1
+            let effectiveGroup =
+                currentGroup == -1 ? duplicateGroup : currentGroup
+
+            try db.run("BEGIN IMMEDIATE TRANSACTION")
+            if let duplicateId {
+                try db.run(table.filter(Col.id == duplicateId).delete())
+            }
+
+            let update = table.filter(Col.id == id).update(
+                Col.uniqueId <- uniqueId,
+                Col.type <- type.rawValue,
+                Col.data <- data,
+                Col.showData <- showData,
+                Col.searchText <- searchText,
+                Col.length <- length,
+                Col.group <- effectiveGroup,
+                Col.tag <- tag,
+                Col.ts <- timestamp
+            )
+            let count = try db.run(update)
+            guard count == 1 else {
+                throw NSError(
+                    domain: "PasteSQLManager",
+                    code: 1,
+                    userInfo: [
+                        NSLocalizedDescriptionKey:
+                            "更新文本内容影响行数异常：\(count)",
+                    ]
+                )
+            }
+            try db.run("COMMIT")
+            log.debug("更新文本内容成功：\(id)")
+            return true
         } catch {
+            _ = try? db.run("ROLLBACK")
             log.error("更新文本内容失败：\(error)")
+            return false
         }
     }
 
@@ -330,7 +378,7 @@ extension PasteSQLManager {
 
         let sel =
             select ?? [
-                Col.id, Col.type, Col.data, Col.ts,
+                Col.id, Col.uniqueId, Col.type, Col.data, Col.ts,
                 Col.appPath, Col.appName, Col.searchText,
                 Col.showData, Col.length, Col.group,
                 Col.tag, Col.hidden,
@@ -717,6 +765,28 @@ extension PasteSQLManager {
 // MARK: - unique_id 重算与去重迁移
 
 extension PasteSQLManager {
+    private func databaseUserVersion() -> Int {
+        guard let db else { return 0 }
+        do {
+            let version = try db.scalar("PRAGMA user_version") as? Int64 ?? 0
+            return Int(version)
+        } catch {
+            log.error("读取数据库版本失败: \(error)")
+            return 0
+        }
+    }
+
+    private func setDatabaseUserVersion(_ version: Int) -> Bool {
+        guard let db else { return false }
+        do {
+            try db.run("PRAGMA user_version = \(version)")
+            return true
+        } catch {
+            log.error("更新数据库版本失败: \(error)")
+            return false
+        }
+    }
+
     private func indexExists(named name: String) -> Bool {
         guard let db else { return false }
         do {
@@ -734,14 +804,17 @@ extension PasteSQLManager {
     /// 既会绕过插入去重产生内容相同的多行，又会让 diffable data source 因重复标识符崩溃。
     /// 本迁移用当前算法重算全表 `unique_id`，合并重复行（保留时间戳最新的），并修正存储值。
     private func migrateUniqueIdIfNeeded() async {
-        let alreadyMigrated = await MainActor.run { PasteUserDefaults.uniqueIdMigrated }
-        guard !alreadyMigrated || !indexExists(named: "uidx_unique_id") else {
+        let currentVersion = databaseUserVersion()
+        guard currentVersion < Self.uniqueIdMigrationVersion
+            || !indexExists(named: "uidx_unique_id")
+        else {
             log.debug("unique_id 已迁移，跳过")
             return
         }
         guard await performUniqueIdMigration() else { return }
-        await MainActor.run {
-            PasteUserDefaults.uniqueIdMigrated = true
+        if setDatabaseUserVersion(
+            max(currentVersion, Self.uniqueIdMigrationVersion)
+        ) {
             log.info("unique_id 迁移完成")
         }
     }

@@ -213,7 +213,7 @@ private final class PinChipButton: NSView {
         iv.image = NSImage(
             systemSymbolName: "chevron.down",
             accessibilityDescription: String(localized: .pin)
-        )?.withSymbolConfiguration(.init(pointSize: 8, weight: .medium))
+        )?.withSymbolConfiguration(.init(pointSize: 8, weight: .regular))
         iv.contentTintColor = .controlTextColor
         return iv
     }()
@@ -249,14 +249,14 @@ private final class PinChipButton: NSView {
         }
 
         circleView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().inset(Const.space8)
+            make.leading.equalToSuperview().inset(Const.space6)
             make.centerY.equalToSuperview()
             make.width.height.equalTo(14)
         }
 
         chevron.snp.makeConstraints { make in
             make.leading.equalTo(circleView.snp.trailing).offset(4)
-            make.trailing.equalToSuperview().inset(Const.space8)
+            make.trailing.equalToSuperview().inset(Const.space6)
             make.centerY.equalToSuperview()
             make.width.equalTo(10)
             make.height.equalTo(8)

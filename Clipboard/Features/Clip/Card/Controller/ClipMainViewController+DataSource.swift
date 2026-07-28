@@ -69,7 +69,7 @@ extension ClipMainViewController: NSCollectionViewDelegate {
         _: NSCollectionView,
         pasteboardWriterForItemAt indexPath: IndexPath
     ) -> (any NSPasteboardWriting)? {
-        dataList.value[indexPath.item].writeItem
+        displayedModel(at: indexPath)?.writeItem
     }
 
     func collectionView(
@@ -127,10 +127,7 @@ extension ClipMainViewController {
     var selectedModels: [PasteboardModel] {
         collectionView.selectionIndexPaths
             .sorted()
-            .compactMap { path in
-                guard path.item < dataList.value.count else { return nil }
-                return dataList.value[path.item]
-            }
+            .compactMap { displayedModel(at: $0) }
     }
 
     var isMultiSelect: Bool {
@@ -155,7 +152,7 @@ extension ClipMainViewController {
         _ indexPath: IndexPath = IndexPath(item: 0, section: 0)
     ) {
         selectIndexPath = indexPath
-        guard !dataList.value.isEmpty else { return }
+        guard displayedItemCount > 0 else { return }
         setSelection(to: selectIndexPath)
         scrollTo(indexPath: selectIndexPath)
         updateSelectedItemBorder()
@@ -173,7 +170,7 @@ extension ClipMainViewController {
     }
 
     func scrollTo(indexPath: IndexPath, animated: Bool = true) {
-        guard !dataList.value.isEmpty else { return }
+        guard displayedItemCount > 0 else { return }
         guard let attrs = collectionView.layoutAttributesForItem(at: indexPath)
         else { return }
         let padding = Const.cardSpace + Const.cardSize / 5
@@ -294,7 +291,7 @@ extension ClipMainViewController: CollectionViewItemDelegate {
     }
 
     func deleteItem(_ item: PasteboardModel, indexPath: IndexPath) {
-        let countAfterDelete = dataList.value.count - 1
+        let countAfterDelete = displayedItemCount - 1
         if countAfterDelete > 0 {
             let newItem = min(indexPath.item, countAfterDelete - 1)
             selectIndexPath = IndexPath(item: newItem, section: 0)

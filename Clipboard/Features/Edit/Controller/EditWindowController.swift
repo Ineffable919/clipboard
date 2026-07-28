@@ -244,7 +244,7 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
             guard let itemId = model.id else { return }
 
             Task {
-                await PasteDataStore.main.updateItemContent(
+                let updated = await PasteDataStore.main.updateItemContent(
                     id: itemId,
                     newType: actualType,
                     newData: newData,
@@ -254,6 +254,7 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
                     newTag: newTag
                 )
 
+                guard updated else { return }
                 await MainActor.run {
                     self.closeWindow()
                 }

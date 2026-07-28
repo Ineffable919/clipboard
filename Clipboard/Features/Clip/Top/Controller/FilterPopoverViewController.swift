@@ -14,6 +14,7 @@ final class FilterPopoverViewController: NSViewController {
     private var loadingTask: Task<Void, Never>?
 
     private var hasInitializedView = false
+    private var hasAppeared = false
 
     // MARK: - Views
 
@@ -46,11 +47,20 @@ final class FilterPopoverViewController: NSViewController {
     override func viewWillAppear() {
         super.viewWillAppear()
         if !hasInitializedView {
-            loadDataFromCache()
-            hasInitializedView = true
-        } else {
-            updateFromCache()
+            prepare()
+        } else if hasAppeared {
+            loadData()
         }
+        hasAppeared = true
+    }
+
+    // MARK: - Public API
+
+    func prepare() {
+        loadViewIfNeeded()
+        guard !hasInitializedView else { return }
+        hasInitializedView = true
+        loadData()
     }
 }
 
@@ -104,37 +114,22 @@ extension FilterPopoverViewController {
         contentView.dateSection.updateSelection(viewModel.selectedDateFilter)
     }
 
-    private func loadDataFromCache() {
+    private func loadData() {
         loadingTask?.cancel()
 
         loadingTask = Task { @MainActor [weak self] in
             guard let self, let viewModel else { return }
 
-            await viewModel.loadAppPathCache()
-
-            async let appInfoTask = loadAppInfoWithIcons()
+            async let appPathTask: Void = viewModel.loadAppPathCache()
+            async let appInfoTask = PasteMetadataCache.shared.getAllAppInfo()
             async let typesTask = PasteMetadataCache.shared.getAllTagTypes()
 
-            let (appInfo, types) = await (appInfoTask, typesTask)
-
-            contentView.typeSection.setAvailableTypes(types)
-            contentView.appSection.setAvailableApps(appInfo)
-
-            let userChips = CategoryChipStore.shared.chips.filter { !$0.isSystem }
-            contentView.tagSection.setAvailableGroups(userChips)
-
-            updateContentViewState()
-        }
-    }
-
-    private func updateFromCache() {
-        loadingTask?.cancel()
-
-        loadingTask = Task { @MainActor [weak self] in
-            guard let self else { return }
-
-            let types = await PasteMetadataCache.shared.getAllTagTypes()
-            let rawAppInfo = await PasteMetadataCache.shared.getAllAppInfo()
+            let (rawAppInfo, types, _) = await (
+                appInfoTask,
+                typesTask,
+                appPathTask
+            )
+            guard !Task.isCancelled else { return }
 
             let appInfo = rawAppInfo.map { info in
                 let icon = AppIconCache.shared.getCachedIcon(forPath: info.path)
@@ -148,27 +143,53 @@ extension FilterPopoverViewController {
             contentView.tagSection.setAvailableGroups(userChips)
 
             updateContentViewState()
+
+            await loadMissingIcons(for: rawAppInfo)
         }
     }
 
-    private func loadAppInfoWithIcons() async -> [(name: String, path: String, icon: NSImage?)] {
-        let rawAppInfo = await PasteMetadataCache.shared.getAllAppInfo()
+    private func loadMissingIcons(
+        for appInfo: [(name: String, path: String)]
+    ) async {
+        let missingAppInfo = appInfo.filter {
+            AppIconCache.shared.getCachedIcon(forPath: $0.path) == nil
+        }
+        let maximumConcurrentLoads = 6
 
-        return await withTaskGroup(
-            of: (Int, (name: String, path: String, icon: NSImage?)).self
+        await withTaskGroup(
+            of: (name: String, path: String, icon: NSImage).self
         ) { group in
-            for (index, info) in rawAppInfo.enumerated() {
+            var nextIndex = missingAppInfo.startIndex
+
+            for _ in 0 ..< min(maximumConcurrentLoads, missingAppInfo.count) {
+                let info = missingAppInfo[nextIndex]
+                nextIndex = missingAppInfo.index(after: nextIndex)
                 group.addTask {
                     let icon = await AppIconCache.shared.loadIcon(forPath: info.path)
-                    return (index, (name: info.name, path: info.path, icon: icon))
+                    return (name: info.name, path: info.path, icon: icon)
                 }
             }
 
-            var results: [(Int, (name: String, path: String, icon: NSImage?))] = []
-            for await result in group {
-                results.append(result)
+            while let result = await group.next() {
+                guard !Task.isCancelled else {
+                    group.cancelAll()
+                    return
+                }
+                contentView.appSection.updateIcon(
+                    result.icon,
+                    forAppNamed: result.name,
+                    path: result.path
+                )
+
+                if nextIndex < missingAppInfo.endIndex {
+                    let info = missingAppInfo[nextIndex]
+                    nextIndex = missingAppInfo.index(after: nextIndex)
+                    group.addTask {
+                        let icon = await AppIconCache.shared.loadIcon(forPath: info.path)
+                        return (name: info.name, path: info.path, icon: icon)
+                    }
+                }
             }
-            return results.sorted(by: { $0.0 < $1.0 }).map(\.1)
         }
     }
 }

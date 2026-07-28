@@ -10,23 +10,27 @@ import SnapKit
 
 final class AppFilterButton: FilterButton {
     let appName: String
+    let appPath: String
 
-    init(icon: NSImage?, title: String) {
+    private let appIconView = NSImageView()
+
+    init(icon: NSImage?, title: String, path: String) {
         appName = title
+        appPath = path
         super.init(icon: nil, title: title)
-
-        if let appIcon = icon {
-            setupAppIcon(appIcon)
-        }
+        setupAppIcon()
+        updateIcon(icon)
     }
 
-    private func setupAppIcon(_ icon: NSImage) {
-        let iconView = NSImageView()
-        iconView.image = icon
-        iconView.imageScaling = .scaleProportionallyDown
-        iconView.snp.makeConstraints { make in
+    func updateIcon(_ icon: NSImage?) {
+        appIconView.image = icon
+    }
+
+    private func setupAppIcon() {
+        appIconView.imageScaling = .scaleProportionallyDown
+        appIconView.snp.makeConstraints { make in
             make.width.height.equalTo(20)
         }
-        stack.insertArrangedSubview(iconView, at: 0)
+        stack.insertArrangedSubview(appIconView, at: 0)
     }
 }

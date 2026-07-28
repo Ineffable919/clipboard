@@ -86,7 +86,8 @@ extension PasteDataStore {
         rows.compactMap { row in
             if let type = try? row.get(Col.type),
                let data = try? row.get(Col.data),
-               let timestamp = try? row.get(Col.ts)
+               let timestamp = try? row.get(Col.ts),
+               let uniqueId = try? row.get(Col.uniqueId)
             {
                 let id = try? row.get(Col.id)
                 let appName = try? row.get(Col.appName)
@@ -121,7 +122,8 @@ extension PasteDataStore {
                     length: length ?? 0,
                     group: group ?? -1,
                     tag: tag ?? "",
-                    hidden: hidden
+                    hidden: hidden,
+                    uniqueId: uniqueId
                 )
                 pasteModel.id = id
                 return pasteModel
@@ -520,10 +522,13 @@ extension PasteDataStore {
         newSearchText: String,
         newLength: Int,
         newTag: String
-    ) async {
+    ) async -> Bool {
         let normalizedSearchText = PasteboardModel.normalizeSearchText(newSearchText)
+        let loadedLimit = max(pageSize, dataList.value.count)
+        loadPageTask?.cancel()
+        isLoadingPage = false
 
-        await sqlManager.updateItemContent(
+        guard await sqlManager.updateItemContent(
             id: id,
             type: newType,
             data: newData,
@@ -531,28 +536,33 @@ extension PasteDataStore {
             searchText: normalizedSearchText,
             length: newLength,
             tag: newTag
-        )
-
-        var list = dataList.value
-        if let index = list.firstIndex(where: { $0.id == id }) {
-            let oldModel = list[index]
-            let newModel = PasteboardModel(
-                pasteboardType: newType,
-                data: newData,
-                showData: newShowData,
-                timestamp: Int64(Date().timeIntervalSince1970),
-                appPath: oldModel.appPath,
-                appName: oldModel.appName,
-                searchText: normalizedSearchText,
-                length: newLength,
-                group: oldModel.group,
-                tag: newTag
-            )
-            newModel.id = id
-            list.remove(at: index)
-            list.insert(newModel, at: 0)
-            dataList.value = list
+        ) else {
+            return false
         }
+
+        let list: [PasteboardModel]
+        if isInFilterMode, let currentFilter {
+            let rows = await sqlManager.search(
+                filter: currentFilter,
+                limit: loadedLimit
+            )
+            list = mapRows(rows)
+        } else {
+            list = await getItems(limit: loadedLimit)
+        }
+
+        totalCount = await sqlManager.getTotalCount()
+        if isInFilterMode, let currentFilter {
+            filteredCount = await sqlManager.getCount(filter: currentFilter)
+        } else {
+            filteredCount = totalCount
+        }
+        let effectiveTotal = isInFilterMode ? filteredCount : totalCount
+        hasMoreData = list.count < effectiveTotal
+        pageIndex = max(0, (list.count - 1) / pageSize)
+        lastRequestedPage = pageIndex
+        updateData(with: list, changeType: .moveToFirst)
+        return true
     }
 
     func updateItemGroupInDB(id: Int64, groupId: Int) async {

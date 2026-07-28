@@ -149,9 +149,6 @@ enum PasteUserDefaults {
     /// 背景类型(仅macOS 26+, 0:液态玻璃 1:毛玻璃)
     @UserDefaultsWrapper(.backgroundType, defaultValue: 0)
     static var backgroundType
-    /// unique_id 重算与去重迁移标记
-    @UserDefaultsWrapper(.uniqueIdMigrated, defaultValue: false)
-    static var uniqueIdMigrated
     /// 状态栏图标
     @UserDefaultsWrapper(.showMenuBarIcon, defaultValue: true)
     static var showMenuBarIcon
