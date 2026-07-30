@@ -5,6 +5,69 @@
         <description>Clipboard 应用更新源</description>
         <language>zh-CN</language>
 
+        <!-- 2.1 -->
+        <item>
+            <title>Version 2.1 (arm64)</title>
+            <description sparkle:format="markdown"><![CDATA[
+## What's new
+
+- 新增 JSON 编辑模式，支持格式化、压缩、转义处理、Unicode 编解码、键排序和命名风格转换。
+- JSON 编辑器新增行号、语法高亮、格式校验和缩进设置。
+- 新增 Markdown 内容识别与渲染预览，并支持在渲染结果和原文之间切换。
+
+## Improvements
+
+- 优化筛选按钮、搜索框、卡片选中状态及顶部工具栏的视觉细节。
+- 修复数据库索引。
+- 修复搜索联想列表的鼠标事件处理问题。
+- 修复若干卡片布局、选中边框和界面稳定性问题。
+]]></description>
+            <sparkle:fullReleaseNotesLink>
+                https://ineffable919.github.io/clipboard/scripts/release-note.html
+            </sparkle:fullReleaseNotesLink>
+            <pubDate>Thu, 30 Jul 2026 19:14:48 +0900</pubDate>
+            <sparkle:version>129</sparkle:version>
+            <sparkle:shortVersionString>2.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <enclosure
+                url="https://github.com/Ineffable919/clipboard/releases/download/2.1/Clipboard-2.1-arm64.zip"
+                sparkle:arch="arm64"
+                sparkle:edSignature="BljybmWppQ2ONmRJdLpX8l1laNXc4epbLpeXVj19cIyzUBddpoEGmsCLZFatvvaerDk6CEiSY5HFpcZDnk8GAQ=="
+                length="4534081"
+                type="application/octet-stream" />
+        </item>
+        <item>
+            <title>Version 2.1 (x86_64)</title>
+            <description sparkle:format="markdown"><![CDATA[
+## What's new
+
+- 新增 JSON 编辑模式，支持格式化、压缩、转义处理、Unicode 编解码、键排序和命名风格转换。
+- JSON 编辑器新增行号、语法高亮、格式校验和缩进设置。
+- 新增 Markdown 内容识别与渲染预览，并支持在渲染结果和原文之间切换。
+
+## Improvements
+
+- 优化筛选按钮、搜索框、卡片选中状态及顶部工具栏的视觉细节。
+- 修复数据库索引。
+- 修复搜索联想列表的鼠标事件处理问题。
+- 修复若干卡片布局、选中边框和界面稳定性问题。
+]]></description>
+            <sparkle:fullReleaseNotesLink>
+                https://ineffable919.github.io/clipboard/scripts/release-note.html
+            </sparkle:fullReleaseNotesLink>
+            <pubDate>Thu, 30 Jul 2026 19:14:48 +0900</pubDate>
+            <sparkle:version>129</sparkle:version>
+            <sparkle:shortVersionString>2.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://github.com/Ineffable919/clipboard/releases/download/2.1/Clipboard-2.1-x86_64.zip"
+                sparkle:arch="x86_64"
+                sparkle:edSignature="axEl84kJcju0WUltmW9cGxmIxKBFmtwEkYJVkeIF5gTMJIw4qtc9TiqJO59cy1ICNXP2p3KoY7+gdhtX22YOAg=="
+                length="4800568"
+                type="application/octet-stream" />
+        </item>
+
         <!-- 2.0 -->
         <item>
             <title>Version 2.0 (Apple Silicon (arm64))</title>
