@@ -14,6 +14,12 @@ final class TokenAttachment: NSTextAttachment {
 
     static let lineHeight: CGFloat = 20
 
+    static func alignedBaseline(for font: NSFont) -> CGFloat {
+        let textLineHeight = font.ascender + abs(font.descender)
+        let topPadding = (lineHeight - textLineHeight) / 2
+        return (topPadding + font.ascender).rounded()
+    }
+
     var isSelected: Bool = false {
         didSet { (attachmentCell as? TokenAttachmentCell)?.isSelected = isSelected }
     }
@@ -90,9 +96,7 @@ private final class TokenAttachmentCell: NSTextAttachmentCell {
     override nonisolated func cellBaselineOffset() -> NSPoint {
         MainActor.assumeIsolated {
             let font = chipFont()
-            let textLineHeight = font.ascender + abs(font.descender)
-            let topPadding = (TokenAttachment.lineHeight - textLineHeight) / 2
-            let baselineOffset = topPadding + font.ascender
+            let baselineOffset = TokenAttachment.alignedBaseline(for: font)
             let y = baselineOffset - TokenAttachment.lineHeight
             return NSPoint(x: 0, y: y)
         }

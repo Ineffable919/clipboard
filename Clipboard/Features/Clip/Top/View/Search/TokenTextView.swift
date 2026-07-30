@@ -412,9 +412,8 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         else { return }
 
         let font = Self.baselineFont
-        let fixedLineHeight = TokenAttachment.lineHeight
-        let textLineHeight = font.ascender + abs(font.descender)
-        let topPadding = (fixedLineHeight - textLineHeight) / 2
+        let baselineOffset = TokenAttachment.alignedBaseline(for: font)
+        let topPadding = baselineOffset - font.ascender
 
         let origin = NSPoint(
             x: textContainerInset.width + (textContainer?.lineFragmentPadding ?? 0),
@@ -457,13 +456,11 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
     ) -> Bool {
         let font = Self.baselineFont
         let fixedLineHeight = TokenAttachment.lineHeight
-        let textLineHeight = font.ascender + abs(font.descender)
-        let topPadding = (fixedLineHeight - textLineHeight) / 2
 
         lineFragmentRect.pointee.size.height = fixedLineHeight
         lineFragmentUsedRect.pointee.size.height = fixedLineHeight
 
-        baselineOffset.pointee = topPadding + font.ascender
+        baselineOffset.pointee = TokenAttachment.alignedBaseline(for: font)
 
         return true
     }
