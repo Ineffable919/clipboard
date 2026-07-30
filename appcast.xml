@@ -10,18 +10,18 @@
             <title>Version 2.1 (arm64)</title>
             <description sparkle:format="markdown">
                 <![CDATA[
-## What's new
+                ## What's new
 
-- 新增 JSON 编辑模式，支持格式化、压缩、转义处理、Unicode 编解码、键排序和命名风格转换。
-- JSON 编辑器新增行号、语法高亮、格式校验和缩进设置。
-- 新增 Markdown 内容识别与渲染预览，并支持在渲染结果和原文之间切换。
+                - 新增 JSON 编辑模式，支持格式化、压缩、转义处理、Unicode 编解码、键排序和命名风格转换。
+                - JSON 编辑器新增行号、语法高亮、格式校验和缩进设置。
+                - 新增 Markdown 内容识别与渲染预览，并支持在渲染结果和原文之间切换。
 
-## Improvements
+                ## Improvements
 
-- 优化筛选按钮、搜索框、卡片选中状态及顶部工具栏的视觉细节。
-- 修复数据库索引。
-- 修复搜索联想列表的鼠标事件处理问题。
-- 修复若干卡片布局、选中边框和界面稳定性问题。
+                - 优化筛选按钮、搜索框、卡片选中状态及顶部工具栏的视觉细节。
+                - 修复数据库索引。
+                - 修复搜索联想列表的鼠标事件处理问题。
+                - 修复若干卡片布局、选中边框和界面稳定性问题。
                 ]]>
             </description>
             <sparkle:fullReleaseNotesLink>
@@ -43,18 +43,18 @@
             <title>Version 2.1 (x86_64)</title>
             <description sparkle:format="markdown">
                 <![CDATA[
-## What's new
+                ## What's new
 
-- 新增 JSON 编辑模式，支持格式化、压缩、转义处理、Unicode 编解码、键排序和命名风格转换。
-- JSON 编辑器新增行号、语法高亮、格式校验和缩进设置。
-- 新增 Markdown 内容识别与渲染预览，并支持在渲染结果和原文之间切换。
+                - 新增 JSON 编辑模式，支持格式化、压缩、转义处理、Unicode 编解码、键排序和命名风格转换。
+                - JSON 编辑器新增行号、语法高亮、格式校验和缩进设置。
+                - 新增 Markdown 内容识别与渲染预览，并支持在渲染结果和原文之间切换。
 
-## Improvements
+                ## Improvements
 
-- 优化筛选按钮、搜索框、卡片选中状态及顶部工具栏的视觉细节。
-- 修复数据库索引。
-- 修复搜索联想列表的鼠标事件处理问题。
-- 修复若干卡片布局、选中边框和界面稳定性问题。
+                - 优化筛选按钮、搜索框、卡片选中状态及顶部工具栏的视觉细节。
+                - 修复数据库索引。
+                - 修复搜索联想列表的鼠标事件处理问题。
+                - 修复若干卡片布局、选中边框和界面稳定性问题。
                 ]]>
             </description>
             <sparkle:fullReleaseNotesLink>
