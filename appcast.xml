@@ -8,7 +8,8 @@
         <!-- 2.1 -->
         <item>
             <title>Version 2.1 (arm64)</title>
-            <description sparkle:format="markdown"><![CDATA[
+            <description sparkle:format="markdown">
+                <![CDATA[
 ## What's new
 
 - 新增 JSON 编辑模式，支持格式化、压缩、转义处理、Unicode 编解码、键排序和命名风格转换。
@@ -21,7 +22,8 @@
 - 修复数据库索引。
 - 修复搜索联想列表的鼠标事件处理问题。
 - 修复若干卡片布局、选中边框和界面稳定性问题。
-]]></description>
+                ]]>
+            </description>
             <sparkle:fullReleaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
             </sparkle:fullReleaseNotesLink>
@@ -39,7 +41,8 @@
         </item>
         <item>
             <title>Version 2.1 (x86_64)</title>
-            <description sparkle:format="markdown"><![CDATA[
+            <description sparkle:format="markdown">
+                <![CDATA[
 ## What's new
 
 - 新增 JSON 编辑模式，支持格式化、压缩、转义处理、Unicode 编解码、键排序和命名风格转换。
@@ -52,7 +55,8 @@
 - 修复数据库索引。
 - 修复搜索联想列表的鼠标事件处理问题。
 - 修复若干卡片布局、选中边框和界面稳定性问题。
-]]></description>
+                ]]>
+            </description>
             <sparkle:fullReleaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
             </sparkle:fullReleaseNotesLink>
