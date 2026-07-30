@@ -66,7 +66,7 @@ final class TopBarIconButton: NSView {
             make.center.equalToSuperview()
         }
         snp.makeConstraints { make in
-            make.width.height.equalTo(28)
+            make.width.height.equalTo(30)
         }
 
         badgeDot.wantsLayer = true
