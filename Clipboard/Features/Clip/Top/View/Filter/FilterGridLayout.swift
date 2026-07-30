@@ -31,7 +31,7 @@ enum FilterGridLayout {
 
         var currentRow: [NSView] = []
         for (index, button) in buttons.enumerated() {
-            button.snp.makeConstraints { make in
+            button.snp.remakeConstraints { make in
                 make.width.equalTo(buttonWidth)
                 make.height.equalTo(buttonHeight)
             }
@@ -56,5 +56,84 @@ enum FilterGridLayout {
         container.snp.remakeConstraints { make in
             make.width.equalToSuperview()
         }
+    }
+}
+
+final class PersistentFilterGridView: NSView {
+    struct Item {
+        let button: FilterButton
+        let position: Int
+    }
+
+    private let columnCount = 3
+    private let spacing = Const.space8
+    private let buttonSize = NSSize(width: 140, height: 30)
+
+    private var items: [Item] = []
+    private var visibleButtons: [FilterButton] = []
+
+    override var isFlipped: Bool {
+        true
+    }
+
+    func setItems(
+        _ items: [Item],
+        visible visibleButtons: [FilterButton]
+    ) {
+        let oldPositions = Dictionary(uniqueKeysWithValues: self.items.map {
+            (ObjectIdentifier($0.button), $0.position)
+        })
+        let newPositions = Dictionary(uniqueKeysWithValues: items.map {
+            (ObjectIdentifier($0.button), $0.position)
+        })
+
+        if oldPositions != newPositions {
+            for item in self.items where newPositions[ObjectIdentifier(item.button)] == nil {
+                item.button.removeFromSuperview()
+            }
+
+            for item in items {
+                if item.button.superview !== self {
+                    addSubview(item.button)
+                }
+                let column = item.position % columnCount
+                let row = item.position / columnCount
+                item.button.snp.remakeConstraints { make in
+                    make.leading.equalToSuperview().offset(
+                        CGFloat(column) * (buttonSize.width + spacing)
+                    )
+                    make.top.equalToSuperview().offset(
+                        CGFloat(row) * (buttonSize.height + spacing)
+                    )
+                    make.width.equalTo(buttonSize.width)
+                    make.height.equalTo(buttonSize.height)
+                }
+            }
+            self.items = items
+        }
+
+        self.visibleButtons = visibleButtons
+        let visibleIdentifierSet = Set(visibleButtons.map { ObjectIdentifier($0) })
+        for item in items {
+            item.button.isHidden = !visibleIdentifierSet.contains(
+                ObjectIdentifier(item.button)
+            )
+        }
+
+        invalidateIntrinsicContentSize()
+        needsLayout = true
+    }
+
+    override var intrinsicContentSize: NSSize {
+        guard !visibleButtons.isEmpty else {
+            return .zero
+        }
+
+        let rowCount = (visibleButtons.count + columnCount - 1) / columnCount
+        let width = buttonSize.width * CGFloat(columnCount)
+            + spacing * CGFloat(columnCount - 1)
+        let height = buttonSize.height * CGFloat(rowCount)
+            + spacing * CGFloat(rowCount - 1)
+        return NSSize(width: width, height: height)
     }
 }

@@ -11,7 +11,7 @@ import UniformTypeIdentifiers
 // MARK: - 存储设置视图
 
 struct StorageSettingView: View {
-    @Environment(\.colorScheme) var colorScheme
+    @Environment(\.colorScheme) private var colorScheme
 
     @State private var totalCount: Int = 0
     @State private var isExporting = false

@@ -24,7 +24,6 @@ final class HorizontalScrollView: NSScrollView {
         didSet { noteFocusRingMaskChanged() }
     }
 
-
     var isFocusRingSuppressed = false {
         didSet {
             guard isFocusRingSuppressed != oldValue else { return }

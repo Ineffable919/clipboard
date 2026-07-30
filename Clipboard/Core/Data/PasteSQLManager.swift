@@ -13,6 +13,7 @@ import SQLite
 
 actor PasteSQLManager {
     static let manager = PasteSQLManager()
+    private static let uniqueIdMigrationVersion = 1
 
     private static var databaseDirectory: URL {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
@@ -87,28 +88,64 @@ actor PasteSQLManager {
         }
     }
 
-    func setup() {
-        Task {
-            performIndexCreation()
-            migrateTagFieldAsync()
-            migrateHiddenFieldAsync()
-            migrateUniqueIdAsync()
+    private nonisolated static func createIndexes(on conn: Connection) {
+        let indexes = [
+            (
+                "idx_app_hidden_ts",
+                "CREATE INDEX IF NOT EXISTS idx_app_hidden_ts ON Clip(app_name, hidden, timestamp DESC)"
+            ),
+            (
+                "idx_tag_hidden_ts",
+                "CREATE INDEX IF NOT EXISTS idx_tag_hidden_ts ON Clip(tag, hidden, timestamp DESC)"
+            ),
+            (
+                "idx_group_ts",
+                "CREATE INDEX IF NOT EXISTS idx_group_ts ON Clip(\"group\", timestamp DESC)"
+            ),
+            (
+                "uidx_unique_id",
+                "CREATE UNIQUE INDEX IF NOT EXISTS uidx_unique_id ON Clip(unique_id)"
+            ),
+            (
+                "idx_hidden_ts",
+                "CREATE INDEX IF NOT EXISTS idx_hidden_ts ON Clip(hidden, timestamp DESC)"
+            ),
+        ]
+
+        var failedIndexes: [String] = []
+        for (name, statement) in indexes {
+            do {
+                try conn.run(statement)
+            } catch {
+                failedIndexes.append(name)
+                log.warn("创建索引 \(name) 失败: \(error)")
+            }
         }
+
+        guard failedIndexes.isEmpty else { return }
+
+        let obsoleteIndexes = [
+            "idx_app_name",
+            "idx_tag",
+            "idx_ts",
+            "idx_group",
+            "idx_unique_id",
+        ]
+        for name in obsoleteIndexes {
+            do {
+                try conn.run("DROP INDEX IF EXISTS \(name)")
+            } catch {
+                log.warn("清理旧索引 \(name) 失败: \(error)")
+            }
+        }
+        log.info("索引初始化成功")
     }
 
-    private func performIndexCreation() {
+    func setup() async {
+        await migrateUniqueIdIfNeeded()
+
         guard let db else { return }
-        do {
-            try db.run("CREATE INDEX IF NOT EXISTS idx_app_name ON Clip(app_name)")
-            try db.run("CREATE INDEX IF NOT EXISTS idx_tag ON Clip(tag)")
-            try db.run("CREATE INDEX IF NOT EXISTS idx_ts ON Clip(timestamp DESC)")
-            try db.run("CREATE INDEX IF NOT EXISTS idx_group ON Clip(\"group\")")
-            try db.run("CREATE INDEX IF NOT EXISTS idx_unique_id ON Clip(unique_id)")
-            try db.run("CREATE INDEX IF NOT EXISTS idx_hidden_ts ON Clip(hidden, timestamp DESC)")
-            log.debug("索引初始化成功")
-        } catch {
-            log.warn("索引已存在或创建失败: \(error)")
-        }
+        Self.createIndexes(on: db)
     }
 }
 
@@ -206,13 +243,14 @@ extension PasteSQLManager {
     func recreateTable() async {
         guard let conn = db else { return }
         Self.createTable(on: conn, table: table)
-        performIndexCreation()
+        Self.createIndexes(on: conn)
         log.debug("表重新创建成功")
     }
 
     func update(id: Int64, item: PasteboardModel) async {
         let query = table.filter(Col.id == id)
         let update = await query.update(
+            Col.uniqueId <- item.uniqueId,
             Col.type <- item.pasteboardType.rawValue,
             Col.data <- item.data,
             Col.showData <- item.showData,
@@ -263,23 +301,69 @@ extension PasteSQLManager {
         searchText: String,
         length: Int,
         tag: String
-    ) async {
-        let query = table.filter(Col.id == id)
-        let timestamp = Int64(Date().timeIntervalSince1970)
-        let update = query.update(
-            Col.type <- type.rawValue,
-            Col.data <- data,
-            Col.showData <- showData,
-            Col.searchText <- searchText,
-            Col.length <- length,
-            Col.tag <- tag,
-            Col.ts <- timestamp
+    ) async -> Bool {
+        guard let db else { return false }
+        let uniqueId = await PasteboardModel.generateUniqueId(
+            for: type,
+            data: data
         )
+        let timestamp = Int64(Date().timeIntervalSince1970)
+
         do {
-            let count = try db?.run(update)
-            log.debug("更新文本内容成功，影响行数：\(String(describing: count))")
+            guard let currentRow = try db.pluck(
+                table
+                    .select(Col.group)
+                    .filter(Col.id == id)
+            ) else {
+                log.error("更新文本内容失败：记录不存在，id：\(id)")
+                return false
+            }
+
+            let duplicateRow = try db.pluck(
+                table
+                    .select(Col.id, Col.group)
+                    .filter(Col.uniqueId == uniqueId && Col.id != id)
+            )
+            let duplicateId = duplicateRow?[Col.id]
+            let currentGroup = currentRow[Col.group]
+            let duplicateGroup = duplicateRow?[Col.group] ?? -1
+            let effectiveGroup =
+                currentGroup == -1 ? duplicateGroup : currentGroup
+
+            try db.run("BEGIN IMMEDIATE TRANSACTION")
+            if let duplicateId {
+                try db.run(table.filter(Col.id == duplicateId).delete())
+            }
+
+            let update = table.filter(Col.id == id).update(
+                Col.uniqueId <- uniqueId,
+                Col.type <- type.rawValue,
+                Col.data <- data,
+                Col.showData <- showData,
+                Col.searchText <- searchText,
+                Col.length <- length,
+                Col.group <- effectiveGroup,
+                Col.tag <- tag,
+                Col.ts <- timestamp
+            )
+            let count = try db.run(update)
+            guard count == 1 else {
+                throw NSError(
+                    domain: "PasteSQLManager",
+                    code: 1,
+                    userInfo: [
+                        NSLocalizedDescriptionKey:
+                            "更新文本内容影响行数异常：\(count)",
+                    ]
+                )
+            }
+            try db.run("COMMIT")
+            log.debug("更新文本内容成功：\(id)")
+            return true
         } catch {
+            _ = try? db.run("ROLLBACK")
             log.error("更新文本内容失败：\(error)")
+            return false
         }
     }
 
@@ -294,7 +378,7 @@ extension PasteSQLManager {
 
         let sel =
             select ?? [
-                Col.id, Col.type, Col.data, Col.ts,
+                Col.id, Col.uniqueId, Col.type, Col.data, Col.ts,
                 Col.appPath, Col.appName, Col.searchText,
                 Col.showData, Col.length, Col.group,
                 Col.tag, Col.hidden,
@@ -302,13 +386,17 @@ extension PasteSQLManager {
         let ord = order ?? [Col.ts.desc]
 
         var query = table.select(sel).order(ord)
-        if let f = filter { query = query.filter(f) }
+        if let f = filter {
+            query = query.filter(f)
+        }
         if let l = limit {
             query = query.limit(l, offset: offset ?? 0)
         }
 
         do {
-            if let result = try db?.prepare(query) { return Array(result) }
+            if let result = try db?.prepare(query) {
+                return Array(result)
+            }
             return []
         } catch {
             log.error("查询失败：\(error)")
@@ -674,140 +762,60 @@ extension PasteSQLManager {
     }
 }
 
-// MARK: - 数据迁移
-
-extension PasteSQLManager {
-    func migrateTagFieldAsync() {
-        Task {
-            let alreadyMigrated = await MainActor.run { PasteUserDefaults.tagFieldMigrated }
-            guard !alreadyMigrated else {
-                log.debug("Tag 数据已迁移，跳过")
-                return
-            }
-            await performTagMigration()
-            await MainActor.run {
-                PasteUserDefaults.tagFieldMigrated = true
-                log.info("Tag 数据迁移完成")
-            }
-        }
-    }
-
-    private func performTagMigration() async {
-        log.info("开始迁移 tag 字段数据")
-
-        guard let db else {
-            log.error("数据库未初始化，跳过")
-            return
-        }
-
-        do {
-            try db.run("ALTER TABLE Clip ADD COLUMN tag TEXT")
-        } catch {
-            log.warn("新增 tag 字段失败: \(error)")
-            return
-        }
-
-        let batchSize = 500
-        var totalMigrated = 0
-
-        while true {
-            guard !Task.isCancelled else {
-                log.warn("迁移任务被取消")
-                break
-            }
-
-            let query = table
-                .filter(Col.tag == nil)
-                .limit(batchSize, offset: 0)
-
-            do {
-                let rows = try db.prepare(query)
-                let rowsArray = Array(rows)
-
-                if rowsArray.isEmpty { break }
-
-                try db.run("BEGIN TRANSACTION")
-                for row in rowsArray {
-                    let id = row[Col.id]
-                    let typeStr = row[Col.type]
-                    let data = row[Col.data]
-
-                    let pasteboardType = PasteboardType(typeStr)
-                    let tagValue = await PasteboardModel.calculateTag(
-                        type: pasteboardType,
-                        content: data
-                    )
-
-                    let update = table.filter(Col.id == id)
-                        .update(Col.tag <- tagValue)
-
-                    do {
-                        try db.run(update)
-                    } catch {
-                        log.error("更新记录 \(id) 的 tag 失败: \(error)")
-                    }
-                }
-                try db.run("COMMIT")
-
-                totalMigrated += rowsArray.count
-                log.debug("已迁移 \(totalMigrated) 条记录")
-                try await Task.sleep(for: .milliseconds(500))
-            } catch {
-                log.error("迁移批次失败: \(error)")
-                break
-            }
-        }
-
-        log.info("tag 字段数据迁移完成，共迁移 \(totalMigrated) 条记录")
-    }
-}
-
-// MARK: - 字段迁移
-
-extension PasteSQLManager {
-    func migrateHiddenFieldAsync() {
-        Task {
-            let alreadyMigrated = await MainActor.run { PasteUserDefaults.hiddenFieldMigrated }
-            guard !alreadyMigrated else {
-                log.debug("hidden 字段已增加，跳过")
-                return
-            }
-            await performHiddenFieldMigration()
-            await MainActor.run {
-                PasteUserDefaults.hiddenFieldMigrated = true
-                log.info("hidden 字段添加完成")
-            }
-        }
-    }
-
-    private func performHiddenFieldMigration() async {
-        guard let db else { return }
-        do {
-            try db.run("ALTER TABLE Clip ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0")
-        } catch {
-            log.warn("新增 hidden 字段失败（可能已存在）: \(error)")
-        }
-    }
-}
-
 // MARK: - unique_id 重算与去重迁移
 
 extension PasteSQLManager {
+    private func databaseUserVersion() -> Int {
+        guard let db else { return 0 }
+        do {
+            let version = try db.scalar("PRAGMA user_version") as? Int64 ?? 0
+            return Int(version)
+        } catch {
+            log.error("读取数据库版本失败: \(error)")
+            return 0
+        }
+    }
+
+    private func setDatabaseUserVersion(_ version: Int) -> Bool {
+        guard let db else { return false }
+        do {
+            try db.run("PRAGMA user_version = \(version)")
+            return true
+        } catch {
+            log.error("更新数据库版本失败: \(error)")
+            return false
+        }
+    }
+
+    private func indexExists(named name: String) -> Bool {
+        guard let db else { return false }
+        do {
+            let count = try db.scalar(
+                "SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name='\(name)'"
+            ) as? Int64 ?? 0
+            return count > 0
+        } catch {
+            log.error("读取数据库索引失败: \(error)")
+            return false
+        }
+    }
+
     /// 历史版本 `generateUniqueId` 算法变更后，旧行存储的 `unique_id` 与运行时重算值不一致：
     /// 既会绕过插入去重产生内容相同的多行，又会让 diffable data source 因重复标识符崩溃。
     /// 本迁移用当前算法重算全表 `unique_id`，合并重复行（保留时间戳最新的），并修正存储值。
-    func migrateUniqueIdAsync() {
-        Task {
-            let alreadyMigrated = await MainActor.run { PasteUserDefaults.uniqueIdMigrated }
-            guard !alreadyMigrated else {
-                log.debug("unique_id 已迁移，跳过")
-                return
-            }
-            await performUniqueIdMigration()
-            await MainActor.run {
-                PasteUserDefaults.uniqueIdMigrated = true
-                log.info("unique_id 迁移完成")
-            }
+    private func migrateUniqueIdIfNeeded() async {
+        let currentVersion = databaseUserVersion()
+        guard currentVersion < Self.uniqueIdMigrationVersion
+            || !indexExists(named: "uidx_unique_id")
+        else {
+            log.debug("unique_id 已迁移，跳过")
+            return
+        }
+        guard await performUniqueIdMigration() else { return }
+        if setDatabaseUserVersion(
+            max(currentVersion, Self.uniqueIdMigrationVersion)
+        ) {
+            log.info("unique_id 迁移完成")
         }
     }
 
@@ -819,8 +827,8 @@ extension PasteSQLManager {
         let group: Int
     }
 
-    private func performUniqueIdMigration() async {
-        guard let db else { return }
+    private func performUniqueIdMigration() async -> Bool {
+        guard let db else { return false }
         log.info("开始重算 unique_id 并清理重复行")
 
         var infos: [UniqueIdRowInfo] = []
@@ -839,7 +847,7 @@ extension PasteSQLManager {
             }
         } catch {
             log.error("读取数据失败，跳过 unique_id 迁移: \(error)")
-            return
+            return false
         }
 
         var groups: [String: [UniqueIdRowInfo]] = [:]
@@ -865,7 +873,7 @@ extension PasteSQLManager {
 
         guard !idsToDelete.isEmpty || !updates.isEmpty else {
             log.info("unique_id 无需迁移")
-            return
+            return true
         }
 
         do {
@@ -886,9 +894,11 @@ extension PasteSQLManager {
             }
             try db.run("COMMIT")
             log.info("unique_id 迁移：删除重复 \(idsToDelete.count) 行，修正 \(updates.count) 行")
+            return true
         } catch {
             _ = try? db.run("ROLLBACK")
             log.error("unique_id 迁移失败: \(error)")
+            return false
         }
     }
 }

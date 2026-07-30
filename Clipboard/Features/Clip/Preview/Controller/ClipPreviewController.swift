@@ -71,6 +71,7 @@ final class ClipPreviewController: NSViewController {
 
         headerView.configure(model: model, appIcon: nil)
         contentView.configure(with: model, maxContentH: maxContentH)
+        headerView.updateMarkdownToggle(visible: model.usesMarkdownPreview, isRendered: true)
         footerView.configure(
             model: model,
             fileSize: nil,
@@ -147,6 +148,11 @@ final class ClipPreviewController: NSViewController {
             guard let model = self?.model else { return }
             self?.onDismiss?()
             EditWindowController.shared.openWindow(with: model)
+        }
+        headerView.onToggleMarkdown = { [weak self] in
+            guard let self else { return }
+            let isRendered = contentView.toggleMarkdownMode()
+            headerView.setMarkdownRendered(isRendered)
         }
         headerView.onOpenWithApp = { [weak self] in
             guard let path = self?.model?.cachedFilePaths?.first else { return }

@@ -69,7 +69,7 @@ extension ClipMainViewController: NSCollectionViewDelegate {
         _: NSCollectionView,
         pasteboardWriterForItemAt indexPath: IndexPath
     ) -> (any NSPasteboardWriting)? {
-        dataList.value[indexPath.item].writeItem
+        displayedModel(at: indexPath)?.writeItem
     }
 
     func collectionView(
@@ -127,10 +127,7 @@ extension ClipMainViewController {
     var selectedModels: [PasteboardModel] {
         collectionView.selectionIndexPaths
             .sorted()
-            .compactMap { path in
-                guard path.item < dataList.value.count else { return nil }
-                return dataList.value[path.item]
-            }
+            .compactMap { displayedModel(at: $0) }
     }
 
     var isMultiSelect: Bool {
@@ -155,7 +152,7 @@ extension ClipMainViewController {
         _ indexPath: IndexPath = IndexPath(item: 0, section: 0)
     ) {
         selectIndexPath = indexPath
-        guard !dataList.value.isEmpty else { return }
+        guard displayedItemCount > 0 else { return }
         setSelection(to: selectIndexPath)
         scrollTo(indexPath: selectIndexPath)
         updateSelectedItemBorder()
@@ -172,59 +169,59 @@ extension ClipMainViewController {
         }
     }
 
-    func scrollTo(indexPath: IndexPath) {
-        guard !dataList.value.isEmpty else { return }
+    func scrollTo(indexPath: IndexPath, animated: Bool = true) {
+        guard displayedItemCount > 0 else { return }
         guard let attrs = collectionView.layoutAttributesForItem(at: indexPath)
         else { return }
         let padding = Const.cardSpace + Const.cardSize / 5
 
-        guard eventIsRepeat() else {
-            NSAnimationContext.runAnimationGroup { ctx in
-                ctx.duration = 0.2
-                ctx.allowsImplicitAnimation = true
-                collectionView.scrollToVisible(
-                    NSRect(
-                        x: attrs.frame.origin.x - padding,
-                        y: 0,
-                        width: attrs.frame.width + padding * 2,
-                        height: attrs.frame.height
-                    )
+        guard animated, !eventIsRepeat() else {
+            guard let scrollView = collectionView.enclosingScrollView else {
+                return
+            }
+
+            let clipView = scrollView.contentView
+            let visibleRect = clipView.documentVisibleRect
+
+            let targetMinX = attrs.frame.minX - padding
+            let targetMaxX = attrs.frame.maxX + padding
+
+            var newOriginX = visibleRect.origin.x
+
+            if targetMinX < visibleRect.minX {
+                newOriginX = targetMinX
+            } else if targetMaxX > visibleRect.maxX {
+                newOriginX = targetMaxX - visibleRect.width
+            }
+
+            let maxX = max(
+                0,
+                collectionView.bounds.width - visibleRect.width
+            )
+
+            newOriginX = min(max(0, newOriginX), maxX)
+
+            if abs(newOriginX - visibleRect.origin.x) > 1 {
+                clipView.setBoundsOrigin(
+                    NSPoint(x: newOriginX, y: 0)
                 )
+
+                scrollView.reflectScrolledClipView(clipView)
             }
             return
         }
 
-        guard let scrollView = collectionView.enclosingScrollView else {
-            return
-        }
-
-        let clipView = scrollView.contentView
-        let visibleRect = clipView.documentVisibleRect
-
-        let targetMinX = attrs.frame.minX - padding
-        let targetMaxX = attrs.frame.maxX + padding
-
-        var newOriginX = visibleRect.origin.x
-
-        if targetMinX < visibleRect.minX {
-            newOriginX = targetMinX
-        } else if targetMaxX > visibleRect.maxX {
-            newOriginX = targetMaxX - visibleRect.width
-        }
-
-        let maxX = max(
-            0,
-            collectionView.bounds.width - visibleRect.width
-        )
-
-        newOriginX = min(max(0, newOriginX), maxX)
-
-        if abs(newOriginX - visibleRect.origin.x) > 1 {
-            clipView.setBoundsOrigin(
-                NSPoint(x: newOriginX, y: 0)
+        NSAnimationContext.runAnimationGroup { ctx in
+            ctx.duration = 0.2
+            ctx.allowsImplicitAnimation = true
+            collectionView.scrollToVisible(
+                NSRect(
+                    x: attrs.frame.origin.x - padding,
+                    y: 0,
+                    width: attrs.frame.width + padding * 2,
+                    height: attrs.frame.height
+                )
             )
-
-            scrollView.reflectScrolledClipView(clipView)
         }
     }
 }
@@ -294,7 +291,7 @@ extension ClipMainViewController: CollectionViewItemDelegate {
     }
 
     func deleteItem(_ item: PasteboardModel, indexPath: IndexPath) {
-        let countAfterDelete = dataList.value.count - 1
+        let countAfterDelete = displayedItemCount - 1
         if countAfterDelete > 0 {
             let newItem = min(indexPath.item, countAfterDelete - 1)
             selectIndexPath = IndexPath(item: newItem, section: 0)

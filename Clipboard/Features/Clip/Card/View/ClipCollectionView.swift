@@ -40,7 +40,9 @@ final class ClipCollectionView: NSCollectionView {
 
     override func becomeFirstResponder() -> Bool {
         let result = super.becomeFirstResponder()
-        if result { onBecomeFirstResponder?() }
+        if result {
+            onBecomeFirstResponder?()
+        }
         return result
     }
 

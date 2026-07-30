@@ -81,15 +81,18 @@ extension ClipMainViewController {
     }
 
     func performQuickPaste(at index: Int) {
-        guard index >= 0, index < dataList.value.count else {
+        guard index >= 0 else {
+            NSSound.beep()
+            return
+        }
+        let indexPath = IndexPath(item: index, section: 0)
+        guard let item = displayedModel(at: indexPath) else {
             NSSound.beep()
             return
         }
 
-        let item = dataList.value[index]
-
         collectionView.deselectItems(at: [selectIndexPath])
-        selectIndexPath = IndexPath(item: index, section: 0)
+        selectIndexPath = indexPath
         collectionView.selectItems(
             at: [selectIndexPath],
             scrollPosition: .centeredHorizontally

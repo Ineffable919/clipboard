@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct AppearanceSettingsView: View {
-    @Environment(\.colorScheme) var colorScheme
+    @Environment(\.colorScheme) private var colorScheme
 
     @AppStorage(PrefKey.backgroundType.rawValue) private var backgroundTypeRaw:
         Int = 0
@@ -176,7 +176,11 @@ struct AppearanceSettingsRow: View {
             Text(.settingLanguageRestartConfirmTitle),
             isPresented: Binding(
                 get: { pendingLanguage != nil },
-                set: { if !$0 { pendingLanguage = nil } }
+                set: {
+                    if !$0 {
+                        pendingLanguage = nil
+                    }
+                }
             )
         ) {
             Button(.commonCancel, role: .cancel) {

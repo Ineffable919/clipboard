@@ -74,7 +74,9 @@ final class ChipScrollView: NSView {
     // MARK: - Intrinsic Content Size
 
     override var intrinsicContentSize: NSSize {
-        if scrollMode { return NSSize(width: NSView.noIntrinsicMetric, height: NSView.noIntrinsicMetric) }
+        if scrollMode {
+            return NSSize(width: NSView.noIntrinsicMetric, height: NSView.noIntrinsicMetric)
+        }
         return NSSize(width: contentStack.fittingSize.width, height: NSView.noIntrinsicMetric)
     }
 

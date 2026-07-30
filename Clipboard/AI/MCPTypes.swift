@@ -9,15 +9,15 @@ enum JSONRPCId {
     init?(from value: Any?) {
         switch value {
         case let s as String: self = .string(s)
-        case let i as Int:    self = .int(i)
-        default:              return nil
+        case let i as Int: self = .int(i)
+        default: return nil
         }
     }
 
     var jsonValue: Any {
         switch self {
-        case .string(let s): return s
-        case .int(let i):    return i
+        case let .string(s): s
+        case let .int(i): i
         }
     }
 }
@@ -32,8 +32,8 @@ struct JSONRPCRequest {
     init?(json: [String: Any]) {
         guard let method = json["method"] as? String else { return nil }
         self.method = method
-        self.params = json["params"] as? [String: Any] ?? [:]
-        self.id = json.keys.contains("id") ? JSONRPCId(from: json["id"]) : nil
+        params = json["params"] as? [String: Any] ?? [:]
+        id = json.keys.contains("id") ? JSONRPCId(from: json["id"]) : nil
     }
 }
 

@@ -18,7 +18,10 @@ final class PreviewIconButton: NSView {
 
     init(systemSymbol: String, accessibilityDescription: String? = nil) {
         super.init(frame: .zero)
-        imageView.image = NSImage(systemSymbolName: systemSymbol, accessibilityDescription: accessibilityDescription)
+        imageView.image = NSImage(
+            systemSymbolName: systemSymbol,
+            accessibilityDescription: accessibilityDescription
+        )?.withSymbolConfiguration(.init(pointSize: 14, weight: .regular))
         imageView.contentTintColor = .controlTextColor
         setup()
     }
@@ -26,6 +29,13 @@ final class PreviewIconButton: NSView {
     @available(*, unavailable)
     required init?(coder _: NSCoder) {
         fatalError()
+    }
+
+    func updateSymbol(_ name: String, accessibilityDescription: String? = nil) {
+        imageView.image = NSImage(
+            systemSymbolName: name,
+            accessibilityDescription: accessibilityDescription
+        )?.withSymbolConfiguration(.init(pointSize: 14, weight: .regular))
     }
 
     private func setup() {
@@ -81,7 +91,9 @@ final class PreviewIconButton: NSView {
 
     override func updateTrackingAreas() {
         super.updateTrackingAreas()
-        if let old = trackingArea { removeTrackingArea(old) }
+        if let old = trackingArea {
+            removeTrackingArea(old)
+        }
         let area = NSTrackingArea(
             rect: bounds,
             options: [.mouseEnteredAndExited, .activeInKeyWindow],
@@ -119,7 +131,9 @@ final class PreviewIconButton: NSView {
     override func mouseUp(with event: NSEvent) {
         updateAppearance(animated: false)
         let loc = convert(event.locationInWindow, from: nil)
-        if bounds.contains(loc) { onAction?() }
+        if bounds.contains(loc) {
+            onAction?()
+        }
         super.mouseUp(with: event)
     }
 }

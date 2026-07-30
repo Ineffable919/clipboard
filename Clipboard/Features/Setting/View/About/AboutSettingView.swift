@@ -9,8 +9,6 @@ import Sparkle
 import SwiftUI
 
 struct AboutSettingView: View {
-    @Environment(\.colorScheme) var colorScheme
-
     private var appName: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
             ?? "Clipboard"
@@ -26,9 +24,7 @@ struct AboutSettingView: View {
             ?? "1"
     }
 
-    private var currentYear: Int {
-        Calendar.current.component(.year, from: Date())
-    }
+    private let currentYear = Calendar.current.component(.year, from: Date())
 
     var body: some View {
         VStack {

@@ -18,6 +18,7 @@ struct TopBarMenuBuilder {
 
     // MARK: - Public
 
+    @MainActor
     func buildSettingsMenu() -> NSMenu {
         let menu = NSMenu()
         let updateManager = UpdateManager.shared

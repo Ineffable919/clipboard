@@ -6,7 +6,6 @@
 //
 
 import AppKit
-import SwiftUI
 
 @MainActor
 final class EditWindowController: NSWindowController, NSWindowDelegate {
@@ -14,12 +13,19 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
 
     private static let minWidth: CGFloat = 400.0
     private static let minHeight: CGFloat = 300.0
+    private static let jsonWidth: CGFloat = 800.0
+    private static let jsonHeight: CGFloat = 600.0
+    private static let modeResizeDuration = 0.18
 
     private(set) var currentModel: PasteboardModel?
 
-    private var editState: EditWindowState?
+    private var editContentView: EditContentView?
+    private var stableWindowCenter: NSPoint?
+    private var resizeGeneration = 0
+    private var isResizingForMode = false
+    private var needsInitialPresentation = false
 
-    var onSave: ((PasteboardModel, NSAttributedString) -> Void)?
+    var onSave: ((PasteboardModel, EditedContent) -> Void)?
 
     private init() {
         let window = EditWindow(
@@ -57,6 +63,7 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
 
         super.init(window: window)
 
+        stableWindowCenter = Self.center(of: window.frame)
         window.delegate = self
         window.onKeyEquivalent = { [weak self] event in
             self?.handleKeyEquivalent(event) ?? false
@@ -92,23 +99,8 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
 
         isNewItem = true
         currentModel = emptyModel
-        editState = EditWindowState(model: emptyModel)
-
-        if let state = editState {
-            let editView = TextEditView(
-                state: state,
-                onCancel: { [weak self] in
-                    self?.closeWindow()
-                },
-                onSave: { [weak self] content in
-                    self?.saveContent(content)
-                }
-            )
-            window?.contentView = NSHostingView(rootView: editView)
-        }
-
-        NSApp.activate(ignoringOtherApps: true)
-        window?.makeKeyAndOrderFront(nil)
+        needsInitialPresentation = true
+        installContentView(for: emptyModel)
     }
 
     func openWindow(with model: PasteboardModel) {
@@ -119,75 +111,109 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
 
         isNewItem = false
         currentModel = model
-        editState = EditWindowState(model: model)
+        needsInitialPresentation = true
+        installContentView(for: model)
+    }
 
-        if let state = editState {
-            let editView = TextEditView(
-                state: state,
-                onCancel: { [weak self] in
-                    self?.closeWindow()
-                },
-                onSave: { [weak self] content in
-                    self?.saveContent(content)
-                }
-            )
-            window?.contentView = NSHostingView(rootView: editView)
+    private func installContentView(for model: PasteboardModel) {
+        let contentView = EditContentView(model: model)
+        contentView.onCancel = { [weak self] in
+            self?.closeWindow()
         }
-
-        NSApp.activate(ignoringOtherApps: true)
-        window?.makeKeyAndOrderFront(nil)
+        contentView.onSave = { [weak self] content in
+            self?.saveContent(content)
+        }
+        contentView.onModeChange = { [weak self] mode, animated in
+            self?.updateWindow(for: mode, animated: animated)
+        }
+        contentView.onInitialContentReady = { [weak self] in
+            self?.presentPreparedWindow()
+        }
+        window?.contentView = contentView
+        editContentView = contentView
     }
 
     func closeWindow() {
+        finishModeResize()
         window?.orderOut(nil)
         currentModel = nil
-        editState = nil
+        editContentView = nil
         isNewItem = false
+        needsInitialPresentation = false
+        window?.minSize = NSSize(width: Self.minWidth, height: Self.minHeight)
     }
 
     // MARK: - NSWindowDelegate
 
     func windowWillClose(_: Notification) {
+        finishModeResize()
         currentModel = nil
-        editState = nil
+        editContentView = nil
         isNewItem = false
+        needsInitialPresentation = false
+        window?.minSize = NSSize(width: Self.minWidth, height: Self.minHeight)
+    }
+
+    func windowDidMove(_: Notification) {
+        updateStableWindowCenter()
+    }
+
+    func windowDidResize(_: Notification) {
+        updateStableWindowCenter()
+    }
+
+    func windowShouldZoom(_: NSWindow, toFrame _: NSRect) -> Bool {
+        false
     }
 
     private func saveFromState() {
-        guard let state = editState else {
+        guard let contentView = editContentView, contentView.isLoaded else {
             return
         }
-        saveContent(state.currentContent)
+        saveContent(contentView.currentContent)
     }
 
-    func saveContent(_ content: NSAttributedString) {
+    func saveContent(_ content: EditedContent) {
         guard let model = currentModel else {
             return
         }
 
-        let plainText = content.string
+        let plainText: String
+        let length: Int
+        let actualType: PasteboardType
+        let newData: Data
+        let showData: Data?
+
+        switch content {
+        case let .plainText(text):
+            plainText = text
+            length = text.utf16.count
+            actualType = .string
+            newData = Data(text.utf8)
+            showData = Data(text.prefix(250).utf8)
+        case let .attributedText(attributedString):
+            plainText = attributedString.string
+            length = attributedString.length
+            let isRich = Self.hasRichTextAttributes(attributedString)
+            actualType = isRich ? .rtf : .string
+            newData = if actualType == .string {
+                Data(plainText.utf8)
+            } else {
+                attributedString.toData(with: actualType) ?? Data()
+            }
+
+            let showContent = length > 250
+                ? attributedString.attributedSubstring(
+                    from: NSRange(location: 0, length: 250)
+                )
+                : attributedString
+            showData = showContent.toData(with: actualType)
+        }
+
         guard !plainText.allSatisfy(\.isWhitespace) else {
             closeWindow()
             return
         }
-
-        let length = content.length
-        let isRich = Self.hasRichTextAttributes(content)
-        let actualType: PasteboardType = isRich ? .rtf : .string
-
-        let newData: Data = if actualType == .string {
-            plainText.data(using: .utf8) ?? Data()
-        } else {
-            content.toData(with: actualType) ?? Data()
-        }
-
-        let showAttr =
-            length > 250
-                ? content.attributedSubstring(
-                    from: NSRange(location: 0, length: 250)
-                )
-                : content
-        let showData = showAttr.toData(with: actualType)
 
         let newTag = PasteboardModel.calculateTag(
             type: actualType,
@@ -218,7 +244,7 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
             guard let itemId = model.id else { return }
 
             Task {
-                await PasteDataStore.main.updateItemContent(
+                let updated = await PasteDataStore.main.updateItemContent(
                     id: itemId,
                     newType: actualType,
                     newData: newData,
@@ -228,11 +254,115 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
                     newTag: newTag
                 )
 
+                guard updated else { return }
                 await MainActor.run {
                     self.closeWindow()
                 }
             }
         }
+    }
+
+    /// 在装载文本前根据模式同步设定尺寸并居中于当前屏幕。
+    private func prepareInitialWindow(for mode: EditMode) {
+        guard let window else { return }
+        needsInitialPresentation = false
+        resizeGeneration += 1
+        isResizingForMode = false
+
+        let targetWidth = mode == .json ? Self.jsonWidth : Self.minWidth
+        let targetHeight = mode == .json ? Self.jsonHeight : Self.minHeight
+        window.minSize = NSSize(width: targetWidth, height: targetHeight)
+
+        let screen = window.screen ?? NSScreen.main
+        var frame = window.frame
+        frame.size.width = targetWidth
+        frame.size.height = targetHeight
+        if let visible = screen?.visibleFrame {
+            frame.origin.x = visible.midX - targetWidth / 2
+            frame.origin.y = visible.midY - targetHeight / 2
+        }
+        window.setFrame(frame, display: true)
+        window.layoutIfNeeded()
+        stableWindowCenter = Self.center(of: frame)
+    }
+
+    /// 文本、行号宽度和约束都稳定后再显示窗口，首帧即为文档顶部。
+    private func presentPreparedWindow() {
+        guard let window, !needsInitialPresentation else { return }
+        window.layoutIfNeeded()
+        editContentView?.scrollActiveEditorToTop()
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+    }
+
+    private func updateWindow(for mode: EditMode, animated: Bool) {
+        guard let window else { return }
+
+        if needsInitialPresentation {
+            prepareInitialWindow(for: mode)
+            return
+        }
+
+        let targetWidth = mode == .json ? Self.jsonWidth : Self.minWidth
+        let targetHeight = mode == .json ? Self.jsonHeight : Self.minHeight
+        let center = stableWindowCenter ?? Self.center(of: window.frame)
+
+        resizeGeneration += 1
+        let generation = resizeGeneration
+        isResizingForMode = true
+        window.minSize = NSSize(width: targetWidth, height: targetHeight)
+
+        var frame = window.frame
+        frame.size.width = targetWidth
+        frame.size.height = targetHeight
+        frame.origin.x = center.x - targetWidth / 2
+        frame.origin.y = center.y - targetHeight / 2
+        if let screen = window.screen {
+            frame = window.constrainFrameRect(frame, to: screen)
+        }
+
+        guard window.frame != frame else {
+            isResizingForMode = false
+            editContentView?.scrollActiveEditorToTop()
+            return
+        }
+
+        guard animated else {
+            window.setFrame(frame, display: true)
+            isResizingForMode = false
+            stableWindowCenter = Self.center(of: window.frame)
+            editContentView?.scrollActiveEditorToTop()
+            return
+        }
+
+        NSAnimationContext.runAnimationGroup({ context in
+            context.duration = Self.modeResizeDuration
+            context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            window.animator().setFrame(frame, display: true)
+        }) { [weak self] in
+            Task { @MainActor in
+                guard let self, generation == self.resizeGeneration else { return }
+                self.isResizingForMode = false
+                self.editContentView?.scrollActiveEditorToTop()
+            }
+        }
+    }
+
+    private func updateStableWindowCenter() {
+        guard !isResizingForMode, let window else { return }
+        stableWindowCenter = Self.center(of: window.frame)
+    }
+
+    private func finishModeResize() {
+        resizeGeneration += 1
+        isResizingForMode = false
+        if let window {
+            stableWindowCenter = Self.center(of: window.frame)
+        }
+    }
+
+    private static func center(of frame: NSRect) -> NSPoint {
+        NSPoint(x: frame.midX, y: frame.midY)
     }
 
     /// 检测 NSAttributedString 是否包含富文本属性（加粗、斜体、下划线、删除线等）

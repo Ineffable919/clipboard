@@ -14,7 +14,9 @@ final class BadgeBackgroundView: NSView {
         didSet { needsDisplay = true }
     }
 
-    override var wantsUpdateLayer: Bool { true }
+    override var wantsUpdateLayer: Bool {
+        true
+    }
 
     override func updateLayer() {
         effectiveAppearance.performAsCurrentDrawingAppearance {

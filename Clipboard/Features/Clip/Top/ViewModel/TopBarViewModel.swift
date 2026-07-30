@@ -276,6 +276,22 @@ final class TopBarViewModel {
         filterDidChange.send()
     }
 
+    func refreshGroupTag() {
+        guard let groupId = selectedGroupId else { return }
+        tags.removeAll { $0.type == .filterGroup }
+        let chipModel = chipStore.chips.first { $0.id == groupId }
+        let label = chipModel?.name ?? ""
+        let dotIcon = makeColorDotImage(colorIndex: chipModel?.colorIndex ?? 0)
+        let tag = InputTag(
+            icon: dotIcon,
+            label: label,
+            type: .filterGroup,
+            associatedValue: String(groupId)
+        )
+        tags.append(tag)
+        filterDidChange.send()
+    }
+
     func setGroupFilter(_ groupId: Int?) {
         tags.removeAll { $0.type == .filterGroup }
         selectedGroupId = groupId
@@ -552,7 +568,9 @@ final class TopBarViewModel {
             selectedGroupId: selectedGroupId
         )
 
-        if criteria == lastSearchCriteria { return }
+        if criteria == lastSearchCriteria {
+            return
+        }
         lastSearchCriteria = criteria
 
         if criteria.isEmpty {

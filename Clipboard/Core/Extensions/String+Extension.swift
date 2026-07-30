@@ -193,7 +193,7 @@ extension String {
         return count
     }
 
-    var smartWordCount: Int {
+    nonisolated var smartWordCount: Int {
         var count = 0
 
         let tokenizer = NLTokenizer(unit: .word)
@@ -219,7 +219,7 @@ extension String {
 }
 
 extension CharacterSet {
-    static let cjkUnifiedIdeographs =
+    nonisolated static let cjkUnifiedIdeographs =
         CharacterSet(charactersIn: "\u{4E00}" ... "\u{9FFF}")
 }
 

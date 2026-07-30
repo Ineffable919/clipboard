@@ -20,6 +20,7 @@ final class PreviewHeaderBar: NSView {
     var onPinToChip: ((Int) -> Void)?
     var onUnpin: (() -> Void)?
     var onCreateChip: (() -> Void)?
+    var onToggleMarkdown: (() -> Void)?
 
     // MARK: - Subviews
 
@@ -65,10 +66,19 @@ final class PreviewHeaderBar: NSView {
         accessibilityDescription: String(localized: .share)
     )
 
+    private let markdownToggleButton: PreviewIconButton = {
+        let btn = PreviewIconButton(
+            systemSymbol: "curlybraces",
+            accessibilityDescription: String(localized: .previewViewSource)
+        )
+        btn.isHidden = true
+        return btn
+    }()
+
     private let pinButton = PinChipButton()
 
     private lazy var rightStack: NSStackView = {
-        let stack = NSStackView(views: [pinButton, shareButton, editButton, openWithButton])
+        let stack = NSStackView(views: [markdownToggleButton, pinButton, shareButton, editButton, openWithButton])
         stack.orientation = .horizontal
         stack.spacing = Const.space8
         stack.alignment = .centerY
@@ -88,6 +98,7 @@ final class PreviewHeaderBar: NSView {
         }
         editButton.onAction = { [weak self] in self?.onEdit?() }
         openWithButton.onAction = { [weak self] in self?.onOpenWithApp?() }
+        markdownToggleButton.onAction = { [weak self] in self?.onToggleMarkdown?() }
         pinButton.toolTip = String(localized: .pin)
         pinButton.onPinToChip = { [weak self] chipId in self?.onPinToChip?(chipId) }
         pinButton.onUnpin = { [weak self] in self?.onUnpin?() }
@@ -146,6 +157,31 @@ final class PreviewHeaderBar: NSView {
         pinButton.configure(group: model.group)
     }
 
+    /// 配置 markdown 渲染/原文切换按钮的可见性与初始状态
+    func updateMarkdownToggle(visible: Bool, isRendered: Bool) {
+        markdownToggleButton.isHidden = !visible
+        if visible {
+            setMarkdownRendered(isRendered)
+        }
+    }
+
+    /// 根据当前渲染态更新切换按钮的图标与提示
+    func setMarkdownRendered(_ isRendered: Bool) {
+        if isRendered {
+            markdownToggleButton.updateSymbol(
+                "curlybraces",
+                accessibilityDescription: String(localized: .previewViewSource)
+            )
+            markdownToggleButton.toolTip = String(localized: .previewViewSource)
+        } else {
+            markdownToggleButton.updateSymbol(
+                "eye",
+                accessibilityDescription: String(localized: .previewViewRendered)
+            )
+            markdownToggleButton.toolTip = String(localized: .previewViewRendered)
+        }
+    }
+
     func updateOpenWithApp(isSingleFile: Bool, defaultAppForFile: String?) {
         if isSingleFile, let appName = defaultAppForFile {
             openWithButton.title = String(localized: .openWithApp(appName))
@@ -177,7 +213,7 @@ private final class PinChipButton: NSView {
         iv.image = NSImage(
             systemSymbolName: "chevron.down",
             accessibilityDescription: String(localized: .pin)
-        )?.withSymbolConfiguration(.init(pointSize: 8, weight: .medium))
+        )?.withSymbolConfiguration(.init(pointSize: 8, weight: .regular))
         iv.contentTintColor = .controlTextColor
         return iv
     }()
@@ -213,14 +249,14 @@ private final class PinChipButton: NSView {
         }
 
         circleView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().inset(Const.space8)
+            make.leading.equalToSuperview().inset(Const.space6)
             make.centerY.equalToSuperview()
             make.width.height.equalTo(14)
         }
 
         chevron.snp.makeConstraints { make in
             make.leading.equalTo(circleView.snp.trailing).offset(4)
-            make.trailing.equalToSuperview().inset(Const.space8)
+            make.trailing.equalToSuperview().inset(Const.space6)
             make.centerY.equalToSuperview()
             make.width.equalTo(10)
             make.height.equalTo(8)
@@ -284,7 +320,9 @@ private final class PinChipButton: NSView {
 
     override func updateTrackingAreas() {
         super.updateTrackingAreas()
-        if let old = trackingArea { removeTrackingArea(old) }
+        if let old = trackingArea {
+            removeTrackingArea(old)
+        }
         let area = NSTrackingArea(
             rect: bounds,
             options: [.mouseEnteredAndExited, .activeInKeyWindow],

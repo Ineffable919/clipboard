@@ -76,7 +76,9 @@ final class CardBottomView: NSView, PassthroughMouseEvents {
         case .image:
             return CardImageBottomView(introString: model.introString())
         case .link:
-            if PasteUserDefaults.enableLinkPreview { return nil }
+            if PasteUserDefaults.enableLinkPreview {
+                return nil
+            }
             return CardCommonBottomView(model: model)
         case .file:
             return CardFileBottomView(model: model, keyword: keyword)

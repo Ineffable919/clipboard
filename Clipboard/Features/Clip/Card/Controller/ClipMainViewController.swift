@@ -81,7 +81,11 @@ final class ClipMainViewController: NSViewController {
 
     lazy var bg: BackgroundEffectController = {
         let inner: CGFloat =
-            if #available(macOS 26.0, *) { 8.0 } else { 0.0 }
+            if #available(macOS 26.0, *) {
+                8.0
+            } else {
+                0.0
+            }
         return BackgroundEffectController(
             cornerRadius: Const.windowRadis,
             innerPadding: inner
@@ -223,7 +227,7 @@ extension ClipMainViewController {
             height: Const.defaultHeight
         )
 
-        if focusRegion == .search, !topVM.hasInput {
+        if topBarView.isSearching, !topVM.hasInput {
             topBarView.deactivateSearch()
             setFocusRegion(.collection)
         } else if focusRegion == .collection {
@@ -383,15 +387,23 @@ extension ClipMainViewController {
     func applySnapshot(animating: Bool = true, completion: (() -> Void)? = nil) {
         var snapshot = NSDiffableDataSourceSnapshot<ClipSection, PasteboardModel>()
         snapshot.appendSections([.main])
-        snapshot.appendItems(dataList.value.deduplicatedByUniqueId())
+        snapshot.appendItems(dataList.value)
         diffableDataSource.apply(snapshot, animatingDifferences: animating) {
             completion?()
         }
         updateEmptyState()
     }
 
+    func displayedModel(at indexPath: IndexPath) -> PasteboardModel? {
+        diffableDataSource.itemIdentifier(for: indexPath)
+    }
+
+    var displayedItemCount: Int {
+        collectionView.numberOfItems(inSection: 0)
+    }
+
     func restoreSelection() {
-        guard !dataList.value.isEmpty else { return }
+        guard displayedItemCount > 0 else { return }
         setSelection(to: selectIndexPath)
         updateSelectedItemBorder()
     }
@@ -421,6 +433,10 @@ extension ClipMainViewController {
     func setFocusRegion(_ region: FocusRegion) {
         guard region != focusRegion else { return }
         focusRegion = region
+        if region != .collection {
+            isQuickPastePressed = false
+            isPlainTextModifierPressed = false
+        }
         updateSelectedItemBorder()
         if region == .collection {
             Task { @MainActor [weak self] in
@@ -455,7 +471,6 @@ extension ClipMainViewController {
             var snapshot = diffableDataSource.snapshot()
             let existing = Set(snapshot.itemIdentifiers.map(\.uniqueId))
             let appended = newItems
-                .deduplicatedByUniqueId()
                 .filter { !existing.contains($0.uniqueId) }
             guard !appended.isEmpty else { return }
             snapshot.appendItems(appended, toSection: .main)
@@ -560,12 +575,12 @@ extension ClipMainViewController {
     }
 
     private func adjustSelectionAfterDelete() {
-        guard !dataList.value.isEmpty else { return }
-        let safeItem = min(selectIndexPath.item, dataList.value.count - 1)
+        guard displayedItemCount > 0 else { return }
+        let safeItem = min(selectIndexPath.item, displayedItemCount - 1)
         let safePath = IndexPath(item: safeItem, section: 0)
         selectIndexPath = safePath
         setSelection(to: safePath)
-        scrollTo(indexPath: safePath)
+        scrollTo(indexPath: safePath, animated: false)
         updateSelectedItemBorder()
     }
 

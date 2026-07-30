@@ -68,9 +68,9 @@ struct MCPTools {
 
         switch name {
         case "search_clipboard": return searchClipboard(arguments)
-        case "write_clipboard":  return writeClipboard(arguments)
-        case "list_tags":        return listTags()
-        default:                 return mcpError("Unknown tool: \(name)")
+        case "write_clipboard": return writeClipboard(arguments)
+        case "list_tags": return listTags()
+        default: return mcpError("Unknown tool: \(name)")
         }
     }
 
@@ -223,18 +223,18 @@ struct MCPTools {
         }
 
         let insert = table.insert(
-            Col.uniqueId   <- uniqueId,
-            Col.type       <- NSPasteboard.PasteboardType.string.rawValue,
-            Col.data       <- contentData,
-            Col.showData   <- showData,
-            Col.ts         <- timestamp,
-            Col.appPath    <- "",
-            Col.appName    <- "AI",
+            Col.uniqueId <- uniqueId,
+            Col.type <- NSPasteboard.PasteboardType.string.rawValue,
+            Col.data <- contentData,
+            Col.showData <- showData,
+            Col.ts <- timestamp,
+            Col.appPath <- "",
+            Col.appName <- "AI",
             Col.searchText <- content.trimmingCharacters(in: .whitespacesAndNewlines),
-            Col.length     <- content.count,
-            Col.group      <- -1,
-            Col.tag        <- tagValue(for: content),
-            Col.hidden     <- 0
+            Col.length <- content.count,
+            Col.group <- -1,
+            Col.tag <- tagValue(for: content),
+            Col.hidden <- 0
         )
 
         if (try? db.run(insert)) != nil {
@@ -247,25 +247,25 @@ struct MCPTools {
 
     private func tagForType(_ type: String) -> String {
         switch type {
-        case "text":  return "string"
-        case "rich":  return "rich"
-        case "link":  return "link"
-        case "image": return "image"
-        case "file":  return "file"
-        case "color": return "color"
-        default:      return type
+        case "text": "string"
+        case "rich": "rich"
+        case "link": "link"
+        case "image": "image"
+        case "file": "file"
+        case "color": "color"
+        default: type
         }
     }
 
     private func labelForTag(_ tag: String) -> String {
         switch tag {
-        case "string": return "Text"
-        case "rich":   return "Rich Text"
-        case "link":   return "Link"
-        case "image":  return "Image"
-        case "file":   return "File"
-        case "color":  return "Color"
-        default:       return "Text"
+        case "string": "Text"
+        case "rich": "Rich Text"
+        case "link": "Link"
+        case "image": "Image"
+        case "file": "File"
+        case "color": "Color"
+        default: "Text"
         }
     }
 

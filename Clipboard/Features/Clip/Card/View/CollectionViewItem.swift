@@ -49,6 +49,9 @@ final class CollectionViewItem: NSCollectionViewItem {
 
     // MARK: - Selection border
 
+    private var contentEdges: Constraint?
+    private var contentInset = Const.selectionBorderWidth - 0.5
+
     private lazy var selectionBorderView: AppearanceObservingView = {
         let view = AppearanceObservingView()
         view.wantsLayer = true
@@ -59,8 +62,10 @@ final class CollectionViewItem: NSCollectionViewItem {
         view.layer?.borderWidth = 0
         view.onAppearanceChange = { [weak self] in
             self?.updateSelectionBorder()
-            self?.updateShadow()
             self?.updateInfoIconAppearance()
+        }
+        view.onBackingChange = { [weak self] in
+            self?.updateContentInset()
         }
         return view
     }()
@@ -203,6 +208,12 @@ extension CollectionViewItem {
         initSubView()
     }
 
+    override func viewDidLayout() {
+        super.viewDidLayout()
+        updateContentInset()
+        updateShadowPath()
+    }
+
     override var isSelected: Bool {
         didSet {
             updateSelectionBorder()
@@ -252,6 +263,23 @@ extension CollectionViewItem {
             layer.shadowRadius = 2
             layer.shadowOffset = CGSize(width: 0, height: -1)
         }
+    }
+
+    private func updateShadowPath() {
+        selectionBorderView.layer?.shadowPath = CGPath(
+            roundedRect: contentView.frame,
+            cornerWidth: Const.radius,
+            cornerHeight: Const.radius,
+            transform: nil
+        )
+    }
+
+    private func updateContentInset() {
+        guard let scale = selectionBorderView.window?.backingScaleFactor, scale > 0 else { return }
+        let inset = Const.selectionBorderWidth - 1 / scale
+        guard inset != contentInset else { return }
+        contentInset = inset
+        contentEdges?.update(inset: inset)
     }
 }
 
@@ -353,7 +381,7 @@ extension CollectionViewItem {
         }
 
         contentView.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(Const.selectionBorderWidth)
+            contentEdges = make.edges.equalToSuperview().inset(contentInset).constraint
         }
 
         headView.snp.makeConstraints { make in
@@ -405,9 +433,15 @@ extension CollectionViewItem: NSMenuDelegate {
 
 private final class AppearanceObservingView: NSView {
     var onAppearanceChange: (() -> Void)?
+    var onBackingChange: (() -> Void)?
 
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
         onAppearanceChange?()
+    }
+
+    override func viewDidChangeBackingProperties() {
+        super.viewDidChangeBackingProperties()
+        onBackingChange?()
     }
 }

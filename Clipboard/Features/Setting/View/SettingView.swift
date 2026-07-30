@@ -28,7 +28,11 @@ enum SettingPage: CaseIterable, Identifiable {
         case .keyboard: "command"
         case .storage: "externaldrive"
         case .ai:
-            if #available(macOS 15.0, *) { "apple.intelligence" } else { "lasso.badge.sparkles" }
+            if #available(macOS 15.0, *) {
+                "apple.intelligence"
+            } else {
+                "lasso.badge.sparkles"
+            }
         case .about: "info.circle"
         }
     }
@@ -98,7 +102,7 @@ struct SettingView: View {
             .navigationTitle(Text(vm.selectedPage.title))
             .toolbarTitleDisplayMode(.inline)
         }
-        .onAppear{
+        .onAppear {
             Task { @MainActor in
                 isSidebarFocused = true
             }
@@ -109,7 +113,7 @@ struct SettingView: View {
 // MARK: - 设置开关行
 
 struct SettingToggleRow: View {
-    let title: String
+    let title: LocalizedStringResource
     @Binding var isOn: Bool
 
     var body: some View {

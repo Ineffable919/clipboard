@@ -776,7 +776,9 @@ final class CheckerboardView: NSView {
     private func currentTile() -> CGImage? {
         let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
         let name: NSAppearance.Name = isDark ? .darkAqua : .aqua
-        if cachedAppearanceName == name, let tile = cachedTile { return tile }
+        if cachedAppearanceName == name, let tile = cachedTile {
+            return tile
+        }
 
         cachedAppearanceName = name
         lightColor = isDark ? Const.darkImageShallowColor : Const.lightImageShallowColor

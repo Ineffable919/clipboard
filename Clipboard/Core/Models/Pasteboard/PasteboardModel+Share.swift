@@ -16,7 +16,9 @@ extension PasteboardModel {
             return NSImage(data: data).map { [$0] } ?? []
         case .link:
             let str = plainText.trimmingCharacters(in: .whitespacesAndNewlines)
-            if let url = URL(string: str) { return [url] }
+            if let url = URL(string: str) {
+                return [url]
+            }
             return [str]
         case .string, .rich, .color:
             let text = plainText

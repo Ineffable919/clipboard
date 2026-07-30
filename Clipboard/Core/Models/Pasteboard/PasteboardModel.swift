@@ -39,19 +39,7 @@ final class PasteboardModel: Identifiable, Codable {
     private(set) var group: Int
     let tag: String
     private(set) var hidden: Bool
-    var cachedThumbnail: NSImage?
-    var cachedImageSize: CGSize?
-    var cachedBackgroundColor: NSColor?
-    var cachedForegroundColor: NSColor?
-    var cachedFilePaths: [String]?
-    var cachedOCRRegions: [OCRTextRegion]?
-    var cachedOCRKeyword: String?
-    var cachedHasBackgroundColor: Bool = false
-    var cachedNeedsBottomMask: Bool?
-    var cachedDragPreviewRichImage: NSImage?
-    var thumbnailLoadTask: Task<NSImage?, Never>?
-    /// 链接预览元数据缓存
-    var cachedLinkMetadata: LinkPreviewMetadata?
+    var runtimeCache = PasteboardModelRuntimeCache()
 
     var hasBgColor: Bool {
         cachedHasBackgroundColor
@@ -76,7 +64,8 @@ final class PasteboardModel: Identifiable, Codable {
         length: Int,
         group: Int,
         tag: String,
-        hidden: Bool = false
+        hidden: Bool = false,
+        uniqueId: String? = nil
     ) {
         self.pasteboardType = pasteboardType
         self.data = data
@@ -90,7 +79,7 @@ final class PasteboardModel: Identifiable, Codable {
         self.tag = tag
         self.hidden = hidden
 
-        uniqueId = Self.generateUniqueId(
+        self.uniqueId = uniqueId ?? Self.generateUniqueId(
             for: pasteboardType,
             data: data
         )
@@ -175,7 +164,9 @@ final class PasteboardModel: Identifiable, Codable {
     }
 
     func loadThumbnail() async -> NSImage? {
-        if let cachedThumbnail { return cachedThumbnail }
+        if let cachedThumbnail {
+            return cachedThumbnail
+        }
 
         if let existingTask = thumbnailLoadTask {
             return await existingTask.value
@@ -269,7 +260,8 @@ final class PasteboardModel: Identifiable, Codable {
             length: container.decode(Int.self, forKey: .length),
             group: container.decode(Int.self, forKey: .group),
             tag: container.decode(String.self, forKey: .tag),
-            hidden: container.decode(Bool.self, forKey: .hidden)
+            hidden: container.decode(Bool.self, forKey: .hidden),
+            uniqueId: container.decode(String.self, forKey: .uniqueId)
         )
 
         id = try container.decodeIfPresent(Int64.self, forKey: .id)

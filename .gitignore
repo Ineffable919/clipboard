@@ -94,7 +94,11 @@ iOSInjectionProject/
 .vscode
 .claude
 .air
+.idea
 .codex
 /reference
 scripts/build.sh
 scripts/sign_update.sh
+scripts/release.sh
+scripts/release-notes-*.md
+.release/
