@@ -91,7 +91,9 @@ extension String {
 
     var isCSSHexColor: Bool {
         let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, trimmed.count <= 50 else { return false }
+        guard self == trimmed, !trimmed.isEmpty, trimmed.count <= 50 else {
+            return false
+        }
 
         let lowercased = trimmed.lowercased()
 
