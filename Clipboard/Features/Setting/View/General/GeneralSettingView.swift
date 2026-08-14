@@ -25,6 +25,8 @@ struct GeneralSettingView: View {
     @State private var selectedPasteTarget: PasteTargetMode =
         PasteUserDefaults.pasteDirect ? .toApp : .toClipboard
 
+    @State private var hasAccessibilityPermission: Bool = AXIsProcessTrusted()
+
     @AppStorage(PrefKey.pasteOnlyText.rawValue)
     private var pasteAsPlainText = false
 
@@ -99,15 +101,30 @@ struct GeneralSettingView: View {
                     .bold()
 
                 VStack(alignment: .leading, spacing: Const.space12) {
-                    VStack(spacing: Const.space4) {
-                        ForEach(PasteTargetMode.allCases, id: \.rawValue) {
-                            mode in
-                            PasteTargetModeRow(
-                                mode: mode,
-                                isSelected: selectedPasteTarget == mode,
-                                onSelect: { selectedPasteTarget = mode }
-                            )
+                    HStack(alignment: .top, spacing: Const.space8) {
+                        VStack(alignment: .leading, spacing: Const.space4) {
+                            ForEach(PasteTargetMode.allCases, id: \.rawValue) { mode in
+                                VStack(alignment: .leading, spacing: Const.space4) {
+                                    PasteTargetModeRow(
+                                        mode: mode,
+                                        isSelected: selectedPasteTarget == mode,
+                                        onSelect: { selectedPasteTarget = mode }
+                                    )
+
+                                    if mode == .toApp,
+                                       selectedPasteTarget == .toApp,
+                                       !hasAccessibilityPermission {
+                                        AccessibilityButton(
+                                            action: openAccessibilitySettings
+                                        )
+                                        .padding(.leading, Const.space32)
+                                    }
+                                }
+                            }
                         }
+
+                        PasteTargetIllustration(mode: selectedPasteTarget)
+                            .frame(width: 144, height: 96)
                     }
                     .onChange(of: selectedPasteTarget) { _, newValue in
                         PasteUserDefaults.pasteDirect = (newValue == .toApp)
@@ -168,6 +185,7 @@ struct GeneralSettingView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
             refreshLaunchAtLoginStatus()
+            refreshAccessibilityPermissionStatus()
             startLaunchAtLoginTimer()
         }
         .onDisappear {
@@ -178,6 +196,7 @@ struct GeneralSettingView: View {
                 for: NSWindow.didBecomeKeyNotification
             )
         ) { _ in
+            refreshAccessibilityPermissionStatus()
             startLaunchAtLoginTimer()
         }
         .onReceive(
@@ -206,6 +225,20 @@ struct GeneralSettingView: View {
                 NSApp.activate(ignoringOtherApps: true)
             }
         }
+    }
+
+    // MARK: - 辅助功能权限
+
+    private func refreshAccessibilityPermissionStatus() {
+        hasAccessibilityPermission = AXIsProcessTrusted()
+    }
+
+    private func openAccessibilitySettings() {
+        guard let url = URL(
+            string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
+        ) else { return }
+
+        NSWorkspace.shared.open(url)
     }
 
     // MARK: - 刷新登录启动状态

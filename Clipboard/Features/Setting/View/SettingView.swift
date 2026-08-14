@@ -53,6 +53,8 @@ enum SettingPage: CaseIterable, Identifiable {
 struct SettingView: View {
     @Environment(SettingViewModel.self) private var viewModel
     @FocusState private var isSidebarFocused: Bool
+    @State private var hasAccessibilityPermission = AXIsProcessTrusted()
+    @AppStorage(PrefKey.pasteDirect.rawValue) private var pasteDirect = true
 
     var body: some View {
         @Bindable var vm = viewModel
@@ -62,10 +64,31 @@ struct SettingView: View {
                 List(selection: $vm.selectedPage) {
                     ForEach(SettingPage.allCases) { page in
                         NavigationLink(value: page) {
-                            Label {
-                                Text(page.title)
-                            } icon: {
-                                Image(systemName: page.icon)
+                            HStack(spacing: Const.space8) {
+                                Label {
+                                    Text(page.title)
+                                } icon: {
+                                    Image(systemName: page.icon)
+                                }
+
+                                Spacer(minLength: Const.space8)
+
+                                if !hasAccessibilityPermission,
+                                   page == .privacy || (page == .general && pasteDirect) {
+                                    ZStack {
+                                        Circle()
+                                            .fill(Color(nsColor: .systemRed))
+                                        Image(systemName: "exclamationmark")
+                                            .font(.system(size: 11, weight: .bold))
+                                            .foregroundStyle(.white)
+                                    }
+                                    .frame(width: 18, height: 18)
+                                    .compositingGroup()
+                                    .accessibilityElement(children: .ignore)
+                                    .accessibilityLabel(
+                                        Text(.settingPrivacyAccessibilityPermissionDenied)
+                                    )
+                                }
                             }
                         }
                     }
@@ -103,9 +126,17 @@ struct SettingView: View {
             .toolbarTitleDisplayMode(.inline)
         }
         .onAppear {
+            hasAccessibilityPermission = AXIsProcessTrusted()
             Task { @MainActor in
                 isSidebarFocused = true
             }
+        }
+        .onReceive(
+            NotificationCenter.default.publisher(
+                for: NSApplication.didBecomeActiveNotification
+            )
+        ) { _ in
+            hasAccessibilityPermission = AXIsProcessTrusted()
         }
     }
 }

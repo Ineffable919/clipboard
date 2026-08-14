@@ -2908,6 +2908,24 @@
         }
       }
     },
+    "settingGeneralEnableAccessibility" : {
+      "comment" : "Button shown when direct paste requires Accessibility permission",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable Accessibility Access"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启用无障碍访问"
+          }
+        }
+      }
+    },
     "settingGeneralHistoryCleanupHint" : {
       "comment" : "Tooltip: history is only cleaned up once per day",
       "extractionState" : "manual",
