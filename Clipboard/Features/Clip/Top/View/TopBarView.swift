@@ -12,7 +12,10 @@ import SnapKit
 final class TopBarView: NSView {
     private let chipRowHeight: CGFloat = 44
 
-    private let settingBtn = TopBarIconButton(symbolName: "ellipsis")
+    private let settingBtn = TopBarIconButton(
+        symbolName: "ellipsis",
+        pointSize: 17
+    )
 
     private let defaultRow = NSStackView()
     private let searchIconBtn = TopBarIconButton(
