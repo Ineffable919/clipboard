@@ -53,7 +53,6 @@ enum SettingPage: CaseIterable, Identifiable {
 struct SettingView: View {
     @Environment(SettingViewModel.self) private var viewModel
     @FocusState private var isSidebarFocused: Bool
-    @State private var hasAccessibilityPermission = AXIsProcessTrusted()
     @AppStorage(PrefKey.pasteDirect.rawValue) private var pasteDirect = true
 
     var body: some View {
@@ -73,7 +72,7 @@ struct SettingView: View {
 
                                 Spacer(minLength: Const.space8)
 
-                                if !hasAccessibilityPermission,
+                                if !viewModel.hasAccessibilityPermission,
                                    page == .privacy || (page == .general && pasteDirect) {
                                     ZStack {
                                         Circle()
@@ -126,7 +125,7 @@ struct SettingView: View {
             .toolbarTitleDisplayMode(.inline)
         }
         .onAppear {
-            hasAccessibilityPermission = AXIsProcessTrusted()
+            viewModel.refreshAccessibilityPermission()
             Task { @MainActor in
                 isSidebarFocused = true
             }
@@ -136,7 +135,7 @@ struct SettingView: View {
                 for: NSApplication.didBecomeActiveNotification
             )
         ) { _ in
-            hasAccessibilityPermission = AXIsProcessTrusted()
+            viewModel.refreshAccessibilityPermission()
         }
     }
 }

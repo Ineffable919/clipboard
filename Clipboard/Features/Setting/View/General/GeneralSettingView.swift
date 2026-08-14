@@ -11,6 +11,7 @@ import SwiftUI
 // MARK: - 通用设置视图
 
 struct GeneralSettingView: View {
+    @Environment(SettingViewModel.self) private var viewModel
     @State private var launchAtLogin: Bool = LaunchAtLoginHelper.shared.isEnabled
 
     @AppStorage(PrefKey.showMenuBarIcon.rawValue)
@@ -22,10 +23,8 @@ struct GeneralSettingView: View {
     @AppStorage(PrefKey.soundEnabled.rawValue)
     private var soundEnabled = true
 
-    @State private var selectedPasteTarget: PasteTargetMode =
-        PasteUserDefaults.pasteDirect ? .toApp : .toClipboard
-
-    @State private var hasAccessibilityPermission: Bool = AXIsProcessTrusted()
+    @AppStorage(PrefKey.pasteDirect.rawValue)
+    private var pasteDirect = true
 
     @AppStorage(PrefKey.pasteOnlyText.rawValue)
     private var pasteAsPlainText = false
@@ -108,14 +107,16 @@ struct GeneralSettingView: View {
                                     PasteTargetModeRow(
                                         mode: mode,
                                         isSelected: selectedPasteTarget == mode,
-                                        onSelect: { selectedPasteTarget = mode }
+                                        onSelect: {
+                                            pasteDirect = (mode == .toApp)
+                                        }
                                     )
 
                                     if mode == .toApp,
                                        selectedPasteTarget == .toApp,
-                                       !hasAccessibilityPermission {
+                                       !viewModel.hasAccessibilityPermission {
                                         AccessibilityButton(
-                                            action: openAccessibilitySettings
+                                            action: viewModel.openAccessibilitySettings
                                         )
                                         .padding(.leading, Const.space32)
                                     }
@@ -125,9 +126,6 @@ struct GeneralSettingView: View {
 
                         PasteTargetIllustration(mode: selectedPasteTarget)
                             .frame(width: 144, height: 96)
-                    }
-                    .onChange(of: selectedPasteTarget) { _, newValue in
-                        PasteUserDefaults.pasteDirect = (newValue == .toApp)
                     }
 
                     Divider()
@@ -185,7 +183,6 @@ struct GeneralSettingView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
             refreshLaunchAtLoginStatus()
-            refreshAccessibilityPermissionStatus()
             startLaunchAtLoginTimer()
         }
         .onDisappear {
@@ -196,7 +193,6 @@ struct GeneralSettingView: View {
                 for: NSWindow.didBecomeKeyNotification
             )
         ) { _ in
-            refreshAccessibilityPermissionStatus()
             startLaunchAtLoginTimer()
         }
         .onReceive(
@@ -227,20 +223,6 @@ struct GeneralSettingView: View {
         }
     }
 
-    // MARK: - 辅助功能权限
-
-    private func refreshAccessibilityPermissionStatus() {
-        hasAccessibilityPermission = AXIsProcessTrusted()
-    }
-
-    private func openAccessibilitySettings() {
-        guard let url = URL(
-            string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
-        ) else { return }
-
-        NSWorkspace.shared.open(url)
-    }
-
     // MARK: - 刷新登录启动状态
 
     private func refreshLaunchAtLoginStatus() {
@@ -264,9 +246,15 @@ struct GeneralSettingView: View {
         launchAtLoginTimer?.invalidate()
         launchAtLoginTimer = nil
     }
+
+    private var selectedPasteTarget: PasteTargetMode {
+        pasteDirect ? .toApp : .toClipboard
+    }
 }
 
 #Preview {
+    let viewModel = SettingViewModel()
     GeneralSettingView()
         .frame(width: Const.settingWidth - 150, height: Const.settingHeight)
+        .environment(viewModel)
 }

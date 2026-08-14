@@ -37,9 +37,6 @@ struct PrivacySettingView: View {
         return list
     }()
 
-    @State private var hasAccessibilityPermission: Bool = AXIsProcessTrusted()
-    @State private var permissionTimer: Timer?
-
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             ScrollView {
@@ -75,10 +72,7 @@ struct PrivacySettingView: View {
                             isOn: $delConfirm
                         )
                         Divider()
-                        AccessibilityPermissionRow(
-                            hasPermission: $hasAccessibilityPermission,
-                            onOpenSettings: openAccessibilitySettings
-                        )
+                        AccessibilityPermissionRow()
                     }
                     .padding(.horizontal, Const.space16)
                     .settingsStyle()
@@ -168,27 +162,6 @@ struct PrivacySettingView: View {
         .onChange(of: showDuringScreenShare) { _, _ in
             WindowManager.shared.configureWindowSharing()
         }
-        .onAppear {
-            refreshPermissionStatus()
-            startPermissionTimer()
-        }
-        .onDisappear {
-            stopPermissionTimer()
-        }
-        .onReceive(
-            NotificationCenter.default.publisher(
-                for: NSWindow.didBecomeKeyNotification
-            )
-        ) { _ in
-            startPermissionTimer()
-        }
-        .onReceive(
-            NotificationCenter.default.publisher(
-                for: NSWindow.didResignKeyNotification
-            )
-        ) { _ in
-            stopPermissionTimer()
-        }
     }
 
     // MARK: - 添加应用
@@ -238,45 +211,6 @@ struct PrivacySettingView: View {
         }
     }
 
-    // MARK: - 打开辅助功能设置
-
-    private func openAccessibilitySettings() {
-        if let url = URL(
-            string:
-            "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
-        ) {
-            NSWorkspace.shared.open(url)
-            Task {
-                try? await Task.sleep(for: .seconds(2))
-                await MainActor.run {
-                    refreshPermissionStatus()
-                }
-            }
-        }
-    }
-
-    // MARK: - 刷新权限状态
-
-    private func refreshPermissionStatus() {
-        hasAccessibilityPermission = AXIsProcessTrusted()
-    }
-
-    private func startPermissionTimer() {
-        stopPermissionTimer()
-        permissionTimer = Timer.scheduledTimer(
-            withTimeInterval: 2.0,
-            repeats: true
-        ) { _ in
-            Task { @MainActor in
-                refreshPermissionStatus()
-            }
-        }
-    }
-
-    private func stopPermissionTimer() {
-        permissionTimer?.invalidate()
-        permissionTimer = nil
-    }
 }
 
 // MARK: - 单行开关组件
@@ -385,8 +319,7 @@ struct IgnoredAppRow: View {
 // MARK: - 辅助功能权限状态行组件
 
 struct AccessibilityPermissionRow: View {
-    @Binding var hasPermission: Bool
-    let onOpenSettings: () -> Void
+    @Environment(SettingViewModel.self) private var viewModel
 
     var body: some View {
         HStack(alignment: .center, spacing: Const.space12) {
@@ -394,7 +327,7 @@ struct AccessibilityPermissionRow: View {
                 Text(.settingPrivacyAccessibilityPermissionTitle)
                     .font(.callout)
                 Text(
-                    hasPermission
+                    viewModel.hasAccessibilityPermission
                         ? String(localized: .settingPrivacyAccessibilityPermissionGranted)
                         : String(localized: .settingPrivacyAccessibilityPermissionDenied)
                 )
@@ -405,7 +338,7 @@ struct AccessibilityPermissionRow: View {
             Spacer()
 
             HStack(spacing: 8) {
-                if hasPermission {
+                if viewModel.hasAccessibilityPermission {
                     Image(
                         systemName: "checkmark.circle.fill"
                     )
@@ -413,8 +346,11 @@ struct AccessibilityPermissionRow: View {
                     .foregroundStyle(.green)
                 }
 
-                if !hasPermission {
-                    SystemButton(title: String(localized: .settingPrivacyOpenSettings), action: onOpenSettings)
+                if !viewModel.hasAccessibilityPermission {
+                    SystemButton(
+                        title: String(localized: .settingPrivacyOpenSettings),
+                        action: viewModel.openAccessibilitySettings
+                    )
                 }
             }
         }
@@ -423,6 +359,8 @@ struct AccessibilityPermissionRow: View {
 }
 
 #Preview {
+    let viewModel = SettingViewModel()
     PrivacySettingView()
         .frame(width: Const.settingWidth - 150, height: Const.settingHeight)
+        .environment(viewModel)
 }
