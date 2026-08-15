@@ -71,8 +71,6 @@ struct PrivacySettingView: View {
                             subtitle: String(localized: .settingPrivacyDeleteConfirmationDescription),
                             isOn: $delConfirm
                         )
-                        Divider()
-                        AccessibilityPermissionRow()
                     }
                     .padding(.horizontal, Const.space16)
                     .settingsStyle()
@@ -316,51 +314,7 @@ struct IgnoredAppRow: View {
     }
 }
 
-// MARK: - 辅助功能权限状态行组件
-
-struct AccessibilityPermissionRow: View {
-    @Environment(SettingViewModel.self) private var viewModel
-
-    var body: some View {
-        HStack(alignment: .center, spacing: Const.space12) {
-            VStack(alignment: .leading, spacing: Const.space4) {
-                Text(.settingPrivacyAccessibilityPermissionTitle)
-                    .font(.callout)
-                Text(
-                    viewModel.hasAccessibilityPermission
-                        ? String(localized: .settingPrivacyAccessibilityPermissionGranted)
-                        : String(localized: .settingPrivacyAccessibilityPermissionDenied)
-                )
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            HStack(spacing: 8) {
-                if viewModel.hasAccessibilityPermission {
-                    Image(
-                        systemName: "checkmark.circle.fill"
-                    )
-                    .font(.system(size: Const.iconSize18))
-                    .foregroundStyle(.green)
-                }
-
-                if !viewModel.hasAccessibilityPermission {
-                    SystemButton(
-                        title: String(localized: .settingPrivacyOpenSettings),
-                        action: viewModel.openAccessibilitySettings
-                    )
-                }
-            }
-        }
-        .padding(.vertical, Const.space12)
-    }
-}
-
 #Preview {
-    let viewModel = SettingViewModel()
     PrivacySettingView()
         .frame(width: Const.settingWidth - 150, height: Const.settingHeight)
-        .environment(viewModel)
 }

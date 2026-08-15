@@ -72,8 +72,9 @@ struct SettingView: View {
 
                                 Spacer(minLength: Const.space8)
 
-                                if !viewModel.hasAccessibilityPermission,
-                                   page == .privacy || (page == .general && pasteDirect) {
+                                if page == .general,
+                                   pasteDirect,
+                                   !viewModel.hasAccessibilityPermission {
                                     ZStack {
                                         Circle()
                                             .fill(Color(nsColor: .systemRed))
