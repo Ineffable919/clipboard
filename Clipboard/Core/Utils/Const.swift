@@ -59,7 +59,9 @@ enum Const {
     static let selectionBorderWidth: CGFloat = 4.0
 
     static let topBarHeight: CGFloat = 54.0
-    static let topBarWidth: CGFloat = 400.0
+    static let searchFieldMinWidth: CGFloat = 400.0
+    static let searchFieldMaxWidth: CGFloat = 480.0
+    static let searchFieldScreenWidthRatio: CGFloat = 0.25
     static let cardBottomPadding: CGFloat = 16.0
 
     static let contentShape = UnevenRoundedRectangle(

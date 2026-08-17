@@ -52,6 +52,8 @@ final class TopBarView: NSView {
     private(set) var topVM: TopBarViewModel?
     private var cancellables = Set<AnyCancellable>()
     private var shouldSkipNextTokenSync = false
+    private var searchFieldWidth = Const.searchFieldMinWidth
+    private var searchFieldWidthConstraint: Constraint?
 
     private lazy var chipController = TopBarChipController(
         topVM: topVM,
@@ -64,6 +66,11 @@ final class TopBarView: NSView {
     override init(frame: NSRect) {
         super.init(frame: frame)
         setup()
+    }
+
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        updateSearchFieldWidth()
     }
 
     @available(*, unavailable)
@@ -173,7 +180,7 @@ final class TopBarView: NSView {
 
         searchField.placeholderString = String(localized: .search)
         searchField.snp.makeConstraints { make in
-            make.width.equalTo(Const.topBarWidth)
+            searchFieldWidthConstraint = make.width.equalTo(searchFieldWidth).constraint
             make.height.equalTo(32)
         }
 
@@ -285,10 +292,27 @@ final class TopBarView: NSView {
         }
     }
 
+    private func updateSearchFieldWidth() {
+        guard let screenWidth = window?.frame.width, screenWidth > 0 else { return }
+
+        let width = min(
+            max(
+                screenWidth * Const.searchFieldScreenWidthRatio,
+                Const.searchFieldMinWidth
+            ),
+            Const.searchFieldMaxWidth
+        )
+        guard width != searchFieldWidth else { return }
+
+        searchFieldWidth = width
+        searchFieldWidthConstraint?.update(offset: width)
+    }
+
     // MARK: - 模式切换
 
     private func activateSearch() {
         guard !isSearching else { return }
+        updateSearchFieldWidth()
         isSearching = true
         applyMode()
         loadAppSuggestionsIfNeeded()
