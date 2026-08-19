@@ -194,14 +194,19 @@ final class SearchField: NSView {
         updateColors()
     }
 
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        updateColors()
+    }
+
     private func updateColors() {
         if #available(macOS 26.0, *) {
-            let color = NSApp.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+            let color = effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
                 ? NSColor(white: 1.0, alpha: 0.15)
                 : NSColor(white: 0.0, alpha: 0.1)
             layer?.backgroundColor = color.cgColor
         } else {
-            let color = NSApp.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+            let color = effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
                 ? NSColor(white: 1.0, alpha: 0.12)
                 : NSColor(white: 0.0, alpha: 0.1)
             layer?.backgroundColor = color.cgColor

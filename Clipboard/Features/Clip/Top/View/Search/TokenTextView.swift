@@ -47,7 +47,7 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         tv.isAutomaticDataDetectionEnabled = false
         tv.isAutomaticLinkDetectionEnabled = false
 
-        tv.applyTypingAttributes()
+        tv.restorePlainTextInputState()
         tv.defaultParagraphStyle = Self.fixedParagraphStyle
         tv.textContainerInset = NSSize(
             width: Metrics.horizontalInset,
@@ -149,6 +149,7 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         storage.endEditing()
 
         setSelectedRange(NSRange(location: min(range.location, storage.length), length: 0))
+        restorePlainTextInputState()
         notifyTextChanged()
     }
 
@@ -175,6 +176,7 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         storage.endEditing()
 
         setSelectedRange(NSRange(location: 0, length: 0))
+        restorePlainTextInputState()
         notifyTextChanged()
     }
 
@@ -234,32 +236,33 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         onTextChanged?(getPlainText())
     }
 
-    private func applyTypingAttributes() {
+    private func restorePlainTextInputState() {
         typingAttributes = plainTextAttributes
     }
 
     private func updateTextAppearance() {
         textColor = .labelColor
-        insertionPointColor = .labelColor
-        applyTypingAttributes()
 
-        guard let storage = textStorage, storage.length > 0 else { return }
-
-        let selectedRange = selectedRange()
-        let fullRange = NSRange(location: 0, length: storage.length)
-        storage.beginEditing()
-        storage.enumerateAttribute(.attachment, in: fullRange, options: []) { value, range, _ in
-            guard value == nil else { return }
-            storage.addAttributes(plainTextAttributes, range: range)
+        if let storage = textStorage, storage.length > 0 {
+            let selectedRange = selectedRange()
+            let fullRange = NSRange(location: 0, length: storage.length)
+            storage.beginEditing()
+            storage.enumerateAttribute(.attachment, in: fullRange, options: []) { value, range, _ in
+                guard value == nil else { return }
+                storage.addAttributes(plainTextAttributes, range: range)
+            }
+            storage.endEditing()
+            setSelectedRange(selectedRange)
         }
-        storage.endEditing()
-        setSelectedRange(selectedRange)
+
+        restorePlainTextInputState()
+        needsDisplay = true
     }
 
     private func moveCursorToEnd() {
         let end = textStorage?.length ?? 0
         setSelectedRange(NSRange(location: end, length: 0))
-        applyTypingAttributes()
+        restorePlainTextInputState()
         scrollRangeToVisible(selectedRange())
     }
 
@@ -301,6 +304,7 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
                     storage.deleteCharacters(in: deleteRange)
                     storage.endEditing()
                     setSelectedRange(NSRange(location: range.location, length: 0))
+                    restorePlainTextInputState()
 
                     for tag in tokensInRange {
                         onTokenDeleted?(tag)
@@ -328,6 +332,7 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
             textStorage?.endEditing()
 
             setSelectedRange(NSRange(location: prevLoc, length: 0))
+            restorePlainTextInputState()
             notifyTextChanged()
         } else {
             super.deleteBackward(sender)
@@ -364,6 +369,7 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         if isInTokenArea(range.location) {
             let tokenEnd = findTokenEndIndex()
             setSelectedRange(NSRange(location: tokenEnd, length: 0))
+            restorePlainTextInputState()
         }
 
         super.insertText(string, replacementRange: NSRange(location: NSNotFound, length: 0))
