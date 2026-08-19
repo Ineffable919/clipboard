@@ -93,7 +93,7 @@ enum Const {
     static let settingWidth: CGFloat = 650.0
     static let settingHeight: CGFloat = 660.0
 
-    static let darkBackground: Color = .init(hex: "#272835")
+    static let darkBackground: Color = .init(hex: "#363842")
     static let lightBackground: Color = .init(hex: "#f5f5f5")
     static let lightToolColor: Color = .init(hex: "#eeeeef")
     static let darkToolColor: Color = .init(hex: "#2e2e39")
