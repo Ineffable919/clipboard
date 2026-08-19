@@ -43,36 +43,6 @@ private struct MCPClientInfo: Identifiable {
     }
 }
 
-// MARK: - MCPToolInfo
-
-private struct MCPToolInfo: Identifiable {
-    let id = UUID()
-    let name: String
-    let description: String
-    let icon: String
-    let color: Color
-
-    static let all: [MCPToolInfo] = MCPToolDefinition.all.map {
-        .init(
-            name: $0.name,
-            description: $0.localizedDescription,
-            icon: $0.icon,
-            color: Color(hex: $0.colorHex)
-        )
-    }
-}
-
-private extension MCPToolDefinition {
-    var localizedDescription: String {
-        switch name {
-        case "search_clipboard": String(localized: .mcpToolDescSearchClipboard)
-        case "write_clipboard": String(localized: .mcpToolDescWriteClipboard)
-        case "list_tags": String(localized: .mcpToolDescListCategories)
-        default: description
-        }
-    }
-}
-
 // MARK: - AISettingsView
 
 struct AISettingsView: View {
@@ -156,7 +126,7 @@ struct AISettingsView: View {
                 command: vsCodeCommand,
                 footer: nil,
                 configNote: "~/.vscode/mcp.json"
-            ),
+            )
         ]
     }()
 
@@ -207,42 +177,6 @@ struct AISettingsView: View {
     }
 }
 
-// MARK: - Header Card
-
-private struct MCPHeaderCard: View {
-    @Binding var isEnabled: Bool
-    let enabledToolCount: Int
-
-    var body: some View {
-        HStack(spacing: Const.space12) {
-            VStack(alignment: .leading, spacing: Const.space4) {
-                Text("MCP")
-                    .font(.headline)
-                Text(
-                    isEnabled
-                        ? "stdio · @clipboard/mcp · \(enabledToolCount) tools exposed"
-                        : "server stopped · 0 tools exposed"
-                )
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-            }
-
-            Spacer()
-
-            Toggle("", isOn: $isEnabled)
-                .toggleStyle(.switch)
-                .controlSize(.mini)
-                .labelsHidden()
-                .onChange(of: isEnabled) { _, newValue in
-                    MCPEnableFlag.setEnabled(newValue)
-                }
-        }
-        .padding(Const.space16)
-        .settingsStyle()
-    }
-}
-
 // MARK: - Tools Section
 
 private extension Binding where Value == Set<String> {
@@ -275,8 +209,7 @@ private struct MCPToolsSection: View {
                 .font(.subheadline.bold())
 
             VStack(spacing: 0) {
-                ForEach(Array(MCPToolInfo.all.enumerated()), id: \.element.id) {
-                    index, tool in
+                ForEach(Array(MCPToolInfo.all.enumerated()), id: \.element.id) { index, tool in
                     if index > 0 {
                         Divider()
                             .padding(.horizontal, Const.space24)

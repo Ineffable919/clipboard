@@ -47,7 +47,9 @@ struct UpdaterSettingsView: View {
                     automaticallyDownloadsUpdates
             }
         }
-        .padding()
+        .padding(.horizontal, Const.space16)
+        .padding(.top, Const.space16)
+        .padding(.bottom, Const.space4)
         .frame(maxWidth: .infinity, alignment: .center)
     }
 

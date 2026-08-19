@@ -1720,6 +1720,42 @@
         }
       }
     },
+    "mcpRunning" : {
+      "comment" : "MCP server status while running, with the exposed tool count",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "stdio · @clipboard/mcp · %lld tools exposed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "stdio · @clipboard/mcp · 已开放 %lld 个工具"
+          }
+        }
+      }
+    },
+    "mcpStopped" : {
+      "comment" : "MCP server status while stopped",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "server stopped · 0 tools exposed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "服务已停止 · 已开放 0 个工具"
+          }
+        }
+      }
+    },
     "mcpToolDescListCategories" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2419,9 +2455,6 @@
         }
       }
     },
-    "server stopped · 0 tools exposed" : {
-
-    },
     "settingAboutAutomaticallyCheckUpdates" : {
       "comment" : "Toggle label: automatically check for updates",
       "extractionState" : "manual",
@@ -2429,7 +2462,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Automatically check for updates"
+            "value" : "Check automatically"
           }
         },
         "zh-Hans" : {
@@ -2447,7 +2480,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Automatically download updates"
+            "value" : "Download automatically"
           }
         },
         "zh-Hans" : {
@@ -2915,7 +2948,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Enable Accessibility Access"
+            "value" : "Enable Accessibility"
           }
         },
         "zh-Hans" : {
@@ -4382,9 +4415,6 @@
           }
         }
       }
-    },
-    "stdio · @clipboard/mcp · %lld tools exposed" : {
-
     },
     "tag" : {
       "comment" : "Tag filter section title",

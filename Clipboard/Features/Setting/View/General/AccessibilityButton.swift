@@ -24,6 +24,9 @@ struct AccessibilityButton: View {
                 Text(.settingGeneralEnableAccessibility)
                     .font(.callout)
                     .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .layoutPriority(1)
 
                 Image(systemName: "chevron.right")
                     .font(.system(size: 12, weight: .regular))
