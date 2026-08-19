@@ -27,7 +27,8 @@ struct AboutSettingView: View {
     private let currentYear = Calendar.current.component(.year, from: Date())
 
     var body: some View {
-        VStack {
+        ScrollView(.vertical) {
+            VStack {
             VStack(spacing: 8) {
                 if let appIcon = NSImage(named: "AppIcon") {
                     Image(nsImage: appIcon)
@@ -60,9 +61,11 @@ struct AboutSettingView: View {
             }
             .padding(.top, Const.space16)
 
-            Button(action: {
-                checkForUpdates()
-            }) {
+            Button(
+                action: {
+                    checkForUpdates()
+                },
+                label: {
                 HStack(spacing: 8) {
                     Image(systemName: "arrow.down.circle")
                         .font(.system(size: 14))
@@ -78,7 +81,8 @@ struct AboutSettingView: View {
                         .fill(Color.accentColor)
                 )
                 .foregroundStyle(.white)
-            }
+                }
+            )
             .buttonStyle(.plain)
             .shadow(
                 color: Color.accentColor.opacity(0.3),
@@ -88,40 +92,43 @@ struct AboutSettingView: View {
             )
             .padding(Const.space32)
 
-            Spacer()
+                Spacer(minLength: Const.space32)
 
-            VStack(spacing: Const.space12) {
-                if let updater = AppDelegate.shared?.updaterController.updater {
-                    UpdaterSettingsView(updater: updater)
-                }
-                HStack(spacing: 20) {
-                    if let github = URL(string: "https://github.com/Ineffable919/clipboard") {
-                        Link(String(localized: .aboutGithub), destination: github)
+                VStack(spacing: Const.space12) {
+                    if let updater = AppDelegate.shared?.updaterController.updater {
+                        UpdaterSettingsView(updater: updater)
                     }
-                    if let issues = URL(string: "https://github.com/Ineffable919/clipboard/issues") {
-                        Link(String(localized: .aboutFeedback), destination: issues)
+                    HStack(spacing: 20) {
+                        if let github = URL(string: "https://github.com/Ineffable919/clipboard") {
+                            Link(String(localized: .aboutGithub), destination: github)
+                        }
+                        if let issues = URL(string: "https://github.com/Ineffable919/clipboard/issues") {
+                            Link(String(localized: .aboutFeedback), destination: issues)
+                        }
                     }
-                }
-                VStack(spacing: Const.space4) {
-                    Text(.aboutMadeForMac)
+                    VStack(spacing: Const.space4) {
+                        Text(.aboutMadeForMac)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text(
+                            String.localizedStringWithFormat(
+                                String(
+                                    localized: "aboutCopyrightFormat",
+                                    defaultValue: "Copyright © %lld Crown. All rights reserved.",
+                                    table: "Localizable"
+                                ),
+                                currentYear
+                            ),
+                        )
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Text(
-                        String.localizedStringWithFormat(
-                            String(
-                                localized: "aboutCopyrightFormat",
-                                defaultValue: "Copyright © %lld Crown. All rights reserved.",
-                                table: "Localizable"
-                            ),
-                            currentYear
-                        )
-                    )
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    }
+                    .padding(.bottom, Const.space16)
                 }
-                .padding(.bottom, Const.space16)
             }
+            .frame(maxWidth: .infinity)
         }
+        .scrollIndicators(.hidden)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 

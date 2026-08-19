@@ -14,7 +14,7 @@ struct KeyboardSettingView: View {
     @State private var refreshID = UUID()
 
     var body: some View {
-        VStack(spacing: 0) {
+        ScrollView(.vertical) {
             VStack(spacing: 20) {
                 VStack(spacing: 0) {
                     StartupShortcutsView()
@@ -72,13 +72,10 @@ struct KeyboardSettingView: View {
                     }
                 }
             }
+            .padding([.horizontal, .bottom], Const.space24)
         }
-        .padding([.horizontal, .bottom], Const.space24)
-        .frame(
-            maxWidth: .infinity,
-            maxHeight: .infinity,
-            alignment: .topLeading
-        )
+        .scrollIndicators(.hidden)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
@@ -147,7 +144,7 @@ struct QuickPasteModifierView: View {
     private let modifiers = [
         (id: 0, symbol: "⌘", name: "Command"),
         (id: 1, symbol: "⌥", name: "Option"),
-        (id: 2, symbol: "⌃", name: "Control"),
+        (id: 2, symbol: "⌃", name: "Control")
     ]
 
     var body: some View {
@@ -188,7 +185,7 @@ struct PlainTextModifierView: View {
         (id: 0, symbol: "⌘", name: "Command"),
         (id: 1, symbol: "⌥", name: "Option"),
         (id: 2, symbol: "⌃", name: "Control"),
-        (id: 3, symbol: "⇧", name: "Shift"),
+        (id: 3, symbol: "⇧", name: "Shift")
     ]
 
     var body: some View {

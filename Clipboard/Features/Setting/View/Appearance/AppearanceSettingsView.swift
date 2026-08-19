@@ -31,64 +31,63 @@ struct AppearanceSettingsView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Const.space16) {
-            AppearanceSettingsRow()
-                .settingsStyle()
-
-            VStack(spacing: 0) {
-                DisplayModeRow(
-                    displayMode: Binding(
-                        get: { displayMode },
-                        set: { displayMode = $0 }
-                    )
-                )
-
-                if displayMode == .floating {
-                    WindowPositionRow(
-                        windowPosition: Binding(
-                            get: { windowPosition },
-                            set: { windowPosition = $0 }
-                        )
-                    )
-                }
-            }
-            .settingsStyle()
-
-            if #available(macOS 26.0, *) {
-                Text(.appearanceBackgroundTitle)
-                    .font(.headline)
-                    .bold()
+        ScrollView(.vertical) {
+            VStack(alignment: .leading, spacing: Const.space16) {
+                AppearanceSettingsRow()
+                    .settingsStyle()
 
                 VStack(spacing: 0) {
-                    HStack {
-                        Text(.appearanceBackgroundLabel)
-                        Spacer()
-                        BackgroundTypeOptionButton(
-                            title: .appearanceBackgroundLiquid,
-                            isSelected: backgroundType == .liquid
-                        ) {
-                            backgroundType = .liquid
-                        }
-                        BackgroundTypeOptionButton(
-                            title: .appearanceBackgroundFrosted,
-                            isSelected: backgroundType == .frosted
-                        ) {
-                            backgroundType = .frosted
-                        }
+                    DisplayModeRow(
+                        displayMode: Binding(
+                            get: { displayMode },
+                            set: { displayMode = $0 }
+                        )
+                    )
+
+                    if displayMode == .floating {
+                        WindowPositionRow(
+                            windowPosition: Binding(
+                                get: { windowPosition },
+                                set: { windowPosition = $0 }
+                            )
+                        )
                     }
                 }
-                .padding(.horizontal, Const.space16)
-                .padding(.vertical, Const.space8)
-                .frame(maxWidth: .infinity, alignment: .leading)
                 .settingsStyle()
+
+                if #available(macOS 26.0, *) {
+                    Text(.appearanceBackgroundTitle)
+                        .font(.headline)
+                        .bold()
+
+                    VStack(spacing: 0) {
+                        HStack {
+                            Text(.appearanceBackgroundLabel)
+                            Spacer()
+                            BackgroundTypeOptionButton(
+                                title: .appearanceBackgroundLiquid,
+                                isSelected: backgroundType == .liquid
+                            ) {
+                                backgroundType = .liquid
+                            }
+                            BackgroundTypeOptionButton(
+                                title: .appearanceBackgroundFrosted,
+                                isSelected: backgroundType == .frosted
+                            ) {
+                                backgroundType = .frosted
+                            }
+                        }
+                    }
+                    .padding(.horizontal, Const.space16)
+                    .padding(.vertical, Const.space8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .settingsStyle()
+                }
             }
+            .padding([.horizontal, .bottom], Const.space24)
         }
-        .padding([.horizontal, .bottom], Const.space24)
-        .frame(
-            maxWidth: .infinity,
-            maxHeight: Const.settingHeight,
-            alignment: .topLeading
-        )
+        .scrollIndicators(.hidden)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
@@ -98,7 +97,7 @@ struct AppearanceSettingsRow: View {
     @AppStorage(PrefKey.appearance.rawValue) private var appearanceRaw: Int = 0
     @AppStorage(PrefKey.appLanguage.rawValue) private var languageRaw: String =
         AppLanguage.zhHans.rawValue
-    @State private var pendingLanguage: AppLanguage? = nil
+    @State private var pendingLanguage: AppLanguage?
 
     private var selectedAppearance: AppearanceMode {
         get { .init(rawValue: appearanceRaw) ?? .system }
@@ -112,7 +111,7 @@ struct AppearanceSettingsRow: View {
     private let options: [(mode: AppearanceMode, icon: String)] = [
         (.system, "circle.lefthalf.filled.righthalf.striped.horizontal"),
         (.light, "sun.max"),
-        (.dark, "moon"),
+        (.dark, "moon")
     ]
 
     var body: some View {
