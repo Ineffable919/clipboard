@@ -5125,7 +5125,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open System Settings"
+            "value" : "Open Settings"
           }
         },
         "zh-Hans" : {
@@ -5467,7 +5467,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Start Using Clip"
+            "value" : "Get Started"
           }
         },
         "zh-Hans" : {
