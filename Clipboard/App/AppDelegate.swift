@@ -96,6 +96,8 @@ extension AppDelegate {
 
         HotKeyManager.shared.initialize()
 
+        WelcomeWindowController.shared.showIfNeeded()
+
         syncLaunchAtLoginStatus()
 
         updaterController.updater.checkForUpdatesInBackground()

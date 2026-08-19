@@ -155,6 +155,9 @@ enum PasteUserDefaults {
     /// Dock 图标
     @UserDefaultsWrapper(.showDockIcon, defaultValue: true)
     static var showDockIcon
+    /// 已完成首次启动欢迎页
+    @UserDefaultsWrapper(.welcomeDone, defaultValue: false)
+    static var welcomeDone
 }
 
 @propertyWrapper

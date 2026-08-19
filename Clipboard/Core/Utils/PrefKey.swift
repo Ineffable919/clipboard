@@ -63,6 +63,8 @@ enum PrefKey: String, CaseIterable {
     case showDockIcon
     /// 应用语言
     case appLanguage
+    /// 已完成首次启动欢迎页
+    case welcomeDone
 }
 
 /// 应用语言

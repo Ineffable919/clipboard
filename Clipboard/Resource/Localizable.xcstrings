@@ -4602,6 +4602,852 @@
         }
       }
     },
+    "welcomeContinue" : {
+      "comment" : "Welcome flow primary button to continue",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "继续"
+          }
+        }
+      }
+    },
+    "welcomeIntroductionColorTitle" : {
+      "comment" : "Welcome introduction color capability title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colors"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "颜色"
+          }
+        }
+      }
+    },
+    "welcomeIntroductionEyebrow" : {
+      "comment" : "Welcome page eyebrow",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "01 / QUICK START"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "01 / 快速开始"
+          }
+        }
+      }
+    },
+    "welcomeIntroductionFileSubtitle" : {
+      "comment" : "Welcome introduction file capability description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use local files only when you need them."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按需访问，本地预览。"
+          }
+        }
+      }
+    },
+    "welcomeIntroductionFileTitle" : {
+      "comment" : "Welcome introduction file capability title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Files"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件"
+          }
+        }
+      }
+    },
+    "welcomeIntroductionImageSubtitle" : {
+      "comment" : "Welcome introduction image capability description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep visual content ready to reuse."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保留画面，随时取用。"
+          }
+        }
+      }
+    },
+    "welcomeIntroductionImageTitle" : {
+      "comment" : "Welcome introduction image capability title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Images"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图片"
+          }
+        }
+      }
+    },
+    "welcomeIntroductionLinkSubtitle" : {
+      "comment" : "Welcome introduction link capability description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recognize and organize links automatically."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动识别，快速归档。"
+          }
+        }
+      }
+    },
+    "welcomeIntroductionLinkTitle" : {
+      "comment" : "Welcome introduction link capability title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Links"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "链接"
+          }
+        }
+      }
+    },
+    "welcomeIntroductionTextSubtitle" : {
+      "comment" : "Welcome introduction text capability description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lightweight yet powerful for everyday work."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "轻量而强大，提升日常效率。"
+          }
+        }
+      }
+    },
+    "welcomeIntroductionTextTitle" : {
+      "comment" : "Welcome introduction text capability title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文本"
+          }
+        }
+      }
+    },
+    "welcomeIntroductionPasteSubtitle" : {
+      "comment" : "Welcome introduction fast paste description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose an item and paste it into the current app."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择内容后，立即粘贴到当前应用。"
+          }
+        }
+      }
+    },
+    "welcomeIntroductionPasteTitle" : {
+      "comment" : "Welcome introduction fast paste title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste Instantly"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速粘贴"
+          }
+        }
+      }
+    },
+    "welcomeIntroductionRecordSubtitle" : {
+      "comment" : "Welcome introduction automatic recording description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copied content is saved locally on your Mac."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制的内容会自动保存在本机。"
+          }
+        }
+      }
+    },
+    "welcomeIntroductionRecordTitle" : {
+      "comment" : "Welcome introduction automatic recording title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save Automatically"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动记录"
+          }
+        }
+      }
+    },
+    "welcomeIntroductionSearchSubtitle" : {
+      "comment" : "Welcome introduction instant search description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type a keyword to find exactly what you need."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输入关键词，快速找到需要的内容。"
+          }
+        }
+      }
+    },
+    "welcomeIntroductionSearchTitle" : {
+      "comment" : "Welcome introduction instant search title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search Instantly"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "即时搜索"
+          }
+        }
+      }
+    },
+    "welcomeIntroductionSubtitle" : {
+      "comment" : "Welcome introduction subtitle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clip saves your clipboard history in the background, ready whenever you need it."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clip 会在后台保存剪贴板历史，需要时一键找回。"
+          }
+        }
+      }
+    },
+    "welcomeIntroductionTitle" : {
+      "comment" : "Welcome introduction title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy it once. Find it anytime."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制过的，不必重来"
+          }
+        }
+      }
+    },
+    "welcomePermissionAccessibilitySubtitle" : {
+      "comment" : "Welcome accessibility permission description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Used only to paste your selection into the current app."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用于将选中的内容粘贴到当前应用"
+          }
+        }
+      }
+    },
+    "welcomePermissionEyebrow" : {
+      "comment" : "Welcome permissions page eyebrow",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "03 / FINISH SETUP"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "03 / 完成设置"
+          }
+        }
+      }
+    },
+    "welcomePermissionFilesSubtitle" : {
+      "comment" : "Welcome files and folders permission description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Files are requested by macOS only when you preview or use them. No setup is needed now."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件仅在预览或使用时由 macOS 按需询问，现在无需设置。"
+          }
+        }
+      }
+    },
+    "welcomePermissionFilesTitle" : {
+      "comment" : "Welcome files and folders permission title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Files & Folders"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件与文件夹"
+          }
+        }
+      }
+    },
+    "welcomePermissionGranted" : {
+      "comment" : "Short status when accessibility permission is granted",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enabled"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已开启"
+          }
+        }
+      }
+    },
+    "welcomePermissionKeyboardPrivacy" : {
+      "comment" : "Welcome privacy note explaining accessibility permission scope",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clip never reads your keystrokes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clip 不会读取你的键盘输入"
+          }
+        }
+      }
+    },
+    "welcomePermissionLocalOnly" : {
+      "comment" : "Welcome privacy local-only note",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stored only on this Mac"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅保存在这台 Mac"
+          }
+        }
+      }
+    },
+    "welcomePermissionOnDemand" : {
+      "comment" : "Files and folders permission on-demand status",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On demand"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按需授权"
+          }
+        }
+      }
+    },
+    "welcomePermissionOpenSettings" : {
+      "comment" : "Button that opens macOS Accessibility settings from the welcome flow",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open System Settings"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开系统设置"
+          }
+        }
+      }
+    },
+    "welcomePermissionSubtitle" : {
+      "comment" : "Welcome permissions page subtitle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Once allowed, select any item from history to paste it into the current app."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授权后，选择历史内容即可直接粘贴到当前应用。"
+          }
+        }
+      }
+    },
+    "welcomePermissionTitle" : {
+      "comment" : "Welcome permissions page title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One last step: paste directly"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最后一步，直接粘贴"
+          }
+        }
+      }
+    },
+    "welcomePreferencesAppearanceSubtitle" : {
+      "comment" : "Welcome appearance preference description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Follow the system or keep a light or dark appearance."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跟随系统，或固定使用浅色、深色外观。"
+          }
+        }
+      }
+    },
+    "welcomePreferencesEyebrow" : {
+      "comment" : "Welcome preferences page eyebrow",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "04 / PERSONALIZE"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "04 / 个性化"
+          }
+        }
+      }
+    },
+    "welcomePreferencesLaunchAtLoginSubtitle" : {
+      "comment" : "Welcome launch at login preference description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep Clip ready whenever you need it."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "让 Clip 随时保持就绪"
+          }
+        }
+      }
+    },
+    "welcomePreferencesMenuBarSubtitle" : {
+      "comment" : "Welcome menu bar preference description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Clip and common actions from the menu bar."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从菜单栏快速打开 Clip 和常用操作。"
+          }
+        }
+      }
+    },
+    "welcomePreferencesSubtitle" : {
+      "comment" : "Welcome preferences page subtitle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clip is ready. You can adjust everything else later in Settings."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clip 已经准备好了，其他选项随时可以在偏好设置中调整。"
+          }
+        }
+      }
+    },
+    "welcomePreferencesTitle" : {
+      "comment" : "Welcome preferences page title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ready to go"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "准备好了"
+          }
+        }
+      }
+    },
+    "welcomePrevious" : {
+      "comment" : "Welcome flow button to go to the previous page",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上一步"
+          }
+        }
+      }
+    },
+    "welcomeShortcutEyebrow" : {
+      "comment" : "Welcome shortcut page eyebrow",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "02 / QUICK ACTIONS"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "02 / 快捷操作"
+          }
+        }
+      }
+    },
+    "welcomeShortcutGlobalSubtitle" : {
+      "comment" : "Welcome global shortcut description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click the shortcut, then press a new key combination"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点击快捷键，然后直接按下新的组合"
+          }
+        }
+      }
+    },
+    "welcomeShortcutGlobalTitle" : {
+      "comment" : "Welcome global shortcut title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Clip"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "呼出 Clip"
+          }
+        }
+      }
+    },
+    "welcomeShortcutNote" : {
+      "comment" : "Welcome shortcut saving note",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changes are saved immediately and can be edited later in Settings."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快捷键会立即保存，也可以稍后在偏好设置中修改。"
+          }
+        }
+      }
+    },
+    "welcomeShortcutStepOpen" : {
+      "comment" : "Welcome shortcut workflow step: open",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开"
+          }
+        }
+      }
+    },
+    "welcomeShortcutStepPaste" : {
+      "comment" : "Welcome shortcut workflow step: paste",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粘贴"
+          }
+        }
+      }
+    },
+    "welcomeShortcutStepSearch" : {
+      "comment" : "Welcome shortcut workflow step: search",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择"
+          }
+        }
+      }
+    },
+    "welcomeShortcutSubtitle" : {
+      "comment" : "Welcome shortcut page subtitle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Clip from any app, choose with the keyboard, then paste."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在任何应用中呼出 Clip，用键盘选择，然后直接粘贴。"
+          }
+        }
+      }
+    },
+    "welcomeShortcutTitle" : {
+      "comment" : "Welcome shortcut page title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One shortcut to find anything"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一个快捷键，完成找回"
+          }
+        }
+      }
+    },
+    "welcomeStart" : {
+      "comment" : "Welcome flow final primary button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Using Clip"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始使用"
+          }
+        }
+      }
+    },
     "wrongFile" : {
       "comment" : "Alert title for invalid import file",
       "extractionState" : "manual",
