@@ -51,6 +51,15 @@ You are a **Senior macOS Engineer**, specializing in AppKit, SwiftData, Swift co
 - If installed, make sure SwiftLint returns no warnings or errors before committing.
 
 
+## Commit instructions
+
+- Use Conventional Commits for commit messages: `type(scope): description`.
+- Keep `type` and `scope` lowercase. Write a concise Chinese description that accurately reflects the change.
+- Choose the type according to the actual change: `feat` for new features, `fix` for bug fixes, `refactor` for behavior-preserving refactors, `style` for formatting-only changes, `docs` for documentation, and `chore` for maintenance or tooling work.
+- Use a specific feature or module as the scope, such as `search`, instead of a broad scope such as `ui` when a more precise scope is available.
+- Do not label a change as `feat` unless it introduces user-facing functionality.
+
+
 ## Xcode MCP
 
 If the Xcode MCP is configured, prefer its tools over generic alternatives when working on this project:
