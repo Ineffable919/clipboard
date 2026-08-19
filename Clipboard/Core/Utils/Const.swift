@@ -8,7 +8,7 @@
 import SwiftUI
 
 enum Const {
-    static let defaultHeight: CGFloat = 330.0
+    static let defaultHeight: CGFloat = 332.0
     static let showDuration: CFTimeInterval = 0.15
     static let hideDuration: CFTimeInterval = 0.24
 
@@ -23,7 +23,7 @@ enum Const {
 
     static let windowRadis: CGFloat =
         if #available(macOS 26.0, *) {
-            23.0
+            26.0
         } else {
             12.0
         }
