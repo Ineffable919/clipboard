@@ -1,13 +1,15 @@
 {
   "images" : [
     {
-      "filename" : "PasteApp.png",
-      "idiom" : "universal",
-      "scale" : "1x"
+      "filename" : "App.pdf",
+      "idiom" : "universal"
     }
   ],
   "info" : {
     "author" : "xcode",
     "version" : 1
+  },
+  "properties" : {
+    "preserves-vector-representation" : true
   }
 }
