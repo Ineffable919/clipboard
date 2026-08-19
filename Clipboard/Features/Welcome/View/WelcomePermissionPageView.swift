@@ -55,7 +55,7 @@ struct WelcomePermissionPageView: View {
 
                         if viewModel.hasAccessibilityPermission {
                             Text(.welcomePermissionGranted)
-                                .font(.footnote.weight(.medium))
+                                .font(.body.weight(.medium))
                                 .foregroundStyle(WelcomeStyle.accent)
                                 .frame(width: 128, alignment: .trailing)
                         } else {

@@ -12,7 +12,17 @@ struct WelcomeHeaderView: View {
     var body: some View {
         HStack {
             Text(verbatim: "Clip")
-                .font(.headline.weight(.semibold))
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [
+                            WelcomeStyle.accent,
+                            Color(nsColor: .systemCyan),
+                        ],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
 
             Spacer()
 
