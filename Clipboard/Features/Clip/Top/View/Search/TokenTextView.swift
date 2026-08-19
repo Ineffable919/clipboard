@@ -33,33 +33,33 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         layout.addTextContainer(container)
         storage.addLayoutManager(layout)
 
-        let tv = TokenTextView(frame: .zero, textContainer: container)
-        layout.delegate = tv
-        tv.isRichText = true
-        tv.drawsBackground = false
-        tv.isEditable = true
-        tv.isSelectable = true
-        tv.font = .preferredFont(forTextStyle: .body)
-        tv.textColor = .labelColor
+        let textView = TokenTextView(frame: .zero, textContainer: container)
+        layout.delegate = textView
+        textView.isRichText = true
+        textView.drawsBackground = false
+        textView.isEditable = true
+        textView.isSelectable = true
+        textView.font = .preferredFont(forTextStyle: .body)
+        textView.textColor = .labelColor
         if #available(macOS 15.0, *) {
-            tv.writingToolsBehavior = .none
+            textView.writingToolsBehavior = .none
         }
-        tv.isAutomaticDataDetectionEnabled = false
-        tv.isAutomaticLinkDetectionEnabled = false
+        textView.isAutomaticDataDetectionEnabled = false
+        textView.isAutomaticLinkDetectionEnabled = false
 
-        tv.restorePlainTextInputState()
-        tv.defaultParagraphStyle = Self.fixedParagraphStyle
-        tv.textContainerInset = NSSize(
+        textView.restorePlainTextInputState()
+        textView.defaultParagraphStyle = Self.fixedParagraphStyle
+        textView.textContainerInset = NSSize(
             width: Metrics.horizontalInset,
             height: Metrics.verticalInset
         )
-        tv.minSize = NSSize(width: 0, height: Metrics.height)
-        tv.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: Metrics.height)
-        tv.isVerticallyResizable = false
-        tv.isHorizontallyResizable = true
-        tv.autoresizingMask = [.width, .height]
+        textView.minSize = NSSize(width: 0, height: Metrics.height)
+        textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: Metrics.height)
+        textView.isVerticallyResizable = false
+        textView.isHorizontallyResizable = true
+        textView.autoresizingMask = [.width, .height]
 
-        return tv
+        return textView
     }
 
     // MARK: - Properties
@@ -84,11 +84,11 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         return style
     }()
 
-    private var plainTextAttributes: [NSAttributedString.Key: Any] {
+    var plainTextAttributes: [NSAttributedString.Key: Any] {
         [
             .font: font as Any,
             .foregroundColor: NSColor.labelColor,
-            .paragraphStyle: Self.fixedParagraphStyle,
+            .paragraphStyle: Self.fixedParagraphStyle
         ]
     }
 
@@ -101,142 +101,7 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         }
     }
 
-    // MARK: - Token Management
-
-    func insertToken(_ tag: InputTag) {
-        insertTokens([tag])
-    }
-
-    func insertTokens(_ tags: [InputTag]) {
-        guard !tags.isEmpty, let storage = textStorage else { return }
-
-        storage.beginEditing()
-        for tag in tags {
-            let insertIndex = findTokenEndIndex()
-            storage.insert(NSAttributedString.makeToken(for: tag), at: insertIndex)
-            storage.insert(
-                NSAttributedString(string: " ", attributes: plainTextAttributes),
-                at: insertIndex + 1
-            )
-        }
-        storage.endEditing()
-
-        moveCursorToEnd()
-        notifyTextChanged()
-    }
-
-    func removeToken(_ tag: InputTag) {
-        guard let storage = textStorage else { return }
-
-        let fullRange = NSRange(location: 0, length: storage.length)
-        var foundRange: NSRange?
-
-        storage.enumerateAttribute(.attachment, in: fullRange, options: []) { value, range, stop in
-            if let attachment = value as? TokenAttachment, attachment.tag == tag {
-                foundRange = range
-                stop.pointee = true
-            }
-        }
-
-        guard let range = foundRange else { return }
-
-        storage.beginEditing()
-        let deleteRange = NSRange(
-            location: range.location,
-            length: min(range.length + 1, storage.length - range.location)
-        )
-        storage.deleteCharacters(in: deleteRange)
-        storage.endEditing()
-
-        setSelectedRange(NSRange(location: min(range.location, storage.length), length: 0))
-        restorePlainTextInputState()
-        notifyTextChanged()
-    }
-
-    func clearAllTokens() {
-        guard let storage = textStorage else { return }
-
-        let fullRange = NSRange(location: 0, length: storage.length)
-        var rangesToDelete: [NSRange] = []
-
-        storage.enumerateAttribute(.attachment, in: fullRange, options: []) { value, range, _ in
-            if value is NSTextAttachment {
-                rangesToDelete.append(range)
-            }
-        }
-
-        storage.beginEditing()
-        for range in rangesToDelete.reversed() {
-            let deleteRange = NSRange(
-                location: range.location,
-                length: min(range.length + 1, storage.length - range.location)
-            )
-            storage.deleteCharacters(in: deleteRange)
-        }
-        storage.endEditing()
-
-        setSelectedRange(NSRange(location: 0, length: 0))
-        restorePlainTextInputState()
-        notifyTextChanged()
-    }
-
-    func getAllTokens() -> [InputTag] {
-        guard let storage = textStorage else { return [] }
-
-        var tokens: [InputTag] = []
-        let fullRange = NSRange(location: 0, length: storage.length)
-
-        storage.enumerateAttribute(.attachment, in: fullRange, options: []) { value, _, _ in
-            if let attachment = value as? TokenAttachment {
-                tokens.append(attachment.tag)
-            }
-        }
-
-        return tokens
-    }
-
-    func getPlainText() -> String {
-        guard let storage = textStorage else { return "" }
-
-        let mutableString = NSMutableString(string: storage.string)
-        let fullRange = NSRange(location: 0, length: storage.length)
-        var rangesToDelete: [NSRange] = []
-
-        storage.enumerateAttribute(.attachment, in: fullRange, options: []) { value, range, _ in
-            if value is NSTextAttachment {
-                rangesToDelete.append(range)
-            }
-        }
-
-        for range in rangesToDelete.reversed() {
-            mutableString.deleteCharacters(in: range)
-        }
-
-        return mutableString.trimmingCharacters(in: .whitespaces)
-    }
-
-    // MARK: - Private Helpers
-
-    private func findTokenEndIndex() -> Int {
-        guard let storage = textStorage else { return 0 }
-
-        var lastTokenEnd = 0
-        let fullRange = NSRange(location: 0, length: storage.length)
-
-        storage.enumerateAttribute(.attachment, in: fullRange, options: []) { value, range, _ in
-            if value is NSTextAttachment {
-                lastTokenEnd = max(lastTokenEnd, range.location + range.length + 1)
-            }
-        }
-
-        return lastTokenEnd
-    }
-
-    private func notifyTextChanged() {
-        onTextChanged?(getPlainText())
-    }
-
-    private func restorePlainTextInputState() {
+    func restorePlainTextInputState() {
         typingAttributes = plainTextAttributes
     }
 
@@ -259,7 +124,7 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         needsDisplay = true
     }
 
-    private func moveCursorToEnd() {
+    func moveCursorToEnd() {
         let end = textStorage?.length ?? 0
         setSelectedRange(NSRange(location: end, length: 0))
         restorePlainTextInputState()
@@ -278,85 +143,36 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
     override func deleteBackward(_ sender: Any?) {
         let range = selectedRange()
 
-        guard range.length == 0, range.location > 0 else {
-            if range.length > 0, let storage = textStorage {
-                var tokensInRange: [InputTag] = []
-                storage.enumerateAttribute(.attachment, in: range, options: []) { value, _, _ in
-                    if let attachment = value as? TokenAttachment {
-                        tokensInRange.append(attachment.tag)
-                    }
-                }
-
-                if !tokensInRange.isEmpty {
-                    let storageLength = storage.length
-                    var extendedEnd = range.location + range.length
-                    if extendedEnd < storageLength {
-                        let nextChar = (storage.string as NSString).character(at: extendedEnd)
-                        if nextChar == unichar((" " as UnicodeScalar).value) {
-                            extendedEnd += 1
-                        }
-                    }
-                    let deleteRange = NSRange(
-                        location: range.location,
-                        length: min(extendedEnd - range.location, storageLength - range.location)
-                    )
-                    storage.beginEditing()
-                    storage.deleteCharacters(in: deleteRange)
-                    storage.endEditing()
-                    setSelectedRange(NSRange(location: range.location, length: 0))
-                    restorePlainTextInputState()
-
-                    for tag in tokensInRange {
-                        onTokenDeleted?(tag)
-                    }
-                    notifyTextChanged()
-                    return
-                }
-            }
-            super.deleteBackward(sender)
-            notifyTextChanged()
+        if deleteSelectedTokens(in: range) {
             return
         }
 
-        let prevLoc = range.location - 1
-
-        if let attachment = textStorage?.attribute(.attachment, at: prevLoc, effectiveRange: nil) as? TokenAttachment {
-            onTokenDeleted?(attachment.tag)
-
-            textStorage?.beginEditing()
-            let deleteRange = NSRange(
-                location: prevLoc,
-                length: min(2, (textStorage?.length ?? 0) - prevLoc)
-            )
-            textStorage?.deleteCharacters(in: deleteRange)
-            textStorage?.endEditing()
-
-            setSelectedRange(NSRange(location: prevLoc, length: 0))
-            restorePlainTextInputState()
-            notifyTextChanged()
-        } else {
-            super.deleteBackward(sender)
-            notifyTextChanged()
+        if range.length == 0,
+           range.location > 0,
+           deleteTokenBeforeCursor(at: range.location - 1) {
+            return
         }
+
+        super.deleteBackward(sender)
+        notifyTextChanged()
     }
 
     override func mouseDown(with event: NSEvent) {
-        let pt = convert(event.locationInWindow, from: nil)
-        guard let lm = layoutManager, let tc = textContainer else {
+        let point = convert(event.locationInWindow, from: nil)
+        guard let layoutManager, let textContainer else {
             super.mouseDown(with: event)
             return
         }
 
-        let idx = lm.characterIndex(
-            for: pt,
-            in: tc,
+        let index = layoutManager.characterIndex(
+            for: point,
+            in: textContainer,
             fractionOfDistanceBetweenInsertionPoints: nil
         )
 
-        if idx < (textStorage?.length ?? 0),
-           textStorage?.attribute(.attachment, at: idx, effectiveRange: nil) != nil
-        {
-            setSelectedRange(NSRange(location: idx, length: 1))
+        if index < (textStorage?.length ?? 0),
+           textStorage?.attribute(.attachment, at: index, effectiveRange: nil) != nil {
+            setSelectedRange(NSRange(location: index, length: 1))
             return
         }
 
@@ -430,7 +246,7 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
 
         let attrs: [NSAttributedString.Key: Any] = [
             .font: font,
-            .foregroundColor: placeholderColor,
+            .foregroundColor: placeholderColor
         ]
         (placeholder as NSString).draw(at: origin, withAttributes: attrs)
     }
@@ -452,6 +268,7 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         }
     }
 
+    // swiftlint:disable:next function_parameter_count
     func layoutManager(
         _: NSLayoutManager,
         shouldSetLineFragmentRect lineFragmentRect: UnsafeMutablePointer<NSRect>,
