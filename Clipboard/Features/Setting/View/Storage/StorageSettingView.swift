@@ -27,10 +27,10 @@ struct StorageSettingView: View {
             VStack(alignment: .leading, spacing: Const.space16) {
                 VStack(alignment: .leading, spacing: 0) {
                     DataStatRow(
-                        title: String(localized: .settingStorageClipboardItemCount),
+                        title: String(localized: .storageItemCount),
                         value: String.localizedStringWithFormat(
                             String(
-                                localized: "settingStorageClipboardItemCountValue",
+                                localized: "storageItemCountValue",
                                 defaultValue: "%lld items",
                                 table: "Localizable"
                             ),
@@ -41,15 +41,15 @@ struct StorageSettingView: View {
                 .padding(.horizontal, Const.space16)
                 .settingsStyle()
 
-                Text(.settingStorageBackupSectionTitle)
+                Text(.storageBackupTitle)
                     .font(.headline)
                     .bold()
 
                 VStack(alignment: .leading, spacing: 0) {
                     DataActionRow(
-                        title: String(localized: .settingStorageExportTitle),
-                        subtitle: String(localized: .settingStorageExportDescription),
-                        buttonTitle: String(localized: .settingStorageExportButton),
+                        title: String(localized: .storageExportTitle),
+                        subtitle: String(localized: .storageExportDesc),
+                        buttonTitle: String(localized: .storageExportButton),
                         isLoading: isExporting
                     ) {
                         exportDatabase()
@@ -58,9 +58,9 @@ struct StorageSettingView: View {
                     Divider()
 
                     DataActionRow(
-                        title: String(localized: .settingStorageImportTitle),
-                        subtitle: String(localized: .settingStorageImportDescription),
-                        buttonTitle: String(localized: .settingStorageImportButton),
+                        title: String(localized: .storageImportTitle),
+                        subtitle: String(localized: .storageImportDesc),
+                        buttonTitle: String(localized: .storageImportButton),
                         isLoading: isImporting
                     ) {
                         importDatabase()
@@ -69,14 +69,14 @@ struct StorageSettingView: View {
                 .padding(.horizontal, Const.space16)
                 .settingsStyle()
 
-                Text(.settingStorageNotesTitle)
+                Text(.storageNotesTitle)
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
                 VStack(alignment: .leading, spacing: Const.space4) {
-                    Text(.settingStorageNoteDeduplicate)
-                    Text(.settingStorageNotePreserveExistingData)
-                    Text(.settingStorageNoteBackupRegularly)
+                    Text(.storageNoteDeduplicate)
+                    Text(.storageNotePreserveExistingData)
+                    Text(.storageNoteBackupRegularly)
                 }
                 .font(.caption2)
                 .foregroundStyle(.secondary)
@@ -101,8 +101,8 @@ struct StorageSettingView: View {
 
     private func exportDatabase() {
         let panel = NSSavePanel()
-        panel.title = String(localized: .settingStorageExportPanelTitle)
-        panel.nameFieldLabel = String(localized: .settingStorageFileNameLabel)
+        panel.title = String(localized: .storageExportPanelTitle)
+        panel.nameFieldLabel = String(localized: .storageFileNameLabel)
         panel.nameFieldStringValue = "Clip_Backup_\(formattedDate()).sqlite3"
         panel.allowedContentTypes = [
             UTType(filenameExtension: "sqlite3") ?? .database,
@@ -125,7 +125,7 @@ struct StorageSettingView: View {
                     alertTitle = result.message
                 } else {
                     log.error("数据库导出失败: \(result.message)")
-                    alertTitle = String(localized: .settingStorageExportFailureTitle)
+                    alertTitle = String(localized: .storageExportFailureTitle)
                     alertMessage = result.message
                 }
                 showAlert = true
@@ -137,7 +137,7 @@ struct StorageSettingView: View {
 
     private func importDatabase() {
         let panel = NSOpenPanel()
-        panel.title = String(localized: .settingStorageImportPanelTitle)
+        panel.title = String(localized: .storageImportPanelTitle)
         panel.canChooseFiles = true
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = false
@@ -162,7 +162,7 @@ struct StorageSettingView: View {
 
                 if result.success {
                     log.info("数据库导入成功: \(result.message)")
-                    alertTitle = String(localized: .settingStorageImportSuccessTitle)
+                    alertTitle = String(localized: .storageImportSuccessTitle)
                     alertMessage = result.message
 
                     CategoryChipStore.shared.mergeImportedChips(from: result.importedChipsData)
@@ -179,11 +179,11 @@ struct StorageSettingView: View {
                     }
                 } else {
                     log.error("数据库导入失败: \(result.message)")
-                    alertTitle = String(localized: .settingStorageImportFailureTitle)
+                    alertTitle = String(localized: .storageImportFailureTitle)
                     alertMessage = result.message.contains(
                         String(localized: .importCancelled)
                     )
-                        ? String(localized: .settingStorageImportCancelled)
+                        ? String(localized: .storageImportCancelled)
                         : result.message
                 }
                 showAlert = true

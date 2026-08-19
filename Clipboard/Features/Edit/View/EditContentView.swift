@@ -195,8 +195,8 @@ final class EditContentView: NSVisualEffectView {
             Task { @MainActor [weak self, weak window] in
                 guard let self, let window else { return }
                 let alert = NSAlert()
-                alert.messageText = String(localized: .jsonRichFormatWarningTitle)
-                alert.informativeText = String(localized: .jsonRichFormatWarningMessage)
+                alert.messageText = String(localized: .jsonRichWarningTitle)
+                alert.informativeText = String(localized: .jsonRichWarningMessage)
                 alert.alertStyle = .warning
                 alert.addButton(withTitle: String(localized: .commonConfirm))
                 alert.addButton(withTitle: String(localized: .commonCancel))

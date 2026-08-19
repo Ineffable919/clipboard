@@ -39,13 +39,13 @@ enum SettingPage: CaseIterable, Identifiable {
 
     var title: LocalizedStringResource {
         switch self {
-        case .general: .settingPageGeneral
-        case .appearance: .settingPageAppearance
-        case .privacy: .settingPagePrivacy
-        case .keyboard: .settingPageKeyboard
-        case .storage: .settingPageStorage
-        case .ai: .settingPageMcp
-        case .about: .settingPageAbout
+        case .general: .pageGeneral
+        case .appearance: .pageAppearance
+        case .privacy: .pagePrivacy
+        case .keyboard: .pageKeyboard
+        case .storage: .pageStorage
+        case .ai: .pageMcp
+        case .about: .pageAbout
         }
     }
 }
@@ -86,7 +86,7 @@ struct SettingView: View {
                                     .compositingGroup()
                                     .accessibilityElement(children: .ignore)
                                     .accessibilityLabel(
-                                        Text(.settingPrivacyAccessibilityPermissionDenied)
+                                        Text(.privacyAccessPermissionDenied)
                                     )
                                 }
                             }
@@ -171,7 +171,7 @@ struct HelpCenterButton: View {
         }) {
             HStack {
                 Image(systemName: "questionmark.circle")
-                Text(.settingHelpCenter)
+                Text(.help)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, Const.space8)

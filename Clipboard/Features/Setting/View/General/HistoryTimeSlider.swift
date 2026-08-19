@@ -169,7 +169,7 @@ struct HistoryTimeSlider: View {
     }
 
     private var milestones: [LocalizedStringResource] {
-        [.historyTimeSliderDay, .historyTimeSliderWeek, .historyTimeSliderMonth, .historyTimeSliderYear, .historyTimeSliderForever]
+        [.historyRangeDay, .historyRangeWeek, .historyRangeMonth, .historyRangeYear, .historyRangeForever]
     }
 
     private var currentTimeUnit: HistoryTimeUnit {

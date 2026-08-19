@@ -15,7 +15,7 @@ struct WelcomeFooterView: View {
 
     var body: some View {
         HStack {
-            Button(.welcomePrevious) {
+            Button(.previous) {
                 navigate {
                     viewModel.goToPreviousPage()
                 }
@@ -63,8 +63,8 @@ struct WelcomeFooterView: View {
             } label: {
                 Text(
                     viewModel.currentPage == .permission
-                        ? .welcomeStart
-                        : .welcomeContinue
+                        ? .start
+                        : .continue
                 )
             }
             .buttonStyle(WelcomePrimaryButtonStyle())

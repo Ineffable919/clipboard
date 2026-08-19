@@ -11,12 +11,12 @@ struct WelcomeShortcutPageView: View {
 
     var body: some View {
         WelcomePageLayout(
-            step: .welcomeShortcutEyebrow,
-            title: .welcomeShortcutTitle,
-            subtitle: .welcomeShortcutSubtitle
+            step: .shortcutEyebrow,
+            title: .shortcutTitle,
+            subtitle: .shortcutSub
         ) {
             VStack(alignment: .leading, spacing: 28) {
-                Text(.welcomeShortcutGlobalTitle)
+                Text(.shortcutGlobalTitle)
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(
                         WelcomeStyle.secondaryText(for: colorScheme)

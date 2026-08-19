@@ -43,32 +43,32 @@ struct PrivacySettingView: View {
                 VStack(spacing: Const.space16) {
                     VStack(spacing: 0) {
                         PrivacyToggleRow(
-                            title: String(localized: .settingPrivacyShowDuringScreenShare),
-                            subtitle: String(localized: .settingPrivacyShowDuringScreenShareDescription),
+                            title: String(localized: .privacyShowScreenShare),
+                            subtitle: String(localized: .privacyShowScreenShareDesc),
                             isOn: $showDuringScreenShare
                         )
                         Divider()
                         PrivacyToggleRow(
-                            title: String(localized: .settingPrivacyLinkPreview),
-                            subtitle: String(localized: .settingPrivacyLinkPreviewDescription),
+                            title: String(localized: .privacyLinkPreview),
+                            subtitle: String(localized: .privacyLinkPreviewDesc),
                             isOn: $enableLinkPreview
                         )
                         Divider()
                         PrivacyToggleRow(
-                            title: String(localized: .settingPrivacyIgnoreSensitiveContent),
-                            subtitle: String(localized: .settingPrivacyIgnoreSensitiveContentDescription),
+                            title: String(localized: .privacySensitive),
+                            subtitle: String(localized: .privacySensitiveDesc),
                             isOn: $ignoreSensitiveContent
                         )
                         Divider()
                         PrivacyToggleRow(
-                            title: String(localized: .settingPrivacyIgnoreEphemeralContent),
-                            subtitle: String(localized: .settingPrivacyIgnoreEphemeralContentDescription),
+                            title: String(localized: .privacyEphemeral),
+                            subtitle: String(localized: .privacyEphemeralDesc),
                             isOn: $ignoreEphemeralContent
                         )
                         Divider()
                         PrivacyToggleRow(
-                            title: String(localized: .settingPrivacyDeleteConfirmation),
-                            subtitle: String(localized: .settingPrivacyDeleteConfirmationDescription),
+                            title: String(localized: .privacyDeleteConfirm),
+                            subtitle: String(localized: .privacyDeleteConfirmDesc),
                             isOn: $delConfirm
                         )
                     }
@@ -76,10 +76,10 @@ struct PrivacySettingView: View {
                     .settingsStyle()
 
                     VStack(alignment: .leading, spacing: Const.space4) {
-                        Text(.settingPrivacyIgnoredAppsTitle)
+                        Text(.privacyIgnoredAppsTitle)
                             .font(.headline)
                             .bold()
-                        Text(.settingPrivacyIgnoredAppsDescription)
+                        Text(.privacyIgnoredAppsDesc)
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }

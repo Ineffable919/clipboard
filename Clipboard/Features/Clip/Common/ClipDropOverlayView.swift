@@ -17,7 +17,7 @@ final class ClipDropOverlayView: NSView {
     private let contentStack = NSStackView()
     private let illustrationView = DropIllustrationView()
     private let titleLabel = NSTextField(labelWithString: String(localized: .dropOverlayTitle))
-    private let subtitleLabel = NSTextField(labelWithString: String(localized: .dropOverlaySubtitle))
+    private let subtitleLabel = NSTextField(labelWithString: String(localized: .dropOverlaySub))
 
     private var isOverlayVisible = false
 

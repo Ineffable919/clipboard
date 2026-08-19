@@ -63,8 +63,8 @@ struct AISettingsView: View {
         let helperPath = Bundle.main.bundleURL
             .appending(path: "Contents/MacOS/clipmcp")
             .path
-        let cliSubtitle = String(localized: .mcpClientSubtitleCLI)
-        let configSubtitle = String(localized: .mcpClientSubtitleConfig)
+        let cliSubtitle = String(localized: .mcpCliSub)
+        let configSubtitle = String(localized: .mcpConfigSub)
         let configCommand = """
         {
           "mcpServers": {
@@ -100,7 +100,7 @@ struct AISettingsView: View {
                 subtitle: cliSubtitle,
                 command:
                 "claude mcp add --transport stdio clipboard -- \(helperPath)",
-                footer: String(localized: .mcpClientFooterClaudeCode),
+                footer: String(localized: .mcpClaudeFooter),
                 configNote: nil
             ),
             MCPClientInfo(
@@ -154,7 +154,7 @@ struct AISettingsView: View {
                                 }
                             }
                         } label: {
-                            Text(String(localized: .mcpConnectAITools))
+                            Text(String(localized: .mcpConnectTools))
                                 .font(.system(size: 13, design: .default))
                         }
                         .fixedSize()
@@ -253,7 +253,7 @@ private struct MCPClientDetailSheet: View {
 
             if let note = client.configNote {
                 HStack(spacing: Const.space4) {
-                    Text(.mcpConfigPasteInto)
+                    Text(.mcpPasteInto)
                     Button {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(note, forType: .string)

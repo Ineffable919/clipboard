@@ -17,11 +17,11 @@ enum WelcomePage: Int, CaseIterable, Identifiable {
     var accessibilityLabel: LocalizedStringResource {
         switch self {
         case .introduction:
-            .welcomeIntroductionTitle
+            .introTitle
         case .shortcut:
-            .welcomeShortcutTitle
+            .shortcutTitle
         case .permission:
-            .welcomePermissionTitle
+            .permissionTitle
         }
     }
 

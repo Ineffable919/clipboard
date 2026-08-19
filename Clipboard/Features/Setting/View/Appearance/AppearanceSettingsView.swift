@@ -55,22 +55,22 @@ struct AppearanceSettingsView: View {
             .settingsStyle()
 
             if #available(macOS 26.0, *) {
-                Text(.settingAppearanceBackgroundSectionTitle)
+                Text(.appearanceBackgroundTitle)
                     .font(.headline)
                     .bold()
 
                 VStack(spacing: 0) {
                     HStack {
-                        Text(.settingAppearanceBackgroundTypeLabel)
+                        Text(.appearanceBackgroundLabel)
                         Spacer()
                         BackgroundTypeOptionButton(
-                            title: .settingAppearanceBackgroundTypeLiquid,
+                            title: .appearanceBackgroundLiquid,
                             isSelected: backgroundType == .liquid
                         ) {
                             backgroundType = .liquid
                         }
                         BackgroundTypeOptionButton(
-                            title: .settingAppearanceBackgroundTypeFrosted,
+                            title: .appearanceBackgroundFrosted,
                             isSelected: backgroundType == .frosted
                         ) {
                             backgroundType = .frosted
@@ -119,7 +119,7 @@ struct AppearanceSettingsRow: View {
         VStack(spacing: 0) {
             // 语言
             HStack {
-                Text(.settingLanguage)
+                Text(.language)
                 Spacer()
                 Picker(
                     selection: Binding(
@@ -143,7 +143,7 @@ struct AppearanceSettingsRow: View {
 
             // 外观
             HStack {
-                Text(.settingAppearanceModeLabel)
+                Text(.appearanceModeLabel)
                 Spacer()
                 Picker(
                     "",
@@ -173,7 +173,7 @@ struct AppearanceSettingsRow: View {
             applyAppearance(selectedAppearance)
         }
         .alert(
-            Text(.settingLanguageRestartConfirmTitle),
+            Text(.languageRestartConfirmTitle),
             isPresented: Binding(
                 get: { pendingLanguage != nil },
                 set: {
@@ -193,7 +193,7 @@ struct AppearanceSettingsRow: View {
                 NSApplication.shared.relaunch()
             }
         } message: {
-            Text(.settingLanguageRestartConfirmMessage)
+            Text(.languageRestartConfirmMessage)
         }
     }
 
@@ -223,7 +223,7 @@ struct DisplayModeRow: View {
 
     var body: some View {
         HStack {
-            Text(.settingAppearanceDisplayModeLabel)
+            Text(.appearanceDisplayLabel)
             Spacer()
             HStack(spacing: Const.space16) {
                 ForEach(DisplayMode.allCases, id: \.self) { mode in
@@ -248,7 +248,7 @@ struct WindowPositionRow: View {
 
     var body: some View {
         HStack {
-            Text(.settingAppearanceWindowPositionLabel)
+            Text(.appearancePositionLabel)
             Spacer()
             Picker(
                 "",

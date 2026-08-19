@@ -66,7 +66,7 @@ struct AboutSettingView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "arrow.down.circle")
                         .font(.system(size: 14))
-                    Text(.settingAboutCheckForUpdates)
+                    Text(.aboutCheckForUpdates)
                         .font(.system(size: 14, weight: .regular))
                         .lineLimit(1)
                         .fixedSize(horizontal: true, vertical: false)
@@ -96,20 +96,20 @@ struct AboutSettingView: View {
                 }
                 HStack(spacing: 20) {
                     if let github = URL(string: "https://github.com/Ineffable919/clipboard") {
-                        Link(String(localized: .settingAboutGithub), destination: github)
+                        Link(String(localized: .aboutGithub), destination: github)
                     }
                     if let issues = URL(string: "https://github.com/Ineffable919/clipboard/issues") {
-                        Link(String(localized: .settingAboutFeedback), destination: issues)
+                        Link(String(localized: .aboutFeedback), destination: issues)
                     }
                 }
                 VStack(spacing: Const.space4) {
-                    Text(.settingAboutMadeForMac)
+                    Text(.aboutMadeForMac)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Text(
                         String.localizedStringWithFormat(
                             String(
-                                localized: "settingAboutCopyrightFormat",
+                                localized: "aboutCopyrightFormat",
                                 defaultValue: "Copyright © %lld Crown. All rights reserved.",
                                 table: "Localizable"
                             ),

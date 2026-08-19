@@ -45,23 +45,23 @@ struct KeyboardSettingView: View {
                 HStack {
                     Spacer()
                     SystemButton(
-                        title: String(localized: .settingKeyboardResetShortcuts)
+                        title: String(localized: .keyboardResetKeys)
                     ) {
                         resetIsPresented = true
                     }
                     .confirmationDialog(
                         String(
-                            localized: .settingKeyboardResetConfirmationMessage
+                            localized: .keyboardResetConfirmMessage
                         ),
                         isPresented: $resetIsPresented
                     ) {
                         if #available(macOS 26.0, *) {
-                            Button(.settingKeyboardResetButton, role: .confirm) {
+                            Button(.keyboardResetButton, role: .confirm) {
                                 HotKeyManager.shared.resetToDefaults()
                                 refreshID = UUID()
                             }
                         } else {
-                            Button(.settingKeyboardResetButton) {
+                            Button(.keyboardResetButton) {
                                 HotKeyManager.shared.resetToDefaults()
                                 refreshID = UUID()
                             }
@@ -93,7 +93,7 @@ struct StartupShortcutsView: View {
             Text(
                 String.localizedStringWithFormat(
                     String(
-                        localized: "settingKeyboardLaunchApp",
+                        localized: "keyboardLaunchApp",
                         defaultValue: "Launch %@",
                         table: "Localizable"
                     ),
@@ -114,7 +114,7 @@ struct StartupShortcutsView: View {
 struct PreviousTabView: View {
     var body: some View {
         HStack {
-            Text(.settingKeyboardPreviousTab)
+            Text(.keyboardPreviousTab)
             Spacer()
             ShortcutRecorder("previous_tab")
         }
@@ -127,7 +127,7 @@ struct PreviousTabView: View {
 struct NextTabView: View {
     var body: some View {
         HStack {
-            Text(.settingKeyboardNextTab)
+            Text(.keyboardNextTab)
             Spacer()
             ShortcutRecorder("next_tab")
         }
@@ -152,7 +152,7 @@ struct QuickPasteModifierView: View {
 
     var body: some View {
         HStack {
-            Text(.settingKeyboardQuickPaste)
+            Text(.keyboardQuick)
             Spacer()
             HStack(spacing: Const.space4) {
                 Picker("", selection: $selectedModifier) {
@@ -170,7 +170,7 @@ struct QuickPasteModifierView: View {
                     selectedModifier = PasteUserDefaults.quickPasteModifier
                 }
 
-                Text(.settingKeyboardQuickPasteSuffix)
+                Text(.keyboardQuickSuffix)
                     .foregroundStyle(.primary)
             }
         }
@@ -193,7 +193,7 @@ struct PlainTextModifierView: View {
 
     var body: some View {
         HStack {
-            Text(.settingKeyboardPasteAsPlainText)
+            Text(.keyboardPastePlain)
             Spacer()
             Picker("", selection: $selectedModifier) {
                 ForEach(modifiers, id: \.id) { modifier in

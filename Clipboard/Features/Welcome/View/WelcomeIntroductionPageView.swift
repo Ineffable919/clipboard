@@ -10,15 +10,15 @@ struct WelcomeIntroductionPageView: View {
 
     var body: some View {
         WelcomePageLayout(
-            step: .welcomeIntroductionEyebrow,
-            title: .welcomeIntroductionTitle,
-            subtitle: .welcomeIntroductionSubtitle
+            step: .introEyebrow,
+            title: .introTitle,
+            subtitle: .introSub
         ) {
             VStack(spacing: 28) {
                 WelcomeWorkflowView()
 
                 Label(
-                    .welcomePermissionLocalOnly,
+                    .permissionLocalOnly,
                     systemImage: "lock"
                 )
                 .font(.footnote)

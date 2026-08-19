@@ -78,8 +78,8 @@ enum AppLanguage: String, CaseIterable, Identifiable {
 
     var title: LocalizedStringResource {
         switch self {
-        case .zhHans: .settingLanguageOptionSimplifiedChinese
-        case .english: .settingLanguageOptionEnglish
+        case .zhHans: .languageOptionChinese
+        case .english: .languageOptionEnglish
         }
     }
 
@@ -97,9 +97,9 @@ enum AppearanceMode: Int, CaseIterable {
 
     var title: LocalizedStringResource {
         switch self {
-        case .system: .settingAppearanceModeSystem
-        case .light: .settingAppearanceModeLight
-        case .dark: .settingAppearanceModeDark
+        case .system: .appearanceModeSystem
+        case .light: .appearanceModeLight
+        case .dark: .appearanceModeDark
         }
     }
 }
@@ -145,15 +145,15 @@ enum HistoryTimeUnit: Equatable {
     var displayText: String {
         switch self {
         case let .days(n):
-            String.localizedStringWithFormat(String(localized: "historyTimeDisplayDays", defaultValue: "%lld days", table: "Localizable"), n)
+            String.localizedStringWithFormat(String(localized: "historyDays", defaultValue: "%lld days", table: "Localizable"), n)
         case let .weeks(n):
-            String.localizedStringWithFormat(String(localized: "historyTimeDisplayWeeks", defaultValue: "%lld weeks", table: "Localizable"), n)
+            String.localizedStringWithFormat(String(localized: "historyWeeks", defaultValue: "%lld weeks", table: "Localizable"), n)
         case let .months(n):
-            String.localizedStringWithFormat(String(localized: "historyTimeDisplayMonths", defaultValue: "%lld months", table: "Localizable"), n)
+            String.localizedStringWithFormat(String(localized: "historyMonths", defaultValue: "%lld months", table: "Localizable"), n)
         case .year:
-            String(localized: .historyTimeDisplayYear)
+            String(localized: .historyYear)
         case .forever:
-            String(localized: .historyTimeDisplayForever)
+            String(localized: .historyForever)
         }
     }
 }
@@ -165,8 +165,8 @@ enum BackgroundType: Int, CaseIterable {
 
     var title: LocalizedStringResource {
         switch self {
-        case .liquid: .settingAppearanceBackgroundTypeLiquid
-        case .frosted: .settingAppearanceBackgroundTypeFrosted
+        case .liquid: .appearanceBackgroundLiquid
+        case .frosted: .appearanceBackgroundFrosted
         }
     }
 }
@@ -178,8 +178,8 @@ enum DisplayMode: Int, CaseIterable {
 
     var title: LocalizedStringResource {
         switch self {
-        case .drawer: .settingAppearanceDisplayModeDrawer
-        case .floating: .settingAppearanceDisplayModeWindow
+        case .drawer: .appearanceDisplayDrawer
+        case .floating: .appearanceDisplayWindow
         }
     }
 }
@@ -192,9 +192,9 @@ enum WindowPositionMode: Int, CaseIterable {
 
     var title: LocalizedStringResource {
         switch self {
-        case .center: .settingAppearanceWindowPositionCenter
-        case .mouse: .settingAppearanceWindowPositionMouse
-        case .lastPosition: .settingAppearanceWindowPositionLast
+        case .center: .appearancePositionCenter
+        case .mouse: .appearancePositionMouse
+        case .lastPosition: .appearancePositionLast
         }
     }
 }

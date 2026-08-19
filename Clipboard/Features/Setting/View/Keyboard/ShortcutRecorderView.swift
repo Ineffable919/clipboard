@@ -64,7 +64,7 @@ struct ShortcutRecorder: View {
                 Button {
                     shortcut = KeyboardShortcut.empty
                     displayText = String(
-                        localized: .settingKeyboardShortcutPlaceholder
+                        localized: .keyboardShortcutHint
                     )
                     save()
                 } label: {
@@ -111,7 +111,7 @@ struct ShortcutRecorder: View {
             value = shortcut
             if shortcut.isEmpty {
                 displayText = String(
-                    localized: .settingKeyboardShortcutPlaceholder
+                    localized: .keyboardShortcutHint
                 )
             }
         }
@@ -141,14 +141,14 @@ struct ShortcutRecorder: View {
 
     private func startRecording() {
         isRecording = true
-        displayText = String(localized: .settingKeyboardShortcutPrompt)
+        displayText = String(localized: .keyboardShortcutTip)
         installEventHandle()
     }
 
     private func stopRecording() {
         isRecording = false
         if shortcut.isEmpty {
-            displayText = String(localized: .settingKeyboardShortcutPlaceholder)
+            displayText = String(localized: .keyboardShortcutHint)
         } else {
             displayText = shortcut.displayString
         }

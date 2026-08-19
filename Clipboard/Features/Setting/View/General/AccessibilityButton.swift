@@ -21,7 +21,7 @@ struct AccessibilityButton: View {
                 .frame(width: Const.iconSize16, height: Const.iconSize16)
                 .accessibilityHidden(true)
 
-                Text(.settingGeneralEnableAccessibility)
+                Text(.generalEnableAccess)
                     .font(.callout)
                     .foregroundStyle(.primary)
                     .lineLimit(1)

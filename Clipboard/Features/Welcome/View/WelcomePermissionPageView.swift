@@ -15,17 +15,17 @@ struct WelcomePermissionPageView: View {
 
     var body: some View {
         WelcomePageLayout(
-            step: .welcomePermissionEyebrow,
-            title: .welcomePermissionTitle,
-            subtitle: .welcomePermissionSubtitle
+            step: .permissionEyebrow,
+            title: .permissionTitle,
+            subtitle: .permissionSub
         ) {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(spacing: 14) {
                     VStack(alignment: .leading, spacing: 5) {
-                        Text(.settingGeneralLaunchAtLogin)
+                        Text(.generalLaunch)
                             .font(.body.weight(.medium))
 
-                        Text(.welcomePreferencesLaunchAtLoginSubtitle)
+                        Text(.preferencesLaunchSub)
                             .font(.footnote)
                             .foregroundStyle(
                                 WelcomeStyle.secondaryText(for: colorScheme)
@@ -35,7 +35,7 @@ struct WelcomePermissionPageView: View {
                     Spacer()
 
                     Toggle(
-                        String(localized: .settingGeneralLaunchAtLogin),
+                        String(localized: .generalLaunch),
                         isOn: $launchAtLogin
                     )
                     .labelsHidden()
@@ -48,18 +48,18 @@ struct WelcomePermissionPageView: View {
 
                 VStack(alignment: .leading, spacing: 5) {
                     HStack(spacing: 14) {
-                        Text(.settingPrivacyAccessibilityPermissionTitle)
+                        Text(.privacyAccessPermissionTitle)
                             .font(.body.weight(.medium))
 
                         Spacer(minLength: 12)
 
                         if viewModel.hasAccessibilityPermission {
-                            Text(.welcomePermissionGranted)
+                            Text(.permissionGranted)
                                 .font(.body.weight(.medium))
                                 .foregroundStyle(WelcomeStyle.accent)
                                 .frame(width: 128, alignment: .trailing)
                         } else {
-                            Button(.welcomePermissionOpenSettings) {
+                            Button(.permissionOpenSettings) {
                                 viewModel.openAccessibilitySettings()
                             }
                             .buttonStyle(.bordered)
@@ -68,7 +68,7 @@ struct WelcomePermissionPageView: View {
                         }
                     }
 
-                    Text(.welcomePermissionAccessibilitySubtitle)
+                    Text(.permissionAccessSub)
                         .font(.footnote)
                         .foregroundStyle(
                             WelcomeStyle.secondaryText(for: colorScheme)
@@ -80,7 +80,7 @@ struct WelcomePermissionPageView: View {
                     .padding(.vertical, 18)
 
                 HStack(spacing: 14) {
-                    Text(.settingAppearanceModeLabel)
+                    Text(.appearanceModeLabel)
                         .font(.body.weight(.medium))
 
                     Spacer()
@@ -110,7 +110,7 @@ struct WelcomePermissionPageView: View {
                         }
                         .tag(AppearanceMode.dark.rawValue)
                     } label: {
-                        Text(.settingAppearanceModeLabel)
+                        Text(.appearanceModeLabel)
                     }
                     .labelsHidden()
                     .pickerStyle(.menu)
@@ -123,7 +123,7 @@ struct WelcomePermissionPageView: View {
                     .overlay(WelcomeStyle.border)
                     .padding(.vertical, 18)
 
-                Text(.welcomePermissionKeyboardPrivacy)
+                Text(.permissionKeyboardPrivacy)
                     .font(.footnote)
                     .foregroundStyle(
                         WelcomeStyle.tertiaryText(for: colorScheme)

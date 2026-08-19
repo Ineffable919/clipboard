@@ -25,9 +25,9 @@ struct MCPToolInfo: Identifiable {
 private extension MCPToolDefinition {
     var localizedDescription: String {
         switch name {
-        case "search_clipboard": String(localized: .mcpToolDescSearchClipboard)
-        case "write_clipboard": String(localized: .mcpToolDescWriteClipboard)
-        case "list_tags": String(localized: .mcpToolDescListCategories)
+        case "search_clipboard": String(localized: .mcpToolSearchClipboard)
+        case "write_clipboard": String(localized: .mcpToolWriteClipboard)
+        case "list_tags": String(localized: .mcpToolListCategories)
         default: description
         }
     }

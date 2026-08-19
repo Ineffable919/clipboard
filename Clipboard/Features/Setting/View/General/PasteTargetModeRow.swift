@@ -12,15 +12,15 @@ enum PasteTargetMode: Int, CaseIterable {
 
     var title: LocalizedStringResource {
         switch self {
-        case .toApp: .settingPasteTargetToApp
-        case .toClipboard: .settingPasteTargetToClipboard
+        case .toApp: .pasteTargetToApp
+        case .toClipboard: .pasteTargetToClipboard
         }
     }
 
     var description: LocalizedStringResource {
         switch self {
-        case .toApp: .settingPasteTargetToAppDescription
-        case .toClipboard: .settingPasteTargetToClipboardDescription
+        case .toApp: .pasteTargetToAppDesc
+        case .toClipboard: .pasteTargetToClipboardDesc
         }
     }
 }

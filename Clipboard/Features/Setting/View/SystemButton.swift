@@ -18,6 +18,6 @@ struct SystemButton: View {
 }
 
 #Preview {
-    SystemButton(title: String(localized: .settingKeyboardResetMore)) {}
+    SystemButton(title: String(localized: .keyboardResetMore)) {}
         .padding()
 }

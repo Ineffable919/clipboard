@@ -45,7 +45,7 @@ struct GeneralSettingView: View {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 4) {
                     SettingToggleRow(
-                        title: .settingGeneralLaunchAtLogin,
+                        title: .generalLaunch,
                         isOn: $launchAtLogin
                     )
                     .onChange(of: launchAtLogin) { _, newValue in
@@ -65,7 +65,7 @@ struct GeneralSettingView: View {
                     Divider()
 
                     SettingToggleRow(
-                        title: .settingGeneralMenuBarIcon,
+                        title: .generalMenuBarIcon,
                         isOn: $showMenuBarIcon
                     )
                     .onChange(of: showMenuBarIcon) { _, newValue in
@@ -78,7 +78,7 @@ struct GeneralSettingView: View {
                     Divider()
 
                     SettingToggleRow(
-                        title: .settingGeneralDockIcon,
+                        title: .generalDockIcon,
                         isOn: $showDockIcon
                     )
                     .onChange(of: showDockIcon) { _, newValue in
@@ -88,14 +88,14 @@ struct GeneralSettingView: View {
                     Divider()
 
                     SettingToggleRow(
-                        title: .settingGeneralSound,
+                        title: .generalSound,
                         isOn: $soundEnabled
                     )
                 }
                 .padding(.horizontal, Const.space16)
                 .settingsStyle()
 
-                Text(.settingGeneralPasteItemsSectionTitle)
+                Text(.generalPasteItemsTitle)
                     .font(.headline)
                     .bold()
 
@@ -133,13 +133,13 @@ struct GeneralSettingView: View {
                     ToggleRow(
                         isEnabled: $pasteAsPlainText,
                         title: String(
-                            localized: .settingGeneralPasteAsPlainText
+                            localized: .generalPastePlain
                         )
                     )
                     ToggleRow(
                         isEnabled: $removeTailingNewline,
                         title: String(
-                            localized: .settingGeneralRemoveTailingNewline
+                            localized: .generalRemoveTailingNewline
                         )
                     )
                 }
@@ -147,11 +147,11 @@ struct GeneralSettingView: View {
                 .settingsStyle()
 
                 HStack {
-                    Text(.settingGeneralHistorySectionTitle)
+                    Text(.generalHistoryTitle)
                         .font(.headline)
                         .bold()
                     Image(systemName: "exclamationmark.circle")
-                        .help(Text(.settingGeneralHistoryCleanupHint))
+                        .help(Text(.generalHistoryCleanupHint))
                 }
 
                 VStack(alignment: .leading, spacing: Const.space8) {
@@ -166,7 +166,7 @@ struct GeneralSettingView: View {
                         Spacer()
                         SystemButton(
                             title: String(
-                                localized: .settingGeneralClearHistory
+                                localized: .generalClearHistory
                             ),
                             action: PasteDataStore.main.clearAllData
                         )

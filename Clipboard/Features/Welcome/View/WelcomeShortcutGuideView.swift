@@ -11,7 +11,7 @@ struct WelcomeShortcutGuideView: View {
     var body: some View {
         HStack(spacing: 14) {
             VStack(spacing: 10) {
-                Text(.welcomeShortcutStepOpen)
+                Text(.shortcutStepOpen)
                     .font(.footnote)
                     .foregroundStyle(
                         WelcomeStyle.secondaryText(for: colorScheme)
@@ -27,7 +27,7 @@ struct WelcomeShortcutGuideView: View {
                 .overlay(WelcomeStyle.border)
 
             VStack(spacing: 10) {
-                Text(.welcomeShortcutStepSearch)
+                Text(.shortcutStepSearch)
                     .font(.footnote)
                     .foregroundStyle(
                         WelcomeStyle.secondaryText(for: colorScheme)
@@ -43,7 +43,7 @@ struct WelcomeShortcutGuideView: View {
                 .overlay(WelcomeStyle.border)
 
             VStack(spacing: 10) {
-                Text(.welcomeShortcutStepPaste)
+                Text(.shortcutStepPaste)
                     .font(.footnote)
                     .foregroundStyle(
                         WelcomeStyle.secondaryText(for: colorScheme)
