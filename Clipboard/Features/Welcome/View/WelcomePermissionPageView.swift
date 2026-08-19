@@ -48,14 +48,6 @@ struct WelcomePermissionPageView: View {
 
                 VStack(alignment: .leading, spacing: 5) {
                     HStack(spacing: 14) {
-                        Circle()
-                            .fill(
-                                viewModel.hasAccessibilityPermission
-                                    ? WelcomeStyle.accent
-                                    : WelcomeStyle.border
-                            )
-                            .frame(width: 8, height: 8)
-
                         Text(.settingPrivacyAccessibilityPermissionTitle)
                             .font(.body.weight(.medium))
 
@@ -65,12 +57,14 @@ struct WelcomePermissionPageView: View {
                             Text(.welcomePermissionGranted)
                                 .font(.footnote.weight(.medium))
                                 .foregroundStyle(WelcomeStyle.accent)
+                                .frame(width: 128, alignment: .trailing)
                         } else {
                             Button(.welcomePermissionOpenSettings) {
                                 viewModel.openAccessibilitySettings()
                             }
                             .buttonStyle(.bordered)
                             .controlSize(.regular)
+                            .frame(width: 128, alignment: .trailing)
                         }
                     }
 
@@ -79,7 +73,6 @@ struct WelcomePermissionPageView: View {
                         .foregroundStyle(
                             WelcomeStyle.secondaryText(for: colorScheme)
                         )
-                        .padding(.leading, 22)
                 }
 
                 Divider()
@@ -122,7 +115,8 @@ struct WelcomePermissionPageView: View {
                     .labelsHidden()
                     .pickerStyle(.menu)
                     .buttonStyle(.borderless)
-                    .frame(width: 128)
+                    .frame(width: 128, alignment: .trailing)
+                    .offset(x: 6)
                 }
 
                 Divider()

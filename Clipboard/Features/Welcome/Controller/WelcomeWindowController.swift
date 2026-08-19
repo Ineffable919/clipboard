@@ -54,7 +54,9 @@ final class WelcomeWindowController: NSWindowController {
     }
 
     func showIfNeeded() {
-        guard !PasteUserDefaults.welcomeDone else { return }
+        #if !DEBUG
+            guard !PasteUserDefaults.welcomeDone else { return }
+        #endif
 
         NSApp.activate(ignoringOtherApps: true)
         window?.center()
