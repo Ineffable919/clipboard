@@ -91,40 +91,40 @@ struct AboutSettingView: View {
                 y: 4
             )
             .padding(Const.space32)
-
-                Spacer(minLength: Const.space32)
-
-                VStack(spacing: Const.space12) {
-                    if let updater = AppDelegate.shared?.updaterController.updater {
-                        UpdaterSettingsView(updater: updater)
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            VStack(spacing: Const.space12) {
+                if let updater = AppDelegate.shared?.updaterController.updater {
+                    UpdaterSettingsView(updater: updater)
+                }
+                HStack(spacing: 20) {
+                    if let github = URL(string: "https://github.com/Ineffable919/clipboard") {
+                        Link(String(localized: .aboutGithub), destination: github)
                     }
-                    HStack(spacing: 20) {
-                        if let github = URL(string: "https://github.com/Ineffable919/clipboard") {
-                            Link(String(localized: .aboutGithub), destination: github)
-                        }
-                        if let issues = URL(string: "https://github.com/Ineffable919/clipboard/issues") {
-                            Link(String(localized: .aboutFeedback), destination: issues)
-                        }
+                    if let issues = URL(string: "https://github.com/Ineffable919/clipboard/issues") {
+                        Link(String(localized: .aboutFeedback), destination: issues)
                     }
-                    VStack(spacing: Const.space4) {
-                        Text(.aboutMadeForMac)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        Text(
-                            String.localizedStringWithFormat(
-                                String(
-                                    localized: "aboutCopyrightFormat",
-                                    defaultValue: "Copyright © %lld Crown. All rights reserved.",
-                                    table: "Localizable"
-                                ),
-                                currentYear
-                            ),
-                        )
+                }
+                VStack(spacing: Const.space4) {
+                    Text(.aboutMadeForMac)
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    }
-                    .padding(.bottom, Const.space16)
+                    Text(
+                        String.localizedStringWithFormat(
+                            String(
+                                localized: "aboutCopyrightFormat",
+                                defaultValue: "Copyright © %lld Crown. All rights reserved.",
+                                table: "Localizable"
+                            ),
+                            currentYear
+                        ),
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 }
+                .padding(.bottom, Const.space16)
             }
             .frame(maxWidth: .infinity)
         }
