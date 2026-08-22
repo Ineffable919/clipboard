@@ -14,7 +14,6 @@ final class FilterPopover: NSPopover {
     var onDidClose: (() -> Void)?
 
     private let filterViewController: FilterPopoverViewController
-    private(set) var isClosing = false
 
     // MARK: - Init
 
@@ -38,10 +37,8 @@ final class FilterPopover: NSPopover {
     }
 
     func toggle(relativeTo positioningRect: NSRect, of positioningView: NSView) {
-        if isShown || isClosing {
-            if !isClosing {
-                close()
-            }
+        if isShown {
+            close()
             return
         }
 
@@ -58,13 +55,10 @@ final class FilterPopover: NSPopover {
 
 extension FilterPopover: NSPopoverDelegate {
     func popoverWillClose(_: Notification) {
-        guard !isClosing else { return }
-        isClosing = true
         onWillClose?()
     }
 
     func popoverDidClose(_: Notification) {
-        isClosing = false
         onDidClose?()
     }
 }

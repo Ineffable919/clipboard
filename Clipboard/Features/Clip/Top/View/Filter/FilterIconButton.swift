@@ -56,22 +56,30 @@ final class FilterIconButton: NSButton {
     }
 
     override func mouseDown(with event: NSEvent) {
-        animateScale(to: 1.05)
+        animateClick()
         super.mouseDown(with: event)
-        animateScale(to: 1.0)
     }
 
-    private func animateScale(to scale: CGFloat) {
+    private func animateClick() {
         guard let layer else { return }
-        let anim = CASpringAnimation(keyPath: "transform.scale")
-        anim.toValue = scale
-        anim.damping = 12
-        anim.initialVelocity = 8
-        anim.duration = anim.settlingDuration
-        anim.fillMode = .forwards
-        anim.isRemovedOnCompletion = false
-        layer.add(anim, forKey: "scale")
-        layer.transform = CATransform3DMakeScale(scale, scale, 1)
+
+        let currentScale = layer.presentation()?.transform.m11 ?? layer.transform.m11
+        layer.removeAnimation(forKey: "scale")
+        layer.transform = CATransform3DIdentity
+
+        guard !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else {
+            return
+        }
+
+        let animation = CAKeyframeAnimation(keyPath: "transform.scale")
+        animation.values = [currentScale, 1.05, 1.0]
+        animation.keyTimes = [0, 0.375, 1]
+        animation.duration = 0.16
+        animation.timingFunctions = [
+            CAMediaTimingFunction(name: .easeOut),
+            CAMediaTimingFunction(name: .easeOut)
+        ]
+        layer.add(animation, forKey: "scale")
     }
 
     @objc private func handleClick() {

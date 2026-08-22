@@ -15,6 +15,7 @@ final class FilterPopoverViewController: NSViewController {
 
     private var hasInitializedView = false
     private var hasAppeared = false
+    private var isViewVisible = false
 
     // MARK: - Views
 
@@ -52,6 +53,17 @@ final class FilterPopoverViewController: NSViewController {
             loadData()
         }
         hasAppeared = true
+    }
+
+    override func viewDidAppear() {
+        super.viewDidAppear()
+        isViewVisible = true
+        contentView.appSection.prepareRemainingApps()
+    }
+
+    override func viewDidDisappear() {
+        super.viewDidDisappear()
+        isViewVisible = false
     }
 
     // MARK: - Public API
@@ -133,11 +145,18 @@ extension FilterPopoverViewController {
 
             let appInfo = rawAppInfo.map { info in
                 let icon = AppIconCache.shared.getCachedIcon(forPath: info.path)
-                return (name: info.name, path: info.path, icon: icon)
+                return FilterAppInfo(
+                    name: info.name,
+                    path: info.path,
+                    icon: icon
+                )
             }
 
             contentView.typeSection.setAvailableTypes(types)
             contentView.appSection.setAvailableApps(appInfo)
+            if isViewVisible {
+                contentView.appSection.prepareRemainingApps()
+            }
 
             let userChips = CategoryChipStore.shared.chips.filter { !$0.isSystem }
             contentView.tagSection.setAvailableGroups(userChips)

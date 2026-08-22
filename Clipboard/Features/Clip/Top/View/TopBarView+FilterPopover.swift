@@ -58,8 +58,7 @@ extension TopBarView {
 
     func togglePopover() {
         guard let filterPopover else { return }
-        let wasClosing = filterPopover.isShown || filterPopover.isClosing
-        if wasClosing {
+        if filterPopover.isShown {
             explicitFilterPopoverCloseDestination = .search
         } else {
             explicitFilterPopoverCloseDestination = nil
@@ -68,7 +67,7 @@ extension TopBarView {
             relativeTo: searchField.filterButton.bounds,
             of: searchField.filterButton
         )
-        if filterPopover.isShown, !filterPopover.isClosing {
+        if filterPopover.isShown {
             installFilterPopoverMouseMonitor()
             onFocusRegionChange?(.filter)
         }

@@ -295,13 +295,10 @@ final class TopBarView: NSView {
         updateSearchFieldWidth()
         isSearching = true
         applyMode()
+        filterPopover?.prepare()
         loadAppSuggestionsIfNeeded()
         window?.makeFirstResponder(searchField)
         onFocusRegionChange?(.search)
-        Task { @MainActor [weak self] in
-            await Task.yield()
-            self?.filterPopover?.prepare()
-        }
     }
 
     func activateSearch(with character: String) {
