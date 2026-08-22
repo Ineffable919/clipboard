@@ -18,10 +18,6 @@ struct WelcomeView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            WelcomeHeaderView(
-                showsSkip: viewModel.currentPage != .permission
-            )
-
             ZStack {
                 WelcomePageContentView(viewModel: viewModel)
                     .id(viewModel.currentPage)
@@ -32,7 +28,11 @@ struct WelcomeView: View {
                                     ? .trailing
                                     : .leading
                             ).combined(with: .opacity),
-                            removal: .opacity
+                            removal: .move(
+                                edge: viewModel.isMovingForward
+                                    ? .leading
+                                    : .trailing
+                            ).combined(with: .opacity)
                         )
                     )
             }
@@ -43,6 +43,14 @@ struct WelcomeView: View {
                 viewModel: viewModel,
                 focusNamespace: focusNamespace
             )
+            .frame(height: WelcomeStyle.footerHeight)
+        }
+        .overlay(alignment: .topTrailing) {
+            if viewModel.currentPage != .permission {
+                WelcomeSkipButtonView()
+                    .padding(.top, 24)
+                    .padding(.trailing, 28)
+            }
         }
         .focusScope(focusNamespace)
         .background(WelcomeStyle.background(for: colorScheme))

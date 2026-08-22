@@ -121,6 +121,13 @@ struct ShortcutRecorder: View {
         .onChange(of: shortcut) { _, _ in
             value = shortcut
         }
+        .onChange(of: value) { _, newValue in
+            guard newValue != shortcut else { return }
+            shortcut = newValue
+            displayText = newValue.isEmpty
+                ? String(localized: .keyboardShortcutHint)
+                : newValue.displayString
+        }
     }
 
     private var textColor: Color {

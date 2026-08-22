@@ -6,26 +6,15 @@
 import SwiftUI
 
 struct WelcomeIntroductionPageView: View {
-    @Environment(\.colorScheme) private var colorScheme
-
     var body: some View {
-        WelcomePageLayout(
-            step: .introEyebrow,
-            title: .introTitle,
-            subtitle: .introSub
-        ) {
-            VStack(spacing: 28) {
-                WelcomeWorkflowView()
+        HStack(alignment: .center, spacing: 31) {
+            WelcomeIntroductionCopyView()
+                .frame(width: 224, alignment: .leading)
 
-                Label(
-                    .permissionLocalOnly,
-                    systemImage: "lock"
-                )
-                .font(.footnote)
-                .foregroundStyle(
-                    WelcomeStyle.secondaryText(for: colorScheme)
-                )
-            }
+            WelcomeWorkflowView()
+                .frame(width: 421)
         }
+        .padding(.horizontal, 22)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

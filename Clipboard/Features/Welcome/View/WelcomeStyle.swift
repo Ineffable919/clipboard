@@ -8,10 +8,8 @@ import SwiftUI
 enum WelcomeStyle {
     static let windowWidth: CGFloat = 720.0
     static let windowHeight: CGFloat = 500.0
-    static let horizontalPadding: CGFloat = 50.0
-    static let leftColumnWidth: CGFloat = 270.0
-    static let rightColumnWidth: CGFloat = 304.0
-    static let columnSpacing: CGFloat = 46.0
+    static let horizontalPadding: CGFloat = 48.0
+    static let footerHeight: CGFloat = 66.0
 
     static let accent = Color(nsColor: .systemBlue)
     static let border = Color.primary.opacity(0.18)
@@ -19,12 +17,16 @@ enum WelcomeStyle {
     static func background(for colorScheme: ColorScheme) -> Color {
         switch colorScheme {
         case .light:
-            .white
+            Color(
+                red: 245.0 / 255.0,
+                green: 245.0 / 255.0,
+                blue: 247.0 / 255.0
+            )
         case .dark:
             Color(
-                red: 37.0 / 255.0,
-                green: 39.0 / 255.0,
-                blue: 43.0 / 255.0
+                red: 24.0 / 255.0,
+                green: 25.0 / 255.0,
+                blue: 28.0 / 255.0
             )
         @unknown default:
             .white
@@ -86,5 +88,37 @@ enum WelcomeStyle {
         @unknown default:
             Color(nsColor: .tertiaryLabelColor)
         }
+    }
+
+    static func surface(for colorScheme: ColorScheme) -> Color {
+        switch colorScheme {
+        case .light:
+            .white
+        case .dark:
+            Color(
+                red: 42.0 / 255.0,
+                green: 44.0 / 255.0,
+                blue: 49.0 / 255.0
+            )
+        @unknown default:
+            Color(nsColor: .controlBackgroundColor)
+        }
+    }
+
+    static func subtleSurface(for colorScheme: ColorScheme) -> Color {
+        switch colorScheme {
+        case .light:
+            Color.black.opacity(0.045)
+        case .dark:
+            Color.white.opacity(0.08)
+        @unknown default:
+            Color.primary.opacity(0.06)
+        }
+    }
+
+    static func panelShadow(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .light
+            ? Color.black.opacity(0.09)
+            : Color.black.opacity(0.3)
     }
 }

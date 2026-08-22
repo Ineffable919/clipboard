@@ -3,35 +3,48 @@
 //  Clipboard
 //
 
+import AppKit
 import SwiftUI
 
 struct WelcomeShortcutPageView: View {
     @State private var shortcut = KeyboardShortcut.empty
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         WelcomePageLayout(
-            step: .shortcutEyebrow,
             title: .shortcutTitle,
             subtitle: .shortcutSub
         ) {
-            VStack(alignment: .leading, spacing: 28) {
-                Text(.shortcutGlobalTitle)
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(
-                        WelcomeStyle.secondaryText(for: colorScheme)
-                    )
-
-                ShortcutRecorder(
-                    "app_launch",
-                    binding: $shortcut,
-                    width: 220,
-                    minHeight: 32,
-                    transparent: true
-                )
-
-                WelcomeShortcutGuideView()
-            }
+            WelcomeShortcutSetupView(
+                shortcut: $shortcut,
+                onRestoreDefault: restoreDefaultShortcut
+            )
         }
+    }
+
+    private func restoreDefaultShortcut() {
+        let defaultShortcut = KeyboardShortcut(
+            modifiersRawValue: NSEvent.ModifierFlags([.command, .shift])
+                .rawValue,
+            keyCode: KeyCode.v,
+            displayKey: "V"
+        )
+
+        let restoredShortcut =
+            if HotKeyManager.shared.getHotKey(key: "app_launch") == nil {
+                HotKeyManager.shared.addHotKey(
+                    key: "app_launch",
+                    shortcut: defaultShortcut,
+                    isGlobal: true
+                )
+            } else {
+                HotKeyManager.shared.updateHotKey(
+                    key: "app_launch",
+                    shortcut: defaultShortcut,
+                    isEnabled: true
+                )
+            }
+
+        guard let restoredShortcut else { return }
+        shortcut = restoredShortcut.shortcut
     }
 }

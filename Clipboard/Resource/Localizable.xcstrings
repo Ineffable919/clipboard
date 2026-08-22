@@ -5064,6 +5064,132 @@
         }
       }
     },
+    "welcomeSampleColorName" : {
+      "comment" : "Color name shown in the welcome page sample card",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teal Blue"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "青蓝色"
+          }
+        }
+      }
+    },
+    "welcomeSampleLinkTitle" : {
+      "comment" : "Link title shown in the welcome page sample card",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Efficient workflows\nfor productive teams"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "高效工作流\n助力团队协作"
+          }
+        }
+      }
+    },
+    "welcomeSampleNoteOne" : {
+      "comment" : "First meeting note shown in the welcome page sample card",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Q2 goals aligned"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Q2 目标对齐"
+          }
+        }
+      }
+    },
+    "welcomeSampleNoteThree" : {
+      "comment" : "Third meeting note shown in the welcome page sample card",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Design review"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设计评审安排"
+          }
+        }
+      }
+    },
+    "welcomeSampleNoteTitle" : {
+      "comment" : "Meeting note heading shown in the welcome page sample card",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meeting notes:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "会议要点："
+          }
+        }
+      }
+    },
+    "welcomeSampleNoteTwo" : {
+      "comment" : "Second meeting note shown in the welcome page sample card",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feature priorities"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新功能优先级"
+          }
+        }
+      }
+    },
+    "welcomePermissionNotEnabled" : {
+      "comment" : "Welcome accessibility permission status before authorization",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not Enabled"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "尚未开启"
+          }
+        }
+      }
+    },
     "permissionKeyboardPrivacy" : {
       "comment" : "Welcome privacy note explaining accessibility permission scope",
       "extractionState" : "manual",
@@ -5348,6 +5474,60 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "呼出 Clip"
+          }
+        }
+      }
+    },
+    "welcomeShortcutCurrent" : {
+      "comment" : "Label above the editable global shortcut in the welcome flow",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Current Shortcut"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前快捷键"
+          }
+        }
+      }
+    },
+    "welcomeShortcutRestoreDefault" : {
+      "comment" : "Button that restores the default global shortcut in the welcome flow",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore Default"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "恢复默认"
+          }
+        }
+      }
+    },
+    "welcomeShortcutResult" : {
+      "comment" : "Heading for the Clip preview shown beside the shortcut recorder",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Press to Open"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按下后即可呼出"
           }
         }
       }

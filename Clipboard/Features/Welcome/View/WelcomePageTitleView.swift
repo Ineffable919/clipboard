@@ -6,23 +6,16 @@
 import SwiftUI
 
 struct WelcomePageTitleView: View {
-    let step: LocalizedStringResource
     let title: LocalizedStringResource
     let subtitle: LocalizedStringResource
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text(step)
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(WelcomeStyle.accent)
-                .padding(.bottom, 24)
-
+        VStack(alignment: .leading, spacing: 12) {
             Text(title)
-                .font(.title.weight(.semibold))
-                .tracking(-0.5)
+                .font(.system(size: 32, weight: .semibold))
+                .tracking(-0.8)
                 .fixedSize(horizontal: false, vertical: true)
-                .padding(.bottom, 18)
 
             Text(subtitle)
                 .font(.body)

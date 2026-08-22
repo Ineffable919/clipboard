@@ -8,9 +8,9 @@ import SwiftUI
 struct WelcomePrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.callout.weight(.semibold))
+            .font(.footnote)
             .foregroundStyle(.white)
-            .frame(maxWidth: .infinity, minHeight: 30)
+            .frame(maxWidth: .infinity, minHeight: 28)
             .background(
                 WelcomeStyle.accent.opacity(configuration.isPressed ? 0.82 : 1)
             )
