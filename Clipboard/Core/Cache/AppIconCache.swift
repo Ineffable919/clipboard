@@ -11,6 +11,8 @@ final class AppIconCache {
     static let shared = AppIconCache()
 
     private let cache = NSCache<NSString, NSImage>()
+    private let inFlightTasksLock = NSLock()
+    private var inFlightTasks: [String: Task<NSImage, Never>] = [:]
 
     private init() {
         cache.countLimit = 50
@@ -31,11 +33,23 @@ final class AppIconCache {
             return cached
         }
 
-        let icon = await Task.detached {
-            NSWorkspace.shared.icon(forFile: path)
-        }.value
+        let task = inFlightTasksLock.withLock {
+            if let task = inFlightTasks[path] {
+                return task
+            }
+
+            let task = Task.detached {
+                NSWorkspace.shared.icon(forFile: path)
+            }
+            inFlightTasks[path] = task
+            return task
+        }
+        let icon = await task.value
 
         cache.setObject(icon, forKey: path as NSString)
+        inFlightTasksLock.withLock {
+            inFlightTasks[path] = nil
+        }
 
         return icon
     }
