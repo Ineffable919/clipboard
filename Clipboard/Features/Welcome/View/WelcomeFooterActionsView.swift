@@ -22,7 +22,7 @@ struct WelcomeFooterActionsView: View {
                     }
                 }
                 .buttonStyle(WelcomeSecondaryButtonStyle())
-                .frame(width: 72)
+                .frame(width: 64)
             }
 
             Button {
@@ -41,7 +41,7 @@ struct WelcomeFooterActionsView: View {
                 )
             }
             .buttonStyle(WelcomePrimaryButtonStyle())
-            .frame(width: 72)
+            .frame(width: 64)
             .focusable()
             .focusEffectDisabled()
             .overlay {

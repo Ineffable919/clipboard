@@ -12,20 +12,20 @@ struct WelcomeFooterView: View {
     var body: some View {
         ZStack {
             HStack {
-                WelcomeFooterActionsView(
-                    viewModel: viewModel,
-                    focusNamespace: focusNamespace
-                )
-
-                Spacer()
-
                 if viewModel.currentPage == .permission {
                     WelcomePreferencesControlsView()
-                        .frame(width: 286, alignment: .trailing)
+                        .frame(width: 286, alignment: .leading)
                 } else {
                     Color.clear
                         .frame(width: 286, height: 1)
                 }
+
+                Spacer()
+
+                WelcomeFooterActionsView(
+                    viewModel: viewModel,
+                    focusNamespace: focusNamespace
+                )
             }
 
             WelcomePageIndicatorView(viewModel: viewModel)

@@ -10,7 +10,7 @@ struct WelcomePrimaryButtonStyle: ButtonStyle {
         configuration.label
             .font(.footnote)
             .foregroundStyle(.white)
-            .frame(maxWidth: .infinity, minHeight: 28)
+            .frame(maxWidth: .infinity, minHeight: 24)
             .background(
                 WelcomeStyle.accent.opacity(configuration.isPressed ? 0.82 : 1)
             )

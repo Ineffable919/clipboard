@@ -10,11 +10,18 @@ struct WelcomeSecondaryButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.callout.weight(.medium))
+            .font(.footnote)
             .foregroundStyle(
                 WelcomeStyle.secondaryText(for: colorScheme)
             )
-            .frame(maxWidth: .infinity, minHeight: 32, alignment: .leading)
-            .opacity(configuration.isPressed ? 0.58 : 1)
+            .frame(maxWidth: .infinity, minHeight: 24)
+            .overlay {
+                RoundedRectangle(
+                    cornerRadius: Const.btnRadius,
+                    style: .continuous
+                )
+                .stroke(WelcomeStyle.border, lineWidth: 1)
+            }
+            .opacity(configuration.isPressed ? 0.6 : 1)
     }
 }
