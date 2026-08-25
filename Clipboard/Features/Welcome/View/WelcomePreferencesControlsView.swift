@@ -13,62 +13,71 @@ struct WelcomePreferencesControlsView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        HStack(spacing: 8) {
-            Text(.generalLaunch)
-                .font(.footnote)
+        HStack(spacing: 20) {
+            HStack(spacing: 6) {
+                Text(.generalLaunch)
+                    .font(.footnote)
+                    .foregroundStyle(
+                        WelcomeStyle.secondaryText(for: colorScheme)
+                    )
 
-            Toggle(
-                String(localized: .generalLaunch),
-                isOn: $launchAtLogin
-            )
-            .labelsHidden()
-            .toggleStyle(.switch)
-            .controlSize(.small)
+                Toggle(
+                    String(localized: .generalLaunch),
+                    isOn: $launchAtLogin
+                )
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .controlSize(.small)
+            }
 
-            Divider()
-                .frame(height: 20)
+            HStack(spacing: 6) {
+                Text(.appearanceModeLabel)
+                    .font(.footnote)
+                    .foregroundStyle(
+                        WelcomeStyle.secondaryText(for: colorScheme)
+                    )
 
-            Text(.appearanceModeLabel)
-                .font(.footnote)
-
-            Menu {
-                ForEach(AppearanceMode.allCases, id: \.rawValue) { mode in
-                    Button {
-                        appearanceRaw = mode.rawValue
-                    } label: {
-                        if mode == currentAppearance {
-                            Label(mode.title, systemImage: "checkmark")
-                        } else {
-                            Text(mode.title)
+                Menu {
+                    ForEach(AppearanceMode.allCases, id: \.rawValue) { mode in
+                        Button {
+                            appearanceRaw = mode.rawValue
+                        } label: {
+                            if mode == currentAppearance {
+                                Label(mode.title, systemImage: "checkmark")
+                            } else {
+                                Text(mode.title)
+                            }
                         }
                     }
-                }
-            } label: {
-                HStack(spacing: 6) {
-                    Text(currentAppearance.title)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                        .foregroundStyle(
-                            WelcomeStyle.primaryText(for: colorScheme)
-                        )
+                } label: {
+                    HStack(spacing: 6) {
+                        Text(currentAppearance.title)
+                            .font(.footnote)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                            .foregroundStyle(
+                                WelcomeStyle.primaryText(for: colorScheme)
+                            )
 
-                    Image(systemName: "chevron.up.chevron.down")
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(
-                            WelcomeStyle.secondaryText(for: colorScheme)
-                        )
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(
+                                WelcomeStyle.secondaryText(for: colorScheme)
+                            )
+                    }
+                    .padding(.horizontal, 10)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(
+                        WelcomeStyle.subtleSurface(for: colorScheme),
+                        in: .rect(cornerRadius: 7)
+                    )
+                    .contentShape(.rect)
                 }
-                .padding(.horizontal, 10)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(
-                    WelcomeStyle.subtleSurface(for: colorScheme),
-                    in: .rect(cornerRadius: 7)
-                )
-                .contentShape(.rect)
+                .menuStyle(.borderlessButton)
+                .menuIndicator(.hidden)
+                .tint(WelcomeStyle.primaryText(for: colorScheme))
+                .frame(width: 88, height: 28)
             }
-            .menuStyle(.borderlessButton)
-            .menuIndicator(.hidden)
-            .frame(width: 88, height: 28)
         }
         .onChange(of: launchAtLogin) { _, newValue in
             let success = LaunchAtLoginHelper.shared.setEnabled(newValue)
