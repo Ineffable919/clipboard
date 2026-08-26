@@ -100,30 +100,46 @@ final class TopBarIconButton: NSView {
     // MARK: - Appearance
 
     private func updateAppearance(animated: Bool) {
-        let isDark =
-            effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-
         imageView.contentTintColor = .labelColor
 
-        let bgColor: NSColor =
-            isHovering
-                ? (isDark
-                    ? .quinaryLabel
-                    : .labelColor.withAlphaComponent(0.06))
-                : .clear
+        var resolvedBackgroundColor: CGColor = .clear
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            resolvedBackgroundColor = backgroundColor().cgColor
+        }
 
         if animated {
             NSAnimationContext.runAnimationGroup { ctx in
                 ctx.duration = 0.1
                 ctx.allowsImplicitAnimation = true
-                backgroundLayer.backgroundColor = bgColor.cgColor
+                backgroundLayer.backgroundColor = resolvedBackgroundColor
             }
         } else {
             CATransaction.begin()
             CATransaction.setDisableActions(true)
-            backgroundLayer.backgroundColor = bgColor.cgColor
+            backgroundLayer.backgroundColor = resolvedBackgroundColor
             CATransaction.commit()
         }
+    }
+
+    private func backgroundColor() -> NSColor {
+        guard isHovering else { return .clear }
+
+        let isDark =
+            effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        guard isDark else {
+            return .labelColor.withAlphaComponent(0.06)
+        }
+
+        let isFrostedGlass: Bool = {
+            if #available(macOS 26, *) {
+                return BackgroundType(rawValue: PasteUserDefaults.backgroundType) == .frosted
+            }
+            return true
+        }()
+
+        return isFrostedGlass
+            ? NSColor(white: 1.0, alpha: 0.10)
+            : .quaternaryLabelColor.withAlphaComponent(0.06)
     }
 
     // MARK: - Layout
