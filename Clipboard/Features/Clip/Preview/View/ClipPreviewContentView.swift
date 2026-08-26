@@ -80,7 +80,12 @@ final class ClipPreviewContentView: NSView {
     // MARK: - Size Hint
 
     /// 根据 model 类型计算内容区域的理想高度，maxImageH 由调用侧传入屏幕可用内容高度
-    static func preferredContentHeight(for model: PasteboardModel, width: CGFloat, maxImageH: CGFloat = Const.maxTextheight) -> CGFloat {
+    static func preferredContentHeight(
+        for model: PasteboardModel,
+        width: CGFloat,
+        maxImageH: CGFloat = Const.maxTextheight,
+        measuredText: NSAttributedString? = nil
+    ) -> CGFloat {
         switch model.type {
         case .color:
             return 270
@@ -90,11 +95,11 @@ final class ClipPreviewContentView: NSView {
             if PasteUserDefaults.enableLinkPreview, model.isLink {
                 return Const.maxContentHeight
             }
-            return textContentHeight(for: model, width: width)
+            return textContentHeight(for: model, width: width, measuredText: measuredText)
         case .image:
             return imageContentHeight(for: model, maxH: maxImageH)
         case .string, .rich:
-            return textContentHeight(for: model, width: width)
+            return textContentHeight(for: model, width: width, measuredText: measuredText)
         case .none:
             return 270
         }
@@ -102,7 +107,11 @@ final class ClipPreviewContentView: NSView {
 
     // MARK: - Private Size Helpers
 
-    private static func textContentHeight(for model: PasteboardModel, width: CGFloat) -> CGFloat {
+    private static func textContentHeight(
+        for model: PasteboardModel,
+        width: CGFloat,
+        measuredText: NSAttributedString?
+    ) -> CGFloat {
         if model.length > Const.maxTextSize {
             return Const.maxTextheight
         }
@@ -111,7 +120,7 @@ final class ClipPreviewContentView: NSView {
         let textWidth = width - inset * 2
         guard textWidth > 0 else { return 240.0 }
 
-        let attributed = Self.measuringAttributedString(for: model)
+        let attributed = measuredText ?? Self.measuringAttributedString(for: model)
         let boundingRect = attributed.boundingRect(
             with: NSSize(width: textWidth, height: Const.maxTextheight),
             options: [.usesLineFragmentOrigin, .usesFontLeading]

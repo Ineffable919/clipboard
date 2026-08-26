@@ -95,12 +95,18 @@ final class ClipPreviewPopover: NSPopover {
     static func fitSize(for model: PasteboardModel, maxHeight: CGFloat = Const.maxPreviewHeight) -> NSSize {
         let cap = min(Const.maxPreviewHeight, maxHeight)
         let contentMaxH = max(cap - chrome, 0)
+        let measuredText = measuredTextIfNeeded(for: model)
 
-        let width = clampedWidth(for: model, contentMaxH: contentMaxH)
+        let width = clampedWidth(
+            for: model,
+            contentMaxH: contentMaxH,
+            measuredText: measuredText
+        )
         let contentH = ClipPreviewContentView.preferredContentHeight(
             for: model,
             width: width,
-            maxImageH: contentMaxH
+            maxImageH: contentMaxH,
+            measuredText: measuredText
         )
         let totalH = chrome + contentH
         let clampedH = min(max(totalH, Const.minPreviewHeight), cap)
@@ -109,7 +115,11 @@ final class ClipPreviewPopover: NSPopover {
 
     // MARK: - Width Calculation
 
-    private static func clampedWidth(for model: PasteboardModel, contentMaxH: CGFloat = Const.maxTextheight) -> CGFloat {
+    private static func clampedWidth(
+        for model: PasteboardModel,
+        contentMaxH: CGFloat = Const.maxTextheight,
+        measuredText: NSAttributedString?
+    ) -> CGFloat {
         switch model.type {
         case .color:
             return 400
@@ -127,7 +137,7 @@ final class ClipPreviewPopover: NSPopover {
             let displayW = ceil(size.width * scale) + Const.space12 * 2
             return min(max(displayW, Const.minPreviewWidth), Const.maxPreviewWidth)
         case .string, .rich:
-            let textWidth = estimatedTextWidth(for: model)
+            let textWidth = estimatedTextWidth(for: model, measuredText: measuredText)
             return min(
                 max(textWidth, Const.minPreviewWidth),
                 Const.maxTextWidth
@@ -137,12 +147,15 @@ final class ClipPreviewPopover: NSPopover {
         }
     }
 
-    private static func estimatedTextWidth(for model: PasteboardModel) -> CGFloat {
+    private static func estimatedTextWidth(
+        for model: PasteboardModel,
+        measuredText: NSAttributedString?
+    ) -> CGFloat {
         if model.length > Const.maxTextSize {
             return Const.maxTextWidth
         }
 
-        let attributed = ClipPreviewContentView.measuringAttributedString(for: model)
+        let attributed = measuredText ?? ClipPreviewContentView.measuringAttributedString(for: model)
         guard attributed.length > 0 else { return Const.minPreviewWidth }
 
         let rect = attributed.boundingRect(
@@ -151,6 +164,19 @@ final class ClipPreviewPopover: NSPopover {
         )
 
         return min(ceil(rect.width) + 32, Const.maxTextWidth)
+    }
+
+    private static func measuredTextIfNeeded(for model: PasteboardModel) -> NSAttributedString? {
+        guard model.length <= Const.maxTextSize else { return nil }
+
+        switch model.type {
+        case .string, .rich:
+            return ClipPreviewContentView.measuringAttributedString(for: model)
+        case .link where !PasteUserDefaults.enableLinkPreview || !model.isLink:
+            return ClipPreviewContentView.measuringAttributedString(for: model)
+        default:
+            return nil
+        }
     }
 
     // MARK: - Key Monitor
