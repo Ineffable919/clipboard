@@ -14,7 +14,7 @@ struct MarkdownAttributedRenderer: MarkupVisitor {
 
     // MARK: - 样式参数
 
-    private let baseFontSize = NSFont.systemFontSize
+    let baseFontSize = NSFont.systemFontSize
     private let blockSpacing = NSFont.systemFontSize * 0.7
     private let listIndent: CGFloat = 22
 
@@ -43,46 +43,6 @@ struct MarkdownAttributedRenderer: MarkupVisitor {
         let result = NSMutableAttributedString(attributedString: renderSync(markdown))
         await loadImages(into: result)
         return result
-    }
-
-    // MARK: - 图片加载
-
-    @MainActor
-    private static func loadImages(into result: NSMutableAttributedString) async {
-        var imageRanges: [(range: NSRange, source: String)] = []
-        result.enumerateAttribute(.markdownImageSource, in: NSRange(location: 0, length: result.length)) { value, range, _ in
-            if let source = value as? String {
-                imageRanges.append((range, source))
-            }
-        }
-        // 逆序替换以保证 range 不偏移
-        for item in imageRanges.reversed() {
-            guard let url = URL(string: item.source) else { continue }
-            let data: Data?
-            if url.isFileURL {
-                data = await Task.detached { try? Data(contentsOf: url) }.value
-            } else if url.scheme == "https" || url.scheme == "http" {
-                data = try? await URLSession.shared.data(from: url).0
-            } else {
-                continue
-            }
-            guard let data, let image = NSImage(data: data) else { continue }
-            let attachment = NSTextAttachment()
-            attachment.image = image
-            let maxW: CGFloat = 400
-            let w = min(image.size.width, maxW)
-            let h = image.size.height * (w / image.size.width)
-            attachment.bounds = CGRect(x: 0, y: 0, width: w, height: h)
-            result.replaceCharacters(in: item.range, with: NSAttributedString(attachment: attachment))
-        }
-    }
-
-    private static func trimTrailingNewlines(_ result: NSMutableAttributedString) {
-        while result.length > 0,
-              (result.string as NSString).substring(from: result.length - 1) == "\n"
-        {
-            result.deleteCharacters(in: NSRange(location: result.length - 1, length: 1))
-        }
     }
 
     // MARK: - 默认遍历
@@ -131,7 +91,7 @@ struct MarkdownAttributedRenderer: MarkupVisitor {
         NSAttributedString(string: inlineCode.code, attributes: [
             .font: codeFont,
             .foregroundColor: NSColor.labelColor,
-            .backgroundColor: NSColor.quaternaryLabelColor,
+            .backgroundColor: NSColor.quaternaryLabelColor
         ])
     }
 
@@ -141,7 +101,7 @@ struct MarkdownAttributedRenderer: MarkupVisitor {
             result.addAttributes([
                 .link: url,
                 .foregroundColor: NSColor.linkColor,
-                .underlineStyle: NSUnderlineStyle.single.rawValue,
+                .underlineStyle: NSUnderlineStyle.single.rawValue
             ], range: NSRange(location: 0, length: result.length))
         }
         return result
@@ -156,7 +116,11 @@ struct MarkdownAttributedRenderer: MarkupVisitor {
         attachment.image = placeholder
         let result = NSMutableAttributedString(attachment: attachment)
         if let source = image.source, !source.isEmpty {
-            result.addAttribute(.markdownImageSource, value: source, range: NSRange(location: 0, length: result.length))
+            result.addAttribute(
+                .markdownImageSource,
+                value: source,
+                range: NSRange(location: 0, length: result.length)
+            )
         }
         result.append(blockTerminator())
         return result
@@ -202,7 +166,7 @@ struct MarkdownAttributedRenderer: MarkupVisitor {
             .font: codeFont,
             .foregroundColor: NSColor.labelColor,
             .backgroundColor: NSColor.quaternaryLabelColor,
-            .paragraphStyle: style,
+            .paragraphStyle: style
         ])
         result.append(blockTerminator())
         return result
@@ -240,43 +204,9 @@ struct MarkdownAttributedRenderer: MarkupVisitor {
             attributes: [
                 .font: bodyFont,
                 .foregroundColor: NSColor.tertiaryLabelColor,
-                .paragraphStyle: style,
+                .paragraphStyle: style
             ]
         )
-        result.append(blockTerminator())
-        return result
-    }
-
-    mutating func visitTable(_ table: Markdown.Table) -> NSAttributedString {
-        let textTable = NSTextTable()
-        let columnCount = table.maxColumnCount
-        textTable.numberOfColumns = columnCount
-
-        let result = NSMutableAttributedString()
-        var rowIndex = 0
-
-        appendTableRow(
-            cells: Array(table.head.cells),
-            row: rowIndex,
-            isHeader: true,
-            table: textTable,
-            columnCount: columnCount,
-            into: result
-        )
-        rowIndex += 1
-
-        for row in table.body.rows {
-            appendTableRow(
-                cells: Array(row.cells),
-                row: rowIndex,
-                isHeader: false,
-                table: textTable,
-                columnCount: columnCount,
-                into: result
-            )
-            rowIndex += 1
-        }
-
         result.append(blockTerminator())
         return result
     }
@@ -324,62 +254,9 @@ struct MarkdownAttributedRenderer: MarkupVisitor {
         return result
     }
 
-    // MARK: - 表格渲染
-
-    private mutating func appendTableRow(
-        cells: [Markdown.Table.Cell],
-        row: Int,
-        isHeader: Bool,
-        table: NSTextTable,
-        columnCount: Int,
-        into result: NSMutableAttributedString
-    ) {
-        for column in 0 ..< columnCount {
-            let block = NSTextTableBlock(
-                table: table,
-                startingRow: row,
-                rowSpan: 1,
-                startingColumn: column,
-                columnSpan: 1
-            )
-            block.setBorderColor(.separatorColor)
-            block.setWidth(1, type: .absoluteValueType, for: .border)
-            block.setWidth(Const.space6, type: .absoluteValueType, for: .padding)
-            if isHeader {
-                block.backgroundColor = .quaternaryLabelColor
-            }
-
-            let style = NSMutableParagraphStyle()
-            style.textBlocks = [block]
-
-            let cellContent: NSMutableAttributedString = if column < cells.count {
-                inlineChildren(of: cells[column])
-            } else {
-                NSMutableAttributedString()
-            }
-            if cellContent.length == 0 {
-                cellContent.append(NSAttributedString(string: " ", attributes: baseAttributes()))
-            }
-            if isHeader {
-                cellContent.addAttribute(
-                    .font,
-                    value: NSFont.systemFont(ofSize: baseFontSize, weight: .semibold),
-                    range: NSRange(location: 0, length: cellContent.length)
-                )
-            }
-            cellContent.addAttribute(
-                .paragraphStyle,
-                value: style,
-                range: NSRange(location: 0, length: cellContent.length)
-            )
-            cellContent.append(NSAttributedString(string: "\n"))
-            result.append(cellContent)
-        }
-    }
-
     // MARK: - 辅助
 
-    private func baseAttributes() -> [NSAttributedString.Key: Any] {
+    func baseAttributes() -> [NSAttributedString.Key: Any] {
         [.font: bodyFont, .foregroundColor: NSColor.labelColor]
     }
 
@@ -390,12 +267,12 @@ struct MarkdownAttributedRenderer: MarkupVisitor {
         return style
     }
 
-    private func blockTerminator() -> NSAttributedString {
+    func blockTerminator() -> NSAttributedString {
         NSAttributedString(string: "\n", attributes: baseAttributes())
     }
 
     /// 拼接行内子节点，结果可继续叠加样式
-    private mutating func inlineChildren(of markup: Markup) -> NSMutableAttributedString {
+    mutating func inlineChildren(of markup: Markup) -> NSMutableAttributedString {
         let result = NSMutableAttributedString()
         for child in markup.children {
             result.append(visit(child))
@@ -420,8 +297,7 @@ struct MarkdownAttributedRenderer: MarkupVisitor {
 
     private func trimTrailingNewline(_ string: NSMutableAttributedString) {
         while string.length > 0,
-              (string.string as NSString).substring(from: string.length - 1) == "\n"
-        {
+              (string.string as NSString).substring(from: string.length - 1) == "\n" {
             string.deleteCharacters(in: NSRange(location: string.length - 1, length: 1))
         }
     }

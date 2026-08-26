@@ -21,7 +21,11 @@ final class ClipPreviewPopover: NSPopover {
 
     // MARK: - Init
 
-    init(model: PasteboardModel, maxHeight: CGFloat = Const.maxPreviewHeight, onContentInteraction: (() -> Void)? = nil) {
+    init(
+        model: PasteboardModel,
+        maxHeight: CGFloat = Const.maxPreviewHeight,
+        onContentInteraction: (() -> Void)? = nil
+    ) {
         self.onContentInteraction = onContentInteraction
         super.init()
         behavior = .transient
