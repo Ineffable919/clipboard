@@ -109,12 +109,12 @@ final class TopBarChipController {
             isEditing: true,
             editingName: topVM.newChipName,
             editingColorIndex: topVM.newChipColorIndex,
+            allowsColorCycling: true,
             action: {},
             onEdit: nil,
             onDelete: nil,
             onColorChange: { [weak self] colorIndex in
                 self?.topVM?.newChipColorIndex = colorIndex
-                self?.refreshNewChipPlaceholder()
             },
             onEditingNameChange: { [weak self] text in
                 self?.topVM?.newChipName = text
@@ -131,12 +131,6 @@ final class TopBarChipController {
         )
 
         chipScrollView?.appendNewChipButton(config: config)
-    }
-
-    private func refreshNewChipPlaceholder() {
-        guard let topVM, topVM.editingNewChip else { return }
-        chipScrollView?.removeNewChipButton()
-        appendNewChipPlaceholder()
     }
 
     private func commitNewChip() {

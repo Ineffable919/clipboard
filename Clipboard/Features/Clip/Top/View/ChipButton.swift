@@ -20,6 +20,7 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         var isEditing: Bool = false
         var editingName: String = ""
         var editingColorIndex: Int = 0
+        var allowsColorCycling: Bool = false
         var action: () -> Void
         var onEdit: (() -> Void)?
         var onDelete: (() -> Void)?
@@ -56,6 +57,10 @@ final class ChipButton: NSView, NSTextFieldDelegate {
     private lazy var clickGestureRecognizer = NSClickGestureRecognizer(
         target: self,
         action: #selector(handleClick)
+    )
+    private lazy var dotClickGestureRecognizer = NSClickGestureRecognizer(
+        target: self,
+        action: #selector(handleDotClick)
     )
     private var nameFieldWidthConstraint: Constraint?
 
@@ -151,6 +156,7 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         )
 
         addGestureRecognizer(clickGestureRecognizer)
+        dotContainerView.addGestureRecognizer(dotClickGestureRecognizer)
 
         registerForDraggedTypes(PasteboardType.supportTypes)
     }
@@ -182,6 +188,11 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         return config.chip.name
     }
 
+    private var canCycleColor: Bool {
+        config.isEditing && config.allowsColorCycling
+            && !config.dotMode && !config.chip.isSystem
+    }
+
     private func updateContent() {
         for arrangedSubview in stack.arrangedSubviews {
             stack.removeArrangedSubview(arrangedSubview)
@@ -189,6 +200,9 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         }
         nameFieldWidthConstraint?.deactivate()
         nameFieldWidthConstraint = nil
+
+        // 仅新增态允许点击圆点切换颜色
+        dotClickGestureRecognizer.isEnabled = canCycleColor
 
         stack.snp.remakeConstraints { make in
             make.edges.equalToSuperview().inset(contentInsets)
@@ -448,6 +462,23 @@ final class ChipButton: NSView, NSTextFieldDelegate {
     @objc private func handleClick() {
         guard !config.isEditing else { return }
         config.action()
+    }
+
+    @objc private func handleDotClick() {
+        guard canCycleColor else { return }
+        let nextIndex =
+            (config.editingColorIndex + 1) % CategoryChip.palette.count
+        updateDotColor(nextIndex)
+        config.onColorChange?(nextIndex)
+    }
+
+    private func updateDotColor(_ colorIndex: Int) {
+        guard config.isEditing else { return }
+        config.editingColorIndex = min(
+            max(colorIndex, 0),
+            CategoryChip.palette.count - 1
+        )
+        configureDot(colorIndex: config.editingColorIndex)
     }
 
     @objc private func handleEditAction() {
