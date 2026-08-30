@@ -32,11 +32,13 @@ struct AppearanceSettingsView: View {
 
     var body: some View {
         ScrollView(.vertical) {
-            VStack(alignment: .leading, spacing: Const.space16) {
-                AppearanceSettingsRow()
-                    .settingsStyle()
+            VStack(alignment: .leading, spacing: 20) {
+                VStack(spacing: Const.space4) {
+                    AppearanceSettingsRow()
 
-                VStack(spacing: 0) {
+                    Divider()
+                        .padding(.horizontal, Const.space16)
+
                     DisplayModeRow(
                         displayMode: Binding(
                             get: { displayMode },
@@ -45,6 +47,9 @@ struct AppearanceSettingsView: View {
                     )
 
                     if displayMode == .floating {
+                        Divider()
+                            .padding(.horizontal, Const.space16)
+
                         WindowPositionRow(
                             windowPosition: Binding(
                                 get: { windowPosition },
@@ -115,7 +120,7 @@ struct AppearanceSettingsRow: View {
     ]
 
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: Const.space4) {
             // 语言
             HStack {
                 Text(.language)
@@ -139,6 +144,9 @@ struct AppearanceSettingsRow: View {
             }
             .padding(.vertical, Const.space8)
             .padding(.horizontal, Const.space16)
+
+            Divider()
+                .padding(.horizontal, Const.space16)
 
             // 外观
             HStack {
