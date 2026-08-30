@@ -49,8 +49,6 @@ struct TopBarMenuBuilder {
             }
             menu.addItem(newVersionItem)
             menu.addItem(.separator())
-        } else {
-            AppDelegate.shared?.updaterController.updater.checkForUpdatesInBackground()
         }
 
         let aboutItem = NSMenuItem(

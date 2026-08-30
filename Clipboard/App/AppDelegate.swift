@@ -27,6 +27,8 @@ extension AppDelegate: NSApplicationDelegate {
     func applicationDidFinishLaunching(_: Notification) {
         Self.shared = self
 
+        _ = updaterController
+
         setupStatusBar()
 
         applyAppearanceSettings()
@@ -99,8 +101,6 @@ extension AppDelegate {
         WelcomeWindowController.shared.showIfNeeded()
 
         syncLaunchAtLoginStatus()
-
-        updaterController.updater.checkForUpdatesInBackground()
     }
 
     private func syncLaunchAtLoginStatus() {
