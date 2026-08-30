@@ -72,6 +72,12 @@ struct SettingView: View {
 
                                 Spacer(minLength: Const.space8)
 
+                                if page == .ai {
+                                    Text(verbatim: "Beta")
+                                        .font(.caption2.weight(.medium))
+                                        .foregroundStyle(.secondary)
+                                }
+
                                 if page == .general,
                                    pasteDirect,
                                    !viewModel.hasAccessibilityPermission {
