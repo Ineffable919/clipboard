@@ -56,7 +56,6 @@ nonisolated struct CodeFenceInfo: Equatable {
 }
 
 // Regex patterns are kept intact so their language signatures stay auditable.
-// swiftlint:disable cyclomatic_complexity line_length
 /// Conservative content-based detection used only when a fence has no info
 /// string. Explicit fence languages always remain the source of truth.
 nonisolated enum CodeFenceLanguageDetector {
@@ -116,4 +115,3 @@ nonisolated enum CodeFenceLanguageDetector {
         source.range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil
     }
 }
-// swiftlint:enable cyclomatic_complexity line_length

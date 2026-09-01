@@ -207,7 +207,6 @@ nonisolated struct MarkdownSafeHTMLFormatter: MarkupVisitor {
     }
 
     // SVG paths and the single-pass alert parser are clearer kept together.
-    // swiftlint:disable cyclomatic_complexity line_length
     private mutating func renderAlert(_ blockQuote: BlockQuote) -> String? {
         let blocks = Array(blockQuote.children)
         guard let firstParagraph = blocks.first as? Paragraph else { return nil }
@@ -298,5 +297,4 @@ nonisolated struct MarkdownSafeHTMLFormatter: MarkupVisitor {
             }
         }
     }
-    // swiftlint:enable cyclomatic_complexity line_length
 }

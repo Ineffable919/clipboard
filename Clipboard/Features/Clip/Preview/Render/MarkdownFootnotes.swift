@@ -8,7 +8,6 @@
 import Foundation
 
 // The extraction and token-restoration helpers form one parsing boundary.
-// swiftlint:disable type_body_length
 nonisolated enum MarkdownFootnotes {
     struct Extraction {
         let markdown: String
@@ -27,24 +26,20 @@ nonisolated enum MarkdownFootnotes {
     }
 
     private static let definitionRegex: NSRegularExpression = {
-        // swiftlint:disable:next force_try
         try! NSRegularExpression(pattern: #"^[ \t]{0,3}\[\^([^\]\n]+)\]:[ \t]*(.*)$"#)
     }()
 
     private static let referenceRegex: NSRegularExpression = {
-        // swiftlint:disable:next force_try
         try! NSRegularExpression(pattern: #"\[\^([^\]\n]+)\]"#)
     }()
 
     private static let codeFenceRegex: NSRegularExpression = {
-        // swiftlint:disable:next force_try
         try! NSRegularExpression(
             pattern: #"(?m)^(`{3,})[ \t]*([^\n`]*)\n([\s\S]*?)\n\1[ \t]*$"#
         )
     }()
 
     private static let inlineCodeRegex: NSRegularExpression = {
-        // swiftlint:disable:next force_try
         try! NSRegularExpression(pattern: #"(?<!`)(`+)(?!`)([^\n]*?)(?<!`)\1(?!`)"#)
     }()
 
@@ -309,4 +304,3 @@ nonisolated enum MarkdownFootnotes {
         return String(line.dropFirst(4))
     }
 }
-// swiftlint:enable type_body_length

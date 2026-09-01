@@ -129,7 +129,7 @@ extension TopBarView {
             guard isSearching else { return }
             switch closeDestination {
             case .search:
-                window?.makeFirstResponder(searchField)
+                window?.makeFirstResponder(searchField.tokenTextView)
                 onFocusRegionChange?(.search)
             case .collection:
                 onFocusRegionChange?(.collection)

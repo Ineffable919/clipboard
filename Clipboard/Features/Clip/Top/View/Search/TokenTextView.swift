@@ -216,14 +216,25 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
     }
 
     override func resignFirstResponder() -> Bool {
+        clearSelectedToken()
         let result = super.resignFirstResponder()
         if result {
-            if #unavailable(macOS 26) {
-                syncTokenSelectionState()
-            }
             onResignFirstResponder?()
         }
         return result
+    }
+
+    private func clearSelectedToken() {
+        let selection = selectedRange()
+        guard selection.length == 1,
+              let storage = textStorage,
+              selection.location < storage.length,
+              storage.attribute(.attachment, at: selection.location, effectiveRange: nil) is TokenAttachment
+        else { return }
+
+        setSelectedRange(NSRange(location: NSMaxRange(selection), length: 0))
+        restorePlainTextInputState()
+        needsDisplay = true
     }
 
     override func draw(_ dirtyRect: NSRect) {
@@ -268,7 +279,6 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         }
     }
 
-    // swiftlint:disable:next function_parameter_count
     func layoutManager(
         _: NSLayoutManager,
         shouldSetLineFragmentRect lineFragmentRect: UnsafeMutablePointer<NSRect>,

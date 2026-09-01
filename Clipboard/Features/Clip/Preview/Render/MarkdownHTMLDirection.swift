@@ -9,7 +9,6 @@ import Foundation
 
 nonisolated enum MarkdownHTMLDirection {
     private static let blockTagRegex: NSRegularExpression = {
-        // swiftlint:disable:next force_try
         try! NSRegularExpression(
             pattern: #"<(blockquote|p|li|h[1-6])(\s[^>]*)?>"#,
             options: [.caseInsensitive]
@@ -17,7 +16,6 @@ nonisolated enum MarkdownHTMLDirection {
     }()
 
     private static let htmlTagRegex: NSRegularExpression = {
-        // swiftlint:disable:next force_try
         try! NSRegularExpression(pattern: #"<[^>]+>"#)
     }()
 

@@ -12,7 +12,6 @@ enum MarkdownHTMLSanitizer {
     private static let contentWorld = WKContentWorld.world(name: "ClipboardMarkdownSanitizer")
 
     // Keep the isolated browser bootstrap together so its execution order is explicit.
-    // swiftlint:disable function_body_length
     private static func bootstrapScript(highlightStylesheet: String?) -> String {
         let stylesheet = javaScriptStringLiteral(highlightStylesheet ?? "")
         return """
@@ -78,8 +77,6 @@ enum MarkdownHTMLSanitizer {
     })();
     """
     }
-    // swiftlint:enable function_body_length
-
     static func install(in contentController: WKUserContentController) {
         guard let domPurifyScript else { return }
 
