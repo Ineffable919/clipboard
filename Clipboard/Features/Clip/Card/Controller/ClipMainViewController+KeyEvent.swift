@@ -72,7 +72,7 @@ extension ClipMainViewController {
 
         if KeyCode.shouldTriggerSearch(for: event),
            !topBarView.searchField.isFirstResponder,
-           focusRegion != .search
+           focusRegion == .collection
         {
             if let characters = event.characters, !characters.isEmpty {
                 topBarView.activateSearch(with: characters)
