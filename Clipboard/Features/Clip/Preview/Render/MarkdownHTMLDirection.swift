@@ -8,16 +8,12 @@
 import Foundation
 
 nonisolated enum MarkdownHTMLDirection {
-    private static let blockTagRegex: NSRegularExpression = {
-        try! NSRegularExpression(
-            pattern: #"<(blockquote|p|li|h[1-6])(\s[^>]*)?>"#,
-            options: [.caseInsensitive]
-        )
-    }()
+    private static let blockTagRegex = regularExpression(
+        #"<(blockquote|p|li|h[1-6])(\s[^>]*)?>"#,
+        options: [.caseInsensitive]
+    )
 
-    private static let htmlTagRegex: NSRegularExpression = {
-        try! NSRegularExpression(pattern: #"<[^>]+>"#)
-    }()
+    private static let htmlTagRegex = regularExpression(#"<[^>]+>"#)
 
     private static let rtlRanges: [ClosedRange<UInt32>] = [
         0x0590...0x05FF, 0x0600...0x06FF, 0x0700...0x074F, 0x0750...0x077F,
@@ -93,5 +89,16 @@ nonisolated enum MarkdownHTMLDirection {
     private static func isRTL(_ character: Character) -> Bool {
         guard let scalar = character.unicodeScalars.first else { return false }
         return rtlRanges.contains { $0.contains(scalar.value) }
+    }
+
+    private static func regularExpression(
+        _ pattern: String,
+        options: NSRegularExpression.Options = []
+    ) -> NSRegularExpression {
+        do {
+            return try NSRegularExpression(pattern: pattern, options: options)
+        } catch {
+            preconditionFailure("Invalid Markdown direction regular expression: \(error)")
+        }
     }
 }

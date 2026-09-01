@@ -63,7 +63,13 @@ nonisolated enum CodeFenceLanguageDetector {
         let text = source.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return nil }
 
-        if matches(#"(?m)^#!.*\b(?:ba)?sh\b|^\s*\$\s+"#, in: text) {
+        return detectShellOrMarkup(in: text)
+            ?? detectProgrammingLanguage(in: text)
+            ?? detectDataOrScriptLanguage(in: text)
+    }
+
+    private static func detectShellOrMarkup(in text: String) -> String? {
+        if matches(shellPromptPattern, in: text) {
             return "bash"
         }
         if (text.hasPrefix("{") && text.hasSuffix("}"))
@@ -72,44 +78,86 @@ nonisolated enum CodeFenceLanguageDetector {
            (try? JSONSerialization.jsonObject(with: data)) != nil {
             return "json"
         }
-        if matches(#"(?m)^\s*(?:<!DOCTYPE\s+html|<html\b|<(?:div|span|section|article)\b)"#, in: text) {
+        if matches(htmlPattern, in: text) {
             return "html"
         }
-        if matches(#"(?m)\b(?:resource|data|provider|variable|module)\s+\"[\w-]+\"(?:\s+\"[\w-]+\")?\s*\{|\bterraform\s*\{"#, in: text) {
+        if matches(hclPattern, in: text) {
             return "hcl"
         }
-        if matches(#"\b(?:import\s+Foundation|func\s+\w+\s*\(|@main)\b|\b(?:let|var)\s+\w+\s*:\s*(?:String|Int|Bool|Double|Float)\b"#, in: text) {
+        return nil
+    }
+
+    private static func detectProgrammingLanguage(in text: String) -> String? {
+        if matches(swiftPattern, in: text) {
             return "swift"
         }
-        if matches(#"(?m)^\s*(?:#\s*include\s*<iostream>|(?:using\s+namespace\s+std|std::\w+|(?:cout|cin)\s*(?:<<|>>))\b)"#, in: text) {
+        if matches(cppPattern, in: text) {
             return "cpp"
         }
-        if matches(#"(?m)^\s*(?:#\s*include\s*[<"](?:assert|ctype|errno|float|inttypes|limits|math|setjmp|signal|stdarg|stdbool|stddef|stdint|stdio|stdlib|string|time)\.h[>"]|(?:int|void)\s+main\s*\([^)]*\)\s*\{)"#, in: text) {
+        if matches(cPattern, in: text) {
             return "c"
         }
-        if matches(#"(?m)^\s*(?:async\s+)?def\s+\w+\s*\(|^\s*from\s+\w+[\w.]*\s+import\b|^\s*class\s+\w+\s*[:(]"#, in: text) {
+        if matches(pythonPattern, in: text) {
             return "python"
         }
-        if matches(#"(?i)\b(?:SELECT|INSERT|UPDATE|DELETE|CREATE\s+(?:TABLE|VIEW|INDEX)|WITH)\b[\s\S]*\b(?:FROM|INTO|WHERE|AS)\b"#, in: text) {
+        return nil
+    }
+
+    private static func detectDataOrScriptLanguage(in text: String) -> String? {
+        if matches(sqlPattern, in: text) {
             return "sql"
         }
-        if matches(#"(?m)(?:^|\n)\s*(?:[#.]?[A-Za-z][\w-]*)\s*\{[\s\S]*:[\s\S]*\}"#, in: text)
-            || matches(#"@(?:media|keyframes|supports)\b"#, in: text) {
+        if matches(cssPattern, in: text) || matches(cssAtRulePattern, in: text) {
             return "css"
         }
-        if matches(#"(?m)^\s*(?:const|let|var)\s+[A-Za-z_$][\w$]*\s*(?::[^=\n]+)?\s*="#, in: text)
-            || matches(#"\b(?:function\s+\w+\s*\(|console\.(?:log|error|warn)|=>)"#, in: text) {
+        if matches(javaScriptVariablePattern, in: text)
+            || matches(javaScriptFunctionPattern, in: text) {
             return "javascript"
         }
-        if matches(#"(?m)^\s*(?:[-A-Za-z_][\w-]*):\s*(?:[^:#\n]|$)"#, in: text)
+        if matches(yamlPattern, in: text)
             && !text.contains("{") && !text.contains(";") {
             return "yaml"
         }
-        if matches(#"(?m)^\s*(?:echo|printf|export|source|cd|mkdir|rm|cp|mv)\s+"#, in: text) {
+        if matches(shellCommandPattern, in: text) {
             return "bash"
         }
         return nil
     }
+
+    private static let shellPromptPattern = #"(?m)^#!.*\b(?:ba)?sh\b|^\s*\$\s+"#
+    private static let htmlPattern =
+        #"(?m)^\s*(?:<!DOCTYPE\s+html|<html\b|"#
+        + #"<(?:div|span|section|article)\b)"#
+    private static let hclPattern =
+        #"(?m)\b(?:resource|data|provider|variable|module)\s+\"[\w-]+\""#
+        + #"(?:\s+\"[\w-]+\")?\s*\{|\bterraform\s*\{"#
+    private static let swiftPattern =
+        #"\b(?:import\s+Foundation|func\s+\w+\s*\(|@main)\b|"#
+        + #"\b(?:let|var)\s+\w+\s*:\s*(?:String|Int|Bool|Double|Float)\b"#
+    private static let cppPattern =
+        #"(?m)^\s*(?:#\s*include\s*<iostream>|"#
+        + #"(?:using\s+namespace\s+std|std::\w+|(?:cout|cin)\s*(?:<<|>>))\b)"#
+    private static let cPattern =
+        #"(?m)^\s*(?:#\s*include\s*[<"](?:assert|ctype|errno|float|"#
+        + #"inttypes|limits|math|setjmp|signal|stdarg|stdbool|stddef|stdint|"#
+        + #"stdio|stdlib|string|time)\.h[>"]|(?:int|void)\s+main\s*\([^)]*\)\s*\{)"#
+    private static let pythonPattern =
+        #"(?m)^\s*(?:async\s+)?def\s+\w+\s*\(|"#
+        + #"^\s*from\s+\w+[\w.]*\s+import\b|^\s*class\s+\w+\s*[:(]"#
+    private static let sqlPattern =
+        #"(?i)\b(?:SELECT|INSERT|UPDATE|DELETE|"#
+        + #"CREATE\s+(?:TABLE|VIEW|INDEX)|WITH)\b[\s\S]*\b(?:FROM|INTO|WHERE|AS)\b"#
+    private static let cssPattern =
+        #"(?m)(?:^|\n)\s*(?:[#.]?[A-Za-z][\w-]*)\s*\{[\s\S]*:[\s\S]*\}"#
+    private static let cssAtRulePattern = #"@(?:media|keyframes|supports)\b"#
+    private static let javaScriptVariablePattern =
+        #"(?m)^\s*(?:const|let|var)\s+[A-Za-z_$][\w$]*\s*(?::[^=\n]+)?\s*="#
+    private static let javaScriptFunctionPattern =
+        #"\b(?:function\s+\w+\s*\(|console\.(?:log|error|warn)|=>)"#
+    private static let yamlPattern =
+        #"(?m)^\s*(?:[-A-Za-z_][\w-]*):\s*(?:[^:#\n]|$)"#
+    private static let shellCommandPattern =
+        #"(?m)^\s*(?:echo|printf|export|source|cd|mkdir|rm|cp|mv)\s+"#
 
     private static func matches(_ pattern: String, in source: String) -> Bool {
         source.range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil

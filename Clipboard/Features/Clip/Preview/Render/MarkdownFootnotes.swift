@@ -25,23 +25,19 @@ nonisolated enum MarkdownFootnotes {
         let ordinal: Int
     }
 
-    private static let definitionRegex: NSRegularExpression = {
-        try! NSRegularExpression(pattern: #"^[ \t]{0,3}\[\^([^\]\n]+)\]:[ \t]*(.*)$"#)
-    }()
+    private static let definitionRegex = regularExpression(
+        #"^[ \t]{0,3}\[\^([^\]\n]+)\]:[ \t]*(.*)$"#
+    )
 
-    private static let referenceRegex: NSRegularExpression = {
-        try! NSRegularExpression(pattern: #"\[\^([^\]\n]+)\]"#)
-    }()
+    private static let referenceRegex = regularExpression(#"\[\^([^\]\n]+)\]"#)
 
-    private static let codeFenceRegex: NSRegularExpression = {
-        try! NSRegularExpression(
-            pattern: #"(?m)^(`{3,})[ \t]*([^\n`]*)\n([\s\S]*?)\n\1[ \t]*$"#
-        )
-    }()
+    private static let codeFenceRegex = regularExpression(
+        #"(?m)^(`{3,})[ \t]*([^\n`]*)\n([\s\S]*?)\n\1[ \t]*$"#
+    )
 
-    private static let inlineCodeRegex: NSRegularExpression = {
-        try! NSRegularExpression(pattern: #"(?<!`)(`+)(?!`)([^\n]*?)(?<!`)\1(?!`)"#)
-    }()
+    private static let inlineCodeRegex = regularExpression(
+        #"(?<!`)(`+)(?!`)([^\n]*?)(?<!`)\1(?!`)"#
+    )
 
     static func extract(from markdown: String) -> Extraction {
         guard markdown.contains("[^") else {
@@ -135,7 +131,9 @@ nonisolated enum MarkdownFootnotes {
         </section>
         """
     }
+}
 
+nonisolated extension MarkdownFootnotes {
     private static func splitDefinitions(from markdown: String) -> (
         markdown: String,
         definitions: [String: String]
@@ -302,5 +300,13 @@ nonisolated enum MarkdownFootnotes {
             return String(line.dropFirst())
         }
         return String(line.dropFirst(4))
+    }
+
+    private static func regularExpression(_ pattern: String) -> NSRegularExpression {
+        do {
+            return try NSRegularExpression(pattern: pattern)
+        } catch {
+            preconditionFailure("Invalid Markdown footnote regular expression: \(error)")
+        }
     }
 }

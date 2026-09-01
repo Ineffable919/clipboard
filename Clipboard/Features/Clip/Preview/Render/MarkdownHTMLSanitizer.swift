@@ -14,7 +14,10 @@ enum MarkdownHTMLSanitizer {
     // Keep the isolated browser bootstrap together so its execution order is explicit.
     private static func bootstrapScript(highlightStylesheet: String?) -> String {
         let stylesheet = javaScriptStringLiteral(highlightStylesheet ?? "")
-        return """
+        return bootstrapScriptPrefix + stylesheet + bootstrapScriptSuffix
+    }
+
+    private static let bootstrapScriptPrefix = """
     (() => {
         const source = document.getElementById('markdown-source');
         const content = document.getElementById('markdown-content');
@@ -37,7 +40,11 @@ enum MarkdownHTMLSanitizer {
         content.innerHTML = DOMPurify.sanitize(source.value, config);
         source.remove();
 
-        const highlightStylesheet = \(stylesheet);
+    """
+        + "        const highlightStylesheet = "
+
+    private static let bootstrapScriptSuffix = """
+    ;
         if (highlightStylesheet) {
             const style = document.createElement('style');
             style.textContent = highlightStylesheet;
@@ -76,7 +83,7 @@ enum MarkdownHTMLSanitizer {
         requestAnimationFrame(highlightNextBatch);
     })();
     """
-    }
+
     static func install(in contentController: WKUserContentController) {
         guard let domPurifyScript else { return }
 
