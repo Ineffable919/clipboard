@@ -33,6 +33,7 @@ final class ClipPreviewController: NSViewController {
     private let headerView = PreviewHeaderBar()
     private let contentView = ClipPreviewContentView()
     private let footerView = PreviewFooterBar()
+    private var footerHeightConstraint: Constraint?
 
     // MARK: - Lifecycle
 
@@ -78,6 +79,7 @@ final class ClipPreviewController: NSViewController {
             browserName: nil,
             defaultAppForFile: nil
         )
+        updateFooterHeight()
 
         let size = ClipPreviewPopover.fitSize(for: model, maxHeight: maxHeight)
         view.frame = NSRect(origin: .zero, size: size)
@@ -127,7 +129,8 @@ final class ClipPreviewController: NSViewController {
         footerView.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview().inset(Const.space12)
             make.bottom.equalToSuperview().inset(Const.space12)
-            make.height.greaterThanOrEqualTo(24)
+            footerHeightConstraint = make.height
+                .equalTo(PreviewFooterBar.minimumHeight).constraint
         }
     }
 
@@ -222,6 +225,7 @@ final class ClipPreviewController: NSViewController {
             browserName: defaultBrowserName,
             defaultAppForFile: defaultAppForFile
         )
+        updateFooterHeight()
         headerView.updateOpenWithApp(
             isSingleFile: isSingleFile,
             defaultAppForFile: defaultAppForFile
@@ -233,5 +237,9 @@ final class ClipPreviewController: NSViewController {
         return bundle.object(forInfoDictionaryKey: "CFBundleDisplayName")
             as? String
             ?? bundle.object(forInfoDictionaryKey: "CFBundleName") as? String
+    }
+
+    private func updateFooterHeight() {
+        footerHeightConstraint?.update(offset: footerView.preferredHeight)
     }
 }

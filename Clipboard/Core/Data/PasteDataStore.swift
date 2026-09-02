@@ -46,6 +46,7 @@ final class PasteDataStore {
     private let sqlManager = PasteSQLManager.manager
     private var searchTask: Task<Void, Error>?
     private var loadPageTask: Task<Void, Never>?
+    private var repairingTagIds = Set<Int64>()
 
     func setup() async {
         await sqlManager.setup()
@@ -126,9 +127,41 @@ extension PasteDataStore {
                     uniqueId: uniqueId
                 )
                 pasteModel.id = id
+                repairLinkTagIfNeeded(pasteModel)
                 return pasteModel
             }
             return nil
+        }
+    }
+
+    private func repairLinkTagIfNeeded(_ model: PasteboardModel) {
+        guard model.tag == PasteModelType.link.tagValue,
+              model.type != .link,
+              let id = model.id
+        else {
+            return
+        }
+
+        let correctedTag = model.type.tagValue
+        guard !correctedTag.isEmpty,
+              repairingTagIds.insert(id).inserted
+        else {
+            return
+        }
+
+        Task { [weak self] in
+            guard let self else { return }
+
+            let updated = await sqlManager.updateItemTag(
+                id: id,
+                expectedTag: PasteModelType.link.tagValue,
+                newTag: correctedTag
+            )
+            repairingTagIds.remove(id)
+
+            if updated {
+                PasteMetadataCache.shared.invalidateTagTypesCache()
+            }
         }
     }
 }

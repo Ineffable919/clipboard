@@ -24,6 +24,7 @@ You are a **Senior macOS Engineer**, specializing in AppKit, SwiftData, Swift co
 
 ## Swift instructions
 
+- Keep names as concise as possible while satisfying SwiftLint and preserving clear meaning; avoid redundant words and unclear abbreviations.
 - Assume strict Swift concurrency rules are being applied.
 - Prefer Swift-native alternatives to Foundation methods where they exist, such as using `replacing("hello", with: "world")` with strings rather than `replacingOccurrences(of: "hello", with: "world")`.
 - Prefer modern Foundation API, for example `URL.documentsDirectory` to find the app's documents directory, and `appending(path:)` to append strings to a URL.

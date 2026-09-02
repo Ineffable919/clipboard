@@ -11,6 +11,10 @@ import SnapKit
 // MARK: - PreviewFooterBar
 
 final class PreviewFooterBar: NSView {
+    static let minimumHeight: CGFloat = 24
+    private static let infoMaxWidth =
+        (Const.maxPreviewWidth - Const.space12 * 2) * 0.7
+
     // MARK: - Callbacks
 
     var onShowInFinder: (() -> Void)?
@@ -81,7 +85,7 @@ final class PreviewFooterBar: NSView {
         infoStack.snp.makeConstraints { make in
             make.leading.centerY.equalToSuperview()
             make.trailing.lessThanOrEqualTo(finderButton.snp.leading).offset(-Const.space8)
-            make.width.lessThanOrEqualTo((Const.maxPreviewWidth - Const.space12 * 2) * 0.8)
+            make.width.lessThanOrEqualTo(Self.infoMaxWidth)
         }
 
         finderButton.snp.makeConstraints { make in
@@ -95,6 +99,14 @@ final class PreviewFooterBar: NSView {
 
     // MARK: - Public API
 
+    var preferredHeight: CGFloat {
+        let firstLineHeight = firstLineLabel.intrinsicContentSize.height
+        let secondLineHeight = secondLineLabel.isHidden
+            ? 0
+            : secondLineLabel.intrinsicContentSize.height
+        return max(Self.minimumHeight, ceil(firstLineHeight + secondLineHeight))
+    }
+
     func configure(
         model: PasteboardModel,
         fileSize: String?,
@@ -106,15 +118,18 @@ final class PreviewFooterBar: NSView {
             && PasteUserDefaults.enableLinkPreview
             && model.isLink
 
+        firstLineLabel.maximumNumberOfLines = 1
+        firstLineLabel.preferredMaxLayoutWidth = 0
+
         if isSingleFile, let path = model.cachedFilePaths?.first {
             setWrappedText(path, suffix: fileSize.map { " · \($0)" } ?? "")
+        } else if showLinkPreview {
+            setWrappedText(model.attributeString.string)
         } else if model.pasteboardType.isText(), !showLinkPreview {
             let stats = TextStatistics(from: model.plainText)
             firstLineLabel.stringValue = stats.displayString
             secondLineLabel.stringValue = ""
             secondLineLabel.isHidden = true
-        } else if model.type == .link {
-            setWrappedText(model.introString())
         } else {
             firstLineLabel.stringValue = model.introString()
             secondLineLabel.stringValue = ""
@@ -134,9 +149,13 @@ final class PreviewFooterBar: NSView {
     // MARK: - Private
 
     private func setWrappedText(_ text: String, suffix: String = "") {
-        let maxWidth = (Const.maxPreviewWidth - Const.space12 * 2) * 0.7
         let font = firstLineLabel.font ?? .systemFont(ofSize: NSFont.systemFontSize)
-        let (line1, line2) = splitPathIntoTwoLines(text, suffix: suffix, font: font, maxWidth: maxWidth)
+        let (line1, line2) = splitPathIntoTwoLines(
+            text,
+            suffix: suffix,
+            font: font,
+            maxWidth: Self.infoMaxWidth
+        )
         firstLineLabel.stringValue = line1
         secondLineLabel.stringValue = line2
         secondLineLabel.isHidden = line2.isEmpty
@@ -150,6 +169,16 @@ final class PreviewFooterBar: NSView {
     ) -> (String, String) {
         let attrs: [NSAttributedString.Key: Any] = [.font: font]
         let fullText = text + suffix
+        let explicitLines = text.split(
+            omittingEmptySubsequences: false,
+            whereSeparator: { $0.isNewline }
+        )
+
+        if explicitLines.count > 1 {
+            let line1 = String(explicitLines[0])
+            let line2 = explicitLines.dropFirst().joined(separator: "\n") + suffix
+            return (line1, line2)
+        }
 
         guard (fullText as NSString).size(withAttributes: attrs).width > maxWidth else {
             return (fullText, "")

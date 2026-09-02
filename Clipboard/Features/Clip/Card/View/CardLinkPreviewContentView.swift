@@ -62,8 +62,11 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
         let f = NSTextField(labelWithString: "")
         f.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         f.textColor = .secondaryLabelColor
-        f.lineBreakMode = .byTruncatingTail
+        f.lineBreakMode = .byTruncatingMiddle
         f.maximumNumberOfLines = 1
+        f.usesSingleLineMode = true
+        f.cell?.wraps = false
+        f.cell?.truncatesLastVisibleLine = true
         f.allowsEditingTextAttributes = false
         return f
     }()
@@ -195,6 +198,7 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
         urlLabel.snp.makeConstraints { make in
             make.top.equalTo(titleLabel.snp.bottom).offset(Const.space4)
             make.leading.trailing.equalToSuperview().inset(Const.space8)
+            make.bottom.lessThanOrEqualToSuperview().inset(Const.space4)
         }
 
         updateBackground()
@@ -239,7 +243,7 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
         keyword: String
     ) -> NSAttributedString {
         let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.lineBreakMode = .byTruncatingTail
+        paragraphStyle.lineBreakMode = .byTruncatingMiddle
         let baseAttrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize),
             .foregroundColor: NSColor.secondaryLabelColor,

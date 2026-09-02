@@ -293,6 +293,27 @@ extension PasteSQLManager {
         }
     }
 
+    func updateItemTag(
+        id: Int64,
+        expectedTag: String,
+        newTag: String
+    ) async -> Bool {
+        guard let database = db else { return false }
+
+        let query = table.filter(
+            (Col.id == id) && (Col.tag == expectedTag)
+        )
+        do {
+            let count = try database.run(query.update(Col.tag <- newTag))
+            guard count > 0 else { return false }
+            log.debug("修复项目 tag 成功：\(expectedTag) -> \(newTag)，id：\(id)")
+            return true
+        } catch {
+            log.error("修复项目 tag 失败：\(error)，id：\(id)")
+            return false
+        }
+    }
+
     func updateItemContent(
         id: Int64,
         type: PasteboardType,

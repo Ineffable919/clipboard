@@ -13,51 +13,56 @@ extension String {
         "^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{4}|[A-Fa-f0-9]{6}|[A-Fa-f0-9]{8})$"
 
     func isCompleteURL() -> Bool {
-        let trimmedString = trimmingCharacters(in: .whitespacesAndNewlines)
+        validURLString() != nil
+    }
 
-        guard !trimmedString.isEmpty else {
-            return false
+    func asCompleteURL() -> URL? {
+        guard let candidate = validURLString() else { return nil }
+        return URL(string: candidate)
+    }
+
+    func isLink() -> Bool {
+        isCompleteURL()
+    }
+
+    private func validURLString() -> String? {
+        let candidate = trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !candidate.isEmpty else { return nil }
+        guard !candidate.unicodeScalars.contains(where: {
+            CharacterSet.whitespacesAndNewlines.contains($0)
+                || CharacterSet.controlCharacters.contains($0)
+        }) else {
+            return nil
         }
 
-        guard let url = URL(string: trimmedString) else {
-            return false
-        }
+        guard let url = URL(string: candidate) else { return nil }
 
         guard let scheme = url.scheme?.lowercased() else {
-            return false
+            return nil
         }
 
         let validSchemes = ["http", "https", "ftp", "ftps"]
         guard validSchemes.contains(scheme) else {
-            return false
+            return nil
         }
 
         guard let host = url.host else {
-            return false
+            return nil
         }
 
         let cleanHost = host.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleanHost.isEmpty else {
-            return false
+            return nil
         }
 
         let hasValidHostFormat =
             cleanHost.contains(".")
                 || cleanHost.localizedStandardContains("localhost")
         guard hasValidHostFormat else {
-            return false
+            return nil
         }
 
-        return true
-    }
-
-    func asCompleteURL() -> URL? {
-        guard isCompleteURL() else { return nil }
-        return URL(string: trimmingCharacters(in: .whitespacesAndNewlines))
-    }
-
-    func isLink() -> Bool {
-        isCompleteURL()
+        return candidate
     }
 
     func detectLinks() -> [URL] {
