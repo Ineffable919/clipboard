@@ -45,7 +45,7 @@ struct KeyboardSettingView: View {
                 HStack {
                     Spacer()
                     SystemButton(
-                        title: String(localized: .keyboardResetKeys)
+                        title: .keyboardResetKeys
                     ) {
                         resetIsPresented = true
                     }

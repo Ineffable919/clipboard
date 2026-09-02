@@ -6,11 +6,23 @@
 import SwiftUI
 
 struct SystemButton: View {
-    let title: String
+    private let label: Text
     let action: () -> Void
 
+    init(title: LocalizedStringResource, action: @escaping () -> Void) {
+        label = Text(title)
+        self.action = action
+    }
+
+    init(title: String, action: @escaping () -> Void) {
+        label = Text(title)
+        self.action = action
+    }
+
     var body: some View {
-        Button(title, action: action)
+        Button(action: action) {
+            label
+        }
             .focusable(false)
             .buttonStyle(.bordered)
             .controlSize(.regular)
@@ -18,6 +30,6 @@ struct SystemButton: View {
 }
 
 #Preview {
-    SystemButton(title: String(localized: .keyboardResetMore)) {}
+    SystemButton(title: .keyboardResetMore) {}
         .padding()
 }
