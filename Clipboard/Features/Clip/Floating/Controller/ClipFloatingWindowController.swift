@@ -48,6 +48,7 @@ final class ClipFloatingWindowController: NSWindowController {
         guard let win = window as? ClipWindowView else { return }
 
         win.configureCommonSettings()
+        win.isOpaque = false
 
         win.level = .statusBar
         win.collectionBehavior = [
@@ -56,6 +57,7 @@ final class ClipFloatingWindowController: NSWindowController {
 
         win.contentView?.wantsLayer = true
         win.contentView?.layer?.cornerRadius = Const.windowRadis
+        win.contentView?.layer?.cornerCurve = .continuous
         win.contentView?.layer?.masksToBounds = true
 
         win.delegate = self

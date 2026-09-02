@@ -127,14 +127,11 @@ final class FloatingFooterView: NSView {
     // MARK: - Background
 
     private static func buildEffectView() -> NSView {
-        let bottomCorners: CACornerMask = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
         if #available(macOS 26.0, *) {
             let bgType = BackgroundType(rawValue: PasteUserDefaults.backgroundType) ?? .liquid
             if bgType == .liquid {
                 let v = NSGlassEffectView()
-                v.cornerRadius = Const.windowRadis
-                v.wantsLayer = true
-                v.layer?.maskedCorners = bottomCorners
+                v.cornerRadius = 0
                 return v
             }
         }
@@ -143,9 +140,6 @@ final class FloatingFooterView: NSView {
         ve.state = .active
         ve.blendingMode = .withinWindow
         ve.material = .popover
-        ve.layer?.cornerRadius = Const.windowRadis
-        ve.layer?.maskedCorners = bottomCorners
-        ve.layer?.masksToBounds = true
         return ve
     }
 

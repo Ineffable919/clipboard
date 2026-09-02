@@ -357,14 +357,11 @@ final class FloatingHeaderView: NSView {
     // MARK: - Background
 
     private static func buildEffectView() -> NSView {
-        let topCorners: CACornerMask = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
         if #available(macOS 26.0, *) {
             let bgType = BackgroundType(rawValue: PasteUserDefaults.backgroundType) ?? .liquid
             if bgType == .liquid {
                 let v = NSGlassEffectView()
-                v.cornerRadius = Const.windowRadis
-                v.wantsLayer = true
-                v.layer?.maskedCorners = topCorners
+                v.cornerRadius = 0
                 return v
             }
         }
@@ -373,9 +370,6 @@ final class FloatingHeaderView: NSView {
         ve.state = .active
         ve.blendingMode = .withinWindow
         ve.material = .popover
-        ve.layer?.cornerRadius = Const.windowRadis
-        ve.layer?.maskedCorners = topCorners
-        ve.layer?.masksToBounds = true
         return ve
     }
 

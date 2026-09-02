@@ -12,7 +12,7 @@ import SnapKit
 final class FloatingWindowContentView: NSView {
     // MARK: - Subviews
 
-    private let bg = BackgroundEffectController(cornerRadius: Const.radius)
+    private let bg = BackgroundEffectController(cornerRadius: 0)
     let headerView = FloatingHeaderView()
     let historyView = FloatingHistoryView()
     let footerView = FloatingFooterView()
