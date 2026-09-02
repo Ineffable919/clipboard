@@ -39,11 +39,11 @@ final class PasteDataStore {
 
     private(set) var lastDataChangeType: DataChangeType = .reset
 
-    private var currentFilter: Expression<Bool>?
+    private(set) var currentFilter: Expression<Bool>?
     private(set) var isInFilterMode: Bool = false
     private var lastRequestedPage = 0
 
-    private let sqlManager = PasteSQLManager.manager
+    let sqlManager = PasteSQLManager.manager
     private var searchTask: Task<Void, Error>?
     private var loadPageTask: Task<Void, Never>?
     private var repairingTagIds = Set<Int64>()
@@ -67,14 +67,17 @@ final class PasteDataStore {
         lastDataChangeType = changeType
         dataList.send(list)
     }
+
+    func setHasMoreData(_ value: Bool) {
+        hasMoreData = value
+    }
 }
 
 // MARK: - Row → Model 映射
 
 extension PasteDataStore {
     private func getItems(limit: Int = 50, offset: Int? = nil) async
-        -> [PasteboardModel]
-    {
+        -> [PasteboardModel] {
         let rows = await sqlManager.search(
             filter: Col.hidden == 0,
             limit: limit,
@@ -83,13 +86,12 @@ extension PasteDataStore {
         return mapRows(rows)
     }
 
-    private func mapRows(_ rows: [Row]) -> [PasteboardModel] {
+    func mapRows(_ rows: [Row]) -> [PasteboardModel] {
         rows.compactMap { row in
             if let type = try? row.get(Col.type),
                let data = try? row.get(Col.data),
                let timestamp = try? row.get(Col.ts),
-               let uniqueId = try? row.get(Col.uniqueId)
-            {
+               let uniqueId = try? row.get(Col.uniqueId) {
                 let id = try? row.get(Col.id)
                 let appName = try? row.get(Col.appName)
                 let appPath = try? row.get(Col.appPath)
@@ -103,9 +105,10 @@ extension PasteDataStore {
                 let pType = PasteboardType(type)
 
                 if pType.isText(), showData == nil {
-                    if let plain = NSAttributedString(with: data, type: pType)?.string
-                        ?? String(data: data, encoding: .utf8)
-                    {
+                    if let plain = NSAttributedString(
+                        with: data,
+                        type: pType
+                    )?.string ?? String(data: data, encoding: .utf8) {
                         showData = String(plain.prefix(300)).data(
                             using: .utf8
                         )
@@ -127,16 +130,17 @@ extension PasteDataStore {
                     uniqueId: uniqueId
                 )
                 pasteModel.id = id
-                repairLinkTagIfNeeded(pasteModel)
+                repairTagIfNeeded(pasteModel)
                 return pasteModel
             }
             return nil
         }
     }
 
-    private func repairLinkTagIfNeeded(_ model: PasteboardModel) {
-        guard model.tag == PasteModelType.link.tagValue,
-              model.type != .link,
+    private func repairTagIfNeeded(_ model: PasteboardModel) {
+        guard let storedType = PasteModelType(rawValue: model.tag),
+              storedType == .link || storedType == .color,
+              model.type != storedType,
               let id = model.id
         else {
             return
@@ -154,7 +158,7 @@ extension PasteDataStore {
 
             let updated = await sqlManager.updateItemTag(
                 id: id,
-                expectedTag: PasteModelType.link.tagValue,
+                expectedTag: storedType.tagValue,
                 newTag: correctedTag
             )
             repairingTagIds.remove(id)
@@ -343,232 +347,26 @@ extension PasteDataStore {
         updateData(with: truncated, changeType: .new)
     }
 
-    func moveItemsToFirst(_ models: [PasteboardModel]) {
-        guard !models.isEmpty else { return }
-
-        let movedIds = Set(models.compactMap(\.id))
-        var list = dataList.value.filter { item in
-            guard let id = item.id else { return true }
-            return !movedIds.contains(id)
-        }
-
-        list.insert(contentsOf: models, at: 0)
-
-        if list.count > pageSize {
-            list = Array(list.prefix(pageSize))
-        }
-        updateData(with: list, changeType: .moveToFirst)
-    }
-
-    func deleteItems(_ items: PasteboardModel...) {
-        deleteItems(items)
-    }
-
-    func deleteItems(_ items: [PasteboardModel]) {
-        let deleteSet = Set(items.compactMap(\.id))
-        var list = dataList.value
-        list.removeAll { item in
-            guard let id = item.id else { return false }
-            return deleteSet.contains(id)
-        }
-        let ids = Array(deleteSet)
-        guard !ids.isEmpty else { return }
-
-        let deficit = pageSize - list.count
-        let needsBackfill = deficit > 0 && hasMoreData
-        let inFilter = isInFilterMode
-        let activeFilter = currentFilter
-
-        if needsBackfill {
-            let currentCount = list.count
-            Task { [weak self, sqlManager] in
-                guard let self else { return }
-
-                await sqlManager.delete(filter: ids.contains(Col.id))
-                let count = await sqlManager.getTotalCount()
-
-                let filter = inFilter ? activeFilter : nil
-                let rows = await sqlManager.search(
-                    filter: filter ?? (Col.hidden == 0),
-                    limit: deficit,
-                    offset: currentCount
-                )
-                let backfillItems = mapRows(rows)
-
-                let filtered: Int =
-                    if inFilter, let f = activeFilter {
-                        await sqlManager.getCount(filter: f)
-                    } else {
-                        count
-                    }
-
-                await MainActor.run { [weak self] in
-                    guard let self else { return }
-                    totalCount = count
-                    filteredCount = filtered
-
-                    var finalList = dataList.value
-                    finalList.removeAll { item in
-                        guard let id = item.id else { return false }
-                        return deleteSet.contains(id)
-                    }
-
-                    let existingIds = Set(finalList.compactMap(\.id))
-                    let uniqueBackfill = backfillItems.filter { item in
-                        guard let id = item.id else { return true }
-                        return !existingIds.contains(id)
-                    }
-                    finalList += uniqueBackfill
-
-                    hasMoreData = finalList.count >= pageSize
-                    updateData(with: finalList, changeType: .delete)
-                    PasteMetadataCache.shared.invalidateTagTypesCache()
-                }
-            }
-        } else {
-            updateData(with: list, changeType: .delete)
-
-            Task.detached(priority: .utility) { [weak self, sqlManager] in
-                await sqlManager.delete(filter: ids.contains(Col.id))
-                let count = await sqlManager.getTotalCount()
-
-                let filtered: Int =
-                    if inFilter, let activeFilter {
-                        await sqlManager.getCount(filter: activeFilter)
-                    } else {
-                        count
-                    }
-
-                await MainActor.run { [weak self] in
-                    guard let self else { return }
-                    totalCount = count
-                    filteredCount = filtered
-                    PasteMetadataCache.shared.invalidateTagTypesCache()
-                }
-            }
-        }
-    }
-
-    func deleteItems(filter: Expression<Bool>) {
-        let inFilter = isInFilterMode
-        let activeFilter = currentFilter
-
-        Task.detached(priority: .utility) { [sqlManager] in
-            await sqlManager.delete(filter: filter)
-            let count = await sqlManager.getTotalCount()
-
-            let filtered: Int =
-                if inFilter, let activeFilter {
-                    await sqlManager.getCount(filter: activeFilter)
-                } else {
-                    count
-                }
-
-            await MainActor.run { [weak self] in
-                guard let self else { return }
-                totalCount = count
-                filteredCount = filtered
-                PasteMetadataCache.shared.invalidateTagTypesCache()
-            }
-        }
-    }
-
-    func deleteItemsByGroup(_ groupId: Int) {
-        deleteItems(filter: Col.group == groupId)
-    }
-
-    func remove(at index: Int) {
-        var list = dataList.value
-        list.remove(at: index)
-        dataList.send(list)
-    }
-
-    func clearExpiredData() {
-        let lastDate = PasteUserDefaults.lastClearDate
-        let dateStr = Date().formatted(date: .numeric, time: .omitted)
-        if lastDate == dateStr {
-            return
-        }
-        PasteUserDefaults.lastClearDate = dateStr
-
-        let currentValue = PasteUserDefaults.historyTime
-        let timeUnit = HistoryTimeUnit(rawValue: currentValue)
-        clearData(for: timeUnit)
-    }
-
-    func clearData(for timeUnit: HistoryTimeUnit) {
-        var dateCom = DateComponents()
-
-        switch timeUnit {
-        case let .days(n):
-            dateCom = DateComponents(calendar: Calendar.current, day: -n)
-        case let .weeks(n):
-            dateCom = DateComponents(calendar: Calendar.current, day: -n * 7)
-        case let .months(n):
-            dateCom = DateComponents(calendar: Calendar.current, month: -n)
-        case .year:
-            dateCom = DateComponents(calendar: Calendar.current, year: -1)
-        case .forever:
-            return
-        }
-
-        if let deadDate = Calendar.current.date(byAdding: dateCom, to: Date()) {
-            let deadTime = Int64(deadDate.timeIntervalSince1970)
-            log.info("清理过期数据，截止时间戳：\(deadTime)")
-            let filteredList = dataList.value.filter { $0.timestamp > deadTime }
-            updateData(with: filteredList)
-            deleteItems(filter: Col.ts < deadTime && Col.group == -1)
-        }
-    }
-
-    func clearAllData() {
-        let alert = NSAlert()
-        alert.informativeText = String(localized: .clearDataMessage)
-        alert.addButton(withTitle: String(localized: .commonConfirm))
-        alert.addButton(withTitle: String(localized: .commonCancel))
-        let response = alert.runModal()
-
-        if response == .alertFirstButtonReturn {
-            Task {
-                await sqlManager.dropTable()
-                await sqlManager.recreateTable()
-                await MainActor.run {
-                    PasteMetadataCache.shared.invalidateAllCaches()
-                }
-                resetToDefault()
-            }
-        }
-    }
-
-    func updateDbItem(id: Int64, item: PasteboardModel) {
-        Task {
-            await sqlManager.update(id: id, item: item)
-        }
-    }
-
     /// 编辑更新
     func updateItemContent(
         id: Int64,
-        newType: PasteboardType,
-        newData: Data,
-        newShowData: Data?,
-        newSearchText: String,
-        newLength: Int,
-        newTag: String
+        content: PasteContent
     ) async -> Bool {
-        let normalizedSearchText = PasteboardModel.normalizeSearchText(newSearchText)
+        let searchText = PasteboardModel.normalizeSearchText(
+            content.searchText
+        )
         let loadedLimit = max(pageSize, dataList.value.count)
         loadPageTask?.cancel()
         isLoadingPage = false
 
         guard await sqlManager.updateItemContent(
             id: id,
-            type: newType,
-            data: newData,
-            showData: newShowData,
-            searchText: normalizedSearchText,
-            length: newLength,
-            tag: newTag
+            type: content.type,
+            data: content.data,
+            showData: content.showData,
+            searchText: searchText,
+            length: content.length,
+            tag: content.tag
         ) else {
             return false
         }
@@ -598,23 +396,4 @@ extension PasteDataStore {
         return true
     }
 
-    func updateItemGroupInDB(id: Int64, groupId: Int) async {
-        await sqlManager.updateItemGroup(id: id, groupId: groupId)
-    }
-
-    func updateItemHidden(itemId: Int64, hidden: Bool) {
-        if let model = dataList.value.first(where: { $0.id == itemId }),
-           hidden != model.hidden
-        {
-            model.updateHidden(val: hidden)
-        }
-
-        Task {
-            await sqlManager.updateItemHidden(id: itemId, hidden: hidden)
-        }
-    }
-
-    func getCountByGroup(groupId: Int) async -> Int {
-        await sqlManager.getCountByGroup(groupId: groupId)
-    }
 }

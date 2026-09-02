@@ -40,7 +40,7 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
                 .closable,
                 .miniaturizable,
                 .resizable,
-                .fullSizeContentView,
+                .fullSizeContentView
             ],
             backing: .buffered,
             defer: false
@@ -75,7 +75,7 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
         fatalError("init(coder:) has not been implemented")
     }
 
-    private var isNewItem: Bool = false
+    private(set) var isNewItem: Bool = false
 
     // MARK: - Public Methods
 
@@ -165,105 +165,18 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
     func windowShouldZoom(_: NSWindow, toFrame _: NSRect) -> Bool {
         false
     }
+}
 
-    private func saveFromState() {
+private extension EditWindowController {
+    func saveFromState() {
         guard let contentView = editContentView, contentView.isLoaded else {
             return
         }
         saveContent(contentView.currentContent)
     }
 
-    func saveContent(_ content: EditedContent) {
-        guard let model = currentModel else {
-            return
-        }
-
-        let plainText: String
-        let length: Int
-        let actualType: PasteboardType
-        let newData: Data
-        let showData: Data?
-
-        switch content {
-        case let .plainText(text):
-            plainText = text
-            length = text.utf16.count
-            actualType = .string
-            newData = Data(text.utf8)
-            showData = Data(text.prefix(250).utf8)
-        case let .attributedText(attributedString):
-            plainText = attributedString.string
-            length = attributedString.length
-            let isRich = Self.hasRichTextAttributes(attributedString)
-            actualType = isRich ? .rtf : .string
-            newData = if actualType == .string {
-                Data(plainText.utf8)
-            } else {
-                attributedString.toData(with: actualType) ?? Data()
-            }
-
-            let showContent = length > 250
-                ? attributedString.attributedSubstring(
-                    from: NSRange(location: 0, length: 250)
-                )
-                : attributedString
-            showData = showContent.toData(with: actualType)
-        }
-
-        guard !plainText.allSatisfy(\.isWhitespace) else {
-            closeWindow()
-            return
-        }
-
-        let newTag = PasteboardModel.calculateTag(
-            type: actualType,
-            content: newData
-        )
-
-        if isNewItem {
-            let newModel = PasteboardModel(
-                pasteboardType: actualType,
-                data: newData,
-                showData: showData,
-                timestamp: Int64(Date().timeIntervalSince1970),
-                appPath: model.appPath,
-                appName: model.appName,
-                searchText: PasteboardModel.normalizeSearchText(plainText),
-                length: length,
-                group: -1,
-                tag: newTag
-            )
-
-            Task {
-                await PasteDataStore.main.insertModel(newModel)
-                await MainActor.run {
-                    self.closeWindow()
-                }
-            }
-        } else {
-            guard let itemId = model.id else { return }
-
-            Task {
-                let updated = await PasteDataStore.main.updateItemContent(
-                    id: itemId,
-                    newType: actualType,
-                    newData: newData,
-                    newShowData: showData,
-                    newSearchText: plainText,
-                    newLength: length,
-                    newTag: newTag
-                )
-
-                guard updated else { return }
-                await MainActor.run {
-                    self.closeWindow()
-                }
-            }
-        }
-    }
-
     /// 在装载文本前根据模式同步设定尺寸并居中于当前屏幕。
-    private func prepareInitialWindow(for mode: EditMode) {
+    func prepareInitialWindow(for mode: EditMode) {
         guard let window else { return }
         needsInitialPresentation = false
         resizeGeneration += 1
@@ -287,7 +200,7 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
     }
 
     /// 文本、行号宽度和约束都稳定后再显示窗口，首帧即为文档顶部。
-    private func presentPreparedWindow() {
+    func presentPreparedWindow() {
         guard let window, !needsInitialPresentation else { return }
         window.layoutIfNeeded()
         editContentView?.scrollActiveEditorToTop()
@@ -295,7 +208,7 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
         window.makeKeyAndOrderFront(nil)
     }
 
-    private func updateWindow(for mode: EditMode, animated: Bool) {
+    func updateWindow(for mode: EditMode, animated: Bool) {
         guard let window else { return }
 
         if needsInitialPresentation {
@@ -335,25 +248,42 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
             return
         }
 
-        NSAnimationContext.runAnimationGroup({ context in
-            context.duration = Self.modeResizeDuration
-            context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-            window.animator().setFrame(frame, display: true)
-        }) { [weak self] in
-            Task { @MainActor in
-                guard let self, generation == self.resizeGeneration else { return }
-                self.isResizingForMode = false
-                self.editContentView?.scrollActiveEditorToTop()
-            }
-        }
+        animateWindow(window, to: frame, generation: generation)
     }
 
-    private func updateStableWindowCenter() {
+    func animateWindow(
+        _ window: NSWindow,
+        to frame: NSRect,
+        generation: Int
+    ) {
+        NSAnimationContext.runAnimationGroup(
+            { context in
+                context.duration = Self.modeResizeDuration
+                context.timingFunction = CAMediaTimingFunction(
+                    name: .easeInEaseOut
+                )
+                window.animator().setFrame(frame, display: true)
+            },
+            completionHandler: { [weak self] in
+                Task { @MainActor in
+                    guard let self,
+                          generation == self.resizeGeneration
+                    else {
+                        return
+                    }
+                    self.isResizingForMode = false
+                    self.editContentView?.scrollActiveEditorToTop()
+                }
+            }
+        )
+    }
+
+    func updateStableWindowCenter() {
         guard !isResizingForMode, let window else { return }
         stableWindowCenter = Self.center(of: window.frame)
     }
 
-    private func finishModeResize() {
+    func finishModeResize() {
         resizeGeneration += 1
         isResizingForMode = false
         if let window {
@@ -361,61 +291,16 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
         }
     }
 
-    private static func center(of frame: NSRect) -> NSPoint {
+    static func center(of frame: NSRect) -> NSPoint {
         NSPoint(x: frame.midX, y: frame.midY)
-    }
-
-    /// 检测 NSAttributedString 是否包含富文本属性（加粗、斜体、下划线、删除线等）
-    private static func hasRichTextAttributes(
-        _ attributedString: NSAttributedString
-    ) -> Bool {
-        guard attributedString.length > 0 else { return false }
-
-        let fullRange = NSRange(location: 0, length: attributedString.length)
-        var found = false
-
-        attributedString.enumerateAttributes(
-            in: fullRange,
-            options: []
-        ) { attributes, _, stop in
-            // 检查下划线
-            if let underline = attributes[.underlineStyle] as? Int,
-               underline != 0
-            {
-                found = true
-                stop.pointee = true
-                return
-            }
-
-            // 检查删除线
-            if let strikethrough = attributes[.strikethroughStyle] as? Int,
-               strikethrough != 0
-            {
-                found = true
-                stop.pointee = true
-                return
-            }
-
-            // 检查字体特征（加粗、斜体）
-            if let font = attributes[.font] as? NSFont {
-                let traits = font.fontDescriptor.symbolicTraits
-                if traits.contains(.bold) || traits.contains(.italic) {
-                    found = true
-                    stop.pointee = true
-                    return
-                }
-            }
-        }
-
-        return found
     }
 
     // MARK: - Private Methods
 
-    private func handleKeyEquivalent(_ event: NSEvent) -> Bool {
+    func handleKeyEquivalent(_ event: NSEvent) -> Bool {
         let keyChar = event.charactersIgnoringModifiers?.lowercased() ?? ""
         let modifiers = event.modifierFlags.intersection([
-            .command, .option, .control, .shift,
+            .command, .option, .control, .shift
         ])
 
         // Cmd+W — close window
