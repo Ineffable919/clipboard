@@ -96,9 +96,10 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
 
     func configure(with model: PasteboardModel, keyword: String) {
         let urlString = model.attributeString.string
+            .trimmingCharacters(in: .whitespacesAndNewlines)
         let url = urlString.asCompleteURL()
 
-        titleLabel.stringValue = model.cachedLinkMetadata?.title
+        titleLabel.stringValue = Self.singleLineTitle(model.cachedLinkMetadata?.title)
             ?? url?.host()
             ?? urlString
 
@@ -132,7 +133,9 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
             await MainActor.run {
                 guard !Task.isCancelled else { return }
                 model.cachedLinkMetadata = meta
-                self.titleLabel.stringValue = meta.title ?? url.host() ?? url.absoluteString
+                self.titleLabel.stringValue = Self.singleLineTitle(meta.title)
+                    ?? url.host()
+                    ?? url.absoluteString
                 self.applyMetadata(meta)
             }
         }
@@ -237,6 +240,14 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
     }
 
     // MARK: - Private: URL label
+
+    private static func singleLineTitle(_ title: String?) -> String? {
+        guard let title else { return nil }
+        let normalized = title
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacing(/\s+/, with: " ")
+        return normalized.isEmpty || normalized == "/" ? nil : normalized
+    }
 
     private func makeURLAttributedString(
         urlString: String,
