@@ -13,13 +13,15 @@ struct WelcomePreferencesControlsView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        HStack(spacing: 20) {
-            HStack(spacing: 6) {
+        VStack(spacing: 0) {
+            HStack {
                 Text(.generalLaunch)
                     .font(.footnote)
                     .foregroundStyle(
                         WelcomeStyle.secondaryText(for: colorScheme)
                     )
+
+                Spacer()
 
                 Toggle(
                     String(localized: .generalLaunch),
@@ -29,55 +31,35 @@ struct WelcomePreferencesControlsView: View {
                 .toggleStyle(.switch)
                 .controlSize(.small)
             }
+            .frame(height: 48)
 
-            HStack(spacing: 6) {
+            Divider()
+                .overlay(WelcomeStyle.border)
+
+            HStack {
                 Text(.appearanceModeLabel)
                     .font(.footnote)
                     .foregroundStyle(
                         WelcomeStyle.secondaryText(for: colorScheme)
                     )
 
-                Menu {
-                    ForEach(AppearanceMode.allCases, id: \.rawValue) { mode in
-                        Button {
-                            appearanceRaw = mode.rawValue
-                        } label: {
-                            if mode == currentAppearance {
-                                Label(mode.title, systemImage: "checkmark")
-                            } else {
-                                Text(mode.title)
-                            }
-                        }
-                    }
-                } label: {
-                    HStack(spacing: 6) {
-                        Text(currentAppearance.title)
-                            .font(.footnote)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                            .foregroundStyle(
-                                WelcomeStyle.primaryText(for: colorScheme)
-                            )
+                Spacer()
 
-                        Image(systemName: "chevron.up.chevron.down")
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(
-                                WelcomeStyle.secondaryText(for: colorScheme)
-                            )
+                Picker(
+                    String(localized: .appearanceModeLabel),
+                    selection: $appearanceRaw
+                ) {
+                    ForEach(AppearanceMode.allCases, id: \.rawValue) { mode in
+                        Text(mode.title)
+                            .tag(mode.rawValue)
                     }
-                    .padding(.horizontal, 10)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(
-                        WelcomeStyle.subtleSurface(for: colorScheme),
-                        in: .rect(cornerRadius: 7)
-                    )
-                    .contentShape(.rect)
                 }
-                .menuStyle(.borderlessButton)
-                .menuIndicator(.hidden)
-                .tint(WelcomeStyle.primaryText(for: colorScheme))
-                .frame(width: 88, height: 28)
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .controlSize(.small)
+                .frame(width: 104)
             }
+            .frame(height: 48)
         }
         .onChange(of: launchAtLogin) { _, newValue in
             let success = LaunchAtLoginHelper.shared.setEnabled(newValue)
@@ -92,10 +74,6 @@ struct WelcomePreferencesControlsView: View {
         .onChange(of: appearanceRaw) { _, newValue in
             applyAppearance(AppearanceMode(rawValue: newValue) ?? .system)
         }
-    }
-
-    private var currentAppearance: AppearanceMode {
-        AppearanceMode(rawValue: appearanceRaw) ?? .system
     }
 
     private func applyAppearance(_ mode: AppearanceMode) {

@@ -2012,7 +2012,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open Settings"
+            "value" : "Open Settings…"
           }
         },
         "zh-Hans" : {
@@ -5257,7 +5257,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "打开系统设置"
+            "value" : "打开系统设置…"
           }
         }
       }

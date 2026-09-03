@@ -11,7 +11,7 @@ struct WelcomePermissionPageView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        HStack(alignment: .center, spacing: 42) {
+        HStack(alignment: .center, spacing: 32) {
             VStack(alignment: .leading, spacing: 22) {
                 WelcomePageTitleView(
                     title: .permissionTitle,
@@ -24,10 +24,10 @@ struct WelcomePermissionPageView: View {
                         WelcomeStyle.secondaryText(for: colorScheme)
                     )
             }
-            .frame(width: 270, alignment: .leading)
+            .frame(width: 232, alignment: .leading)
 
             WelcomePermissionCardView(viewModel: viewModel)
-                .frame(width: 312)
+                .frame(width: 360)
         }
         .padding(.horizontal, WelcomeStyle.horizontalPadding)
         .frame(maxWidth: .infinity, maxHeight: .infinity)

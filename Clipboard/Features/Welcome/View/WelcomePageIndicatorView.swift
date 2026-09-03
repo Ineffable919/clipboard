@@ -29,7 +29,7 @@ struct WelcomePageIndicatorView: View {
                                     for: colorScheme
                                 ).opacity(0.55)
                         )
-                        .frame(width: 7, height: 7)
+                        .frame(width: 9, height: 9)
                         .frame(width: 18, height: 24)
                         .contentShape(Rectangle())
                 }

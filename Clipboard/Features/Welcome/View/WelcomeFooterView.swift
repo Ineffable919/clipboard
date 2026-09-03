@@ -12,14 +12,6 @@ struct WelcomeFooterView: View {
     var body: some View {
         ZStack {
             HStack {
-                if viewModel.currentPage == .permission {
-                    WelcomePreferencesControlsView()
-                        .frame(width: 286, alignment: .leading)
-                } else {
-                    Color.clear
-                        .frame(width: 286, height: 1)
-                }
-
                 Spacer()
 
                 WelcomeFooterActionsView(

@@ -11,7 +11,7 @@ struct WelcomePermissionCardView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 12) {
                 Image(systemName: "accessibility")
                     .font(.title2)
@@ -22,6 +22,8 @@ struct WelcomePermissionCardView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(.privacyAccessPermissionTitle)
                         .font(.headline)
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
 
                     Text(
                         viewModel.hasAccessibilityPermission
@@ -36,30 +38,44 @@ struct WelcomePermissionCardView: View {
                     )
                 }
 
-                Spacer(minLength: 8)
-
                 if viewModel.hasAccessibilityPermission {
+                    Spacer(minLength: 8)
+
                     Image(systemName: "checkmark.circle.fill")
                         .font(.title3)
                         .foregroundStyle(WelcomeStyle.accent)
-                } else {
-                    Button(.permissionOpenSettings) {
-                        viewModel.openAccessibilitySettings()
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.regular)
-                    .tint(WelcomeStyle.accent)
                 }
             }
+            .padding(.bottom, 16)
 
             Divider()
                 .overlay(WelcomeStyle.border)
 
-            Text(.permissionAccessSub)
-                .font(.footnote)
-                .foregroundStyle(
-                    WelcomeStyle.secondaryText(for: colorScheme)
-                )
+            HStack(alignment: .center, spacing: 12) {
+                Text(.permissionAccessSub)
+                    .font(.footnote)
+                    .foregroundStyle(
+                        WelcomeStyle.secondaryText(for: colorScheme)
+                    )
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                if !viewModel.hasAccessibilityPermission {
+                    Button(.permissionOpenSettings) {
+                        viewModel.openAccessibilitySettings()
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .frame(width: 104)
+                    .tint(WelcomeStyle.accent)
+                }
+            }
+            .frame(height: 48)
+
+            Divider()
+                .overlay(WelcomeStyle.border)
+
+            WelcomePreferencesControlsView()
         }
         .padding(18)
         .background(WelcomeStyle.surface(for: colorScheme))
