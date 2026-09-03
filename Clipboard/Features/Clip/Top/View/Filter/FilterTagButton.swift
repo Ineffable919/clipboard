@@ -28,6 +28,10 @@ final class FilterTagButton: FilterButton {
         dotView.layer?.cornerRadius = 6
         let color = CategoryChip.nsColor(at: colorIndex)
         dotView.layer?.backgroundColor = color.cgColor
+        dotView.layer?.borderWidth = 1
+        dotView.layer?.borderColor = NSColor.labelColor
+            .withAlphaComponent(0.22)
+            .cgColor
         dotContainer.addSubview(dotView)
         dotView.snp.makeConstraints { make in
             make.width.height.equalTo(12)

@@ -318,13 +318,19 @@ final class TopBarViewModel {
 
     private func makeColorDotImage(colorIndex: Int) -> NSImage {
         let canvasSize: CGFloat = 14
-        let dotSize: CGFloat = 10
+        let dotSize: CGFloat = 12
         let image = NSImage(size: NSSize(width: canvasSize, height: canvasSize))
         image.lockFocus()
         let color = CategoryChip.nsColor(at: colorIndex)
         color.setFill()
         let origin = (canvasSize - dotSize) / 2
-        NSBezierPath(ovalIn: NSRect(x: origin, y: origin, width: dotSize, height: dotSize)).fill()
+        let path = NSBezierPath(
+            ovalIn: NSRect(x: origin, y: origin, width: dotSize, height: dotSize)
+        )
+        path.fill()
+        NSColor.labelColor.withAlphaComponent(0.22).setStroke()
+        path.lineWidth = 1
+        path.stroke()
         image.unlockFocus()
         image.isTemplate = false
         return image

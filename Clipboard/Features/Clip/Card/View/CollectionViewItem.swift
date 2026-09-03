@@ -150,8 +150,6 @@ final class CollectionViewItem: NSCollectionViewItem {
         guard let model = item else { return }
         if model.type == .color, let bgColor = model.cachedBackgroundColor {
             contentView.dynamicBackgroundColor = bgColor
-        } else if let bgColor = model.safeBgColor {
-            contentView.dynamicBackgroundColor = bgColor
         } else {
             contentView.dynamicBackgroundColor = NSColor.textBackgroundColor
         }

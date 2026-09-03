@@ -277,9 +277,12 @@ final class ChipButton: NSView, NSTextFieldDelegate {
     private func configureDot(colorIndex: Int) {
         let index = min(max(colorIndex, 0), CategoryChip.palette.count - 1)
         dotView.layer?.cornerRadius = config.dotRadius
-        let color = NSColor(CategoryChip.palette[index])
         effectiveAppearance.performAsCurrentDrawingAppearance {
-            dotView.layer?.backgroundColor = color.cgColor
+            dotView.layer?.backgroundColor = CategoryChip.nsColor(at: index).cgColor
+            dotView.layer?.borderWidth = 1
+            dotView.layer?.borderColor = NSColor.labelColor
+                .withAlphaComponent(0.22)
+                .cgColor
         }
     }
 
@@ -371,7 +374,7 @@ final class ChipButton: NSView, NSTextFieldDelegate {
     private func compactChipColor() -> NSColor {
         config.chip.id == -1
             ? .controlAccentColor
-            : CategoryChip.nsColor(at: config.chip.colorIndex, alpha: 1.0)
+            : CategoryChip.nsColor(at: config.chip.colorIndex)
     }
 
     private func resolvedForegroundColor() -> NSColor {

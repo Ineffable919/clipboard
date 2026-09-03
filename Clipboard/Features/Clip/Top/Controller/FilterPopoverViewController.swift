@@ -134,11 +134,9 @@ extension FilterPopoverViewController {
 
             async let appPathTask: Void = viewModel.loadAppPathCache()
             async let appInfoTask = PasteMetadataCache.shared.getAllAppInfo()
-            async let typesTask = PasteMetadataCache.shared.getAllTagTypes()
 
-            let (rawAppInfo, types, _) = await (
+            let (rawAppInfo, _) = await (
                 appInfoTask,
-                typesTask,
                 appPathTask
             )
             guard !Task.isCancelled else { return }
@@ -152,7 +150,9 @@ extension FilterPopoverViewController {
                 )
             }
 
-            contentView.typeSection.setAvailableTypes(types)
+            contentView.typeSection.setAvailableTypes([
+                .color, .file, .image, .link, .string
+            ])
             contentView.appSection.setAvailableApps(appInfo)
             if isViewVisible {
                 contentView.appSection.prepareRemainingApps()
