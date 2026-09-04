@@ -85,6 +85,21 @@ final class ChipScrollView: NSView {
         superview?.needsLayout = true
     }
 
+    private func keepEditingEdgeVisible(_ button: ChipButton) {
+        invalidateWidth()
+        Task { @MainActor [weak self, weak button] in
+            guard let self, let button else { return }
+            layoutSubtreeIfNeeded()
+            let edge = NSRect(
+                x: max(button.bounds.maxX - 1, 0),
+                y: button.bounds.minY,
+                width: 1,
+                height: button.bounds.height
+            )
+            button.scrollToVisible(edge)
+        }
+    }
+
     // MARK: - Public API
 
     func reload(
@@ -96,6 +111,7 @@ final class ChipScrollView: NSView {
     ) {
         self.chips = chips
         newChipButton = nil
+        var editingButton: ChipButton?
 
         chipButtons.forEach { $0.removeFromSuperview() }
         for arrangedSubview in contentStack.arrangedSubviews {
@@ -118,8 +134,12 @@ final class ChipScrollView: NSView {
                         }
                     )
             let btn = ChipButton(config: config)
-            btn.onWidthChanged = { [weak self] in
-                self?.invalidateWidth()
+            btn.onWidthChanged = { [weak self, weak btn] in
+                guard let btn else { return }
+                self?.keepEditingEdgeVisible(btn)
+            }
+            if config.isEditing {
+                editingButton = btn
             }
             chipButtons.append(btn)
             contentStack.addArrangedSubview(btn)
@@ -128,6 +148,9 @@ final class ChipScrollView: NSView {
         selectedChipId = selectedId
         invalidateWidth()
         scrollView.documentView?.scroll(.zero)
+        if let editingButton {
+            keepEditingEdgeVisible(editingButton)
+        }
     }
 
     // MARK: - Private
@@ -148,12 +171,13 @@ final class ChipScrollView: NSView {
     func appendNewChipButton(config: ChipButton.Config) {
         removeNewChipButton()
         let btn = ChipButton(config: config)
-        btn.onWidthChanged = { [weak self] in
-            self?.invalidateWidth()
+        btn.onWidthChanged = { [weak self, weak btn] in
+            guard let btn else { return }
+            self?.keepEditingEdgeVisible(btn)
         }
         newChipButton = btn
         contentStack.addArrangedSubview(btn)
-        invalidateWidth()
+        keepEditingEdgeVisible(btn)
     }
 
     func removeNewChipButton() {
