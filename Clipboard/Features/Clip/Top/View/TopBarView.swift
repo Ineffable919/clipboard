@@ -258,8 +258,7 @@ final class TopBarView: NSView {
         }
 
         defaultRow.snp.makeConstraints { make in
-            make.centerX.equalTo(self.snp.leading).offset(225)
-            make.leading.greaterThanOrEqualToSuperview()
+            make.leading.equalToSuperview().offset(45)
             make.trailing.lessThanOrEqualTo(settingBtn.snp.leading).offset(
                 -Const.space12
             )
