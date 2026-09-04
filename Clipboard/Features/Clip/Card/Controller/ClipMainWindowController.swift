@@ -86,6 +86,8 @@ extension ClipMainWindowController {
         let view = window.contentViewController?.view
         let height = view?.bounds.height ?? Const.defaultHeight
 
+        (contentViewController as? ClipMainViewController)?
+            .bg.resetSlidePresentation()
         snapToPresentedPosition(view)
 
         suppressSearchFocusRing(true)
@@ -113,16 +115,26 @@ extension ClipMainWindowController {
         guard let window else { return }
 
         let view = window.contentViewController?.view
+        let mainViewController = contentViewController as? ClipMainViewController
         if !window.isVisible {
             let screenFrame = frame ?? NSScreen.main?.frame ?? .zero
             AppEnvironment.shared.previousApp = NSWorkspace.shared.frontmostApplication
             let panelFrame = NSRect(x: screenFrame.minX, y: screenFrame.minY, width: screenFrame.width, height: Const.defaultHeight)
             view?.setFrameOrigin(NSPoint(x: 0, y: -Const.defaultHeight))
             window.setFrame(panelFrame, display: false)
+            if mainViewController?.effectView is NSVisualEffectView {
+                window.alphaValue = 0
+            }
             window.setIsVisible(true)
         } else {
             snapToPresentedPosition(window.contentViewController?.view)
         }
+
+        let usesSlidePresentation = prepareBackdropSlidePresentation(
+            in: window,
+            view: view,
+            controller: mainViewController
+        )
 
         window.makeKeyAndOrderFront(nil)
         if #unavailable(macOS 15.0) {
@@ -133,16 +145,46 @@ extension ClipMainWindowController {
         slideAnimationGeneration += 1
         let generation = slideAnimationGeneration
 
-        NSAnimationContext.runAnimationGroup { context in
-            context.duration = Const.showDuration
-            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            view?.animator().setFrameOrigin(.zero)
-        } completionHandler: { [weak self] in
-            MainActor.assumeIsolated {
+        if usesSlidePresentation, let mainViewController {
+            mainViewController.bg.animateSlidePresentation(
+                duration: Const.showDuration,
+                timingFunction: CAMediaTimingFunction(name: .easeOut)
+            ) { [weak self] in
                 guard let self, generation == self.slideAnimationGeneration, self.targetVisible else { return }
                 self.suppressSearchFocusRing(false)
             }
+        } else {
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = Const.showDuration
+                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                view?.animator().setFrameOrigin(.zero)
+            } completionHandler: { [weak self] in
+                MainActor.assumeIsolated {
+                    guard let self, generation == self.slideAnimationGeneration, self.targetVisible else { return }
+                    self.suppressSearchFocusRing(false)
+                }
+            }
         }
+    }
+
+    private func prepareBackdropSlidePresentation(
+        in window: NSWindow,
+        view: NSView?,
+        controller: ClipMainViewController?
+    ) -> Bool {
+        guard controller?.effectView is NSVisualEffectView else { return false }
+
+        view?.layer?.removeAllAnimations()
+        view?.setFrameOrigin(.zero)
+        view?.layoutSubtreeIfNeeded()
+        let prepared = controller?.bg.prepareSlidePresentation() == true
+        window.alphaValue = 1
+        if !prepared {
+            view?.setFrameOrigin(
+                NSPoint(x: 0, y: -Const.defaultHeight)
+            )
+        }
+        return prepared
     }
 
     private func suppressSearchFocusRing(_ suppressed: Bool) {

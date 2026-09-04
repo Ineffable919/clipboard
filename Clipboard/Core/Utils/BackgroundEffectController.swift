@@ -21,6 +21,7 @@ final class BackgroundEffectController {
 
     private var lastBackgroundType: Int = PasteUserDefaults.backgroundType
     private var cancellables = Set<AnyCancellable>()
+    private var presentationMask: CALayer?
 
     init(cornerRadius: CGFloat, innerPadding: CGFloat = 0) {
         self.cornerRadius = cornerRadius
@@ -46,6 +47,89 @@ final class BackgroundEffectController {
     func install(in host: NSView) {
         self.host = host
         attach()
+    }
+
+    func prepareSlidePresentation() -> Bool {
+        guard effectView is NSVisualEffectView,
+              let effectLayer = effectView.layer,
+              let contentLayer = contentContainer.layer
+        else {
+            return false
+        }
+
+        effectView.layoutSubtreeIfNeeded()
+        let height = effectView.bounds.height
+        guard height > 0 else { return false }
+
+        resetSlidePresentation()
+
+        let mask = CALayer()
+        mask.frame = effectView.bounds
+        mask.backgroundColor = NSColor.black.cgColor
+        mask.cornerRadius = cornerRadius
+        mask.cornerCurve = .continuous
+        mask.masksToBounds = true
+
+        let hiddenTransform = CATransform3DMakeTranslation(0, -height, 0)
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        mask.transform = hiddenTransform
+        contentLayer.transform = hiddenTransform
+        effectLayer.mask = mask
+        CATransaction.commit()
+
+        presentationMask = mask
+        return true
+    }
+
+    func animateSlidePresentation(
+        duration: CFTimeInterval,
+        timingFunction: CAMediaTimingFunction,
+        completion: @escaping @MainActor () -> Void
+    ) {
+        guard let mask = presentationMask,
+              let contentLayer = contentContainer.layer
+        else {
+            completion()
+            return
+        }
+
+        let hiddenTransform = mask.transform
+        let makeAnimation = {
+            let animation = CABasicAnimation(keyPath: "transform")
+            animation.fromValue = hiddenTransform
+            animation.toValue = CATransform3DIdentity
+            animation.duration = duration
+            animation.timingFunction = timingFunction
+            return animation
+        }
+
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        CATransaction.setCompletionBlock { [weak self] in
+            MainActor.assumeIsolated {
+                self?.resetSlidePresentation()
+                completion()
+            }
+        }
+        mask.transform = CATransform3DIdentity
+        contentLayer.transform = CATransform3DIdentity
+        mask.add(makeAnimation(), forKey: "clip.slidePresentation")
+        contentLayer.add(makeAnimation(), forKey: "clip.slidePresentation")
+        CATransaction.commit()
+    }
+
+    func resetSlidePresentation() {
+        presentationMask?.removeAllAnimations()
+        contentContainer.layer?.removeAnimation(forKey: "clip.slidePresentation")
+
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        effectView.layer?.mask = nil
+        contentContainer.layer?.transform = CATransform3DIdentity
+        CATransaction.commit()
+
+        presentationMask = nil
     }
 
     private func attach() {
