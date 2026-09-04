@@ -378,7 +378,7 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         if config.compact, config.isSelected || config.isEditing {
             return .white
         }
-        return .labelColor
+        return .labelColor.withAlphaComponent(0.85)
     }
 
     override var intrinsicContentSize: NSSize {

@@ -57,7 +57,7 @@ final class ChipScrollView: NSView {
         scrollView.contentView = clipView
 
         contentStack.orientation = .horizontal
-        contentStack.spacing = Const.space6 / 2
+        contentStack.spacing = 0
         contentStack.alignment = .centerY
         scrollView.documentView = contentStack
 

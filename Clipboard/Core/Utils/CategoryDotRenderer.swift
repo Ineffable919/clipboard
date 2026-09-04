@@ -7,7 +7,6 @@ import AppKit
 
 enum CategoryDotRenderer {
     static let diameter: CGFloat = 12
-    static let borderWidth: CGFloat = 0.5
 
     static func configure(
         _ view: NSView,
@@ -20,8 +19,8 @@ enum CategoryDotRenderer {
         view.effectiveAppearance.performAsCurrentDrawingAppearance {
             let color = CategoryChip.nsColor(at: colorIndex)
             view.layer?.backgroundColor = color.cgColor
-            view.layer?.borderWidth = borderWidth
-            view.layer?.borderColor = color.withSystemEffect(.pressed).cgColor
+            view.layer?.borderWidth = 0
+            view.layer?.borderColor = nil
         }
     }
 
@@ -51,15 +50,8 @@ enum CategoryDotRenderer {
     }
 
     static func draw(in rect: NSRect, color: NSColor) {
-        let path = NSBezierPath(ovalIn: rect.insetBy(
-            dx: borderWidth / 2,
-            dy: borderWidth / 2
-        ))
+        let path = NSBezierPath(ovalIn: rect)
         color.setFill()
         path.fill()
-
-        color.withSystemEffect(.pressed).setStroke()
-        path.lineWidth = borderWidth
-        path.stroke()
     }
 }
