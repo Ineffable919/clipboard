@@ -26,7 +26,7 @@ extension TopBarView {
 
         CategoryChipStore.shared.chipsContentDidChange
             .sink { [weak self] in
-                self?.topVM?.refreshGroupTag()
+                self?.topVM?.refreshGroupTags()
             }
             .store(in: &cancellables)
     }

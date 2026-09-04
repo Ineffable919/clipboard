@@ -102,7 +102,7 @@ extension FilterPopoverViewController {
 
         // 标签筛选回调
         contentView.tagSection.onGroupToggle = { [weak self] groupId in
-            self?.viewModel?.setGroupFilter(groupId)
+            self?.viewModel?.toggleGroupFilter(groupId)
             self?.updateContentViewState()
         }
 
@@ -122,7 +122,7 @@ extension FilterPopoverViewController {
 
         contentView.typeSection.updateSelection(viewModel.selectedTypes)
         contentView.appSection.updateSelection(viewModel.selectedAppNames)
-        contentView.tagSection.updateSelection(viewModel.selectedGroupId)
+        contentView.tagSection.updateSelection(viewModel.selectedGroupIds)
         contentView.dateSection.updateSelection(viewModel.selectedDateFilter)
     }
 

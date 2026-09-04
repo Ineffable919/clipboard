@@ -62,7 +62,9 @@ extension TopBarView {
         var suggestions: [SearchSuggestionItem] = []
 
         for chip in userChips {
-            guard topVM?.selectedGroupId != chip.id else { continue }
+            guard topVM?.selectedGroupIds.contains(chip.id) != true else {
+                continue
+            }
             guard fuzzyMatch(chip.name, query: query) else { continue }
             let dotIcon = makeChipDotIcon(colorIndex: chip.colorIndex)
             suggestions.append(SearchSuggestionItem(
@@ -120,7 +122,7 @@ extension TopBarView {
         case let .setDate(option):
             topVM.setDateFilter(option)
         case let .setGroup(id):
-            topVM.setGroupFilter(id)
+            topVM.toggleGroupFilter(id)
         }
     }
 
@@ -153,22 +155,6 @@ extension TopBarView {
     }
 
     private func makeChipDotIcon(colorIndex: Int) -> NSImage {
-        let canvasSize: CGFloat = 14
-        let dotSize: CGFloat = 12
-        let image = NSImage(size: NSSize(width: canvasSize, height: canvasSize))
-        image.lockFocus()
-        let color = CategoryChip.nsColor(at: colorIndex)
-        color.setFill()
-        let origin = (canvasSize - dotSize) / 2
-        let path = NSBezierPath(
-            ovalIn: NSRect(x: origin, y: origin, width: dotSize, height: dotSize)
-        )
-        path.fill()
-        NSColor.labelColor.withAlphaComponent(0.22).setStroke()
-        path.lineWidth = 1
-        path.stroke()
-        image.unlockFocus()
-        image.isTemplate = false
-        return image
+        CategoryDotRenderer.image(colorIndex: colorIndex)
     }
 }

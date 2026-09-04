@@ -71,14 +71,14 @@ struct SearchCriteria: Equatable {
     var selectedTypes: Set<PasteModelType>
     var selectedAppNames: Set<String>
     var selectedDateFilter: DateFilterOption?
-    var selectedGroupId: Int?
+    var selectedGroupIds: Set<Int>
 
     static let empty = SearchCriteria(
         keyword: "",
         selectedTypes: [],
         selectedAppNames: [],
         selectedDateFilter: nil,
-        selectedGroupId: nil
+        selectedGroupIds: []
     )
 
     var isEmpty: Bool {
@@ -86,6 +86,6 @@ struct SearchCriteria: Equatable {
             && selectedTypes.isEmpty
             && selectedAppNames.isEmpty
             && selectedDateFilter == nil
-            && selectedGroupId == nil
+            && selectedGroupIds.isEmpty
     }
 }

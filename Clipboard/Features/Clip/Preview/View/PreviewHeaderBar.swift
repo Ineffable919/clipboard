@@ -404,17 +404,10 @@ private final class PinChipButton: NSView {
     }
 
     private func chipDotImage(colorIndex: Int) -> NSImage {
-        let size = NSSize(width: 12, height: 12)
-        let image = NSImage(size: size, flipped: false) { rect in
-            let color = CategoryChip.paletteNSColors[
-                min(max(colorIndex, 0), CategoryChip.paletteNSColors.count - 1)
-            ]
-            color.setFill()
-            NSBezierPath(ovalIn: rect.insetBy(dx: 0.5, dy: 0.5)).fill()
-            return true
-        }
-        image.isTemplate = false
-        return image
+        CategoryDotRenderer.image(
+            colorIndex: colorIndex,
+            canvasSize: CategoryDotRenderer.diameter
+        )
     }
 
     @objc private func handleChipItem(_ sender: NSMenuItem) {
@@ -457,8 +450,7 @@ private final class PinCircleView: NSView {
         let path = NSBezierPath(ovalIn: rect)
 
         if let color = pinColor {
-            color.setFill()
-            path.fill()
+            CategoryDotRenderer.draw(in: rect, color: color)
         } else {
             NSColor.controlTextColor.setStroke()
             path.lineWidth = 1.5

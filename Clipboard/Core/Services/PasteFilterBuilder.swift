@@ -19,8 +19,8 @@ enum PasteFilterBuilder {
         }
 
         // 分组筛选
-        if let groupId = criteria.selectedGroupId {
-            clauses.append(Col.group == groupId)
+        if !criteria.selectedGroupIds.isEmpty {
+            clauses.append(groupFilter(for: criteria.selectedGroupIds))
         } else {
             clauses.append(Col.hidden == 0)
         }
@@ -72,5 +72,10 @@ enum PasteFilterBuilder {
             }
             return next
         }
+    }
+
+    private static func groupFilter(for groupIds: Set<Int>) -> Expression<Bool> {
+        groupIds.map { Col.group == $0 }
+            .reduce(Expression<Bool>(value: false)) { $0 || $1 }
     }
 }

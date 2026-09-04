@@ -276,14 +276,11 @@ final class ChipButton: NSView, NSTextFieldDelegate {
 
     private func configureDot(colorIndex: Int) {
         let index = min(max(colorIndex, 0), CategoryChip.palette.count - 1)
-        dotView.layer?.cornerRadius = config.dotRadius
-        effectiveAppearance.performAsCurrentDrawingAppearance {
-            dotView.layer?.backgroundColor = CategoryChip.nsColor(at: index).cgColor
-            dotView.layer?.borderWidth = 1
-            dotView.layer?.borderColor = NSColor.labelColor
-                .withAlphaComponent(0.22)
-                .cgColor
-        }
+        CategoryDotRenderer.configure(
+            dotView,
+            colorIndex: index,
+            diameter: config.dotRadius * 2
+        )
     }
 
     private func updateAppearance(animated: Bool) {
@@ -843,9 +840,10 @@ private final class ChipColorCircleView: NSView {
             ringPath.stroke()
         }
 
-        let dotPath = NSBezierPath(ovalIn: bounds.insetBy(dx: 5.0, dy: 5.0))
-        color.setFill()
-        dotPath.fill()
+        CategoryDotRenderer.draw(
+            in: bounds.insetBy(dx: 5.0, dy: 5.0),
+            color: color
+        )
     }
 
     @objc private func handleTap() {

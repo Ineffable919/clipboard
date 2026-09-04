@@ -35,7 +35,7 @@ final class TopBarViewModel {
 
     func selectChip(id: Int) {
         CategoryChipStore.shared.selectedChipId = id
-        syncGroupIdFromChipStore()
+        syncGroupIdsFromChipStore()
     }
 
     // New Chip State
@@ -60,12 +60,12 @@ final class TopBarViewModel {
     /// 日期筛选：单选
     private(set) var selectedDateFilter: DateFilterOption?
 
-    /// 分组筛选：单选
-    private(set) var selectedGroupId: Int?
+    /// 分组筛选：支持多选
+    private(set) var selectedGroupIds: Set<Int> = []
 
     var hasInput: Bool {
         !query.isEmpty || !selectedTypes.isEmpty || !selectedAppNames.isEmpty
-            || selectedDateFilter != nil || selectedGroupId != nil
+            || selectedDateFilter != nil || !selectedGroupIds.isEmpty
     }
 
     func clearInput() {
@@ -80,7 +80,7 @@ final class TopBarViewModel {
 
     var hasActiveFilters: Bool {
         !selectedTypes.isEmpty || !selectedAppNames.isEmpty
-            || selectedDateFilter != nil || selectedGroupId != nil
+            || selectedDateFilter != nil || !selectedGroupIds.isEmpty
     }
 
     // MARK: - Private Properties
@@ -111,17 +111,17 @@ final class TopBarViewModel {
 
     func setSelectChipId(chip: Int) {
         chipStore.selectedChipId = chip
-        syncGroupIdFromChipStore()
+        syncGroupIdsFromChipStore()
     }
 
     func selectPreviousChip() {
         chipStore.selectPreviousChip()
-        syncGroupIdFromChipStore()
+        syncGroupIdsFromChipStore()
     }
 
     func selectNextChip() {
         chipStore.selectNextChip()
-        syncGroupIdFromChipStore()
+        syncGroupIdsFromChipStore()
     }
 
     func addChip(name: String, colorIndex: Int) {
@@ -138,31 +138,17 @@ final class TopBarViewModel {
 
     func removeChip(_ chip: CategoryChip) {
         chipStore.removeChip(chip)
-        syncGroupIdFromChipStore()
+        selectedGroupIds.remove(chip.id)
+        refreshGroupTags()
     }
 
-    private func syncGroupIdFromChipStore() {
+    private func syncGroupIdsFromChipStore() {
         let groupId = chipStore.getSelectChipId()
-        let newGroupId = groupId == -1 ? nil : groupId
-        guard selectedGroupId != newGroupId else { return }
+        let newGroupIds: Set<Int> = groupId == -1 ? [] : [groupId]
+        guard selectedGroupIds != newGroupIds else { return }
 
-        tags.removeAll { $0.type == .filterGroup }
-        selectedGroupId = newGroupId
-        if let newGroupId {
-            let chipModel = chipStore.chips.first { $0.id == newGroupId }
-            let label = chipModel?.name ?? ""
-            let dotIcon = makeColorDotImage(
-                colorIndex: chipModel?.colorIndex ?? 0
-            )
-            let tag = InputTag(
-                icon: dotIcon,
-                label: label,
-                type: .filterGroup,
-                associatedValue: String(newGroupId)
-            )
-            tags.append(tag)
-        }
-        filterDidChange.send()
+        selectedGroupIds = newGroupIds
+        refreshGroupTags()
     }
 
     // MARK: - New Chip Methods
@@ -276,71 +262,68 @@ final class TopBarViewModel {
         filterDidChange.send()
     }
 
-    func refreshGroupTag() {
-        guard let groupId = selectedGroupId else { return }
-        tags.removeAll { $0.type == .filterGroup }
-        let chipModel = chipStore.chips.first { $0.id == groupId }
-        let label = chipModel?.name ?? ""
-        let dotIcon = makeColorDotImage(colorIndex: chipModel?.colorIndex ?? 0)
-        let tag = InputTag(
-            icon: dotIcon,
-            label: label,
-            type: .filterGroup,
-            associatedValue: String(groupId)
+    func refreshGroupTags() {
+        let validGroupIds = Set(
+            chipStore.chips.lazy.filter { !$0.isSystem }.map(\.id)
         )
-        tags.append(tag)
+        selectedGroupIds.formIntersection(validGroupIds)
+        tags.removeAll { $0.type == .filterGroup }
+        for chip in chipStore.chips where selectedGroupIds.contains(chip.id) {
+            addTagForGroup(chip)
+        }
+        syncSelectedChip()
         filterDidChange.send()
     }
 
-    func setGroupFilter(_ groupId: Int?) {
-        tags.removeAll { $0.type == .filterGroup }
-        selectedGroupId = groupId
-        if let groupId {
-            let chip = chipStore.chips.first { $0.id == groupId }
-            let label = chip?.name ?? ""
-            let dotIcon = makeColorDotImage(
-                colorIndex: chip?.colorIndex ?? 0
-            )
-            let tag = InputTag(
-                icon: dotIcon,
-                label: label,
-                type: .filterGroup,
-                associatedValue: String(groupId)
-            )
-            tags.append(tag)
+    func toggleGroupFilter(_ groupId: Int) {
+        if selectedGroupIds.remove(groupId) != nil {
+            tags.removeAll {
+                $0.type == .filterGroup
+                    && $0.associatedValue == String(groupId)
+            }
+        } else if let chip = chipStore.chips.first(where: { $0.id == groupId }) {
+            selectedGroupIds.insert(groupId)
+            addTagForGroup(chip)
         }
-        let chipId = groupId ?? -1
-        if chipStore.selectedChipId != chipId {
-            chipStore.selectedChipId = chipId
-        }
+        syncSelectedChip(preferredGroupId: groupId)
         filterDidChange.send()
+    }
+
+    private func addTagForGroup(_ chip: CategoryChip) {
+        let tag = InputTag(
+            icon: makeColorDotImage(colorIndex: chip.colorIndex),
+            label: chip.name,
+            type: .filterGroup,
+            associatedValue: String(chip.id)
+        )
+        tags.append(tag)
+    }
+
+    private func syncSelectedChip(preferredGroupId: Int? = nil) {
+        let preferredId = preferredGroupId.flatMap {
+            selectedGroupIds.contains($0) ? $0 : nil
+        }
+        let currentId = selectedGroupIds.contains(chipStore.selectedChipId)
+            ? chipStore.selectedChipId
+            : nil
+        let selectedId = preferredId
+            ?? currentId
+            ?? chipStore.chips.first { selectedGroupIds.contains($0.id) }?.id
+            ?? -1
+        if chipStore.selectedChipId != selectedId {
+            chipStore.selectedChipId = selectedId
+        }
     }
 
     private func makeColorDotImage(colorIndex: Int) -> NSImage {
-        let canvasSize: CGFloat = 14
-        let dotSize: CGFloat = 12
-        let image = NSImage(size: NSSize(width: canvasSize, height: canvasSize))
-        image.lockFocus()
-        let color = CategoryChip.nsColor(at: colorIndex)
-        color.setFill()
-        let origin = (canvasSize - dotSize) / 2
-        let path = NSBezierPath(
-            ovalIn: NSRect(x: origin, y: origin, width: dotSize, height: dotSize)
-        )
-        path.fill()
-        NSColor.labelColor.withAlphaComponent(0.22).setStroke()
-        path.lineWidth = 1
-        path.stroke()
-        image.unlockFocus()
-        image.isTemplate = false
-        return image
+        CategoryDotRenderer.image(colorIndex: colorIndex)
     }
 
     func clearAllFilters() {
         selectedTypes.removeAll()
         selectedAppNames.removeAll()
         selectedDateFilter = nil
-        selectedGroupId = nil
+        selectedGroupIds.removeAll()
         tags.removeAll()
         if chipStore.selectedChipId != -1 {
             chipStore.selectedChipId = -1
@@ -452,10 +435,10 @@ final class TopBarViewModel {
         case .filterDate:
             selectedDateFilter = nil
         case .filterGroup:
-            selectedGroupId = nil
-            if chipStore.selectedChipId != -1 {
-                chipStore.selectedChipId = -1
+            if let groupId = Int(tag.associatedValue) {
+                selectedGroupIds.remove(groupId)
             }
+            syncSelectedChip()
         }
         filterDidChange.send()
     }
@@ -540,7 +523,7 @@ final class TopBarViewModel {
         selectedTypes.removeAll()
         selectedAppNames.removeAll()
         selectedDateFilter = nil
-        selectedGroupId = nil
+        selectedGroupIds.removeAll()
 
         if chipStore.selectedChipId != -1 {
             chipStore.selectedChipId = -1
@@ -556,7 +539,7 @@ final class TopBarViewModel {
             selectedTypes: selectedTypes,
             selectedAppNames: selectedAppNames,
             selectedDateFilter: selectedDateFilter,
-            selectedGroupId: selectedGroupId
+            selectedGroupIds: selectedGroupIds
         )
         return criteria != lastSearchCriteria
     }
@@ -571,7 +554,7 @@ final class TopBarViewModel {
             selectedTypes: selectedTypes,
             selectedAppNames: selectedAppNames,
             selectedDateFilter: selectedDateFilter,
-            selectedGroupId: selectedGroupId
+            selectedGroupIds: selectedGroupIds
         )
 
         if criteria == lastSearchCriteria {
@@ -642,7 +625,7 @@ extension TopBarViewModel {
             await db.updateItemGroupInDB(id: modelId, groupId: chipId)
         }
 
-        if selectedGroupId != nil {
+        if !selectedGroupIds.isEmpty, !selectedGroupIds.contains(chipId) {
             var list = db.dataList.value
             list.removeAll(where: { $0.id == modelId })
             db.updateData(with: list, changeType: .delete)

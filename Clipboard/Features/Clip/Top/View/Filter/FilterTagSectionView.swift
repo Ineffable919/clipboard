@@ -2,7 +2,7 @@
 //  FilterTagSectionView.swift
 //  Clipboard
 //
-//  分组筛选区域：管理分组按钮的创建、布局和选中状态（单选）
+//  分组筛选区域：管理分组按钮的创建、布局和多选状态
 //
 
 import AppKit
@@ -11,11 +11,11 @@ import SnapKit
 final class FilterTagSectionView: NSStackView {
     // MARK: - Callbacks
 
-    var onGroupToggle: ((Int?) -> Void)?
+    var onGroupToggle: ((Int) -> Void)?
 
     // MARK: - State
 
-    private var selectedGroupId: Int?
+    private var selectedGroupIds: Set<Int> = []
     private var availableGroups: [CategoryChip] = []
     private var groupButtons: [Int: FilterTagButton] = [:]
 
@@ -64,10 +64,10 @@ final class FilterTagSectionView: NSStackView {
         rebuildGrid()
     }
 
-    func updateSelection(_ groupId: Int?) {
-        selectedGroupId = groupId
+    func updateSelection(_ groupIds: Set<Int>) {
+        selectedGroupIds = groupIds
         for (id, button) in groupButtons {
-            button.isSelected = id == groupId
+            button.isSelected = groupIds.contains(id)
         }
     }
 
@@ -93,14 +93,9 @@ final class FilterTagSectionView: NSStackView {
             )
             let capturedId = chip.id
             button.action = { [weak self] in
-                guard let self else { return }
-                if selectedGroupId == capturedId {
-                    onGroupToggle?(nil)
-                } else {
-                    onGroupToggle?(capturedId)
-                }
+                self?.onGroupToggle?(capturedId)
             }
-            button.isSelected = selectedGroupId == chip.id
+            button.isSelected = selectedGroupIds.contains(chip.id)
             groupButtons[chip.id] = button
             buttons.append(button)
         }
