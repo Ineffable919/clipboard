@@ -11,7 +11,7 @@ import Combine
 
 @MainActor
 final class ClipListPresenter {
-    private let pd = PasteDataStore.main
+    private let dataStore = PasteDataStore.main
     private var cancellables = Set<AnyCancellable>()
     private var wasEmpty = true
 
@@ -19,6 +19,7 @@ final class ClipListPresenter {
 
     /// 全量刷新：接收新数据、是否动画、完成回调。
     var applyFull: (_ items: [PasteboardModel], _ animating: Bool, _ completion: (() -> Void)?) -> Void = { _, _, _ in }
+    var applyReorder: (_ items: [PasteboardModel]) -> Void = { _ in }
     /// 追加新条目到现有快照。
     var appendItems: (_ newItems: [PasteboardModel]) -> Void = { _ in }
     /// 返回当前快照中的所有条目，用于去重。
@@ -53,10 +54,11 @@ final class ClipListPresenter {
     // MARK: - Start
 
     func startObserving(scrollView: NSScrollView) {
-        pd.dataList
+        dataStore.dataList
+            .map { [weak self] items in (items, self?.dataStore.lastDataChangeType ?? .reset) }
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.handleDataChange(self?.pd.lastDataChangeType ?? .reset)
+            .sink { [weak self] items, change in
+                self?.handleDataChange(change, items: items)
             }
             .store(in: &cancellables)
 
@@ -72,18 +74,19 @@ final class ClipListPresenter {
 
     // MARK: - Private
 
-    private func handleDataChange(_ changeType: PasteDataStore.DataChangeType) {
-        let items = pd.dataList.value
+    private func handleDataChange(_ changeType: PasteDataStore.DataChangeType, items: [PasteboardModel]) {
         let prevWasEmpty = wasEmpty
         wasEmpty = items.isEmpty
 
         let wasShowingPreview = previewIsShown()
-        let shouldDismissPreview = changeType != .loadMore && changeType != .update
+        let shouldDismissPreview = ![PasteDataStore.DataChangeType.loadMore, .update, .reorder].contains(changeType)
         if shouldDismissPreview, wasShowingPreview {
             closePreview()
         }
 
         switch changeType {
+        case .reorder:
+            applyReorder(items)
         case .new, .searchFilter, .moveToFirst, .reset:
             applyFull(items, false) { [weak self] in
                 guard let self else { return }
@@ -96,11 +99,7 @@ final class ClipListPresenter {
         case .delete:
             applyFull(items, true) { [weak self] in self?.adjustAfterDelete() }
         case .loadMore:
-            let existingIds = Set(currentSnapshotItems().map(\.uniqueId))
-            let newItems = items.filter { !existingIds.contains($0.uniqueId) }
-            if !newItems.isEmpty {
-                appendItems(newItems)
-            }
+            appendNewItems(items)
         case .update:
             reconfigureItems(items)
             restoreSelection()
@@ -111,15 +110,22 @@ final class ClipListPresenter {
 
         updateEmptyState(items.isEmpty)
 
-        if prevWasEmpty, !items.isEmpty,
-           changeType == .loadMore || changeType == .update
-        {
+        let isAppendOrUpdate = [PasteDataStore.DataChangeType.loadMore, .update].contains(changeType)
+        if prevWasEmpty, !items.isEmpty, isAppendOrUpdate {
             resetSelection()
         }
     }
 
+    private func appendNewItems(_ items: [PasteboardModel]) {
+        let existingIds = Set(currentSnapshotItems().map(\.uniqueId))
+        let newItems = items.filter { !existingIds.contains($0.uniqueId) }
+        if !newItems.isEmpty {
+            appendItems(newItems)
+        }
+    }
+
     private func checkLoadMore(scrollView: NSScrollView) {
-        guard pd.hasMoreData, !pd.isLoadingPage else { return }
+        guard dataStore.hasMoreData, !dataStore.isLoadingPage else { return }
         let clipView = scrollView.contentView
         let docFrame = scrollView.documentView?.frame ?? .zero
 
@@ -130,6 +136,6 @@ final class ClipListPresenter {
             let visibleMaxX = clipView.bounds.origin.x + clipView.bounds.width
             guard docFrame.width - visibleMaxX < loadMoreThreshold else { return }
         }
-        pd.loadNextPage()
+        dataStore.loadNextPage()
     }
 }

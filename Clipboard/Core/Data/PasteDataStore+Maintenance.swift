@@ -11,6 +11,9 @@ extension PasteDataStore {
     func moveItemsToFirst(_ models: [PasteboardModel]) {
         guard !models.isEmpty else { return }
 
+        let ids = models.compactMap(\.id)
+        Task { await sqlManager.promoteItems(ids) }
+
         let movedIds = Set(models.compactMap(\.id))
         var list = dataList.value.filter { item in
             guard let id = item.id else { return true }
@@ -202,7 +205,7 @@ extension PasteDataStore {
                 $0.timestamp > deadTime
             }
             updateData(with: filteredList)
-            deleteItems(filter: Col.ts < deadTime && Col.group == -1)
+            deleteItems(filter: Col.timestamp < deadTime && Col.group == -1)
         }
     }
 

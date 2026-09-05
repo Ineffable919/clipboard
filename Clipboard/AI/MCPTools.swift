@@ -18,31 +18,34 @@ struct MCPTools {
             "properties": [
                 "query": [
                     "type": "string",
-                    "description": "Search keyword (optional if filtering by type or tag)",
+                    "description": "Search keyword (optional if filtering by type or tag)"
                 ],
                 "type": [
                     "type": "string",
                     "enum": ["text", "link", "image", "file", "color", "rich"],
-                    "description": "Filter by content type: text (plain text), link (URL), image (PNG/TIFF), file (file path), color (hex color), rich (formatted/RTF text)",
+                    "description": """
+                    Filter by content type: text (plain text), link (URL), image (PNG/TIFF), \
+                    file (file path), color (hex color), rich (formatted/RTF text)
+                    """
                 ],
                 "tag": [
                     "type": "string",
-                    "description": "Filter by user-defined tag name. Call list_tags first to see available names.",
+                    "description": "Filter by user-defined tag name. Call list_tags first to see available names."
                 ],
-                "limit": ["type": "integer", "description": "Max results, default 20, max 50"],
-            ],
+                "limit": ["type": "integer", "description": "Max results, default 20, max 50"]
+            ]
         ],
         "write_clipboard": [
             "type": "object",
             "properties": [
-                "content": ["type": "string", "description": "Plain text to write"],
+                "content": ["type": "string", "description": "Plain text to write"]
             ],
-            "required": ["content"],
+            "required": ["content"]
         ],
         "list_tags": [
             "type": "object",
-            "properties": [:],
-        ],
+            "properties": [:]
+        ]
     ]
 
     private static let allDefinitions: [[String: Any]] = MCPToolDefinition.all.compactMap { def in
@@ -86,15 +89,15 @@ struct MCPTools {
             return mcpError("Provide at least one of: query, type, or tag")
         }
 
-        guard let db = try? Connection(ClipboardPaths.database, readonly: true) else {
+        guard let database = try? Connection(ClipboardPaths.database, readonly: true) else {
             return mcpError("Cannot open clipboard database")
         }
 
         let table = Table("Clip")
         var queryExpr = table
-            .select(Col.type, Col.data, Col.searchText, Col.ts, Col.tag)
+            .select(Col.type, Col.data, Col.searchText, Col.timestamp, Col.tag)
             .filter(Col.hidden == 0)
-            .order(Col.ts.desc)
+            .order(Col.sortOrder.desc, Col.id.desc)
             .limit(limit)
 
         if !query.isEmpty {
@@ -115,34 +118,13 @@ struct MCPTools {
         var contentBlocks: [[String: Any]] = []
         var count = 0
 
-        if let rows = try? db.prepare(queryExpr) {
+        if let rows = try? database.prepare(queryExpr) {
             for row in rows {
                 if count > 0 {
                     contentBlocks.append(["type": "text", "text": "---"])
                 }
 
-                let type = (try? row.get(Col.type)) ?? ""
-                let tag = (try? row.get(Col.tag)) ?? ""
-                let ts = (try? row.get(Col.ts)) ?? 0
-                let date = Date(timeIntervalSince1970: TimeInterval(ts))
-                    .formatted(date: .abbreviated, time: .shortened)
-                let typeLabel = labelForTag(tag)
-                let header = "[\(typeLabel)] \(date)"
-
-                if tag == "image" {
-                    contentBlocks.append(["type": "text", "text": header])
-                    if let data = try? row.get(Col.data) {
-                        let mimeType = type == "public.tiff" ? "image/tiff" : "image/png"
-                        contentBlocks.append([
-                            "type": "image",
-                            "data": data.base64EncodedString(),
-                            "mimeType": mimeType,
-                        ])
-                    }
-                } else {
-                    let body = extractText(from: row, type: type)
-                    contentBlocks.append(["type": "text", "text": "\(header)\n\(body)"])
-                }
+                contentBlocks += blocks(for: row)
 
                 count += 1
             }
@@ -156,21 +138,47 @@ struct MCPTools {
         return ["content": contentBlocks]
     }
 
+    private func blocks(for row: Row) -> [[String: Any]] {
+        var blocks: [[String: Any]] = []
+        let type = (try? row.get(Col.type)) ?? ""
+        let tag = (try? row.get(Col.tag)) ?? ""
+        let timestamp = (try? row.get(Col.timestamp)) ?? 0
+        let date = Date(timeIntervalSince1970: TimeInterval(timestamp))
+            .formatted(date: .abbreviated, time: .shortened)
+        let typeLabel = labelForTag(tag)
+        let header = "[\(typeLabel)] \(date)"
+
+        if tag == "image" {
+            blocks.append(["type": "text", "text": header])
+            if let data = try? row.get(Col.data) {
+                let mimeType = type == "public.tiff" ? "image/tiff" : "image/png"
+                blocks.append([
+                    "type": "image",
+                    "data": data.base64EncodedString(),
+                    "mimeType": mimeType
+                ])
+            }
+        } else {
+            let body = extractText(from: row, type: type)
+            blocks.append(["type": "text", "text": "\(header)\n\(body)"])
+        }
+        return blocks
+    }
+
     // MARK: - list_tags
 
     private func listTags() -> [String: Any] {
         var lines: [String] = []
 
         lines.append("Content types (use the 'type' parameter):")
-        for t in ["text", "rich", "link", "image", "file", "color"] {
-            lines.append("  \(t)")
+        for type in ["text", "rich", "link", "image", "file", "color"] {
+            lines.append("  \(type)")
         }
 
         let userDefaults = UserDefaults(suiteName: ClipboardPaths.appBundleId)
         if let data = userDefaults?.data(forKey: "userCategoryChip"),
            let chips = try? JSONDecoder().decode([MCPCategoryChip].self, from: data),
-           !chips.isEmpty
-        {
+           !chips.isEmpty {
             lines.append("")
             lines.append("User-defined tags (use the 'tag' parameter):")
             for chip in chips {
@@ -205,19 +213,19 @@ struct MCPTools {
         let timestamp = Int64(Date().timeIntervalSince1970)
         let showData = String(content.prefix(300)).data(using: .utf8)
 
-        guard let db = try? Connection(ClipboardPaths.database) else {
+        guard let database = try? Connection(ClipboardPaths.database) else {
             return mcpError("Cannot open clipboard database")
         }
-        try? db.execute("PRAGMA journal_mode=WAL")
-        db.busyTimeout = 5.0
+        try? database.execute("PRAGMA journal_mode=WAL")
+        database.busyTimeout = 5.0
 
         let table = Table("Clip")
 
         let existing = table.select(Col.id).filter(Col.uniqueId == uniqueId)
-        if let row = try? db.pluck(existing), let existingId = try? row.get(Col.id) {
-            _ = try? db.run(
+        if let row = try? database.pluck(existing), let existingId = try? row.get(Col.id) {
+            _ = try? database.run(
                 table.filter(Col.id == existingId)
-                    .update(Col.ts <- timestamp, Col.hidden <- 0)
+                    .update(Col.timestamp <- timestamp, Col.hidden <- 0, Col.sortOrder <- Col.nextSortOrder)
             )
             return ["content": [["type": "text", "text": "Clipboard updated"]]]
         }
@@ -227,7 +235,8 @@ struct MCPTools {
             Col.type <- NSPasteboard.PasteboardType.string.rawValue,
             Col.data <- contentData,
             Col.showData <- showData,
-            Col.ts <- timestamp,
+            Col.timestamp <- timestamp,
+            Col.sortOrder <- Col.nextSortOrder,
             Col.appPath <- "",
             Col.appName <- "AI",
             Col.searchText <- content.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -237,13 +246,17 @@ struct MCPTools {
             Col.hidden <- 0
         )
 
-        if (try? db.run(insert)) != nil {
+        if (try? database.run(insert)) != nil {
             return ["content": [["type": "text", "text": "Written to clipboard"]]]
         }
         return mcpError("Failed to write to database")
     }
 
-    // MARK: - Helpers
+}
+
+// MARK: - Helpers
+
+private extension MCPTools {
 
     private func tagForType(_ type: String) -> String {
         switch type {

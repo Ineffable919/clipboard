@@ -25,6 +25,9 @@ final class PasteDataStore {
     private(set) var pageIndex = 0
     private(set) var isLoadingPage = false
     private(set) var hasMoreData = false
+    private(set) var listRevision = 0
+    private(set) var filterRevision = 0
+    private(set) var isReordering = false
     var filteredCount: Int = 0
 
     enum DataChangeType {
@@ -35,6 +38,7 @@ final class PasteDataStore {
         case delete
         case moveToFirst
         case update
+        case reorder
     }
 
     private(set) var lastDataChangeType: DataChangeType = .reset
@@ -46,7 +50,8 @@ final class PasteDataStore {
     let sqlManager = PasteSQLManager.manager
     private var searchTask: Task<Void, Error>?
     private var loadPageTask: Task<Void, Never>?
-    private var repairingTagIds = Set<Int64>()
+    var repairingTagIds = Set<Int64>()
+    private var orderRevision = 0
 
     func setup() async {
         await sqlManager.setup()
@@ -64,6 +69,7 @@ final class PasteDataStore {
         with list: [PasteboardModel],
         changeType: DataChangeType = .reset
     ) {
+        listRevision &+= 1
         lastDataChangeType = changeType
         dataList.send(list)
     }
@@ -73,108 +79,11 @@ final class PasteDataStore {
     }
 }
 
-// MARK: - Row → Model 映射
-
-extension PasteDataStore {
-    private func getItems(limit: Int = 50, offset: Int? = nil) async
-        -> [PasteboardModel] {
-        let rows = await sqlManager.search(
-            filter: Col.hidden == 0,
-            limit: limit,
-            offset: offset
-        )
-        return mapRows(rows)
-    }
-
-    func mapRows(_ rows: [Row]) -> [PasteboardModel] {
-        rows.compactMap { row in
-            if let type = try? row.get(Col.type),
-               let data = try? row.get(Col.data),
-               let timestamp = try? row.get(Col.ts),
-               let uniqueId = try? row.get(Col.uniqueId) {
-                let id = try? row.get(Col.id)
-                let appName = try? row.get(Col.appName)
-                let appPath = try? row.get(Col.appPath)
-                var showData = try? row.get(Col.showData)
-                let searchText = try? row.get(Col.searchText)
-                let length = try? row.get(Col.length)
-                let group = try? row.get(Col.group)
-                let tag = try? row.get(Col.tag)
-                let hidden = ((try? row.get(Col.hidden)) ?? 0) != 0
-
-                let pType = PasteboardType(type)
-
-                if pType.isText(), showData == nil {
-                    if let plain = NSAttributedString(
-                        with: data,
-                        type: pType
-                    )?.string ?? String(data: data, encoding: .utf8) {
-                        showData = String(plain.prefix(300)).data(
-                            using: .utf8
-                        )
-                    }
-                }
-
-                let pasteModel = PasteboardModel(
-                    pasteboardType: pType,
-                    data: data,
-                    showData: showData,
-                    timestamp: timestamp,
-                    appPath: appPath ?? "",
-                    appName: appName ?? "",
-                    searchText: searchText ?? "",
-                    length: length ?? 0,
-                    group: group ?? -1,
-                    tag: tag ?? "",
-                    hidden: hidden,
-                    uniqueId: uniqueId
-                )
-                pasteModel.id = id
-                repairTagIfNeeded(pasteModel)
-                return pasteModel
-            }
-            return nil
-        }
-    }
-
-    private func repairTagIfNeeded(_ model: PasteboardModel) {
-        guard let storedType = PasteModelType(rawValue: model.tag),
-              storedType == .link || storedType == .color,
-              model.type != storedType,
-              let id = model.id
-        else {
-            return
-        }
-
-        let correctedTag = model.type.tagValue
-        guard !correctedTag.isEmpty,
-              repairingTagIds.insert(id).inserted
-        else {
-            return
-        }
-
-        Task { [weak self] in
-            guard let self else { return }
-
-            let updated = await sqlManager.updateItemTag(
-                id: id,
-                expectedTag: storedType.tagValue,
-                newTag: correctedTag
-            )
-            repairingTagIds.remove(id)
-
-            if updated {
-                PasteMetadataCache.shared.invalidateTagTypesCache()
-            }
-        }
-    }
-}
-
 // MARK: - 数据操作
 
 extension PasteDataStore {
     func loadNextPage() {
-        guard !isLoadingPage else { return }
+        guard !isLoadingPage, !isReordering else { return }
         let effectiveTotal = isInFilterMode ? filteredCount : totalCount
         guard dataList.value.count < effectiveTotal else { return }
 
@@ -241,6 +150,8 @@ extension PasteDataStore {
     }
 
     func resetToDefault() {
+        filterRevision &+= 1
+        listRevision &+= 1
         searchTask?.cancel()
         loadPageTask?.cancel()
         isLoadingPage = false
@@ -250,9 +161,52 @@ extension PasteDataStore {
         }
     }
 
+    /// 数据库提交成功后再发布顺序，失败时维持当前列表。
+    func reorderItems(_ ids: [Int64], before: Int64?, after: Int64?) async -> Bool {
+        guard !isReordering else { return false }
+        isReordering = true
+        defer { isReordering = false }
+        loadPageTask?.cancel()
+        isLoadingPage = false
+        lastRequestedPage = max(0, (dataList.value.count - 1) / pageSize)
+        pageIndex = lastRequestedPage
+        let revision = listRevision
+        guard let order = await sqlManager.reorderItems(ids, before: before, after: after) else { return false }
+        orderRevision &+= 1
+
+        if revision == listRevision {
+            applyOrder(order)
+        } else {
+            // await 期间有新内容或切换筛选时，按最新数据库顺序同步，保留当前列表成员。
+            await refreshOrder()
+        }
+        return true
+    }
+
+    private func refreshOrder() async {
+        while !Task.isCancelled {
+            let revision = listRevision
+            guard let order = await sqlManager.orderedItemIDs() else { return }
+            guard revision == listRevision else { continue }
+            applyOrder(order)
+            return
+        }
+    }
+
+    private func applyOrder(_ ids: [Int64]) {
+        let models = Dictionary(dataList.value.compactMap { model in
+            model.id.map { ($0, model) }
+        }, uniquingKeysWith: { first, _ in first })
+        updateData(with: ids.compactMap { models[$0] }, changeType: .reorder)
+    }
+
     /// 数据搜索（关键词 + 自定义分组 + 过滤视图）
     func searchData(_ criteria: SearchCriteria) {
+        filterRevision &+= 1
         searchTask?.cancel()
+        loadPageTask?.cancel()
+        isLoadingPage = false
+        listRevision &+= 1
 
         searchTask = Task {
             let filter = PasteFilterBuilder.buildFilter(from: criteria)
@@ -263,13 +217,17 @@ extension PasteDataStore {
             pageIndex = 0
             lastRequestedPage = 0
 
-            let rows = await sqlManager.search(filter: filter, limit: pageSize)
-            try Task.checkCancellation()
-
             let count = await sqlManager.getCount(filter: filter)
             try Task.checkCancellation()
 
-            let result = mapRows(rows)
+            var result: [PasteboardModel]
+            var revision: Int
+            repeat {
+                revision = orderRevision
+                let rows = await sqlManager.search(filter: filter, limit: pageSize)
+                try Task.checkCancellation()
+                result = mapRows(rows)
+            } while revision != orderRevision
 
             filteredCount = count
             updateData(with: result, changeType: .searchFilter)
@@ -361,12 +319,8 @@ extension PasteDataStore {
 
         guard await sqlManager.updateItemContent(
             id: id,
-            type: content.type,
-            data: content.data,
-            showData: content.showData,
-            searchText: searchText,
-            length: content.length,
-            tag: content.tag
+            content: content,
+            searchText: searchText
         ) else {
             return false
         }

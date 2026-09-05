@@ -155,6 +155,10 @@ extension TopBarView {
     }
 
     private func makeChipDotIcon(colorIndex: Int) -> NSImage {
-        CategoryDotRenderer.image(colorIndex: colorIndex)
+        CategoryDotRenderer.image(
+            colorIndex: colorIndex,
+            canvasSize: 18,
+            diameter: 10
+        )
     }
 }

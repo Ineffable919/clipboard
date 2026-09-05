@@ -36,9 +36,7 @@ enum PasteFilterBuilder {
             }
             if !tagValues.isEmpty {
                 let tagCondition = tagValues.map { (Col.tag ?? "") == $0 }
-                    .reduce(Expression<Bool>(value: false)) {
-                        result,
-                        condition in
+                    .reduce(Expression<Bool>(value: false)) { result, condition in
                         result || condition
                     }
                 clauses.append(tagCondition)
@@ -58,10 +56,10 @@ enum PasteFilterBuilder {
         if let dateFilter = criteria.selectedDateFilter {
             let (start, end) = dateFilter.timestampRange()
             if let endTimestamp = end {
-                let dateCondition = Col.ts >= start && Col.ts < endTimestamp
+                let dateCondition = Col.timestamp >= start && Col.timestamp < endTimestamp
                 clauses.append(dateCondition)
             } else {
-                let dateCondition = Col.ts >= start
+                let dateCondition = Col.timestamp >= start
                 clauses.append(dateCondition)
             }
         }

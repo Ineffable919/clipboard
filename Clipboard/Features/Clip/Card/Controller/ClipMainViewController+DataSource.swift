@@ -15,6 +15,8 @@ extension ClipMainViewController: NSCollectionViewDelegate {
         _: NSCollectionView,
         shouldSelectItemsAt indexPaths: Set<IndexPath>
     ) -> Set<IndexPath> {
+        if restoringSelection { return indexPaths }
+        if collectionView.keepsDragSelection { return collectionView.selectionIndexPaths }
         if isMultiSelect {
             if let path = indexPaths.min() {
                 selectIndexPath = path
@@ -32,7 +34,7 @@ extension ClipMainViewController: NSCollectionViewDelegate {
         _: NSCollectionView,
         shouldDeselectItemsAt indexPaths: Set<IndexPath>
     ) -> Set<IndexPath> {
-        indexPaths
+        collectionView.keepsDragSelection && !restoringSelection ? [] : indexPaths
     }
 
     func collectionView(
@@ -62,7 +64,7 @@ extension ClipMainViewController: NSCollectionViewDelegate {
         canDragItemsAt _: Set<IndexPath>,
         with _: NSEvent
     ) -> Bool {
-        true
+        !dataStore.isReordering
     }
 
     func collectionView(
@@ -75,9 +77,30 @@ extension ClipMainViewController: NSCollectionViewDelegate {
     func collectionView(
         _: NSCollectionView,
         validateDrop draggingInfo: any NSDraggingInfo,
-        proposedIndexPath _: AutoreleasingUnsafeMutablePointer<NSIndexPath>,
-        dropOperation _: UnsafeMutablePointer<NSCollectionView.DropOperation>
+        proposedIndexPath: AutoreleasingUnsafeMutablePointer<NSIndexPath>,
+        dropOperation: UnsafeMutablePointer<NSCollectionView.DropOperation>
     ) -> NSDragOperation {
+        if let source = draggingInfo.draggingSource as? NSCollectionView, source === collectionView {
+            dropOverlayView.resetDragState()
+            guard canReorder else {
+                collectionView.hideDropLine()
+                return []
+            }
+            // 落在卡片中央时，根据左右半区选择相邻间隙。
+            let point = collectionView.convert(draggingInfo.draggingLocation, from: nil)
+            var index = min(max(0, proposedIndexPath.pointee.item), displayedItemCount)
+            if dropOperation.pointee == .on,
+               let frame = collectionView.layoutAttributesForItem(at: IndexPath(item: index, section: 0))?.frame,
+               point.x >= frame.midX {
+                index += 1
+            }
+            let dropPath = IndexPath(item: min(index, displayedItemCount), section: 0)
+            proposedIndexPath.pointee = dropPath as NSIndexPath
+            dropOperation.pointee = .before
+            collectionView.showDropLine(before: dropPath)
+            return .move
+        }
+        collectionView.hideDropLine()
         guard canAcceptExternalDrop(draggingInfo) else {
             dropOverlayView.resetDragState()
             return []
@@ -89,10 +112,39 @@ extension ClipMainViewController: NSCollectionViewDelegate {
     func collectionView(
         _: NSCollectionView,
         acceptDrop draggingInfo: any NSDraggingInfo,
-        indexPath _: IndexPath,
+        indexPath: IndexPath,
         dropOperation _: NSCollectionView.DropOperation
     ) -> Bool {
-        acceptExternalDrop(draggingInfo)
+        collectionView.hideDropLine()
+        if let source = draggingInfo.draggingSource as? NSCollectionView, source === collectionView {
+            return acceptReorder(at: indexPath)
+        }
+        return acceptExternalDrop(draggingInfo)
+    }
+
+    func collectionView(
+        _: NSCollectionView,
+        draggingSession _: NSDraggingSession,
+        willBeginAt _: NSPoint,
+        forItemsAt indexPaths: Set<IndexPath>
+    ) {
+        draggedIDs = indexPaths.sorted().compactMap { displayedModel(at: $0)?.id }
+        dragFilterRevision = dataStore.filterRevision
+        // 遮罩位于列表上方；hitTest 穿透不会让已注册的拖放目标穿透。
+        dropOverlayView.unregisterDraggedTypes()
+        dropOverlayView.resetDragState()
+    }
+
+    func collectionView(
+        _: NSCollectionView,
+        draggingSession _: NSDraggingSession,
+        endedAt _: NSPoint,
+        dragOperation _: NSDragOperation
+    ) {
+        draggedIDs = []
+        collectionView.hideDropLine()
+        dropOverlayView.registerForDraggedTypes(PasteboardType.supportTypes)
+        dropOverlayView.resetDragState()
     }
 
     private static let dropSupportedTypes = PasteboardType.supportTypes.map(\.rawValue)
@@ -110,7 +162,7 @@ extension ClipMainViewController {
     }
 
     func acceptExternalDrop(_ draggingInfo: any NSDraggingInfo) -> Bool {
-        let accepted = db.addNewItem(
+        let accepted = dataStore.addNewItem(
             draggingInfo.draggingPasteboard,
             sourceApp: dragSourceApp,
             chipId: store.selectedChipId

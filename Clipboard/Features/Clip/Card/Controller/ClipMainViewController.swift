@@ -18,7 +18,7 @@ final class ClipMainViewController: NSViewController {
 
     var dataList = PasteDataStore.main.dataList
     var cancellables = Set<AnyCancellable>()
-    let db = PasteDataStore.main
+    let dataStore = PasteDataStore.main
     let store = CategoryChipStore.shared
 
     let presenter = ClipListPresenter()
@@ -26,14 +26,17 @@ final class ClipMainViewController: NSViewController {
     var monitorToken: Any?
     var flagsMonitorToken: Any?
     var dragSourceApp: NSRunningApplication?
+    var draggedIDs: [Int64] = []
+    var dragFilterRevision = 0
+    var restoringSelection = false
 
     // MARK: - Pause Indicator
 
-    private let pauseStack = NSStackView()
-    private let pauseTimeLabel = NSTextField(labelWithString: "")
-    private let pauseButton = NSButton()
-    private var pauseTimerCancellable: AnyCancellable?
-    private var appearanceObservation: NSKeyValueObservation?
+    let pauseStack = NSStackView()
+    let pauseTimeLabel = NSTextField(labelWithString: "")
+    let pauseButton = NSButton()
+    var pauseTimerCancellable: AnyCancellable?
+    var appearanceObservation: NSKeyValueObservation?
 
     // MARK: - Preview
 
@@ -79,7 +82,7 @@ final class ClipMainViewController: NSViewController {
 
     // MARK: - Views
 
-    lazy var bg: BackgroundEffectController = {
+    lazy var backdrop: BackgroundEffectController = {
         let inner: CGFloat =
             if #available(macOS 26.0, *) {
                 8.0
@@ -93,11 +96,11 @@ final class ClipMainViewController: NSViewController {
     }()
 
     var effectView: NSView {
-        bg.effectView
+        backdrop.effectView
     }
 
     var contentView: NSView {
-        bg.contentContainer
+        backdrop.contentContainer
     }
 
     lazy var topBarView: TopBarView = {
@@ -107,7 +110,7 @@ final class ClipMainViewController: NSViewController {
     }()
 
     lazy var collectionView: ClipCollectionView = {
-        let flowLayout = NSCollectionViewFlowLayout()
+        let flowLayout = CardLayout()
         flowLayout.itemSize = NSSize(
             width: Const.cardSize,
             height: Const.cardSize
@@ -144,9 +147,9 @@ final class ClipMainViewController: NSViewController {
         collectionView.onShiftClick = { [weak self] clickedPath in
             guard let self else { return }
             setFocusRegion(.collection)
-            let lo = min(selectIndexPath.item, clickedPath.item)
-            let hi = max(selectIndexPath.item, clickedPath.item)
-            let paths = Set((lo ... hi).map { IndexPath(item: $0, section: 0) })
+            let lower = min(selectIndexPath.item, clickedPath.item)
+            let upper = max(selectIndexPath.item, clickedPath.item)
+            let paths = Set((lower ... upper).map { IndexPath(item: $0, section: 0) })
             collectionView.selectionIndexPaths = paths
             scrollTo(indexPath: clickedPath)
         }
@@ -246,8 +249,7 @@ extension ClipMainViewController {
         if flagsMonitorToken == nil {
             flagsMonitorToken = NSEvent.addLocalMonitorForEvents(
                 matching: .flagsChanged
-            ) {
-                [weak self] event in
+            ) { [weak self] event in
                 self?.flagsChangedEvent(event)
             }
         }
@@ -261,7 +263,7 @@ extension ClipMainViewController {
         topVM.resetFilterState()
         topBarView.deactivateSearch()
         topBarView.reloadChips()
-        db.resetToDefault()
+        dataStore.resetToDefault()
         setFocusRegion(.collection)
     }
 
@@ -287,7 +289,7 @@ extension ClipMainViewController {
 extension ClipMainViewController {
     func initView() {
         view.wantsLayer = true
-        bg.install(in: view)
+        backdrop.install(in: view)
 
         contentView.addSubview(scrollView)
         contentView.addSubview(topBarView)
@@ -364,227 +366,4 @@ extension ClipMainViewController {
         topVM.resume()
     }
 
-    private func initDiffableDataSource() {
-        diffableDataSource = NSCollectionViewDiffableDataSource<
-            ClipSection, PasteboardModel
-        >(
-            collectionView: collectionView
-        ) { [weak self] collectionView, indexPath, model in
-            let item = collectionView.makeItem(
-                withIdentifier: CollectionViewItem.identifier,
-                for: indexPath
-            )
-            guard let self, let cItem = item as? CollectionViewItem else {
-                return item
-            }
-            cItem.delegate = self
-            cItem.configure(with: model, keyword: topVM.query)
-            cItem.quickPasteIndex = quickPasteIndex(for: indexPath.item)
-            return cItem
-        }
-    }
-
-    func applySnapshot(animating: Bool = true, completion: (() -> Void)? = nil) {
-        var snapshot = NSDiffableDataSourceSnapshot<ClipSection, PasteboardModel>()
-        snapshot.appendSections([.main])
-        snapshot.appendItems(dataList.value)
-        diffableDataSource.apply(snapshot, animatingDifferences: animating) {
-            completion?()
-        }
-        updateEmptyState()
-    }
-
-    func displayedModel(at indexPath: IndexPath) -> PasteboardModel? {
-        diffableDataSource.itemIdentifier(for: indexPath)
-    }
-
-    var displayedItemCount: Int {
-        collectionView.numberOfItems(inSection: 0)
-    }
-
-    func restoreSelection() {
-        guard displayedItemCount > 0 else { return }
-        setSelection(to: selectIndexPath)
-        updateSelectedItemBorder()
-    }
-}
-
-// MARK: - Focus
-
-extension ClipMainViewController {
-    func initFocus() {
-        topBarView.onFocusRegionChange = { [weak self] region in
-            self?.setFocusRegion(region)
-        }
-
-        topBarView.searchField.onBecomeFirstResponder = { [weak self] in
-            self?.setFocusRegion(.search)
-        }
-
-        let clickGesture = NSClickGestureRecognizer(
-            target: self,
-            action: #selector(handleContentViewClick(_:))
-        )
-        clickGesture.buttonMask = 0x1 // 左键点击
-        clickGesture.delegate = self
-        contentView.addGestureRecognizer(clickGesture)
-    }
-
-    func setFocusRegion(_ region: FocusRegion) {
-        guard region != focusRegion else { return }
-        focusRegion = region
-        if region != .collection {
-            isQuickPastePressed = false
-            isPlainTextModifierPressed = false
-        }
-        updateSelectedItemBorder()
-        if region == .collection {
-            Task { @MainActor [weak self] in
-                guard let self, focusRegion == .collection else { return }
-                view.window?.makeFirstResponder(collectionView)
-            }
-        }
-    }
-
-    func updateSelectedItemBorder() {
-        let isFocused = focusRegion == .collection
-        for indexPath in collectionView.selectionIndexPaths {
-            (collectionView.item(at: indexPath) as? CollectionViewItem)?
-                .setFocused(isFocused)
-        }
-    }
-
-    @objc func handleContentViewClick(_: NSClickGestureRecognizer) {
-        setFocusRegion(.collection)
-    }
-}
-
-// MARK: - List Presenter
-
-extension ClipMainViewController {
-    func initListPresenter() {
-        presenter.applyFull = { [weak self] _, animating, completion in
-            self?.applySnapshot(animating: animating, completion: completion)
-        }
-        presenter.appendItems = { [weak self] newItems in
-            guard let self else { return }
-            var snapshot = diffableDataSource.snapshot()
-            let existing = Set(snapshot.itemIdentifiers.map(\.uniqueId))
-            let appended = newItems
-                .filter { !existing.contains($0.uniqueId) }
-            guard !appended.isEmpty else { return }
-            snapshot.appendItems(appended, toSection: .main)
-            diffableDataSource.apply(snapshot, animatingDifferences: false)
-            updateEmptyState()
-        }
-        presenter.currentSnapshotItems = { [weak self] in
-            self?.diffableDataSource.snapshot().itemIdentifiers ?? []
-        }
-        presenter.resetSelection = { [weak self] in
-            self?.resetSelectIndex()
-            self?.restoreSelection()
-        }
-        presenter.restoreSelection = { [weak self] in self?.restoreSelection() }
-        presenter.adjustAfterDelete = { [weak self] in self?.adjustSelectionAfterDelete() }
-        presenter.updateEmptyState = { [weak self] _ in self?.updateEmptyState() }
-        presenter.reconfigureItems = { [weak self] items in
-            guard let self else { return }
-            let identifiers = diffableDataSource.snapshot().itemIdentifiers
-            let indexMap = Dictionary(uniqueKeysWithValues: identifiers.enumerated().map { ($1.uniqueId, $0) })
-            for item in items {
-                guard let idx = indexMap[item.uniqueId] else { continue }
-                (collectionView.item(at: IndexPath(item: idx, section: 0)) as? CollectionViewItem)?
-                    .configure(with: item, keyword: topVM.query)
-            }
-        }
-
-        presenter.previewIsShown = { [weak self] in self?.previewPopover?.isShown == true }
-        presenter.closePreview = { [weak self] in self?.closePreviewPopover() }
-        presenter.reopenPreview = { [weak self] in self?.updatePreviewForSelectedItem() }
-
-        presenter.isVerticalScroll = false
-        presenter.loadMoreThreshold = (Const.cardSize + Const.cardSpace) * 2
-
-        presenter.startObserving(scrollView: scrollView)
-    }
-}
-
-// MARK: - Observe
-
-extension ClipMainViewController {
-    func initObserve() {
-        topBarView.searchField.$text
-            .removeDuplicates()
-            .dropFirst()
-            .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
-            .sink { [weak self] _ in
-                guard let self else { return }
-                topVM.handleQueryChange()
-            }
-            .store(in: &cancellables)
-
-        store.chipsContentDidChange
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] in
-                guard let self else { return }
-                topBarView.reloadChips()
-                applySnapshot(animating: false)
-                restoreSelection()
-            }
-            .store(in: &cancellables)
-
-        topVM.filterDidChange
-            .debounce(for: .milliseconds(100), scheduler: DispatchQueue.main)
-            .sink { [weak self] in
-                guard let self else { return }
-                topVM.performSearch()
-            }
-            .store(in: &cancellables)
-
-        PasteBoard.main.$isPaused
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.updatePauseState() }
-            .store(in: &cancellables)
-
-        appearanceObservation = view.observe(\.effectiveAppearance) { [weak self] _, _ in
-            Task { @MainActor [weak self] in
-                guard let self, !pauseStack.isHidden else { return }
-                view.effectiveAppearance.performAsCurrentDrawingAppearance {
-                    pauseStack.layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.1).cgColor
-                }
-            }
-        }
-    }
-
-    private func updatePauseState() {
-        let isPaused = PasteBoard.main.isPaused
-        pauseStack.isHidden = !isPaused
-        if isPaused {
-            pauseTimeLabel.stringValue = topVM.formattedRemainingTime
-            pauseTimerCancellable = Timer.publish(every: 1, on: .main, in: .common)
-                .autoconnect()
-                .sink { [weak self] _ in
-                    self?.pauseTimeLabel.stringValue = self?.topVM.formattedRemainingTime ?? ""
-                }
-        } else {
-            pauseTimerCancellable = nil
-        }
-        view.effectiveAppearance.performAsCurrentDrawingAppearance {
-            pauseStack.layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.1).cgColor
-        }
-    }
-
-    private func adjustSelectionAfterDelete() {
-        guard displayedItemCount > 0 else { return }
-        let safeItem = min(selectIndexPath.item, displayedItemCount - 1)
-        let safePath = IndexPath(item: safeItem, section: 0)
-        selectIndexPath = safePath
-        setSelection(to: safePath)
-        scrollTo(indexPath: safePath, animated: false)
-        updateSelectedItemBorder()
-    }
-
-    func updateEmptyState() {
-        emptyStateView.isHidden = !dataList.value.isEmpty
-    }
 }

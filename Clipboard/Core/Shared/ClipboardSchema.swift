@@ -12,7 +12,11 @@ struct Col {
     nonisolated static let type = Expression<String>("type")
     nonisolated static let data = Expression<Data>("data")
     nonisolated static let showData = Expression<Data?>("show_data")
-    nonisolated static let ts = Expression<Int64>("timestamp")
+    nonisolated static let timestamp = Expression<Int64>("timestamp")
+    nonisolated static let sortOrder = Expression<Int64>("sort_order")
+    nonisolated static let nextSortOrder = Expression<Int64>(
+        literal: "(SELECT COALESCE(MAX(sort_order), 0) + 1 FROM Clip)"
+    )
     nonisolated static let appPath = Expression<String>("app_path")
     nonisolated static let appName = Expression<String>("app_name")
     nonisolated static let searchText = Expression<String>("search_text")
@@ -60,9 +64,24 @@ struct MCPToolDefinition {
     let colorHex: String
 
     static let all: [MCPToolDefinition] = [
-        .init(name: "search_clipboard", description: "Search clipboard history by keyword, content type, or user category", icon: "magnifyingglass", colorHex: "#007AFF"),
-        .init(name: "write_clipboard", description: "Write plain text to the system clipboard", icon: "bolt.fill", colorHex: "#34C759"),
-        .init(name: "list_tags", description: "List available content types and user-defined tags for clipboard search", icon: "tag.fill", colorHex: "#FF9500"),
+        .init(
+            name: "search_clipboard",
+            description: "Search clipboard history by keyword, content type, or user category",
+            icon: "magnifyingglass",
+            colorHex: "#007AFF"
+        ),
+        .init(
+            name: "write_clipboard",
+            description: "Write plain text to the system clipboard",
+            icon: "bolt.fill",
+            colorHex: "#34C759"
+        ),
+        .init(
+            name: "list_tags",
+            description: "List available content types and user-defined tags for clipboard search",
+            icon: "tag.fill",
+            colorHex: "#FF9500"
+        )
     ]
 }
 

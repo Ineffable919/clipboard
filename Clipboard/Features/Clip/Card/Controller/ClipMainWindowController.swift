@@ -19,7 +19,7 @@ final class ClipMainWindowController: NSWindowController {
         targetVisible
     }
 
-    private let db = PasteDataStore.main
+    private let dataStore = PasteDataStore.main
 
     init() {
         let panel = ClipWindowView(
@@ -86,27 +86,39 @@ extension ClipMainWindowController {
         let view = window.contentViewController?.view
         let height = view?.bounds.height ?? Const.defaultHeight
 
-        (contentViewController as? ClipMainViewController)?
-            .bg.resetSlidePresentation()
-        snapToPresentedPosition(view)
-
+        let mainViewController = contentViewController as? ClipMainViewController
         suppressSearchFocusRing(true)
         slideAnimationGeneration += 1
-
-        NSAnimationContext.runAnimationGroup({ context in
-            context.duration = Const.hideDuration
-            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            view?.animator().setFrameOrigin(NSPoint(x: 0, y: -height))
-        }) {
-            Task { @MainActor in
-                guard !self.targetVisible else { return }
-                self.window?.setIsVisible(false)
-                if #unavailable(macOS 15.0) {
-                    AppEnvironment.shared.previousApp?.activate(options: [])
-                }
-                self.window?.orderOut(nil)
-                completionHandler?()
+        let generation = slideAnimationGeneration
+        let finish: @MainActor () -> Void = { [weak self] in
+            guard let self, generation == self.slideAnimationGeneration, !self.targetVisible else { return }
+            self.window?.setIsVisible(false)
+            if #unavailable(macOS 15.0) {
+                AppEnvironment.shared.previousApp?.activate(options: [])
             }
+            self.window?.orderOut(nil)
+            mainViewController?.backdrop.resetSlidePresentation()
+            completionHandler?()
+        }
+
+        if let mainViewController,
+           mainViewController.backdrop.prepareSlidePresentation(initiallyHidden: false) {
+            // 保持所选玻璃材质的采样位置不变，遮罩完全收起后再隐藏窗口。
+            mainViewController.backdrop.animateSlidePresentation(
+                visible: false,
+                duration: Const.hideDuration,
+                timingFunction: CAMediaTimingFunction(name: .easeOut),
+                completion: finish
+            )
+        } else {
+            snapToPresentedPosition(view)
+            NSAnimationContext.runAnimationGroup({ context in
+                context.duration = Const.hideDuration
+                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                view?.animator().setFrameOrigin(NSPoint(x: 0, y: -height))
+            }, completionHandler: {
+                Task { @MainActor in finish() }
+            })
         }
     }
 
@@ -116,24 +128,16 @@ extension ClipMainWindowController {
 
         let view = window.contentViewController?.view
         let mainViewController = contentViewController as? ClipMainViewController
-        if !window.isVisible {
-            let screenFrame = frame ?? NSScreen.main?.frame ?? .zero
-            AppEnvironment.shared.previousApp = NSWorkspace.shared.frontmostApplication
-            let panelFrame = NSRect(x: screenFrame.minX, y: screenFrame.minY, width: screenFrame.width, height: Const.defaultHeight)
-            view?.setFrameOrigin(NSPoint(x: 0, y: -Const.defaultHeight))
-            window.setFrame(panelFrame, display: false)
-            if mainViewController?.effectView is NSVisualEffectView {
-                window.alphaValue = 0
-            }
-            window.setIsVisible(true)
+        let initiallyHidden = !window.isVisible
+        if initiallyHidden {
+            prepareWindow(window, in: frame)
         } else {
             snapToPresentedPosition(window.contentViewController?.view)
         }
 
-        let usesSlidePresentation = prepareBackdropSlidePresentation(
-            in: window,
-            view: view,
-            controller: mainViewController
+        let usesSlidePresentation = prepareBackdropSlidePresentation(in: window, view: view,
+            controller: mainViewController,
+            initiallyHidden: initiallyHidden
         )
 
         window.makeKeyAndOrderFront(nil)
@@ -146,7 +150,8 @@ extension ClipMainWindowController {
         let generation = slideAnimationGeneration
 
         if usesSlidePresentation, let mainViewController {
-            mainViewController.bg.animateSlidePresentation(
+            mainViewController.backdrop.animateSlidePresentation(
+                visible: true,
                 duration: Const.showDuration,
                 timingFunction: CAMediaTimingFunction(name: .easeOut)
             ) { [weak self] in
@@ -167,17 +172,29 @@ extension ClipMainWindowController {
         }
     }
 
+    private func prepareWindow(_ window: NSWindow, in frame: NSRect?) {
+        let screenFrame = frame ?? NSScreen.main?.frame ?? .zero
+        AppEnvironment.shared.previousApp = NSWorkspace.shared.frontmostApplication
+        let panelFrame = NSRect(
+            x: screenFrame.minX, y: screenFrame.minY,
+            width: screenFrame.width, height: Const.defaultHeight
+        )
+        window.contentViewController?.view.setFrameOrigin(NSPoint(x: 0, y: -Const.defaultHeight))
+        window.setFrame(panelFrame, display: false)
+        window.alphaValue = 0
+        window.setIsVisible(true)
+    }
+
     private func prepareBackdropSlidePresentation(
         in window: NSWindow,
         view: NSView?,
-        controller: ClipMainViewController?
+        controller: ClipMainViewController?,
+        initiallyHidden: Bool
     ) -> Bool {
-        guard controller?.effectView is NSVisualEffectView else { return false }
-
         view?.layer?.removeAllAnimations()
         view?.setFrameOrigin(.zero)
         view?.layoutSubtreeIfNeeded()
-        let prepared = controller?.bg.prepareSlidePresentation() == true
+        let prepared = controller?.backdrop.prepareSlidePresentation(initiallyHidden: initiallyHidden) == true
         window.alphaValue = 1
         if !prepared {
             view?.setFrameOrigin(
@@ -194,9 +211,9 @@ extension ClipMainWindowController {
 
     private func snapToPresentedPosition(_ view: NSView?) {
         guard let view else { return }
-        let y = view.layer?.presentation()?.frame.origin.y ?? view.frame.origin.y
+        let originY = view.layer?.presentation()?.frame.origin.y ?? view.frame.origin.y
         view.layer?.removeAllAnimations()
-        view.setFrameOrigin(NSPoint(x: 0, y: y))
+        view.setFrameOrigin(NSPoint(x: 0, y: originY))
     }
 }
 
