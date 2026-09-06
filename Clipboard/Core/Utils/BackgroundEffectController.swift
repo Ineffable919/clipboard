@@ -16,6 +16,7 @@ final class BackgroundEffectController {
     let contentContainer: NSView
 
     private weak var host: NSView?
+    private let presentationView: NSView?
     private let cornerRadius: CGFloat
     private let innerPadding: CGFloat
 
@@ -24,7 +25,7 @@ final class BackgroundEffectController {
     private var presentationMask: CALayer?
     private var slideGeneration = 0
 
-    init(cornerRadius: CGFloat, innerPadding: CGFloat = 0) {
+    init(cornerRadius: CGFloat, innerPadding: CGFloat = 0, slides: Bool = false) {
         self.cornerRadius = cornerRadius
         self.innerPadding = innerPadding
 
@@ -37,9 +38,18 @@ final class BackgroundEffectController {
         container.layer?.masksToBounds = true
         contentContainer = container
 
+        if slides {
+            let presentation = NSView()
+            presentation.wantsLayer = true
+            presentation.layer?.backgroundColor = NSColor.clear.cgColor
+            presentationView = presentation
+        } else {
+            presentationView = nil
+        }
+
         effectView = Self.buildEffectView(
             cornerRadius: cornerRadius,
-            contentContainer: container
+            contentContainer: slides ? nil : container
         )
 
         observeSettings()
@@ -51,20 +61,20 @@ final class BackgroundEffectController {
     }
 
     func prepareSlidePresentation(initiallyHidden: Bool) -> Bool {
-        guard let effectLayer = effectView.layer,
+        guard let presentationView, let effectLayer = presentationView.layer,
               let contentLayer = contentContainer.layer
         else {
             return false
         }
 
-        effectView.layoutSubtreeIfNeeded()
-        let height = effectView.bounds.height
+        presentationView.layoutSubtreeIfNeeded()
+        let height = presentationView.bounds.height
         guard height > 0 else { return false }
 
         if presentationMask != nil { return true }
 
         let mask = CALayer()
-        mask.frame = effectView.bounds
+        mask.frame = presentationView.bounds
         mask.backgroundColor = NSColor.black.cgColor
         mask.cornerRadius = cornerRadius
         mask.cornerCurve = .continuous
@@ -134,32 +144,42 @@ final class BackgroundEffectController {
 
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        effectView.layer?.mask = nil
+        presentationView?.layer?.mask = nil
         contentContainer.layer?.transform = CATransform3DIdentity
         CATransaction.commit()
 
         presentationMask = nil
-        handleSettingsChange()
     }
 
     private func attach() {
         guard let host else { return }
-        host.addSubview(effectView)
-        effectView.snp.remakeConstraints { make in
+        let backdropHost = presentationView ?? effectView
+        host.addSubview(backdropHost)
+        backdropHost.snp.remakeConstraints { make in
             make.leading.equalTo(innerPadding)
             make.trailing.equalTo(-innerPadding)
             make.top.equalToSuperview()
             make.bottom.equalTo(-innerPadding)
         }
-        if effectView is NSVisualEffectView {
+        if let presentationView {
+            // 背景和内容分别持有，切换材质不再拆动内容、焦点或动画遮罩。
+            presentationView.addSubview(contentContainer)
+            contentContainer.snp.remakeConstraints { $0.edges.equalToSuperview() }
+            attachBackground(to: presentationView)
+        } else if effectView is NSVisualEffectView {
             effectView.addSubview(contentContainer)
             contentContainer.snp.remakeConstraints { $0.edges.equalToSuperview() }
         }
     }
 
+    private func attachBackground(to presentationView: NSView) {
+        presentationView.addSubview(effectView, positioned: .below, relativeTo: contentContainer)
+        effectView.snp.remakeConstraints { $0.edges.equalToSuperview() }
+    }
+
     private static func buildEffectView(
         cornerRadius: CGFloat,
-        contentContainer: NSView
+        contentContainer: NSView?
     ) -> NSView {
         if #available(macOS 26.0, *) {
             let bgType = BackgroundType(rawValue: PasteUserDefaults.backgroundType) ?? .liquid
@@ -193,8 +213,6 @@ final class BackgroundEffectController {
     private func handleSettingsChange() {
         let currentBgType = PasteUserDefaults.backgroundType
         guard currentBgType != lastBackgroundType else { return }
-        // 显隐结束后再切换材质，避免新背景脱离旧遮罩而闪现。
-        guard presentationMask == nil else { return }
         lastBackgroundType = currentBgType
         rebuild()
     }
@@ -205,16 +223,22 @@ final class BackgroundEffectController {
 
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        if #available(macOS 26.0, *), let glassView = oldEffectView as? NSGlassEffectView {
-            glassView.contentView = nil
+        if presentationView == nil {
+            if #available(macOS 26.0, *), let glassView = oldEffectView as? NSGlassEffectView {
+                glassView.contentView = nil
+            }
+            contentContainer.removeFromSuperview()
         }
-        contentContainer.removeFromSuperview()
 
         effectView = Self.buildEffectView(
             cornerRadius: cornerRadius,
-            contentContainer: contentContainer
+            contentContainer: presentationView == nil ? contentContainer : nil
         )
-        attach()
+        if let presentationView {
+            attachBackground(to: presentationView)
+        } else {
+            attach()
+        }
         host.layoutSubtreeIfNeeded()
         oldEffectView.removeFromSuperview()
         CATransaction.commit()

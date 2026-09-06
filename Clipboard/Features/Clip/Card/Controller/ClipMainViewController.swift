@@ -91,7 +91,8 @@ final class ClipMainViewController: NSViewController {
             }
         return BackgroundEffectController(
             cornerRadius: Const.windowRadis,
-            innerPadding: inner
+            innerPadding: inner,
+            slides: true
         )
     }()
 
