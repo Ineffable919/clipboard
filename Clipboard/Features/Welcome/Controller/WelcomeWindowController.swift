@@ -4,6 +4,7 @@
 //
 
 import AppKit
+import SnapKit
 import SwiftUI
 
 @MainActor
@@ -40,7 +41,17 @@ final class WelcomeWindowController: NSWindowController {
         )
         window.maxSize = window.minSize
         window.standardWindowButton(.zoomButton)?.isEnabled = false
-        window.contentView = NSHostingView(rootView: WelcomeView())
+        if #available(macOS 26.0, *) {
+            window.isOpaque = false
+            let glass = NSGlassEffectView()
+            glass.cornerRadius = Const.radius
+            let content = NSHostingView(rootView: WelcomeView(glass: true))
+            glass.contentView = content
+            content.snp.makeConstraints { $0.edges.equalToSuperview() }
+            window.contentView = glass
+        } else {
+            window.contentView = NSHostingView(rootView: WelcomeView())
+        }
         window.center()
 
         super.init(window: window)

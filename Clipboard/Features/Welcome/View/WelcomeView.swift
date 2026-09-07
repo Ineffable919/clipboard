@@ -9,8 +9,11 @@ struct WelcomeView: View {
     @State private var viewModel: WelcomeViewModel
     @Namespace private var focusNamespace
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    private let glass: Bool
 
-    init(initialPage: WelcomePage = .introduction) {
+    init(initialPage: WelcomePage = .introduction, glass: Bool = false) {
+        self.glass = glass
         _viewModel = State(
             initialValue: WelcomeViewModel(currentPage: initialPage)
         )
@@ -53,7 +56,11 @@ struct WelcomeView: View {
             }
         }
         .focusScope(focusNamespace)
-        .background(WelcomeStyle.background(for: colorScheme))
+        .background(
+            glass && !reduceTransparency
+                ? Color.clear
+                : WelcomeStyle.background(for: colorScheme)
+        )
         .foregroundStyle(WelcomeStyle.primaryText(for: colorScheme))
         .tint(WelcomeStyle.accent)
     }
