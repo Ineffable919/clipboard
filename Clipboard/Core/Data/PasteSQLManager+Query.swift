@@ -67,11 +67,7 @@ extension PasteSQLManager {
     func promoteItems(_ ids: [Int64]) {
         guard let database = connection else { return }
         do {
-            try database.transaction(.immediate) {
-                for id in ids.reversed() {
-                    try database.run(table.filter(Col.id == id).update(Col.sortOrder <- Col.nextSortOrder))
-                }
-            }
+            try PasteOrder.promote(ids, on: database)
         } catch {
             log.error("置顶卡片失败：\(error)")
         }

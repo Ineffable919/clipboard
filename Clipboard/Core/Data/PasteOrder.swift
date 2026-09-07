@@ -28,6 +28,15 @@ enum PasteOrder {
             .map { $0[Col.id] }
     }
 
+    nonisolated static func promote(_ ids: [Int64], on database: Connection) throws {
+        try database.transaction(.immediate) {
+            let table = Table("Clip")
+            for id in ids.reversed() {
+                try database.run(table.filter(Col.id == id).update(Col.sortOrder <- Col.nextSortOrder))
+            }
+        }
+    }
+
     /// before 优先；结果末尾使用 after，避免误移到尚未加载的历史记录之后。
     nonisolated static func move(
         _ ids: [Int64],
