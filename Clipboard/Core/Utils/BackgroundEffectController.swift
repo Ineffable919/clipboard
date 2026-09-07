@@ -39,14 +39,10 @@ final class BackgroundEffectController {
         contentContainer = container
 
         if slides {
-            if #available(macOS 15.0, *) {
-                let presentation = NSView()
-                presentation.wantsLayer = true
-                presentation.layer?.backgroundColor = NSColor.clear.cgColor
-                presentationView = presentation
-            } else {
-                presentationView = nil
-            }
+            let presentation = NSView()
+            presentation.wantsLayer = true
+            presentation.layer?.backgroundColor = NSColor.clear.cgColor
+            presentationView = presentation
         } else {
             presentationView = nil
         }
@@ -65,8 +61,7 @@ final class BackgroundEffectController {
     }
 
     func prepareSlidePresentation(initiallyHidden: Bool) -> Bool {
-        let presentationView = presentationView ?? effectView
-        guard let effectLayer = presentationView.layer,
+        guard let presentationView, let effectLayer = presentationView.layer,
               let contentLayer = contentContainer.layer
         else {
             return false
@@ -149,7 +144,7 @@ final class BackgroundEffectController {
 
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        (presentationView ?? effectView).layer?.mask = nil
+        presentationView?.layer?.mask = nil
         contentContainer.layer?.transform = CATransform3DIdentity
         CATransaction.commit()
 
