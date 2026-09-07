@@ -80,58 +80,32 @@ final class ClipMainWindowController: NSWindowController {
 
 extension ClipMainWindowController {
     func dismiss(_ completionHandler: (@MainActor () -> Void)? = nil) {
-        guard targetVisible else {
-            log.info("抽屉隐藏：忽略重复请求，windowVisible=\(window?.isVisible == true)")
-            return
-        }
         targetVisible = false
         guard let window, window.isVisible else { return }
-        let startedAt = ContinuousClock.now
 
         let view = window.contentViewController?.view
         let height = view?.bounds.height ?? Const.defaultHeight
 
-        let mainViewController = contentViewController as? ClipMainViewController
+        snapToPresentedPosition(view)
+
         suppressSearchFocusRing(true)
         slideAnimationGeneration += 1
-        let generation = slideAnimationGeneration
-        log.info("抽屉隐藏开始：generation=\(generation)，macOS=\(ProcessInfo.processInfo.operatingSystemVersionString)")
-        let finish: @MainActor () -> Void = { [weak self] in
-            guard let self, generation == self.slideAnimationGeneration, !self.targetVisible else { return }
-            let animationElapsed = startedAt.duration(to: .now)
-            self.window?.setIsVisible(false)
-            if #unavailable(macOS 15.0) {
-                AppEnvironment.shared.previousApp?.activate(options: [])
-            }
-            self.window?.orderOut(nil)
-            mainViewController?.backdrop.resetSlidePresentation()
-            log.info(
-                "抽屉隐藏完成：generation=\(generation)，animation=\(animationElapsed)，total=\(startedAt.duration(to: .now))"
-            )
-            completionHandler?()
-        }
 
-        if let mainViewController,
-           mainViewController.backdrop.prepareSlidePresentation(initiallyHidden: false) {
-            // 保持所选玻璃材质的采样位置不变，遮罩完全收起后再隐藏窗口。
-            mainViewController.backdrop.animateSlidePresentation(
-                visible: false,
-                duration: Const.hideDuration,
-                timingFunction: CAMediaTimingFunction(name: .easeOut),
-                completion: {
-                    Task { @MainActor in finish() }
+        NSAnimationContext.runAnimationGroup({ context in
+            context.duration = Const.hideDuration
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            view?.animator().setFrameOrigin(NSPoint(x: 0, y: -height))
+        }, completionHandler: {
+            Task { @MainActor in
+                guard !self.targetVisible else { return }
+                self.window?.setIsVisible(false)
+                if #unavailable(macOS 15.0) {
+                    AppEnvironment.shared.previousApp?.activate(options: [])
                 }
-            )
-        } else {
-            snapToPresentedPosition(view)
-            NSAnimationContext.runAnimationGroup({ context in
-                context.duration = Const.hideDuration
-                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-                view?.animator().setFrameOrigin(NSPoint(x: 0, y: -height))
-            }, completionHandler: {
-                Task { @MainActor in finish() }
-            })
-        }
+                self.window?.orderOut(nil)
+                completionHandler?()
+            }
+        })
     }
 
     func show(in frame: NSRect?) {
@@ -139,18 +113,19 @@ extension ClipMainWindowController {
         guard let window else { return }
 
         let view = window.contentViewController?.view
-        let mainViewController = contentViewController as? ClipMainViewController
-        let initiallyHidden = !window.isVisible
-        if initiallyHidden {
-            prepareWindow(window, in: frame)
+        if !window.isVisible {
+            let screenFrame = frame ?? NSScreen.main?.frame ?? .zero
+            AppEnvironment.shared.previousApp = NSWorkspace.shared.frontmostApplication
+            let panelFrame = NSRect(
+                x: screenFrame.minX, y: screenFrame.minY,
+                width: screenFrame.width, height: Const.defaultHeight
+            )
+            view?.setFrameOrigin(NSPoint(x: 0, y: -Const.defaultHeight))
+            window.setFrame(panelFrame, display: false)
+            window.setIsVisible(true)
         } else {
             snapToPresentedPosition(window.contentViewController?.view)
         }
-
-        let usesSlidePresentation = prepareBackdropSlidePresentation(in: window, view: view,
-            controller: mainViewController,
-            initiallyHidden: initiallyHidden
-        )
 
         window.makeKeyAndOrderFront(nil)
         if #unavailable(macOS 15.0) {
@@ -161,59 +136,16 @@ extension ClipMainWindowController {
         slideAnimationGeneration += 1
         let generation = slideAnimationGeneration
 
-        if usesSlidePresentation, let mainViewController {
-            mainViewController.backdrop.animateSlidePresentation(
-                visible: true,
-                duration: Const.showDuration,
-                timingFunction: CAMediaTimingFunction(name: .easeOut)
-            ) { [weak self] in
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = Const.showDuration
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            view?.animator().setFrameOrigin(.zero)
+        } completionHandler: { [weak self] in
+            MainActor.assumeIsolated {
                 guard let self, generation == self.slideAnimationGeneration, self.targetVisible else { return }
                 self.suppressSearchFocusRing(false)
             }
-        } else {
-            NSAnimationContext.runAnimationGroup { context in
-                context.duration = Const.showDuration
-                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-                view?.animator().setFrameOrigin(.zero)
-            } completionHandler: { [weak self] in
-                MainActor.assumeIsolated {
-                    guard let self, generation == self.slideAnimationGeneration, self.targetVisible else { return }
-                    self.suppressSearchFocusRing(false)
-                }
-            }
         }
-    }
-
-    private func prepareWindow(_ window: NSWindow, in frame: NSRect?) {
-        let screenFrame = frame ?? NSScreen.main?.frame ?? .zero
-        AppEnvironment.shared.previousApp = NSWorkspace.shared.frontmostApplication
-        let panelFrame = NSRect(
-            x: screenFrame.minX, y: screenFrame.minY,
-            width: screenFrame.width, height: Const.defaultHeight
-        )
-        window.contentViewController?.view.setFrameOrigin(NSPoint(x: 0, y: -Const.defaultHeight))
-        window.setFrame(panelFrame, display: false)
-        window.alphaValue = 0
-        window.setIsVisible(true)
-    }
-
-    private func prepareBackdropSlidePresentation(
-        in window: NSWindow,
-        view: NSView?,
-        controller: ClipMainViewController?,
-        initiallyHidden: Bool
-    ) -> Bool {
-        view?.layer?.removeAllAnimations()
-        view?.setFrameOrigin(.zero)
-        view?.layoutSubtreeIfNeeded()
-        let prepared = controller?.backdrop.prepareSlidePresentation(initiallyHidden: initiallyHidden) == true
-        window.alphaValue = 1
-        if !prepared {
-            view?.setFrameOrigin(
-                NSPoint(x: 0, y: -Const.defaultHeight)
-            )
-        }
-        return prepared
     }
 
     private func suppressSearchFocusRing(_ suppressed: Bool) {

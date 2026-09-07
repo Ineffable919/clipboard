@@ -19,8 +19,7 @@ final class FloatingFooterView: NSView {
 
     // MARK: - State
 
-    private var effectView: NSView = FloatingFooterView.buildEffectView()
-    private var lastBackgroundType: Int = PasteUserDefaults.backgroundType
+    private let effectView: NSView = FloatingFooterView.buildEffectView()
     private weak var topVM: TopBarViewModel?
     private var cancellables = Set<AnyCancellable>()
     private var timerCancellable: AnyCancellable?
@@ -117,23 +116,15 @@ final class FloatingFooterView: NSView {
         pauseButton.snp.makeConstraints { make in
             make.edges.equalTo(pauseStack)
         }
-
-        UserDefaults.standard.publisher(for: \.backgroundType)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.handleBackgroundSettingsChange() }
-            .store(in: &cancellables)
     }
 
     // MARK: - Background
 
     private static func buildEffectView() -> NSView {
         if #available(macOS 26.0, *) {
-            let bgType = BackgroundType(rawValue: PasteUserDefaults.backgroundType) ?? .liquid
-            if bgType == .liquid {
-                let v = NSGlassEffectView()
-                v.cornerRadius = 0
-                return v
-            }
+            let glassView = NSGlassEffectView()
+            glassView.cornerRadius = 0
+            return glassView
         }
         let ve = NSVisualEffectView()
         ve.wantsLayer = true
@@ -141,24 +132,6 @@ final class FloatingFooterView: NSView {
         ve.blendingMode = .withinWindow
         ve.material = .popover
         return ve
-    }
-
-    private func handleBackgroundSettingsChange() {
-        let currentBgType = PasteUserDefaults.backgroundType
-        guard currentBgType != lastBackgroundType else { return }
-        lastBackgroundType = currentBgType
-        rebuildEffectView()
-    }
-
-    private func rebuildEffectView() {
-        effectView.removeFromSuperview()
-        effectView = Self.buildEffectView()
-        addSubview(effectView, positioned: .below, relativeTo: countLabel)
-        effectView.snp.makeConstraints { make in
-            make.leading.trailing.bottom.equalToSuperview()
-            make.top.equalToSuperview().offset(-Const.windowRadis)
-        }
-        layoutSubtreeIfNeeded()
     }
 
     private func updatePauseState() {

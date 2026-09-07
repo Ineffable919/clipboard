@@ -132,7 +132,7 @@ final class TopBarIconButton: NSView {
 
         let isFrostedGlass: Bool = {
             if #available(macOS 26, *) {
-                return BackgroundType(rawValue: PasteUserDefaults.backgroundType) == .frosted
+                return false
             }
             return true
         }()
