@@ -49,8 +49,6 @@ enum PrefKey: String, CaseIterable {
     case globalHotKeys
     /// 粘贴时去掉末尾换行符
     case removeTailingNewline
-    /// 背景类型(仅macOS 26+)
-    case backgroundType
     /// 显示模式（抽屉式/窗口式）
     case displayMode
     /// 窗口位置模式（中心/鼠标/上次位置）
@@ -154,19 +152,6 @@ enum HistoryTimeUnit: Equatable {
             String(localized: .historyYear)
         case .forever:
             String(localized: .historyForever)
-        }
-    }
-}
-
-/// 背景类型(仅macOS 26+)
-enum BackgroundType: Int, CaseIterable {
-    case liquid = 0
-    case frosted = 1
-
-    var title: LocalizedStringResource {
-        switch self {
-        case .liquid: .appearanceBackgroundLiquid
-        case .frosted: .appearanceBackgroundFrosted
         }
     }
 }

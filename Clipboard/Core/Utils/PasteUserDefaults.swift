@@ -146,9 +146,6 @@ enum PasteUserDefaults {
     /// 粘贴时去掉末尾换行符
     @UserDefaultsWrapper(.removeTailingNewline, defaultValue: false)
     static var removeTailingNewline
-    /// 背景类型(仅macOS 26+, 0:液态玻璃 1:毛玻璃)
-    @UserDefaultsWrapper(.backgroundType, defaultValue: 0)
-    static var backgroundType
     /// 状态栏图标
     @UserDefaultsWrapper(.showMenuBarIcon, defaultValue: true)
     static var showMenuBarIcon
@@ -232,11 +229,6 @@ extension UserDefaults {
     @objc dynamic var appearance: Bool {
         get { bool(forKey: "appearance") }
         set { set(newValue, forKey: "appearance") }
-    }
-
-    @objc dynamic var backgroundType: Int {
-        get { integer(forKey: "backgroundType") }
-        set { set(newValue, forKey: "backgroundType") }
     }
 
     @objc dynamic var displayMode: Int {

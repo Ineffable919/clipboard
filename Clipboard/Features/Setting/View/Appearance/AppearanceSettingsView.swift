@@ -10,15 +10,8 @@ import SwiftUI
 struct AppearanceSettingsView: View {
     @Environment(\.colorScheme) private var colorScheme
 
-    @AppStorage(PrefKey.backgroundType.rawValue) private var backgroundTypeRaw:
-        Int = 0
     @AppStorage(PrefKey.displayMode.rawValue) private var displayModeRaw: Int = 0
     @AppStorage(PrefKey.windowPosition.rawValue) private var windowPositionRaw: Int = 0
-
-    private var backgroundType: BackgroundType {
-        get { .init(rawValue: backgroundTypeRaw) ?? .liquid }
-        nonmutating set { backgroundTypeRaw = newValue.rawValue }
-    }
 
     private var displayMode: DisplayMode {
         get { .init(rawValue: displayModeRaw) ?? .drawer }
@@ -59,35 +52,6 @@ struct AppearanceSettingsView: View {
                     }
                 }
                 .settingsStyle()
-
-                if #available(macOS 26.0, *) {
-                    Text(.appearanceBackgroundTitle)
-                        .font(.headline)
-                        .bold()
-
-                    VStack(spacing: 0) {
-                        HStack {
-                            Text(.appearanceBackgroundLabel)
-                            Spacer()
-                            BackgroundTypeOptionButton(
-                                title: .appearanceBackgroundLiquid,
-                                isSelected: backgroundType == .liquid
-                            ) {
-                                backgroundType = .liquid
-                            }
-                            BackgroundTypeOptionButton(
-                                title: .appearanceBackgroundFrosted,
-                                isSelected: backgroundType == .frosted
-                            ) {
-                                backgroundType = .frosted
-                            }
-                        }
-                    }
-                    .padding(.horizontal, Const.space16)
-                    .padding(.vertical, Const.space8)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .settingsStyle()
-                }
             }
             .padding([.horizontal, .bottom], Const.space24)
         }
