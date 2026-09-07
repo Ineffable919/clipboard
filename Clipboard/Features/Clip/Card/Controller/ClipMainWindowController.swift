@@ -22,12 +22,7 @@ final class ClipMainWindowController: NSWindowController {
     private let dataStore = PasteDataStore.main
 
     init() {
-        let initialWidth: CGFloat
-        if #available(macOS 26.0, *) {
-            initialWidth = NSScreen.main?.frame.width ?? Const.defaultHeight
-        } else {
-            initialWidth = 0
-        }
+        let initialWidth = NSScreen.main?.frame.width ?? Const.defaultHeight
         let panel = ClipWindowView(
             contentRect: NSRect(
                 x: 0,
@@ -86,92 +81,19 @@ final class ClipMainWindowController: NSWindowController {
 
 extension ClipMainWindowController {
     func dismiss(_ completionHandler: (@MainActor () -> Void)? = nil) {
-        if #available(macOS 26.0, *) {
-            guard targetVisible, let window, window.isVisible else { return }
-            targetVisible = false
-            animateContent(visible: false) { [weak self] in
-                self?.window?.setIsVisible(false)
-                self?.window?.orderOut(nil)
-                completionHandler?()
-            }
-            return
-        }
-
+        guard targetVisible, let window, window.isVisible else { return }
         targetVisible = false
-        guard let window, window.isVisible else { return }
-
-        let view = window.contentViewController?.view
-        let height = view?.bounds.height ?? Const.defaultHeight
-
-        snapToPresentedPosition(view)
-
-        suppressSearchFocusRing(true)
-        slideAnimationGeneration += 1
-
-        NSAnimationContext.runAnimationGroup({ context in
-            context.duration = Const.hideDuration
-            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            view?.animator().setFrameOrigin(NSPoint(x: 0, y: -height))
-        }, completionHandler: {
-            Task { @MainActor in
-                guard !self.targetVisible else { return }
-                self.window?.setIsVisible(false)
-                if #unavailable(macOS 15.0) {
-                    AppEnvironment.shared.previousApp?.activate(options: [])
-                }
-                self.window?.orderOut(nil)
-                completionHandler?()
+        animateContent(visible: false) { [weak self] in
+            self?.window?.setIsVisible(false)
+            if #unavailable(macOS 15.0) {
+                AppEnvironment.shared.previousApp?.activate(options: [])
             }
-        })
+            self?.window?.orderOut(nil)
+            completionHandler?()
+        }
     }
 
     func show(in frame: NSRect?) {
-        if #available(macOS 26.0, *) {
-            showWindow(in: frame)
-            return
-        }
-
-        targetVisible = true
-        guard let window else { return }
-
-        let view = window.contentViewController?.view
-        if !window.isVisible {
-            let screenFrame = frame ?? NSScreen.main?.frame ?? .zero
-            AppEnvironment.shared.previousApp = NSWorkspace.shared.frontmostApplication
-            let panelFrame = NSRect(
-                x: screenFrame.minX, y: screenFrame.minY,
-                width: screenFrame.width, height: Const.defaultHeight
-            )
-            view?.setFrameOrigin(NSPoint(x: 0, y: -Const.defaultHeight))
-            window.setFrame(panelFrame, display: false)
-            window.setIsVisible(true)
-        } else {
-            snapToPresentedPosition(window.contentViewController?.view)
-        }
-
-        window.makeKeyAndOrderFront(nil)
-        if #unavailable(macOS 15.0) {
-            NSApp.activate(ignoringOtherApps: true)
-        }
-
-        suppressSearchFocusRing(true)
-        slideAnimationGeneration += 1
-        let generation = slideAnimationGeneration
-
-        NSAnimationContext.runAnimationGroup { context in
-            context.duration = Const.showDuration
-            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
-            view?.animator().setFrameOrigin(.zero)
-        } completionHandler: { [weak self] in
-            MainActor.assumeIsolated {
-                guard let self, generation == self.slideAnimationGeneration, self.targetVisible else { return }
-                self.suppressSearchFocusRing(false)
-            }
-        }
-    }
-
-    @available(macOS 26.0, *)
-    private func showWindow(in frame: NSRect?) {
         guard let window else { return }
         targetVisible = true
         let initiallyHidden = !window.isVisible
@@ -193,9 +115,11 @@ extension ClipMainWindowController {
             self?.suppressSearchFocusRing(false)
         }
         window.makeKeyAndOrderFront(nil)
+        if #unavailable(macOS 15.0) {
+            NSApp.activate(ignoringOtherApps: true)
+        }
     }
 
-    @available(macOS 26.0, *)
     private func animateContent(
         visible: Bool,
         initiallyHidden: Bool = false,
@@ -236,13 +160,6 @@ extension ClipMainWindowController {
     private func suppressSearchFocusRing(_ suppressed: Bool) {
         (contentViewController as? ClipMainViewController)?
             .setSearchFocusRingSuppressed(suppressed)
-    }
-
-    private func snapToPresentedPosition(_ view: NSView?) {
-        guard let view else { return }
-        let originY = view.layer?.presentation()?.frame.origin.y ?? view.frame.origin.y
-        view.layer?.removeAllAnimations()
-        view.setFrameOrigin(NSPoint(x: 0, y: originY))
     }
 }
 
