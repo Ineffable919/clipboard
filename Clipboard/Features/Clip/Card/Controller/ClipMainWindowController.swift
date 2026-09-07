@@ -97,7 +97,9 @@ extension ClipMainWindowController {
                 AppEnvironment.shared.previousApp?.activate(options: [])
             }
             self.window?.orderOut(nil)
-            mainViewController?.backdrop.resetSlidePresentation()
+            if #available(macOS 15.0, *) {
+                mainViewController?.backdrop.resetSlidePresentation()
+            }
             completionHandler?()
         }
 
@@ -181,7 +183,9 @@ extension ClipMainWindowController {
         )
         window.contentViewController?.view.setFrameOrigin(NSPoint(x: 0, y: -Const.defaultHeight))
         window.setFrame(panelFrame, display: false)
-        window.alphaValue = 0
+        if #available(macOS 15.0, *) {
+            window.alphaValue = 0
+        }
         window.setIsVisible(true)
     }
 
@@ -191,6 +195,8 @@ extension ClipMainWindowController {
         controller: ClipMainViewController?,
         initiallyHidden: Bool
     ) -> Bool {
+        // 旧系统沿用整体视图平移动画，保留显示起点和被中断动画的当前位置。
+        guard #available(macOS 15.0, *) else { return false }
         view?.layer?.removeAllAnimations()
         view?.setFrameOrigin(.zero)
         view?.layoutSubtreeIfNeeded()
