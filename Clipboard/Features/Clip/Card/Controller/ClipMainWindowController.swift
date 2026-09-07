@@ -22,11 +22,17 @@ final class ClipMainWindowController: NSWindowController {
     private let dataStore = PasteDataStore.main
 
     init() {
+        let initialWidth: CGFloat
+        if #available(macOS 26.0, *) {
+            initialWidth = NSScreen.main?.frame.width ?? Const.defaultHeight
+        } else {
+            initialWidth = 0
+        }
         let panel = ClipWindowView(
             contentRect: NSRect(
                 x: 0,
                 y: 0,
-                width: 0,
+                width: initialWidth,
                 height: Const.defaultHeight
             ),
             styleMask: [.borderless, .nonactivatingPanel, .fullSizeContentView],
@@ -80,6 +86,17 @@ final class ClipMainWindowController: NSWindowController {
 
 extension ClipMainWindowController {
     func dismiss(_ completionHandler: (@MainActor () -> Void)? = nil) {
+        if #available(macOS 26.0, *) {
+            guard targetVisible, let window, window.isVisible else { return }
+            targetVisible = false
+            animateContent(visible: false) { [weak self] in
+                self?.window?.setIsVisible(false)
+                self?.window?.orderOut(nil)
+                completionHandler?()
+            }
+            return
+        }
+
         targetVisible = false
         guard let window, window.isVisible else { return }
 
@@ -109,6 +126,11 @@ extension ClipMainWindowController {
     }
 
     func show(in frame: NSRect?) {
+        if #available(macOS 26.0, *) {
+            showWindow(in: frame)
+            return
+        }
+
         targetVisible = true
         guard let window else { return }
 
@@ -146,6 +168,69 @@ extension ClipMainWindowController {
                 self.suppressSearchFocusRing(false)
             }
         }
+    }
+
+    @available(macOS 26.0, *)
+    private func showWindow(in frame: NSRect?) {
+        guard let window else { return }
+        targetVisible = true
+        let initiallyHidden = !window.isVisible
+
+        if initiallyHidden {
+            let screenFrame = frame ?? NSScreen.main?.frame ?? .zero
+            AppEnvironment.shared.previousApp = NSWorkspace.shared.frontmostApplication
+            let visibleFrame = NSRect(
+                x: screenFrame.minX, y: screenFrame.minY,
+                width: screenFrame.width, height: Const.defaultHeight
+            )
+            window.contentViewController?.view.setFrameOrigin(.zero)
+            window.setFrame(visibleFrame, display: false)
+            window.contentViewController?.view.layoutSubtreeIfNeeded()
+        }
+
+        // 显示窗口前安装动画，避免首帧闪现。
+        animateContent(visible: true, initiallyHidden: initiallyHidden) { [weak self] in
+            self?.suppressSearchFocusRing(false)
+        }
+        window.makeKeyAndOrderFront(nil)
+    }
+
+    @available(macOS 26.0, *)
+    private func animateContent(
+        visible: Bool,
+        initiallyHidden: Bool = false,
+        completion: @escaping @MainActor () -> Void
+    ) {
+        guard let view = window?.contentViewController?.view, let layer = view.layer else { return }
+        suppressSearchFocusRing(true)
+        slideAnimationGeneration += 1
+        let generation = slideAnimationGeneration
+        let key = "drawerSlide"
+        let startY = initiallyHidden ? -view.bounds.height : (layer.presentation()?.transform.m42 ?? 0)
+
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        layer.removeAnimation(forKey: key)
+        CATransaction.setCompletionBlock { [weak self] in
+            Task { @MainActor in
+                guard let self, generation == self.slideAnimationGeneration else { return }
+                if visible {
+                    self.window?.contentViewController?.view.layer?.removeAnimation(forKey: key)
+                }
+                completion()
+            }
+        }
+
+        // 仅动画呈现位置，避免文字因实际坐标移出窗口而被裁剪。
+        let animation = CABasicAnimation(keyPath: "transform.translation.y")
+        animation.fromValue = startY
+        animation.toValue = visible ? 0 : -view.bounds.height
+        animation.duration = visible ? Const.showDuration : Const.hideDuration
+        animation.timingFunction = CAMediaTimingFunction(name: .easeOut)
+        animation.fillMode = .forwards
+        animation.isRemovedOnCompletion = false
+        layer.add(animation, forKey: key)
+        CATransaction.commit()
     }
 
     private func suppressSearchFocusRing(_ suppressed: Bool) {

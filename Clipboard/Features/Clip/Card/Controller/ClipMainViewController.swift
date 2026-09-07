@@ -223,9 +223,15 @@ extension ClipMainViewController {
     }
 
     override func viewDidAppear() {
+        let originY: CGFloat
+        if #available(macOS 26.0, *) {
+            originY = 0
+        } else {
+            originY = -Const.defaultHeight
+        }
         view.frame = NSRect(
             x: view.frame.origin.x,
-            y: -Const.defaultHeight,
+            y: originY,
             width: view.frame.width,
             height: Const.defaultHeight
         )
