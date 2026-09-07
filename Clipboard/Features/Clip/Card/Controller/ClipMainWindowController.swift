@@ -101,7 +101,7 @@ extension ClipMainWindowController {
             completionHandler?()
         }
 
-        if #available(macOS 15.0, *), let mainViewController,
+        if let mainViewController,
            mainViewController.backdrop.prepareSlidePresentation(initiallyHidden: false) {
             // 保持所选玻璃材质的采样位置不变，遮罩完全收起后再隐藏窗口。
             mainViewController.backdrop.animateSlidePresentation(
@@ -111,9 +111,6 @@ extension ClipMainWindowController {
                 completion: finish
             )
         } else {
-            if #unavailable(macOS 15.0) {
-                mainViewController?.backdrop.resetSlidePresentation()
-            }
             snapToPresentedPosition(view)
             NSAnimationContext.runAnimationGroup({ context in
                 context.duration = Const.hideDuration
