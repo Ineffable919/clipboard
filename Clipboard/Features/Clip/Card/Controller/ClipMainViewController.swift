@@ -89,11 +89,10 @@ final class ClipMainViewController: NSViewController {
             } else {
                 0.0
             }
-        let slides = if #available(macOS 15.0, *) { true } else { false }
         return BackgroundEffectController(
             cornerRadius: Const.windowRadis,
             innerPadding: inner,
-            slides: slides
+            slides: true
         )
     }()
 
