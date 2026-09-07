@@ -80,8 +80,13 @@ final class ClipMainWindowController: NSWindowController {
 
 extension ClipMainWindowController {
     func dismiss(_ completionHandler: (@MainActor () -> Void)? = nil) {
+        guard targetVisible else {
+            log.info("抽屉隐藏：忽略重复请求，windowVisible=\(window?.isVisible == true)")
+            return
+        }
         targetVisible = false
         guard let window, window.isVisible else { return }
+        let startedAt = ContinuousClock.now
 
         let view = window.contentViewController?.view
         let height = view?.bounds.height ?? Const.defaultHeight
@@ -90,14 +95,19 @@ extension ClipMainWindowController {
         suppressSearchFocusRing(true)
         slideAnimationGeneration += 1
         let generation = slideAnimationGeneration
+        log.info("抽屉隐藏开始：generation=\(generation)，macOS=\(ProcessInfo.processInfo.operatingSystemVersionString)")
         let finish: @MainActor () -> Void = { [weak self] in
             guard let self, generation == self.slideAnimationGeneration, !self.targetVisible else { return }
+            let animationElapsed = startedAt.duration(to: .now)
             self.window?.setIsVisible(false)
             if #unavailable(macOS 15.0) {
                 AppEnvironment.shared.previousApp?.activate(options: [])
             }
             self.window?.orderOut(nil)
             mainViewController?.backdrop.resetSlidePresentation()
+            log.info(
+                "抽屉隐藏完成：generation=\(generation)，animation=\(animationElapsed)，total=\(startedAt.duration(to: .now))"
+            )
             completionHandler?()
         }
 
@@ -108,7 +118,9 @@ extension ClipMainWindowController {
                 visible: false,
                 duration: Const.hideDuration,
                 timingFunction: CAMediaTimingFunction(name: .easeOut),
-                completion: finish
+                completion: {
+                    Task { @MainActor in finish() }
+                }
             )
         } else {
             snapToPresentedPosition(view)
