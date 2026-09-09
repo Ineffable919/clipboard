@@ -133,6 +133,6 @@ enum FloatConst {
     static let headerHeight: CGFloat = 90.0
     static let footerHeight: CGFloat = 32.0
     static let cardHeight: CGFloat = 60.0
-    static let cardSpacing: CGFloat = 10.0
+    static let cardSpacing: CGFloat = 6.0
     static let floatSelectionBorderWidth: CGFloat = 2.0
 }

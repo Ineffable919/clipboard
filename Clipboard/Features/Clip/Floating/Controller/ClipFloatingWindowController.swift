@@ -36,6 +36,10 @@ final class ClipFloatingWindowController: NSWindowController {
         )
         panel.contentViewController = clipVC
         super.init(window: panel)
+        let displayMode = FloatingDisplayMode(
+            rawValue: UserDefaults.standard.integer(forKey: PrefKey.floatMode.rawValue)
+        ) ?? .standard
+        clipVC.floatingContentView.setDisplayMode(displayMode)
         setupWindow()
     }
 
@@ -48,15 +52,14 @@ final class ClipFloatingWindowController: NSWindowController {
         guard let win = window as? ClipWindowView else { return }
 
         win.configureCommonSettings()
-        win.isOpaque = false
 
-        win.level = .statusBar
+        win.hasShadow = true
         win.collectionBehavior = [
             .canJoinAllSpaces, .fullScreenAuxiliary, .stationary,
         ]
 
         win.contentView?.wantsLayer = true
-        win.contentView?.layer?.cornerRadius = Const.windowRadis
+        win.contentView?.layer?.cornerRadius = clipVC.floatingContentView.displayMode.windowRadius
         win.contentView?.layer?.cornerCurve = .continuous
         win.contentView?.layer?.masksToBounds = true
 

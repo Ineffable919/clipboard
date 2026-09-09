@@ -40,7 +40,12 @@ extension FloatingHistoryView {
         scrollView.verticalScrollElasticity = .automatic
         scrollView.horizontalScrollElasticity = .none
         scrollView.documentView = collectionView
-        scrollView.scrollerInsets = scrollInsets
+        scrollView.scrollerInsets = NSEdgeInsets(
+            top: scrollInsets.top,
+            left: 0,
+            bottom: scrollInsets.bottom,
+            right: 0
+        )
         addSubview(scrollView)
 
         setupSource()
@@ -103,8 +108,10 @@ extension FloatingHistoryView {
                 with: model,
                 keyword: topVM?.query ?? "",
                 isFocused: env.focusRegion == .collection,
-                quickPasteIndex: quickPasteDisplayIndex(for: row)
+                quickPasteIndex: quickPasteDisplayIndex(for: row),
+                displayMode: displayMode
             )
+            item.setShowPlainTextIndicator(isPlainTextModifierPressed)
             item.onPaste = { [weak self] in self?.pasteItem(at: row) }
             item.onPastePlainText = { [weak self] in
                 self?.pasteItem(at: row, isAttribute: false)
@@ -180,7 +187,7 @@ extension FloatingHistoryView {
         let visibleRect = clipView.documentVisibleRect
         let topCover = scrollInsets.top - Const.selectionBorderWidth
         let bottomCover = scrollInsets.bottom
-        let peek = FloatConst.cardHeight / 3
+        let peek = displayMode.cardHeight / 3
 
         let effectiveMinY = visibleRect.minY + topCover + peek
         let effectiveMaxY = visibleRect.maxY - bottomCover - peek

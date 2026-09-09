@@ -43,6 +43,14 @@ final class FloatingHeaderView: NSView {
     var onChipSelected: (() -> Void)?
     var onChipEditingFocusChange: ((Bool) -> Void)?
 
+    func setDisplayMode(_ mode: FloatingDisplayMode) {
+        let isStandard = mode == .standard
+        dragHandle.snp.updateConstraints { $0.height.equalTo(isStandard ? 16 : 12) }
+        searchField.controlSize = isStandard ? .large : .regular
+        searchField.snp.updateConstraints {
+            $0.top.equalTo(dragHandle.snp.bottom).offset(isStandard ? Const.space8 : Const.space4)
+        }
+    }
     func isExcludedFromFocusGesture(_ view: NSView) -> Bool {
         let isEditingChip = topVM?.isEditingChip == true || topVM?.editingNewChip == true
         return view === pinButton || view.isDescendant(of: pinButton) ||
@@ -294,7 +302,8 @@ final class FloatingHeaderView: NSView {
         // Pin
         pinButton.snp.makeConstraints { make in
             make.leading.equalToSuperview().offset(Const.space12)
-            make.top.equalTo(dragHandle.snp.bottom).offset(Const.space4)
+            make.centerY.equalTo(searchField)
+            make.width.height.equalTo(28)
         }
 
         // 设置
@@ -312,10 +321,9 @@ final class FloatingHeaderView: NSView {
         }
 
         searchField.snp.makeConstraints { make in
-            make.leading.equalTo(pinButton.snp.trailing).offset(Const.space12)
+            make.leading.equalTo(pinButton.snp.trailing).offset(Const.space8)
             make.trailing.equalTo(settingsBtn.snp.leading).offset(-Const.space8)
             make.top.equalTo(dragHandle.snp.bottom).offset(Const.space8)
-            make.centerY.equalTo(pinButton)
         }
 
         addChipBtn.action = { [weak self] in
@@ -323,7 +331,7 @@ final class FloatingHeaderView: NSView {
         }
 
         chipScrollView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(Const.space8)
+            make.leading.equalToSuperview().offset(Const.space12)
             make.trailing.equalTo(addChipBtn.snp.leading).offset(-Const.space4)
             make.top.equalTo(searchField.snp.bottom).offset(Const.space8)
             make.bottom.equalToSuperview()
@@ -537,7 +545,7 @@ final class FloatingPinButton: NSButton {
 
     private func setup() {
         isBordered = false
-        imageScaling = .scaleProportionallyUpOrDown
+        imageScaling = .scaleNone
         target = self
         action = #selector(toggle)
         toolTip = String(localized: .pin)
@@ -552,7 +560,7 @@ final class FloatingPinButton: NSButton {
 
     private func updateAppearance() {
         let symbolName = isPinned ? "pin.fill" : "pin"
-        let config = NSImage.SymbolConfiguration(pointSize: 16, weight: .regular)
+        let config = NSImage.SymbolConfiguration(pointSize: 14, weight: .regular)
         image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?
             .withSymbolConfiguration(config)
         contentTintColor = isPinned ? .controlAccentColor : .secondaryLabelColor

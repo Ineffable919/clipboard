@@ -18,13 +18,15 @@ final class FloatingHistoryView: NSView {
     let collectionView = ClipCollectionView()
     let collectionLayout = NSCollectionViewFlowLayout()
     let emptyStateView = EmptyStateView(style: .floating)
-    let scrollInsets = NSEdgeInsets(
-        top: FloatConst.headerHeight + FloatConst.cardSpacing
-            + Const.selectionBorderWidth,
-        left: 0,
-        bottom: FloatConst.footerHeight + FloatConst.cardSpacing,
-        right: 0
-    )
+    private(set) var displayMode: FloatingDisplayMode = .standard
+    var scrollInsets: NSEdgeInsets {
+        NSEdgeInsets(
+            top: displayMode.headerHeight + displayMode.cardSpacing + Const.selectionBorderWidth,
+            left: displayMode.cardInset,
+            bottom: displayMode.footerHeight + displayMode.cardSpacing,
+            right: displayMode.cardInset
+        )
+    }
 
     // MARK: - Data Source
 
@@ -62,7 +64,37 @@ final class FloatingHistoryView: NSView {
         fatalError()
     }
 
+    override func layout() {
+        super.layout()
+        let width = scrollView.contentSize.width - scrollInsets.left - scrollInsets.right
+        let size = NSSize(width: width, height: displayMode.cardHeight)
+        guard width > 0, collectionLayout.itemSize != size else { return }
+        collectionLayout.itemSize = size
+        collectionLayout.invalidateLayout()
+    }
+
     // MARK: - Public API
+
+    func setDisplayMode(_ mode: FloatingDisplayMode) {
+        guard displayMode != mode else { return }
+        displayMode = mode
+        collectionLayout.minimumLineSpacing = mode.cardSpacing
+        collectionLayout.sectionInset = scrollInsets
+        scrollView.scrollerInsets = NSEdgeInsets(
+            top: scrollInsets.top, left: 0, bottom: scrollInsets.bottom, right: 0
+        )
+        presenter.loadMoreThreshold = (mode.cardHeight + mode.cardSpacing) * 5
+        needsLayout = true
+        let selectedPaths = collectionView.selectionIndexPaths
+        var snapshot = dataSource.snapshot()
+        snapshot.reloadItems(snapshot.itemIdentifiers)
+        dataSource.apply(snapshot, animatingDifferences: false) { [weak self] in
+            guard let self else { return }
+            collectionView.selectionIndexPaths = selectedPaths
+            updateSelectedItemBorder()
+            updateQuickPasteDisplay()
+        }
+    }
 
     func setPreviewHooks(
         isShown: @escaping () -> Bool,
@@ -125,7 +157,8 @@ final class FloatingHistoryView: NSView {
                         with: item,
                         keyword: topVM?.query ?? "",
                         isFocused: focused,
-                        quickPasteIndex: quickPasteDisplayIndex(for: idx)
+                        quickPasteIndex: quickPasteDisplayIndex(for: idx),
+                        displayMode: displayMode
                     )
             }
         }

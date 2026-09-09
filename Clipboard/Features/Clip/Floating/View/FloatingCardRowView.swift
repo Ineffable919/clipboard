@@ -70,6 +70,7 @@ final class FloatingCardRowView: NSView {
 
     private var currentModel: PasteboardModel?
     private var currentKeyword: String = ""
+    private var displayMode: FloatingDisplayMode = .standard
     private var isSelectedState: Bool = false
     private var isFocusedState: Bool = false
     private var iconLoadTask: Task<Void, Never>?
@@ -122,7 +123,7 @@ final class FloatingCardRowView: NSView {
         wantsLayer = true
 
         selectionBorderView.wantsLayer = true
-        selectionBorderView.layer?.cornerRadius = Const.radius + FloatConst.floatSelectionBorderWidth
+        selectionBorderView.layer?.cornerRadius = displayMode.cardRadius + FloatConst.floatSelectionBorderWidth
         selectionBorderView.layer?.cornerCurve = .continuous
         selectionBorderView.layer?.borderWidth = 0
         selectionBorderView.layer?.backgroundColor = .clear
@@ -131,7 +132,7 @@ final class FloatingCardRowView: NSView {
         addSubview(selectionBorderView)
 
         backgroundView.wantsLayer = true
-        backgroundView.layer?.cornerRadius = Const.radius
+        backgroundView.layer?.cornerRadius = displayMode.cardRadius
         backgroundView.layer?.cornerCurve = .continuous
         backgroundView.layer?.masksToBounds = true
         selectionBorderView.addSubview(backgroundView)
@@ -142,8 +143,9 @@ final class FloatingCardRowView: NSView {
         contentView.layer?.masksToBounds = true
         backgroundView.addSubview(contentView)
 
-        timestampLabel.font = .systemFont(ofSize: NSFont.labelFontSize, weight: .regular)
+        timestampLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .regular)
         timestampLabel.textColor = .secondaryLabelColor
+        timestampLabel.alignment = .right
         timestampLabel.lineBreakMode = .byTruncatingTail
         timestampLabel.setContentHuggingPriority(.required, for: .horizontal)
         timestampLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
@@ -152,7 +154,7 @@ final class FloatingCardRowView: NSView {
         badgeBgView.addSubview(badgeStackView)
         badgeStackView.addArrangedSubview(plainTextIcon)
         badgeStackView.addArrangedSubview(quickPasteBadge)
-        backgroundView.addSubview(badgeBgView)
+        backgroundView.addSubview(badgeBgView, positioned: .above, relativeTo: contentView)
 
         chipTagIcon.imageScaling = .scaleProportionallyUpOrDown
         chipTagIcon.image = NSImage(systemSymbolName: "tag.fill", accessibilityDescription: nil)
@@ -167,43 +169,59 @@ final class FloatingCardRowView: NSView {
             make.edges.equalToSuperview().inset(FloatConst.floatSelectionBorderWidth).priority(999)
         }
 
-        appIconView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(Const.space6)
-            make.centerY.equalToSuperview()
-            make.width.height.equalTo(28)
-        }
-
-        timestampLabel.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().offset(-Const.space6)
-            make.centerY.equalToSuperview()
-        }
-
-        badgeBgView.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().inset(Const.space6)
-            make.bottom.equalToSuperview().inset(Const.space4)
-            make.height.equalTo(16)
-        }
-
         badgeStackView.snp.makeConstraints { make in
             make.centerY.equalToSuperview()
             make.leading.trailing.equalToSuperview().inset(Const.space2)
         }
 
-        chipTagIcon.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().offset(-Const.space4)
-            make.top.equalToSuperview().offset(Const.space4)
-            make.width.height.equalTo(10)
-        }
-
-        contentView.snp.makeConstraints { make in
-            make.leading.equalTo(appIconView.snp.trailing).offset(Const.space10)
-            make.trailing.equalTo(timestampLabel.snp.leading).offset(-Const.space4)
-            make.top.equalToSuperview().offset(Const.space4)
-            make.bottom.equalToSuperview().offset(-Const.space4)
-        }
+        applyDisplayMode()
 
         setupContextMenu()
         updateShadow()
+    }
+
+    private func applyDisplayMode() {
+        let isStandard = displayMode == .standard
+        appIconView.isHidden = !isStandard
+        timestampLabel.isHidden = !isStandard
+        timestampLabel.font = .systemFont(ofSize: NSFont.labelFontSize)
+        selectionBorderView.layer?.cornerRadius = displayMode.cardRadius + FloatConst.floatSelectionBorderWidth
+        backgroundView.layer?.cornerRadius = displayMode.cardRadius
+
+        badgeBgView.snp.remakeConstraints { make in
+            make.trailing.equalToSuperview().inset(Const.space6)
+            make.height.equalTo(16)
+            if isStandard {
+                make.bottom.equalToSuperview().inset(Const.space4)
+            } else {
+                make.centerY.equalToSuperview()
+            }
+        }
+
+        appIconView.snp.remakeConstraints { make in
+            make.leading.equalToSuperview().offset(Const.space6)
+            make.centerY.equalToSuperview()
+            make.width.height.equalTo(28)
+        }
+        timestampLabel.snp.remakeConstraints { make in
+            make.trailing.equalToSuperview().inset(Const.space6)
+            make.centerY.equalToSuperview()
+        }
+        chipTagIcon.snp.remakeConstraints { make in
+            make.trailing.equalToSuperview().inset(isStandard ? Const.space4 : Const.space2)
+            make.top.equalToSuperview().offset(isStandard ? Const.space4 : Const.space2)
+            make.width.height.equalTo(isStandard ? 10 : 8)
+        }
+        contentView.snp.remakeConstraints { make in
+            if isStandard {
+                make.leading.equalTo(appIconView.snp.trailing).offset(Const.space10)
+                make.trailing.equalTo(timestampLabel.snp.leading).offset(-Const.space4)
+                make.top.bottom.equalToSuperview().inset(Const.space4)
+            } else {
+                make.leading.trailing.equalToSuperview().inset(Const.space10)
+                make.top.bottom.equalToSuperview().inset(Const.space8)
+            }
+        }
     }
 
     // MARK: - Configure
@@ -213,8 +231,12 @@ final class FloatingCardRowView: NSView {
         keyword: String,
         isSelected: Bool,
         isFocused: Bool,
-        quickPasteIndex: Int?
+        quickPasteIndex: Int?,
+        displayMode: FloatingDisplayMode = .standard
     ) {
+        let modeChanged = self.displayMode != displayMode
+        self.displayMode = displayMode
+        if modeChanged { applyDisplayMode() }
         let modelChanged = currentModel?.uniqueId != model.uniqueId
         currentModel = model
         currentKeyword = keyword
@@ -231,8 +253,7 @@ final class FloatingCardRowView: NSView {
             relativeTo: TimeManager.shared.currentTime
         )
         timestampLabel.textColor = fgColor
-
-        if modelChanged {
+        if displayMode == .standard, modelChanged || modeChanged {
             appIconView.configure(appPath: model.appPath)
         }
 
@@ -243,7 +264,7 @@ final class FloatingCardRowView: NSView {
             chipTagIcon.isHidden = true
         }
 
-        if modelChanged {
+        if modelChanged || modeChanged {
             replaceContentSubview(for: model, keyword: keyword)
         } else {
             updateKeywordInContentSubview(keyword: keyword, model: model)
@@ -362,21 +383,29 @@ final class FloatingCardRowView: NSView {
         case .color:
             return FloatingColorContentView(model: model)
         case .image:
-            return FloatingImageContentView(model: model)
+            return FloatingImageContentView(model: model, displayMode: displayMode)
         case .file:
             return FloatingFileContentView(model: model)
         case .rich:
             if model.hasBgColor {
-                return FloatingRichContentView(model: model, keyword: keyword)
+                return FloatingRichContentView(
+                    model: model, keyword: keyword, maximumLines: displayMode == .standard ? 2 : 1
+                )
             }
-            return FloatingTextContentView(model: model, keyword: keyword)
+            return FloatingTextContentView(
+                model: model, keyword: keyword, maximumLines: displayMode == .standard ? 0 : 1
+            )
         case .link:
             if PasteUserDefaults.enableLinkPreview {
-                return FloatingLinkContentView(model: model, keyword: keyword)
+                return FloatingLinkContentView(model: model, keyword: keyword, displayMode: displayMode)
             }
-            return FloatingTextContentView(model: model, keyword: keyword)
+            return FloatingTextContentView(
+                model: model, keyword: keyword, maximumLines: displayMode == .standard ? 0 : 1
+            )
         case .string:
-            return FloatingTextContentView(model: model, keyword: keyword)
+            return FloatingTextContentView(
+                model: model, keyword: keyword, maximumLines: displayMode == .standard ? 0 : 1
+            )
         case .none:
             return NSView()
         }
@@ -496,36 +525,18 @@ private final class FloatingAppIconView: NSView {
     }
 }
 
-// MARK: - VerticallyCenteredTextFieldCell
-
-private final class VerticallyCenteredTextFieldCell: NSTextFieldCell {
-    override func drawingRect(forBounds rect: NSRect) -> NSRect {
-        let rect = super.drawingRect(forBounds: rect)
-        let textSize = cellSize(forBounds: rect)
-        let heightDelta = rect.height - textSize.height
-        guard heightDelta > 0 else { return rect }
-        return NSRect(
-            x: rect.origin.x,
-            y: rect.origin.y + heightDelta / 2,
-            width: rect.width,
-            height: textSize.height
-        )
-    }
-}
-
 // MARK: - FloatingTextContentView
 
 final class FloatingTextContentView: NSView {
-    private let textField: NSTextField = {
-        let field = NSTextField(labelWithString: "")
-        field.cell = VerticallyCenteredTextFieldCell()
-        return field
-    }()
+    private let textField = NSTextField(labelWithString: "")
 
-    init(model: PasteboardModel, keyword: String) {
+    init(model: PasteboardModel, keyword: String, maximumLines: Int) {
         super.init(frame: .zero)
+        textField.cell = VerticallyCenteredTextFieldCell()
+        textField.cell?.usesSingleLineMode = maximumLines == 1
         textField.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .regular)
         textField.lineBreakMode = .byTruncatingTail
+        textField.maximumNumberOfLines = maximumLines
         textField.cell?.truncatesLastVisibleLine = true
         addSubview(textField)
         textField.snp.makeConstraints { make in
@@ -540,10 +551,17 @@ final class FloatingTextContentView: NSView {
     }
 
     func update(keyword: String, model: PasteboardModel) {
-        if keyword.isEmpty {
-            textField.attributedStringValue = model.plainTextAttributedString
+        let text = keyword.isEmpty
+            ? model.plainTextAttributedString
+            : model.highlightedNSAttributedString(keyword: keyword)
+        if textField.maximumNumberOfLines == 1, model.pasteboardType == .string {
+            let preview = NSMutableAttributedString(attributedString: text)
+            preview.addAttribute(
+                .font, value: NSFont.systemFont(ofSize: 12), range: NSRange(location: 0, length: preview.length)
+            )
+            textField.attributedStringValue = preview
         } else {
-            textField.attributedStringValue = model.highlightedNSAttributedString(keyword: keyword)
+            textField.attributedStringValue = text
         }
     }
 }
@@ -551,17 +569,15 @@ final class FloatingTextContentView: NSView {
 // MARK: - FloatingRichContentView
 
 final class FloatingRichContentView: NSView {
-    private let textField: NSTextField = {
-        let field = NSTextField(labelWithString: "")
-        field.cell = VerticallyCenteredTextFieldCell()
-        return field
-    }()
+    private let textField = NSTextField(labelWithString: "")
 
-    init(model: PasteboardModel, keyword: String) {
+    init(model: PasteboardModel, keyword: String, maximumLines: Int) {
         super.init(frame: .zero)
+        textField.cell = VerticallyCenteredTextFieldCell()
+        textField.cell?.usesSingleLineMode = maximumLines == 1
         textField.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .regular)
         textField.lineBreakMode = .byTruncatingTail
-        textField.maximumNumberOfLines = 2
+        textField.maximumNumberOfLines = maximumLines
         textField.cell?.truncatesLastVisibleLine = true
         addSubview(textField)
         textField.snp.makeConstraints { make in
@@ -609,23 +625,50 @@ private final class FloatingColorContentView: NSView {
 // MARK: - FloatingImageContentView
 
 private final class FloatingImageContentView: NSView {
-    private let imageView = NSImageView()
+    private let imageView = NSView()
     private let placeholder = NSImageView()
     private var loadTask: Task<Void, Never>?
 
-    init(model: PasteboardModel) {
+    init(model: PasteboardModel, displayMode: FloatingDisplayMode) {
         super.init(frame: .zero)
-        imageView.imageScaling = .scaleProportionallyUpOrDown
+        imageView.wantsLayer = true
+        imageView.layer?.cornerRadius = displayMode == .standard ? 0 : 4
+        imageView.layer?.masksToBounds = true
+        imageView.layer?.contentsGravity = displayMode == .standard ? .resizeAspect : .resizeAspectFill
         imageView.isHidden = true
         addSubview(imageView)
-        imageView.snp.makeConstraints { $0.edges.equalToSuperview() }
+        imageView.snp.makeConstraints { make in
+            if displayMode == .standard {
+                make.edges.equalToSuperview()
+            } else {
+                make.leading.centerY.equalToSuperview()
+                make.width.equalTo(64)
+                make.height.equalToSuperview()
+            }
+        }
+
+        if displayMode == .minimal {
+            let photoIcon = NSImageView()
+            photoIcon.image = NSImage(
+                systemSymbolName: "photo", accessibilityDescription: String(localized: .image)
+            )
+            photoIcon.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 14, weight: .regular)
+            photoIcon.contentTintColor = .systemBlue
+            photoIcon.imageScaling = .scaleNone
+            addSubview(photoIcon)
+            photoIcon.snp.makeConstraints { make in
+                make.leading.equalTo(imageView.snp.trailing).offset(Const.space8)
+                make.centerY.equalToSuperview()
+                make.width.height.equalTo(20)
+            }
+        }
 
         placeholder.image = NSImage(systemSymbolName: "photo", accessibilityDescription: nil)
         placeholder.contentTintColor = .secondaryLabelColor
         placeholder.imageScaling = .scaleProportionallyUpOrDown
         addSubview(placeholder)
         placeholder.snp.makeConstraints { make in
-            make.center.equalToSuperview()
+            make.center.equalTo(imageView)
             make.width.height.equalTo(20)
         }
 
@@ -633,7 +676,7 @@ private final class FloatingImageContentView: NSView {
             let image = await model.loadThumbnail()
             guard !Task.isCancelled, let self else { return }
             if let image {
-                imageView.image = image
+                imageView.layer?.contents = image
                 imageView.isHidden = false
                 placeholder.isHidden = true
             }
@@ -701,8 +744,10 @@ private final class FloatingLinkContentView: NSView {
     private let titleLabel = NSTextField(labelWithString: "")
     private let urlLabel = NSTextField(labelWithString: "")
     private var loadTask: Task<Void, Never>?
+    private let displayMode: FloatingDisplayMode
 
-    init(model: PasteboardModel, keyword: String) {
+    init(model: PasteboardModel, keyword: String, displayMode: FloatingDisplayMode) {
+        self.displayMode = displayMode
         super.init(frame: .zero)
 
         iconView.imageScaling = .scaleProportionallyUpOrDown
@@ -737,6 +782,10 @@ private final class FloatingLinkContentView: NSView {
 
         textStack.addArrangedSubview(titleLabel)
         textStack.addArrangedSubview(urlLabel)
+        if displayMode == .minimal {
+            urlLabel.isHidden = true
+            titleLabel.snp.makeConstraints { $0.width.equalTo(textStack) }
+        }
 
         let urlString = model.attributeString.string
         if keyword.isEmpty {
@@ -748,7 +797,7 @@ private final class FloatingLinkContentView: NSView {
         if let cached = model.cachedLinkMetadata {
             applyMetadata(title: cached.title, icon: cached.iconImage, urlString: urlString)
         } else {
-            titleLabel.stringValue = URL(string: urlString)?.host() ?? urlString
+            applyMetadata(title: nil, icon: nil, urlString: urlString)
             loadTask = Task { @MainActor [weak self] in
                 guard let url = URL(string: urlString) else { return }
                 let metadata = await FloatingLinkContentView.fetchMetadata(for: url)
@@ -767,7 +816,12 @@ private final class FloatingLinkContentView: NSView {
     deinit { loadTask?.cancel() }
 
     private func applyMetadata(title: String?, icon: NSImage?, urlString: String) {
-        titleLabel.stringValue = title ?? URL(string: urlString)?.host() ?? urlString
+        let title = title?.trimmingCharacters(in: .whitespacesAndNewlines)
+        titleLabel.stringValue = title.flatMap { $0.isEmpty ? nil : $0 }
+            ?? URL(string: urlString)?.host() ?? urlString
+        if displayMode == .minimal {
+            toolTip = "\(titleLabel.stringValue)\n\(urlString)"
+        }
         if let icon {
             iconView.image = icon
             iconView.contentTintColor = nil

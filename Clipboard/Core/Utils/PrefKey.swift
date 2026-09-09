@@ -51,6 +51,8 @@ enum PrefKey: String, CaseIterable {
     case removeTailingNewline
     /// 显示模式（抽屉式/窗口式）
     case displayMode
+    /// 浮窗卡片显示模式（标准/简洁）
+    case floatMode
     /// 窗口位置模式（中心/鼠标/上次位置）
     case windowPosition
     /// 上次窗口位置和大小

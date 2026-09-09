@@ -49,10 +49,9 @@ final class ClipMainWindowController: NSWindowController {
 
         win.delegate = self
 
+        win.hasShadow = false
         win.configureCommonSettings()
 
-        win.level = .statusBar
-        win.isOpaque = false
         win.collectionBehavior = [.canJoinAllSpaces, .stationary]
     }
 

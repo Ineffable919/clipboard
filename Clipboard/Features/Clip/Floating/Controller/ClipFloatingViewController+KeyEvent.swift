@@ -150,7 +150,7 @@ extension ClipFloatingViewController {
         let hasExtra = !event.modifierFlags.intersection([
             .option, .control, .shift,
         ]).isEmpty
-        guard !hasExtra else { return nil }
+        guard !hasExtra else { return event }
 
         let historyView = floatingContentView.historyView
         switch event.keyCode {
@@ -173,7 +173,7 @@ extension ClipFloatingViewController {
             historyView.openEditWindow(at: historyView.selectedIndex)
             return nil
         default:
-            return nil
+            return event
         }
     }
 

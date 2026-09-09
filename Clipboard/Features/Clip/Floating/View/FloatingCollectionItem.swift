@@ -14,7 +14,8 @@ final class FloatingCollectionItem: NSCollectionViewItem {
         with model: PasteboardModel,
         keyword: String,
         isFocused: Bool,
-        quickPasteIndex: Int?
+        quickPasteIndex: Int?,
+        displayMode: FloatingDisplayMode = .standard
     ) {
         self.isFocused = isFocused
         cardView.configure(
@@ -22,7 +23,8 @@ final class FloatingCollectionItem: NSCollectionViewItem {
             keyword: keyword,
             isSelected: isSelected,
             isFocused: isFocused,
-            quickPasteIndex: quickPasteIndex
+            quickPasteIndex: quickPasteIndex,
+            displayMode: displayMode
         )
     }
 

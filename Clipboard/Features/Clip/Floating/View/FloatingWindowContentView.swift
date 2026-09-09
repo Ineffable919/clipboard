@@ -20,6 +20,7 @@ final class FloatingWindowContentView: NSView {
     // MARK: - State
 
     let topVM = TopBarViewModel()
+    private(set) var displayMode: FloatingDisplayMode = .standard
     private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Init
@@ -35,6 +36,30 @@ final class FloatingWindowContentView: NSView {
     }
 
     // MARK: - Public API
+
+    func setDisplayMode(_ mode: FloatingDisplayMode) {
+        guard displayMode != mode else { return }
+        displayMode = mode
+        UserDefaults.standard.set(mode.rawValue, forKey: PrefKey.floatMode.rawValue)
+        headerView.setDisplayMode(mode)
+        footerView.displayMode = mode
+        headerView.snp.updateConstraints { $0.height.equalTo(mode.headerHeight) }
+        footerView.snp.updateConstraints { $0.height.equalTo(mode.footerHeight) }
+        historyView.setDisplayMode(mode)
+
+        if let window {
+            window.contentView?.layer?.cornerRadius = mode.windowRadius
+            var frame = window.frame
+            frame.origin.y = frame.maxY - mode.windowSize.height
+            frame.size = mode.windowSize
+            if let screen = window.screen {
+                frame.origin.y = max(screen.visibleFrame.minY, frame.origin.y)
+            }
+            window.setFrame(frame, display: true)
+        }
+        layoutSubtreeIfNeeded()
+        historyView.scrollTo(index: historyView.selectedIndex)
+    }
 
     func resetState() {
         topVM.resetFilterState()
@@ -60,6 +85,9 @@ final class FloatingWindowContentView: NSView {
         headerView.configure(topVM: topVM)
         historyView.configure(topVM: topVM)
         footerView.configure(topVM: topVM)
+        footerView.onDisplayModeChanged = { [weak self] mode in
+            self?.setDisplayMode(mode)
+        }
 
         historyView.onActivateSearch = { [weak self] text in
             self?.headerView.activateSearch(with: text)
@@ -111,6 +139,7 @@ final class FloatingWindowContentView: NSView {
 
         headerView.snp.makeConstraints { make in
             make.top.leading.trailing.equalTo(container)
+            make.height.equalTo(FloatConst.headerHeight)
         }
 
         footerView.snp.makeConstraints { make in
