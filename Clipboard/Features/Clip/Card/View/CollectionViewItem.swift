@@ -71,6 +71,9 @@ final class CollectionViewItem: NSCollectionViewItem {
         view.onBackingChange = { [weak self] in
             self?.updateContentInset()
         }
+        view.onLayout = { [weak self] in
+            self?.updateShadowPath()
+        }
         return view
     }()
 
@@ -213,7 +216,6 @@ extension CollectionViewItem {
     override func viewDidLayout() {
         super.viewDidLayout()
         updateContentInset()
-        updateShadowPath()
     }
 
     override var isSelected: Bool {
@@ -268,8 +270,11 @@ extension CollectionViewItem {
     }
 
     private func updateShadowPath() {
-        selectionBorderView.layer?.shadowPath = CGPath(
-            roundedRect: contentView.frame,
+        guard let layer = selectionBorderView.layer else { return }
+        let frame = contentView.frame
+        guard layer.shadowPath?.boundingBoxOfPath != frame else { return }
+        layer.shadowPath = CGPath(
+            roundedRect: frame,
             cornerWidth: Const.radius,
             cornerHeight: Const.radius,
             transform: nil
@@ -351,6 +356,13 @@ extension CollectionViewItem: UserInterfaceItemIdentifier {}
 private final class AppearanceObservingView: NSView {
     var onAppearanceChange: (() -> Void)?
     var onBackingChange: (() -> Void)?
+    var onLayout: (() -> Void)?
+
+    override func layout() {
+        super.layout()
+        // 子视图布局完成后，再同步阴影轮廓。
+        onLayout?()
+    }
 
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
