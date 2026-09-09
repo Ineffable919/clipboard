@@ -223,12 +223,7 @@ extension ClipMainViewController {
     }
 
     override func viewDidAppear() {
-        view.frame = NSRect(
-            x: view.frame.origin.x,
-            y: 0,
-            width: view.frame.width,
-            height: Const.defaultHeight
-        )
+        super.viewDidAppear()
 
         if topBarView.isSearching, !topVM.hasInput {
             topBarView.deactivateSearch()
