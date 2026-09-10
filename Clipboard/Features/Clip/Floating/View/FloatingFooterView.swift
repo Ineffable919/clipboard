@@ -8,9 +8,12 @@
 import AppKit
 import Combine
 import SnapKit
+import SwiftUI
 
 final class FloatingFooterView: NSView {
     // MARK: - Subviews
+
+    private let backgroundView = NSView()
 
     private let countLabel = NSTextField(labelWithString: "")
     private let pauseButton = NSButton()
@@ -30,6 +33,7 @@ final class FloatingFooterView: NSView {
     override init(frame: NSRect) {
         super.init(frame: frame)
         setup()
+        updateBackground()
     }
 
     @available(*, unavailable)
@@ -87,11 +91,7 @@ final class FloatingFooterView: NSView {
         wantsLayer = true
         layer?.masksToBounds = true
 
-        addSubview(effectView)
-        effectView.snp.makeConstraints { make in
-            make.leading.trailing.bottom.equalToSuperview()
-            make.top.equalToSuperview().offset(-Const.windowRadis)
-        }
+        setupBackground()
 
         countLabel.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .regular)
         countLabel.textColor = .secondaryLabelColor
@@ -185,6 +185,28 @@ final class FloatingFooterView: NSView {
         }
     }
 
+    private func setupBackground() {
+        addSubview(effectView)
+        effectView.snp.makeConstraints { make in
+            make.leading.trailing.bottom.equalToSuperview()
+            make.top.equalToSuperview().offset(-Const.windowRadis)
+        }
+
+        guard #available(macOS 26.0, *) else { return }
+        backgroundView.wantsLayer = true
+        addSubview(backgroundView)
+        backgroundView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+    }
+
+    private func updateBackground() {
+        guard #available(macOS 26.0, *) else { return }
+        let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        backgroundView.layer?.backgroundColor = NSColor(WelcomeStyle.background(for: isDark ? .dark : .light))
+            .withAlphaComponent(0.35).cgColor
+    }
+
     private static func buildEffectView() -> NSView {
         if #available(macOS 26.0, *) {
             let glassView = NSGlassEffectView()
@@ -230,6 +252,7 @@ final class FloatingFooterView: NSView {
 
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
+        updateBackground()
         updatePauseBackground()
     }
 

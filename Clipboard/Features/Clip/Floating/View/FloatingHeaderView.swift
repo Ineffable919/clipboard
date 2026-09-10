@@ -8,10 +8,13 @@
 import AppKit
 import Combine
 import SnapKit
+import SwiftUI
 import Sparkle
 
 final class FloatingHeaderView: NSView {
     // MARK: - Subviews
+
+    private let backgroundView = NSView()
 
     private let dragHandle = FloatingDragHandle()
     private let pinButton = FloatingPinButton()
@@ -30,6 +33,7 @@ final class FloatingHeaderView: NSView {
     override init(frame: NSRect) {
         super.init(frame: frame)
         setup()
+        updateBackground()
     }
 
     @available(*, unavailable)
@@ -279,11 +283,7 @@ final class FloatingHeaderView: NSView {
         wantsLayer = true
         layer?.masksToBounds = true
 
-        addSubview(effectView)
-        effectView.snp.makeConstraints { make in
-            make.top.leading.trailing.equalToSuperview()
-            make.bottom.equalToSuperview().offset(Const.windowRadis)
-        }
+        setupBackground()
 
         addSubview(dragHandle)
         addSubview(pinButton)
@@ -356,6 +356,33 @@ final class FloatingHeaderView: NSView {
     }
 
     // MARK: - Background
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        updateBackground()
+    }
+
+    private func setupBackground() {
+        addSubview(effectView)
+        effectView.snp.makeConstraints { make in
+            make.top.leading.trailing.equalToSuperview()
+            make.bottom.equalToSuperview().offset(Const.windowRadis)
+        }
+
+        guard #available(macOS 26.0, *) else { return }
+        backgroundView.wantsLayer = true
+        addSubview(backgroundView)
+        backgroundView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+    }
+
+    private func updateBackground() {
+        guard #available(macOS 26.0, *) else { return }
+        let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        backgroundView.layer?.backgroundColor = NSColor(WelcomeStyle.background(for: isDark ? .dark : .light))
+            .withAlphaComponent(0.35).cgColor
+    }
 
     private static func buildEffectView() -> NSView {
         if #available(macOS 26.0, *) {
