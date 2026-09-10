@@ -394,8 +394,15 @@ final class ChipButton: NSView, NSTextFieldDelegate {
 
         let pillFrame = bounds.insetBy(dx: haloInset, dy: haloInset)
         backgroundLayer.frame = pillFrame
-        backgroundLayer.cornerRadius =
-            config.compact ? Const.btnRadius : Const.radius
+        if #available(macOS 26.0, *), config.compact {
+            backgroundLayer.cornerRadius = max(0, pillFrame.height / 2)
+        } else {
+            backgroundLayer.cornerRadius = config.compact ? Const.btnRadius : Const.radius
+        }
+        if nameField.containerCornerRadius != backgroundLayer.cornerRadius {
+            nameField.containerCornerRadius = backgroundLayer.cornerRadius
+            nameField.noteFocusRingMaskChanged()
+        }
     }
 
     override func viewDidChangeEffectiveAppearance() {
