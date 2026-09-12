@@ -287,7 +287,9 @@ private extension ChipScrollView {
             context.duration = 0.18
             button.animator().alphaValue = 0
         } completionHandler: {
-            button.removeFromSuperview()
+            Task { @MainActor in
+                button.removeFromSuperview()
+            }
         }
     }
 }
