@@ -48,6 +48,7 @@ final class TopBarChipController {
             chips: chips,
             selectedId: currentId,
             dotMode: false,
+            creatingChip: topVM.editingNewChip,
             makeConfig: makeChipButtonConfig
         )
         chipScrollView?.onSelectionChanged = { [weak self] id in

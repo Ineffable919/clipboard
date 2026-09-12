@@ -299,8 +299,7 @@ extension ClipMainViewController {
         }
 
         topBarView.snp.makeConstraints { make in
-            make.leading.equalTo(contentView.snp.centerX).offset(-225)
-            make.trailing.equalToSuperview()
+            make.leading.trailing.equalToSuperview()
             make.top.equalToSuperview()
             make.height.equalTo(Const.topBarHeight)
         }

@@ -857,3 +857,17 @@ private final class ChipColorCircleView: NSView {
         onTap()
     }
 }
+
+extension ChipButton {
+    func update(config newConfig: Config) {
+        let rebuild = config.chip != newConfig.chip
+            || config.dotMode != newConfig.dotMode
+            || config.compact != newConfig.compact
+            || config.isEditing != newConfig.isEditing
+        config = newConfig
+        if rebuild {
+            updateContent()
+        }
+        updateAppearance(animated: false)
+    }
+}

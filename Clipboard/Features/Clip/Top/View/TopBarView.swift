@@ -78,6 +78,7 @@ final class TopBarView: NSView {
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
         updateSearchFieldWidth()
+        updateChipWidths()
     }
 
     @available(*, unavailable)
@@ -122,6 +123,7 @@ final class TopBarView: NSView {
         setupSearchRow()
         setupSettingBtn()
         layoutRows()
+        updateChipWidths()
         applyMode()
         observeUpdateBadge()
     }
@@ -133,6 +135,7 @@ final class TopBarView: NSView {
         defaultRow.alignment = .centerY
         defaultRow.distribution = .fill
         defaultRow.setHuggingPriority(.required, for: .horizontal)
+        defaultRow.setClippingResistancePriority(.defaultLow, for: .horizontal)
         addSubview(defaultRow)
 
         searchIconBtn.action = { [weak self] in self?.activateSearch() }
@@ -156,6 +159,7 @@ final class TopBarView: NSView {
         searchRow.orientation = .horizontal
         searchRow.spacing = Const.space8
         searchRow.alignment = .centerY
+        searchRow.setClippingResistancePriority(.defaultLow, for: .horizontal)
         addSubview(searchRow)
 
         searchField.placeholderString = String(localized: .search)
@@ -206,7 +210,7 @@ final class TopBarView: NSView {
 
         dotChipScrollView.setContentHuggingPriority(.required, for: .horizontal)
         dotChipScrollView.setContentCompressionResistancePriority(
-            .required,
+            .defaultLow,
             for: .horizontal
         )
 
@@ -258,7 +262,8 @@ final class TopBarView: NSView {
         }
 
         defaultRow.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(45)
+            make.centerX.equalToSuperview()
+            make.leading.greaterThanOrEqualToSuperview().offset(45)
             make.trailing.lessThanOrEqualTo(settingBtn.snp.leading).offset(
                 -Const.space12
             )
@@ -266,8 +271,8 @@ final class TopBarView: NSView {
         }
 
         searchRow.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(5)
-            make.trailing.equalToSuperview()
+            make.leading.equalTo(snp.centerX).offset(-220)
+            make.trailing.equalTo(settingBtn.snp.leading).offset(-Const.space12)
             make.top.equalToSuperview().offset(Const.space10)
         }
     }
@@ -286,6 +291,7 @@ final class TopBarView: NSView {
 
         searchFieldWidth = width
         searchFieldWidthConstraint?.update(offset: width)
+        updateChipWidths()
     }
 
     // MARK: - 模式切换
@@ -320,4 +326,17 @@ final class TopBarView: NSView {
         searchRow.isHidden = !isSearching
     }
 
+}
+
+private extension TopBarView {
+    func updateChipWidths() {
+        let rightInset = Const.space16 + settingBtn.fittingSize.width + Const.space12
+        let controlsWidth = searchIconBtn.fittingSize.width + addChipBtn.fittingSize.width
+            + 2 * Const.space12
+        chipScrollView.maximumWidth = max(0, bounds.width - 2 * rightInset - controlsWidth)
+        dotChipScrollView.maximumWidth = max(
+            0,
+            bounds.width / 2 + 220 - rightInset - searchFieldWidth - Const.space8
+        )
+    }
 }

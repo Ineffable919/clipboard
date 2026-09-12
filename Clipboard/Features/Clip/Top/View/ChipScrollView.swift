@@ -17,6 +17,7 @@ final class ChipScrollView: NSView {
     private var chips: [CategoryChip] = []
     private var chipButtons: [ChipButton] = []
     private weak var newChipButton: ChipButton?
+    private var pendingScrollOrigin: NSPoint?
 
     var selectedChipId: Int = -1 {
         didSet {
@@ -28,6 +29,13 @@ final class ChipScrollView: NSView {
     var onSelectionChanged: ((Int) -> Void)?
 
     var scrollMode: Bool = false
+
+    var maximumWidth: CGFloat = .greatestFiniteMagnitude {
+        didSet {
+            guard oldValue != maximumWidth else { return }
+            invalidateWidth()
+        }
+    }
 
     // MARK: - Init
 
@@ -77,19 +85,32 @@ final class ChipScrollView: NSView {
         if scrollMode {
             return NSSize(width: NSView.noIntrinsicMetric, height: NSView.noIntrinsicMetric)
         }
-        return NSSize(width: contentStack.fittingSize.width, height: NSView.noIntrinsicMetric)
+        return NSSize(
+            width: min(contentStack.fittingSize.width, maximumWidth),
+            height: NSView.noIntrinsicMetric
+        )
     }
 
     private func invalidateWidth() {
         invalidateIntrinsicContentSize()
+        needsLayout = true
         superview?.needsLayout = true
+    }
+
+    override func layout() {
+        super.layout()
+        if let origin = pendingScrollOrigin {
+            pendingScrollOrigin = nil
+            contentStack.scroll(origin)
+        }
     }
 
     private func keepEditingEdgeVisible(_ button: ChipButton) {
         invalidateWidth()
         Task { @MainActor [weak self, weak button] in
             guard let self, let button else { return }
-            layoutSubtreeIfNeeded()
+            guard let contentView = window?.contentView else { return }
+            contentView.layoutSubtreeIfNeeded()
             let edge = NSRect(
                 x: max(button.bounds.maxX - 1, 0),
                 y: button.bounds.minY,
@@ -107,49 +128,54 @@ final class ChipScrollView: NSView {
         selectedId: Int,
         dotMode: Bool = false,
         compact: Bool = false,
+        creatingChip: Bool = false,
         makeConfig: ((CategoryChip, Bool, Bool) -> ChipButton.Config)? = nil
     ) {
-        self.chips = chips
-        newChipButton = nil
-        var editingButton: ChipButton?
+        let oldButtons = Dictionary(uniqueKeysWithValues: zip(self.chips.map(\.id), chipButtons))
+        let changed = self.chips.map(\.id) != chips.map(\.id)
+        let hadPlaceholder = newChipButton != nil
+        let animate = !self.chips.isEmpty
+            && ((changed && !hadPlaceholder) || (hadPlaceholder && !changed && !creatingChip))
 
-        chipButtons.forEach { $0.removeFromSuperview() }
-        for arrangedSubview in contentStack.arrangedSubviews {
-            contentStack.removeArrangedSubview(arrangedSubview)
-            arrangedSubview.removeFromSuperview()
-        }
-        chipButtons = []
-
-        for chip in chips {
-            let isSelected = chip.id == selectedId
-            let config =
-                makeConfig?(chip, isSelected, dotMode)
+        animateChanges(animate) { animated in
+            pendingScrollOrigin = pendingScrollOrigin ?? scrollView.contentView.bounds.origin
+            if let placeholder = newChipButton, !creatingChip {
+                removeButton(placeholder, animated: animated)
+                newChipButton = nil
+            }
+            let ids = Set(chips.map(\.id))
+            for (id, button) in oldButtons where !ids.contains(id) {
+                removeButton(button, animated: animated)
+            }
+            self.chips = chips
+            chipButtons = []
+            for (index, chip) in chips.enumerated() {
+                let config = makeConfig?(chip, chip.id == selectedId, dotMode)
                     ?? .init(
                         chip: chip,
-                        isSelected: isSelected,
+                        isSelected: chip.id == selectedId,
                         dotMode: dotMode,
                         compact: compact,
-                        action: { [weak self] in
-                            self?.select(id: chip.id)
-                        }
+                        action: { [weak self] in self?.select(id: chip.id) }
                     )
-            let btn = ChipButton(config: config)
-            btn.onWidthChanged = { [weak self, weak btn] in
-                guard let btn else { return }
-                self?.keepEditingEdgeVisible(btn)
+                let button: ChipButton
+                if let existing = oldButtons[chip.id] {
+                    button = existing
+                    button.update(config: config)
+                } else {
+                    button = makeButton(config: config)
+                    insertButton(button, at: index, animated: animated)
+                }
+                if contentStack.arrangedSubviews.firstIndex(of: button) != index {
+                    contentStack.removeArrangedSubview(button)
+                    contentStack.insertArrangedSubview(button, at: index)
+                }
+                chipButtons.append(button)
+                if config.isEditing {
+                    keepEditingEdgeVisible(button)
+                }
             }
-            if config.isEditing {
-                editingButton = btn
-            }
-            chipButtons.append(btn)
-            contentStack.addArrangedSubview(btn)
-        }
-
-        selectedChipId = selectedId
-        invalidateWidth()
-        scrollView.documentView?.scroll(.zero)
-        if let editingButton {
-            keepEditingEdgeVisible(editingButton)
+            selectedChipId = selectedId
         }
     }
 
@@ -169,23 +195,24 @@ final class ChipScrollView: NSView {
     // MARK: - New Chip Placeholder
 
     func appendNewChipButton(config: ChipButton.Config) {
-        removeNewChipButton()
-        let btn = ChipButton(config: config)
-        btn.onWidthChanged = { [weak self, weak btn] in
-            guard let btn else { return }
-            self?.keepEditingEdgeVisible(btn)
+        if let button = newChipButton {
+            button.update(config: config)
+            return
         }
-        newChipButton = btn
-        contentStack.addArrangedSubview(btn)
-        keepEditingEdgeVisible(btn)
+        animateChanges(!chips.isEmpty) { animated in
+            let button = makeButton(config: config)
+            newChipButton = button
+            insertButton(button, at: contentStack.arrangedSubviews.count, animated: animated)
+            keepEditingEdgeVisible(button)
+        }
     }
 
     func removeNewChipButton() {
-        guard let btn = newChipButton else { return }
-        contentStack.removeArrangedSubview(btn)
-        btn.removeFromSuperview()
-        newChipButton = nil
-        invalidateWidth()
+        guard let button = newChipButton else { return }
+        animateChanges(true) { animated in
+            newChipButton = nil
+            removeButton(button, animated: animated)
+        }
     }
 
     // MARK: - Scroll To Visible
@@ -204,5 +231,63 @@ final class ChipScrollView: NSView {
         let target = (newChipButton ?? chipButtons.last)
         guard let target else { return }
         Task { @MainActor in target.scrollToVisible(target.bounds) }
+    }
+}
+
+private extension ChipScrollView {
+    func makeButton(config: ChipButton.Config) -> ChipButton {
+        let button = ChipButton(config: config)
+        button.onWidthChanged = { [weak self, weak button] in
+            guard let button else { return }
+            self?.keepEditingEdgeVisible(button)
+        }
+        return button
+    }
+
+    func animateChanges(_ requested: Bool, changes: (Bool) -> Void) {
+        guard requested, let window, window.isVisible, !isHiddenOrHasHiddenAncestor,
+              !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion,
+              let root = window.contentView
+        else {
+            changes(false)
+            invalidateWidth()
+            return
+        }
+        root.layoutSubtreeIfNeeded()
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.18
+            context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            context.allowsImplicitAnimation = true
+            changes(true)
+            invalidateWidth()
+            root.layoutSubtreeIfNeeded()
+        }
+    }
+
+    func insertButton(_ button: ChipButton, at index: Int, animated: Bool) {
+        button.frame = NSRect(
+            origin: NSPoint(x: contentStack.arrangedSubviews.last?.frame.maxX ?? 0, y: 0),
+            size: button.fittingSize
+        )
+        contentStack.insertArrangedSubview(button, at: index)
+        if animated {
+            button.alphaValue = 0
+            button.animator().alphaValue = 1
+        }
+    }
+
+    func removeButton(_ button: ChipButton, animated: Bool) {
+        contentStack.removeArrangedSubview(button)
+        guard animated else {
+            button.removeFromSuperview()
+            return
+        }
+        // Keep the outgoing view outside the stack's layout until its fade completes.
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.18
+            button.animator().alphaValue = 0
+        } completionHandler: {
+            button.removeFromSuperview()
+        }
     }
 }

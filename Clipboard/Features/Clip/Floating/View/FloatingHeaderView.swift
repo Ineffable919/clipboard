@@ -83,6 +83,7 @@ final class FloatingHeaderView: NSView {
             selectedId: selectedId,
             dotMode: false,
             compact: true,
+            creatingChip: topVM.editingNewChip,
             makeConfig: { [weak self] chip, isSelected, dotMode in
                 let isEditing = topVM.editingChipId == chip.id
                 return .init(
