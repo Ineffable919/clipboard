@@ -297,11 +297,11 @@ final class FloatingCardRowView: NSView {
     }
 
     private func updateShadow() {
-        guard let layer = selectionBorderView.layer else { return }
-        layer.shadowColor = NSColor.shadowColor.cgColor
-        layer.shadowOpacity = 0.12
-        layer.shadowRadius = 2
-        layer.shadowOffset = CGSize(width: 0, height: -1)
+        let shadow = NSShadow()
+        shadow.shadowColor = NSColor.shadowColor.withAlphaComponent(0.12)
+        shadow.shadowBlurRadius = 2
+        shadow.shadowOffset = CGSize(width: 0, height: -1)
+        selectionBorderView.shadow = shadow
     }
 
     private func updateQuickPasteBadge() {
