@@ -163,13 +163,11 @@ final class CardStringContentView: NSView, PassthroughMouseEvents {
 
     init(model: PasteboardModel, keyword: String) {
         super.init(frame: .zero)
+        textView.textContainer?.widthTracksTextView = true
         addSubview(textView)
         textView.snp.makeConstraints { $0.edges.equalToSuperview() }
 
-        let attributed: NSAttributedString = keyword.isEmpty
-            ? model.plainTextAttributedString
-            : model.highlightedNSAttributedString(keyword: keyword)
-        textView.textStorage?.setAttributedString(attributed)
+        updateKeyword(keyword, model: model)
     }
 
     @available(*, unavailable)
@@ -182,6 +180,9 @@ final class CardStringContentView: NSView, PassthroughMouseEvents {
             ? model.plainTextAttributedString
             : model.highlightedNSAttributedString(keyword: keyword)
         textView.textStorage?.setAttributedString(attributed)
+        if model.pasteboardType == .string {
+            textView.font = .preferredFont(forTextStyle: .body)
+        }
     }
 }
 
