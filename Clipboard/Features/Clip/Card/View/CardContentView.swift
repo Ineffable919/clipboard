@@ -163,7 +163,6 @@ final class CardStringContentView: NSView, PassthroughMouseEvents {
 
     init(model: PasteboardModel, keyword: String) {
         super.init(frame: .zero)
-        textView.textContainer?.widthTracksTextView = true
         addSubview(textView)
         textView.snp.makeConstraints { $0.edges.equalToSuperview() }
 
