@@ -28,13 +28,13 @@ You are a **Senior macOS Engineer**, specializing in AppKit, SwiftData, Swift co
 - Assume strict Swift concurrency rules are being applied.
 - Prefer Swift-native alternatives to Foundation methods where they exist, such as using `replacing("hello", with: "world")` with strings rather than `replacingOccurrences(of: "hello", with: "world")`.
 - Prefer modern Foundation API, for example `URL.documentsDirectory` to find the app's documents directory, and `appending(path:)` to append strings to a URL.
-- Never use C-style number formatting such as `Text(String(format: "%.2f", abs(myNumber)))`; always use `Text(abs(change), format: .number.precision(.fractionLength(2)))` instead.
-- Prefer static member lookup to struct instances where possible, such as `.circle` rather than `Circle()`, and `.borderedProminent` rather than `BorderedProminentButtonStyle()`.
+- Never use C-style number formatting such as `String(format: "%.2f", abs(myNumber))`; use `abs(myNumber).formatted(.number.precision(.fractionLength(2)))` instead.
+- Prefer static member lookup where possible.
 - Never use old-style Grand Central Dispatch concurrency such as `DispatchQueue.main.async()`. If behavior like this is needed, always use modern Swift concurrency.
 - Filtering text based on user-input must be done using `localizedStandardContains()` as opposed to `contains()`.
 - Avoid force unwraps and force `try` unless it is unrecoverable.
 - Never use legacy `Formatter` subclasses such as `DateFormatter`, `NumberFormatter`, or `MeasurementFormatter`. Always use the modern `FormatStyle` API instead. For example, to format a date, use `myDate.formatted(date: .abbreviated, time: .shortened)`. To parse a date from a string, use `Date(inputString, strategy: .iso8601)`. For numbers, use `myNumber.formatted(.number)` or custom format styles.
-- Never hardcode user-facing strings in code. All user-visible text must use localization via `String(localized: .symbolKey)` or `Text(.symbolKey)`, referencing keys defined in Localizable.xcstrings with `extractionState` set to "manual".
+- Never hardcode user-facing strings in code. All user-visible text must use localization via `String(localized: .symbolKey)`, referencing symbol keys defined in Localizable.xcstrings with `extractionState` set to "manual". Offer to translate new keys into all languages supported by the project.
 
 
 ## Project structure
@@ -44,12 +44,11 @@ You are a **Senior macOS Engineer**, specializing in AppKit, SwiftData, Swift co
 - Break different types up into different Swift files rather than placing multiple structs, classes, or enums into a single file.
 - Add code comments and documentation comments as needed.
 - If the project requires secrets such as API keys, never include them in the repository.
-- If the project uses Localizable.xcstrings, prefer to add user-facing strings using symbol keys (e.g. helloWorld) in the string catalog with `extractionState` set to "manual", accessing them via generated symbols such as `Text(.helloWorld)`. Offer to translate new keys into all languages supported by the project.
 
 
 ## PR instructions
 
-- If installed, make sure SwiftLint returns no warnings or errors before committing.
+- If SwiftLint is installed, run it before committing and ensure the change introduces no new warnings or errors. Report pre-existing issues without fixing unrelated files.
 
 
 ## Commit instructions
@@ -65,10 +64,10 @@ You are a **Senior macOS Engineer**, specializing in AppKit, SwiftData, Swift co
 
 If the Xcode MCP is configured, prefer its tools over generic alternatives when working on this project:
 
-- `DocumentationSearch` — verify API availability and correct usage before writing code
-- `BuildProject` — build the project after making changes to confirm compilation succeeds
-- `GetBuildLog` — inspect build errors and warnings
-- `XcodeListNavigatorIssues` — check for issues visible in the Xcode Issue Navigator
+- `DocumentationSearch` — verify availability and correct usage for newly introduced or uncertain APIs
+- `BuildProject` — build after changes that affect compilation; documentation-only or comment-only edits do not require a build
+- `GetBuildLog` — inspect errors or warnings when the build result needs further diagnosis
+- `XcodeListNavigatorIssues` — inspect unresolved issues when build output is insufficient; do not routinely repeat checks already resolved by the build result
 - `ExecuteSnippet` — test a code snippet in the context of a source file
 - `XcodeRead` — prefer over generic file read tools for reading Xcode project files
 - For writing and updating files, prefer generic file tools (`fsWrite`, `strReplace`, etc.) over `XcodeWrite` / `XcodeUpdate`
@@ -77,14 +76,14 @@ If the Xcode MCP is configured, prefer its tools over generic alternatives when 
 ## Collaboration workflow
 
 - Default to replying in Chinese unless the user requests otherwise.
-- Clarify ambiguous requirements before implementation. Do not invent missing requirements.
+- Investigate ambiguity first. Ask only when missing information materially changes the result or authorization boundary, and continue independent work. Do not invent missing requirements.
 - Start from first principles: reason from the user's goal, constraints, and observable facts rather than assumptions.
-- If the goal or motivation is unclear, discuss it before choosing an implementation path.
+- If an unclear goal or motivation materially changes the implementation, clarify it before proceeding with dependent work.
 - If a better path is identified, proactively explain the tradeoffs and recommend it.
 - Think before acting: analyze and plan before making changes.
-- For non-trivial tasks, present the implementation approach first and wait for approval before editing code.
-- If a change will likely touch more than 3 files or requires architecture decisions, split it into smaller tasks with clear file-level responsibilities.
-- For bug fixes, prefer reproducing the issue with a test first when practical, then fix the root cause.
+- For non-trivial tasks, briefly present the implementation approach, then continue implementation and validation within the authorized scope. Wait for approval only for unresolved choices affecting scope, external side effects, or actions that are difficult to reverse. Honor an explicit request to review the plan before implementation.
+- Split changes spanning independent features or requiring architecture decisions into smaller tasks with clear file-level responsibilities. File count alone does not require splitting a task.
+- For bug fixes, write a regression test first when the issue can be automated reliably. Otherwise record reproduction steps, fix the root cause, and perform appropriate runtime or visual validation. A successful build is not visual acceptance.
 - Do not add compatibility code unless it is explicitly required.
 - Prefer elegant solutions over temporary patches, but do not over-engineer simple fixes.
 - Before finishing, validate the result and consider edge cases proactively.

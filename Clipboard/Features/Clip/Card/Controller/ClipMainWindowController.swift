@@ -150,7 +150,7 @@ extension ClipMainWindowController {
         animation.toValue = visible ? 0 : -view.bounds.height
         animation.duration = visible ? Const.showDuration : Const.hideDuration
         animation.timingFunction = CAMediaTimingFunction(name: .easeOut)
-        animation.fillMode = .forwards
+        animation.fillMode = visible ? .both : .forwards
         animation.isRemovedOnCompletion = false
         layer.add(animation, forKey: key)
         CATransaction.commit()
