@@ -6,6 +6,10 @@ final class FloatingCollectionItem: NSCollectionViewItem {
     private var isFocused = true
     let cardView = FloatingCardRowView()
 
+    isolated deinit {
+        cardView.removeFromSuperview()
+    }
+
     override func loadView() {
         view = cardView
     }
