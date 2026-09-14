@@ -339,3 +339,8 @@ extension SearchField: NSTextViewDelegate {
         onBecomeFirstResponder?()
     }
 }
+
+extension SearchField {
+    var modeIconView: NSImageView { searchIcon }
+    var modeTrailingViews: [NSView] { [cancelButton, filterButton] }
+}

@@ -871,3 +871,7 @@ extension ChipButton {
         updateAppearance(animated: false)
     }
 }
+
+extension ChipButton {
+    var modeIconOrigin: NSPoint { stack.convert(.zero, to: self) }
+}

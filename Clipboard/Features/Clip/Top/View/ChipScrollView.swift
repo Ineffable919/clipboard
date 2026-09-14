@@ -19,6 +19,10 @@ final class ChipScrollView: NSView {
     private weak var newChipButton: ChipButton?
     private var pendingScrollOrigin: NSPoint?
 
+    var modeButtons: [Int: ChipButton] {
+        Dictionary(uniqueKeysWithValues: zip(chips.map(\.id), chipButtons))
+    }
+
     var selectedChipId: Int = -1 {
         didSet {
             guard oldValue != selectedChipId else { return }

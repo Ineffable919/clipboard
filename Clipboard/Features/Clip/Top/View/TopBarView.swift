@@ -17,19 +17,19 @@ final class TopBarView: NSView {
         pointSize: 17
     )
 
-    private let defaultRow = NSStackView()
-    private let searchIconBtn = TopBarIconButton(
+    let defaultRow = NSStackView()
+    let searchIconBtn = TopBarIconButton(
         symbolName: "magnifyingglass",
         pointSize: 18
     )
-    private let chipScrollView = ChipScrollView()
-    private let addChipBtn = TopBarIconButton(symbolName: "plus")
+    let chipScrollView = ChipScrollView()
+    let addChipBtn = TopBarIconButton(symbolName: "plus")
 
     // MARK: - 搜索模式行
 
-    private let searchRow = NSStackView()
+    let searchRow = NSStackView()
     let searchField = SearchField()
-    private let dotChipScrollView = ChipScrollView()
+    let dotChipScrollView = ChipScrollView()
 
     // MARK: - Popover
 
@@ -54,6 +54,8 @@ final class TopBarView: NSView {
     var shouldSkipNextTokenSync = false
     private var searchFieldWidth = Const.searchFieldMinWidth
     private var searchFieldWidthConstraint: Constraint?
+    var modeAnimationGeneration = 0
+    var modeChipLayers: [ModeChipLayer] = []
     private static var _cachedAppSuggestions: [AppSuggestionInfo]?
     var appSuggestionsLoadingTask: Task<Void, Never>?
 
@@ -77,6 +79,7 @@ final class TopBarView: NSView {
 
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
+        if searchField.layer?.animation(forKey: "modeWidth") != nil { applyMode() }
         updateSearchFieldWidth()
         updateChipWidths()
     }
@@ -225,6 +228,9 @@ final class TopBarView: NSView {
 
     override func hitTest(_ point: NSPoint) -> NSView? {
         let result = super.hitTest(point)
+        if !isSearching, let result, result.isDescendant(of: searchRow) {
+            return defaultRow.hitTest(convert(point, from: superview))
+        }
         if isSearching, result === searchRow {
             return nil
         }
@@ -300,7 +306,7 @@ final class TopBarView: NSView {
         guard !isSearching else { return }
         updateSearchFieldWidth()
         isSearching = true
-        applyMode()
+        applyMode(animated: true)
         filterPopover?.prepare()
         loadAppSuggestionsIfNeeded()
         window?.makeFirstResponder(searchField)
@@ -318,12 +324,7 @@ final class TopBarView: NSView {
         searchField.hideSuggestions()
         searchField.clearAllContent()
         topVM?.clearInput()
-        applyMode()
-    }
-
-    private func applyMode() {
-        defaultRow.isHidden = isSearching
-        searchRow.isHidden = !isSearching
+        applyMode(animated: true)
     }
 
 }
