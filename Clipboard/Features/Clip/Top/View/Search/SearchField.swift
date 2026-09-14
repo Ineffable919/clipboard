@@ -11,6 +11,8 @@ import SnapKit
 
 final class SearchField: NSView {
     @Published private(set) var text: String = ""
+    private var isWindowFocusRingSuppressed = false
+    private var isModeFocusRingSuppressed = false
 
     var onResignFirstResponder: (() -> Void)?
     var onBecomeFirstResponder: (() -> Void)?
@@ -215,10 +217,6 @@ final class SearchField: NSView {
 
     // MARK: - Actions
 
-    func setFocusRingSuppressed(_ suppressed: Bool) {
-        scrollView.isFocusRingSuppressed = suppressed
-    }
-
     func moveCursorToEnd() {
         let length = tokenTextView.textStorage?.length ?? 0
         tokenTextView.setSelectedRange(NSRange(location: length, length: 0))
@@ -343,4 +341,18 @@ extension SearchField: NSTextViewDelegate {
 extension SearchField {
     var modeIconView: NSImageView { searchIcon }
     var modeTrailingViews: [NSView] { [cancelButton, filterButton] }
+
+    func setFocusRingSuppressed(_ suppressed: Bool) {
+        isWindowFocusRingSuppressed = suppressed
+        updateFocusRingSuppression()
+    }
+
+    func setModeFocusRingSuppressed(_ suppressed: Bool) {
+        isModeFocusRingSuppressed = suppressed
+        updateFocusRingSuppression()
+    }
+
+    private func updateFocusRingSuppression() {
+        scrollView.isFocusRingSuppressed = isWindowFocusRingSuppressed || isModeFocusRingSuppressed
+    }
 }

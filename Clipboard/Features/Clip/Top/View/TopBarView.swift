@@ -109,8 +109,8 @@ final class TopBarView: NSView {
         chipController.onFocusRegionChange = { [weak self] region in
             self?.onFocusRegionChange?(region)
         }
-        chipController.onDeactivateSearch = { [weak self] in
-            self?.deactivateSearch()
+        chipController.onDeactivateSearch = { [weak self] selectChip in
+            self?.deactivateSearch(beforeTransition: selectChip)
         }
         reloadChips()
         setupTokenSync()
@@ -318,12 +318,15 @@ final class TopBarView: NSView {
         searchField.appendText(character)
     }
 
-    func deactivateSearch() {
-        guard isSearching else { return }
+    func deactivateSearch(beforeTransition: () -> Void = {}) {
+        guard isSearching else { return beforeTransition() }
         isSearching = false
+        searchField.setModeFocusRingSuppressed(true)
+        if searchField.isFirstResponder { window?.makeFirstResponder(nil) }
         searchField.hideSuggestions()
         searchField.clearAllContent()
         topVM?.clearInput()
+        beforeTransition()
         applyMode(animated: true)
     }
 

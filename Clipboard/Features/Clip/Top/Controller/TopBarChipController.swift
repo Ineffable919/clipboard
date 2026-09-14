@@ -18,7 +18,7 @@ final class TopBarChipController {
 
     var onReloadNeeded: (() -> Void)?
     var onFocusRegionChange: ((FocusRegion) -> Void)?
-    var onDeactivateSearch: (() -> Void)?
+    var onDeactivateSearch: ((() -> Void) -> Void)?
 
     // MARK: - Init
 
@@ -158,11 +158,17 @@ final class TopBarChipController {
                 commitChipEditing(for: editingId)
             }
         }
-        onDeactivateSearch?()
-        topVM?.setSelectChipId(chip: id)
-        chipScrollView?.selectedChipId = id
-        dotChipScrollView?.selectedChipId = id
-        onReloadNeeded?()
+        let selectChip = {
+            self.topVM?.setSelectChipId(chip: id)
+            self.chipScrollView?.selectedChipId = id
+            self.dotChipScrollView?.selectedChipId = id
+            self.onReloadNeeded?()
+        }
+        if let onDeactivateSearch {
+            onDeactivateSearch(selectChip)
+        } else {
+            selectChip()
+        }
         onFocusRegionChange?(.collection)
     }
 

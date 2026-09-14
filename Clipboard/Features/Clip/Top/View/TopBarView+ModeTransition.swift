@@ -15,6 +15,7 @@ extension TopBarView {
 
     func applyMode(animated: Bool = false) {
         modeAnimationGeneration += 1
+        searchField.setModeFocusRingSuppressed(!isSearching)
         guard animated, window?.isVisible == true,
               !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else {
             finishModeTransition()
