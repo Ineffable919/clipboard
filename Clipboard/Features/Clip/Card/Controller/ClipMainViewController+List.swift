@@ -26,10 +26,10 @@ extension ClipMainViewController {
         var snapshot = NSDiffableDataSourceSnapshot<ClipSection, PasteboardModel>()
         snapshot.appendSections([.main])
         snapshot.appendItems(items ?? dataList.value)
-        diffableDataSource.apply(snapshot, animatingDifferences: animating) {
+        diffableDataSource.apply(snapshot, animatingDifferences: animating) { [weak self] in
+            self?.updateEmptyState()
             completion?()
         }
-        updateEmptyState()
     }
 
     func displayedModel(at indexPath: IndexPath) -> PasteboardModel? {
@@ -113,8 +113,9 @@ extension ClipMainViewController {
                 .filter { !existing.contains($0.uniqueId) }
             guard !appended.isEmpty else { return }
             snapshot.appendItems(appended, toSection: .main)
-            diffableDataSource.apply(snapshot, animatingDifferences: false)
-            updateEmptyState()
+            diffableDataSource.apply(snapshot, animatingDifferences: false) { [weak self] in
+                self?.updateEmptyState()
+            }
         }
         presenter.currentSnapshotItems = { [weak self] in
             self?.diffableDataSource.snapshot().itemIdentifiers ?? []
@@ -125,7 +126,7 @@ extension ClipMainViewController {
         }
         presenter.restoreSelection = { [weak self] in self?.restoreSelection() }
         presenter.adjustAfterDelete = { [weak self] in self?.adjustSelectionAfterDelete() }
-        presenter.updateEmptyState = { [weak self] _ in self?.updateEmptyState() }
+        // 抽屉的空状态在快照完成后更新，避免与删除动画重叠。
         presenter.reconfigureItems = { [weak self] items in
             guard let self else { return }
             let identifiers = diffableDataSource.snapshot().itemIdentifiers
@@ -224,6 +225,7 @@ extension ClipMainViewController {
     }
 
     func updateEmptyState() {
-        emptyStateView.isHidden = !dataList.value.isEmpty
+        let isEmpty = diffableDataSource.snapshot().numberOfItems == 0
+        emptyStateView.isHidden = !isEmpty
     }
 }

@@ -306,8 +306,8 @@ extension ClipMainViewController {
 
         emptyStateView.snp.makeConstraints { make in
             make.center.equalTo(scrollView)
-            make.leading.greaterThanOrEqualTo(scrollView).offset(16)
-            make.trailing.lessThanOrEqualTo(scrollView).offset(-16)
+            make.leading.equalTo(scrollView).offset(16)
+            make.trailing.equalTo(scrollView).offset(-16)
         }
 
         dropOverlayView.snp.makeConstraints { make in

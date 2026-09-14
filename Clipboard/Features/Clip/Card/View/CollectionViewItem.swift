@@ -35,6 +35,12 @@ final class CollectionViewItem: NSCollectionViewItem {
     private var isFocused = true
     private var tickCancellable: AnyCancellable?
 
+    isolated deinit {
+        if isViewLoaded {
+            view.removeFromSuperview()
+        }
+    }
+
     // MARK: - Quick Paste
 
     var quickPasteIndex: Int? {
