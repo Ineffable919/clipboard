@@ -222,6 +222,7 @@ extension PasteDataStore {
                 await sqlManager.recreateTable()
                 await MainActor.run {
                     PasteMetadataCache.shared.invalidateAllCaches()
+                    CategoryChipStore.shared.clearUserCategories()
                 }
                 resetToDefault()
             }

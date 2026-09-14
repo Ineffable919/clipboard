@@ -97,6 +97,12 @@ final class CategoryChipStore {
         db.deleteItemsByGroup(chip.id)
     }
 
+    func clearUserCategories() {
+        chips = CategoryChip.systemChips
+        selectedChipId = chips.first?.id ?? -1
+        saveUserCategories()
+    }
+
     func getSelectedChip() -> CategoryChip? {
         chips.first { $0.id == selectedChipId }
     }

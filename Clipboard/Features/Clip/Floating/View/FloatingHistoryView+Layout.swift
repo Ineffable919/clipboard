@@ -179,6 +179,11 @@ extension FloatingHistoryView {
     }
 
     func scrollTo(index: Int) {
+        guard index >= 0,
+              collectionView.numberOfSections > 0,
+              index < collectionView.numberOfItems(inSection: 0)
+        else { return }
+
         let indexPath = IndexPath(item: index, section: 0)
         guard let attrs = collectionView.layoutAttributesForItem(at: indexPath),
               let clipView = collectionView.enclosingScrollView?.contentView
