@@ -641,7 +641,7 @@ private final class FloatingImageContentView: NSView {
             if displayMode == .standard {
                 make.edges.equalToSuperview()
             } else {
-                make.leading.centerY.equalToSuperview()
+                make.centerY.equalToSuperview()
                 make.width.equalTo(64)
                 make.height.equalToSuperview()
             }
@@ -657,10 +657,11 @@ private final class FloatingImageContentView: NSView {
             photoIcon.imageScaling = .scaleNone
             addSubview(photoIcon)
             photoIcon.snp.makeConstraints { make in
-                make.leading.equalTo(imageView.snp.trailing).offset(Const.space8)
+                make.leading.equalToSuperview()
                 make.centerY.equalToSuperview()
                 make.width.height.equalTo(20)
             }
+            imageView.snp.makeConstraints { $0.leading.equalTo(photoIcon.snp.trailing).offset(Const.space8) }
         }
 
         placeholder.image = NSImage(systemSymbolName: "photo", accessibilityDescription: nil)
