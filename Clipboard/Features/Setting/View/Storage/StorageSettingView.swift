@@ -105,7 +105,7 @@ struct StorageSettingView: View {
         panel.nameFieldLabel = String(localized: .storageFileNameLabel)
         panel.nameFieldStringValue = "Clip_Backup_\(formattedDate()).sqlite3"
         panel.allowedContentTypes = [
-            UTType(filenameExtension: "sqlite3") ?? .database,
+            UTType(filenameExtension: "sqlite3") ?? .database
         ]
         panel.canCreateDirectories = true
 
@@ -142,7 +142,7 @@ struct StorageSettingView: View {
         panel.canChooseDirectories = false
         panel.allowsMultipleSelection = false
         panel.allowedContentTypes = [
-            UTType(filenameExtension: "sqlite3") ?? .database,
+            UTType(filenameExtension: "sqlite3") ?? .database
         ]
 
         let clipDataDir = URL.documentsDirectory.appending(path: "Clip")
@@ -164,8 +164,6 @@ struct StorageSettingView: View {
                     log.info("数据库导入成功: \(result.message)")
                     alertTitle = String(localized: .storageImportSuccessTitle)
                     alertMessage = result.message
-
-                    CategoryChipStore.shared.mergeImportedChips(from: result.importedChipsData)
 
                     Task {
                         await AppColorService.shared.extractMissingColors(appInfo: result.importedAppInfo)
