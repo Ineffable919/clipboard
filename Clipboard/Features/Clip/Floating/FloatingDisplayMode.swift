@@ -17,7 +17,7 @@ enum FloatingDisplayMode: Int, CaseIterable {
 
     var headerHeight: CGFloat { self == .standard ? 90 : 78 }
     var windowRadius: CGFloat {
-        if #available(macOS 26.0, *), self == .minimal {
+        if #available(macOS 27.0, *) {
             return 20
         }
         return Const.windowRadis

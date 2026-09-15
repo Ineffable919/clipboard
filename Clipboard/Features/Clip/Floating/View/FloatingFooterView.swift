@@ -167,7 +167,7 @@ final class FloatingFooterView: NSView {
     }
 
     private func updateModeIcon() {
-        modeButton.image = NSImage(systemSymbolName: "list.bullet", accessibilityDescription: nil)?
+        modeButton.image = NSImage(systemSymbolName: "text.menu", accessibilityDescription: nil)?
             .withSymbolConfiguration(NSImage.SymbolConfiguration(
                 pointSize: displayMode == .standard ? 15 : 12, weight: .regular
             ))
