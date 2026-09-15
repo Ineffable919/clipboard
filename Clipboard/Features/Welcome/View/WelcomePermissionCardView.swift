@@ -65,7 +65,7 @@ struct WelcomePermissionCardView: View {
                         viewModel.openAccessibilitySettings()
                     }
                     .buttonStyle(.bordered)
-                    .controlSize(.small)
+                    .controlSize(.regular)
                     .frame(width: 104)
                     .tint(WelcomeStyle.accent)
                 }
@@ -82,7 +82,7 @@ struct WelcomePermissionCardView: View {
         .clipShape(.rect(cornerRadius: 14))
         .overlay {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(WelcomeStyle.border, lineWidth: 1)
+                .strokeBorder(WelcomeStyle.border, lineWidth: 0.5)
         }
         .shadow(
             color: WelcomeStyle.panelShadow(for: colorScheme),

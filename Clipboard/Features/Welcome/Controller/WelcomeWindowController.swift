@@ -35,6 +35,7 @@ final class WelcomeWindowController: NSWindowController {
         window.isReleasedWhenClosed = false
         window.collectionBehavior = [.moveToActiveSpace]
         window.level = .normal
+        window.hasShadow = false
         window.minSize = NSSize(
             width: WelcomeStyle.windowWidth,
             height: WelcomeStyle.windowHeight

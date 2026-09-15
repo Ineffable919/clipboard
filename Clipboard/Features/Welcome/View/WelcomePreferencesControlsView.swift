@@ -56,7 +56,7 @@ struct WelcomePreferencesControlsView: View {
                 }
                 .labelsHidden()
                 .pickerStyle(.menu)
-                .controlSize(.small)
+                .controlSize(.regular)
                 .frame(width: 104)
             }
             .frame(height: 48)

@@ -58,7 +58,7 @@ struct WelcomeView: View {
         .focusScope(focusNamespace)
         .background(
             glass && !reduceTransparency
-                ? Color.clear
+                ? WelcomeStyle.background(for: colorScheme).opacity(0.35)
                 : WelcomeStyle.background(for: colorScheme)
         )
         .foregroundStyle(WelcomeStyle.primaryText(for: colorScheme))
