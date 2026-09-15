@@ -109,7 +109,7 @@ extension ClipMainWindowController {
             window.contentViewController?.view.layoutSubtreeIfNeeded()
         }
 
-        // 显示窗口前安装动画，避免首帧闪现。
+        // 显示窗口前安装动画，避免首帧闪现
         animateContent(visible: true, initiallyHidden: initiallyHidden) { [weak self] in
             self?.suppressSearchFocusRing(false)
         }
