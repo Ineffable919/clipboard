@@ -19,6 +19,7 @@ final class SearchField: NSView {
     var onTextChanged: ((String) -> Void)?
     var onFilterButtonTapped: (() -> Void)?
     var onTokenDeleted: ((InputTag) -> Void)?
+    var onTokensChanged: (([InputTag]) -> Void)?
     var onClearAllFilters: (() -> Void)?
 
     var onSuggestionsNeeded: ((String) -> [SearchSuggestionItem])?
@@ -329,6 +330,8 @@ extension SearchField: NSTextViewDelegate {
             text = plainText
             onTextChanged?(plainText)
         }
+        // 原生编辑可能只删除标签，关键词不变时也要同步筛选条件。
+        onTokensChanged?(tokenTextView.getAllTokens())
         updateCancelButtonVisibility()
         updateSuggestions()
     }

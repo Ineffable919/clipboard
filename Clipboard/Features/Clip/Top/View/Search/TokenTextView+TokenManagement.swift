@@ -185,10 +185,15 @@ extension TokenTextView {
 
         onTokenDeleted?(attachment.tag)
 
+        let nextLocation = location + 1
+        let hasTrailingSpace = nextLocation < storage.length
+            && (storage.string as NSString).character(at: nextLocation)
+                == unichar((" " as UnicodeScalar).value)
+
         storage.beginEditing()
         let deleteRange = NSRange(
             location: location,
-            length: min(2, storage.length - location)
+            length: hasTrailingSpace ? 2 : 1
         )
         storage.deleteCharacters(in: deleteRange)
         storage.endEditing()

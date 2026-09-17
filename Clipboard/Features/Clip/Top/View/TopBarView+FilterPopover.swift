@@ -12,6 +12,13 @@ extension TopBarView {
     func setupTokenSync() {
         guard let topVM else { return }
 
+        searchField.onTokensChanged = { [weak self] tags in
+            guard let self, let topVM = self.topVM else { return }
+            for tag in topVM.tags where !tags.contains(tag) {
+                handleTokenDeletedFromSearchField(tag)
+            }
+        }
+
         topVM.filterDidChange
             .sink { [weak self] in
                 self?.syncTokensToSearchField()

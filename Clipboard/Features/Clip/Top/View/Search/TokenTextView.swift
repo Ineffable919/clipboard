@@ -154,6 +154,13 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         }
 
         super.deleteBackward(sender)
+        let cursor = selectedRange()
+        if cursor.length == 0,
+           cursor.location > 0,
+           let storage = textStorage,
+           storage.attribute(.attachment, at: cursor.location - 1, effectiveRange: nil) is TokenAttachment {
+            setSelectedRange(NSRange(location: cursor.location - 1, length: 1))
+        }
         notifyTextChanged()
     }
 
