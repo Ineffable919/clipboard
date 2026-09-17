@@ -154,13 +154,35 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         }
 
         super.deleteBackward(sender)
-        let cursor = selectedRange()
-        if cursor.length == 0,
-           cursor.location > 0,
-           let storage = textStorage,
-           storage.attribute(.attachment, at: cursor.location - 1, effectiveRange: nil) is TokenAttachment {
-            setSelectedRange(NSRange(location: cursor.location - 1, length: 1))
+        selectToken(at: selectedRange().location - 1)
+        notifyTextChanged()
+    }
+
+    override func deleteWordBackward(_ sender: Any?) {
+        if deleteSelectedTokens(in: selectedRange()) || deleteSpacesBeforeCursor() {
+            return
         }
+
+        super.deleteWordBackward(sender)
+        selectToken(at: selectedRange().location - 1)
+        notifyTextChanged()
+    }
+
+    override func deleteForward(_ sender: Any?) {
+        let range = selectedRange()
+
+        if deleteSelectedTokens(in: range) {
+            return
+        }
+
+        if range.length == 0,
+           range.location < (textStorage?.length ?? 0),
+           deleteSelectedTokens(in: NSRange(location: range.location, length: 1)) {
+            return
+        }
+
+        super.deleteForward(sender)
+        selectToken(at: selectedRange().location)
         notifyTextChanged()
     }
 
@@ -229,19 +251,6 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
             onResignFirstResponder?()
         }
         return result
-    }
-
-    private func clearSelectedToken() {
-        let selection = selectedRange()
-        guard selection.length == 1,
-              let storage = textStorage,
-              selection.location < storage.length,
-              storage.attribute(.attachment, at: selection.location, effectiveRange: nil) is TokenAttachment
-        else { return }
-
-        setSelectedRange(NSRange(location: NSMaxRange(selection), length: 0))
-        restorePlainTextInputState()
-        needsDisplay = true
     }
 
     override func draw(_ dirtyRect: NSRect) {

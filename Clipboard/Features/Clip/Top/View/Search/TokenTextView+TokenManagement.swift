@@ -137,6 +137,50 @@ extension TokenTextView {
         onTextChanged?(getPlainText())
     }
 
+    func selectToken(at location: Int) {
+        guard selectedRange().length == 0,
+              location >= 0,
+              let storage = textStorage,
+              location < storage.length,
+              storage.attribute(.attachment, at: location, effectiveRange: nil) is TokenAttachment
+        else { return }
+
+        setSelectedRange(NSRange(location: location, length: 1))
+    }
+
+    func clearSelectedToken() {
+        let selection = selectedRange()
+        guard selection.length == 1,
+              let storage = textStorage,
+              selection.location < storage.length,
+              storage.attribute(.attachment, at: selection.location, effectiveRange: nil) is TokenAttachment
+        else { return }
+
+        setSelectedRange(NSRange(location: NSMaxRange(selection), length: 0))
+        restorePlainTextInputState()
+        needsDisplay = true
+    }
+
+    func deleteSpacesBeforeCursor() -> Bool {
+        let cursor = selectedRange()
+        guard cursor.length == 0, let storage = textStorage else { return false }
+
+        let text = storage.string as NSString
+        var start = cursor.location
+        while start > 0, text.character(at: start - 1) == unichar((" " as UnicodeScalar).value) {
+            start -= 1
+        }
+        guard start > 0,
+              start < cursor.location,
+              storage.attribute(.attachment, at: start - 1, effectiveRange: nil) is TokenAttachment
+        else { return false }
+
+        storage.deleteCharacters(in: NSRange(location: start, length: cursor.location - start))
+        setSelectedRange(NSRange(location: start - 1, length: 1))
+        notifyTextChanged()
+        return true
+    }
+
     func deleteSelectedTokens(in range: NSRange) -> Bool {
         guard range.length > 0, let storage = textStorage else { return false }
 
@@ -150,7 +194,10 @@ extension TokenTextView {
 
         let storageLength = storage.length
         var extendedEnd = range.location + range.length
-        if extendedEnd < storageLength {
+        let followsToken = range.location > 0
+            && storage.attribute(.attachment, at: range.location - 1, effectiveRange: nil) is TokenAttachment
+        // 前面的分隔空格已被删除时，保留后面的空格供剩余标签使用。
+        if extendedEnd < storageLength, !followsToken {
             let nextCharacter = (storage.string as NSString).character(at: extendedEnd)
             if nextCharacter == unichar((" " as UnicodeScalar).value) {
                 extendedEnd += 1
