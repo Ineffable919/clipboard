@@ -3,10 +3,16 @@ import Foundation
 import SQLite
 
 extension PasteSQLManager {
-    func insert(item: PasteboardModel, timestamp: Int64, group: Int = -1) async -> (Int64, Int?) {
+    private func resolvedAppID(for item: PasteboardModel) async throws -> Int64 {
+        if let id = await item.appID { return id }
+        let (name, path, bundleID) = await (item.appName, item.appPath, item.sourceBundleID)
+        return try resolveApp(name: name, path: path, bundleID: bundleID)
+    }
+
+    func insert(item: PasteboardModel, timestamp: Int64, group: Int = -1) async -> PasteInsertResult {
         let existing = await search(
             filter: Col.uniqueId == item.uniqueId,
-            select: [Col.id, Col.group],
+            select: [Col.id, Col.group, Col.appID],
             order: [],
             limit: 1
         ).first
@@ -28,9 +34,10 @@ extension PasteSQLManager {
                 log.error("更新时间戳失败：\(error)")
             }
             let effectiveGroup = group != -1 ? group : existingGroup
-            return (existingId, effectiveGroup)
+            return PasteInsertResult(id: existingId, group: effectiveGroup, appID: try? row.get(Col.appID))
         }
 
+        guard let appID = try? await resolvedAppID(for: item) else { return .failed }
         let insert = await table.insert(
             Col.uniqueId <- item.uniqueId,
             Col.type <- item.pasteboardType.rawValue,
@@ -38,8 +45,7 @@ extension PasteSQLManager {
             Col.showData <- item.showData,
             Col.timestamp <- timestamp,
             Col.sortOrder <- Col.nextSortOrder,
-            Col.appPath <- item.appPath,
-            Col.appName <- item.appName,
+            Col.appID <- appID,
             Col.searchText <- item.searchText,
             Col.length <- item.length,
             Col.group <- item.group,
@@ -49,17 +55,18 @@ extension PasteSQLManager {
         do {
             let rowId = try connection?.run(insert)
             log.debug("插入成功：\(String(describing: rowId))")
-            return (rowId ?? -1, nil)
+            return PasteInsertResult(id: rowId ?? -1, group: nil, appID: appID)
         } catch {
             log.error("插入失败：\(error)")
         }
-        return (-1, nil)
+        return .failed
     }
 
     func delete(filter: Expression<Bool>) async {
         let query = table.filter(filter)
         do {
             let count = try connection?.run(query.delete())
+            await refreshAppCache()
             log.debug("删除的条数为：\(String(describing: count))")
         } catch {
             log.error("删除失败：\(error)")
@@ -70,28 +77,36 @@ extension PasteSQLManager {
         let idFilter = table.filter(Col.id == id)
         do {
             try connection?.run(idFilter.delete())
+            await refreshAppCache()
         } catch {
             log.error("删除失败：\(error)，id：\(id)")
         }
     }
 
-    func dropTable() async {
+    /// 无挂起点，清空和空间整理期间同一 actor 上的数据库操作排队执行。
+    func clearHistory() throws -> Bool {
+        guard let connection else { throw CocoaError(.fileWriteUnknown) }
+        try connection.transaction(.immediate) {
+            try connection.run(table.delete())
+            try connection.run("DELETE FROM App")
+        }
+        apps.removeAll()
+        appIdentities.removeAll()
         do {
-            let result = try connection?.run(table.drop())
-            log.debug("删除所有\(String(describing: result?.columnCount))")
+            try connection.execute("VACUUM")
+            let busy = try connection.scalar("PRAGMA wal_checkpoint(TRUNCATE)") as? Int64
+            let backup = URL(filePath: Self.databasePath).deletingLastPathComponent()
+                .appending(path: "Clip.before-app-migration.sqlite3")
+            if FileManager.default.fileExists(atPath: backup.path) { try FileManager.default.removeItem(at: backup) }
+            return busy == 0
         } catch {
-            log.error("删除失败：\(error)")
+            log.error("历史已清空，空间回收失败：\(error)")
+            return false
         }
     }
 
-    func recreateTable() async {
-        guard let conn = connection else { return }
-        Self.createTable(on: conn, table: table)
-        Self.createIndexes(on: conn)
-        log.debug("表重新创建成功")
-    }
-
     func update(id: Int64, item: PasteboardModel) async {
+        guard let appID = try? await resolvedAppID(for: item) else { return }
         let query = table.filter(Col.id == id)
         let update = await query.update(
             Col.uniqueId <- item.uniqueId,
@@ -99,8 +114,7 @@ extension PasteSQLManager {
             Col.data <- item.data,
             Col.showData <- item.showData,
             Col.timestamp <- item.timestamp,
-            Col.appPath <- item.appPath,
-            Col.appName <- item.appName,
+            Col.appID <- appID,
             Col.searchText <- item.searchText,
             Col.length <- item.length,
             Col.group <- item.group,
@@ -109,6 +123,7 @@ extension PasteSQLManager {
         )
         do {
             let count = try connection?.run(update)
+            await refreshAppCache()
             log.debug("修改成功，影响行数：\(String(describing: count))")
         } catch {
             log.error("修改失败：\(error)")
@@ -186,10 +201,8 @@ extension PasteSQLManager {
                     .filter(Col.uniqueId == uniqueId && Col.id != id)
             )
             let duplicateId = duplicateRow?[Col.id]
-            let currentGroup = currentRow[Col.group]
             let duplicateGroup = duplicateRow?[Col.group] ?? -1
-            let effectiveGroup =
-                currentGroup == -1 ? duplicateGroup : currentGroup
+            let effectiveGroup = currentRow[Col.group] == -1 ? duplicateGroup : currentRow[Col.group]
 
             try connection.run("BEGIN IMMEDIATE TRANSACTION")
             if let duplicateId {
@@ -210,6 +223,7 @@ extension PasteSQLManager {
                 )
             }
             try connection.run("COMMIT")
+            await refreshAppCache()
             log.debug("更新文本内容成功：\(id)")
             return true
         } catch {

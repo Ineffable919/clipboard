@@ -77,7 +77,9 @@ extension EditWindowController {
             searchText: PasteboardModel.normalizeSearchText(content.searchText),
             length: content.length,
             group: -1,
-            tag: content.tag
+            tag: content.tag,
+            appID: source.appID,
+            sourceBundleID: source.sourceBundleID
         )
 
         Task {

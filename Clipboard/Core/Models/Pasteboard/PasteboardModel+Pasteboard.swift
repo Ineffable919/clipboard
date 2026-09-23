@@ -76,7 +76,8 @@ extension PasteboardModel {
             searchText: searchText,
             length: length,
             group: -1,
-            tag: calculatedTag
+            tag: calculatedTag,
+            sourceBundleID: app?.bundleIdentifier
         )
     }
 

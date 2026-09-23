@@ -9,7 +9,7 @@ import AppKit
 
 struct InputTag: Identifiable, Equatable {
     let id = UUID()
-    let icon: NSImage?
+    var icon: NSImage?
     let label: String
     let type: TagType
     let associatedValue: String

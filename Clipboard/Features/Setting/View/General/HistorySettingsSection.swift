@@ -6,6 +6,7 @@
 import SwiftUI
 
 struct HistorySettingsSection: View {
+    @State private var isClearing = false
     @State private var selectedHistoryTimeUnit: HistoryTimeUnit =
         .init(rawValue: PasteUserDefaults.historyTime)
 
@@ -29,14 +30,19 @@ struct HistorySettingsSection: View {
 
                 HStack {
                     Spacer()
+                    if isClearing {
+                        ProgressView().controlSize(.small)
+                    }
                     SystemButton(
                         title: .generalClearHistory,
                         action: PasteDataStore.main.clearAllData
                     )
+                    .disabled(isClearing)
                 }
             }
             .padding(Const.space12)
             .settingsStyle()
         }
+        .onReceive(PasteDataStore.main.clearingHistory) { isClearing = $0 }
     }
 }

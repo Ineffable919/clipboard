@@ -12,42 +12,9 @@ final class PasteMetadataCache {
     static let shared = PasteMetadataCache()
 
     private let sqlManager = PasteSQLManager.manager
-    private var cachedAppInfo: [(name: String, path: String)]?
     private var cachedTagTypes: [PasteModelType]?
 
     private init() {}
-
-    // MARK: - App Info
-
-    func getAllAppInfo() async -> [(name: String, path: String)] {
-        if let cached = cachedAppInfo {
-            return cached
-        }
-
-        let appInfo = await sqlManager.getDistinctAppInfo()
-        cachedAppInfo = appInfo
-        return appInfo
-    }
-
-    func invalidateAppInfoCache(_ model: PasteboardModel) {
-        guard !model.appName.isEmpty else { return }
-
-        if cachedAppInfo == nil {
-            Task {
-                cachedAppInfo = await getAllAppInfo()
-            }
-            return
-        }
-
-        if let index = cachedAppInfo?.firstIndex(where: { $0.name == model.appName }) {
-            cachedAppInfo?[index].path = model.appPath
-        } else {
-            cachedAppInfo?.insert(
-                (name: model.appName, path: model.appPath),
-                at: 0
-            )
-        }
-    }
 
     // MARK: - Tag Types
 
@@ -91,7 +58,6 @@ final class PasteMetadataCache {
     // MARK: - Cache Management
 
     func invalidateAllCaches() {
-        cachedAppInfo = nil
         cachedTagTypes = nil
     }
 

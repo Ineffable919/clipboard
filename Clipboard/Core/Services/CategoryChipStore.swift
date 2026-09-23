@@ -115,15 +115,15 @@ final class CategoryChipStore {
 
     func reserveImport(from data: Data?) -> ImportedCategories {
         let categories = ImportedCategories(
-            data: data, existingIDs: Set(chips.map(\.id)).union(reservedImportIDs)
+            data: data, existingChips: chips, reservedIDs: reservedImportIDs
         )
-        reservedImportIDs.formUnion(categories.groupIDs.values)
+        reservedImportIDs.formUnion(categories.chips.map(\.id))
         return categories
     }
 
     func finishImport(_ categories: ImportedCategories, data: Data?) {
         mergeImportedChips(from: data)
-        reservedImportIDs.subtract(categories.groupIDs.values)
+        reservedImportIDs.subtract(categories.chips.map(\.id))
     }
 
     func mergeImportedChips(from data: Data?) {

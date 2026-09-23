@@ -1,64 +1,64 @@
-//
-//  AppIconCache.swift
-//  Clipboard
-//
-//  Created by crown on 2026/3/3.
-//
-
 import AppKit
 
+@MainActor
 final class AppIconCache {
     static let shared = AppIconCache()
-
     private let cache = NSCache<NSString, NSImage>()
-    private let inFlightTasksLock = NSLock()
     private var inFlightTasks: [String: Task<NSImage, Never>] = [:]
+    private var generation = 0
+    private let fallback = NSImage(
+        systemSymbolName: "questionmark.app.dashed", accessibilityDescription: nil
+    ) ?? NSImage()
 
     private init() {
-        cache.countLimit = 50
-        cache.totalCostLimit = 10 * 1024 * 1024 // 10MB
+        cache.countLimit = 200
+        cache.totalCostLimit = 10 * 1024 * 1024
     }
 
-    func getCachedIcon(forPath path: String) -> NSImage? {
-        guard !path.isEmpty else { return nil }
-        return cache.object(forKey: path as NSString)
+    func getCachedIcon(forAppID id: Int64?, path: String = "") -> NSImage? {
+        cache.object(forKey: key(id: id, path: path) as NSString)
     }
 
-    func loadIcon(forPath path: String) async -> NSImage {
-        guard !path.isEmpty else {
-            return NSWorkspace.shared.icon(forFile: path)
-        }
-
-        if let cached = cache.object(forKey: path as NSString) {
-            return cached
-        }
-
-        let task = inFlightTasksLock.withLock {
-            if let task = inFlightTasks[path] {
-                return task
+    func loadIcon(forAppID id: Int64?, path: String = "") async -> NSImage {
+        let key = key(id: id, path: path)
+        if let image = cache.object(forKey: key as NSString) { return image }
+        if let task = inFlightTasks[key] { return await task.value }
+        let app = id.flatMap { SourceAppCache.shared.apps[$0] }
+        let iconData = app?.iconData
+        let sourcePath = app?.path ?? path
+        let currentGeneration = generation
+        let task = Task { [fallback] in
+            let loaded = await Task.detached(priority: .utility) {
+                SourceAppIcon.read(data: iconData, path: sourcePath)
+            }.value
+            guard self.generation == currentGeneration else { return fallback }
+            if let data = loaded.data, let id {
+                Task(priority: .utility) { [self] in
+                    let updated = await PasteSQLManager.manager.saveAppIcon(id: id, path: sourcePath, data: data)
+                    guard generation == currentGeneration, let updated else { return }
+                    SourceAppCache.shared.update(updated)
+                }
             }
-
-            let task = Task.detached {
-                NSWorkspace.shared.icon(forFile: path)
-            }
-            inFlightTasks[path] = task
-            return task
+            return loaded.image ?? fallback
         }
-        let icon = await task.value
-
-        cache.setObject(icon, forKey: path as NSString)
-        inFlightTasksLock.withLock {
-            inFlightTasks[path] = nil
+        inFlightTasks[key] = task
+        let image = await task.value
+        if generation == currentGeneration {
+            cache.setObject(image, forKey: key as NSString, cost: SourceAppIcon.cacheCost)
+            inFlightTasks[key] = nil
         }
-
-        return icon
+        return image
     }
 
     func clearCache() {
+        generation &+= 1
+        inFlightTasks.values.forEach { $0.cancel() }
+        inFlightTasks.removeAll()
         cache.removeAllObjects()
     }
 
-    var cacheInfo: (countLimit: Int, costLimit: Int) {
-        (cache.countLimit, cache.totalCostLimit)
+    private func key(id: Int64?, path: String) -> String {
+        id.map { "app:\($0)" } ?? "path:\(path)"
     }
+
 }

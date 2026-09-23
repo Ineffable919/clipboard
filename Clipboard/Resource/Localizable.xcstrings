@@ -1,6 +1,20 @@
 {
   "sourceLanguage" : "zh-Hans",
   "strings" : {
+    "clearHistoryFailed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Could not clear history. Please try again." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "清空历史失败，请重试" } }
+      }
+    },
+    "clearHistorySpaceFailed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "History was cleared, but some disk space could not be reclaimed." } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "历史已清空，但部分磁盘空间未能回收" } }
+      }
+    },
     "floatingDisplayMode": {
       "extractionState": "manual",
       "localizations": {
@@ -337,9 +351,10 @@
       }
     },
     "" : {
-
+      "shouldTranslate" : false
     },
     "%@ (%@)" : {
+      "shouldTranslate" : false,
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -350,6 +365,7 @@
       }
     },
     "%@ %@" : {
+      "shouldTranslate" : false,
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -1012,7 +1028,7 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "No clipboard record"
           }
         },
@@ -1565,7 +1581,7 @@
       }
     },
     "MCP" : {
-
+      "shouldTranslate" : false
     },
     "mcpAddTo" : {
       "extractionState" : "manual",
@@ -1657,7 +1673,7 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "Connect AI Tools"
           }
         },

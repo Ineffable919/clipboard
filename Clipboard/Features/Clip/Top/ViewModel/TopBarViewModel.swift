@@ -55,7 +55,7 @@ final class TopBarViewModel {
     private(set) var selectedTypes: Set<PasteModelType> = []
 
     /// 应用筛选：支持多选
-    private(set) var selectedAppNames: Set<String> = []
+    private(set) var selectedAppIDs: Set<Int64> = []
 
     /// 日期筛选：单选
     private(set) var selectedDateFilter: DateFilterOption?
@@ -64,7 +64,7 @@ final class TopBarViewModel {
     private(set) var selectedGroupIds: Set<Int> = []
 
     var hasInput: Bool {
-        !query.isEmpty || !selectedTypes.isEmpty || !selectedAppNames.isEmpty
+        !query.isEmpty || !selectedTypes.isEmpty || !selectedAppIDs.isEmpty
             || selectedDateFilter != nil || !selectedGroupIds.isEmpty
     }
 
@@ -79,7 +79,7 @@ final class TopBarViewModel {
     }
 
     var hasActiveFilters: Bool {
-        !selectedTypes.isEmpty || !selectedAppNames.isEmpty
+        !selectedTypes.isEmpty || !selectedAppIDs.isEmpty
             || selectedDateFilter != nil || !selectedGroupIds.isEmpty
     }
 
@@ -90,8 +90,6 @@ final class TopBarViewModel {
 
     private var lastSearchCriteria: SearchCriteria?
     private var isModeResetting = false
-
-    private var appPathCache: [String: String] = [:]
 
     // MARK: - Initialization
 
@@ -228,18 +226,25 @@ final class TopBarViewModel {
         filterDidChange.send()
     }
 
-    func toggleApp(_ appName: String, appPath: String? = nil) {
-        if selectedAppNames.contains(appName) {
-            selectedAppNames.remove(appName)
-            tags.removeAll {
-                $0.type == .filterApp && $0.associatedValue == appName
+    func toggleApp(_ id: Int64) {
+        if selectedAppIDs.remove(id) != nil {
+            tags.removeAll { $0.type == .filterApp && $0.associatedValue == String(id) }
+        } else if let app = SourceAppCache.shared.apps[id] {
+            selectedAppIDs.insert(id)
+            let tag = InputTag(
+                icon: AppIconCache.shared.getCachedIcon(forAppID: id)
+                    ?? NSImage(systemSymbolName: "questionmark.app.dashed", accessibilityDescription: nil),
+                label: app.name, type: .filterApp, associatedValue: String(id), appPath: app.path
+            )
+            tags.append(tag)
+            if AppIconCache.shared.getCachedIcon(forAppID: id) == nil {
+                Task { [weak self] in
+                    let icon = await AppIconCache.shared.loadIcon(forAppID: id, path: app.path)
+                    guard let self, let index = tags.firstIndex(where: { $0.id == tag.id }) else { return }
+                    tags[index].icon = icon
+                    filterDidChange.send()
+                }
             }
-        } else {
-            selectedAppNames.insert(appName)
-            if let path = appPath, !path.isEmpty {
-                appPathCache[appName] = path
-            }
-            addTagForApp(appName)
         }
         filterDidChange.send()
     }
@@ -321,7 +326,7 @@ final class TopBarViewModel {
 
     func clearAllFilters() {
         selectedTypes.removeAll()
-        selectedAppNames.removeAll()
+        selectedAppIDs.removeAll()
         selectedDateFilter = nil
         selectedGroupIds.removeAll()
         tags.removeAll()
@@ -383,42 +388,6 @@ final class TopBarViewModel {
         }
     }
 
-    private func addTagForApp(_ appName: String) {
-        let appPath = appPathCache[appName] ?? ""
-        let appIcon: NSImage? =
-            if FileManager.default.fileExists(atPath: appPath) {
-                NSWorkspace.shared.icon(forFile: appPath)
-            } else {
-                NSImage(
-                    systemSymbolName: "questionmark.app.dashed",
-                    accessibilityDescription: nil
-                )
-            }
-        let tag = InputTag(
-            icon: appIcon,
-            label: appName,
-            type: .filterApp,
-            associatedValue: appName,
-            appPath: appPath
-        )
-        tags.append(tag)
-    }
-
-    private var isLoadingAppPathCache = false
-
-    func loadAppPathCache() async {
-        guard !isLoadingAppPathCache, appPathCache.isEmpty else { return }
-        isLoadingAppPathCache = true
-
-        let appInfo = await PasteMetadataCache.shared.getAllAppInfo()
-        await MainActor.run {
-            appPathCache = Dictionary(
-                uniqueKeysWithValues: appInfo.map { ($0.name, $0.path) }
-            )
-            isLoadingAppPathCache = false
-        }
-    }
-
     func removeTag(_ tag: InputTag) {
         tags.removeAll { $0 == tag }
 
@@ -431,7 +400,7 @@ final class TopBarViewModel {
                 selectedTypes.remove(type)
             }
         case .filterApp:
-            selectedAppNames.remove(tag.associatedValue)
+            if let id = Int64(tag.associatedValue) { selectedAppIDs.remove(id) }
         case .filterDate:
             selectedDateFilter = nil
         case .filterGroup:
@@ -521,7 +490,7 @@ final class TopBarViewModel {
         query = ""
         tags.removeAll()
         selectedTypes.removeAll()
-        selectedAppNames.removeAll()
+        selectedAppIDs.removeAll()
         selectedDateFilter = nil
         selectedGroupIds.removeAll()
 
@@ -537,7 +506,7 @@ final class TopBarViewModel {
         let criteria = SearchCriteria(
             keyword: trimmedQuery,
             selectedTypes: selectedTypes,
-            selectedAppNames: selectedAppNames,
+            selectedAppIDs: selectedAppIDs,
             selectedDateFilter: selectedDateFilter,
             selectedGroupIds: selectedGroupIds
         )
@@ -552,7 +521,7 @@ final class TopBarViewModel {
         let criteria = SearchCriteria(
             keyword: trimmedQuery,
             selectedTypes: selectedTypes,
-            selectedAppNames: selectedAppNames,
+            selectedAppIDs: selectedAppIDs,
             selectedDateFilter: selectedDateFilter,
             selectedGroupIds: selectedGroupIds
         )

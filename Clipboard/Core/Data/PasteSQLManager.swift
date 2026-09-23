@@ -23,41 +23,24 @@ actor PasteSQLManager {
         databaseDirectory.appendingPathComponent("Clip.sqlite3").path
     }
 
-    let connection: Connection?
+    var connection: Connection?
 
     let table: Table
+    var apps: [Int64: SourceApp] = [:]
+    var appIdentities: [String: Int64] = [:]
 
     private init() {
-        let dirPath = Self.databaseDirectory.path
-        let fileManager = FileManager.default
-        var isDir = ObjCBool(false)
-        let dirExists = fileManager.fileExists(atPath: dirPath, isDirectory: &isDir)
-        if !dirExists || !isDir.boolValue {
-            do {
-                try fileManager.createDirectory(atPath: dirPath, withIntermediateDirectories: true)
-            } catch {
-                log.debug(error.localizedDescription)
-            }
-        }
+        table = Table("Clip")
+    }
 
-        var connection: Connection?
-        do {
-            let conn = try Connection(Self.databasePath)
-            log.info("数据库初始化 - 路径：\(Self.databasePath)")
-            conn.busyTimeout = 5.0
-            connection = conn
-        } catch {
-            log.error("Connection Error: \(error)")
-        }
-        self.connection = connection
-
-        let tab = Table("Clip")
-        table = tab
-
-        if let conn = connection {
-            try? conn.execute("PRAGMA journal_mode=WAL")
-            Self.createTable(on: conn, table: tab)
-        }
+    private func openDatabase() throws {
+        guard connection == nil else { return }
+        try FileManager.default.createDirectory(at: Self.databaseDirectory, withIntermediateDirectories: true)
+        let database = try Connection(Self.databasePath)
+        database.busyTimeout = 5.0
+        try database.execute("PRAGMA journal_mode=WAL")
+        Self.createTable(on: database, table: table)
+        connection = database
     }
 
     nonisolated static func createTable(on conn: Connection, table: Table) {
@@ -68,8 +51,7 @@ actor PasteSQLManager {
             schema.column(Col.data)
             schema.column(Col.showData)
             schema.column(Col.timestamp)
-            schema.column(Col.appPath)
-            schema.column(Col.appName)
+            schema.column(Col.appID)
             schema.column(Col.searchText)
             schema.column(Col.length)
             schema.column(Col.group, defaultValue: -1)
@@ -88,7 +70,7 @@ actor PasteSQLManager {
         let indexes = [
             (
                 "idx_app_hidden_ts",
-                "CREATE INDEX IF NOT EXISTS idx_app_hidden_ts ON Clip(app_name, hidden, timestamp DESC)"
+                "CREATE INDEX IF NOT EXISTS idx_app_hidden_ts ON Clip(app_id, hidden, timestamp DESC)"
             ),
             (
                 "idx_tag_hidden_ts",
@@ -137,10 +119,26 @@ actor PasteSQLManager {
         log.info("索引初始化成功")
     }
 
-    func setup() async {
+    func setup() async -> Bool {
+        do {
+            try openDatabase()
+            guard let connection else { return false }
+            try SourceAppSQL.create(on: connection)
+            let backupURL = Self.databaseDirectory.appending(path: "Clip.before-app-migration.sqlite3")
+            let started = ContinuousClock.now
+            if try SourceAppMigration.run(on: connection, backupURL: backupURL) {
+                log.info("应用信息迁移完成，耗时：\(started.duration(to: .now))")
+            }
+            try SourceAppSQL.reassignMissing(on: connection, fallback: .current)
+            try loadApps()
+        } catch {
+            log.error("应用信息迁移失败，保留原数据库：\(error)")
+            return false
+        }
         await migrateUniqueIdIfNeeded()
 
-        guard let connection else { return }
+        guard let connection else { return false }
         Self.createIndexes(on: connection)
+        return true
     }
 }

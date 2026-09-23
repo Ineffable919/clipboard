@@ -73,7 +73,7 @@ extension PasteDataStore {
                 limit: deficit,
                 offset: currentCount
             )
-            let backfillItems = mapRows(rows)
+            let backfillItems = await mapRows(rows)
             let filtered: Int =
                 if inFilter, let activeFilter {
                     await sqlManager.getCount(filter: activeFilter)
@@ -101,7 +101,7 @@ extension PasteDataStore {
 
                 setHasMoreData(finalList.count >= pageSize)
                 updateData(with: finalList, changeType: .delete)
-                PasteMetadataCache.shared.invalidateTagTypesCache()
+                PasteMetadataCache.shared.invalidateAllCaches()
             }
         }
     }
@@ -124,7 +124,7 @@ extension PasteDataStore {
                 guard let self else { return }
                 totalCount = count
                 filteredCount = filtered
-                PasteMetadataCache.shared.invalidateTagTypesCache()
+                PasteMetadataCache.shared.invalidateAllCaches()
             }
         }
     }
@@ -148,7 +148,7 @@ extension PasteDataStore {
                 guard let self else { return }
                 totalCount = count
                 filteredCount = filtered
-                PasteMetadataCache.shared.invalidateTagTypesCache()
+                PasteMetadataCache.shared.invalidateAllCaches()
             }
         }
     }
@@ -210,6 +210,7 @@ extension PasteDataStore {
     }
 
     func clearAllData() {
+        guard !clearingHistory.value else { return }
         let alert = NSAlert()
         alert.informativeText = String(localized: .clearDataMessage)
         alert.addButton(withTitle: String(localized: .commonConfirm))
@@ -217,16 +218,32 @@ extension PasteDataStore {
         let response = alert.runModal()
 
         if response == .alertFirstButtonReturn {
+            clearingHistory.send(true)
             Task {
-                await sqlManager.dropTable()
-                await sqlManager.recreateTable()
-                await MainActor.run {
+                defer { clearingHistory.send(false) }
+                do {
+                    let reclaimed = try await sqlManager.clearHistory()
+                    SourceAppCache.shared.replace([])
                     PasteMetadataCache.shared.invalidateAllCaches()
                     CategoryChipStore.shared.clearUserCategories()
+                    resetToDefault()
+                    if !reclaimed {
+                        showClearHistoryError(String(localized: .clearHistorySpaceFailed))
+                    }
+                } catch {
+                    log.error("清空历史失败：\(error)")
+                    showClearHistoryError(String(localized: .clearHistoryFailed))
                 }
-                resetToDefault()
             }
         }
+    }
+
+    private func showClearHistoryError(_ message: String) {
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = message
+        alert.addButton(withTitle: String(localized: .commonConfirm))
+        alert.runModal()
     }
 
     func updateDbItem(id: Int64, item: PasteboardModel) {

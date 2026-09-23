@@ -44,9 +44,9 @@ enum PasteFilterBuilder {
         }
 
         // 应用筛选
-        if !criteria.selectedAppNames.isEmpty {
-            let appCondition = criteria.selectedAppNames.map {
-                Col.appName == $0
+        if !criteria.selectedAppIDs.isEmpty {
+            let appCondition = criteria.selectedAppIDs.map {
+                Col.appID == $0
             }
             .reduce(Expression<Bool>(value: false)) { $0 || $1 }
             clauses.append(appCondition)

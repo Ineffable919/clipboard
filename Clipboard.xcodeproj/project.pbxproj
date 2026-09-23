@@ -40,6 +40,7 @@
 				AI/MCPTools.swift,
 				AI/MCPTypes.swift,
 				Core/Shared/ClipboardSchema.swift,
+				Core/Shared/SourceApp.swift,
 			);
 			target = B1222F8C2FCF029B00FF7C3D /* clipmcp */;
 		};

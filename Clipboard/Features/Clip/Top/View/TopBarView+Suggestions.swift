@@ -78,16 +78,15 @@ extension TopBarView {
     }
 
     private func appSuggestions(matching query: String) -> [SearchSuggestionItem] {
-        guard let cachedAppSuggestions else { return [] }
         var suggestions: [SearchSuggestionItem] = []
 
-        for app in cachedAppSuggestions {
-            guard topVM?.selectedAppNames.contains(app.name) != true else { continue }
+        for app in SourceAppCache.shared.orderedApps {
+            guard topVM?.selectedAppIDs.contains(app.id) != true else { continue }
             guard fuzzyMatch(app.name, query: query) else { continue }
             suggestions.append(SearchSuggestionItem(
                 title: app.name,
-                icon: app.icon,
-                action: .toggleApp(app.name, app.path)
+                icon: AppIconCache.shared.getCachedIcon(forAppID: app.id),
+                action: .toggleApp(app.id)
             ))
         }
 
@@ -117,40 +116,12 @@ extension TopBarView {
         switch item.action {
         case let .toggleType(type):
             topVM.toggleType(type)
-        case let .toggleApp(name, path):
-            topVM.toggleApp(name, appPath: path)
+        case let .toggleApp(id):
+            topVM.toggleApp(id)
         case let .setDate(option):
             topVM.setDateFilter(option)
         case let .setGroup(id):
             topVM.toggleGroupFilter(id)
-        }
-    }
-
-    func loadAppSuggestionsIfNeeded() {
-        guard cachedAppSuggestions == nil,
-              appSuggestionsLoadingTask == nil
-        else {
-            return
-        }
-        appSuggestionsLoadingTask = Task { @MainActor [weak self] in
-            guard let self else { return }
-            defer { appSuggestionsLoadingTask = nil }
-
-            let appInfo = await PasteMetadataCache.shared.getAllAppInfo()
-            var suggestions: [AppSuggestionInfo] = []
-            for info in appInfo {
-                let icon = await AppIconCache.shared.loadIcon(forPath: info.path)
-                suggestions.append(AppSuggestionInfo(
-                    name: info.name,
-                    path: info.path,
-                    icon: icon
-                ))
-            }
-            cachedAppSuggestions = suggestions
-
-            if !searchField.text.isEmpty {
-                searchField.showSuggestions()
-            }
         }
     }
 

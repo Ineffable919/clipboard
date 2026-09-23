@@ -34,19 +34,16 @@ extension PasteSQLManager {
 
             do {
                 let sourceDb = try Connection(sourcePath)
-                try sourceDb.execute("PRAGMA wal_checkpoint(TRUNCATE)")
 
                 if FileManager.default.fileExists(atPath: destinationURL.path) {
                     try FileManager.default.removeItem(at: destinationURL)
                 }
 
-                try FileManager.default.copyItem(
-                    atPath: sourcePath,
-                    toPath: destinationURL.path
-                )
+                let destDb = try Connection(destinationURL.path)
+                let backup = try sourceDb.backup(usingConnection: destDb)
+                try backup.step()
 
                 if let data = userChipsData, let json = String(data: data, encoding: .utf8) {
-                    let destDb = try Connection(destinationURL.path)
                     try destDb.execute(
                         "CREATE TABLE IF NOT EXISTS \(Self.metaTable) (key TEXT PRIMARY KEY, value TEXT NOT NULL)"
                     )
@@ -98,8 +95,17 @@ extension PasteSQLManager {
         }.value
 
         if result.success {
-            await MainActor.run {
-                PasteMetadataCache.shared.invalidateAllCaches()
+            do {
+                try await loadApps()
+                let records = await getDistinctAppInfo()
+                await MainActor.run {
+                    SourceAppCache.shared.replace(records)
+                    SourceAppCache.shared.warmMissingIcons()
+                    AppColorService.shared.fillMissingColors()
+                    PasteMetadataCache.shared.invalidateAllCaches()
+                }
+            } catch {
+                log.error("导入后刷新应用缓存失败：\(error)")
             }
         }
 
@@ -112,21 +118,22 @@ extension PasteSQLManager {
         do {
             let sourceDb = try Connection(source.path, readonly: true)
             let destDb = try Connection(destination)
+            destDb.busyTimeout = 5.0
 
-            let sourceTable = Table("Clip")
             let columns = try sourceDb.prepare("PRAGMA table_info(Clip)")
                 .compactMap { $0[1] as? String }
             let sourceOrder = columns.contains("sort_order") ? Col.sortOrder : Col.timestamp
-            let rows = try sourceDb.prepare(sourceTable.order(sourceOrder.desc, Col.id.desc))
+            let rows = try sourceDb.prepare(Table("Clip").order(sourceOrder.desc, Col.id.desc))
 
             var importedCount = 0
             var skippedCount = 0
-            var importedGroups: Set<Int> = []
-            var appInfoDict: [String: String] = [:]
             var importedChipsData: Data?
 
-            try destDb.run("BEGIN TRANSACTION")
+            try destDb.run("BEGIN IMMEDIATE TRANSACTION")
             do {
+                let appIDs = try SourceAppSQL.importIDs(
+                    from: sourceDb, into: destDb, normalized: columns.contains("app_id")
+                )
                 for row in rows {
                     guard !Task.isCancelled else {
                         throw NSError(domain: "ImportCancelled", code: -1,
@@ -134,21 +141,17 @@ extension PasteSQLManager {
                         )
                     }
 
-                    let sourceGroup = (try? row.get(Col.group)) ?? -1
-                    let group = categories.groupIDs[sourceGroup] ?? -1
-                    guard let app = try await importRow(row, into: destDb, group: group) else {
+                    let group = categories.groupIDs[(try? row.get(Col.group)) ?? -1] ?? -1
+                    let appID = try SourceAppSQL.importID(for: row, mapping: appIDs,
+                                                          normalized: columns.contains("app_id"))
+                    guard try await importRow(row, into: destDb, group: group, appID: appID) else {
                         skippedCount += 1
                         continue
                     }
                     importedCount += 1
-                    importedGroups.insert(group)
-
-                    if !app.name.isEmpty, appInfoDict[app.name] == nil {
-                        appInfoDict[app.name] = app.path
-                    }
                 }
-                let chips = categories.chips.filter { importedGroups.contains($0.id) }
-                importedChipsData = try JSONEncoder().encode(chips)
+                importedChipsData = try JSONEncoder().encode(categories.chips)
+                try SourceAppSQL.reassignMissing(on: destDb, fallback: .current)
                 try destDb.run("COMMIT")
             } catch {
                 _ = try? destDb.run("ROLLBACK")
@@ -157,7 +160,7 @@ extension PasteSQLManager {
 
             return importResult(
                 imported: importedCount, skipped: skippedCount,
-                appInfo: appInfoDict, chipsData: importedChipsData
+                chipsData: importedChipsData
             )
         } catch {
             return ImportExportResult(
@@ -168,19 +171,19 @@ extension PasteSQLManager {
     }
 
     private nonisolated static func importResult(
-        imported: Int, skipped: Int, appInfo: [String: String], chipsData: Data?
+        imported: Int, skipped: Int, chipsData: Data?
     ) -> ImportExportResult {
         let skippedText = skipped > 0 ? Self.localize("importSkip", skipped) : ""
         return ImportExportResult(
             success: true,
             message: Self.localize("importResult", imported, skippedText),
-            importedAppInfo: appInfo.map { (name: $0.key, path: $0.value) },
             importedChipsData: chipsData
         )
     }
 
-    private nonisolated static func importRow(_ row: Row, into database: Connection, group: Int) async throws
-        -> (name: String, path: String)? {
+    private nonisolated static func importRow(
+        _ row: Row, into database: Connection, group: Int, appID: Int64
+    ) async throws -> Bool {
         let destTable = Table("Clip")
         let typeRaw = try row.get(Col.type)
         let data = try row.get(Col.data)
@@ -191,10 +194,8 @@ extension PasteSQLManager {
         let existingQuery = destTable.filter(Col.uniqueId == uniqueId)
         let existingCount = try database.scalar(existingQuery.count)
 
-        guard existingCount == 0 else { return nil }
+        guard existingCount == 0 else { return false }
 
-        let appPath = try row.get(Col.appPath)
-        let appName = try row.get(Col.appName)
         // 备份按显示顺序依次追加，保留现有记录的位置
         let importSortOrder = SQLite.Expression<Int64>(
             literal: "(SELECT COALESCE(MIN(sort_order), 0) - 1 FROM Clip)"
@@ -207,16 +208,16 @@ extension PasteSQLManager {
             Col.showData <- row.get(Col.showData),
             Col.timestamp <- row.get(Col.timestamp),
             Col.sortOrder <- importSortOrder,
-            Col.appPath <- appPath,
-            Col.appName <- appName,
+            Col.appID <- appID,
             Col.searchText <- row.get(Col.searchText),
             Col.length <- row.get(Col.length),
             Col.group <- group,
+            Col.hidden <- (try? row.get(Col.hidden)) ?? 0,
             Col.tag <- try? row.get(Col.tag)
         )
 
         try database.run(insert)
-        return (appName, appPath)
+        return true
     }
 
     private nonisolated static func readChips(from database: Connection) -> Data? {
@@ -258,17 +259,11 @@ extension PasteSQLManager {
 
                 let requiredColumns = [
                     "unique_id", "type", "data", "timestamp",
-                    "app_path", "app_name", "search_text", "length"
+                    "search_text", "length"
                 ]
 
-                let tableInfo = try sourceDb.prepare("PRAGMA table_info(Clip)")
-                var existingColumns: Set<String> = []
-
-                for row in tableInfo {
-                    if let columnName = row[1] as? String {
-                        existingColumns.insert(columnName)
-                    }
-                }
+                let existingColumns = Set(try sourceDb.prepare("PRAGMA table_info(Clip)")
+                    .compactMap { $0[1] as? String })
 
                 for column in requiredColumns {
                     guard existingColumns.contains(column) else {
@@ -282,6 +277,13 @@ extension PasteSQLManager {
                     }
                 }
 
+                if existingColumns.contains("app_id") {
+                    // 读取应用表也验证新备份字段完整性；具体引用在导入事务内校验。
+                    _ = try sourceDb.prepare("SELECT id, bundle_id, app_name, app_path, icon_data FROM App LIMIT 0")
+                } else if !existingColumns.isSuperset(of: ["app_name", "app_path"]) {
+                    return ImportExportResult(success: false,
+                        message: Self.localize("backupInvalid", Self.localize("missingColumn", "app_id")))
+                }
                 return ImportExportResult(success: true, message: Self.localize("backupValid"))
             } catch {
                 return ImportExportResult(

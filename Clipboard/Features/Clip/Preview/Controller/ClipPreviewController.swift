@@ -191,9 +191,9 @@ final class ClipPreviewController: NSViewController {
     private func loadMetadata(for model: PasteboardModel) async {
         guard !Task.isCancelled else { return }
 
-        if !model.appPath.isEmpty {
-            appIcon = NSWorkspace.shared.icon(forFile: model.appPath)
-        }
+        let icon = await AppIconCache.shared.loadIcon(forAppID: model.appID, path: model.appPath)
+        guard !Task.isCancelled else { return }
+        appIcon = icon
 
         defaultBrowserName = bundleDisplayName(
             for: NSWorkspace.shared.urlForApplication(

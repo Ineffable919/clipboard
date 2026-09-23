@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import Combine
 
 @MainActor
 final class AppColorService {
@@ -14,6 +15,8 @@ final class AppColorService {
     private static let fallbackHex = "#1765D9"
 
     private var colorDict: [String: String]
+    let changes = PassthroughSubject<String, Never>()
+    private var fillingTask: Task<Void, Never>?
 
     private init() {
         var data = PasteUserDefaults.appColorData
@@ -28,32 +31,34 @@ final class AppColorService {
     }
 
     func updateColor(for model: PasteboardModel) {
-        guard colorDict[model.appName] == nil else { return }
-        let iconImage = NSWorkspace.shared.icon(forFile: model.appPath)
-        guard let hex = Self.extractDominantColor(from: iconImage) else { return }
-        colorDict[model.appName] = hex
-        PasteUserDefaults.appColorData = colorDict
+        let name = model.appName
+        guard colorDict[name] == nil else { return }
+        Task {
+            let icon = await AppIconCache.shared.loadIcon(forAppID: model.appID, path: model.appPath)
+            storeColor(from: icon, name: name)
+        }
     }
 
-    /// 批量提取缺失的应用图标颜色
-    func extractMissingColors(appInfo: [(name: String, path: String)]) async {
-        let pending = appInfo.filter { !$0.path.isEmpty && colorDict[$0.name] == nil }
-        guard !pending.isEmpty else { return }
-
-        let icons: [(String, NSImage)] = await Task.detached(priority: .utility) {
-            pending.map { ($0.name, NSWorkspace.shared.icon(forFile: $0.path)) }
-        }.value
-
-        var changed = false
-        for (appName, icon) in icons {
-            if let hex = Self.extractDominantColor(from: icon) {
-                colorDict[appName] = hex
-                changed = true
+    /// 新旧备份都使用合并后的应用图标，已卸载应用无需再次访问原路径
+    func fillMissingColors() {
+        fillingTask?.cancel()
+        let pending = SourceAppCache.shared.orderedApps.filter { colorDict[$0.name] == nil }
+        fillingTask = Task(priority: .utility) {
+            for app in pending {
+                guard !Task.isCancelled else { return }
+                let icon = await AppIconCache.shared.loadIcon(forAppID: app.id, path: app.path)
+                guard !Task.isCancelled else { return }
+                storeColor(from: icon, name: app.name)
+                await Task.yield()
             }
         }
-        if changed {
-            PasteUserDefaults.appColorData = colorDict
-        }
+    }
+
+    private func storeColor(from icon: NSImage, name: String) {
+        guard colorDict[name] == nil, let hex = Self.extractDominantColor(from: icon) else { return }
+        colorDict[name] = hex
+        PasteUserDefaults.appColorData = colorDict
+        changes.send(name)
     }
 
     func color(for model: PasteboardModel) -> NSColor {

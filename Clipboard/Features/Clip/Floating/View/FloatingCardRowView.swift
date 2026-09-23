@@ -254,7 +254,7 @@ final class FloatingCardRowView: NSView {
         )
         timestampLabel.textColor = fgColor
         if displayMode == .standard, modelChanged || modeChanged {
-            appIconView.configure(appPath: model.appPath)
+            appIconView.configure(appID: model.appID, appPath: model.appPath)
         }
 
         if let chip = model.getGroupChip() {
@@ -514,11 +514,11 @@ private final class FloatingAppIconView: NSView {
 
     deinit { loadTask?.cancel() }
 
-    func configure(appPath: String) {
+    func configure(appID: Int64?, appPath: String) {
         loadTask?.cancel()
         imageView.image = nil
         loadTask = Task { @MainActor [weak self] in
-            let icon = await AppIconCache.shared.loadIcon(forPath: appPath)
+            let icon = await AppIconCache.shared.loadIcon(forAppID: appID, path: appPath)
             guard !Task.isCancelled else { return }
             self?.imageView.image = icon
         }

@@ -11,11 +11,11 @@ import SnapKit
 final class FilterAppSectionView: NSStackView {
     // MARK: - Callbacks
 
-    var onAppToggle: ((String, String?) -> Void)?
+    var onAppToggle: ((Int64) -> Void)?
 
     // MARK: - State
 
-    private var selectedApps: Set<String> = []
+    private var selectedApps: Set<Int64> = []
     private var appInfoList: [FilterAppInfo] = []
     private var appButtons: [AppFilterButton] = []
     private var showAllApps = false
@@ -91,7 +91,8 @@ final class FilterAppSectionView: NSStackView {
         let oldAppNames = appInfoList.map(\.name)
         let newAppPaths = apps.map(\.path)
         let oldAppPaths = appInfoList.map(\.path)
-        guard newAppNames != oldAppNames || newAppPaths != oldAppPaths else { return }
+        guard apps.map(\.id) != appInfoList.map(\.id)
+            || newAppNames != oldAppNames || newAppPaths != oldAppPaths else { return }
 
         cancelButtonPreparation()
         appInfoList = apps
@@ -100,16 +101,16 @@ final class FilterAppSectionView: NSStackView {
         layoutGrid()
     }
 
-    func updateSelection(_ apps: Set<String>) {
+    func updateSelection(_ apps: Set<Int64>) {
         selectedApps = apps
         for button in appButtons {
-            button.isSelected = apps.contains(button.appName)
+            button.isSelected = apps.contains(button.appID)
         }
     }
 
-    func updateIcon(_ icon: NSImage, forAppNamed appName: String, path: String) {
+    func updateIcon(_ icon: NSImage, forAppID id: Int64) {
         guard let index = appInfoList.firstIndex(where: {
-            $0.name == appName && $0.path == path
+            $0.id == id
         }) else {
             return
         }
@@ -171,14 +172,15 @@ final class FilterAppSectionView: NSStackView {
 
     private func makeButton(for appInfo: FilterAppInfo) -> AppFilterButton {
         let button = AppFilterButton(
+            id: appInfo.id,
             icon: appInfo.icon,
             title: appInfo.name,
             path: appInfo.path
         )
         button.action = { [weak self] in
-            self?.onAppToggle?(appInfo.name, appInfo.path)
+            self?.onAppToggle?(appInfo.id)
         }
-        button.isSelected = selectedApps.contains(appInfo.name)
+        button.isSelected = selectedApps.contains(appInfo.id)
         return button
     }
 

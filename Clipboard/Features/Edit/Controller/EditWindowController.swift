@@ -94,7 +94,8 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
             searchText: "",
             length: 0,
             group: -1,
-            tag: "string"
+            tag: "string",
+            sourceBundleID: Bundle.main.bundleIdentifier
         )
 
         isNewItem = true

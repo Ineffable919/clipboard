@@ -8,6 +8,7 @@
 import AppKit
 
 struct FilterAppInfo {
+    let id: Int64
     let name: String
     let path: String
     var icon: NSImage?

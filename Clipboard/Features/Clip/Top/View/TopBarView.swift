@@ -56,13 +56,6 @@ final class TopBarView: NSView {
     private var searchFieldWidthConstraint: Constraint?
     var modeAnimationGeneration = 0
     var modeChipLayers: [ModeChipLayer] = []
-    private static var _cachedAppSuggestions: [AppSuggestionInfo]?
-    var appSuggestionsLoadingTask: Task<Void, Never>?
-
-    var cachedAppSuggestions: [AppSuggestionInfo]? {
-        get { Self._cachedAppSuggestions }
-        set { Self._cachedAppSuggestions = newValue }
-    }
 
     lazy var chipController = TopBarChipController(
         topVM: topVM,
@@ -93,6 +86,11 @@ final class TopBarView: NSView {
 
     func configure(topVM: TopBarViewModel) {
         self.topVM = topVM
+
+        SourceAppCache.shared.changes.sink { [weak self] in
+            guard let self, isSearching, !searchField.text.isEmpty else { return }
+            searchField.showSuggestions()
+        }.store(in: &cancellables)
 
         filterPopover = FilterPopover(viewModel: topVM)
         filterPopover?.onWillClose = { [weak self] in
@@ -308,7 +306,6 @@ final class TopBarView: NSView {
         isSearching = true
         applyMode(animated: true)
         filterPopover?.prepare()
-        loadAppSuggestionsIfNeeded()
         window?.makeFirstResponder(searchField)
         onFocusRegionChange?(.search)
     }

@@ -11,18 +11,18 @@ extension PasteDataStore {
             limit: limit,
             offset: offset
         )
-        return mapRows(rows)
+        return await mapRows(rows)
     }
 
-    func mapRows(_ rows: [Row]) -> [PasteboardModel] {
-        rows.compactMap { row in
+    func mapRows(_ rows: [Row]) async -> [PasteboardModel] {
+        await loadMissingApps(in: rows)
+        return rows.compactMap { row in
             if let type = try? row.get(Col.type),
                let data = try? row.get(Col.data),
                let timestamp = try? row.get(Col.timestamp),
                let uniqueId = try? row.get(Col.uniqueId) {
                 let id = try? row.get(Col.id)
-                let appName = try? row.get(Col.appName)
-                let appPath = try? row.get(Col.appPath)
+                let appID = try? row.get(Col.appID)
                 var showData = try? row.get(Col.showData)
                 let searchText = try? row.get(Col.searchText)
                 let length = try? row.get(Col.length)
@@ -48,20 +48,30 @@ extension PasteDataStore {
                     data: data,
                     showData: showData,
                     timestamp: timestamp,
-                    appPath: appPath ?? "",
-                    appName: appName ?? "",
+                    appPath: "",
+                    appName: "",
                     searchText: searchText ?? "",
                     length: length ?? 0,
                     group: group ?? -1,
                     tag: tag ?? "",
                     hidden: hidden,
-                    uniqueId: uniqueId
+                    uniqueId: uniqueId,
+                    appID: appID
                 )
                 pasteModel.id = id
                 repairTagIfNeeded(pasteModel)
                 return pasteModel
             }
             return nil
+        }
+    }
+
+    private func loadMissingApps(in rows: [Row]) async {
+        let missingIDs = Set(rows.compactMap { try? $0.get(Col.appID) })
+            .filter { SourceAppCache.shared.apps[$0] == nil }
+        if !missingIDs.isEmpty {
+            _ = try? await sqlManager.sourceApps(ids: missingIDs)
+            await sqlManager.refreshAppCache()
         }
     }
 

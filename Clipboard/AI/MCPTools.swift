@@ -223,13 +223,17 @@ struct MCPTools {
 
         let existing = table.select(Col.id).filter(Col.uniqueId == uniqueId)
         if let row = try? database.pluck(existing), let existingId = try? row.get(Col.id) {
-            _ = try? database.run(
-                table.filter(Col.id == existingId)
-                    .update(Col.timestamp <- timestamp, Col.hidden <- 0, Col.sortOrder <- Col.nextSortOrder)
+            _ = try? database.run(table.filter(Col.id == existingId)
+                .update(Col.timestamp <- timestamp, Col.hidden <- 0, Col.sortOrder <- Col.nextSortOrder)
             )
             return ["content": [["type": "text", "text": "Clipboard updated"]]]
         }
 
+        let appPath = NSWorkspace.shared.urlForApplication(withBundleIdentifier: ClipboardPaths.appBundleId)?.path ?? ""
+        guard let appID = try? SourceAppSQL.resolve(name: "Clip", path: appPath,
+                                                  bundleID: ClipboardPaths.appBundleId, on: database) else {
+            return mcpError("Cannot resolve source application")
+        }
         let insert = table.insert(
             Col.uniqueId <- uniqueId,
             Col.type <- NSPasteboard.PasteboardType.string.rawValue,
@@ -237,8 +241,7 @@ struct MCPTools {
             Col.showData <- showData,
             Col.timestamp <- timestamp,
             Col.sortOrder <- Col.nextSortOrder,
-            Col.appPath <- "",
-            Col.appName <- "AI",
+            Col.appID <- appID,
             Col.searchText <- content.trimmingCharacters(in: .whitespacesAndNewlines),
             Col.length <- content.count,
             Col.group <- -1,

@@ -51,14 +51,18 @@ final class PasteDataStore {
     private var searchTask: Task<Void, Error>?
     private var loadPageTask: Task<Void, Never>?
     var repairingTagIds = Set<Int64>()
+    let clearingHistory = CurrentValueSubject<Bool, Never>(false)
     private var orderRevision = 0
 
-    func setup() async {
-        await sqlManager.setup()
+    func setup() async -> Bool {
+        guard await sqlManager.setup() else { return false }
+        SourceAppCache.shared.replace(await sqlManager.getDistinctAppInfo())
         await resetDefaultList()
         let count = await sqlManager.getTotalCount()
         totalCount = count
         filteredCount = count
+        SourceAppCache.shared.warmMissingIcons()
+        return true
     }
 
     func notifyCategoryChipsChanged() {
@@ -113,7 +117,7 @@ extension PasteDataStore {
                     limit: pageSize,
                     offset: currentOffset
                 )
-                newItems = mapRows(rows)
+                newItems = await mapRows(rows)
             } else {
                 newItems = await getItems(
                     limit: pageSize,
@@ -226,7 +230,7 @@ extension PasteDataStore {
                 revision = orderRevision
                 let rows = await sqlManager.search(filter: filter, limit: pageSize)
                 try Task.checkCancellation()
-                result = mapRows(rows)
+                result = await mapRows(rows)
             } while revision != orderRevision
 
             filteredCount = count
@@ -243,8 +247,6 @@ extension PasteDataStore {
             model.updateGroup(val: chipId)
         }
 
-        AppColorService.shared.updateColor(for: model)
-        PasteMetadataCache.shared.invalidateAppInfoCache(model)
         PasteMetadataCache.shared.invalidateTagTypesCache(model)
 
         Task {
@@ -268,16 +270,39 @@ extension PasteDataStore {
         await sqlManager.update(id: id, item: model)
     }
 
+    private func prepareApp(for model: PasteboardModel) async -> Bool {
+        do {
+            let id: Int64
+            if let existing = model.appID {
+                id = existing
+            } else {
+                id = try await sqlManager.resolveApp(
+                    name: model.appName, path: model.appPath, bundleID: model.sourceBundleID
+                )
+            }
+            model.appID = id
+            return true
+        } catch {
+            log.error("保存来源应用失败：\(error)")
+            return false
+        }
+    }
+
     func insertModel(_ model: PasteboardModel) async {
-        let (itemId, existingGroup) = await sqlManager.insert(
+        guard await prepareApp(for: model) else { return }
+        let result = await sqlManager.insert(
             item: model,
             timestamp: model.timestamp,
             group: model.group
         )
+        guard result.id >= 0 else { return }
+        model.appID = result.appID
+        await sqlManager.refreshAppCache()
+        AppColorService.shared.updateColor(for: model)
         let count = await sqlManager.getTotalCount()
 
-        model.id = itemId
-        if let group = existingGroup {
+        model.id = result.id
+        if let group = result.group {
             model.updateGroup(val: group)
         }
         totalCount = count
@@ -331,7 +356,7 @@ extension PasteDataStore {
                 filter: currentFilter,
                 limit: loadedLimit
             )
-            list = mapRows(rows)
+            list = await mapRows(rows)
         } else {
             list = await getItems(limit: loadedLimit)
         }

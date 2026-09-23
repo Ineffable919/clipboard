@@ -17,6 +17,8 @@ struct Col {
     nonisolated static let nextSortOrder = Expression<Int64>(
         literal: "(SELECT COALESCE(MAX(sort_order), 0) + 1 FROM Clip)"
     )
+    nonisolated static let appID = Expression<Int64>("app_id")
+    // 仅供旧备份导入使用。
     nonisolated static let appPath = Expression<String>("app_path")
     nonisolated static let appName = Expression<String>("app_name")
     nonisolated static let searchText = Expression<String>("search_text")

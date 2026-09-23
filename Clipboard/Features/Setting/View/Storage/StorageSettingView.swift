@@ -166,8 +166,6 @@ struct StorageSettingView: View {
                     alertMessage = result.message
 
                     Task {
-                        await AppColorService.shared.extractMissingColors(appInfo: result.importedAppInfo)
-
                         await PasteDataStore.main.resetDefaultList()
                         let count = await PasteSQLManager.manager.getTotalCount()
                         db.totalCount = count

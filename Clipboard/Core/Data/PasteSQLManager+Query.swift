@@ -24,7 +24,7 @@ extension PasteSQLManager {
         let sel =
             select ?? [
                 Col.id, Col.uniqueId, Col.type, Col.data, Col.timestamp,
-                Col.appPath, Col.appName, Col.searchText,
+                Col.appID, Col.searchText,
                 Col.showData, Col.length, Col.group,
                 Col.tag, Col.hidden
             ]
@@ -73,55 +73,20 @@ extension PasteSQLManager {
         }
     }
 
-    func getDistinctAppNames() async -> [String] {
+    func getDistinctAppInfo() -> [SourceApp] {
+        guard let connection else { return [] }
         do {
-            let query = table.select(distinct: Col.appName)
-                .order(Col.appName.asc)
-
-            var appNames: [String] = []
-            if let result = try connection?.prepare(query) {
-                for row in result {
-                    if let appName = try? row.get(Col.appName), !appName.isEmpty {
-                        appNames.append(appName)
-                    }
-                }
-            }
-            return appNames
+            let ids = try connection.prepare("""
+                SELECT a.id FROM App a
+                WHERE EXISTS (SELECT 1 FROM Clip WHERE app_id = a.id)
+                ORDER BY MAX(
+                    COALESCE((SELECT MAX(timestamp) FROM Clip WHERE app_id = a.id AND hidden = 0), -1),
+                    COALESCE((SELECT MAX(timestamp) FROM Clip WHERE app_id = a.id AND hidden = 1), -1)
+                ) DESC, a.id DESC
+                """).compactMap { $0[0] as? Int64 }
+            return ids.compactMap { apps[$0] }
         } catch {
-            log.error("获取应用名称列表失败：\(error)")
-            return []
-        }
-    }
-
-    func getDistinctAppInfo() async -> [(name: String, path: String)] {
-        do {
-            var appInfo: [(name: String, path: String)] = []
-
-            let sql = """
-            SELECT app_name, app_path FROM Clip
-            WHERE id IN (
-                SELECT MAX(id) FROM Clip
-                WHERE app_name != ''
-                GROUP BY app_name
-            )
-            ORDER BY (
-                SELECT MAX(timestamp) FROM Clip c2
-                WHERE c2.app_name = Clip.app_name
-            ) DESC
-            """
-
-            if let result = try connection?.prepare(sql) {
-                for row in result {
-                    if let appName = row[0] as? String,
-                       let appPath = row[1] as? String,
-                       !appName.isEmpty {
-                        appInfo.append((name: appName, path: appPath))
-                    }
-                }
-            }
-            return appInfo
-        } catch {
-            log.error("获取应用信息列表失败：\(error)")
+            log.error("获取应用列表失败：\(error)")
             return []
         }
     }
