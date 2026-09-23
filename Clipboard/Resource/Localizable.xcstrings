@@ -1,6 +1,13 @@
 {
   "sourceLanguage" : "zh-Hans",
   "strings" : {
+    "clearHistorySuccess" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Deleted successfully" } },
+        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "删除成功" } }
+      }
+    },
     "clearHistoryFailed" : {
       "extractionState" : "manual",
       "localizations" : {

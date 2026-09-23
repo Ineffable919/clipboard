@@ -220,27 +220,30 @@ extension PasteDataStore {
         if response == .alertFirstButtonReturn {
             clearingHistory.send(true)
             Task {
-                defer { clearingHistory.send(false) }
                 do {
                     let reclaimed = try await sqlManager.clearHistory()
                     SourceAppCache.shared.replace([])
                     PasteMetadataCache.shared.invalidateAllCaches()
                     CategoryChipStore.shared.clearUserCategories()
                     resetToDefault()
-                    if !reclaimed {
-                        showClearHistoryError(String(localized: .clearHistorySpaceFailed))
+                    clearingHistory.send(false)
+                    if reclaimed {
+                        showClearHistoryResult(String(localized: .clearHistorySuccess), style: .informational)
+                    } else {
+                        showClearHistoryResult(String(localized: .clearHistorySpaceFailed))
                     }
                 } catch {
+                    clearingHistory.send(false)
                     log.error("清空历史失败：\(error)")
-                    showClearHistoryError(String(localized: .clearHistoryFailed))
+                    showClearHistoryResult(String(localized: .clearHistoryFailed))
                 }
             }
         }
     }
 
-    private func showClearHistoryError(_ message: String) {
+    private func showClearHistoryResult(_ message: String, style: NSAlert.Style = .warning) {
         let alert = NSAlert()
-        alert.alertStyle = .warning
+        alert.alertStyle = style
         alert.messageText = message
         alert.addButton(withTitle: String(localized: .commonConfirm))
         alert.runModal()
