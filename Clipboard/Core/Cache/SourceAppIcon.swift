@@ -19,10 +19,12 @@ nonisolated enum SourceAppIcon {
         // 明确请求大尺寸表示，避免先取得默认 32px 图像再放大。
         icon.size = size
         var rect = NSRect(origin: .zero, size: size)
-        guard let source = icon.cgImage(forProposedRect: &rect, context: nil, hints: nil),
+        let bitmapInfo = CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue
+        guard let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
+              let source = icon.cgImage(forProposedRect: &rect, context: nil, hints: nil),
               let context = CGContext(data: nil, width: pixelSize, height: pixelSize, bitsPerComponent: 8,
-                                      bytesPerRow: 0, space: CGColorSpaceCreateDeviceRGB(),
-                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+                                      bytesPerRow: pixelSize * 4, space: colorSpace,
+                                      bitmapInfo: bitmapInfo)
         else { return (stored.map { image(from: $0) } ?? icon, nil) }
         context.interpolationQuality = .high
         context.draw(source, in: CGRect(origin: .zero, size: size))
