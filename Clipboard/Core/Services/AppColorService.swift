@@ -35,6 +35,7 @@ final class AppColorService {
         guard colorDict[name] == nil else { return }
         Task {
             let icon = await AppIconCache.shared.loadIcon(forAppID: model.appID, path: model.appPath)
+            guard !Task.isCancelled else { return }
             storeColor(from: icon, name: name)
         }
     }
@@ -54,6 +55,13 @@ final class AppColorService {
         }
     }
 
+    func clearColors() {
+        fillingTask?.cancel()
+        fillingTask = nil
+        colorDict.removeAll()
+        PasteUserDefaults.appColorData = [:]
+    }
+
     private func storeColor(from icon: NSImage, name: String) {
         guard colorDict[name] == nil, let hex = Self.extractDominantColor(from: icon) else { return }
         colorDict[name] = hex
@@ -66,9 +74,9 @@ final class AppColorService {
             return Self.paletteNSColor(at: chip.colorIndex)
         }
         if let colorStr = colorDict[model.appName] {
-            return NSColor(hex: colorStr).withAlphaComponent(0.85)
+            return NSColor(hex: colorStr)
         }
-        return NSColor(hex: Self.fallbackHex).withAlphaComponent(0.85)
+        return NSColor(hex: Self.fallbackHex)
     }
 
     private static func paletteNSColor(at index: Int) -> NSColor {

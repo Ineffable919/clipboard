@@ -223,6 +223,7 @@ extension PasteDataStore {
                 do {
                     let reclaimed = try await sqlManager.clearHistory()
                     SourceAppCache.shared.replace([])
+                    AppColorService.shared.clearColors()
                     PasteMetadataCache.shared.invalidateAllCaches()
                     CategoryChipStore.shared.clearUserCategories()
                     resetToDefault()
