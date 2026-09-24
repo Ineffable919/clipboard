@@ -9,8 +9,8 @@ import AppKit
 
 extension PasteboardModel {
     var colorDisplayText: String {
-        let raw = attributeString.string
-        return raw.hasPrefix("#") ? raw : "#\(raw)"
+        let raw = attributeString.string.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !raw.isEmpty && raw.allSatisfy(\.isHexDigit) ? "#\(raw)" : raw
     }
 
     // MARK: - 颜色

@@ -96,16 +96,22 @@ extension String {
 
     var isCSSHexColor: Bool {
         let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
-        guard self == trimmed, !trimmed.isEmpty, trimmed.count <= 50 else {
+        guard !trimmed.isEmpty, trimmed.count <= 50 else {
             return false
         }
 
         let lowercased = trimmed.lowercased()
 
-        return isValidHexColor(lowercased)
-            || Self.cssNamedColors.contains(lowercased)
-            || isValidRGBColor(lowercased)
-            || isValidHSLColor(lowercased)
+        if lowercased.hasPrefix("#") {
+            return isValidHexColor(lowercased)
+        }
+        if isValidRGBColor(lowercased) || isValidHSLColor(lowercased) {
+            return true
+        }
+
+        // 无明确颜色标记的文本保留严格边界，避免表格内容误识别
+        guard self == trimmed else { return false }
+        return isValidHexColor(lowercased) || Self.cssNamedColors.contains(lowercased)
     }
 
     private static let cssNamedColors: Set<String> = [
