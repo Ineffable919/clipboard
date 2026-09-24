@@ -279,7 +279,6 @@ enum AppIconColorExtractor {
 }
 
 extension AppIconColorExtractor {
-    /// 少量彩色标志不改变中性底图标的分类，透明像素不计入面积
     private static func neutralBackground(from pixels: [ColorArea]) -> String? {
         let total = pixels.reduce(0) { $0 + $1.area }
         guard total > 0 else { return nil }
@@ -288,22 +287,7 @@ extension AppIconColorExtractor {
         guard colorful / total < 0.15 else { return nil }
         let dark = pixels.filter { $0.saturation < 0.4 && $0.brightness < 90 }
             .reduce(0) { $0 + $1.area }
-        if dark / total >= 0.55 { return "#061335" }
-
-        let light = pixels.filter { $0.saturation < 0.15 && $0.brightness >= 180 }
-            .reduce(0) { $0 + $1.area }
-        guard light / total >= 0.4 else { return nil }
-        let grays = clusters(from: pixels.filter {
-            $0.saturation < 0.15 && $0.brightness >= 60 && $0.brightness < 180
-        }, mergeFamilies: false)
-        let representative = grays.sorted {
-            if $0.area != $1.area { return $0.area > $1.area }
-            return $0.rgbKey < $1.rgbKey
-        }.first { $0.area / total >= 0.02 }
-        // 浅色底没有足够中灰时使用中灰兜底，并限制亮度以承载白色标题
-        let level = Int(min(118, max(90, representative?.brightness ?? 118)).rounded())
-        let channel = String(level, radix: 16, uppercase: true)
-        return "#" + String(repeating: channel, count: 3)
+        return dark / total >= 0.55 ? "#061335" : nil
     }
 
 }
