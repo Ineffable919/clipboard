@@ -58,6 +58,7 @@ final class CardContentView: NSView, PassthroughMouseEvents {
 
         currentModel = model
         currentKeyword = keyword
+        needsDisplay = true
 
         guard !isSameModel || !isSameKeyword else { return }
 
@@ -74,6 +75,22 @@ final class CardContentView: NSView, PassthroughMouseEvents {
         currentContentView = nil
         currentModel = nil
         currentKeyword = ""
+        needsDisplay = true
+    }
+
+    override var wantsUpdateLayer: Bool { true }
+
+    override func updateLayer() {
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            let color: NSColor = currentModel == nil || currentModel?.type == .color
+                ? .clear : .textBackgroundColor
+            layer?.backgroundColor = color.cgColor
+        }
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        needsDisplay = true
     }
 
     // MARK: Private

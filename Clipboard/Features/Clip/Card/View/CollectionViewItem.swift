@@ -80,8 +80,8 @@ final class CollectionViewItem: NSCollectionViewItem {
         return view
     }()
 
-    private lazy var contentView: DynamicBackgroundView = {
-        let view = DynamicBackgroundView()
+    private lazy var contentView: NSView = {
+        let view = NSView()
         view.wantsLayer = true
         view.layer?.masksToBounds = true
         view.layer?.cornerRadius = Const.radius
@@ -143,7 +143,6 @@ final class CollectionViewItem: NSCollectionViewItem {
     func configure(with model: PasteboardModel, keyword: String = "") {
         item = model
         headView.configure(with: model)
-        updateContentBackground()
         updateInfoIconAppearance()
 
         cardContentView.configure(with: model, keyword: keyword)
@@ -154,15 +153,6 @@ final class CollectionViewItem: NSCollectionViewItem {
                 guard let self, let model = item else { return }
                 headView.refreshTimestamp(for: model)
             }
-    }
-
-    private func updateContentBackground() {
-        guard let model = item else { return }
-        if model.type == .color, let bgColor = model.cachedBackgroundColor {
-            contentView.dynamicBackgroundColor = bgColor
-        } else {
-            contentView.dynamicBackgroundColor = NSColor.textBackgroundColor
-        }
     }
 
     func setFocused(_ focused: Bool) {
