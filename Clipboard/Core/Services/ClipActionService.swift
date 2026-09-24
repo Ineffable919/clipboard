@@ -127,7 +127,7 @@ final class ClipActionService {
         isAttribute: Bool = true,
         showTip: Bool = false
     ) {
-        let alert = NSAlert()
+        let alert = NSAlert.appAlert()
         alert.messageText = String(localized: .accessTitle)
         alert.informativeText = String(localized: .accessMessage)
         alert.alertStyle = .informational

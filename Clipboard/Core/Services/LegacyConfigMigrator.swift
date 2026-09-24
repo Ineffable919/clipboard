@@ -25,7 +25,7 @@ final class LegacyConfigMigrator {
     // MARK: - 提示用户（导入 / 跳过）
 
     private func presentMigrationAlert() {
-        let alert = NSAlert()
+        let alert = NSAlert.appAlert()
         alert.messageText = String(localized: .importAsk)
         alert.addButton(withTitle: String(localized: .importAction))
         alert.addButton(withTitle: String(localized: .skip))
@@ -141,7 +141,7 @@ final class LegacyConfigMigrator {
     }
 
     private func presentWrongFileAlert() {
-        let alert = NSAlert()
+        let alert = NSAlert.appAlert()
         alert.messageText = String(localized: .wrongFile)
         alert.informativeText = String(localized: .choosePlist)
         alert.addButton(withTitle: String(localized: .commonConfirm))
@@ -149,7 +149,7 @@ final class LegacyConfigMigrator {
     }
 
     private func presentResultAlert(success: Bool) {
-        let alert = NSAlert()
+        let alert = NSAlert.appAlert()
         alert.messageText = success
             ? String(localized: .importSuccess)
             : String(localized: .importFail)

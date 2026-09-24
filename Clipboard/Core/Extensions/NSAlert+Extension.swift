@@ -6,12 +6,18 @@
 import AppKit
 
 extension NSAlert {
+    static func appAlert() -> NSAlert {
+        let alert = NSAlert()
+        alert.icon = NSImage(named: "AppIcon")
+        return alert
+    }
+
     /// Shows a warning-style confirm/cancel alert and returns true if the user confirmed.
     /// Suppresses window resign-key events while the alert is running.
     static func runConfirm(title: String, message: String) -> Bool {
         AppEnvironment.shared.suppressResignKey = true
         defer { AppEnvironment.shared.suppressResignKey = false }
-        let alert = NSAlert()
+        let alert = appAlert()
         alert.messageText = title
         alert.informativeText = message
         alert.alertStyle = .warning

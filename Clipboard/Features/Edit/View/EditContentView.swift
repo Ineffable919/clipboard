@@ -194,7 +194,7 @@ final class EditContentView: NSVisualEffectView {
         if newMode == .json, textEditor.hasRichFormatting, let window {
             Task { @MainActor [weak self, weak window] in
                 guard let self, let window else { return }
-                let alert = NSAlert()
+                let alert = NSAlert.appAlert()
                 alert.messageText = String(localized: .jsonRichWarningTitle)
                 alert.informativeText = String(localized: .jsonRichWarningMessage)
                 alert.alertStyle = .warning
