@@ -212,6 +212,7 @@ extension PasteDataStore {
     func clearAllData() {
         guard !clearingHistory.value else { return }
         let alert = NSAlert()
+        alert.icon = NSImage(named: "AppIcon")
         alert.informativeText = String(localized: .clearDataMessage)
         alert.addButton(withTitle: String(localized: .commonConfirm))
         alert.addButton(withTitle: String(localized: .commonCancel))

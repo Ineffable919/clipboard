@@ -8,39 +8,11 @@ private struct MCPClientInfo: Identifiable {
     }
 
     let name: String
-    let iconImageName: String
+    let iconURL: String
     let subtitle: String
     let command: String
     let footer: String?
     let configNote: String?
-
-    var menuIconImage: NSImage? {
-        iconImage(size: NSSize(width: 16, height: 16), cornerRadius: 3)
-    }
-
-    var detailIconImage: NSImage? {
-        iconImage(size: NSSize(width: 40, height: 40), cornerRadius: 8)
-    }
-
-    private func iconImage(size: NSSize, cornerRadius: CGFloat) -> NSImage? {
-        guard
-            let image = NSImage(named: iconImageName),
-            let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil)
-        else { return nil }
-
-        let roundedImage = NSImage(size: size, flipped: false) { bounds in
-            guard let context = NSGraphicsContext.current?.cgContext else { return false }
-
-            let path = NSBezierPath(roundedRect: bounds, xRadius: cornerRadius, yRadius: cornerRadius)
-            path.addClip()
-
-            context.draw(cgImage, in: bounds)
-            return true
-        }
-
-        roundedImage.isTemplate = false
-        return roundedImage
-    }
 }
 
 // MARK: - AISettingsView
@@ -63,6 +35,8 @@ struct AISettingsView: View {
         let helperPath = Bundle.main.bundleURL
             .appending(path: "Contents/MacOS/clipmcp")
             .path
+        let iconBase = "https://raw.githubusercontent.com/Ineffable919/clipboard/"
+            + "c1d53491f24ff028946e287ec09b9943e5a11caf/Clipboard/Resource/Assets.xcassets"
         let cliSubtitle = String(localized: .mcpCliSub)
         let configSubtitle = String(localized: .mcpConfigSub)
         let configCommand = """
@@ -87,7 +61,7 @@ struct AISettingsView: View {
         return [
             MCPClientInfo(
                 name: "Claude Desktop",
-                iconImageName: "MCPClaudeIcon",
+                iconURL: "\(iconBase)/MCPClaudeIcon.imageset/claude.png",
                 subtitle: configSubtitle,
                 command: configCommand,
                 footer: nil,
@@ -96,7 +70,7 @@ struct AISettingsView: View {
             ),
             MCPClientInfo(
                 name: "Claude Code",
-                iconImageName: "MCPClaudeIcon",
+                iconURL: "\(iconBase)/MCPClaudeIcon.imageset/claude.png",
                 subtitle: cliSubtitle,
                 command:
                 "claude mcp add --transport stdio clipboard -- \(helperPath)",
@@ -105,7 +79,7 @@ struct AISettingsView: View {
             ),
             MCPClientInfo(
                 name: "Codex",
-                iconImageName: "MCPCodexIcon",
+                iconURL: "\(iconBase)/MCPCodexIcon.imageset/codex.png",
                 subtitle: cliSubtitle,
                 command: "codex mcp add clipboard -- \(helperPath)",
                 footer: nil,
@@ -113,7 +87,7 @@ struct AISettingsView: View {
             ),
             MCPClientInfo(
                 name: "Cursor",
-                iconImageName: "MCPCursorIcon",
+                iconURL: "\(iconBase)/MCPCursorIcon.imageset/cursor.png",
                 subtitle: configSubtitle,
                 command: configCommand,
                 footer: nil,
@@ -121,7 +95,7 @@ struct AISettingsView: View {
             ),
             MCPClientInfo(
                 name: "VS Code",
-                iconImageName: "MCPVSCodeIcon",
+                iconURL: "\(iconBase)/MCPVSCodeIcon.imageset/vscode.png",
                 subtitle: configSubtitle,
                 command: vsCodeCommand,
                 footer: nil,
@@ -142,15 +116,7 @@ struct AISettingsView: View {
                                 Button {
                                     selectedClient = client
                                 } label: {
-                                    if let iconImage = client.menuIconImage {
-                                        Label {
-                                            Text(client.name)
-                                        } icon: {
-                                            Image(nsImage: iconImage)
-                                        }
-                                    } else {
-                                        Text(client.name)
-                                    }
+                                    Text(client.name)
                                 }
                             }
                         } label: {
@@ -169,10 +135,7 @@ struct AISettingsView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .animation(.easeInOut(duration: 0.2), value: isEnabled)
         .sheet(item: $selectedClient) { client in
-            MCPClientDetailSheet(
-                client: client,
-                iconImage: client.detailIconImage
-            )
+            MCPClientDetailSheet(client: client)
         }
     }
 }
@@ -231,7 +194,8 @@ private struct MCPToolsSection: View {
 
 private struct MCPClientDetailSheet: View {
     let client: MCPClientInfo
-    let iconImage: NSImage?
+    @State private var iconImage: NSImage?
+    @State private var isIconLoading = true
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -283,14 +247,28 @@ private struct MCPClientDetailSheet: View {
         }
         .padding(Const.space24)
         .frame(width: 440)
+        .task(id: client.iconURL) {
+            iconImage = nil
+            isIconLoading = true
+            let image = await MCPClientIconLoader.load(client.iconURL)
+            guard !Task.isCancelled else { return }
+            iconImage = image
+            isIconLoading = false
+        }
     }
 
     @ViewBuilder private var clientIcon: some View {
-        if let iconImage {
+        if isIconLoading {
+            ProgressView()
+                .controlSize(.small)
+                .frame(width: 40, height: 40)
+                .padding(.bottom, Const.space16)
+        } else if let iconImage {
             Image(nsImage: iconImage)
                 .resizable()
                 .scaledToFit()
                 .frame(width: 40, height: 40)
+                .clipShape(.rect(cornerRadius: 8))
                 .padding(.bottom, Const.space16)
         }
     }
