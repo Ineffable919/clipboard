@@ -274,8 +274,11 @@ final class TopBarView: NSView {
             make.top.equalToSuperview().offset(Const.space12)
         }
 
+        searchField.snp.makeConstraints { make in
+            make.centerX.equalTo(snp.centerX)
+        }
+
         searchRow.snp.makeConstraints { make in
-            make.leading.equalTo(snp.centerX).offset(-220)
             make.trailing.equalTo(settingBtn.snp.leading).offset(-Const.space12)
             make.top.equalToSuperview().offset(Const.space10)
         }
@@ -337,7 +340,7 @@ private extension TopBarView {
         chipScrollView.maximumWidth = max(0, bounds.width - 2 * rightInset - controlsWidth)
         dotChipScrollView.maximumWidth = max(
             0,
-            bounds.width / 2 + 220 - rightInset - searchFieldWidth - Const.space8
+            (bounds.width - searchFieldWidth) / 2 - rightInset - Const.space8
         )
     }
 }
