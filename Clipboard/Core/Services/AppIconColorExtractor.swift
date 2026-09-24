@@ -1,6 +1,6 @@
 import AppKit
 
-/// 优先明显主导色，再比较中心位置、局部对比和多处分布，最后应用色系偏好。
+/// 优先明显主导色，再比较中心位置、局部对比和多处分布，最后应用色系偏好
 enum AppIconColorExtractor {
     private static let pixelSize = 32
     private static let mergeDistance: Double = 48
@@ -23,12 +23,12 @@ enum AppIconColorExtractor {
         }
         let leader = ranked[0]
         let nextRegionCount = ranked.dropFirst().map(\.regionCount).max() ?? 0
-        // 主导色必须同时具备足够面积和分布优势，避免局部色块压过全图主色。
+        // 主导色必须同时具备足够面积和分布优势，避免局部色块压过全图主色
         let isDominant = leader.area >= totalArea * 0.45
             && Double(leader.regionCount) >= Double(nextRegionCount) * 1.4
         let highestScore = candidates.map(\.visualScore).max() ?? 0
         let finalists = isDominant ? [leader] : candidates.filter {
-            // 高对比也不能让微小装饰色抢走主色；中心主体允许分布范围略小。
+            // 高对比也不能让微小装饰色抢走主色；中心主体允许分布范围略小
             $0.area >= totalArea * 0.1
                 && ($0.visualScore >= highestScore * scoreTolerance
                     || ($0.centrality >= 0.6 && $0.area >= totalArea * 0.12))
@@ -40,7 +40,7 @@ enum AppIconColorExtractor {
             return lhs.rgbKey < rhs.rgbKey
         }.first
         guard let selected else { return nil }
-        // 色系合并只决定谁胜出；输出该色系中面积最大的相近色簇，避免渐变混成新色。
+        // 色系合并只决定谁胜出；输出该色系中面积最大的相近色簇，避免渐变混成新色
         let shades = clusters(from: pixels.filter {
             $0.isSuitable && $0.colorPriority == selected.colorPriority
         }, mergeFamilies: false)
@@ -93,14 +93,14 @@ enum AppIconColorExtractor {
                 }
             }
         }
-        // 先按桶键排序，再稳定地按面积排序，避免字典遍历顺序影响聚类。
+        // 先按桶键排序，再稳定地按面积排序，避免字典遍历顺序影响聚类
         return buckets.keys.sorted().compactMap { buckets[$0] }.sorted {
             if $0.area != $1.area { return $0.area > $1.area }
             return $0.rgbKey < $1.rgbKey
         }
     }
 
-    /// 只比较附近有效彩色像素，黑白文字和透明边缘不制造虚假的颜色对比。
+    /// 只比较附近有效彩色像素，黑白文字和透明边缘不制造虚假的颜色对比
     private static func localContrast(
         of sample: ColorArea, row: Int, column: Int, pixels: UnsafeMutablePointer<UInt8>
     ) -> Double {
@@ -132,7 +132,7 @@ enum AppIconColorExtractor {
             var distance = mergeDistance * mergeDistance
             for index in groups.indices {
                 let group = groups[index]
-                // 同色系的渐变共同统计，避免粉紫、深浅蓝被分成多个竞争者。
+                // 同色系的渐变共同统计，避免粉紫、深浅蓝被分成多个竞争者
                 let sameFamily = mergeFamilies && group.saturation >= 0.2 && sample.saturation >= 0.2
                     && group.colorPriority == sample.colorPriority
                 let candidate = sameFamily ? 0 : group.squaredDistance(to: sample)
@@ -158,16 +158,16 @@ enum AppIconColorExtractor {
         var centerWeight: Double = 0
         var centrality: Double { centerWeight / area }
         var contrastWeight: Double = 0
-        // 范围采用平方根，避免单纯面积压过多处重复出现的醒目色块。
+        // 范围采用平方根，避免单纯面积压过多处重复出现的醒目色块
         var visualScore: Double {
             let contrast = contrastWeight / area
-            // 低对比的渐变碎块不额外加分；明显对比的重复色块最多获得三倍权重。
+            // 低对比的渐变碎块不额外加分；明显对比的重复色块最多获得三倍权重
             let prominence = min(1, max(0, (contrast - 0.15) / 0.1))
             return Double(regionCount).squareRoot() * (0.5 + centrality)
                 * (1 + contrast) * (1 + 2 * separation * prominence)
         }
 
-        /// 八邻域连接色块；忽略微小碎片，只奖励有足够面积且相隔较远的两块颜色。
+        /// 八邻域连接色块；忽略微小碎片，只奖励有足够面积且相隔较远的两块颜色
         var separation: Double {
             var remaining = Set(regionAreas.indices.filter { regionAreas[$0] >= 1.6 })
             var components: [(area: Double, center: CGPoint)] = []
@@ -263,7 +263,7 @@ enum AppIconColorExtractor {
             return deltaRed * deltaRed + deltaGreen * deltaGreen + deltaBlue * deltaBlue
         }
 
-        // 分布得分接近时：蓝 > 黄/橙 > 绿 > 其他 > 红。
+        // 分布得分接近时：蓝 > 黄/橙 > 绿 > 其他 > 红
         var colorPriority: Int {
             guard saturation >= 0.2 else { return 1 }
             switch hue {
@@ -279,7 +279,7 @@ enum AppIconColorExtractor {
 }
 
 extension AppIconColorExtractor {
-    /// 少量彩色标志不改变中性底图标的分类，透明像素不计入面积。
+    /// 少量彩色标志不改变中性底图标的分类，透明像素不计入面积
     private static func neutralBackground(from pixels: [ColorArea]) -> String? {
         let total = pixels.reduce(0) { $0 + $1.area }
         guard total > 0 else { return nil }
@@ -300,7 +300,7 @@ extension AppIconColorExtractor {
             if $0.area != $1.area { return $0.area > $1.area }
             return $0.rgbKey < $1.rgbKey
         }.first { $0.area / total >= 0.02 }
-        // 浅色底没有足够中灰时使用中灰兜底，并限制亮度以承载白色标题。
+        // 浅色底没有足够中灰时使用中灰兜底，并限制亮度以承载白色标题
         let level = Int(min(118, max(90, representative?.brightness ?? 118)).rounded())
         let channel = String(level, radix: 16, uppercase: true)
         return "#" + String(repeating: channel, count: 3)
