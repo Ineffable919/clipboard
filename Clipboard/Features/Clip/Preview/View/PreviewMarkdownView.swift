@@ -14,7 +14,6 @@ final class PreviewMarkdownView: NSView, WKNavigationDelegate, WKUIDelegate {
     private let sourceScrollView = NSScrollView()
     private let sourceTextView = NSTextView()
     private let model: PasteboardModel
-    private let sourceBackgroundColor: NSColor?
     private var renderTask: Task<Void, Never>?
     private var hasLoadedRenderedContent = false
     private var hasLoadedSourceContent = false
@@ -24,11 +23,6 @@ final class PreviewMarkdownView: NSView, WKNavigationDelegate, WKUIDelegate {
 
     init(model: PasteboardModel) {
         self.model = model
-        if model.type == .rich, let backgroundColor = model.safeBgColor {
-            sourceBackgroundColor = backgroundColor
-        } else {
-            sourceBackgroundColor = nil
-        }
         let configuration = Self.makeWebConfiguration()
         webView = WKWebView(frame: .zero, configuration: configuration)
         super.init(frame: .zero)
@@ -113,7 +107,7 @@ final class PreviewMarkdownView: NSView, WKNavigationDelegate, WKUIDelegate {
         sourceTextView.isEditable = false
         sourceTextView.isSelectable = true
         sourceTextView.drawsBackground = true
-        sourceTextView.backgroundColor = sourceBackgroundColor ?? .textBackgroundColor
+        sourceTextView.backgroundColor = .textBackgroundColor
         sourceTextView.isAutomaticLinkDetectionEnabled = false
         sourceTextView.textContainerInset = NSSize(width: Const.space8, height: Const.space8)
         sourceTextView.isVerticallyResizable = true
@@ -143,6 +137,7 @@ final class PreviewMarkdownView: NSView, WKNavigationDelegate, WKUIDelegate {
         } else {
             loadSourceContentIfNeeded()
         }
+        updateSourceBackground()
     }
 
     private func loadRenderedContentIfNeeded() {
@@ -198,6 +193,9 @@ final class PreviewMarkdownView: NSView, WKNavigationDelegate, WKUIDelegate {
             )
             sourceTextView.textStorage?.setAttributedString(mutable)
         }
+        if let content = sourceTextView.textStorage {
+            model.cachePreviewColors(content)
+        }
     }
 
     private func applyMarkdownSourceContent(_ source: String) {
@@ -212,12 +210,16 @@ final class PreviewMarkdownView: NSView, WKNavigationDelegate, WKUIDelegate {
 
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
-        if let sourceBackgroundColor {
-            sourceTextView.backgroundColor = sourceBackgroundColor
-            layer?.backgroundColor = sourceBackgroundColor.cgColor
-        } else {
-            sourceTextView.backgroundColor = .textBackgroundColor
-            layer?.backgroundColor = nil
+        updateSourceBackground()
+    }
+
+    private func updateSourceBackground() {
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            let background = model.type == .rich
+                ? model.richBackground(on: .textBackgroundColor, forPreview: true)
+                : nil
+            sourceTextView.backgroundColor = background ?? .textBackgroundColor
+            layer?.backgroundColor = isRendered ? nil : sourceTextView.backgroundColor.cgColor
         }
     }
 

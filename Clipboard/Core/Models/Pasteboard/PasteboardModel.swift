@@ -107,6 +107,9 @@ final class PasteboardModel: Identifiable, Codable {
         cachedBackgroundColor = bg
         cachedForegroundColor = fg
         cachedHasBackgroundColor = hasBg
+        if type == .rich, hasBgColor, safeBgColor == nil {
+            cachedRichForegrounds = Self.richForegrounds(in: attributeString)
+        }
     }
 
     // MARK: - 纯文本（粘贴用）

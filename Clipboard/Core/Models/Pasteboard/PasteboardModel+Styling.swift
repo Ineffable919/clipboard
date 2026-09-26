@@ -22,8 +22,62 @@ extension PasteboardModel {
         return srgb.alphaComponent > 0.01 ? srgb : nil
     }
 
+    /// 只为没有有效背景的文字补底色，不修改富文本本身
+    func richBackground(on background: NSColor, forPreview: Bool = false) -> NSColor? {
+        guard hasBgColor else { return nil }
+        if let safeBgColor { return safeBgColor }
+
+        let foregrounds = (forPreview ? cachedPreviewForegrounds ?? [] : cachedRichForegrounds)
+            .compactMap { $0.usingColorSpace(.sRGB) }
+
+        guard !foregrounds.isEmpty,
+              let background = background.usingColorSpace(.sRGB)
+        else { return nil }
+
+        func minimumContrast(on color: NSColor) -> CGFloat {
+            foregrounds.reduce(CGFloat(21)) { min($0, textContrast($1, on: color)) }
+        }
+
+        guard minimumContrast(on: background) < 4.5 else { return nil }
+        let light = NSColor(srgbRed: 1, green: 1, blue: 1, alpha: 1)
+        let dark = NSColor(srgbRed: 0, green: 0, blue: 0, alpha: 1)
+        let lightContrast = minimumContrast(on: light)
+        let darkContrast = minimumContrast(on: dark)
+        let candidate = lightContrast >= darkContrast ? light : dark
+        // 深浅文字混排时，只有所有无背景片段都清晰才切换整块底色
+        return max(lightContrast, darkContrast) >= 4.5 ? candidate : nil
+    }
+
+    /// 完整预览首次加载后分析；空数组也缓存，避免反复扫描无适配需求的文本
+    func cachePreviewColors(_ content: NSAttributedString) {
+        guard cachedPreviewForegrounds == nil else { return }
+        cachedPreviewForegrounds = hasBgColor && safeBgColor == nil
+            ? Self.richForegrounds(in: content) : []
+    }
+
+    static func richForegrounds(in content: NSAttributedString) -> [NSColor] {
+        var colors = Set<NSColor>()
+        let source = content.string as NSString
+        let visibleCharacters = CharacterSet.whitespacesAndNewlines.inverted
+        content.enumerateAttributes(in: NSRange(location: 0, length: content.length)) { attributes, range, _ in
+            if let background = attributes[.backgroundColor] as? NSColor,
+               background.alphaComponent > 0.01 { return }
+            guard attributes[.attachment] == nil else { return }
+            let foreground = attributes[.foregroundColor] as? NSColor ?? .textColor
+            guard !colors.contains(foreground),
+                  source.rangeOfCharacter(from: visibleCharacters, options: [], range: range).location != NSNotFound
+            else { return }
+            // 保留动态颜色，使用时再按视图主题解析；相同颜色只参与一次对比度计算。
+            colors.insert(foreground)
+        }
+        return Array(colors)
+    }
+
     func colors() -> (NSColor, NSColor) {
-        if type == .rich, cachedBackgroundColor != nil, safeBgColor == nil {
+        if type == .rich {
+            if let background = richBackground(on: .textBackgroundColor) {
+                return (background, contrastingNSColor(for: background))
+            }
             return (.textBackgroundColor, .secondaryLabelColor)
         }
         return (
@@ -144,6 +198,24 @@ extension PasteboardModel {
 }
 
 // MARK: - NSColor helpers
+
+private func textContrast(_ foreground: NSColor, on background: NSColor) -> CGFloat {
+    func luminance(_ red: CGFloat, _ green: CGFloat, _ blue: CGFloat) -> CGFloat {
+        func linear(_ value: CGFloat) -> CGFloat {
+            value <= 0.04045 ? value / 12.92 : pow((value + 0.055) / 1.055, 2.4)
+        }
+        return 0.2126 * linear(red) + 0.7152 * linear(green) + 0.0722 * linear(blue)
+    }
+
+    let alpha = foreground.alphaComponent
+    let back = luminance(background.redComponent, background.greenComponent, background.blueComponent)
+    let front = luminance(
+        foreground.redComponent * alpha + background.redComponent * (1 - alpha),
+        foreground.greenComponent * alpha + background.greenComponent * (1 - alpha),
+        foreground.blueComponent * alpha + background.blueComponent * (1 - alpha)
+    )
+    return (max(front, back) + 0.05) / (min(front, back) + 0.05)
+}
 
 func contrastingNSColor(for color: NSColor) -> NSColor {
     let c = color.usingColorSpace(.sRGB) ?? color

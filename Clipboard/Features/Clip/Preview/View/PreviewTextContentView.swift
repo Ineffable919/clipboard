@@ -11,33 +11,22 @@ import SnapKit
 final class PreviewTextContentView: NSView {
     private let scrollView = NSScrollView()
     private let textView = NSTextView()
-    private let fixedBackgroundColor: NSColor?
+    private let model: PasteboardModel
 
     init(model: PasteboardModel) {
-        if model.type == .rich, let backgroundColor = model.safeBgColor {
-            fixedBackgroundColor = backgroundColor
-        } else {
-            fixedBackgroundColor = nil
-        }
-
+        self.model = model
         super.init(frame: .zero)
         wantsLayer = true
 
         setupScrollView()
         setupTextView()
 
-        if let backgroundColor = fixedBackgroundColor {
-            textView.backgroundColor = backgroundColor
-            layer?.backgroundColor = backgroundColor.cgColor
-        } else {
-            textView.backgroundColor = .textBackgroundColor
-        }
-
         scrollView.documentView = textView
         addSubview(scrollView)
         scrollView.snp.makeConstraints { $0.edges.equalToSuperview() }
 
         applyContent(for: model)
+        updateBackground()
     }
 
     @available(*, unavailable)
@@ -47,8 +36,16 @@ final class PreviewTextContentView: NSView {
 
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
-        if let backgroundColor = fixedBackgroundColor {
-            layer?.backgroundColor = backgroundColor.cgColor
+        updateBackground()
+    }
+
+    private func updateBackground() {
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            let background = model.type == .rich
+                ? model.richBackground(on: .textBackgroundColor, forPreview: true)
+                : nil
+            textView.backgroundColor = background ?? .textBackgroundColor
+            layer?.backgroundColor = textView.backgroundColor.cgColor
         }
     }
 
@@ -116,6 +113,9 @@ final class PreviewTextContentView: NSView {
                 range: NSRange(location: 0, length: mutable.length)
             )
             textView.textStorage?.setAttributedString(mutable)
+        }
+        if let content = textView.textStorage {
+            model.cachePreviewColors(content)
         }
     }
 

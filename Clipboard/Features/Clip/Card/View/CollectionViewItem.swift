@@ -161,26 +161,28 @@ final class CollectionViewItem: NSCollectionViewItem {
     }
 
     private func updateInfoIconAppearance() {
-        guard let model = item else { return }
-        let backgroundColor: NSColor
-        let backgroundAlpha: CGFloat
-        let tintColor: NSColor
+        view.effectiveAppearance.performAsCurrentDrawingAppearance {
+            guard let model = item else { return }
+            let backgroundColor: NSColor
+            let backgroundAlpha: CGFloat
+            let tintColor: NSColor
 
-        if model.type == .image {
-            backgroundColor = .unemphasizedSelectedContentBackgroundColor
-            backgroundAlpha = 0.8
-            tintColor = .secondaryLabelColor
-        } else {
-            let (base, textColor) = model.colors()
-            backgroundColor = base
-            backgroundAlpha = 1.0
-            tintColor = textColor
+            if model.type == .image {
+                backgroundColor = .unemphasizedSelectedContentBackgroundColor
+                backgroundAlpha = 0.8
+                tintColor = .secondaryLabelColor
+            } else {
+                let (base, textColor) = model.colors()
+                backgroundColor = base
+                backgroundAlpha = 1.0
+                tintColor = textColor
+            }
+
+            badgeBgView.dynamicBackgroundColor = backgroundColor
+            badgeBgView.backgroundAlpha = backgroundAlpha
+            infoIconView.contentTintColor = tintColor
+            quickPasteLabel.textColor = tintColor
         }
-
-        badgeBgView.dynamicBackgroundColor = backgroundColor
-        badgeBgView.backgroundAlpha = backgroundAlpha
-        infoIconView.contentTintColor = tintColor
-        quickPasteLabel.textColor = tintColor
     }
 
     private func updateQuickPasteLabel() {

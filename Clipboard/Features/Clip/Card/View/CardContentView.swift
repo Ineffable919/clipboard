@@ -226,18 +226,16 @@ private final class PassthroughTextView: NSTextView {
 
 final class CardRichContentView: NSView, PassthroughMouseEvents {
     private lazy var textView: PassthroughTextView = makeCardTextView()
+    private let model: PasteboardModel
 
     init(model: PasteboardModel, keyword: String) {
+        self.model = model
         super.init(frame: .zero)
-
-        if let bgColor = model.safeBgColor {
-            textView.drawsBackground = true
-            textView.backgroundColor = bgColor
-        }
 
         addSubview(textView)
         textView.snp.makeConstraints { $0.edges.equalToSuperview() }
         textView.textStorage?.setAttributedString(model.highlightedRichText(keyword: keyword))
+        updateBackground()
     }
 
     @available(*, unavailable)
@@ -247,6 +245,19 @@ final class CardRichContentView: NSView, PassthroughMouseEvents {
 
     func updateKeyword(_ keyword: String, model: PasteboardModel) {
         textView.textStorage?.setAttributedString(model.highlightedRichText(keyword: keyword))
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        updateBackground()
+    }
+
+    private func updateBackground() {
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            let background = model.richBackground(on: .textBackgroundColor)
+            textView.drawsBackground = background != nil
+            textView.backgroundColor = background ?? .textBackgroundColor
+        }
     }
 }
 

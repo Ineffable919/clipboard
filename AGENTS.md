@@ -70,7 +70,6 @@ If the Xcode MCP is configured, prefer its tools over generic alternatives when 
 - `XcodeListNavigatorIssues` — inspect unresolved issues when build output is insufficient; do not routinely repeat checks already resolved by the build result
 - `ExecuteSnippet` — test a code snippet in the context of a source file
 - `XcodeRead` — prefer over generic file read tools for reading Xcode project files
-- For writing and updating files, prefer generic file tools (`fsWrite`, `strReplace`, etc.) over `XcodeWrite` / `XcodeUpdate`
 
 
 ## Collaboration workflow

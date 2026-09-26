@@ -283,14 +283,13 @@ final class CardCommonBottomView: NSView, PassthroughMouseEvents {
 
     private var needsMask: Bool = false
     private var baseColor: NSColor = .controlBackgroundColor
+    private let model: PasteboardModel
 
     init(model: PasteboardModel) {
+        self.model = model
         super.init(frame: .zero)
         wantsLayer = true
 
-        let (base, textColor) = model.colors()
-        baseColor = base
-        label.textColor = textColor
         label.stringValue = model.introString()
 
         needsMask = model.needsBottomMask {
@@ -299,11 +298,10 @@ final class CardCommonBottomView: NSView, PassthroughMouseEvents {
 
         if needsMask {
             label.drawsBackground = true
-            label.backgroundColor = baseColor
             layer?.addSublayer(gradientLayer)
-            updateGradient()
         }
 
+        updateColors()
         addSubview(label)
         label.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
@@ -325,8 +323,16 @@ final class CardCommonBottomView: NSView, PassthroughMouseEvents {
 
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
-        if needsMask {
-            updateGradient()
+        updateColors()
+    }
+
+    private func updateColors() {
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            let (background, foreground) = model.colors()
+            baseColor = background
+            label.textColor = foreground
+            label.backgroundColor = background
+            if needsMask { updateGradient() }
         }
     }
 
