@@ -56,6 +56,8 @@ final class TopBarView: NSView {
     private var searchFieldWidthConstraint: Constraint?
     var modeAnimationGeneration = 0
     var modeChipLayers: [ModeChipLayer] = []
+    var modeClips: [ModeClip] = []
+    var modeHiddenViews: [NSView] = []
 
     lazy var chipController = TopBarChipController(
         topVM: topVM,
@@ -226,13 +228,8 @@ final class TopBarView: NSView {
 
     override func hitTest(_ point: NSPoint) -> NSView? {
         let result = super.hitTest(point)
-        if !isSearching, let result, result.isDescendant(of: searchRow) {
-            return defaultRow.hitTest(convert(point, from: superview))
-        }
-        if isSearching, result === searchRow {
-            return nil
-        }
-        return result
+        if result === settingBtn || result?.isDescendant(of: settingBtn) == true { return result }
+        return modeHitTest(point, fallback: result)
     }
 
     // MARK: - Update Badge

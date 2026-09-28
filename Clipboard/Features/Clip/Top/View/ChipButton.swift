@@ -874,4 +874,9 @@ extension ChipButton {
 
 extension ChipButton {
     var modeIconOrigin: NSPoint { stack.convert(.zero, to: self) }
+    var modeBackground: CALayer { backgroundLayer }
+    var modeLabel: CALayer? {
+        nameField.wantsLayer = true
+        return nameField.layer
+    }
 }

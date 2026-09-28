@@ -7,10 +7,17 @@ import AppKit
 
 extension TopBarView {
     struct ModeChipLayer {
+        let view: NSView
         let layer: CALayer
         let defaultFrame: CGRect
         let searchFrame: CGRect
         let showsInSearch: Bool
+    }
+
+    struct ModeClip {
+        let view: NSView
+        let clips: Bool
+        let masks: Bool
     }
 
     func applyMode(animated: Bool = false) {
@@ -30,8 +37,22 @@ extension TopBarView {
         chipScrollView.alphaValue = 1
         dotChipScrollView.alphaValue = 1
         addChipBtn.alphaValue = 1
-        for item in modeChipLayers { item.layer.removeFromSuperlayer() }
+        for item in modeChipLayers {
+            for layer in [item.layer, (item.view as? ChipButton)?.modeBackground,
+                          (item.view as? ChipButton)?.modeLabel].compactMap({ $0 }) {
+                for key in ["modeOffset", "modeWidth", "modePosition", "modeOpacity"] {
+                    layer.removeAnimation(forKey: key)
+                }
+            }
+        }
         modeChipLayers = []
+        for state in modeClips {
+            state.view.clipsToBounds = state.clips
+            state.view.layer?.masksToBounds = state.masks
+        }
+        modeClips = []
+        for view in modeHiddenViews { view.isHidden = false }
+        modeHiddenViews = []
         searchField.layer?.masksToBounds = false
         for view in [searchField, searchIconBtn, searchField.modeIconView] + searchField.modeTrailingViews {
             for key in ["modeOpacity", "modeOffset", "modeWidth", "modePosition", "modeIconOpacity"] {
@@ -64,17 +85,7 @@ extension TopBarView {
         if modeChipLayers.isEmpty { prepareModeChips() }
         animateModeField(buttonFrame: buttonFrame, fieldFrame: fieldFrame, wasHidden: wasHidden)
         animateModeIcon(buttonFrame: buttonFrame, wasHidden: wasHidden)
-        for item in modeChipLayers {
-            let source = wasHidden ? item.defaultFrame : item.searchFrame
-            let target = isSearching ? item.searchFrame : item.defaultFrame
-            animateModeLayer(item.layer, keyPath: "position.x", from: source.minX,
-                             to: target.minX, key: "modePosition")
-            animateModeLayer(item.layer, keyPath: "bounds.size.width", from: source.width,
-                             to: target.width, key: "modeWidth")
-            animateModeLayer(item.layer, keyPath: "opacity",
-                             from: item.showsInSearch == !wasHidden ? 1 : 0,
-                             to: item.showsInSearch == isSearching ? 1 : 0, key: "modeOpacity")
-        }
+        for item in modeChipLayers { animateModeChip(item, wasHidden: wasHidden) }
         fieldLayer.masksToBounds = true
         CATransaction.commit()
     }
@@ -141,29 +152,59 @@ extension TopBarView {
         let dotFrame = dotChipScrollView.convert(dotChipScrollView.bounds, to: self)
         let movedAddFrame = addFrame.offsetBy(dx: dotFrame.maxX + Const.space12 - addFrame.minX, dy: 0)
         addModeChip(addChipBtn, defaultFrame: addFrame, searchFrame: movedAddFrame, showsInSearch: false)
-        chipScrollView.alphaValue = 0
-        dotChipScrollView.alphaValue = 0
-        addChipBtn.alphaValue = 0
+        let buttons = Array(chipScrollView.modeButtons.values) + Array(dots.values)
+        for button in buttons where !button.isHidden && !modeChipLayers.contains(where: { $0.view === button }) {
+            button.isHidden = true
+            modeHiddenViews.append(button)
+        }
+        for item in modeChipLayers { unclipModeAncestors(of: item.view) }
     }
 
     private func addModeChip(
         _ view: NSView, defaultFrame: CGRect, searchFrame: CGRect, showsInSearch: Bool
     ) {
-        guard let bitmap = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { return }
-        view.cacheDisplay(in: view.bounds, to: bitmap)
-        let content = CALayer()
-        content.frame = view.bounds
-        content.contents = bitmap.cgImage
-        content.contentsScale = window?.backingScaleFactor ?? 2
-        let container = CALayer()
-        container.anchorPoint = .zero
-        container.frame = showsInSearch ? searchFrame : defaultFrame
-        container.masksToBounds = true
-        container.addSublayer(content)
-        layer?.addSublayer(container)
+        guard let layer = view.layer else { return }
         modeChipLayers.append(ModeChipLayer(
-            layer: container, defaultFrame: defaultFrame, searchFrame: searchFrame, showsInSearch: showsInSearch
+            view: view, layer: layer, defaultFrame: defaultFrame, searchFrame: searchFrame, showsInSearch: showsInSearch
         ))
+    }
+
+    private func unclipModeAncestors(of view: NSView) {
+        var ancestor = view.superview
+        while let parent = ancestor, parent !== self {
+            if !modeClips.contains(where: { $0.view === parent }) {
+                modeClips.append(ModeClip(view: parent, clips: parent.clipsToBounds,
+                                          masks: parent.layer?.masksToBounds ?? false))
+                parent.clipsToBounds = false
+                parent.layer?.masksToBounds = false
+            }
+            ancestor = parent.superview
+        }
+    }
+
+    private func animateModeChip(_ item: ModeChipLayer, wasHidden: Bool) {
+        let source = wasHidden ? item.defaultFrame : item.searchFrame
+        let target = isSearching ? item.searchFrame : item.defaultFrame
+        let base = item.showsInSearch ? item.searchFrame : item.defaultFrame
+        animateModeLayer(item.layer, keyPath: "transform.translation.x", from: source.minX - base.minX,
+                         to: target.minX - base.minX, key: "modeOffset")
+        animateModeLayer(item.layer, keyPath: "opacity",
+                         from: item.showsInSearch == !wasHidden ? 1 : 0,
+                         to: item.showsInSearch == isSearching ? 1 : 0, key: "modeOpacity")
+        guard let button = item.view as? ChipButton, !item.showsInSearch else { return }
+        let background = button.modeBackground
+        let sourceWidth = max(0, background.bounds.width + source.width - base.width)
+        let targetWidth = max(0, background.bounds.width + target.width - base.width)
+        animateModeLayer(background, keyPath: "bounds.size.width", from: sourceWidth,
+                         to: targetWidth, key: "modeWidth")
+        let origin = background.frame.minX
+        animateModeLayer(background, keyPath: "position.x",
+                         from: origin + sourceWidth * background.anchorPoint.x,
+                         to: origin + targetWidth * background.anchorPoint.x, key: "modePosition")
+        if let label = button.modeLabel {
+            animateModeLayer(label, keyPath: "opacity", from: wasHidden ? 1 : 0,
+                             to: isSearching ? 0 : 1, key: "modeOpacity")
+        }
     }
 
     private func animateModeLayer(
