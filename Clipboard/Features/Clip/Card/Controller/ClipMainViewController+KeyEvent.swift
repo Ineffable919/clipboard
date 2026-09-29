@@ -101,6 +101,8 @@ extension ClipMainViewController {
 
     private func handleActionKeyEvent(_ event: NSEvent) -> NSEvent? {
         switch event.keyCode {
+        case KeyCode.leftArrow, KeyCode.rightArrow:
+            return arrowKeyDown(event)
         case KeyCode.escape:
             return escapeKeyDown(event)
         case KeyCode.delete:
@@ -112,6 +114,24 @@ extension ClipMainViewController {
         default:
             return event
         }
+    }
+
+    private func arrowKeyDown(_ event: NSEvent) -> NSEvent? {
+        guard focusRegion == .collection,
+              event.modifierFlags.isDisjoint(with: [.command, .option, .control, .shift])
+        else { return event }
+        guard displayedItemCount > 0 else { return nil }
+
+        let movesRight = event.keyCode == KeyCode.rightArrow
+        let selected = collectionView.selectionIndexPaths
+        let anchor = (movesRight ? selected.max() : selected.min()) ?? selectIndexPath
+        let next = min(max(anchor.item + (movesRight ? 1 : -1), 0), displayedItemCount - 1)
+        if next == anchor.item {
+            NSSound.beep()
+        }
+        // 离屏选中项也按数据顺序导航，避免原生布局导航跳到可见边界或末项
+        resetSelectIndex(IndexPath(item: next, section: 0))
+        return nil
     }
 
     private func escapeKeyDown(_: NSEvent) -> NSEvent? {
