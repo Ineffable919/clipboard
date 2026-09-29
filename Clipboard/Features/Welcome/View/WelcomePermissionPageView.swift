@@ -6,6 +6,11 @@
 import AppKit
 import SwiftUI
 
+#Preview {
+    WelcomePermissionPageView(viewModel: WelcomeViewModel(currentPage: .permission))
+        .frame(width: WelcomeStyle.windowWidth, height: WelcomeStyle.windowHeight - WelcomeStyle.footerHeight)
+}
+
 struct WelcomePermissionPageView: View {
     let viewModel: WelcomeViewModel
     @Environment(\.colorScheme) private var colorScheme

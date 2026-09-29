@@ -5,6 +5,12 @@
 
 import SwiftUI
 
+#Preview {
+    WelcomeShortcutGuideView()
+        .frame(width: 300)
+        .padding(24)
+}
+
 struct WelcomeShortcutGuideView: View {
     @Environment(\.colorScheme) private var colorScheme
 

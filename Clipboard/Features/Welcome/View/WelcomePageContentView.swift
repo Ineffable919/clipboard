@@ -5,6 +5,11 @@
 
 import SwiftUI
 
+#Preview {
+    WelcomePageContentView(viewModel: WelcomeViewModel())
+        .frame(width: WelcomeStyle.windowWidth, height: WelcomeStyle.windowHeight - WelcomeStyle.footerHeight)
+}
+
 struct WelcomePageContentView: View {
     let viewModel: WelcomeViewModel
 

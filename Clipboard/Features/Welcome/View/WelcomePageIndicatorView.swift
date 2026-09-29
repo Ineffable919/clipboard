@@ -5,6 +5,11 @@
 
 import SwiftUI
 
+#Preview {
+    WelcomePageIndicatorView(viewModel: WelcomeViewModel())
+        .padding(24)
+}
+
 struct WelcomePageIndicatorView: View {
     let viewModel: WelcomeViewModel
 

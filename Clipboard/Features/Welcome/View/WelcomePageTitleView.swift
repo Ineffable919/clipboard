@@ -5,6 +5,12 @@
 
 import SwiftUI
 
+#Preview {
+    WelcomePageTitleView(title: .shortcutTitle, subtitle: .shortcutSub)
+        .frame(width: 360)
+        .padding(24)
+}
+
 struct WelcomePageTitleView: View {
     let title: LocalizedStringResource
     let subtitle: LocalizedStringResource

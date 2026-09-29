@@ -5,6 +5,11 @@
 
 import SwiftUI
 
+#Preview {
+    WelcomeIntroductionPageView()
+        .frame(width: WelcomeStyle.windowWidth, height: WelcomeStyle.windowHeight - WelcomeStyle.footerHeight)
+}
+
 struct WelcomeIntroductionPageView: View {
     var body: some View {
         HStack(alignment: .center, spacing: 31) {

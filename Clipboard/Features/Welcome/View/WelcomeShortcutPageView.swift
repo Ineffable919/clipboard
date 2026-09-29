@@ -6,6 +6,11 @@
 import AppKit
 import SwiftUI
 
+#Preview {
+    WelcomeShortcutPageView()
+        .frame(width: WelcomeStyle.windowWidth, height: WelcomeStyle.windowHeight - WelcomeStyle.footerHeight)
+}
+
 struct WelcomeShortcutPageView: View {
     @State private var shortcut = KeyboardShortcut.empty
 

@@ -5,6 +5,14 @@
 
 import SwiftUI
 
+#Preview {
+    WelcomePageLayout(title: .shortcutTitle, subtitle: .shortcutSub) {
+        WelcomeShortcutGuideView()
+            .frame(width: 300)
+    }
+    .frame(width: WelcomeStyle.windowWidth, height: WelcomeStyle.windowHeight - WelcomeStyle.footerHeight)
+}
+
 struct WelcomePageLayout<Content: View>: View {
     let title: LocalizedStringResource
     let subtitle: LocalizedStringResource

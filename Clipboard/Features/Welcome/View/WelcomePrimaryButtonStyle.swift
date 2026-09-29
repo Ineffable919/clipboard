@@ -5,6 +5,13 @@
 
 import SwiftUI
 
+#Preview {
+    Button(.continue) {}
+        .buttonStyle(WelcomePrimaryButtonStyle())
+        .frame(width: 100)
+        .padding(24)
+}
+
 struct WelcomePrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label

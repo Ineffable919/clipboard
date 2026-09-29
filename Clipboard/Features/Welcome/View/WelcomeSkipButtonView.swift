@@ -5,6 +5,11 @@
 
 import SwiftUI
 
+#Preview {
+    WelcomeSkipButtonView()
+        .padding(24)
+}
+
 struct WelcomeSkipButtonView: View {
     var body: some View {
         Button(.skip) {

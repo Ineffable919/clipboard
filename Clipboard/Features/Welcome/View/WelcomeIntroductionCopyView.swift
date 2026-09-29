@@ -5,6 +5,12 @@
 
 import SwiftUI
 
+#Preview {
+    WelcomeIntroductionCopyView()
+        .frame(width: 224)
+        .padding(24)
+}
+
 struct WelcomeIntroductionCopyView: View {
     @Environment(\.colorScheme) private var colorScheme
 

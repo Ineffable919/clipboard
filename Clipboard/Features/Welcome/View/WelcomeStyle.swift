@@ -11,7 +11,7 @@ enum WelcomeStyle {
     static let horizontalPadding: CGFloat = 48.0
     static let footerHeight: CGFloat = 66.0
 
-    static let accent = Color(nsColor: .systemBlue)
+    static let accent = Color.accentColor
     static let border = Color.primary.opacity(0.18)
 
     static func background(for colorScheme: ColorScheme) -> Color {

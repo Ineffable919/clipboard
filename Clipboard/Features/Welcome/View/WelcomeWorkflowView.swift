@@ -5,6 +5,11 @@
 
 import SwiftUI
 
+#Preview {
+    WelcomeWorkflowView()
+        .padding(24)
+}
+
 struct WelcomeWorkflowView: View {
     var body: some View {
         HStack(spacing: 8) {

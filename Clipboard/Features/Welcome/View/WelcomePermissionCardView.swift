@@ -5,6 +5,12 @@
 
 import SwiftUI
 
+#Preview {
+    WelcomePermissionCardView(viewModel: WelcomeViewModel(currentPage: .permission))
+        .frame(width: 360)
+        .padding(24)
+}
+
 struct WelcomePermissionCardView: View {
     let viewModel: WelcomeViewModel
 
@@ -64,10 +70,8 @@ struct WelcomePermissionCardView: View {
                     Button(.permissionOpenSettings) {
                         viewModel.openAccessibilitySettings()
                     }
-                    .buttonStyle(.bordered)
-                    .controlSize(.regular)
+                    .buttonStyle(WelcomeControlButtonStyle())
                     .frame(width: 104)
-                    .tint(WelcomeStyle.accent)
                 }
             }
             .frame(height: 48)

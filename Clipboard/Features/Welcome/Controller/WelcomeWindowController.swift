@@ -12,7 +12,7 @@ final class WelcomeWindowController: NSWindowController {
     static let shared = WelcomeWindowController()
 
     private init() {
-        let window = NSWindow(
+        let window = WelcomeWindow(
             contentRect: NSRect(
                 x: 0,
                 y: 0,

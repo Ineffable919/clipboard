@@ -5,6 +5,11 @@
 
 import SwiftUI
 
+#Preview {
+    WelcomeWorkflowKeyView(label: "⌘", width: 64)
+        .padding(24)
+}
+
 struct WelcomeWorkflowKeyView: View {
     let label: String
     let width: CGFloat

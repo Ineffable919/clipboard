@@ -5,6 +5,14 @@
 
 import SwiftUI
 
+#Preview {
+    @Previewable @Namespace var focusNamespace
+
+    WelcomeFooterView(viewModel: WelcomeViewModel(currentPage: .shortcut), focusNamespace: focusNamespace)
+        .frame(width: WelcomeStyle.windowWidth, height: WelcomeStyle.footerHeight)
+        .focusScope(focusNamespace)
+}
+
 struct WelcomeFooterView: View {
     let viewModel: WelcomeViewModel
     let focusNamespace: Namespace.ID

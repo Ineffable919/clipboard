@@ -6,6 +6,12 @@
 import AppKit
 import SwiftUI
 
+#Preview {
+    WelcomePreferencesControlsView()
+        .frame(width: 360)
+        .padding(24)
+}
+
 struct WelcomePreferencesControlsView: View {
     @State private var launchAtLogin = LaunchAtLoginHelper.shared.isEnabled
     @AppStorage(PrefKey.appearance.rawValue) private var appearanceRaw =
@@ -56,8 +62,14 @@ struct WelcomePreferencesControlsView: View {
                 }
                 .labelsHidden()
                 .pickerStyle(.menu)
-                .controlSize(.regular)
-                .frame(width: 104)
+                .buttonStyle(.borderless)
+                .foregroundStyle(.primary)
+                .padding(.horizontal, 8)
+                .frame(width: 104, height: 24)
+                .background(
+                    (colorScheme == .dark ? Color.white : .black).opacity(0.08),
+                    in: .rect(cornerRadius: 6)
+                )
             }
             .frame(height: 48)
         }

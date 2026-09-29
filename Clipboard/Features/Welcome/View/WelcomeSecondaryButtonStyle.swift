@@ -5,6 +5,13 @@
 
 import SwiftUI
 
+#Preview {
+    Button(.previous) {}
+        .buttonStyle(WelcomeSecondaryButtonStyle())
+        .frame(width: 100)
+        .padding(24)
+}
+
 struct WelcomeSecondaryButtonStyle: ButtonStyle {
     @Environment(\.colorScheme) private var colorScheme
 

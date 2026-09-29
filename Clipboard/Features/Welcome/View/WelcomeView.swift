@@ -62,7 +62,6 @@ struct WelcomeView: View {
                 : WelcomeStyle.background(for: colorScheme)
         )
         .foregroundStyle(WelcomeStyle.primaryText(for: colorScheme))
-        .tint(WelcomeStyle.accent)
     }
 }
 

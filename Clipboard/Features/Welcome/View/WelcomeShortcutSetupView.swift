@@ -5,6 +5,12 @@
 
 import SwiftUI
 
+#Preview {
+    WelcomeShortcutSetupView(shortcut: .constant(.empty), onRestoreDefault: {})
+        .frame(width: 600)
+        .padding(24)
+}
+
 struct WelcomeShortcutSetupView: View {
     @Binding var shortcut: KeyboardShortcut
     let onRestoreDefault: () -> Void
