@@ -1,367 +1,10 @@
 {
   "sourceLanguage" : "zh-Hans",
   "strings" : {
-    "clearHistorySuccess" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Deleted successfully" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "删除成功" } }
-      }
-    },
-    "clearHistoryFailed" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Could not clear history. Please try again." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "清空历史失败，请重试" } }
-      }
-    },
-    "clearHistorySpaceFailed" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "History was cleared, but some disk space could not be reclaimed." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "历史已清空，但部分磁盘空间未能回收" } }
-      }
-    },
-    "floatingDisplayMode": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Card Display Mode"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "卡片显示模式"
-          }
-        }
-      }
-    },
-    "floatingModeStandard": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Standard"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "标准"
-          }
-        }
-      }
-    },
-    "floatingModeMinimal": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Compact"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "简洁"
-          }
-        }
-      }
-    },
-    "jsonAddEscapes" : {
-      "comment" : "JSON editor menu item: add escaping",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add Escapes" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "添加转义" } }
-      }
-    },
-    "jsonCompact" : {
-      "comment" : "JSON editor toolbar action: compact JSON",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Compact" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "压缩" } }
-      }
-    },
-    "jsonDecodeUnicode" : {
-      "comment" : "JSON editor menu item: decode Unicode escapes",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Unicode to Text" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Unicode 转中文" } }
-      }
-    },
-    "jsonDuplicateKey" : {
-      "comment" : "JSON editor error when renamed keys collide",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Duplicate key after renaming: %@" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "键命名后出现重复键：%@" } }
-      }
-    },
-    "jsonEncodeUnicode" : {
-      "comment" : "JSON editor menu item: encode text as Unicode escapes",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Text to Unicode" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "中文转 Unicode" } }
-      }
-    },
-    "jsonEscape" : {
-      "comment" : "JSON editor escape menu title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Escape" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "转义" } }
-      }
-    },
-    "jsonFormat" : {
-      "comment" : "JSON editor toolbar action: format JSON",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Format" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "格式化" } }
-      }
-    },
-    "jsonIndentNone" : {
-      "comment" : "JSON editor indentation option with line breaks and no leading spaces",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "No Indent" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "无缩进" } }
-      }
-    },
-    "jsonIndentSpaces" : {
-      "comment" : "JSON editor indentation option; argument is number of spaces",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Indent %lld Spaces" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "缩进空格 %lld" } }
-      }
-    },
-    "jsonInvalid" : {
-      "comment" : "JSON editor validation status",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Invalid JSON" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "JSON 无效" } }
-      }
-    },
-    "jsonKeyCamel" : {
-      "comment" : "JSON key naming style",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "camelCase" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "camelCase" } }
-      }
-    },
-    "jsonKeyKebab" : {
-      "comment" : "JSON key naming style",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "kebab-case" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "kebab-case" } }
-      }
-    },
-    "jsonKeyPascal" : {
-      "comment" : "JSON key naming style",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "CamelCase" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "CamelCase" } }
-      }
-    },
-    "jsonKeyScreamingSnake" : {
-      "comment" : "JSON key naming style",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "SNAKE_CASE" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "SNAKE_CASE" } }
-      }
-    },
-    "jsonKeySnake" : {
-      "comment" : "JSON key naming style",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "snake_case" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "snake_case" } }
-      }
-    },
-    "jsonKeySpace" : {
-      "comment" : "JSON key naming style",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "space case" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "space case" } }
-      }
-    },
-    "jsonKeyTitle" : {
-      "comment" : "JSON key naming style",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Camel Case" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Camel Case" } }
-      }
-    },
-    "jsonLineColumn" : {
-      "comment" : "JSON editor cursor position; arguments are line and column",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Line %1$lld, Column %2$lld" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "第 %1$lld 行，第 %2$lld 列" } }
-      }
-    },
-    "jsonModeTooltip" : {
-      "comment" : "Tooltip for switching to JSON editing mode",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Switch to JSON mode" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "切换到 JSON 模式" } }
-      }
-    },
-    "jsonProcessing" : {
-      "comment" : "JSON editor processing status",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Processing…" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "处理中…" } }
-      }
-    },
-    "jsonRemoveEscapes" : {
-      "comment" : "JSON editor menu item: remove escaping",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove Escapes" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "取消转义" } }
-      }
-    },
-    "jsonRenameKeys" : {
-      "comment" : "JSON editor key naming menu title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Key Naming" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "键命名" } }
-      }
-    },
-    "jsonRichWarningMessage" : {
-      "comment" : "JSON mode switch warning message",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Switching to JSON mode removes formatting added during this edit." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "切换到 JSON 模式会移除本次编辑中添加的富文本格式。" } }
-      }
-    },
-    "jsonRichWarningTitle" : {
-      "comment" : "JSON mode switch warning title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Remove Text Formatting?" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "移除文本格式？" } }
-      }
-    },
-    "jsonSortAscending" : {
-      "comment" : "JSON editor key sort option",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Ascending" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "升序" } }
-      }
-    },
-    "jsonSortDescending" : {
-      "comment" : "JSON editor key sort option",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Descending" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "降序" } }
-      }
-    },
-    "jsonSortKeys" : {
-      "comment" : "JSON editor key sorting menu title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Sort Keys" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "键排序" } }
-      }
-    },
-    "jsonTransformFailed" : {
-      "comment" : "JSON editor transformation failure",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Transformation failed. Check the JSON syntax." } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "转换失败，请检查 JSON 格式" } }
-      }
-    },
-    "jsonUnicode" : {
-      "comment" : "JSON editor Unicode conversion menu title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Unicode" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "Unicode" } }
-      }
-    },
-    "jsonValid" : {
-      "comment" : "JSON editor validation status",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Valid JSON" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "JSON 有效" } }
-      }
-    },
-    "textModeTooltip" : {
-      "comment" : "Tooltip for switching to text editing mode",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Switch to text mode" } },
-        "zh-Hans" : { "stringUnit" : { "state" : "translated", "value" : "切换到文本模式" } }
-      }
-    },
-    "previewViewRendered" : {
-      "comment" : "Preview toolbar: switch back to rendered markdown",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "View rendered"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "查看渲染"
-          }
-        }
-      }
-    },
-    "previewViewSource" : {
-      "comment" : "Preview toolbar: view raw markdown source",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "View source"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "查看原文"
-          }
-        }
-      }
-    },
     "" : {
       "shouldTranslate" : false
     },
     "%@ (%@)" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -369,10 +12,10 @@
             "value" : "%1$@ (%2$@)"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "%@ %@" : {
-      "shouldTranslate" : false,
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
@@ -380,7 +23,8 @@
             "value" : "%1$@ %2$@"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "aboutApp" : {
       "comment" : "Menu item: About app with app name",
@@ -396,6 +40,132 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "关于 %@"
+          }
+        }
+      }
+    },
+    "aboutAutoCheckUpdates" : {
+      "comment" : "Toggle label: automatically check for updates",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check automatically"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动检查更新"
+          }
+        }
+      }
+    },
+    "aboutAutoDownloadUpdates" : {
+      "comment" : "Toggle label: automatically download updates",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download automatically"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动下载更新"
+          }
+        }
+      }
+    },
+    "aboutCheckForUpdates" : {
+      "comment" : "Button title: check for updates",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check for Updates"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "检查更新"
+          }
+        }
+      }
+    },
+    "aboutCopyrightFormat" : {
+      "comment" : "Copyright text in About settings, with year placeholder",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copyright © %lld Crown. All rights reserved."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copyright © %lld Crown. All rights reserved."
+          }
+        }
+      }
+    },
+    "aboutFeedback" : {
+      "comment" : "Link title: feedback and issues",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feedback"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "反馈建议"
+          }
+        }
+      }
+    },
+    "aboutGithub" : {
+      "comment" : "Link title: GitHub repository",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GitHub"
+          }
+        }
+      }
+    },
+    "aboutMadeForMac" : {
+      "comment" : "Caption in About settings",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Made with ❤️ for macOS"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Made with ❤️ for macOS"
           }
         }
       }
@@ -450,6 +220,258 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "应用"
+          }
+        }
+      }
+    },
+    "appearanceDisplayDrawer" : {
+      "comment" : "Display mode: drawer",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drawers"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "抽屉"
+          }
+        }
+      }
+    },
+    "appearanceDisplayLabel" : {
+      "comment" : "Label: display mode",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Display Mode"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示模式"
+          }
+        }
+      }
+    },
+    "appearanceDisplayWindow" : {
+      "comment" : "Display mode: window",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Window"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "窗口"
+          }
+        }
+      }
+    },
+    "appearanceGlassBlurred" : {
+      "comment" : "Label next to glass material slider: blurred",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blurred"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "模糊"
+          }
+        }
+      }
+    },
+    "appearanceGlassLabel" : {
+      "comment" : "Label: glass material strength",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Glass Material"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "玻璃材质"
+          }
+        }
+      }
+    },
+    "appearanceGlassTransparent" : {
+      "comment" : "Label next to glass material slider: transparent",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transparent"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "透明"
+          }
+        }
+      }
+    },
+    "appearanceModeDark" : {
+      "comment" : "Appearance mode: dark",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dark"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "深色"
+          }
+        }
+      }
+    },
+    "appearanceModeLabel" : {
+      "comment" : "Label: appearance mode",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appearance"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外观"
+          }
+        }
+      }
+    },
+    "appearanceModeLight" : {
+      "comment" : "Appearance mode: light",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "浅色"
+          }
+        }
+      }
+    },
+    "appearanceModeSystem" : {
+      "comment" : "Appearance mode: follow system",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跟随系统"
+          }
+        }
+      }
+    },
+    "appearancePositionCenter" : {
+      "comment" : "Window position mode: screen center",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Center of screen"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "屏幕中心"
+          }
+        }
+      }
+    },
+    "appearancePositionLabel" : {
+      "comment" : "Label: window position",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Window position"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "窗口位置"
+          }
+        }
+      }
+    },
+    "appearancePositionLast" : {
+      "comment" : "Window position mode: last position",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last Position"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上次位置"
+          }
+        }
+      }
+    },
+    "appearancePositionMouse" : {
+      "comment" : "Window position mode: mouse location",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mouse position"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "鼠标位置"
           }
         }
       }
@@ -651,6 +673,57 @@
         }
       }
     },
+    "clearHistoryFailed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not clear history. Please try again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "清空历史失败，请重试"
+          }
+        }
+      }
+    },
+    "clearHistorySpaceFailed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "History was cleared, but some disk space could not be reclaimed."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "历史已清空，但部分磁盘空间未能回收"
+          }
+        }
+      }
+    },
+    "clearHistorySuccess" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deleted successfully"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除成功"
+          }
+        }
+      }
+    },
     "clipboard" : {
       "comment" : "System chip name for the default clipboard category",
       "extractionState" : "manual",
@@ -755,6 +828,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "确定"
+          }
+        }
+      }
+    },
+    "continue" : {
+      "comment" : "Welcome flow primary button to continue",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "继续"
           }
         }
       }
@@ -1119,6 +1210,273 @@
         }
       }
     },
+    "floatingDisplayMode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Card Display Mode"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "卡片显示模式"
+          }
+        }
+      }
+    },
+    "floatingModeMinimal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compact"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "简洁"
+          }
+        }
+      }
+    },
+    "floatingModeStandard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standard"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "标准"
+          }
+        }
+      }
+    },
+    "generalClearHistory" : {
+      "comment" : "Button: clear all history",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear History..."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除历史..."
+          }
+        }
+      }
+    },
+    "generalDockIcon" : {
+      "comment" : "Toggle label: show dock icon",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock Icon"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dock图标"
+          }
+        }
+      }
+    },
+    "generalEnableAccess" : {
+      "comment" : "Button shown when direct paste requires Accessibility permission",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enable Accessibility"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启用无障碍访问"
+          }
+        }
+      }
+    },
+    "generalHistoryCleanupHint" : {
+      "comment" : "Tooltip: history is only cleaned up once per day",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cleanup runs once per day"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "每天仅删除一次"
+          }
+        }
+      }
+    },
+    "generalHistoryTitle" : {
+      "comment" : "Section title: keep history",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep History"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保留历史"
+          }
+        }
+      }
+    },
+    "generalLaunch" : {
+      "comment" : "Toggle label: launch app at login",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open at login"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "登录时打开"
+          }
+        }
+      }
+    },
+    "generalMenuBarIcon" : {
+      "comment" : "Toggle label: show menu bar icon",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Menu Bar Icon"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "状态栏图标"
+          }
+        }
+      }
+    },
+    "generalPasteItemsTitle" : {
+      "comment" : "Section title: paste items",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste Items"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粘贴项目"
+          }
+        }
+      }
+    },
+    "generalPastePlain" : {
+      "comment" : "Toggle label: always paste as plain text",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Always paste as Plain Text"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "始终以纯文本粘贴"
+          }
+        }
+      }
+    },
+    "generalRemoveTailingNewline" : {
+      "comment" : "Toggle label: remove trailing newline when pasting",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove Trailing Newline on Paste"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粘贴时去掉末尾的换行符"
+          }
+        }
+      }
+    },
+    "generalSound" : {
+      "comment" : "Toggle label: enable sound effects",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sound effects"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音效"
+          }
+        }
+      }
+    },
+    "help" : {
+      "comment" : "Button title for the settings help center link",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Help Center"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "帮助中心"
+          }
+        }
+      }
+    },
     "historyDays" : {
       "comment" : "History display: N days, e.g. '3 days'",
       "extractionState" : "manual",
@@ -1169,42 +1527,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld个月"
-          }
-        }
-      }
-    },
-    "historyWeeks" : {
-      "comment" : "History display: N weeks, e.g. '2 weeks'",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld weeks"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld周"
-          }
-        }
-      }
-    },
-    "historyYear" : {
-      "comment" : "History display: 1 year",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1 year"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "1年"
           }
         }
       }
@@ -1295,6 +1617,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "年"
+          }
+        }
+      }
+    },
+    "historyWeeks" : {
+      "comment" : "History display: N weeks, e.g. '2 weeks'",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld weeks"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld周"
+          }
+        }
+      }
+    },
+    "historyYear" : {
+      "comment" : "History display: 1 year",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 year"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1年"
           }
         }
       }
@@ -1515,6 +1873,330 @@
         }
       }
     },
+    "introColorTitle" : {
+      "comment" : "Welcome introduction color capability title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Colors"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "颜色"
+          }
+        }
+      }
+    },
+    "introEyebrow" : {
+      "comment" : "Welcome page eyebrow",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "01 / QUICK START"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "01 / 快速开始"
+          }
+        }
+      }
+    },
+    "introFileSub" : {
+      "comment" : "Welcome introduction file capability description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use local files only when you need them."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按需访问，本地预览。"
+          }
+        }
+      }
+    },
+    "introFileTitle" : {
+      "comment" : "Welcome introduction file capability title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Files"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件"
+          }
+        }
+      }
+    },
+    "introImageSub" : {
+      "comment" : "Welcome introduction image capability description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep visual content ready to reuse."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保留画面，随时取用。"
+          }
+        }
+      }
+    },
+    "introImageTitle" : {
+      "comment" : "Welcome introduction image capability title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Images"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "图片"
+          }
+        }
+      }
+    },
+    "introLinkSub" : {
+      "comment" : "Welcome introduction link capability description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recognize and organize links automatically."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动识别，快速归档。"
+          }
+        }
+      }
+    },
+    "introLinkTitle" : {
+      "comment" : "Welcome introduction link capability title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Links"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "链接"
+          }
+        }
+      }
+    },
+    "introPasteSub" : {
+      "comment" : "Welcome introduction fast paste description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose an item and paste it into the current app."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择内容后，立即粘贴到当前应用。"
+          }
+        }
+      }
+    },
+    "introPasteTitle" : {
+      "comment" : "Welcome introduction fast paste title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste Instantly"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速粘贴"
+          }
+        }
+      }
+    },
+    "introRecordSub" : {
+      "comment" : "Welcome introduction automatic recording description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copied content is saved locally on your Mac."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制的内容会自动保存在本机。"
+          }
+        }
+      }
+    },
+    "introRecordTitle" : {
+      "comment" : "Welcome introduction automatic recording title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save Automatically"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动记录"
+          }
+        }
+      }
+    },
+    "introSearchSub" : {
+      "comment" : "Welcome introduction instant search description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Type a keyword to find exactly what you need."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输入关键词，快速找到需要的内容。"
+          }
+        }
+      }
+    },
+    "introSearchTitle" : {
+      "comment" : "Welcome introduction instant search title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search Instantly"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "即时搜索"
+          }
+        }
+      }
+    },
+    "introSub" : {
+      "comment" : "Welcome introduction subtitle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clip saves your clipboard history in the background, ready whenever you need it."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clip 会在后台保存剪贴板历史，需要时一键找回。"
+          }
+        }
+      }
+    },
+    "introTextSub" : {
+      "comment" : "Welcome introduction text capability description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lightweight yet powerful for everyday work."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "轻量而强大，提升日常效率。"
+          }
+        }
+      }
+    },
+    "introTextTitle" : {
+      "comment" : "Welcome introduction text capability title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文本"
+          }
+        }
+      }
+    },
+    "introTitle" : {
+      "comment" : "Welcome introduction title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy it once. Find it anytime."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制过的，不必重来"
+          }
+        }
+      }
+    },
     "itemCount" : {
       "comment" : "Number of items",
       "extractionState" : "manual",
@@ -1533,6 +2215,780 @@
         }
       }
     },
+    "jsonAddEscapes" : {
+      "comment" : "JSON editor menu item: add escaping",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Escapes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加转义"
+          }
+        }
+      }
+    },
+    "jsonCompact" : {
+      "comment" : "JSON editor toolbar action: compact JSON",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compact"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "压缩"
+          }
+        }
+      }
+    },
+    "jsonDecodeUnicode" : {
+      "comment" : "JSON editor menu item: decode Unicode escapes",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unicode to Text"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unicode 转中文"
+          }
+        }
+      }
+    },
+    "jsonDuplicateKey" : {
+      "comment" : "JSON editor error when renamed keys collide",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duplicate key after renaming: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "键命名后出现重复键：%@"
+          }
+        }
+      }
+    },
+    "jsonEncodeUnicode" : {
+      "comment" : "JSON editor menu item: encode text as Unicode escapes",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text to Unicode"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "中文转 Unicode"
+          }
+        }
+      }
+    },
+    "jsonEscape" : {
+      "comment" : "JSON editor escape menu title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escape"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "转义"
+          }
+        }
+      }
+    },
+    "jsonFormat" : {
+      "comment" : "JSON editor toolbar action: format JSON",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Format"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "格式化"
+          }
+        }
+      }
+    },
+    "jsonIndentNone" : {
+      "comment" : "JSON editor indentation option with line breaks and no leading spaces",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Indent"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无缩进"
+          }
+        }
+      }
+    },
+    "jsonIndentSpaces" : {
+      "comment" : "JSON editor indentation option; argument is number of spaces",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indent %lld Spaces"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缩进空格 %lld"
+          }
+        }
+      }
+    },
+    "jsonInvalid" : {
+      "comment" : "JSON editor validation status",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid JSON"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JSON 无效"
+          }
+        }
+      }
+    },
+    "jsonKeyCamel" : {
+      "comment" : "JSON key naming style",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "camelCase"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "camelCase"
+          }
+        }
+      }
+    },
+    "jsonKeyKebab" : {
+      "comment" : "JSON key naming style",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kebab-case"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kebab-case"
+          }
+        }
+      }
+    },
+    "jsonKeyPascal" : {
+      "comment" : "JSON key naming style",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CamelCase"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CamelCase"
+          }
+        }
+      }
+    },
+    "jsonKeyScreamingSnake" : {
+      "comment" : "JSON key naming style",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SNAKE_CASE"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SNAKE_CASE"
+          }
+        }
+      }
+    },
+    "jsonKeySnake" : {
+      "comment" : "JSON key naming style",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "snake_case"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "snake_case"
+          }
+        }
+      }
+    },
+    "jsonKeySpace" : {
+      "comment" : "JSON key naming style",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "space case"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "space case"
+          }
+        }
+      }
+    },
+    "jsonKeyTitle" : {
+      "comment" : "JSON key naming style",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camel Case"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Camel Case"
+          }
+        }
+      }
+    },
+    "jsonLineColumn" : {
+      "comment" : "JSON editor cursor position; arguments are line and column",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Line %1$lld, Column %2$lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "第 %1$lld 行，第 %2$lld 列"
+          }
+        }
+      }
+    },
+    "jsonModeTooltip" : {
+      "comment" : "Tooltip for switching to JSON editing mode",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch to JSON mode"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切换到 JSON 模式"
+          }
+        }
+      }
+    },
+    "jsonProcessing" : {
+      "comment" : "JSON editor processing status",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Processing…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "处理中…"
+          }
+        }
+      }
+    },
+    "jsonRemoveEscapes" : {
+      "comment" : "JSON editor menu item: remove escaping",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove Escapes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取消转义"
+          }
+        }
+      }
+    },
+    "jsonRenameKeys" : {
+      "comment" : "JSON editor key naming menu title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key Naming"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "键命名"
+          }
+        }
+      }
+    },
+    "jsonRichWarningMessage" : {
+      "comment" : "JSON mode switch warning message",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switching to JSON mode removes formatting added during this edit."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切换到 JSON 模式会移除本次编辑中添加的富文本格式。"
+          }
+        }
+      }
+    },
+    "jsonRichWarningTitle" : {
+      "comment" : "JSON mode switch warning title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove Text Formatting?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除文本格式？"
+          }
+        }
+      }
+    },
+    "jsonSortAscending" : {
+      "comment" : "JSON editor key sort option",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ascending"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "升序"
+          }
+        }
+      }
+    },
+    "jsonSortDescending" : {
+      "comment" : "JSON editor key sort option",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descending"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "降序"
+          }
+        }
+      }
+    },
+    "jsonSortKeys" : {
+      "comment" : "JSON editor key sorting menu title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sort Keys"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "键排序"
+          }
+        }
+      }
+    },
+    "jsonTransformFailed" : {
+      "comment" : "JSON editor transformation failure",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Transformation failed. Check the JSON syntax."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "转换失败，请检查 JSON 格式"
+          }
+        }
+      }
+    },
+    "jsonUnicode" : {
+      "comment" : "JSON editor Unicode conversion menu title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unicode"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unicode"
+          }
+        }
+      }
+    },
+    "jsonValid" : {
+      "comment" : "JSON editor validation status",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valid JSON"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JSON 有效"
+          }
+        }
+      }
+    },
+    "keyboardLaunchApp" : {
+      "comment" : "Keyboard shortcut row title with app name placeholder",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activate %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "启动 %@"
+          }
+        }
+      }
+    },
+    "keyboardNextTab" : {
+      "comment" : "Keyboard shortcut row title: show next tab",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Next Tab"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示下一个 Tab"
+          }
+        }
+      }
+    },
+    "keyboardPastePlain" : {
+      "comment" : "Keyboard setting row title: paste as plain text",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plain Text mode"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粘贴为纯文本"
+          }
+        }
+      }
+    },
+    "keyboardPreviousTab" : {
+      "comment" : "Keyboard shortcut row title: show previous tab",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Previous Tab"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示上一个 Tab"
+          }
+        }
+      }
+    },
+    "keyboardQuick" : {
+      "comment" : "Keyboard setting row title: quick paste modifier",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quick Paste"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快速粘贴"
+          }
+        }
+      }
+    },
+    "keyboardQuickSuffix" : {
+      "comment" : "Text shown after the quick paste modifier picker",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+ 1...9"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+ 1...9"
+          }
+        }
+      }
+    },
+    "keyboardReset" : {
+      "comment" : "Preview title for reset shortcuts button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset shortcuts to default"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置快捷方式为默认"
+          }
+        }
+      }
+    },
+    "keyboardResetButton" : {
+      "comment" : "Confirmation button: reset shortcuts",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置"
+          }
+        }
+      }
+    },
+    "keyboardResetConfirmMessage" : {
+      "comment" : "Confirmation dialog message for resetting all shortcuts",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Are you sure you want to reset all shortcuts to their defaults?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "您确定将所有的快键方式重置为默认值吗？"
+          }
+        }
+      }
+    },
+    "keyboardResetKeys" : {
+      "comment" : "Button title: reset shortcuts to defaults",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset shortcuts to defaults…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置快键方式为默认..."
+          }
+        }
+      }
+    },
+    "keyboardResetMore" : {
+      "comment" : "Preview title for reset shortcuts button with ellipsis",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset shortcuts to default..."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置快捷方式为默认..."
+          }
+        }
+      }
+    },
+    "keyboardShortcutHint" : {
+      "comment" : "Placeholder text in shortcut recorder when no shortcut is set",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record Shortcut…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请录入快捷键…"
+          }
+        }
+      }
+    },
+    "keyboardShortcutTip" : {
+      "comment" : "Prompt text in shortcut recorder while recording",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Press Shortcut"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按下快捷键"
+          }
+        }
+      }
+    },
     "keychain" : {
       "comment" : "Name of Keychain Access app",
       "extractionState" : "manual",
@@ -1547,6 +3003,96 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "钥匙串访问"
+          }
+        }
+      }
+    },
+    "language" : {
+      "comment" : "Label for language picker in settings",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Language"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "语言"
+          }
+        }
+      }
+    },
+    "languageOptionChinese" : {
+      "comment" : "Language option: Simplified Chinese",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "简体中文"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "简体中文"
+          }
+        }
+      }
+    },
+    "languageOptionEnglish" : {
+      "comment" : "Language option: English",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "English"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "English"
+          }
+        }
+      }
+    },
+    "languageRestartConfirmMessage" : {
+      "comment" : "Alert message when user changes language, explaining restart is required",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changing the language requires restarting the app. Are you sure?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更改语言需要重新启动应用才能生效，是否确定更改？"
+          }
+        }
+      }
+    },
+    "languageRestartConfirmTitle" : {
+      "comment" : "Alert title when user changes language",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
           }
         }
       }
@@ -1658,19 +3204,19 @@
         }
       }
     },
-    "mcpPasteInto" : {
+    "mcpConnectFormat" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Paste into:"
+            "value" : "Connect %@"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "粘贴到："
+            "value" : "连接 %@"
           }
         }
       }
@@ -1688,23 +3234,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "连接 AI 工具"
-          }
-        }
-      }
-    },
-    "mcpConnectFormat" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connect %@"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "连接 %@"
           }
         }
       }
@@ -1790,6 +3319,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已开放工具"
+          }
+        }
+      }
+    },
+    "mcpPasteInto" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste into:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粘贴到："
           }
         }
       }
@@ -2115,6 +3661,131 @@
         }
       }
     },
+    "pageAbout" : {
+      "comment" : "Settings sidebar item: About",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关于"
+          }
+        }
+      }
+    },
+    "pageAppearance" : {
+      "comment" : "Settings sidebar item: Appearance",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appearance"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外观"
+          }
+        }
+      }
+    },
+    "pageGeneral" : {
+      "comment" : "Settings sidebar item: General",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "General"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通用"
+          }
+        }
+      }
+    },
+    "pageKeyboard" : {
+      "comment" : "Settings sidebar item: Keyboard shortcuts",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keyboard"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快捷键"
+          }
+        }
+      }
+    },
+    "pageMcp" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI"
+          }
+        }
+      }
+    },
+    "pagePrivacy" : {
+      "comment" : "Settings sidebar item: Privacy",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privacy"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐私"
+          }
+        }
+      }
+    },
+    "pageStorage" : {
+      "comment" : "Settings sidebar item: Storage",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Storage"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "存储"
+          }
+        }
+      }
+    },
     "passwords" : {
       "comment" : "Name of Passwords app",
       "extractionState" : "manual",
@@ -2165,6 +3836,78 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "以纯文本粘贴"
+          }
+        }
+      }
+    },
+    "pasteTargetToApp" : {
+      "comment" : "Paste target mode: paste directly to active app",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To Active App"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "到当前活动应用"
+          }
+        }
+      }
+    },
+    "pasteTargetToAppDesc" : {
+      "comment" : "Paste target mode description: paste directly to active app",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste the selected item directly into the app you are currently using."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将选定的项目直接粘贴到您当前正在使用的应用程序中。"
+          }
+        }
+      }
+    },
+    "pasteTargetToClipboard" : {
+      "comment" : "Paste target mode: copy to clipboard",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To Clipboard"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "到剪贴板"
+          }
+        }
+      }
+    },
+    "pasteTargetToClipboardDesc" : {
+      "comment" : "Paste target mode description: copy to clipboard for manual paste",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy the selected item to the system clipboard for manual pasting."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将选定的项目复制到系统剪贴板，以便随后手动粘贴。"
           }
         }
       }
@@ -2331,6 +4074,204 @@
         }
       }
     },
+    "permissionAccessSub" : {
+      "comment" : "Welcome accessibility permission description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Used only to paste your selection into the current app."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "用于将选中的内容粘贴到当前应用"
+          }
+        }
+      }
+    },
+    "permissionEyebrow" : {
+      "comment" : "Welcome permissions page eyebrow",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "03 / FINISH SETUP"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "03 / 完成设置"
+          }
+        }
+      }
+    },
+    "permissionFilesSub" : {
+      "comment" : "Welcome files and folders permission description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Files are requested by macOS only when you preview or use them. No setup is needed now."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件仅在预览或使用时由 macOS 按需询问，现在无需设置。"
+          }
+        }
+      }
+    },
+    "permissionFilesTitle" : {
+      "comment" : "Welcome files and folders permission title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Files & Folders"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文件与文件夹"
+          }
+        }
+      }
+    },
+    "permissionGranted" : {
+      "comment" : "Short status when accessibility permission is granted",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enabled"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已开启"
+          }
+        }
+      }
+    },
+    "permissionKeyboardPrivacy" : {
+      "comment" : "Welcome privacy note explaining accessibility permission scope",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clip never reads your keystrokes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clip 不会读取你的键盘输入"
+          }
+        }
+      }
+    },
+    "permissionLocalOnly" : {
+      "comment" : "Welcome privacy local-only note",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stored only on this Mac"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅保存在这台 Mac"
+          }
+        }
+      }
+    },
+    "permissionOnDemand" : {
+      "comment" : "Files and folders permission on-demand status",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On demand"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按需授权"
+          }
+        }
+      }
+    },
+    "permissionOpenSettings" : {
+      "comment" : "Button that opens macOS Accessibility settings from the welcome flow",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Settings"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开系统设置…"
+          }
+        }
+      }
+    },
+    "permissionSub" : {
+      "comment" : "Welcome permissions page subtitle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Once allowed, select any item from history to paste it into the current app."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "授权后，选择历史内容即可直接粘贴到当前应用。"
+          }
+        }
+      }
+    },
+    "permissionTitle" : {
+      "comment" : "Welcome permissions page title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One last step: paste directly"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最后一步，直接粘贴"
+          }
+        }
+      }
+    },
     "pin" : {
       "comment" : "Pin action or tooltip",
       "extractionState" : "manual",
@@ -2345,6 +4286,114 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "固定"
+          }
+        }
+      }
+    },
+    "preferencesAppearanceSub" : {
+      "comment" : "Welcome appearance preference description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Follow the system or keep a light or dark appearance."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跟随系统，或固定使用浅色、深色外观。"
+          }
+        }
+      }
+    },
+    "preferencesEyebrow" : {
+      "comment" : "Welcome preferences page eyebrow",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "04 / PERSONALIZE"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "04 / 个性化"
+          }
+        }
+      }
+    },
+    "preferencesLaunchSub" : {
+      "comment" : "Welcome launch at login preference description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep Clip ready whenever you need it."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "让 Clip 随时保持就绪"
+          }
+        }
+      }
+    },
+    "preferencesMenuBarSub" : {
+      "comment" : "Welcome menu bar preference description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Clip and common actions from the menu bar."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从菜单栏快速打开 Clip 和常用操作。"
+          }
+        }
+      }
+    },
+    "preferencesSub" : {
+      "comment" : "Welcome preferences page subtitle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clip is ready. You can adjust everything else later in Settings."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clip 已经准备好了，其他选项随时可以在偏好设置中调整。"
+          }
+        }
+      }
+    },
+    "preferencesTitle" : {
+      "comment" : "Welcome preferences page title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ready to go"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "准备好了"
           }
         }
       }
@@ -2399,6 +4448,348 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "预设快捷键"
+          }
+        }
+      }
+    },
+    "previewViewRendered" : {
+      "comment" : "Preview toolbar: switch back to rendered markdown",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View rendered"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查看渲染"
+          }
+        }
+      }
+    },
+    "previewViewSource" : {
+      "comment" : "Preview toolbar: view raw markdown source",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View source"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "查看原文"
+          }
+        }
+      }
+    },
+    "previous" : {
+      "comment" : "Welcome flow button to go to the previous page",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上一步"
+          }
+        }
+      }
+    },
+    "privacyAccessPermissionDenied" : {
+      "comment" : "Status text when accessibility permission is not granted",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not authorized. Clipboard can only copy to the clipboard. If an entry already exists, remove it and add it again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未授权，仅能复制内容到剪贴板，若已存在，请删除后重新添加"
+          }
+        }
+      }
+    },
+    "privacyAccessPermissionGranted" : {
+      "comment" : "Status text when accessibility permission is granted",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Authorized. Clipboard can paste content directly into other apps."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已授权，可以直接粘贴内容到其它应用"
+          }
+        }
+      }
+    },
+    "privacyAccessPermissionTitle" : {
+      "comment" : "Privacy row title: accessibility permission",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Accessibility Permission"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "辅助功能权限"
+          }
+        }
+      }
+    },
+    "privacyDeleteConfirm" : {
+      "comment" : "Privacy toggle title: delete confirmation",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Confirmation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除确认"
+          }
+        }
+      }
+    },
+    "privacyDeleteConfirmDesc" : {
+      "comment" : "Privacy toggle description: delete confirmation",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask for confirmation before deleting an item."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "删除记录时是否弹窗确认。"
+          }
+        }
+      }
+    },
+    "privacyEphemeral" : {
+      "comment" : "Privacy toggle title: ignore ephemeral content",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignore transient content"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "忽略瞬时内容"
+          }
+        }
+      }
+    },
+    "privacyEphemeralDesc" : {
+      "comment" : "Privacy toggle description: ignore ephemeral content",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do not save temporary data generated by other applications."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不要保存其它应用程序生成的临时数据。"
+          }
+        }
+      }
+    },
+    "privacyIgnoredAppsDesc" : {
+      "comment" : "Description for ignored apps section",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Do not save content copied from the applications below."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不要保存从以下应用程序复制的内容。"
+          }
+        }
+      }
+    },
+    "privacyIgnoredAppsTitle" : {
+      "comment" : "Section title: ignored apps",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignore applications"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "忽略应用程序"
+          }
+        }
+      }
+    },
+    "privacyLinkPreview" : {
+      "comment" : "Privacy toggle title: generate link previews",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generate link previews"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "生成链接预览"
+          }
+        }
+      }
+    },
+    "privacyLinkPreviewDesc" : {
+      "comment" : "Privacy toggle description: generate link previews",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Generating previews for links when turned on may affect one-time and sensitive links."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开启后对链接生成预览，可能会影响一次性和敏感链接。"
+          }
+        }
+      }
+    },
+    "privacyOpenSettings" : {
+      "comment" : "Button title: open privacy settings",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Settings…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "去设置..."
+          }
+        }
+      }
+    },
+    "privacySensitive" : {
+      "comment" : "Privacy toggle title: ignore sensitive content",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ignoring confidential content"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "忽略机密内容"
+          }
+        }
+      }
+    },
+    "privacySensitiveDesc" : {
+      "comment" : "Privacy toggle description: ignore sensitive content",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passwords and sensitive data are not saved when detected."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "检测到密码和敏感数据时不保存。"
+          }
+        }
+      }
+    },
+    "privacyShowScreenShare" : {
+      "comment" : "Privacy toggle title: show during screen sharing",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show during screen sharing"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "允许在屏幕共享中显示"
+          }
+        }
+      }
+    },
+    "privacyShowScreenShareDesc" : {
+      "comment" : "Privacy toggle description: show during screen sharing",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When closed, the window will not be captured during screen sharing, screen recording or presentations, protecting your privacy."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭后，在屏幕共享、录屏或演示时，窗口不会被捕获，保护您的隐私。"
           }
         }
       }
@@ -2529,1409 +4920,6 @@
         }
       }
     },
-    "aboutAutoCheckUpdates" : {
-      "comment" : "Toggle label: automatically check for updates",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Check automatically"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "自动检查更新"
-          }
-        }
-      }
-    },
-    "aboutAutoDownloadUpdates" : {
-      "comment" : "Toggle label: automatically download updates",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Download automatically"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "自动下载更新"
-          }
-        }
-      }
-    },
-    "aboutCheckForUpdates" : {
-      "comment" : "Button title: check for updates",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Check for Updates"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "检查更新"
-          }
-        }
-      }
-    },
-    "aboutCopyrightFormat" : {
-      "comment" : "Copyright text in About settings, with year placeholder",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copyright © %lld Crown. All rights reserved."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copyright © %lld Crown. All rights reserved."
-          }
-        }
-      }
-    },
-    "aboutFeedback" : {
-      "comment" : "Link title: feedback and issues",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Feedback"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "反馈建议"
-          }
-        }
-      }
-    },
-    "aboutGithub" : {
-      "comment" : "Link title: GitHub repository",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "GitHub"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "GitHub"
-          }
-        }
-      }
-    },
-    "aboutMadeForMac" : {
-      "comment" : "Caption in About settings",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Made with ❤️ for macOS"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Made with ❤️ for macOS"
-          }
-        }
-      }
-    },
-    "appearanceDisplayDrawer" : {
-      "comment" : "Display mode: drawer",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Drawers"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "抽屉"
-          }
-        }
-      }
-    },
-    "appearanceDisplayLabel" : {
-      "comment" : "Label: display mode",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Display Mode"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "显示模式"
-          }
-        }
-      }
-    },
-    "appearanceDisplayWindow" : {
-      "comment" : "Display mode: window",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Window"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "窗口"
-          }
-        }
-      }
-    },
-    "appearanceGlassBlurred" : {
-      "comment" : "Label next to glass material slider: blurred",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Blurred"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "模糊"
-          }
-        }
-      }
-    },
-    "appearanceGlassLabel" : {
-      "comment" : "Label: glass material strength",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Glass Material"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "玻璃材质"
-          }
-        }
-      }
-    },
-    "appearanceGlassTransparent" : {
-      "comment" : "Label next to glass material slider: transparent",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Transparent"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "透明"
-          }
-        }
-      }
-    },
-    "appearanceModeDark" : {
-      "comment" : "Appearance mode: dark",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dark"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "深色"
-          }
-        }
-      }
-    },
-    "appearanceModeLabel" : {
-      "comment" : "Label: appearance mode",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Appearance"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "外观"
-          }
-        }
-      }
-    },
-    "appearanceModeLight" : {
-      "comment" : "Appearance mode: light",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Light"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "浅色"
-          }
-        }
-      }
-    },
-    "appearanceModeSystem" : {
-      "comment" : "Appearance mode: follow system",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "System"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "跟随系统"
-          }
-        }
-      }
-    },
-    "appearancePositionCenter" : {
-      "comment" : "Window position mode: screen center",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Center of screen"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "屏幕中心"
-          }
-        }
-      }
-    },
-    "appearancePositionLabel" : {
-      "comment" : "Label: window position",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Window position"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "窗口位置"
-          }
-        }
-      }
-    },
-    "appearancePositionLast" : {
-      "comment" : "Window position mode: last position",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Last Position"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "上次位置"
-          }
-        }
-      }
-    },
-    "appearancePositionMouse" : {
-      "comment" : "Window position mode: mouse location",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mouse position"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "鼠标位置"
-          }
-        }
-      }
-    },
-    "generalClearHistory" : {
-      "comment" : "Button: clear all history",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clear History..."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "删除历史..."
-          }
-        }
-      }
-    },
-    "generalDockIcon" : {
-      "comment" : "Toggle label: show dock icon",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dock Icon"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dock 图标"
-          }
-        }
-      }
-    },
-    "generalEnableAccess" : {
-      "comment" : "Button shown when direct paste requires Accessibility permission",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enable Accessibility"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "启用无障碍访问"
-          }
-        }
-      }
-    },
-    "generalHistoryCleanupHint" : {
-      "comment" : "Tooltip: history is only cleaned up once per day",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cleanup runs once per day"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "每天仅删除一次"
-          }
-        }
-      }
-    },
-    "generalHistoryTitle" : {
-      "comment" : "Section title: keep history",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keep History"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "保留历史"
-          }
-        }
-      }
-    },
-    "generalLaunch" : {
-      "comment" : "Toggle label: launch app at login",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open at login"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "登录时打开"
-          }
-        }
-      }
-    },
-    "generalMenuBarIcon" : {
-      "comment" : "Toggle label: show menu bar icon",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Menu Bar Icon"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "状态栏图标"
-          }
-        }
-      }
-    },
-    "generalPastePlain" : {
-      "comment" : "Toggle label: always paste as plain text",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Always paste as Plain Text"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "始终以纯文本粘贴"
-          }
-        }
-      }
-    },
-    "generalPasteItemsTitle" : {
-      "comment" : "Section title: paste items",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Paste Items"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "粘贴项目"
-          }
-        }
-      }
-    },
-    "generalRemoveTailingNewline" : {
-      "comment" : "Toggle label: remove trailing newline when pasting",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remove Trailing Newline on Paste"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "粘贴时去掉末尾的换行符"
-          }
-        }
-      }
-    },
-    "generalSound" : {
-      "comment" : "Toggle label: enable sound effects",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sound effects"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "音效"
-          }
-        }
-      }
-    },
-    "help" : {
-      "comment" : "Button title for the settings help center link",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Help Center"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "帮助中心"
-          }
-        }
-      }
-    },
-    "keyboardLaunchApp" : {
-      "comment" : "Keyboard shortcut row title with app name placeholder",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Activate %@"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "启动 %@"
-          }
-        }
-      }
-    },
-    "keyboardNextTab" : {
-      "comment" : "Keyboard shortcut row title: show next tab",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show Next Tab"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "显示下一个 Tab"
-          }
-        }
-      }
-    },
-    "keyboardPastePlain" : {
-      "comment" : "Keyboard setting row title: paste as plain text",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Plain Text mode"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "粘贴为纯文本"
-          }
-        }
-      }
-    },
-    "keyboardPreviousTab" : {
-      "comment" : "Keyboard shortcut row title: show previous tab",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show Previous Tab"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "显示上一个 Tab"
-          }
-        }
-      }
-    },
-    "keyboardQuick" : {
-      "comment" : "Keyboard setting row title: quick paste modifier",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Quick Paste"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "快速粘贴"
-          }
-        }
-      }
-    },
-    "keyboardQuickSuffix" : {
-      "comment" : "Text shown after the quick paste modifier picker",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "+ 1...9"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "+ 1...9"
-          }
-        }
-      }
-    },
-    "keyboardReset" : {
-      "comment" : "Preview title for reset shortcuts button",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reset shortcuts to default"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "重置快捷方式为默认"
-          }
-        }
-      }
-    },
-    "keyboardResetButton" : {
-      "comment" : "Confirmation button: reset shortcuts",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reset"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "重置"
-          }
-        }
-      }
-    },
-    "keyboardResetConfirmMessage" : {
-      "comment" : "Confirmation dialog message for resetting all shortcuts",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Are you sure you want to reset all shortcuts to their defaults?"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "您确定将所有的快键方式重置为默认值吗？"
-          }
-        }
-      }
-    },
-    "keyboardResetMore" : {
-      "comment" : "Preview title for reset shortcuts button with ellipsis",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reset shortcuts to default..."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "重置快捷方式为默认..."
-          }
-        }
-      }
-    },
-    "keyboardResetKeys" : {
-      "comment" : "Button title: reset shortcuts to defaults",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reset shortcuts to defaults…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "重置快键方式为默认..."
-          }
-        }
-      }
-    },
-    "keyboardShortcutHint" : {
-      "comment" : "Placeholder text in shortcut recorder when no shortcut is set",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Record Shortcut…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "请录入快捷键…"
-          }
-        }
-      }
-    },
-    "keyboardShortcutTip" : {
-      "comment" : "Prompt text in shortcut recorder while recording",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Press Shortcut"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "按下快捷键"
-          }
-        }
-      }
-    },
-    "language" : {
-      "comment" : "Label for language picker in settings",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Language"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "语言"
-          }
-        }
-      }
-    },
-    "languageOptionEnglish" : {
-      "comment" : "Language option: English",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "English"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "English"
-          }
-        }
-      }
-    },
-    "languageOptionChinese" : {
-      "comment" : "Language option: Simplified Chinese",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "简体中文"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "简体中文"
-          }
-        }
-      }
-    },
-    "languageRestartConfirmMessage" : {
-      "comment" : "Alert message when user changes language, explaining restart is required",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Changing the language requires restarting the app. Are you sure?"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "更改语言需要重新启动应用才能生效，是否确定更改？"
-          }
-        }
-      }
-    },
-    "languageRestartConfirmTitle" : {
-      "comment" : "Alert title when user changes language",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : ""
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : ""
-          }
-        }
-      }
-    },
-    "pageAbout" : {
-      "comment" : "Settings sidebar item: About",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "About"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "关于"
-          }
-        }
-      }
-    },
-    "pageAppearance" : {
-      "comment" : "Settings sidebar item: Appearance",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Appearance"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "外观"
-          }
-        }
-      }
-    },
-    "pageGeneral" : {
-      "comment" : "Settings sidebar item: General",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "General"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "通用"
-          }
-        }
-      }
-    },
-    "pageKeyboard" : {
-      "comment" : "Settings sidebar item: Keyboard shortcuts",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keyboard"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "快捷键"
-          }
-        }
-      }
-    },
-    "pageMcp" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AI"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AI"
-          }
-        }
-      }
-    },
-    "pagePrivacy" : {
-      "comment" : "Settings sidebar item: Privacy",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Privacy"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "隐私"
-          }
-        }
-      }
-    },
-    "pageStorage" : {
-      "comment" : "Settings sidebar item: Storage",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Storage"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "存储"
-          }
-        }
-      }
-    },
-    "pasteTargetToApp" : {
-      "comment" : "Paste target mode: paste directly to active app",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "To Active App"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "到当前活动应用"
-          }
-        }
-      }
-    },
-    "pasteTargetToAppDesc" : {
-      "comment" : "Paste target mode description: paste directly to active app",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Paste the selected item directly into the app you are currently using."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "将选定的项目直接粘贴到您当前正在使用的应用程序中。"
-          }
-        }
-      }
-    },
-    "pasteTargetToClipboard" : {
-      "comment" : "Paste target mode: copy to clipboard",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "To Clipboard"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "到剪贴板"
-          }
-        }
-      }
-    },
-    "pasteTargetToClipboardDesc" : {
-      "comment" : "Paste target mode description: copy to clipboard for manual paste",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copy the selected item to the system clipboard for manual pasting."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "将选定的项目复制到系统剪贴板，以便随后手动粘贴。"
-          }
-        }
-      }
-    },
-    "privacyAccessPermissionDenied" : {
-      "comment" : "Status text when accessibility permission is not granted",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Not authorized. Clipboard can only copy to the clipboard. If an entry already exists, remove it and add it again."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "未授权，仅能复制内容到剪贴板，若已存在，请删除后重新添加"
-          }
-        }
-      }
-    },
-    "privacyAccessPermissionGranted" : {
-      "comment" : "Status text when accessibility permission is granted",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Authorized. Clipboard can paste content directly into other apps."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已授权，可以直接粘贴内容到其它应用"
-          }
-        }
-      }
-    },
-    "privacyAccessPermissionTitle" : {
-      "comment" : "Privacy row title: accessibility permission",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Accessibility Permission"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "辅助功能权限"
-          }
-        }
-      }
-    },
-    "privacyDeleteConfirm" : {
-      "comment" : "Privacy toggle title: delete confirmation",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete Confirmation"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "删除确认"
-          }
-        }
-      }
-    },
-    "privacyDeleteConfirmDesc" : {
-      "comment" : "Privacy toggle description: delete confirmation",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ask for confirmation before deleting an item."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "删除记录时是否弹窗确认。"
-          }
-        }
-      }
-    },
-    "privacyIgnoredAppsDesc" : {
-      "comment" : "Description for ignored apps section",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Do not save content copied from the applications below."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "不要保存从以下应用程序复制的内容。"
-          }
-        }
-      }
-    },
-    "privacyIgnoredAppsTitle" : {
-      "comment" : "Section title: ignored apps",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ignore applications"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "忽略应用程序"
-          }
-        }
-      }
-    },
-    "privacyEphemeral" : {
-      "comment" : "Privacy toggle title: ignore ephemeral content",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ignore transient content"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "忽略瞬时内容"
-          }
-        }
-      }
-    },
-    "privacyEphemeralDesc" : {
-      "comment" : "Privacy toggle description: ignore ephemeral content",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Do not save temporary data generated by other applications."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "不要保存其它应用程序生成的临时数据。"
-          }
-        }
-      }
-    },
-    "privacySensitive" : {
-      "comment" : "Privacy toggle title: ignore sensitive content",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ignoring confidential content"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "忽略机密内容"
-          }
-        }
-      }
-    },
-    "privacySensitiveDesc" : {
-      "comment" : "Privacy toggle description: ignore sensitive content",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Passwords and sensitive data are not saved when detected."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "检测到密码和敏感数据时不保存。"
-          }
-        }
-      }
-    },
-    "privacyLinkPreview" : {
-      "comment" : "Privacy toggle title: generate link previews",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Generate link previews"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "生成链接预览"
-          }
-        }
-      }
-    },
-    "privacyLinkPreviewDesc" : {
-      "comment" : "Privacy toggle description: generate link previews",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Generating previews for links when turned on may affect one-time and sensitive links."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "开启后对链接生成预览，可能会影响一次性和敏感链接。"
-          }
-        }
-      }
-    },
-    "privacyOpenSettings" : {
-      "comment" : "Button title: open privacy settings",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Settings…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "去设置..."
-          }
-        }
-      }
-    },
-    "privacyShowScreenShare" : {
-      "comment" : "Privacy toggle title: show during screen sharing",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show during screen sharing"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "允许在屏幕共享中显示"
-          }
-        }
-      }
-    },
-    "privacyShowScreenShareDesc" : {
-      "comment" : "Privacy toggle description: show during screen sharing",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "When closed, the window will not be captured during screen sharing, screen recording or presentations, protecting your privacy."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "关闭后，在屏幕共享、录屏或演示时，窗口不会被捕获，保护您的隐私。"
-          }
-        }
-      }
-    },
     "settings" : {
       "comment" : "Menu item: open settings",
       "extractionState" : "manual",
@@ -3950,6 +4938,240 @@
         }
       }
     },
+    "share" : {
+      "comment" : "Share action",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分享"
+          }
+        }
+      }
+    },
+    "shortcutEyebrow" : {
+      "comment" : "Welcome shortcut page eyebrow",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "02 / QUICK ACTIONS"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "02 / 快捷操作"
+          }
+        }
+      }
+    },
+    "shortcutGlobalSub" : {
+      "comment" : "Welcome global shortcut description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Click the shortcut, then press a new key combination"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "点击快捷键，然后直接按下新的组合"
+          }
+        }
+      }
+    },
+    "shortcutGlobalTitle" : {
+      "comment" : "Welcome global shortcut title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Clip"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "呼出 Clip"
+          }
+        }
+      }
+    },
+    "shortcutNote" : {
+      "comment" : "Welcome shortcut saving note",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changes are saved immediately and can be edited later in Settings."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快捷键会立即保存，也可以稍后在偏好设置中修改。"
+          }
+        }
+      }
+    },
+    "shortcutStepOpen" : {
+      "comment" : "Welcome shortcut workflow step: open",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开"
+          }
+        }
+      }
+    },
+    "shortcutStepPaste" : {
+      "comment" : "Welcome shortcut workflow step: paste",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "粘贴"
+          }
+        }
+      }
+    },
+    "shortcutStepSearch" : {
+      "comment" : "Welcome shortcut workflow step: search",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择"
+          }
+        }
+      }
+    },
+    "shortcutSub" : {
+      "comment" : "Welcome shortcut page subtitle",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Clip from any app, choose with the keyboard, then paste."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在任何应用中呼出 Clip，用键盘选择，然后直接粘贴。"
+          }
+        }
+      }
+    },
+    "shortcutTitle" : {
+      "comment" : "Welcome shortcut page title",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One shortcut to find anything"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一个快捷键，完成找回"
+          }
+        }
+      }
+    },
+    "showInFinder" : {
+      "comment" : "Action title to reveal a file in Finder",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show in Finder"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在访达中显示"
+          }
+        }
+      }
+    },
+    "skip" : {
+      "comment" : "Skip action",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skip"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跳过"
+          }
+        }
+      }
+    },
+    "start" : {
+      "comment" : "Welcome flow final primary button",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get Started"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开始使用"
+          }
+        }
+      }
+    },
     "storageBackupTitle" : {
       "comment" : "Section title: data backup",
       "extractionState" : "manual",
@@ -3964,42 +5186,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "数据备份"
-          }
-        }
-      }
-    },
-    "storageItemCount" : {
-      "comment" : "Statistic title: clipboard item count",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Number of clipboard records"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "剪贴板记录数"
-          }
-        }
-      }
-    },
-    "storageItemCountValue" : {
-      "comment" : "Clipboard item count value with placeholder",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld items"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld 条"
           }
         }
       }
@@ -4292,6 +5478,42 @@
         }
       }
     },
+    "storageItemCount" : {
+      "comment" : "Statistic title: clipboard item count",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Number of clipboard records"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "剪贴板记录数"
+          }
+        }
+      }
+    },
+    "storageItemCountValue" : {
+      "comment" : "Clipboard item count value with placeholder",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld items"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld 条"
+          }
+        }
+      }
+    },
     "storageNoteBackupRegularly" : {
       "comment" : "Storage note: back up regularly",
       "extractionState" : "manual",
@@ -4364,60 +5586,6 @@
         }
       }
     },
-    "share" : {
-      "comment" : "Share action",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Share"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "分享"
-          }
-        }
-      }
-    },
-    "showInFinder" : {
-      "comment" : "Action title to reveal a file in Finder",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show in Finder"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在访达中显示"
-          }
-        }
-      }
-    },
-    "skip" : {
-      "comment" : "Skip action",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Skip"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "跳过"
-          }
-        }
-      }
-    },
     "tag" : {
       "comment" : "Tag filter section title",
       "extractionState" : "manual",
@@ -4468,6 +5636,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld个字符"
+          }
+        }
+      }
+    },
+    "textModeTooltip" : {
+      "comment" : "Tooltip for switching to text editing mode",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch to text mode"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切换到文本模式"
           }
         }
       }
@@ -4634,434 +5820,20 @@
         }
       }
     },
-    "continue" : {
-      "comment" : "Welcome flow primary button to continue",
+    "welcomePermissionNotEnabled" : {
+      "comment" : "Welcome accessibility permission status before authorization",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Continue"
+            "value" : "Not Enabled"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "继续"
-          }
-        }
-      }
-    },
-    "introColorTitle" : {
-      "comment" : "Welcome introduction color capability title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Colors"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "颜色"
-          }
-        }
-      }
-    },
-    "introEyebrow" : {
-      "comment" : "Welcome page eyebrow",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "01 / QUICK START"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "01 / 快速开始"
-          }
-        }
-      }
-    },
-    "introFileSub" : {
-      "comment" : "Welcome introduction file capability description",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Use local files only when you need them."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "按需访问，本地预览。"
-          }
-        }
-      }
-    },
-    "introFileTitle" : {
-      "comment" : "Welcome introduction file capability title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Files"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "文件"
-          }
-        }
-      }
-    },
-    "introImageSub" : {
-      "comment" : "Welcome introduction image capability description",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keep visual content ready to reuse."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "保留画面，随时取用。"
-          }
-        }
-      }
-    },
-    "introImageTitle" : {
-      "comment" : "Welcome introduction image capability title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Images"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "图片"
-          }
-        }
-      }
-    },
-    "introLinkSub" : {
-      "comment" : "Welcome introduction link capability description",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recognize and organize links automatically."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "自动识别，快速归档。"
-          }
-        }
-      }
-    },
-    "introLinkTitle" : {
-      "comment" : "Welcome introduction link capability title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Links"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "链接"
-          }
-        }
-      }
-    },
-    "introTextSub" : {
-      "comment" : "Welcome introduction text capability description",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lightweight yet powerful for everyday work."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "轻量而强大，提升日常效率。"
-          }
-        }
-      }
-    },
-    "introTextTitle" : {
-      "comment" : "Welcome introduction text capability title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Text"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "文本"
-          }
-        }
-      }
-    },
-    "introPasteSub" : {
-      "comment" : "Welcome introduction fast paste description",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose an item and paste it into the current app."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "选择内容后，立即粘贴到当前应用。"
-          }
-        }
-      }
-    },
-    "introPasteTitle" : {
-      "comment" : "Welcome introduction fast paste title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Paste Instantly"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "快速粘贴"
-          }
-        }
-      }
-    },
-    "introRecordSub" : {
-      "comment" : "Welcome introduction automatic recording description",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copied content is saved locally on your Mac."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "复制的内容会自动保存在本机。"
-          }
-        }
-      }
-    },
-    "introRecordTitle" : {
-      "comment" : "Welcome introduction automatic recording title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Save Automatically"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "自动记录"
-          }
-        }
-      }
-    },
-    "introSearchSub" : {
-      "comment" : "Welcome introduction instant search description",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Type a keyword to find exactly what you need."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "输入关键词，快速找到需要的内容。"
-          }
-        }
-      }
-    },
-    "introSearchTitle" : {
-      "comment" : "Welcome introduction instant search title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search Instantly"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "即时搜索"
-          }
-        }
-      }
-    },
-    "introSub" : {
-      "comment" : "Welcome introduction subtitle",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clip saves your clipboard history in the background, ready whenever you need it."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clip 会在后台保存剪贴板历史，需要时一键找回。"
-          }
-        }
-      }
-    },
-    "introTitle" : {
-      "comment" : "Welcome introduction title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copy it once. Find it anytime."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "复制过的，不必重来"
-          }
-        }
-      }
-    },
-    "permissionAccessSub" : {
-      "comment" : "Welcome accessibility permission description",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Used only to paste your selection into the current app."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "用于将选中的内容粘贴到当前应用"
-          }
-        }
-      }
-    },
-    "permissionEyebrow" : {
-      "comment" : "Welcome permissions page eyebrow",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "03 / FINISH SETUP"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "03 / 完成设置"
-          }
-        }
-      }
-    },
-    "permissionFilesSub" : {
-      "comment" : "Welcome files and folders permission description",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Files are requested by macOS only when you preview or use them. No setup is needed now."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "文件仅在预览或使用时由 macOS 按需询问，现在无需设置。"
-          }
-        }
-      }
-    },
-    "permissionFilesTitle" : {
-      "comment" : "Welcome files and folders permission title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Files & Folders"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "文件与文件夹"
-          }
-        }
-      }
-    },
-    "permissionGranted" : {
-      "comment" : "Short status when accessibility permission is granted",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enabled"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已开启"
+            "value" : "尚未开启"
           }
         }
       }
@@ -5174,312 +5946,6 @@
         }
       }
     },
-    "welcomePermissionNotEnabled" : {
-      "comment" : "Welcome accessibility permission status before authorization",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Not Enabled"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "尚未开启"
-          }
-        }
-      }
-    },
-    "permissionKeyboardPrivacy" : {
-      "comment" : "Welcome privacy note explaining accessibility permission scope",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clip never reads your keystrokes"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clip 不会读取你的键盘输入"
-          }
-        }
-      }
-    },
-    "permissionLocalOnly" : {
-      "comment" : "Welcome privacy local-only note",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Stored only on this Mac"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "仅保存在这台 Mac"
-          }
-        }
-      }
-    },
-    "permissionOnDemand" : {
-      "comment" : "Files and folders permission on-demand status",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "On demand"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "按需授权"
-          }
-        }
-      }
-    },
-    "permissionOpenSettings" : {
-      "comment" : "Button that opens macOS Accessibility settings from the welcome flow",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Settings"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "打开系统设置…"
-          }
-        }
-      }
-    },
-    "permissionSub" : {
-      "comment" : "Welcome permissions page subtitle",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Once allowed, select any item from history to paste it into the current app."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "授权后，选择历史内容即可直接粘贴到当前应用。"
-          }
-        }
-      }
-    },
-    "permissionTitle" : {
-      "comment" : "Welcome permissions page title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "One last step: paste directly"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "最后一步，直接粘贴"
-          }
-        }
-      }
-    },
-    "preferencesAppearanceSub" : {
-      "comment" : "Welcome appearance preference description",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Follow the system or keep a light or dark appearance."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "跟随系统，或固定使用浅色、深色外观。"
-          }
-        }
-      }
-    },
-    "preferencesEyebrow" : {
-      "comment" : "Welcome preferences page eyebrow",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "04 / PERSONALIZE"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "04 / 个性化"
-          }
-        }
-      }
-    },
-    "preferencesLaunchSub" : {
-      "comment" : "Welcome launch at login preference description",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keep Clip ready whenever you need it."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "让 Clip 随时保持就绪"
-          }
-        }
-      }
-    },
-    "preferencesMenuBarSub" : {
-      "comment" : "Welcome menu bar preference description",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Clip and common actions from the menu bar."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "从菜单栏快速打开 Clip 和常用操作。"
-          }
-        }
-      }
-    },
-    "preferencesSub" : {
-      "comment" : "Welcome preferences page subtitle",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clip is ready. You can adjust everything else later in Settings."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clip 已经准备好了，其他选项随时可以在偏好设置中调整。"
-          }
-        }
-      }
-    },
-    "preferencesTitle" : {
-      "comment" : "Welcome preferences page title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ready to go"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "准备好了"
-          }
-        }
-      }
-    },
-    "previous" : {
-      "comment" : "Welcome flow button to go to the previous page",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Back"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "上一步"
-          }
-        }
-      }
-    },
-    "shortcutEyebrow" : {
-      "comment" : "Welcome shortcut page eyebrow",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "02 / QUICK ACTIONS"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "02 / 快捷操作"
-          }
-        }
-      }
-    },
-    "shortcutGlobalSub" : {
-      "comment" : "Welcome global shortcut description",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Click the shortcut, then press a new key combination"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "点击快捷键，然后直接按下新的组合"
-          }
-        }
-      }
-    },
-    "shortcutGlobalTitle" : {
-      "comment" : "Welcome global shortcut title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Clip"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "呼出 Clip"
-          }
-        }
-      }
-    },
     "welcomeShortcutCurrent" : {
       "comment" : "Label above the editable global shortcut in the welcome flow",
       "extractionState" : "manual",
@@ -5530,132 +5996,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "按下后即可呼出"
-          }
-        }
-      }
-    },
-    "shortcutNote" : {
-      "comment" : "Welcome shortcut saving note",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Changes are saved immediately and can be edited later in Settings."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "快捷键会立即保存，也可以稍后在偏好设置中修改。"
-          }
-        }
-      }
-    },
-    "shortcutStepOpen" : {
-      "comment" : "Welcome shortcut workflow step: open",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "打开"
-          }
-        }
-      }
-    },
-    "shortcutStepPaste" : {
-      "comment" : "Welcome shortcut workflow step: paste",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Paste"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "粘贴"
-          }
-        }
-      }
-    },
-    "shortcutStepSearch" : {
-      "comment" : "Welcome shortcut workflow step: search",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "选择"
-          }
-        }
-      }
-    },
-    "shortcutSub" : {
-      "comment" : "Welcome shortcut page subtitle",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Clip from any app, choose with the keyboard, then paste."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在任何应用中呼出 Clip，用键盘选择，然后直接粘贴。"
-          }
-        }
-      }
-    },
-    "shortcutTitle" : {
-      "comment" : "Welcome shortcut page title",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "One shortcut to find anything"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "一个快捷键，完成找回"
-          }
-        }
-      }
-    },
-    "start" : {
-      "comment" : "Welcome flow final primary button",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Get Started"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "开始使用"
           }
         }
       }

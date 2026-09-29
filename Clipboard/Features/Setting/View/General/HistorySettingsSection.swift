@@ -27,6 +27,10 @@ struct HistorySettingsSection: View {
                 .onChange(of: selectedHistoryTimeUnit) { _, newValue in
                     PasteUserDefaults.historyTime = newValue.rawValue
                 }
+                .padding(.top, Const.space8)
+
+                Divider()
+                    .padding(.vertical, Const.space4)
 
                 HStack {
                     Spacer()

@@ -5,77 +5,6 @@
 
 import SwiftUI
 
-// MARK: - 自定义 Slider（macOS 26 以下使用）
-
-@available(macOS, deprecated: 26)
-struct ThinSlider: View {
-    @Binding var value: Double
-    let bounds: ClosedRange<Double>
-    let onEditingChanged: (Bool) -> Void
-
-    @State private var isDragging = false
-
-    var body: some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .leading) {
-                Rectangle()
-                    .fill(Color.gray.opacity(0.2))
-                    .frame(height: 4)
-                    .cornerRadius(2)
-
-                Rectangle()
-                    .fill(Color.accentColor)
-                    .frame(
-                        width: geometry.size.width * normalizedValue,
-                        height: 4
-                    )
-                    .cornerRadius(2)
-
-                Capsule()
-                    .fill(Color.white)
-                    .frame(width: Const.space8, height: 20)
-                    .shadow(
-                        color: Color.black.opacity(0.2),
-                        radius: 2,
-                        x: 0,
-                        y: 1
-                    )
-                    .offset(x: geometry.size.width * normalizedValue - 2)
-                    .gesture(
-                        DragGesture(minimumDistance: 0)
-                            .onChanged { dragValue in
-                                if !isDragging {
-                                    isDragging = true
-                                    onEditingChanged(true)
-                                }
-                                let newNormalized = min(
-                                    max(
-                                        0,
-                                        dragValue.location.x / geometry.size.width
-                                    ),
-                                    1
-                                )
-                                value =
-                                    bounds.lowerBound
-                                        + (bounds.upperBound - bounds.lowerBound)
-                                        * newNormalized
-                            }
-                            .onEnded { _ in
-                                isDragging = false
-                                onEditingChanged(false)
-                            }
-                    )
-            }
-            .frame(height: Const.space24)
-        }
-        .frame(height: Const.space24)
-    }
-
-    private var normalizedValue: Double {
-        (value - bounds.lowerBound) / (bounds.upperBound - bounds.lowerBound)
-    }
-}
-
 // MARK: - 历史时间滑块
 
 struct HistoryTimeSlider: View {
@@ -92,39 +21,6 @@ struct HistoryTimeSlider: View {
     var body: some View {
         VStack(spacing: Const.space8) {
             ZStack {
-                if !isEditing {
-                    GeometryReader { geometry in
-                        ZStack(alignment: .leading) {
-                            ForEach(
-                                Array(milestones.enumerated()),
-                                id: \.offset
-                            ) { index, label in
-                                Text(label)
-                                    .font(.caption)
-                                    .foregroundStyle(.primary)
-                                    .frame(width: 30)
-                                    .offset(
-                                        x: tickPosition(
-                                            for: index,
-                                            in: geometry.size.width
-                                        )
-                                            - labelOffset(for: index)
-                                    )
-                            }
-                        }
-                    }
-                }
-
-                if isEditing {
-                    Text(currentTimeUnit.displayText)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.secondary)
-                }
-            }
-            .frame(height: Const.space16)
-            .animation(.easeInOut(duration: 0.2), value: isEditing)
-
-            ZStack {
                 GeometryReader { geometry in
                     ForEach(0 ..< 5, id: \.self) { index in
                         let tickValue = tickSliderValue(for: index)
@@ -133,13 +29,13 @@ struct HistoryTimeSlider: View {
                         if !isSelected {
                             Rectangle()
                                 .fill(Color.gray.opacity(0.5))
-                                .frame(width: 2.5, height: 3)
+                                .frame(width: 1.5, height: 2)
                                 .offset(
                                     x: tickPosition(
                                         for: index,
                                         in: geometry.size.width
                                     ),
-                                    y: 0.0
+                                    y: geometry.size.height - 3
                                 )
                         }
                     }
@@ -157,11 +53,49 @@ struct HistoryTimeSlider: View {
                     onEditingChanged: { editing in
                         isEditing = editing
                         if !editing {
-                            saveCurrentValue()
+                            selectedTimeUnit = currentTimeUnit
                         }
                     }
                 )
+                .accessibilityLabel(Text(.generalHistoryTitle))
+                .accessibilityValue(Text(currentTimeUnit.displayText))
             }
+
+            ZStack {
+                if !isEditing {
+                    GeometryReader { geometry in
+                        let width = geometry.size.width
+                        ZStack(alignment: .leading) {
+                            ForEach(
+                                Array(milestones.enumerated()),
+                                id: \.offset
+                            ) { index, label in
+                                let position = tickPosition(for: index, in: width)
+                                Text(label)
+                                    .font(.callout)
+                                    .foregroundStyle(.primary)
+                                    .fixedSize(horizontal: true, vertical: false)
+                                    .alignmentGuide(.leading) { dimensions in
+                                        let centered = position - dimensions.width / 2
+                                        return -max(0, min(centered, width - dimensions.width))
+                                    }
+                                    .frame(
+                                        width: width,
+                                        alignment: .leading
+                                    )
+                            }
+                        }
+                    }
+                }
+
+                if isEditing {
+                    Text(currentTimeUnit.displayText)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.secondary)
+                }
+            }
+            .frame(height: Const.space16)
+            .animation(.easeInOut(duration: 0.2), value: isEditing)
         }
         .onAppear {
             sliderValue = internalValueToSliderValue(selectedTimeUnit.rawValue)
@@ -176,26 +110,10 @@ struct HistoryTimeSlider: View {
         HistoryTimeUnit(rawValue: sliderValueToInternalValue(sliderValue))
     }
 
-    private func labelOffset(for index: Int) -> CGFloat {
-        if index == 0 || index == 4 {
-            25.0
-        } else {
-            15.0
-        }
-    }
-
-    /// 计算主刻度线位置（等分，但第一个刻度线对应2天的位置）
+    /// 主刻度沿滑块行程等分，两端为滑块手柄预留空间。
     private func tickPosition(for index: Int, in width: CGFloat) -> CGFloat {
-        if index == 0 {
-            let oneDaySliderValue = internalValueToSliderValue(2)
-            return oneDaySliderValue * width / 4.0 + 8.5
-        } else if index == 1 {
-            return (CGFloat(1) * width / 4.0) + 3.5
-        } else if index == 3 {
-            return (CGFloat(3) * width / 4.0) - 5.0
-        } else {
-            return CGFloat(index) * width / 4.0 - 2.0
-        }
+        let inset: CGFloat = 10
+        return inset + max(0, width - inset * 2) * CGFloat(index) / 4
     }
 
     /// 获取刻度线对应的滑块值
@@ -266,9 +184,4 @@ struct HistoryTimeSlider: View {
         return sectionStart + snappedOffset
     }
 
-    private func saveCurrentValue() {
-        let timeUnit = currentTimeUnit
-        selectedTimeUnit = timeUnit
-        PasteUserDefaults.historyTime = timeUnit.rawValue
-    }
 }
