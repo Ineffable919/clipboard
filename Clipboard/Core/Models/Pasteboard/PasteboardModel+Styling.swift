@@ -22,10 +22,11 @@ extension PasteboardModel {
         return srgb.alphaComponent > 0.01 ? srgb : nil
     }
 
-    /// 只为没有有效背景的文字补底色，不修改富文本本身
+    /// 统一显示底色，并为没有有效背景的文字补底色，不修改富文本本身
     func richBackground(on background: NSColor, forPreview: Bool = false) -> NSColor? {
         guard hasBgColor else { return nil }
-        if let safeBgColor { return safeBgColor }
+        // 使用不透明底色，避免同色的半透明文字背景重复叠加产生色差
+        if let safeBgColor { return safeBgColor.withAlphaComponent(1) }
 
         let foregrounds = (forPreview ? cachedPreviewForegrounds ?? [] : cachedRichForegrounds)
             .compactMap { $0.usingColorSpace(.sRGB) }
