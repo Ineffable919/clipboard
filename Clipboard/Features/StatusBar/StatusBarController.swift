@@ -229,6 +229,15 @@ final class StatusBarController: NSObject {
         pauseItem.submenu = createPauseSubmenu()
         menu.addItem(pauseItem)
 
+        let restartItem = NSMenuItem(
+            title: String(localized: .restart),
+            action: #selector(NSApplication.relaunch),
+            keyEquivalent: ""
+        )
+        restartItem.target = NSApplication.shared
+        setMenuItemImage(restartItem, symbolName: "arrow.clockwise.circle")
+        menu.addItem(restartItem)
+
         let item3 = NSMenuItem(
             title: String(localized: .quit),
             action: #selector(NSApplication.shared.terminate),

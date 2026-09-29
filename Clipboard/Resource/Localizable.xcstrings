@@ -4848,6 +4848,24 @@
         }
       }
     },
+    "restart" : {
+      "comment" : "Menu action to restart the app",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restart"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重启"
+          }
+        }
+      }
+    },
     "resume" : {
       "comment" : "Menu item: resume clipboard monitoring",
       "extractionState" : "manual",
