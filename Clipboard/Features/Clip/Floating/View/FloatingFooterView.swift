@@ -18,7 +18,7 @@ final class FloatingFooterView: NSView {
     private let countLabel = NSTextField(labelWithString: "")
     private let pauseButton = NSButton()
     private let pauseTimeLabel = NSTextField(labelWithString: "")
-    private let pauseStack = NSStackView()
+    private let pauseStack = PauseIndicatorStackView()
     private let modeButton = NSButton()
 
     // MARK: - State
@@ -129,6 +129,8 @@ final class FloatingFooterView: NSView {
 
         pauseButton.isBordered = false
         pauseButton.title = ""
+        pauseButton.isHidden = true
+        pauseButton.setAccessibilityLabel(String(localized: .resume))
         pauseButton.target = self
         pauseButton.action = #selector(resumePasteboard)
         addSubview(pauseButton)

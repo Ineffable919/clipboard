@@ -32,7 +32,7 @@ final class ClipMainViewController: NSViewController {
 
     // MARK: - Pause Indicator
 
-    let pauseStack = NSStackView()
+    let pauseStack = PauseIndicatorStackView()
     let pauseTimeLabel = NSTextField(labelWithString: "")
     let pauseButton = NSButton()
     var pauseTimerCancellable: AnyCancellable?
@@ -341,6 +341,8 @@ extension ClipMainViewController {
 
         pauseButton.isBordered = false
         pauseButton.title = ""
+        pauseButton.isHidden = true
+        pauseButton.setAccessibilityLabel(String(localized: .resume))
         pauseButton.target = self
         pauseButton.action = #selector(resumePasteboard)
         contentView.addSubview(pauseButton)

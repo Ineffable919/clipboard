@@ -199,6 +199,7 @@ extension ClipMainViewController {
     private func updatePauseState() {
         let isPaused = PasteBoard.main.isPaused
         pauseStack.isHidden = !isPaused
+        pauseButton.isHidden = !isPaused
         if isPaused {
             pauseTimeLabel.stringValue = topVM.formattedRemainingTime
             pauseTimerCancellable = Timer.publish(every: 1, on: .main, in: .common)
