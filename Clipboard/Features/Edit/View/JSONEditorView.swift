@@ -7,17 +7,13 @@ import AppKit
 import SnapKit
 
 final class JSONEditorView: NSView {
-    private static let githubLightKey = NSColor(hex: "#116329")
-    private static let githubLightString = NSColor(hex: "#0A3069")
-    private static let githubLightNumber = NSColor(hex: "#0550AE")
-    private static let githubLightLiteral = NSColor(hex: "#CF222E")
-    private static let githubLightPunctuation = NSColor(hex: "#57606A")
+    private static let lightString = NSColor(hex: "#008000")
+    private static let lightNumber = NSColor(hex: "#3322FF")
+    private static let lightLiteral = NSColor(hex: "#B333B3")
 
-    private static let githubDarkKey = NSColor(hex: "#7EE787")
-    private static let githubDarkString = NSColor(hex: "#A5D6FF")
-    private static let githubDarkNumber = NSColor(hex: "#79C0FF")
-    private static let githubDarkLiteral = NSColor(hex: "#FF7B72")
-    private static let githubDarkPunctuation = NSColor(hex: "#8B949E")
+    private static let darkString = NSColor(hex: "#7ECF87")
+    private static let darkNumber = NSColor(hex: "#8FA8FF")
+    private static let darkLiteral = NSColor(hex: "#D99BE5")
 
     // MARK: - Callbacks
 
@@ -526,12 +522,10 @@ final class JSONEditorView: NSView {
             from: [.darkAqua, .aqua]
         ) == .darkAqua
         return switch kind {
-        case .key: isDark ? Self.githubDarkKey : Self.githubLightKey
-        case .string: isDark ? Self.githubDarkString : Self.githubLightString
-        case .number: isDark ? Self.githubDarkNumber : Self.githubLightNumber
-        case .literal: isDark ? Self.githubDarkLiteral : Self.githubLightLiteral
-        case .punctuation:
-            isDark ? Self.githubDarkPunctuation : Self.githubLightPunctuation
+        case .key, .punctuation: .labelColor
+        case .string: isDark ? Self.darkString : Self.lightString
+        case .number: isDark ? Self.darkNumber : Self.lightNumber
+        case .literal: isDark ? Self.darkLiteral : Self.lightLiteral
         }
     }
 
