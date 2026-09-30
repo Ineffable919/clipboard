@@ -35,6 +35,8 @@ final class EditStatisticsBar: NSView {
         return field
     }()
 
+    private let progressIndicator = NSProgressIndicator()
+
     // MARK: - Init
 
     override init(frame frameRect: NSRect) {
@@ -53,6 +55,11 @@ final class EditStatisticsBar: NSView {
         addSubview(label)
         addSubview(statusLabel)
         addSubview(positionLabel)
+        addSubview(progressIndicator)
+        progressIndicator.style = .spinning
+        progressIndicator.controlSize = .small
+        progressIndicator.isDisplayedWhenStopped = false
+        progressIndicator.setAccessibilityLabel(String(localized: .jsonProcessing))
         label.snp.makeConstraints { make in
             make.leading.equalToSuperview().inset(Const.space12)
             make.trailing.lessThanOrEqualTo(statusLabel.snp.leading).offset(-Const.space12)
@@ -68,6 +75,11 @@ final class EditStatisticsBar: NSView {
             make.centerY.equalToSuperview()
             make.trailing.equalToSuperview().inset(Const.space12)
         }
+        progressIndicator.snp.makeConstraints { make in
+            make.centerY.equalToSuperview()
+            make.trailing.equalTo(statusLabel)
+            make.size.equalTo(14)
+        }
     }
 
     // MARK: - Public
@@ -78,6 +90,7 @@ final class EditStatisticsBar: NSView {
 
     func setMode(_ mode: EditMode) {
         let isJSON = mode == .json
+        if !isJSON { progressIndicator.stopAnimation(nil) }
         statusLabel.isHidden = !isJSON
         positionLabel.isHidden = !isJSON
         if isJSON, statusLabel.stringValue.isEmpty {
@@ -86,6 +99,7 @@ final class EditStatisticsBar: NSView {
     }
 
     func setJSONValid(_ valid: Bool) {
+        progressIndicator.stopAnimation(nil)
         statusLabel.stringValue = valid
             ? String(localized: .jsonValid)
             : String(localized: .jsonInvalid)
@@ -93,11 +107,12 @@ final class EditStatisticsBar: NSView {
     }
 
     func setProcessing() {
-        statusLabel.stringValue = String(localized: .jsonProcessing)
-        statusLabel.textColor = .secondaryLabelColor
+        statusLabel.stringValue = ""
+        progressIndicator.startAnimation(nil)
     }
 
     func setError(_ message: String) {
+        progressIndicator.stopAnimation(nil)
         statusLabel.stringValue = message
         statusLabel.textColor = .systemRed
     }

@@ -131,6 +131,10 @@ final class EditToolbarView: NSView {
         modeButton.invalidateIntrinsicContentSize()
     }
 
+    func setIndentation(_ indentation: JSONIndentation) {
+        jsonToolbar.setIndentation(indentation)
+    }
+
     private func installModeToolbar(_ toolbar: NSView) {
         guard toolbar.superview !== self else { return }
 
@@ -146,6 +150,14 @@ final class EditToolbarView: NSView {
 
     func setJSONToolsEnabled(_ enabled: Bool) {
         jsonToolbar.setEnabled(enabled)
+        modeButton.isEnabled = enabled
+    }
+
+    func setLoading(_ loading: Bool) {
+        setJSONToolsEnabled(!loading)
+        for view in formatStack.arrangedSubviews {
+            (view as? NSControl)?.isEnabled = !loading
+        }
     }
 
     func setModeToggleVisible(_ visible: Bool) {

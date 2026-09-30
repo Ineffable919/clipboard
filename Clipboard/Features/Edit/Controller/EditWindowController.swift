@@ -26,6 +26,7 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
     private var needsInitialPresentation = false
 
     var onSave: ((PasteboardModel, EditedContent) -> Void)?
+    var saveTask: Task<Void, Never>?
 
     private init() {
         let window = EditWindow(
@@ -117,6 +118,9 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
     }
 
     private func installContentView(for model: PasteboardModel) {
+        saveTask?.cancel()
+        saveTask = nil
+        editContentView?.cancelWork()
         let contentView = EditContentView(model: model)
         contentView.onCancel = { [weak self] in
             self?.closeWindow()
@@ -127,16 +131,19 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
         contentView.onModeChange = { [weak self] mode, animated in
             self?.updateWindow(for: mode, animated: animated)
         }
-        contentView.onInitialContentReady = { [weak self] in
-            self?.presentPreparedWindow()
-        }
         window?.contentView = contentView
         editContentView = contentView
+        prepareInitialWindow(for: contentView.initialMode)
+        presentPreparedWindow()
     }
 
     func closeWindow() {
+        saveTask?.cancel()
+        saveTask = nil
+        editContentView?.cancelWork()
         finishModeResize()
         window?.orderOut(nil)
+        window?.contentView = nil
         currentModel = nil
         editContentView = nil
         isNewItem = false
@@ -147,7 +154,11 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
     // MARK: - NSWindowDelegate
 
     func windowWillClose(_: Notification) {
+        saveTask?.cancel()
+        saveTask = nil
+        editContentView?.cancelWork()
         finishModeResize()
+        window?.contentView = nil
         currentModel = nil
         editContentView = nil
         isNewItem = false

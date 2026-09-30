@@ -124,10 +124,25 @@ final class PasteboardModel: Identifiable, Codable {
 
     // MARK: - 搜索文本格式化
 
-    static func normalizeSearchText(_ raw: String) -> String {
-        raw.trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacing(/[\p{Cc}\p{Cf}&&[^\t\n]]/, with: "")
-            .replacing(/\s+/, with: " ")
+    nonisolated static func normalizeSearchText(_ raw: String) -> String {
+        var output = ""
+        output.reserveCapacity(raw.utf8.count)
+        // 按完整字素保留，避免拆散 Emoji 的连接符、肤色和变体选择符
+        for character in raw {
+            guard let scalar = character.unicodeScalars.first else { continue }
+            switch scalar.properties.generalCategory {
+            case .uppercaseLetter, .lowercaseLetter, .titlecaseLetter, .modifierLetter, .otherLetter,
+                 .decimalNumber, .letterNumber, .otherNumber,
+                 .mathSymbol, .currencySymbol, .modifierSymbol, .otherSymbol:
+                output.append(character)
+            default:
+                if (scalar.value == 0x23 || scalar.value == 0x2A),
+                   character.unicodeScalars.contains(where: { $0.value == 0x20E3 }) {
+                    output.append(character)
+                }
+            }
+        }
+        return output
     }
 
     // MARK: - 辅助

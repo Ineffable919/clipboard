@@ -19,6 +19,7 @@ final class PreviewFooterBar: NSView {
 
     var onShowInFinder: (() -> Void)?
     var onOpenInBrowser: (() -> Void)?
+    private var statisticsTask: Task<Void, Never>?
 
     // MARK: - Subviews
 
@@ -75,6 +76,10 @@ final class PreviewFooterBar: NSView {
         fatalError()
     }
 
+    deinit {
+        statisticsTask?.cancel()
+    }
+
     // MARK: - Layout
 
     private func setupLayout() {
@@ -113,6 +118,7 @@ final class PreviewFooterBar: NSView {
         browserName: String?,
         defaultAppForFile _: String?
     ) {
+        statisticsTask?.cancel()
         let isSingleFile = model.type == .file && model.fileSize() == 1
         let showLinkPreview = model.type == .link
             && PasteUserDefaults.enableLinkPreview
@@ -126,10 +132,24 @@ final class PreviewFooterBar: NSView {
         } else if showLinkPreview {
             setWrappedText(model.attributeString.string)
         } else if model.pasteboardType.isText(), !showLinkPreview {
-            let stats = TextStatistics(from: model.plainText)
-            firstLineLabel.stringValue = stats.displayString
+            firstLineLabel.stringValue = model.introString()
             secondLineLabel.stringValue = ""
             secondLineLabel.isHidden = true
+            let data = model.data
+            let typeRawValue = model.pasteboardType.rawValue
+            statisticsTask = Task { @MainActor [weak self] in
+                let worker = Task.detached(priority: .utility) {
+                    let text = EditTextLoader.load(data: data, typeRawValue: typeRawValue)
+                    return TextStatistics(from: text)
+                }
+                let stats = await withTaskCancellationHandler {
+                    await worker.value
+                } onCancel: {
+                    worker.cancel()
+                }
+                guard let self, !Task.isCancelled else { return }
+                firstLineLabel.stringValue = stats.displayString
+            }
         } else {
             firstLineLabel.stringValue = model.introString()
             secondLineLabel.stringValue = ""

@@ -5,7 +5,7 @@
 
 import Foundation
 
-struct PasteContent {
+nonisolated struct PasteContent: Sendable {
     let type: PasteboardType
     let data: Data
     let showData: Data?

@@ -7,22 +7,38 @@ import AppKit
 
 extension EditWindowController {
     func saveContent(_ editedContent: EditedContent) {
-        guard let model = currentModel else { return }
-
-        let content = makePasteContent(editedContent)
-        guard !content.searchText.allSatisfy(\.isWhitespace) else {
+        guard let model = currentModel, saveTask == nil else { return }
+        let inserting = isNewItem
+        saveTask = Task {
+            defer {
+                if !Task.isCancelled { saveTask = nil }
+            }
+            guard !Task.isCancelled else { return }
+            let prepared = await makePasteContent(editedContent)
+            guard !Task.isCancelled, currentModel === model else { return }
+            guard let content = prepared,
+                  !content.searchText.allSatisfy(\.isWhitespace) else {
+                closeWindow()
+                return
+            }
+            let text = content.searchText
+            let searchText = await Task.detached(priority: .userInitiated) {
+                PasteboardModel.normalizeSearchText(text)
+            }.value
+            guard !Task.isCancelled, currentModel === model else { return }
+            if inserting {
+                await insertContent(content, searchText: searchText, source: model)
+            } else if let id = model.id {
+                guard await PasteDataStore.main.updateItemContent(
+                    id: id, content: content, searchText: searchText
+                ) else { return }
+            }
+            guard !Task.isCancelled, currentModel === model else { return }
             closeWindow()
-            return
-        }
-
-        if isNewItem {
-            insertContent(content, source: model)
-        } else if let id = model.id {
-            updateContent(content, id: id)
         }
     }
 
-    private func makePasteContent(_ content: EditedContent) -> PasteContent {
+    private func makePasteContent(_ content: EditedContent) async -> PasteContent? {
         let type: PasteboardType
         let data: Data
         let showData: Data?
@@ -31,11 +47,9 @@ extension EditWindowController {
 
         switch content {
         case let .plainText(plainText):
-            type = .string
-            data = Data(plainText.utf8)
-            showData = Data(plainText.prefix(250).utf8)
-            text = plainText
-            length = plainText.utf16.count
+            return await Task.detached(priority: .userInitiated) {
+                PasteboardTextPreparation.prepareForSave(plainText)
+            }.value
         case let .attributedText(attributedText):
             text = attributedText.string
             length = attributedText.length
@@ -65,8 +79,19 @@ extension EditWindowController {
 
     private func insertContent(
         _ content: PasteContent,
+        searchText: String,
         source: PasteboardModel
-    ) {
+    ) async {
+        let data = content.data
+        let uniqueId: String?
+        if content.type == .string {
+            uniqueId = await Task.detached(priority: .userInitiated) {
+                data.sha256Hex
+            }.value
+        } else {
+            uniqueId = nil
+        }
+        guard !Task.isCancelled, currentModel === source else { return }
         let model = PasteboardModel(
             pasteboardType: content.type,
             data: content.data,
@@ -74,29 +99,16 @@ extension EditWindowController {
             timestamp: Int64(Date().timeIntervalSince1970),
             appPath: source.appPath,
             appName: source.appName,
-            searchText: PasteboardModel.normalizeSearchText(content.searchText),
+            searchText: searchText,
             length: content.length,
             group: -1,
             tag: content.tag,
+            uniqueId: uniqueId,
             appID: source.appID,
             sourceBundleID: source.sourceBundleID
         )
 
-        Task {
-            await PasteDataStore.main.insertModel(model)
-            closeWindow()
-        }
-    }
-
-    private func updateContent(_ content: PasteContent, id: Int64) {
-        Task {
-            let updated = await PasteDataStore.main.updateItemContent(
-                id: id,
-                content: content
-            )
-            guard updated else { return }
-            closeWindow()
-        }
+        await PasteDataStore.main.insertModel(model)
     }
 
     private static func hasRichTextAttributes(

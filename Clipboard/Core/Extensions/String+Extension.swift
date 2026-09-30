@@ -16,7 +16,7 @@ extension String {
         validURLString() != nil
     }
 
-    func asCompleteURL() -> URL? {
+    nonisolated func asCompleteURL() -> URL? {
         guard let candidate = validURLString() else { return nil }
         return URL(string: candidate)
     }
@@ -25,7 +25,7 @@ extension String {
         isCompleteURL()
     }
 
-    private func validURLString() -> String? {
+    nonisolated private func validURLString() -> String? {
         let candidate = trimmingCharacters(in: .whitespacesAndNewlines)
         guard !candidate.isEmpty else { return nil }
         guard !candidate.unicodeScalars.contains(where: {
@@ -94,9 +94,9 @@ extension String {
         }
     }
 
-    var isCSSHexColor: Bool {
+    nonisolated var isCSSHexColor: Bool {
         let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, trimmed.count <= 50 else {
+        guard !trimmed.isEmpty, trimmed.prefix(51).count <= 50 else {
             return false
         }
 
@@ -114,7 +114,7 @@ extension String {
         return isValidHexColor(lowercased) || Self.cssNamedColors.contains(lowercased)
     }
 
-    private static let cssNamedColors: Set<String> = [
+    nonisolated private static let cssNamedColors: Set<String> = [
         "black", "white", "red", "green", "blue", "yellow", "cyan", "magenta",
         "gray", "grey", "silver", "maroon", "olive", "lime", "aqua", "teal",
         "navy", "fuchsia", "purple", "orange", "pink", "brown", "gold",
@@ -123,19 +123,19 @@ extension String {
         "transparent"
     ]
 
-    private static let hexCharacters = CharacterSet(charactersIn: "0123456789abcdef")
+    nonisolated private static let hexCharacters = CharacterSet(charactersIn: "0123456789abcdef")
 
-    private static let hexDigitsOnly = CharacterSet(charactersIn: "0123456789")
+    nonisolated private static let hexDigitsOnly = CharacterSet(charactersIn: "0123456789")
 
-    private static let rgbRegex = try? NSRegularExpression(
+    nonisolated private static let rgbRegex = try? NSRegularExpression(
         pattern: #"^rgba?\((\d+),(\d+),(\d+)(,(0|1|0?\.\d+))?\)$"#
     )
 
-    private static let hslRegex = try? NSRegularExpression(
+    nonisolated private static let hslRegex = try? NSRegularExpression(
         pattern: #"^hsla?\((\d+),(\d+)%,(\d+)%(,(0|1|0?\.\d+))?\)$"#
     )
 
-    private func isValidHexColor(_ str: String) -> Bool {
+    nonisolated private func isValidHexColor(_ str: String) -> Bool {
         let hasHash = str.hasPrefix("#")
         let hex = hasHash ? str.dropFirst() : str[...]
         guard [3, 4, 6, 8].contains(hex.count) else { return false }
@@ -147,7 +147,7 @@ extension String {
         return true
     }
 
-    private func isValidRGBColor(_ str: String) -> Bool {
+    nonisolated private func isValidRGBColor(_ str: String) -> Bool {
         let clean = str.replacing(" ", with: "")
         guard let regex = Self.rgbRegex else { return false }
 
@@ -162,7 +162,7 @@ extension String {
         return true
     }
 
-    private func isValidHSLColor(_ str: String) -> Bool {
+    nonisolated private func isValidHSLColor(_ str: String) -> Bool {
         let clean = str.replacing(" ", with: "")
         guard let regex = Self.hslRegex else { return false }
 
@@ -213,6 +213,7 @@ extension String {
         tokenizer.string = self
 
         tokenizer.enumerateTokens(in: startIndex ..< endIndex) { range, _ in
+            guard !withUnsafeCurrentTask(body: { $0?.isCancelled ?? false }) else { return false }
             let token = self[range]
 
             // CJK：逐字符

@@ -2233,6 +2233,24 @@
         }
       }
     },
+    "jsonCollapseLine" : {
+      "comment" : "Accessibility action to collapse a JSON object or array at the given line",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collapse line %lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收起第 %lld 行"
+          }
+        }
+      }
+    },
     "jsonCompact" : {
       "comment" : "JSON editor toolbar action: compact JSON",
       "extractionState" : "manual",
@@ -2319,6 +2337,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "转义"
+          }
+        }
+      }
+    },
+    "jsonExpandLine" : {
+      "comment" : "Accessibility action to expand a JSON object or array at the given line",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expand line %lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "展开第 %lld 行"
           }
         }
       }

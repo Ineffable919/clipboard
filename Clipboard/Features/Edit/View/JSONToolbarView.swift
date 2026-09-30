@@ -80,6 +80,14 @@ final class JSONToolbarView: NSView {
         }
     }
 
+    func setIndentation(_ selected: JSONIndentation) {
+        indentation = selected
+        indentationButton.title = indentationTitle(for: selected)
+        indentationButton.popupMenu?.items.forEach { item in
+            item.state = item.tag == selected.rawValue ? .on : .off
+        }
+    }
+
     private func setup() {
         addSubview(stack)
         stack.snp.makeConstraints { make in
@@ -177,11 +185,7 @@ final class JSONToolbarView: NSView {
 
     @objc private func changeIndentation(_ sender: NSMenuItem) {
         guard let selected = JSONIndentation(rawValue: sender.tag) else { return }
-        indentation = selected
-        indentationButton.title = indentationTitle(for: selected)
-        indentationButton.popupMenu?.items.forEach { item in
-            item.state = item.tag == selected.rawValue ? .on : .off
-        }
+        setIndentation(selected)
         onIndentationChange?(selected)
     }
 

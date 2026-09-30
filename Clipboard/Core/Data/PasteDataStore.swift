@@ -53,6 +53,7 @@ final class PasteDataStore {
     var repairingTagIds = Set<Int64>()
     let clearingHistory = CurrentValueSubject<Bool, Never>(false)
     private var orderRevision = 0
+    private var ingestionTask: Task<Void, Never>?
 
     func setup() async -> Bool {
         guard await sqlManager.setup() else { return false }
@@ -241,6 +242,13 @@ extension PasteDataStore {
 
     @discardableResult
     func addNewItem(_ item: NSPasteboard, sourceApp: NSRunningApplication? = nil, chipId: Int = -1) -> Bool {
+        if let first = item.pasteboardItems?.first,
+           first.availableType(from: PasteboardType.supportTypes) == .string,
+           PasteboardModel.extractFilePaths(from: item, item: first) == nil,
+           let data = first.data(forType: .string), data.count > 1_048_576 {
+            ingestionTask = ingestText(data, sourceApp: sourceApp, chipId: chipId, after: ingestionTask)
+            return true
+        }
         guard let model = PasteboardModel(with: item, sourceApp: sourceApp) else { return false }
 
         if chipId != -1 {
@@ -249,7 +257,9 @@ extension PasteDataStore {
 
         PasteMetadataCache.shared.invalidateTagTypesCache(model)
 
-        Task {
+        let previous = ingestionTask
+        ingestionTask = Task {
+            await previous?.value
             await insertModel(model)
             await runOCRIfNeeded(model)
         }
@@ -333,11 +343,9 @@ extension PasteDataStore {
     /// 编辑更新
     func updateItemContent(
         id: Int64,
-        content: PasteContent
+        content: PasteContent,
+        searchText: String
     ) async -> Bool {
-        let searchText = PasteboardModel.normalizeSearchText(
-            content.searchText
-        )
         let loadedLimit = max(pageSize, dataList.value.count)
         loadPageTask?.cancel()
         isLoadingPage = false
