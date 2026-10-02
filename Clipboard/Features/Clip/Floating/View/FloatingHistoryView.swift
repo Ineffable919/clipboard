@@ -285,11 +285,6 @@ final class FloatingHistoryView: NSView {
 
     // MARK: - Multi Selection
 
-    private var isMultiSelect: Bool {
-        let modifiers = NSApp.currentEvent?.modifierFlags ?? []
-        return modifiers.contains(.command) || modifiers.contains(.shift)
-    }
-
     var selectedModels: [PasteboardModel] {
         collectionView.selectionIndexPaths.sorted()
             .compactMap { path in
@@ -307,17 +302,11 @@ extension FloatingHistoryView: NSCollectionViewDelegate {
         _: NSCollectionView,
         shouldSelectItemsAt indexPaths: Set<IndexPath>
     ) -> Set<IndexPath> {
-        if collectionView.keepsDragSelection { return collectionView.selectionIndexPaths }
-        if isMultiSelect {
-            if let path = indexPaths.min() {
-                selectedIndex = path.item
-            }
-            return indexPaths
+        if collectionView.handlesShiftSelection { return [] }
+        if let indexPath = indexPaths.min() {
+            selectedIndex = indexPath.item
         }
-        if let indexPath = indexPaths.first {
-            resetSelectIndex(indexPath)
-        }
-        return [IndexPath(item: selectedIndex, section: 0)]
+        return indexPaths
     }
 
     func collectionView(
@@ -332,7 +321,7 @@ extension FloatingHistoryView: NSCollectionViewDelegate {
         _: NSCollectionView,
         shouldDeselectItemsAt indexPaths: Set<IndexPath>
     ) -> Set<IndexPath> {
-        collectionView.keepsDragSelection ? [] : indexPaths
+        collectionView.handlesShiftSelection ? [] : indexPaths
     }
 
     func collectionView(
@@ -396,32 +385,5 @@ extension FloatingHistoryView: NSGestureRecognizerDelegate {
     @objc func handleBackgroundClick(_: NSClickGestureRecognizer) {
         setFocusRegion(.collection)
         window?.makeFirstResponder(collectionView)
-    }
-}
-
-// MARK: - Drag
-
-extension FloatingHistoryView {
-    func handleDragMoved(_ screenPoint: NSPoint) {
-        guard let window else { return }
-        let visibleRect = convert(bounds, to: nil)
-        let screenRect = window.convertToScreen(visibleRect)
-        if !screenRect.contains(screenPoint),
-           ClipFloatingWindowController.shared.isVisible {
-            ClipFloatingWindowController.shared.toggleWindow()
-        }
-    }
-
-    func handleDragEnded(_ screenPoint: NSPoint) {
-        guard let window else { return }
-        let visibleRect = convert(bounds, to: nil)
-        let screenRect = window.convertToScreen(visibleRect)
-        guard screenRect.contains(screenPoint) else { return }
-
-        env.suppressResignKey = true
-        window.resignKey()
-        window.makeKey()
-        window.makeFirstResponder(collectionView)
-        env.suppressResignKey = false
     }
 }

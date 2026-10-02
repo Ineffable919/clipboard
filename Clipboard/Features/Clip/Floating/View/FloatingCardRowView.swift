@@ -6,7 +6,6 @@
 //
 
 import AppKit
-@preconcurrency import LinkPresentation
 import SnapKit
 
 // MARK: - FloatingCardRowView
@@ -45,14 +44,14 @@ final class FloatingCardRowView: NSView {
     }()
 
     private let plainTextIcon: NSImageView = {
-        let iv = NSImageView()
-        iv.image = NSImage(systemSymbolName: "text.justify.leading", accessibilityDescription: nil)
-        iv.symbolConfiguration = NSImage.SymbolConfiguration(textStyle: .caption1)
-        iv.imageScaling = .scaleProportionallyUpOrDown
-        iv.isHidden = true
-        iv.setContentHuggingPriority(.required, for: .horizontal)
-        iv.setContentCompressionResistancePriority(.required, for: .horizontal)
-        return iv
+        let icon = NSImageView()
+        icon.image = NSImage(systemSymbolName: "text.justify.leading", accessibilityDescription: nil)
+        icon.symbolConfiguration = NSImage.SymbolConfiguration(textStyle: .caption1)
+        icon.imageScaling = .scaleProportionallyUpOrDown
+        icon.isHidden = true
+        icon.setContentHuggingPriority(.required, for: .horizontal)
+        icon.setContentCompressionResistancePriority(.required, for: .horizontal)
+        return icon
     }()
 
     private let quickPasteBadge: NSTextField = {
@@ -68,9 +67,9 @@ final class FloatingCardRowView: NSView {
 
     // MARK: - State
 
-    private var currentModel: PasteboardModel?
+    private(set) var currentModel: PasteboardModel?
     private var currentKeyword: String = ""
-    private var displayMode: FloatingDisplayMode = .standard
+    private(set) var displayMode: FloatingDisplayMode = .standard
     private var isSelectedState: Bool = false
     private var isFocusedState: Bool = false
     private var iconLoadTask: Task<Void, Never>?
@@ -105,6 +104,10 @@ final class FloatingCardRowView: NSView {
     override init(frame: NSRect) {
         super.init(frame: frame)
         setup()
+        let doubleClick = CollectionClickGestureRecognizer(target: self, action: #selector(handleDoubleClick))
+        doubleClick.numberOfClicksRequired = 2
+        doubleClick.delaysPrimaryMouseButtonEvents = false
+        addGestureRecognizer(doubleClick)
     }
 
     @available(*, unavailable)
@@ -115,113 +118,6 @@ final class FloatingCardRowView: NSView {
     deinit {
         iconLoadTask?.cancel()
         contentLoadTask?.cancel()
-    }
-
-    // MARK: - Setup
-
-    private func setup() {
-        wantsLayer = true
-
-        selectionBorderView.wantsLayer = true
-        selectionBorderView.layer?.cornerRadius = displayMode.cardRadius + FloatConst.floatSelectionBorderWidth
-        selectionBorderView.layer?.cornerCurve = .continuous
-        selectionBorderView.layer?.borderWidth = 0
-        selectionBorderView.layer?.backgroundColor = .clear
-        selectionBorderView.layer?.masksToBounds = false
-
-        addSubview(selectionBorderView)
-
-        backgroundView.wantsLayer = true
-        backgroundView.layer?.cornerRadius = displayMode.cardRadius
-        backgroundView.layer?.cornerCurve = .continuous
-        backgroundView.layer?.masksToBounds = true
-        selectionBorderView.addSubview(backgroundView)
-
-        backgroundView.addSubview(appIconView)
-
-        contentView.wantsLayer = true
-        contentView.layer?.masksToBounds = true
-        backgroundView.addSubview(contentView)
-
-        timestampLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .regular)
-        timestampLabel.textColor = .secondaryLabelColor
-        timestampLabel.alignment = .right
-        timestampLabel.lineBreakMode = .byTruncatingTail
-        timestampLabel.setContentHuggingPriority(.required, for: .horizontal)
-        timestampLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
-        backgroundView.addSubview(timestampLabel)
-
-        badgeBgView.addSubview(badgeStackView)
-        badgeStackView.addArrangedSubview(plainTextIcon)
-        badgeStackView.addArrangedSubview(quickPasteBadge)
-        backgroundView.addSubview(badgeBgView, positioned: .above, relativeTo: contentView)
-
-        chipTagIcon.imageScaling = .scaleProportionallyUpOrDown
-        chipTagIcon.image = NSImage(systemSymbolName: "tag.fill", accessibilityDescription: nil)
-        chipTagIcon.isHidden = true
-        backgroundView.addSubview(chipTagIcon)
-
-        selectionBorderView.snp.makeConstraints { make in
-            make.edges.equalToSuperview().priority(999)
-        }
-
-        backgroundView.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(FloatConst.floatSelectionBorderWidth).priority(999)
-        }
-
-        badgeStackView.snp.makeConstraints { make in
-            make.centerY.equalToSuperview()
-            make.leading.trailing.equalToSuperview().inset(Const.space2)
-        }
-
-        applyDisplayMode()
-
-        setupContextMenu()
-        updateShadow()
-    }
-
-    private func applyDisplayMode() {
-        let isStandard = displayMode == .standard
-        appIconView.isHidden = !isStandard
-        timestampLabel.isHidden = !isStandard
-        timestampLabel.font = .systemFont(ofSize: NSFont.labelFontSize)
-        selectionBorderView.layer?.cornerRadius = displayMode.cardRadius + FloatConst.floatSelectionBorderWidth
-        backgroundView.layer?.cornerRadius = displayMode.cardRadius
-
-        badgeBgView.snp.remakeConstraints { make in
-            make.trailing.equalToSuperview().inset(Const.space6)
-            make.height.equalTo(16)
-            if isStandard {
-                make.bottom.equalToSuperview().inset(Const.space4)
-            } else {
-                make.centerY.equalToSuperview()
-            }
-        }
-
-        appIconView.snp.remakeConstraints { make in
-            make.leading.equalToSuperview().offset(Const.space6)
-            make.centerY.equalToSuperview()
-            make.width.height.equalTo(28)
-        }
-        timestampLabel.snp.remakeConstraints { make in
-            make.trailing.equalToSuperview().inset(Const.space6)
-            make.centerY.equalToSuperview()
-        }
-        chipTagIcon.snp.remakeConstraints { make in
-            make.trailing.equalToSuperview().inset(isStandard ? Const.space4 : Const.space2)
-            make.top.equalToSuperview().offset(isStandard ? Const.space4 : Const.space2)
-            make.width.height.equalTo(isStandard ? 10 : 8)
-        }
-        contentView.snp.remakeConstraints { make in
-            if isStandard {
-                make.leading.equalTo(appIconView.snp.trailing).offset(Const.space10)
-                make.trailing.equalTo(timestampLabel.snp.leading).offset(-Const.space4)
-                make.top.bottom.equalToSuperview().inset(Const.space4)
-            } else {
-                make.leading.trailing.equalToSuperview().inset(Const.space10)
-                make.top.bottom.equalToSuperview().inset(Const.space8)
-            }
-        }
     }
 
     // MARK: - Configure
@@ -325,11 +221,8 @@ final class FloatingCardRowView: NSView {
         quickPasteBadge.textColor = tintColor
     }
 
-    override func mouseDown(with event: NSEvent) {
-        super.mouseDown(with: event)
-        if event.type == .leftMouseDown, event.clickCount == 2 {
-            onPaste?()
-        }
+    @objc private func handleDoubleClick() {
+        onPaste?()
     }
 
     func updateTimestamp() {
@@ -369,45 +262,12 @@ final class FloatingCardRowView: NSView {
 
     private func updateKeywordInContentSubview(keyword: String, model: PasteboardModel) {
         switch contentSubview {
-        case let v as FloatingTextContentView:
-            v.update(keyword: keyword, model: model)
-        case let v as FloatingRichContentView:
-            v.update(keyword: keyword, model: model)
+        case let view as FloatingTextContentView:
+            view.update(keyword: keyword, model: model)
+        case let view as FloatingRichContentView:
+            view.update(keyword: keyword, model: model)
         default:
             break
-        }
-    }
-
-    private func makeContentSubview(for model: PasteboardModel, keyword: String) -> NSView {
-        switch model.type {
-        case .color:
-            return FloatingColorContentView(model: model)
-        case .image:
-            return FloatingImageContentView(model: model, displayMode: displayMode)
-        case .file:
-            return FloatingFileContentView(model: model)
-        case .rich:
-            if model.hasBgColor {
-                return FloatingRichContentView(
-                    model: model, keyword: keyword, maximumLines: displayMode == .standard ? 2 : 1
-                )
-            }
-            return FloatingTextContentView(
-                model: model, keyword: keyword, maximumLines: displayMode == .standard ? 0 : 1
-            )
-        case .link:
-            if PasteUserDefaults.enableLinkPreview {
-                return FloatingLinkContentView(model: model, keyword: keyword, displayMode: displayMode)
-            }
-            return FloatingTextContentView(
-                model: model, keyword: keyword, maximumLines: displayMode == .standard ? 0 : 1
-            )
-        case .string:
-            return FloatingTextContentView(
-                model: model, keyword: keyword, maximumLines: displayMode == .standard ? 0 : 1
-            )
-        case .none:
-            return NSView()
         }
     }
 
@@ -420,438 +280,111 @@ final class FloatingCardRowView: NSView {
     }
 }
 
-// MARK: - ClipItemMenuActionable
+private extension FloatingCardRowView {
+    // MARK: - Setup
 
-extension FloatingCardRowView: ClipItemMenuActionable {
-    func handleClipPaste() {
-        onPaste?()
-    }
+    func setup() {
+        wantsLayer = true
 
-    func handleClipPastePlain() {
-        onPastePlainText?()
-    }
+        selectionBorderView.wantsLayer = true
+        selectionBorderView.layer?.cornerRadius = displayMode.cardRadius + FloatConst.floatSelectionBorderWidth
+        selectionBorderView.layer?.cornerCurve = .continuous
+        selectionBorderView.layer?.borderWidth = 0
+        selectionBorderView.layer?.backgroundColor = .clear
+        selectionBorderView.layer?.masksToBounds = false
 
-    func handleClipCopy() {
-        onCopy?()
-    }
+        addSubview(selectionBorderView)
 
-    func handleClipEdit() {
-        onEdit?()
-    }
+        backgroundView.wantsLayer = true
+        backgroundView.layer?.cornerRadius = displayMode.cardRadius
+        backgroundView.layer?.cornerCurve = .continuous
+        backgroundView.layer?.masksToBounds = true
+        selectionBorderView.addSubview(backgroundView)
 
-    func handleClipDelete() {
-        onDelete?()
-    }
+        backgroundView.addSubview(appIconView)
 
-    func handleClipPreview() {
-        onTogglePreview?()
-    }
+        contentView.wantsLayer = true
+        contentView.layer?.masksToBounds = true
+        backgroundView.addSubview(contentView)
 
-    func handleClipAssignToChip(_ sender: NSMenuItem) {
-        guard let model = currentModel, model.group != sender.tag else { return }
-        onAssignToChip?(sender.tag)
-    }
+        timestampLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .regular)
+        timestampLabel.textColor = .secondaryLabelColor
+        timestampLabel.alignment = .right
+        timestampLabel.lineBreakMode = .byTruncatingTail
+        timestampLabel.setContentHuggingPriority(.required, for: .horizontal)
+        timestampLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+        backgroundView.addSubview(timestampLabel)
 
-    func handleClipCreateChip() {
-        guard let model = currentModel else { return }
-        onCreateChip?(model)
-    }
+        badgeBgView.addSubview(badgeStackView)
+        badgeStackView.addArrangedSubview(plainTextIcon)
+        badgeStackView.addArrangedSubview(quickPasteBadge)
+        backgroundView.addSubview(badgeBgView, positioned: .above, relativeTo: contentView)
 
-    func handleClipUnpin() {
-        onAssignToChip?(-1)
-    }
+        chipTagIcon.imageScaling = .scaleProportionallyUpOrDown
+        chipTagIcon.image = NSImage(systemSymbolName: "tag.fill", accessibilityDescription: nil)
+        chipTagIcon.isHidden = true
+        backgroundView.addSubview(chipTagIcon)
 
-    func handleClipRevealInFinder() {
-        guard let paths = currentModel?.cachedFilePaths, !paths.isEmpty else { return }
-        NSWorkspace.shared.activateFileViewerSelecting(paths.map { URL(fileURLWithPath: $0) })
-    }
-
-    func handleClipOpenInBrowser() {
-        guard let model = currentModel, let url = URL(string: model.plainText) else { return }
-        NSWorkspace.shared.open(url)
-    }
-
-    func handleClipOpenWithDefaultApp() {
-        guard let path = currentModel?.cachedFilePaths?.first else { return }
-        NSWorkspace.shared.open(URL(fileURLWithPath: path))
-    }
-}
-
-// MARK: - NSMenuDelegate
-
-extension FloatingCardRowView: NSMenuDelegate {
-    func menuNeedsUpdate(_ menu: NSMenu) {
-        menu.removeAllItems()
-        guard let model = currentModel else { return }
-        let pasteTitle = if let appName = AppEnvironment.shared.previousApp?.localizedName, PasteUserDefaults.pasteDirect {
-            String(localized: .pasteToApp(appName))
-        } else {
-            String(localized: .paste)
+        selectionBorderView.snp.makeConstraints { make in
+            make.edges.equalToSuperview().priority(999)
         }
-        for item in buildClipItemMenu(for: model, pasteTitle: pasteTitle).items {
-            menu.addItem(item)
+
+        backgroundView.snp.makeConstraints { make in
+            make.edges.equalToSuperview().inset(FloatConst.floatSelectionBorderWidth).priority(999)
         }
-    }
-}
 
-// MARK: - FloatingAppIconView
-
-private final class FloatingAppIconView: NSView {
-    private let imageView = NSImageView()
-    private var loadTask: Task<Void, Never>?
-
-    override init(frame: NSRect) {
-        super.init(frame: frame)
-        imageView.imageScaling = .scaleProportionallyUpOrDown
-        addSubview(imageView)
-        imageView.snp.makeConstraints { $0.edges.equalToSuperview() }
-    }
-
-    @available(*, unavailable)
-    required init?(coder _: NSCoder) {
-        fatalError()
-    }
-
-    deinit { loadTask?.cancel() }
-
-    func configure(appID: Int64?, appPath: String) {
-        loadTask?.cancel()
-        imageView.image = nil
-        loadTask = Task { @MainActor [weak self] in
-            let icon = await AppIconCache.shared.loadIcon(forAppID: appID, path: appPath)
-            guard !Task.isCancelled else { return }
-            self?.imageView.image = icon
+        badgeStackView.snp.makeConstraints { make in
+            make.centerY.equalToSuperview()
+            make.leading.trailing.equalToSuperview().inset(Const.space2)
         }
-    }
-}
 
-// MARK: - FloatingTextContentView
+        applyDisplayMode()
 
-final class FloatingTextContentView: NSView {
-    private let textField = NSTextField(labelWithString: "")
-
-    init(model: PasteboardModel, keyword: String, maximumLines: Int) {
-        super.init(frame: .zero)
-        textField.cell = VerticallyCenteredTextFieldCell()
-        textField.cell?.usesSingleLineMode = maximumLines == 1
-        textField.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .regular)
-        textField.lineBreakMode = .byTruncatingTail
-        textField.maximumNumberOfLines = maximumLines
-        textField.cell?.truncatesLastVisibleLine = true
-        addSubview(textField)
-        textField.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-        update(keyword: keyword, model: model)
+        setupContextMenu()
+        updateShadow()
     }
 
-    @available(*, unavailable)
-    required init?(coder _: NSCoder) {
-        fatalError()
-    }
+    func applyDisplayMode() {
+        let isStandard = displayMode == .standard
+        appIconView.isHidden = !isStandard
+        timestampLabel.isHidden = !isStandard
+        timestampLabel.font = .systemFont(ofSize: NSFont.labelFontSize)
+        selectionBorderView.layer?.cornerRadius = displayMode.cardRadius + FloatConst.floatSelectionBorderWidth
+        backgroundView.layer?.cornerRadius = displayMode.cardRadius
 
-    func update(keyword: String, model: PasteboardModel) {
-        let text = keyword.isEmpty
-            ? model.plainTextAttributedString
-            : model.highlightedNSAttributedString(keyword: keyword)
-        if textField.maximumNumberOfLines == 1, model.pasteboardType == .string {
-            let preview = NSMutableAttributedString(attributedString: text)
-            preview.addAttribute(
-                .font, value: NSFont.systemFont(ofSize: 12), range: NSRange(location: 0, length: preview.length)
-            )
-            textField.attributedStringValue = preview
-        } else {
-            textField.attributedStringValue = text
-        }
-    }
-}
-
-// MARK: - FloatingRichContentView
-
-final class FloatingRichContentView: NSView {
-    private let textField = NSTextField(labelWithString: "")
-
-    init(model: PasteboardModel, keyword: String, maximumLines: Int) {
-        super.init(frame: .zero)
-        textField.cell = VerticallyCenteredTextFieldCell()
-        textField.cell?.usesSingleLineMode = maximumLines == 1
-        textField.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .regular)
-        textField.lineBreakMode = .byTruncatingTail
-        textField.maximumNumberOfLines = maximumLines
-        textField.cell?.truncatesLastVisibleLine = true
-        addSubview(textField)
-        textField.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-        update(keyword: keyword, model: model)
-    }
-
-    @available(*, unavailable)
-    required init?(coder _: NSCoder) {
-        fatalError()
-    }
-
-    func update(keyword: String, model: PasteboardModel) {
-        textField.attributedStringValue = model.highlightedRichText(keyword: keyword)
-    }
-}
-
-// MARK: - FloatingColorContentView
-
-private final class FloatingColorContentView: NSView {
-    private let label = NSTextField(labelWithString: "")
-
-    init(model: PasteboardModel) {
-        super.init(frame: .zero)
-        label.font = .monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .medium)
-        label.alignment = .center
-        label.lineBreakMode = .byTruncatingTail
-        label.textColor = model.colors().1
-        label.stringValue = model.colorDisplayText
-        addSubview(label)
-        label.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-            make.leading.greaterThanOrEqualToSuperview()
-            make.trailing.lessThanOrEqualToSuperview()
-        }
-    }
-
-    @available(*, unavailable)
-    required init?(coder _: NSCoder) {
-        fatalError()
-    }
-}
-
-// MARK: - FloatingImageContentView
-
-private final class FloatingImageContentView: NSView {
-    private let imageView = NSView()
-    private let placeholder = NSImageView()
-    private var loadTask: Task<Void, Never>?
-
-    init(model: PasteboardModel, displayMode: FloatingDisplayMode) {
-        super.init(frame: .zero)
-        imageView.wantsLayer = true
-        imageView.layer?.cornerRadius = displayMode == .standard ? 0 : 4
-        imageView.layer?.masksToBounds = true
-        imageView.layer?.contentsGravity = displayMode == .standard ? .resizeAspect : .resizeAspectFill
-        imageView.isHidden = true
-        addSubview(imageView)
-        imageView.snp.makeConstraints { make in
-            if displayMode == .standard {
-                make.edges.equalToSuperview()
+        badgeBgView.snp.remakeConstraints { make in
+            make.trailing.equalToSuperview().inset(Const.space6)
+            make.height.equalTo(16)
+            if isStandard {
+                make.bottom.equalToSuperview().inset(Const.space4)
             } else {
                 make.centerY.equalToSuperview()
-                make.width.equalTo(64)
-                make.height.equalToSuperview()
             }
         }
 
-        if displayMode == .minimal {
-            let photoIcon = NSImageView()
-            photoIcon.image = NSImage(
-                systemSymbolName: "photo", accessibilityDescription: String(localized: .image)
-            )
-            photoIcon.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 14, weight: .regular)
-            photoIcon.contentTintColor = .systemBlue
-            photoIcon.imageScaling = .scaleNone
-            addSubview(photoIcon)
-            photoIcon.snp.makeConstraints { make in
-                make.leading.equalToSuperview()
-                make.centerY.equalToSuperview()
-                make.width.height.equalTo(20)
-            }
-            imageView.snp.makeConstraints { $0.leading.equalTo(photoIcon.snp.trailing).offset(Const.space8) }
-        }
-
-        placeholder.image = NSImage(systemSymbolName: "photo", accessibilityDescription: nil)
-        placeholder.contentTintColor = .secondaryLabelColor
-        placeholder.imageScaling = .scaleProportionallyUpOrDown
-        addSubview(placeholder)
-        placeholder.snp.makeConstraints { make in
-            make.center.equalTo(imageView)
-            make.width.height.equalTo(20)
-        }
-
-        loadTask = Task { @MainActor [weak self] in
-            let image = await model.loadThumbnail()
-            guard !Task.isCancelled, let self else { return }
-            if let image {
-                imageView.layer?.contents = image
-                imageView.isHidden = false
-                placeholder.isHidden = true
-            }
-        }
-    }
-
-    @available(*, unavailable)
-    required init?(coder _: NSCoder) {
-        fatalError()
-    }
-
-    deinit { loadTask?.cancel() }
-}
-
-// MARK: - FloatingFileContentView
-
-private final class FloatingFileContentView: NSView {
-    private let iconView = NSImageView()
-    private let nameLabel = NSTextField(labelWithString: "")
-
-    init(model: PasteboardModel) {
-        super.init(frame: .zero)
-
-        iconView.imageScaling = .scaleProportionallyUpOrDown
-        addSubview(iconView)
-        iconView.snp.makeConstraints { make in
-            make.leading.equalToSuperview()
+        appIconView.snp.remakeConstraints { make in
+            make.leading.equalToSuperview().offset(Const.space6)
             make.centerY.equalToSuperview()
-            make.width.height.equalTo(24)
+            make.width.height.equalTo(28)
         }
-
-        nameLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize, weight: .regular)
-        nameLabel.lineBreakMode = .byTruncatingMiddle
-        nameLabel.maximumNumberOfLines = 1
-        addSubview(nameLabel)
-        nameLabel.snp.makeConstraints { make in
-            make.leading.equalTo(iconView.snp.trailing).offset(Const.space6)
-            make.trailing.equalToSuperview()
+        timestampLabel.snp.remakeConstraints { make in
+            make.trailing.equalToSuperview().inset(Const.space6)
             make.centerY.equalToSuperview()
         }
-
-        if let paths = model.cachedFilePaths, !paths.isEmpty {
-            if paths.count > 1 {
-                iconView.image = NSImage(systemSymbolName: "folder.fill", accessibilityDescription: nil)
-                iconView.contentTintColor = NSColor.controlAccentColor.withAlphaComponent(0.7)
-                nameLabel.stringValue = String(localized: .fileCount(paths.count))
-            } else if let path = paths.first {
-                let url = URL(filePath: path)
-                iconView.image = FileThumbnailService.shared.systemIcon(for: url)
-                nameLabel.stringValue = url.lastPathComponent
+        chipTagIcon.snp.remakeConstraints { make in
+            make.trailing.equalToSuperview().inset(isStandard ? Const.space4 : Const.space2)
+            make.top.equalToSuperview().offset(isStandard ? Const.space4 : Const.space2)
+            make.width.height.equalTo(isStandard ? 10 : 8)
+        }
+        contentView.snp.remakeConstraints { make in
+            if isStandard {
+                make.leading.equalTo(appIconView.snp.trailing).offset(Const.space10)
+                make.trailing.equalTo(timestampLabel.snp.leading).offset(-Const.space4)
+                make.top.bottom.equalToSuperview().inset(Const.space4)
+            } else {
+                make.leading.trailing.equalToSuperview().inset(Const.space10)
+                make.top.bottom.equalToSuperview().inset(Const.space8)
             }
-        }
-    }
-
-    @available(*, unavailable)
-    required init?(coder _: NSCoder) {
-        fatalError()
-    }
-}
-
-// MARK: - FloatingLinkContentView
-
-private final class FloatingLinkContentView: NSView {
-    private let iconView = NSImageView()
-    private let titleLabel = NSTextField(labelWithString: "")
-    private let urlLabel = NSTextField(labelWithString: "")
-    private var loadTask: Task<Void, Never>?
-    private let displayMode: FloatingDisplayMode
-
-    init(model: PasteboardModel, keyword: String, displayMode: FloatingDisplayMode) {
-        self.displayMode = displayMode
-        super.init(frame: .zero)
-
-        iconView.imageScaling = .scaleProportionallyUpOrDown
-        iconView.image = NSImage(systemSymbolName: "link", accessibilityDescription: nil)
-        iconView.contentTintColor = .secondaryLabelColor
-        addSubview(iconView)
-        iconView.snp.makeConstraints { make in
-            make.leading.equalToSuperview()
-            make.centerY.equalToSuperview()
-            make.width.height.equalTo(20)
-        }
-
-        let textStack = NSStackView()
-        textStack.orientation = .vertical
-        textStack.alignment = .leading
-        textStack.spacing = 2
-        addSubview(textStack)
-        textStack.snp.makeConstraints { make in
-            make.leading.equalTo(iconView.snp.trailing).offset(Const.space6)
-            make.trailing.equalToSuperview()
-            make.centerY.equalToSuperview()
-        }
-
-        titleLabel.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .medium)
-        titleLabel.lineBreakMode = .byTruncatingTail
-        titleLabel.maximumNumberOfLines = 1
-
-        urlLabel.font = .systemFont(ofSize: NSFont.labelFontSize, weight: .regular)
-        urlLabel.textColor = .secondaryLabelColor
-        urlLabel.lineBreakMode = .byTruncatingMiddle
-        urlLabel.maximumNumberOfLines = 1
-
-        textStack.addArrangedSubview(titleLabel)
-        textStack.addArrangedSubview(urlLabel)
-        if displayMode == .minimal {
-            urlLabel.isHidden = true
-            titleLabel.snp.makeConstraints { $0.width.equalTo(textStack) }
-        }
-
-        let urlString = model.attributeString.string
-        if keyword.isEmpty {
-            urlLabel.stringValue = urlString
-        } else {
-            urlLabel.attributedStringValue = model.highlightedPlainText(keyword: keyword)
-        }
-
-        if let cached = model.cachedLinkMetadata {
-            applyMetadata(title: cached.title, icon: cached.iconImage, urlString: urlString)
-        } else {
-            applyMetadata(title: nil, icon: nil, urlString: urlString)
-            loadTask = Task { @MainActor [weak self] in
-                guard let url = URL(string: urlString) else { return }
-                let metadata = await FloatingLinkContentView.fetchMetadata(for: url)
-                guard !Task.isCancelled, let self else { return }
-                model.cachedLinkMetadata = metadata
-                applyMetadata(title: metadata.title, icon: metadata.iconImage, urlString: urlString)
-            }
-        }
-    }
-
-    @available(*, unavailable)
-    required init?(coder _: NSCoder) {
-        fatalError()
-    }
-
-    deinit { loadTask?.cancel() }
-
-    private func applyMetadata(title: String?, icon: NSImage?, urlString: String) {
-        let title = title?.trimmingCharacters(in: .whitespacesAndNewlines)
-        titleLabel.stringValue = title.flatMap { $0.isEmpty ? nil : $0 }
-            ?? URL(string: urlString)?.host() ?? urlString
-        if displayMode == .minimal {
-            toolTip = "\(titleLabel.stringValue)\n\(urlString)"
-        }
-        if let icon {
-            iconView.image = icon
-            iconView.contentTintColor = nil
-        }
-    }
-
-    @preconcurrency
-    private static func fetchMetadata(for url: URL) async -> LinkPreviewMetadata {
-        let provider = LPMetadataProvider()
-        provider.timeout = 5.0
-        nonisolated(unsafe) let unsafeProvider = provider
-        do {
-            let metadata = try await withTaskCancellationHandler {
-                try await provider.startFetchingMetadata(for: url)
-            } onCancel: {
-                unsafeProvider.cancel()
-            }
-            let icon: NSImage? = await withCheckedContinuation { cont in
-                if let p = metadata.iconProvider ?? metadata.imageProvider {
-                    p.loadObject(ofClass: NSImage.self) { img, _ in
-                        cont.resume(returning: img as? NSImage)
-                    }
-                } else {
-                    cont.resume(returning: nil)
-                }
-            }
-            return LinkPreviewMetadata(title: metadata.title, previewImage: nil, iconImage: icon)
-        } catch {
-            return LinkPreviewMetadata(title: nil, previewImage: nil, iconImage: nil)
         }
     }
 }

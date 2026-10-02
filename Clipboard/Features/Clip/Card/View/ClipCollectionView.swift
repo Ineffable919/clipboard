@@ -6,15 +6,27 @@
 import AppKit
 
 final class ClipCollectionView: NSCollectionView {
-    var onMouseDownBeforeSelection: ((_ indexPath: IndexPath) -> Void)?
     var onBecomeFirstResponder: (() -> Void)?
     var onDragMoved: ((_ screenPoint: NSPoint) -> Void)?
     var onDragEnded: ((_ screenPoint: NSPoint) -> Void)?
     var onShiftClick: ((_ indexPath: IndexPath) -> Void)?
-    var onCollapseToSingle: ((_ indexPath: IndexPath) -> Void)?
-    private var pendingCollapse: IndexPath?
-    private var didDrag = false
+    var onClick: ((_ indexPath: IndexPath) -> Void)?
+    private lazy var clickGesture = CollectionClickGestureRecognizer(
+        target: self,
+        action: #selector(handleClick(_:))
+    )
     private let dropLine = CALayer()
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        clickGesture.delaysPrimaryMouseButtonEvents = false
+        addGestureRecognizer(clickGesture)
+    }
+
+    @available(*, unavailable)
+    required init?(coder _: NSCoder) {
+        fatalError()
+    }
 
     func showDropLine(before indexPath: IndexPath) {
         guard let frame = collectionViewLayout?.layoutAttributesForInterItemGap(before: indexPath)?.frame,
@@ -47,41 +59,23 @@ final class ClipCollectionView: NSCollectionView {
         hideDropLine()
     }
 
-    var keepsDragSelection: Bool { pendingCollapse != nil }
-
-    override func mouseDown(with event: NSEvent) {
-        pendingCollapse = nil
-        didDrag = false
-        if event.type == .leftMouseDown {
-            let point = convert(event.locationInWindow, from: nil)
-            let modifiers = event.modifierFlags
-
-            if let indexPath = indexPathForItem(at: point) {
-                if modifiers.contains(.shift), !modifiers.contains(.command) {
-                    onShiftClick?(indexPath)
-                    return
-                }
-
-                if !modifiers.contains(.command),
-                   selectionIndexPaths.count > 1,
-                   selectionIndexPaths.contains(indexPath) {
-                    pendingCollapse = indexPath
-                    super.mouseDown(with: event)
-                    return
-                }
-
-                onMouseDownBeforeSelection?(indexPath)
-            }
-        }
-        super.mouseDown(with: event)
+    var handlesShiftSelection: Bool {
+        // Shift 范围由点击回调统一设置，代理不再叠加系统的范围选择
+        guard onShiftClick != nil, let event = NSApp.currentEvent,
+              [.leftMouseDown, .leftMouseDragged, .leftMouseUp].contains(event.type)
+        else { return false }
+        let modifiers = clickGesture.clickModifiers
+        return modifiers.contains(.shift) && !modifiers.contains(.command)
     }
 
-    override func mouseUp(with event: NSEvent) {
-        super.mouseUp(with: event)
-        if let pendingCollapse, !didDrag {
-            onCollapseToSingle?(pendingCollapse)
+    @objc private func handleClick(_ gesture: NSClickGestureRecognizer) {
+        guard let indexPath = indexPathForItem(at: gesture.location(in: self)) else { return }
+        let modifiers = clickGesture.clickModifiers
+        if modifiers.contains(.shift), !modifiers.contains(.command) {
+            onShiftClick?(indexPath)
+        } else if !modifiers.contains(.command) {
+            onClick?(indexPath)
         }
-        pendingCollapse = nil
     }
 
     override func becomeFirstResponder() -> Bool {
@@ -97,7 +91,6 @@ final class ClipCollectionView: NSCollectionView {
     }
 
     override func draggingSession(_ session: NSDraggingSession, movedTo screenPoint: NSPoint) {
-        didDrag = true
         super.draggingSession(session, movedTo: screenPoint)
         onDragMoved?(screenPoint)
     }
@@ -107,8 +100,6 @@ final class ClipCollectionView: NSCollectionView {
         endedAt screenPoint: NSPoint,
         operation: NSDragOperation
     ) {
-        didDrag = true
-        pendingCollapse = nil
         hideDropLine()
         super.draggingSession(session, endedAt: screenPoint, operation: operation)
 

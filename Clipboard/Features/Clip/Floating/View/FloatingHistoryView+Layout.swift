@@ -88,7 +88,7 @@ extension FloatingHistoryView {
             collectionView.selectionIndexPaths = Set((lower ... upper).map { IndexPath(item: $0, section: 0) })
             scrollTo(index: clickedPath.item)
         }
-        collectionView.onCollapseToSingle = { [weak self] indexPath in
+        collectionView.onClick = { [weak self] indexPath in
             guard let self else { return }
             resetSelectIndex(indexPath)
         }

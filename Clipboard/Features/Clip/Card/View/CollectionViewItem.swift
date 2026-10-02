@@ -206,6 +206,10 @@ extension CollectionViewItem {
     override func viewDidLoad() {
         super.viewDidLoad()
         initSubView()
+        let doubleClick = CollectionClickGestureRecognizer(target: self, action: #selector(handleDoubleClick))
+        doubleClick.numberOfClicksRequired = 2
+        doubleClick.delaysPrimaryMouseButtonEvents = false
+        view.addGestureRecognizer(doubleClick)
     }
 
     override func viewDidLayout() {
@@ -219,12 +223,8 @@ extension CollectionViewItem {
         }
     }
 
-    override func mouseDown(with event: NSEvent) {
-        if event.type == .leftMouseDown, event.clickCount == 2 {
-            handleClipPaste()
-            return
-        }
-        super.mouseDown(with: event)
+    @objc private func handleDoubleClick() {
+        handleClipPaste()
     }
 
     override func prepareForReuse() {

@@ -137,10 +137,6 @@ final class ClipMainViewController: NSViewController {
         collectionView.registerForDraggedTypes(PasteboardType.supportTypes)
         collectionView.setDraggingSourceOperationMask(.every, forLocal: true)
         collectionView.setDraggingSourceOperationMask(.copy, forLocal: false)
-        collectionView.onMouseDownBeforeSelection = { [weak self] indexPath in
-            guard let self, focusRegion != .collection else { return }
-            resetSelectIndex(indexPath)
-        }
         collectionView.onBecomeFirstResponder = { [weak self] in
             self?.setFocusRegion(.collection)
         }
@@ -153,7 +149,7 @@ final class ClipMainViewController: NSViewController {
             collectionView.selectionIndexPaths = paths
             scrollTo(indexPath: clickedPath)
         }
-        collectionView.onCollapseToSingle = { [weak self] indexPath in
+        collectionView.onClick = { [weak self] indexPath in
             guard let self else { return }
             resetSelectIndex(indexPath)
             setFocusRegion(.collection)

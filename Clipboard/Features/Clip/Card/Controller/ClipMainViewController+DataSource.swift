@@ -16,25 +16,18 @@ extension ClipMainViewController: NSCollectionViewDelegate {
         shouldSelectItemsAt indexPaths: Set<IndexPath>
     ) -> Set<IndexPath> {
         if restoringSelection { return indexPaths }
-        if collectionView.keepsDragSelection { return collectionView.selectionIndexPaths }
-        if isMultiSelect {
-            if let path = indexPaths.min() {
-                selectIndexPath = path
-            }
-            return indexPaths
-        }
-
-        if let indexPath = indexPaths.first {
+        if collectionView.handlesShiftSelection { return [] }
+        if let indexPath = indexPaths.min() {
             selectIndexPath = indexPath
         }
-        return [selectIndexPath]
+        return indexPaths
     }
 
     func collectionView(
         _: NSCollectionView,
         shouldDeselectItemsAt indexPaths: Set<IndexPath>
     ) -> Set<IndexPath> {
-        collectionView.keepsDragSelection && !restoringSelection ? [] : indexPaths
+        collectionView.handlesShiftSelection && !restoringSelection ? [] : indexPaths
     }
 
     func collectionView(
@@ -180,11 +173,6 @@ extension ClipMainViewController {
         collectionView.selectionIndexPaths
             .sorted()
             .compactMap { displayedModel(at: $0) }
-    }
-
-    var isMultiSelect: Bool {
-        let modifiers = NSApp.currentEvent?.modifierFlags ?? []
-        return modifiers.contains(.command) || modifiers.contains(.shift)
     }
 }
 
