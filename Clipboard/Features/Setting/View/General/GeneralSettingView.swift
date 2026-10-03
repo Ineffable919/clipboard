@@ -21,7 +21,7 @@ struct GeneralSettingView: View {
             }
             .padding([.horizontal, .bottom], Const.space24)
         }
-        .scrollIndicators(.hidden)
+        .scrollIndicators(.automatic)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

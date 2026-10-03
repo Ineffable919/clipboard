@@ -169,7 +169,13 @@ final class FloatingFooterView: NSView {
     }
 
     private func updateModeIcon() {
-        modeButton.image = NSImage(systemSymbolName: "text.menu", accessibilityDescription: nil)?
+        let symbolName: String
+        if #available(macOS 27.0, *) {
+            symbolName = "text.menu"
+        } else {
+            symbolName = "line.3.horizontal"
+        }
+        modeButton.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?
             .withSymbolConfiguration(NSImage.SymbolConfiguration(
                 pointSize: displayMode == .standard ? 15 : 12, weight: .regular
             ))
