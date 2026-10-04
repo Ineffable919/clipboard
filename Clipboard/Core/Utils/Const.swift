@@ -90,8 +90,8 @@ enum Const {
     static let maxTextSize: Int = 2500
 
     /// 设置页面
-    static let settingWidth: CGFloat = 660.0
-    static let settingHeight: CGFloat = 600.0
+    static let settingWidth: CGFloat = 645.0
+    static let settingHeight: CGFloat = 595.0
 
     static let darkBackground: Color = .init(hex: "#363842")
     static let lightBackground: Color = .init(hex: "#f5f5f5")
