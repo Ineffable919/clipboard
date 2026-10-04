@@ -51,7 +51,7 @@ struct AboutSettingView: View {
                 }
                 Text(appName)
                     .font(
-                        .system(size: 24, weight: .medium, design: .monospaced)
+                        .system(size: 24, weight: .medium, design: .default)
                     )
 
                 Text("\(appVersion) (\(buildNumber))")
