@@ -19,6 +19,7 @@ final class CategoryChipStore {
     let chipsContentDidChange = PassthroughSubject<Void, Never>()
 
     private let db = PasteDataStore.main
+    private var reservedImportIDs: Set<Int> = []
 
     // MARK: - Initialization
 
@@ -53,7 +54,7 @@ final class CategoryChipStore {
     }
 
     func addChip(name: String, colorIndex: Int) {
-        let newId = (chips.last?.id ?? 0) + 1
+        let newId = max(chips.map(\.id).max() ?? -1, reservedImportIDs.max() ?? -1) + 1
         let new = CategoryChip(
             id: newId,
             name: name,
@@ -97,6 +98,12 @@ final class CategoryChipStore {
         db.deleteItemsByGroup(chip.id)
     }
 
+    func clearUserCategories() {
+        chips = CategoryChip.systemChips
+        selectedChipId = chips.first?.id ?? -1
+        saveUserCategories()
+    }
+
     func getSelectedChip() -> CategoryChip? {
         chips.first { $0.id == selectedChipId }
     }
@@ -104,6 +111,19 @@ final class CategoryChipStore {
     func getSelectChipId() -> Int {
         guard let chip = getSelectedChip() else { return -1 }
         return chip.isSystem ? -1 : chip.id
+    }
+
+    func reserveImport(from data: Data?) -> ImportedCategories {
+        let categories = ImportedCategories(
+            data: data, existingChips: chips, reservedIDs: reservedImportIDs
+        )
+        reservedImportIDs.formUnion(categories.chips.map(\.id))
+        return categories
+    }
+
+    func finishImport(_ categories: ImportedCategories, data: Data?) {
+        mergeImportedChips(from: data)
+        reservedImportIDs.subtract(categories.chips.map(\.id))
     }
 
     func mergeImportedChips(from data: Data?) {

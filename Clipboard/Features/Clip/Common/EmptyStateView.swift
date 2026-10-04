@@ -92,7 +92,11 @@ class EmptyStateView: NSView {
     private func setupConstraints() {
         iconImageView.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.top.lessThanOrEqualToSuperview()
+            if style == .main {
+                make.top.equalToSuperview()
+            } else {
+                make.top.lessThanOrEqualToSuperview()
+            }
             make.width.height.equalTo(iconSize)
         }
 
@@ -104,7 +108,11 @@ class EmptyStateView: NSView {
         hintLabel.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
             make.top.equalTo(titleLabel.snp.bottom).offset(Const.space20)
-            make.bottom.lessThanOrEqualToSuperview()
+            if style == .main {
+                make.bottom.equalToSuperview()
+            } else {
+                make.bottom.lessThanOrEqualToSuperview()
+            }
         }
     }
 

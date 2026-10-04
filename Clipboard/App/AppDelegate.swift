@@ -27,6 +27,8 @@ extension AppDelegate: NSApplicationDelegate {
     func applicationDidFinishLaunching(_: Notification) {
         Self.shared = self
 
+        _ = updaterController
+
         setupStatusBar()
 
         applyAppearanceSettings()
@@ -88,7 +90,7 @@ extension AppDelegate: NSApplicationDelegate {
 
 extension AppDelegate {
     private func initClipboardAsync() async {
-        await PasteDataStore.main.setup()
+        guard await PasteDataStore.main.setup() else { return }
 
         PasteBoard.main.startListening()
 
@@ -96,9 +98,9 @@ extension AppDelegate {
 
         HotKeyManager.shared.initialize()
 
-        syncLaunchAtLoginStatus()
+        WelcomeWindowController.shared.showIfNeeded()
 
-        updaterController.updater.checkForUpdatesInBackground()
+        syncLaunchAtLoginStatus()
     }
 
     private func syncLaunchAtLoginStatus() {

@@ -11,12 +11,15 @@ import SnapKit
 
 final class SearchField: NSView {
     @Published private(set) var text: String = ""
+    private var isWindowFocusRingSuppressed = false
+    private var isModeFocusRingSuppressed = false
 
     var onResignFirstResponder: (() -> Void)?
     var onBecomeFirstResponder: (() -> Void)?
     var onTextChanged: ((String) -> Void)?
     var onFilterButtonTapped: (() -> Void)?
     var onTokenDeleted: ((InputTag) -> Void)?
+    var onTokensChanged: (([InputTag]) -> Void)?
     var onClearAllFilters: (() -> Void)?
 
     var onSuggestionsNeeded: ((String) -> [SearchSuggestionItem])?
@@ -63,7 +66,7 @@ final class SearchField: NSView {
 
     private let searchIcon = NSImageView()
     private let scrollView = HorizontalScrollView()
-    private let tokenTextView = TokenTextView.makeConfigured()
+    let tokenTextView = TokenTextView.makeConfigured()
     private let cancelButton = NSButton()
     let filterButton = FilterIconButton()
 
@@ -194,14 +197,19 @@ final class SearchField: NSView {
         updateColors()
     }
 
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        updateColors()
+    }
+
     private func updateColors() {
         if #available(macOS 26.0, *) {
-            let color = NSApp.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+            let color = effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
                 ? NSColor(white: 1.0, alpha: 0.15)
                 : NSColor(white: 0.0, alpha: 0.1)
             layer?.backgroundColor = color.cgColor
         } else {
-            let color = NSApp.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+            let color = effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
                 ? NSColor(white: 1.0, alpha: 0.12)
                 : NSColor(white: 0.0, alpha: 0.1)
             layer?.backgroundColor = color.cgColor
@@ -209,10 +217,6 @@ final class SearchField: NSView {
     }
 
     // MARK: - Actions
-
-    func setFocusRingSuppressed(_ suppressed: Bool) {
-        scrollView.isFocusRingSuppressed = suppressed
-    }
 
     func moveCursorToEnd() {
         let length = tokenTextView.textStorage?.length ?? 0
@@ -268,9 +272,7 @@ final class SearchField: NSView {
         updateCancelButtonVisibility()
     }
 
-    func getAllTokens() -> [InputTag] {
-        tokenTextView.getAllTokens()
-    }
+    func getAllTokens() -> [InputTag] { tokenTextView.getAllTokens() }
 
     private func handleTokenDeleted(_ tag: InputTag) {
         onTokenDeleted?(tag)
@@ -317,102 +319,6 @@ final class SearchField: NSView {
         }
     }
 
-    // MARK: - Suggestion Window
-
-    private func setupSuggestionKeyHandling() {
-        tokenTextView.onKeyDown = { [weak self] event in
-            self?.handleSuggestionKeyEvent(event) ?? false
-        }
-
-        suggestionWindow.suggestionVC.onSelectItem = { [weak self] item in
-            self?.handleSuggestionItemSelected(item)
-        }
-    }
-
-    private func handleSuggestionKeyEvent(_ event: NSEvent) -> Bool {
-        guard suggestionWindow.isVisible else { return false }
-
-        switch event.keyCode {
-        case 125: // ↓
-            return suggestionWindow.suggestionVC.selectNext()
-        case 126: // ↑
-            return suggestionWindow.suggestionVC.selectPrevious()
-        case 36: // Enter
-            return suggestionWindow.suggestionVC.applySelection()
-        case 53: // Esc
-            hideSuggestions()
-            return true
-        default:
-            return false
-        }
-    }
-
-    func showSuggestions() {
-        updateSuggestions()
-    }
-
-    func hideSuggestions() {
-        guard suggestionWindow.isVisible else { return }
-        suggestionWindow.hide()
-    }
-
-    private func updateSuggestions() {
-        let query = text
-        guard !query.isEmpty else {
-            hideSuggestions()
-            return
-        }
-
-        let items = onSuggestionsNeeded?(query) ?? []
-        guard !items.isEmpty else {
-            hideSuggestions()
-            return
-        }
-
-        suggestionWindow.suggestionVC.reloadData(items, query: query)
-
-        let cursorScreenOrigin = cursorScreenPosition()
-
-        if !suggestionWindow.isVisible {
-            guard let win = tokenTextView.window ?? window else { return }
-            suggestionWindow.show(at: cursorScreenOrigin, items: items, query: query, parentWindow: win)
-        } else {
-            suggestionWindow.updateFrame(at: cursorScreenOrigin, items: items, query: query)
-        }
-    }
-
-    private func cursorScreenPosition() -> NSPoint {
-        guard let lm = tokenTextView.layoutManager,
-              let tc = tokenTextView.textContainer
-        else {
-            let fieldBounds = convert(bounds, to: nil)
-            let screenFrame = window?.convertToScreen(fieldBounds) ?? .zero
-            return NSPoint(x: screenFrame.origin.x, y: screenFrame.origin.y)
-        }
-
-        let insertionPoint = tokenTextView.selectedRange().location
-        let glyphRange = lm.glyphRange(
-            forCharacterRange: NSRange(location: insertionPoint, length: 0),
-            actualCharacterRange: nil
-        )
-        let caretRect = lm.boundingRect(forGlyphRange: glyphRange, in: tc)
-
-        let inset = tokenTextView.textContainerInset
-        let localPoint = NSPoint(
-            x: caretRect.origin.x + inset.width,
-            y: caretRect.maxY + inset.height
-        )
-
-        let windowPoint = tokenTextView.convert(localPoint, to: nil)
-        return tokenTextView.window?.convertToScreen(
-            NSRect(origin: windowPoint, size: .zero)
-        ).origin ?? windowPoint
-    }
-
-    private func handleSuggestionItemSelected(_ item: SearchSuggestionItem) {
-        hideSuggestions()
-        onSuggestionSelected?(item)
-    }
 }
 
 // MARK: - NSTextViewDelegate
@@ -424,11 +330,32 @@ extension SearchField: NSTextViewDelegate {
             text = plainText
             onTextChanged?(plainText)
         }
+        // 原生编辑可能只删除标签，关键词不变时也要同步筛选条件。
+        onTokensChanged?(tokenTextView.getAllTokens())
         updateCancelButtonVisibility()
         updateSuggestions()
     }
 
     func textDidBeginEditing(_: Notification) {
         onBecomeFirstResponder?()
+    }
+}
+
+extension SearchField {
+    var modeIconView: NSImageView { searchIcon }
+    var modeTrailingViews: [NSView] { [cancelButton, filterButton] }
+
+    func setFocusRingSuppressed(_ suppressed: Bool) {
+        isWindowFocusRingSuppressed = suppressed
+        updateFocusRingSuppression()
+    }
+
+    func setModeFocusRingSuppressed(_ suppressed: Bool) {
+        isModeFocusRingSuppressed = suppressed
+        updateFocusRingSuppression()
+    }
+
+    private func updateFocusRingSuppression() {
+        scrollView.isFocusRingSuppressed = isWindowFocusRingSuppressed || isModeFocusRingSuppressed
     }
 }

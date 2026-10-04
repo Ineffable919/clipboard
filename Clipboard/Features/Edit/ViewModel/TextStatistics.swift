@@ -13,15 +13,17 @@ struct TextStatistics: Equatable, Sendable {
     let wordCount: Int
     let lineCount: Int
 
-    nonisolated init(from text: String) {
-        characterCount = text.count
+    nonisolated init(from text: String, lineCount knownLineCount: Int? = nil) {
+        var source = text
+        source.makeContiguousUTF8()
+        characterCount = source.count
 
-        if text.isEmpty {
+        if source.isEmpty {
             wordCount = 0
             lineCount = 0
         } else {
-            wordCount = text.smartWordCount
-            lineCount = text.count(where: { $0.isNewline }) + 1
+            wordCount = source.smartWordCount
+            lineCount = knownLineCount ?? (source.count(where: { $0.isNewline }) + 1)
         }
     }
 

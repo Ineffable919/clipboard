@@ -15,8 +15,12 @@ final class PasteboardModel: Identifiable, Codable {
     let data: Data
     let showData: Data?
     private(set) var timestamp: Int64
-    let appPath: String
-    let appName: String
+    var appID: Int64?
+    let sourceBundleID: String?
+    private let sourcePath: String
+    private let sourceName: String
+    var appPath: String { appID.flatMap { SourceAppCache.shared.apps[$0]?.path } ?? sourcePath }
+    var appName: String { appID.flatMap { SourceAppCache.shared.apps[$0]?.name } ?? sourceName }
     private(set) var searchText: String
     let length: Int
     /// 截取后的富文本
@@ -65,14 +69,18 @@ final class PasteboardModel: Identifiable, Codable {
         group: Int,
         tag: String,
         hidden: Bool = false,
-        uniqueId: String? = nil
+        uniqueId: String? = nil,
+        appID: Int64? = nil,
+        sourceBundleID: String? = nil
     ) {
         self.pasteboardType = pasteboardType
         self.data = data
         self.showData = showData
         self.timestamp = timestamp
-        self.appPath = appPath
-        self.appName = appName
+        self.sourcePath = appPath
+        self.sourceName = appName
+        self.appID = appID
+        self.sourceBundleID = sourceBundleID
         self.searchText = searchText
         self.length = length
         self.group = group
@@ -99,6 +107,9 @@ final class PasteboardModel: Identifiable, Codable {
         cachedBackgroundColor = bg
         cachedForegroundColor = fg
         cachedHasBackgroundColor = hasBg
+        if type == .rich, hasBgColor, safeBgColor == nil {
+            cachedRichForegrounds = Self.richForegrounds(in: attributeString)
+        }
     }
 
     // MARK: - 纯文本（粘贴用）
@@ -113,10 +124,25 @@ final class PasteboardModel: Identifiable, Codable {
 
     // MARK: - 搜索文本格式化
 
-    static func normalizeSearchText(_ raw: String) -> String {
-        raw.trimmingCharacters(in: .whitespacesAndNewlines)
-            .replacing(/[\p{Cc}\p{Cf}&&[^\t\n]]/, with: "")
-            .replacing(/\s+/, with: " ")
+    nonisolated static func normalizeSearchText(_ raw: String) -> String {
+        var output = ""
+        output.reserveCapacity(raw.utf8.count)
+        // 按完整字素保留，避免拆散 Emoji 的连接符、肤色和变体选择符
+        for character in raw {
+            guard let scalar = character.unicodeScalars.first else { continue }
+            switch scalar.properties.generalCategory {
+            case .uppercaseLetter, .lowercaseLetter, .titlecaseLetter, .modifierLetter, .otherLetter,
+                 .decimalNumber, .letterNumber, .otherNumber,
+                 .mathSymbol, .currencySymbol, .modifierSymbol, .otherSymbol:
+                output.append(character)
+            default:
+                if (scalar.value == 0x23 || scalar.value == 0x2A),
+                   character.unicodeScalars.contains(where: { $0.value == 0x20E3 }) {
+                    output.append(character)
+                }
+            }
+        }
+        return output
     }
 
     // MARK: - 辅助

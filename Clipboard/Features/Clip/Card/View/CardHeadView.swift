@@ -5,10 +5,12 @@
 //
 
 import AppKit
+import Combine
 import SnapKit
 
 final class CardHeadView: NSView {
     private var iconLoadTask: Task<Void, Never>?
+    private var colorSubscription: AnyCancellable?
 
     // MARK: - Subviews
 
@@ -70,6 +72,10 @@ final class CardHeadView: NSView {
 
         let color = AppColorService.shared.color(for: model)
         backgroundView.layer?.backgroundColor = color.cgColor
+        colorSubscription = AppColorService.shared.changes.sink { [weak self, weak model] name in
+            guard let self, let model, model.appName == name else { return }
+            backgroundView.layer?.backgroundColor = AppColorService.shared.color(for: model).cgColor
+        }
 
         typeLabel.stringValue = model.type.string
 
@@ -82,10 +88,10 @@ final class CardHeadView: NSView {
 
         iconView.isHidden = !isDefault
         if isDefault {
-            iconView.image = AppIconCache.shared.getCachedIcon(forPath: model.appPath)
+            iconView.image = AppIconCache.shared.getCachedIcon(forAppID: model.appID, path: model.appPath)
             iconLoadTask?.cancel()
             iconLoadTask = Task { @MainActor [weak self] in
-                let icon = await AppIconCache.shared.loadIcon(forPath: model.appPath)
+                let icon = await AppIconCache.shared.loadIcon(forAppID: model.appID, path: model.appPath)
                 guard !Task.isCancelled else { return }
                 self?.iconView.image = icon
             }
@@ -93,6 +99,7 @@ final class CardHeadView: NSView {
     }
 
     func reset() {
+        colorSubscription = nil
         iconLoadTask?.cancel()
         iconLoadTask = nil
         iconView.image = nil

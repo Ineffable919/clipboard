@@ -93,9 +93,13 @@ final class PersistentFilterGridView: NSView {
             }
 
             for item in items {
-                if item.button.superview !== self {
+                let identifier = ObjectIdentifier(item.button)
+                let oldPosition = oldPositions[identifier]
+                if oldPosition == nil {
                     addSubview(item.button)
                 }
+                guard oldPosition != item.position else { continue }
+
                 let column = item.position % columnCount
                 let row = item.position / columnCount
                 item.button.snp.remakeConstraints { make in

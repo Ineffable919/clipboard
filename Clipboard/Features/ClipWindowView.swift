@@ -9,8 +9,9 @@ import Cocoa
 
 final class ClipWindowView: NSPanel {
     func configureCommonSettings() {
+        level = .statusBar
+        isOpaque = false
         backgroundColor = .clear
-        hasShadow = false
         titleVisibility = .hidden
         titlebarAppearsTransparent = true
         titlebarSeparatorStyle = .none

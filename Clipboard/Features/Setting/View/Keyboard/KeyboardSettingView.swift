@@ -14,7 +14,7 @@ struct KeyboardSettingView: View {
     @State private var refreshID = UUID()
 
     var body: some View {
-        VStack(spacing: 0) {
+        ScrollView(.vertical) {
             VStack(spacing: 20) {
                 VStack(spacing: 0) {
                     StartupShortcutsView()
@@ -45,23 +45,23 @@ struct KeyboardSettingView: View {
                 HStack {
                     Spacer()
                     SystemButton(
-                        title: String(localized: .settingKeyboardResetShortcuts)
+                        title: .keyboardResetKeys
                     ) {
                         resetIsPresented = true
                     }
                     .confirmationDialog(
                         String(
-                            localized: .settingKeyboardResetConfirmationMessage
+                            localized: .keyboardResetConfirmMessage
                         ),
                         isPresented: $resetIsPresented
                     ) {
                         if #available(macOS 26.0, *) {
-                            Button(.settingKeyboardResetButton, role: .confirm) {
+                            Button(.keyboardResetButton, role: .confirm) {
                                 HotKeyManager.shared.resetToDefaults()
                                 refreshID = UUID()
                             }
                         } else {
-                            Button(.settingKeyboardResetButton) {
+                            Button(.keyboardResetButton) {
                                 HotKeyManager.shared.resetToDefaults()
                                 refreshID = UUID()
                             }
@@ -72,13 +72,10 @@ struct KeyboardSettingView: View {
                     }
                 }
             }
+            .padding([.horizontal, .bottom], Const.space24)
         }
-        .padding([.horizontal, .bottom], Const.space24)
-        .frame(
-            maxWidth: .infinity,
-            maxHeight: .infinity,
-            alignment: .topLeading
-        )
+        .scrollIndicators(.hidden)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
@@ -93,7 +90,7 @@ struct StartupShortcutsView: View {
             Text(
                 String.localizedStringWithFormat(
                     String(
-                        localized: "settingKeyboardLaunchApp",
+                        localized: "keyboardLaunchApp",
                         defaultValue: "Launch %@",
                         table: "Localizable"
                     ),
@@ -114,7 +111,7 @@ struct StartupShortcutsView: View {
 struct PreviousTabView: View {
     var body: some View {
         HStack {
-            Text(.settingKeyboardPreviousTab)
+            Text(.keyboardPreviousTab)
             Spacer()
             ShortcutRecorder("previous_tab")
         }
@@ -127,7 +124,7 @@ struct PreviousTabView: View {
 struct NextTabView: View {
     var body: some View {
         HStack {
-            Text(.settingKeyboardNextTab)
+            Text(.keyboardNextTab)
             Spacer()
             ShortcutRecorder("next_tab")
         }
@@ -147,12 +144,12 @@ struct QuickPasteModifierView: View {
     private let modifiers = [
         (id: 0, symbol: "⌘", name: "Command"),
         (id: 1, symbol: "⌥", name: "Option"),
-        (id: 2, symbol: "⌃", name: "Control"),
+        (id: 2, symbol: "⌃", name: "Control")
     ]
 
     var body: some View {
         HStack {
-            Text(.settingKeyboardQuickPaste)
+            Text(.keyboardQuick)
             Spacer()
             HStack(spacing: Const.space4) {
                 Picker("", selection: $selectedModifier) {
@@ -170,7 +167,7 @@ struct QuickPasteModifierView: View {
                     selectedModifier = PasteUserDefaults.quickPasteModifier
                 }
 
-                Text(.settingKeyboardQuickPasteSuffix)
+                Text(.keyboardQuickSuffix)
                     .foregroundStyle(.primary)
             }
         }
@@ -188,12 +185,12 @@ struct PlainTextModifierView: View {
         (id: 0, symbol: "⌘", name: "Command"),
         (id: 1, symbol: "⌥", name: "Option"),
         (id: 2, symbol: "⌃", name: "Control"),
-        (id: 3, symbol: "⇧", name: "Shift"),
+        (id: 3, symbol: "⇧", name: "Shift")
     ]
 
     var body: some View {
         HStack {
-            Text(.settingKeyboardPasteAsPlainText)
+            Text(.keyboardPastePlain)
             Spacer()
             Picker("", selection: $selectedModifier) {
                 ForEach(modifiers, id: \.id) { modifier in

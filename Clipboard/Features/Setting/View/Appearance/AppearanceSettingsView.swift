@@ -5,20 +5,22 @@
 //  Created by crown on 2025/12/05.
 //
 
+import AppKit
 import SwiftUI
 
 struct AppearanceSettingsView: View {
     @Environment(\.colorScheme) private var colorScheme
 
-    @AppStorage(PrefKey.backgroundType.rawValue) private var backgroundTypeRaw:
-        Int = 0
     @AppStorage(PrefKey.displayMode.rawValue) private var displayModeRaw: Int = 0
     @AppStorage(PrefKey.windowPosition.rawValue) private var windowPositionRaw: Int = 0
 
-    private var backgroundType: BackgroundType {
-        get { .init(rawValue: backgroundTypeRaw) ?? .liquid }
-        nonmutating set { backgroundTypeRaw = newValue.rawValue }
-    }
+    @AppStorage(PrefKey.showMenuBarIcon.rawValue)
+    private var showMenuBarIcon = true
+
+    @AppStorage(PrefKey.showDockIcon.rawValue)
+    private var showDockIcon = true
+
+    @State private var dockIconTask: Task<Void, Never>?
 
     private var displayMode: DisplayMode {
         get { .init(rawValue: displayModeRaw) ?? .drawer }
@@ -31,64 +33,85 @@ struct AppearanceSettingsView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Const.space16) {
-            AppearanceSettingsRow()
-                .settingsStyle()
-
-            VStack(spacing: 0) {
-                DisplayModeRow(
-                    displayMode: Binding(
-                        get: { displayMode },
-                        set: { displayMode = $0 }
+        ScrollView(.vertical) {
+            VStack(alignment: .leading, spacing: 20) {
+                VStack(spacing: Const.space4) {
+                    SettingToggleRow(
+                        title: .generalMenuBarIcon,
+                        isOn: $showMenuBarIcon
                     )
-                )
+                    .padding(.horizontal, Const.space16)
+                    .onChange(of: showMenuBarIcon) { _, newValue in
+                        NotificationCenter.default.post(
+                            name: .menuBarIconVisibilityChanged,
+                            object: newValue
+                        )
+                    }
 
-                if displayMode == .floating {
-                    WindowPositionRow(
-                        windowPosition: Binding(
-                            get: { windowPosition },
-                            set: { windowPosition = $0 }
+                    Divider()
+                        .padding(.horizontal, Const.space16)
+
+                    SettingToggleRow(
+                        title: .generalDockIcon,
+                        isOn: $showDockIcon
+                    )
+                    .padding(.horizontal, Const.space16)
+                    .onChange(of: showDockIcon) { _, newValue in
+                        scheduleDockIconUpdate(visible: newValue)
+                    }
+
+                    Divider()
+                        .padding(.horizontal, Const.space16)
+
+                    AppearanceSettingsRow()
+
+                    Divider()
+                        .padding(.horizontal, Const.space16)
+
+                    DisplayModeRow(
+                        displayMode: Binding(
+                            get: { displayMode },
+                            set: { displayMode = $0 }
                         )
                     )
-                }
-            }
-            .settingsStyle()
 
-            if #available(macOS 26.0, *) {
-                Text(.settingAppearanceBackgroundSectionTitle)
-                    .font(.headline)
-                    .bold()
+                    if displayMode == .floating {
+                        Divider()
+                            .padding(.horizontal, Const.space16)
 
-                VStack(spacing: 0) {
-                    HStack {
-                        Text(.settingAppearanceBackgroundTypeLabel)
-                        Spacer()
-                        BackgroundTypeOptionButton(
-                            title: .settingAppearanceBackgroundTypeLiquid,
-                            isSelected: backgroundType == .liquid
-                        ) {
-                            backgroundType = .liquid
-                        }
-                        BackgroundTypeOptionButton(
-                            title: .settingAppearanceBackgroundTypeFrosted,
-                            isSelected: backgroundType == .frosted
-                        ) {
-                            backgroundType = .frosted
-                        }
+                        WindowPositionRow(
+                            windowPosition: Binding(
+                                get: { windowPosition },
+                                set: { windowPosition = $0 }
+                            )
+                        )
                     }
                 }
-                .padding(.horizontal, Const.space16)
-                .padding(.vertical, Const.space8)
-                .frame(maxWidth: .infinity, alignment: .leading)
                 .settingsStyle()
             }
+            .padding([.horizontal, .bottom], Const.space24)
         }
-        .padding([.horizontal, .bottom], Const.space24)
-        .frame(
-            maxWidth: .infinity,
-            maxHeight: Const.settingHeight,
-            alignment: .topLeading
-        )
+        .scrollIndicators(.hidden)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    // MARK: - Dock 图标显隐
+
+    private func scheduleDockIconUpdate(visible: Bool) {
+        dockIconTask?.cancel()
+        dockIconTask = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(350))
+            guard !Task.isCancelled else { return }
+
+            let target: NSApplication.ActivationPolicy =
+                visible ? .regular : .accessory
+            guard NSApp.activationPolicy() != target else { return }
+
+            NSApp.setActivationPolicy(target)
+            if visible {
+                NSApp.activate()
+            }
+        }
     }
 }
 
@@ -98,7 +121,7 @@ struct AppearanceSettingsRow: View {
     @AppStorage(PrefKey.appearance.rawValue) private var appearanceRaw: Int = 0
     @AppStorage(PrefKey.appLanguage.rawValue) private var languageRaw: String =
         AppLanguage.zhHans.rawValue
-    @State private var pendingLanguage: AppLanguage? = nil
+    @State private var pendingLanguage: AppLanguage?
 
     private var selectedAppearance: AppearanceMode {
         get { .init(rawValue: appearanceRaw) ?? .system }
@@ -112,14 +135,14 @@ struct AppearanceSettingsRow: View {
     private let options: [(mode: AppearanceMode, icon: String)] = [
         (.system, "circle.lefthalf.filled.righthalf.striped.horizontal"),
         (.light, "sun.max"),
-        (.dark, "moon"),
+        (.dark, "moon")
     ]
 
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: Const.space4) {
             // 语言
             HStack {
-                Text(.settingLanguage)
+                Text(.language)
                 Spacer()
                 Picker(
                     selection: Binding(
@@ -141,9 +164,12 @@ struct AppearanceSettingsRow: View {
             .padding(.vertical, Const.space8)
             .padding(.horizontal, Const.space16)
 
+            Divider()
+                .padding(.horizontal, Const.space16)
+
             // 外观
             HStack {
-                Text(.settingAppearanceModeLabel)
+                Text(.appearanceModeLabel)
                 Spacer()
                 Picker(
                     "",
@@ -173,7 +199,7 @@ struct AppearanceSettingsRow: View {
             applyAppearance(selectedAppearance)
         }
         .alert(
-            Text(.settingLanguageRestartConfirmTitle),
+            Text(.languageRestartConfirmTitle),
             isPresented: Binding(
                 get: { pendingLanguage != nil },
                 set: {
@@ -193,7 +219,7 @@ struct AppearanceSettingsRow: View {
                 NSApplication.shared.relaunch()
             }
         } message: {
-            Text(.settingLanguageRestartConfirmMessage)
+            Text(.languageRestartConfirmMessage)
         }
     }
 
@@ -223,7 +249,7 @@ struct DisplayModeRow: View {
 
     var body: some View {
         HStack {
-            Text(.settingAppearanceDisplayModeLabel)
+            Text(.appearanceDisplayLabel)
             Spacer()
             HStack(spacing: Const.space16) {
                 ForEach(DisplayMode.allCases, id: \.self) { mode in
@@ -248,7 +274,7 @@ struct WindowPositionRow: View {
 
     var body: some View {
         HStack {
-            Text(.settingAppearanceWindowPositionLabel)
+            Text(.appearancePositionLabel)
             Spacer()
             Picker(
                 "",

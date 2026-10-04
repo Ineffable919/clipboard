@@ -8,19 +8,22 @@
 import AppKit
 import Combine
 import SnapKit
+import SwiftUI
 
 final class FloatingFooterView: NSView {
     // MARK: - Subviews
 
+    private let backgroundView = NSView()
+
     private let countLabel = NSTextField(labelWithString: "")
     private let pauseButton = NSButton()
     private let pauseTimeLabel = NSTextField(labelWithString: "")
-    private let pauseStack = NSStackView()
+    private let pauseStack = PauseIndicatorStackView()
+    private let modeButton = NSButton()
 
     // MARK: - State
 
-    private var effectView: NSView = FloatingFooterView.buildEffectView()
-    private var lastBackgroundType: Int = PasteUserDefaults.backgroundType
+    private let effectView: NSView = FloatingFooterView.buildEffectView()
     private weak var topVM: TopBarViewModel?
     private var cancellables = Set<AnyCancellable>()
     private var timerCancellable: AnyCancellable?
@@ -30,6 +33,7 @@ final class FloatingFooterView: NSView {
     override init(frame: NSRect) {
         super.init(frame: frame)
         setup()
+        updateBackground()
     }
 
     @available(*, unavailable)
@@ -40,6 +44,32 @@ final class FloatingFooterView: NSView {
     // MARK: - Public API
 
     var onBackgroundClick: (() -> Void)?
+    var onDisplayModeChanged: ((FloatingDisplayMode) -> Void)?
+    var displayMode: FloatingDisplayMode = .standard {
+        didSet {
+            updateModeIcon()
+            countLabel.font = .systemFont(
+                ofSize: displayMode == .standard ? NSFont.systemFontSize : 11, weight: .regular
+            )
+        }
+    }
+
+    @objc private func showDisplayModes() {
+        let menu = NSMenu()
+        for mode in FloatingDisplayMode.allCases {
+            let item = NSMenuItem(title: mode.title, action: #selector(selectDisplayMode(_:)), keyEquivalent: "")
+            item.target = self
+            item.tag = mode.rawValue
+            item.state = mode == displayMode ? .on : .off
+            menu.addItem(item)
+        }
+        menu.popUp(positioning: nil, at: NSPoint(x: 0, y: modeButton.bounds.maxY), in: modeButton)
+    }
+
+    @objc private func selectDisplayMode(_ item: NSMenuItem) {
+        guard let mode = FloatingDisplayMode(rawValue: item.tag) else { return }
+        onDisplayModeChanged?(mode)
+    }
 
     func configure(topVM: TopBarViewModel) {
         self.topVM = topVM
@@ -61,16 +91,14 @@ final class FloatingFooterView: NSView {
         wantsLayer = true
         layer?.masksToBounds = true
 
-        addSubview(effectView)
-        effectView.snp.makeConstraints { make in
-            make.leading.trailing.bottom.equalToSuperview()
-            make.top.equalToSuperview().offset(-Const.windowRadis)
-        }
+        setupBackground()
 
         countLabel.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .regular)
         countLabel.textColor = .secondaryLabelColor
         countLabel.alignment = .center
         addSubview(countLabel)
+
+        setupModeButton()
 
         // 暂停指示器
         let pauseIcon = NSImageView()
@@ -78,6 +106,7 @@ final class FloatingFooterView: NSView {
         pauseIcon.image = NSImage(systemSymbolName: "pause.circle.fill", accessibilityDescription: nil)?
             .withSymbolConfiguration(iconConfig)
         pauseIcon.contentTintColor = .controlAccentColor
+        pauseIcon.imageScaling = .scaleNone
         pauseIcon.snp.makeConstraints { make in
             make.width.height.equalTo(14)
         }
@@ -88,7 +117,9 @@ final class FloatingFooterView: NSView {
         pauseStack.orientation = .horizontal
         pauseStack.alignment = .centerY
         pauseStack.spacing = Const.space4
-        pauseStack.edgeInsets = NSEdgeInsets(top: Const.space4, left: Const.space8, bottom: Const.space4, right: Const.space8)
+        pauseStack.edgeInsets = NSEdgeInsets(
+            top: Const.space2, left: Const.space6, bottom: Const.space2, right: Const.space6
+        )
         pauseStack.addArrangedSubview(pauseIcon)
         pauseStack.addArrangedSubview(pauseTimeLabel)
         pauseStack.wantsLayer = true
@@ -98,73 +129,104 @@ final class FloatingFooterView: NSView {
 
         pauseButton.isBordered = false
         pauseButton.title = ""
+        pauseButton.isHidden = true
+        pauseButton.setAccessibilityLabel(String(localized: .resume))
         pauseButton.target = self
         pauseButton.action = #selector(resumePasteboard)
         addSubview(pauseButton)
         addSubview(pauseStack)
 
         // 布局
-        countLabel.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-        }
+        layoutCountLabel(isPaused: false)
 
         pauseStack.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(Const.space12)
+            make.leading.equalTo(modeButton.snp.trailing).offset(Const.space4)
             make.centerY.equalToSuperview()
-            make.top.bottom.equalToSuperview().inset(Const.space6)
+            make.height.equalTo(20)
         }
 
         pauseButton.snp.makeConstraints { make in
             make.edges.equalTo(pauseStack)
         }
+    }
 
-        UserDefaults.standard.publisher(for: \.backgroundType)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.handleBackgroundSettingsChange() }
-            .store(in: &cancellables)
+    private func setupModeButton() {
+        modeButton.isBordered = false
+        modeButton.title = ""
+        updateModeIcon()
+        modeButton.imageScaling = .scaleNone
+        modeButton.contentTintColor = .secondaryLabelColor
+        modeButton.toolTip = String(localized: .floatingDisplayMode)
+        modeButton.setAccessibilityLabel(String(localized: .floatingDisplayMode))
+        modeButton.target = self
+        modeButton.action = #selector(showDisplayModes)
+        addSubview(modeButton)
+        modeButton.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(Const.space8)
+            make.centerY.equalToSuperview()
+            make.width.height.equalTo(22)
+        }
+    }
+
+    private func updateModeIcon() {
+        let symbolName: String
+        if #available(macOS 27.0, *) {
+            symbolName = "text.menu"
+        } else {
+            symbolName = "line.3.horizontal"
+        }
+        modeButton.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?
+            .withSymbolConfiguration(NSImage.SymbolConfiguration(
+                pointSize: displayMode == .standard ? 15 : 12, weight: .regular
+            ))
     }
 
     // MARK: - Background
 
+    private func layoutCountLabel(isPaused: Bool) {
+        countLabel.snp.remakeConstraints { make in
+            make.centerY.equalToSuperview()
+            make.centerX.equalToSuperview().priority(750)
+            make.leading.greaterThanOrEqualTo(isPaused ? pauseStack.snp.trailing : modeButton.snp.trailing)
+                .offset(Const.space8)
+            make.trailing.lessThanOrEqualToSuperview().inset(Const.space12)
+        }
+    }
+
+    private func setupBackground() {
+        addSubview(effectView)
+        effectView.snp.makeConstraints { make in
+            make.leading.trailing.bottom.equalToSuperview()
+            make.top.equalToSuperview().offset(-Const.windowRadis)
+        }
+
+        guard #available(macOS 26.0, *) else { return }
+        backgroundView.wantsLayer = true
+        addSubview(backgroundView)
+        backgroundView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+    }
+
+    private func updateBackground() {
+        guard #available(macOS 26.0, *) else { return }
+        let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        backgroundView.layer?.backgroundColor = NSColor(WelcomeStyle.background(for: isDark ? .dark : .light))
+            .withAlphaComponent(0.35).cgColor
+    }
+
     private static func buildEffectView() -> NSView {
-        let bottomCorners: CACornerMask = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
         if #available(macOS 26.0, *) {
-            let bgType = BackgroundType(rawValue: PasteUserDefaults.backgroundType) ?? .liquid
-            if bgType == .liquid {
-                let v = NSGlassEffectView()
-                v.cornerRadius = Const.windowRadis
-                v.wantsLayer = true
-                v.layer?.maskedCorners = bottomCorners
-                return v
-            }
+            let glassView = NSGlassEffectView()
+            glassView.cornerRadius = 0
+            return glassView
         }
         let ve = NSVisualEffectView()
         ve.wantsLayer = true
         ve.state = .active
         ve.blendingMode = .withinWindow
         ve.material = .popover
-        ve.layer?.cornerRadius = Const.windowRadis
-        ve.layer?.maskedCorners = bottomCorners
-        ve.layer?.masksToBounds = true
         return ve
-    }
-
-    private func handleBackgroundSettingsChange() {
-        let currentBgType = PasteUserDefaults.backgroundType
-        guard currentBgType != lastBackgroundType else { return }
-        lastBackgroundType = currentBgType
-        rebuildEffectView()
-    }
-
-    private func rebuildEffectView() {
-        effectView.removeFromSuperview()
-        effectView = Self.buildEffectView()
-        addSubview(effectView, positioned: .below, relativeTo: countLabel)
-        effectView.snp.makeConstraints { make in
-            make.leading.trailing.bottom.equalToSuperview()
-            make.top.equalToSuperview().offset(-Const.windowRadis)
-        }
-        layoutSubtreeIfNeeded()
     }
 
     private func updatePauseState() {
@@ -172,6 +234,8 @@ final class FloatingFooterView: NSView {
         let isPaused = PasteBoard.main.isPaused
 
         pauseStack.isHidden = !isPaused
+        pauseButton.isHidden = !isPaused
+        layoutCountLabel(isPaused: isPaused)
 
         if isPaused {
             pauseTimeLabel.stringValue = topVM.formattedRemainingTime
@@ -196,6 +260,7 @@ final class FloatingFooterView: NSView {
 
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
+        updateBackground()
         updatePauseBackground()
     }
 

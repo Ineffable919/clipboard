@@ -18,7 +18,7 @@ final class TopBarChipController {
 
     var onReloadNeeded: (() -> Void)?
     var onFocusRegionChange: ((FocusRegion) -> Void)?
-    var onDeactivateSearch: (() -> Void)?
+    var onDeactivateSearch: ((() -> Void) -> Void)?
 
     // MARK: - Init
 
@@ -48,6 +48,7 @@ final class TopBarChipController {
             chips: chips,
             selectedId: currentId,
             dotMode: false,
+            creatingChip: topVM.editingNewChip,
             makeConfig: makeChipButtonConfig
         )
         chipScrollView?.onSelectionChanged = { [weak self] id in
@@ -109,12 +110,12 @@ final class TopBarChipController {
             isEditing: true,
             editingName: topVM.newChipName,
             editingColorIndex: topVM.newChipColorIndex,
+            allowsColorCycling: true,
             action: {},
             onEdit: nil,
             onDelete: nil,
             onColorChange: { [weak self] colorIndex in
                 self?.topVM?.newChipColorIndex = colorIndex
-                self?.refreshNewChipPlaceholder()
             },
             onEditingNameChange: { [weak self] text in
                 self?.topVM?.newChipName = text
@@ -131,12 +132,6 @@ final class TopBarChipController {
         )
 
         chipScrollView?.appendNewChipButton(config: config)
-    }
-
-    private func refreshNewChipPlaceholder() {
-        guard let topVM, topVM.editingNewChip else { return }
-        chipScrollView?.removeNewChipButton()
-        appendNewChipPlaceholder()
     }
 
     private func commitNewChip() {
@@ -163,11 +158,17 @@ final class TopBarChipController {
                 commitChipEditing(for: editingId)
             }
         }
-        onDeactivateSearch?()
-        topVM?.setSelectChipId(chip: id)
-        chipScrollView?.selectedChipId = id
-        dotChipScrollView?.selectedChipId = id
-        onReloadNeeded?()
+        let selectChip = {
+            self.topVM?.setSelectChipId(chip: id)
+            self.chipScrollView?.selectedChipId = id
+            self.dotChipScrollView?.selectedChipId = id
+            self.onReloadNeeded?()
+        }
+        if let onDeactivateSearch {
+            onDeactivateSearch(selectChip)
+        } else {
+            selectChip()
+        }
         onFocusRegionChange?(.collection)
     }
 

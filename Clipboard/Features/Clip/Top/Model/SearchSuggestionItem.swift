@@ -14,7 +14,7 @@ struct SearchSuggestionItem: Equatable {
 
     enum SuggestionAction: Equatable {
         case toggleType(PasteModelType)
-        case toggleApp(String, String?)
+        case toggleApp(Int64)
         case setDate(DateFilterOption)
         case setGroup(Int)
     }

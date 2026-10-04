@@ -176,11 +176,13 @@ final class PasteBoard {
             guard let item = pasteboard.pasteboardItems?.first else { return }
             log.debug("可用类型 \(item.types)")
             for t in item.types {
-                if let plist = item.propertyList(forType: t) {
+                if let data = item.data(forType: t), data.count > 4096 {
+                    log.debug("  [\(t.rawValue)] data(\(data.count) bytes)")
+                } else if let plist = item.propertyList(forType: t) {
                     log.debug("  [\(t.rawValue)] propertyList = \(plist)")
                 } else if let str = item.string(forType: t) {
                     let preview =
-                        str.count > 200 ? String(str.prefix(200)) + "..." : str
+                        str.prefix(201).count > 200 ? String(str.prefix(200)) + "..." : str
                     log.debug("  [\(t.rawValue)] string = \(preview)")
                 } else if let data = item.data(forType: t) {
                     log.debug("  [\(t.rawValue)] data(\(data.count) bytes)")

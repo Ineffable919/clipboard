@@ -20,6 +20,7 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         var isEditing: Bool = false
         var editingName: String = ""
         var editingColorIndex: Int = 0
+        var allowsColorCycling: Bool = false
         var action: () -> Void
         var onEdit: (() -> Void)?
         var onDelete: (() -> Void)?
@@ -56,6 +57,10 @@ final class ChipButton: NSView, NSTextFieldDelegate {
     private lazy var clickGestureRecognizer = NSClickGestureRecognizer(
         target: self,
         action: #selector(handleClick)
+    )
+    private lazy var dotClickGestureRecognizer = NSClickGestureRecognizer(
+        target: self,
+        action: #selector(handleDotClick)
     )
     private var nameFieldWidthConstraint: Constraint?
 
@@ -151,6 +156,7 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         )
 
         addGestureRecognizer(clickGestureRecognizer)
+        dotContainerView.addGestureRecognizer(dotClickGestureRecognizer)
 
         registerForDraggedTypes(PasteboardType.supportTypes)
     }
@@ -182,6 +188,11 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         return config.chip.name
     }
 
+    private var canCycleColor: Bool {
+        config.isEditing && config.allowsColorCycling
+            && !config.dotMode && !config.chip.isSystem
+    }
+
     private func updateContent() {
         for arrangedSubview in stack.arrangedSubviews {
             stack.removeArrangedSubview(arrangedSubview)
@@ -189,6 +200,9 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         }
         nameFieldWidthConstraint?.deactivate()
         nameFieldWidthConstraint = nil
+
+        // 仅新增态允许点击圆点切换颜色
+        dotClickGestureRecognizer.isEnabled = canCycleColor
 
         stack.snp.remakeConstraints { make in
             make.edges.equalToSuperview().inset(contentInsets)
@@ -262,11 +276,11 @@ final class ChipButton: NSView, NSTextFieldDelegate {
 
     private func configureDot(colorIndex: Int) {
         let index = min(max(colorIndex, 0), CategoryChip.palette.count - 1)
-        dotView.layer?.cornerRadius = config.dotRadius
-        let color = NSColor(CategoryChip.palette[index])
-        effectiveAppearance.performAsCurrentDrawingAppearance {
-            dotView.layer?.backgroundColor = color.cgColor
-        }
+        CategoryDotRenderer.configure(
+            dotView,
+            colorIndex: index,
+            diameter: config.dotRadius * 2
+        )
     }
 
     private func updateAppearance(animated: Bool) {
@@ -314,7 +328,7 @@ final class ChipButton: NSView, NSTextFieldDelegate {
 
         let isFrostedGlass: Bool = {
             if #available(macOS 26, *) {
-                return BackgroundType(rawValue: PasteUserDefaults.backgroundType) == .frosted
+                return false
             }
             return true
         }()
@@ -357,14 +371,14 @@ final class ChipButton: NSView, NSTextFieldDelegate {
     private func compactChipColor() -> NSColor {
         config.chip.id == -1
             ? .controlAccentColor
-            : CategoryChip.nsColor(at: config.chip.colorIndex, alpha: 1.0)
+            : CategoryChip.nsColor(at: config.chip.colorIndex)
     }
 
     private func resolvedForegroundColor() -> NSColor {
         if config.compact, config.isSelected || config.isEditing {
             return .white
         }
-        return .labelColor
+        return .labelColor.withAlphaComponent(0.85)
     }
 
     override var intrinsicContentSize: NSSize {
@@ -380,8 +394,15 @@ final class ChipButton: NSView, NSTextFieldDelegate {
 
         let pillFrame = bounds.insetBy(dx: haloInset, dy: haloInset)
         backgroundLayer.frame = pillFrame
-        backgroundLayer.cornerRadius =
-            config.compact ? Const.btnRadius : Const.radius
+        if #available(macOS 26.0, *), config.compact {
+            backgroundLayer.cornerRadius = max(0, pillFrame.height / 2)
+        } else {
+            backgroundLayer.cornerRadius = config.compact ? Const.btnRadius : Const.radius
+        }
+        if nameField.containerCornerRadius != backgroundLayer.cornerRadius {
+            nameField.containerCornerRadius = backgroundLayer.cornerRadius
+            nameField.noteFocusRingMaskChanged()
+        }
     }
 
     override func viewDidChangeEffectiveAppearance() {
@@ -448,6 +469,23 @@ final class ChipButton: NSView, NSTextFieldDelegate {
     @objc private func handleClick() {
         guard !config.isEditing else { return }
         config.action()
+    }
+
+    @objc private func handleDotClick() {
+        guard canCycleColor else { return }
+        let nextIndex =
+            (config.editingColorIndex + 1) % CategoryChip.palette.count
+        updateDotColor(nextIndex)
+        config.onColorChange?(nextIndex)
+    }
+
+    private func updateDotColor(_ colorIndex: Int) {
+        guard config.isEditing else { return }
+        config.editingColorIndex = min(
+            max(colorIndex, 0),
+            CategoryChip.palette.count - 1
+        )
+        configureDot(colorIndex: config.editingColorIndex)
     }
 
     @objc private func handleEditAction() {
@@ -809,12 +847,36 @@ private final class ChipColorCircleView: NSView {
             ringPath.stroke()
         }
 
-        let dotPath = NSBezierPath(ovalIn: bounds.insetBy(dx: 5.0, dy: 5.0))
-        color.setFill()
-        dotPath.fill()
+        CategoryDotRenderer.draw(
+            in: bounds.insetBy(dx: 5.0, dy: 5.0),
+            color: color
+        )
     }
 
     @objc private func handleTap() {
         onTap()
+    }
+}
+
+extension ChipButton {
+    func update(config newConfig: Config) {
+        let rebuild = config.chip != newConfig.chip
+            || config.dotMode != newConfig.dotMode
+            || config.compact != newConfig.compact
+            || config.isEditing != newConfig.isEditing
+        config = newConfig
+        if rebuild {
+            updateContent()
+        }
+        updateAppearance(animated: false)
+    }
+}
+
+extension ChipButton {
+    var modeIconOrigin: NSPoint { stack.convert(.zero, to: self) }
+    var modeBackground: CALayer { backgroundLayer }
+    var modeLabel: CALayer? {
+        nameField.wantsLayer = true
+        return nameField.layer
     }
 }

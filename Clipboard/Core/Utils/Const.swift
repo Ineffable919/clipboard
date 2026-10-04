@@ -8,7 +8,7 @@
 import SwiftUI
 
 enum Const {
-    static let defaultHeight: CGFloat = 330.0
+    static let defaultHeight: CGFloat = 332.0
     static let showDuration: CFTimeInterval = 0.15
     static let hideDuration: CFTimeInterval = 0.24
 
@@ -23,7 +23,7 @@ enum Const {
 
     static let windowRadis: CGFloat =
         if #available(macOS 26.0, *) {
-            23.0
+            26.0
         } else {
             12.0
         }
@@ -59,7 +59,9 @@ enum Const {
     static let selectionBorderWidth: CGFloat = 4.0
 
     static let topBarHeight: CGFloat = 54.0
-    static let topBarWidth: CGFloat = 400.0
+    static let searchFieldMinWidth: CGFloat = 400.0
+    static let searchFieldMaxWidth: CGFloat = 480.0
+    static let searchFieldScreenWidthRatio: CGFloat = 0.25
     static let cardBottomPadding: CGFloat = 16.0
 
     static let contentShape = UnevenRoundedRectangle(
@@ -88,10 +90,10 @@ enum Const {
     static let maxTextSize: Int = 2500
 
     /// 设置页面
-    static let settingWidth: CGFloat = 650.0
-    static let settingHeight: CGFloat = 660.0
+    static let settingWidth: CGFloat = 645.0
+    static let settingHeight: CGFloat = 595.0
 
-    static let darkBackground: Color = .init(hex: "#272835")
+    static let darkBackground: Color = .init(hex: "#363842")
     static let lightBackground: Color = .init(hex: "#f5f5f5")
     static let lightToolColor: Color = .init(hex: "#eeeeef")
     static let darkToolColor: Color = .init(hex: "#2e2e39")
@@ -131,6 +133,6 @@ enum FloatConst {
     static let headerHeight: CGFloat = 90.0
     static let footerHeight: CGFloat = 32.0
     static let cardHeight: CGFloat = 60.0
-    static let cardSpacing: CGFloat = 10.0
+    static let cardSpacing: CGFloat = 6.0
     static let floatSelectionBorderWidth: CGFloat = 2.0
 }

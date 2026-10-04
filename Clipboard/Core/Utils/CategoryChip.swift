@@ -13,7 +13,7 @@ struct CategoryChip: Identifiable, Equatable, Codable {
     var colorIndex: Int // 存储颜色在调色板中的索引
     var isSystem: Bool
 
-    static let palette: [Color] = [
+    private static let semanticPalette: [Color] = [
         .gray,
         .blue,
         .green,
@@ -24,15 +24,22 @@ struct CategoryChip: Identifiable, Equatable, Codable {
     ]
 
     static let paletteNSColors: [NSColor] = [
-        .systemGray, .systemBlue, .systemGreen,
-        .systemPurple, .systemRed, .systemOrange, .systemYellow,
+        .systemGray,
+        .systemBlue,
+        .systemGreen,
+        .systemPurple,
+        .systemRed,
+        .systemOrange,
+        .systemYellow,
     ]
 
-    static func nsColor(at index: Int, alpha: CGFloat = 0.85) -> NSColor {
+    static let palette = paletteNSColors.map { Color(nsColor: $0) }
+
+    static func nsColor(at index: Int) -> NSColor {
         guard index >= 0, index < paletteNSColors.count else {
-            return paletteNSColors[0].withAlphaComponent(alpha)
+            return paletteNSColors[0]
         }
-        return paletteNSColors[index].withAlphaComponent(alpha)
+        return paletteNSColors[index]
     }
 
     var color: Color {
@@ -44,7 +51,8 @@ struct CategoryChip: Identifiable, Equatable, Codable {
             return CategoryChip.palette[colorIndex]
         }
         set {
-            if let index = CategoryChip.palette.firstIndex(of: newValue) {
+            if let index = CategoryChip.semanticPalette.firstIndex(of: newValue)
+                ?? CategoryChip.palette.firstIndex(of: newValue) {
                 colorIndex = index
             } else {
                 colorIndex = 0
@@ -81,7 +89,8 @@ struct CategoryChip: Identifiable, Equatable, Codable {
         self.name = name
         self.isSystem = isSystem
 
-        if let index = CategoryChip.palette.firstIndex(of: color) {
+        if let index = CategoryChip.semanticPalette.firstIndex(of: color)
+            ?? CategoryChip.palette.firstIndex(of: color) {
             colorIndex = index
         } else {
             colorIndex = 0

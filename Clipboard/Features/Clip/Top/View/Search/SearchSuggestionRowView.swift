@@ -41,6 +41,7 @@ final class SearchSuggestionCellView: NSView {
     private(set) var isHighlighted = false
     private var currentTitle: String = ""
     private var currentQuery: String = ""
+    private var iconLoadTask: Task<Void, Never>?
 
     // MARK: - Init
 
@@ -53,6 +54,8 @@ final class SearchSuggestionCellView: NSView {
     required init?(coder _: NSCoder) {
         fatalError()
     }
+
+    deinit { iconLoadTask?.cancel() }
 
     // MARK: - Setup
 
@@ -87,7 +90,15 @@ final class SearchSuggestionCellView: NSView {
     }
 
     func configure(item: SearchSuggestionItem, query: String) {
+        iconLoadTask?.cancel()
         iconView.image = item.icon
+        if item.icon == nil, case let .toggleApp(id) = item.action {
+            iconLoadTask = Task { [weak self] in
+                let icon = await AppIconCache.shared.loadIcon(forAppID: id)
+                guard !Task.isCancelled else { return }
+                self?.iconView.image = icon
+            }
+        }
         currentTitle = item.title
         currentQuery = query
         updateLabelAppearance()

@@ -26,7 +26,7 @@ struct UpdaterSettingsView: View {
         HStack(spacing: Const.space12) {
             settingsToggle(
                 title: String(
-                    localized: .settingAboutAutomaticallyCheckUpdates
+                    localized: .aboutAutoCheckUpdates
                 ),
                 isOn: $automaticallyChecksForUpdates
             )
@@ -37,7 +37,7 @@ struct UpdaterSettingsView: View {
 
             settingsToggle(
                 title: String(
-                    localized: .settingAboutAutomaticallyDownloadUpdates
+                    localized: .aboutAutoDownloadUpdates
                 ),
                 isOn: $automaticallyDownloadsUpdates
             )
@@ -47,7 +47,9 @@ struct UpdaterSettingsView: View {
                     automaticallyDownloadsUpdates
             }
         }
-        .padding()
+        .padding(.horizontal, Const.space16)
+        .padding(.top, Const.space16)
+        .padding(.bottom, Const.space4)
         .frame(maxWidth: .infinity, alignment: .center)
     }
 

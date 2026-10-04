@@ -234,15 +234,8 @@ extension ClipItemMenuActionable where Self: NSObject {
 // MARK: - Shared Helpers
 
 func clipChipDotImage(colorIndex: Int) -> NSImage {
-    let size = NSSize(width: 12, height: 12)
-    let image = NSImage(size: size, flipped: false) { rect in
-        let color = CategoryChip.paletteNSColors[
-            min(max(colorIndex, 0), CategoryChip.paletteNSColors.count - 1)
-        ]
-        color.setFill()
-        NSBezierPath(ovalIn: rect.insetBy(dx: 0.5, dy: 0.5)).fill()
-        return true
-    }
-    image.isTemplate = false
-    return image
+    CategoryDotRenderer.image(
+        colorIndex: colorIndex,
+        canvasSize: CategoryDotRenderer.diameter
+    )
 }

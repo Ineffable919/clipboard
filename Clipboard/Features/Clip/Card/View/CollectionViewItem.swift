@@ -30,10 +30,16 @@ protocol CollectionViewItemDelegate: NSObjectProtocol {
 final class CollectionViewItem: NSCollectionViewItem {
     weak var delegate: (any CollectionViewItemDelegate)?
 
-    private var item: PasteboardModel?
+    private(set) var item: PasteboardModel?
     private var iconLoadTask: Task<Void, Never>?
     private var isFocused = true
     private var tickCancellable: AnyCancellable?
+
+    isolated deinit {
+        if isViewLoaded {
+            view.removeFromSuperview()
+        }
+    }
 
     // MARK: - Quick Paste
 
@@ -50,7 +56,11 @@ final class CollectionViewItem: NSCollectionViewItem {
     // MARK: - Selection border
 
     private var contentEdges: Constraint?
-    private var contentInset = Const.selectionBorderWidth - 0.5
+    private var contentInset = CollectionViewItem.cardInset(for: 2)
+
+    static func cardInset(for scale: CGFloat) -> CGFloat {
+        Const.selectionBorderWidth - 1 / scale
+    }
 
     private lazy var selectionBorderView: AppearanceObservingView = {
         let view = AppearanceObservingView()
@@ -70,8 +80,8 @@ final class CollectionViewItem: NSCollectionViewItem {
         return view
     }()
 
-    private lazy var contentView: DynamicBackgroundView = {
-        let view = DynamicBackgroundView()
+    private lazy var contentView: NSView = {
+        let view = NSView()
         view.wantsLayer = true
         view.layer?.masksToBounds = true
         view.layer?.cornerRadius = Const.radius
@@ -109,14 +119,14 @@ final class CollectionViewItem: NSCollectionViewItem {
     }()
 
     private lazy var infoIconView: NSImageView = {
-        let iv = NSImageView()
-        iv.image = NSImage(systemSymbolName: "text.justify.leading", accessibilityDescription: nil)
-        iv.symbolConfiguration = NSImage.SymbolConfiguration(textStyle: .callout)
-        iv.imageScaling = .scaleProportionallyUpOrDown
-        iv.isHidden = true
-        iv.setContentHuggingPriority(.required, for: .horizontal)
-        iv.setContentCompressionResistancePriority(.required, for: .horizontal)
-        return iv
+        let icon = NSImageView()
+        icon.image = NSImage(systemSymbolName: "text.justify.leading", accessibilityDescription: nil)
+        icon.symbolConfiguration = NSImage.SymbolConfiguration(textStyle: .callout)
+        icon.imageScaling = .scaleProportionallyUpOrDown
+        icon.isHidden = true
+        icon.setContentHuggingPriority(.required, for: .horizontal)
+        icon.setContentCompressionResistancePriority(.required, for: .horizontal)
+        return icon
     }()
 
     private lazy var quickPasteLabel: NSTextField = {
@@ -133,7 +143,6 @@ final class CollectionViewItem: NSCollectionViewItem {
     func configure(with model: PasteboardModel, keyword: String = "") {
         item = model
         headView.configure(with: model)
-        updateContentBackground()
         updateInfoIconAppearance()
 
         cardContentView.configure(with: model, keyword: keyword)
@@ -146,43 +155,34 @@ final class CollectionViewItem: NSCollectionViewItem {
             }
     }
 
-    private func updateContentBackground() {
-        guard let model = item else { return }
-        if model.type == .color, let bgColor = model.cachedBackgroundColor {
-            contentView.dynamicBackgroundColor = bgColor
-        } else if let bgColor = model.safeBgColor {
-            contentView.dynamicBackgroundColor = bgColor
-        } else {
-            contentView.dynamicBackgroundColor = NSColor.textBackgroundColor
-        }
-    }
-
     func setFocused(_ focused: Bool) {
         isFocused = focused
         updateSelectionBorder()
     }
 
     private func updateInfoIconAppearance() {
-        guard let model = item else { return }
-        let backgroundColor: NSColor
-        let backgroundAlpha: CGFloat
-        let tintColor: NSColor
+        view.effectiveAppearance.performAsCurrentDrawingAppearance {
+            guard let model = item else { return }
+            let backgroundColor: NSColor
+            let backgroundAlpha: CGFloat
+            let tintColor: NSColor
 
-        if model.type == .image {
-            backgroundColor = .unemphasizedSelectedContentBackgroundColor
-            backgroundAlpha = 0.8
-            tintColor = .secondaryLabelColor
-        } else {
-            let (base, textColor) = model.colors()
-            backgroundColor = base
-            backgroundAlpha = 1.0
-            tintColor = textColor
+            if model.type == .image {
+                backgroundColor = .unemphasizedSelectedContentBackgroundColor
+                backgroundAlpha = 0.8
+                tintColor = .secondaryLabelColor
+            } else {
+                let (base, textColor) = model.colors()
+                backgroundColor = base
+                backgroundAlpha = 1.0
+                tintColor = textColor
+            }
+
+            badgeBgView.dynamicBackgroundColor = backgroundColor
+            badgeBgView.backgroundAlpha = backgroundAlpha
+            infoIconView.contentTintColor = tintColor
+            quickPasteLabel.textColor = tintColor
         }
-
-        badgeBgView.dynamicBackgroundColor = backgroundColor
-        badgeBgView.backgroundAlpha = backgroundAlpha
-        infoIconView.contentTintColor = tintColor
-        quickPasteLabel.textColor = tintColor
     }
 
     private func updateQuickPasteLabel() {
@@ -206,12 +206,15 @@ extension CollectionViewItem {
     override func viewDidLoad() {
         super.viewDidLoad()
         initSubView()
+        let doubleClick = CollectionClickGestureRecognizer(target: self, action: #selector(handleDoubleClick))
+        doubleClick.numberOfClicksRequired = 2
+        doubleClick.delaysPrimaryMouseButtonEvents = false
+        view.addGestureRecognizer(doubleClick)
     }
 
     override func viewDidLayout() {
         super.viewDidLayout()
         updateContentInset()
-        updateShadowPath()
     }
 
     override var isSelected: Bool {
@@ -220,12 +223,8 @@ extension CollectionViewItem {
         }
     }
 
-    override func mouseDown(with event: NSEvent) {
-        if event.type == .leftMouseDown, event.clickCount == 2 {
-            handleClipPaste()
-            return
-        }
-        super.mouseDown(with: event)
+    @objc private func handleDoubleClick() {
+        handleClipPaste()
     }
 
     override func prepareForReuse() {
@@ -254,104 +253,23 @@ extension CollectionViewItem {
     }
 
     private func updateShadow() {
-        guard let layer = selectionBorderView.layer else { return }
         if isSelected {
-            layer.shadowOpacity = 0
+            selectionBorderView.shadow = nil
         } else {
-            layer.shadowColor = NSColor.shadowColor.withAlphaComponent(0.1).cgColor
-            layer.shadowOpacity = 1
-            layer.shadowRadius = 2
-            layer.shadowOffset = CGSize(width: 0, height: -1)
+            let shadow = NSShadow()
+            shadow.shadowColor = NSColor.shadowColor.withAlphaComponent(0.1)
+            shadow.shadowBlurRadius = 2
+            shadow.shadowOffset = CGSize(width: 0, height: -1)
+            selectionBorderView.shadow = shadow
         }
-    }
-
-    private func updateShadowPath() {
-        selectionBorderView.layer?.shadowPath = CGPath(
-            roundedRect: contentView.frame,
-            cornerWidth: Const.radius,
-            cornerHeight: Const.radius,
-            transform: nil
-        )
     }
 
     private func updateContentInset() {
         guard let scale = selectionBorderView.window?.backingScaleFactor, scale > 0 else { return }
-        let inset = Const.selectionBorderWidth - 1 / scale
+        let inset = Self.cardInset(for: scale)
         guard inset != contentInset else { return }
         contentInset = inset
         contentEdges?.update(inset: inset)
-    }
-}
-
-// MARK: - Context Menu
-
-extension CollectionViewItem: ClipItemMenuActionable {
-    private var pasteMenuTitle: String {
-        if let appName = delegate?.preApp?.localizedName, PasteUserDefaults.pasteDirect {
-            String(localized: .pasteToApp(appName))
-        } else {
-            String(localized: .paste)
-        }
-    }
-
-    func handleClipPaste() {
-        guard let model = item else { return }
-        delegate?.paste(model)
-    }
-
-    func handleClipPastePlain() {
-        guard let model = item else { return }
-        delegate?.pastePlain(model)
-    }
-
-    func handleClipCopy() {
-        guard let model = item else { return }
-        delegate?.copy(model)
-    }
-
-    func handleClipEdit() {
-        guard let model = item else { return }
-        delegate?.edit(model)
-    }
-
-    func handleClipDelete() {
-        guard let model = item, let indexPath = collectionView?.indexPath(for: self) else { return }
-        delegate?.delete(model, indexPath: indexPath)
-    }
-
-    func handleClipAssignToChip(_ sender: NSMenuItem) {
-        guard let model = item, model.group != sender.tag else { return }
-        delegate?.assignToChip(model, chipId: sender.tag)
-    }
-
-    func handleClipCreateChip() {
-        guard let model = item else { return }
-        delegate?.createChip(pinning: model)
-    }
-
-    func handleClipUnpin() {
-        guard let model = item else { return }
-        delegate?.assignToChip(model, chipId: -1)
-    }
-
-    func handleClipPreview() {
-        guard let model = item else { return }
-        delegate?.preview(model)
-    }
-
-    func handleClipRevealInFinder() {
-        guard let paths = item?.cachedFilePaths, !paths.isEmpty else { return }
-        NSWorkspace.shared.activateFileViewerSelecting(paths.map { URL(fileURLWithPath: $0) })
-    }
-
-    func handleClipOpenInBrowser() {
-        guard let model = item, let url = URL(string: model.plainText) else { return }
-        NSWorkspace.shared.open(url)
-    }
-
-    func handleClipOpenWithDefaultApp() {
-        guard let path = item?.cachedFilePaths?.first else { return }
-        NSWorkspace.shared.open(URL(fileURLWithPath: path))
     }
 }
 
@@ -415,19 +333,6 @@ extension CollectionViewItem {
 }
 
 extension CollectionViewItem: UserInterfaceItemIdentifier {}
-
-// MARK: - NSMenuDelegate
-
-extension CollectionViewItem: NSMenuDelegate {
-    func menuNeedsUpdate(_ menu: NSMenu) {
-        menu.removeAllItems()
-        guard let model = item else { return }
-        delegate?.itemDidRequestSelect(self)
-        for item in buildClipItemMenu(for: model, pasteTitle: pasteMenuTitle).items {
-            menu.addItem(item)
-        }
-    }
-}
 
 // MARK: - AppearanceObservingView
 

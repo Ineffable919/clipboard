@@ -129,6 +129,8 @@ class FilterButton: NSView {
         // 背景颜色
         let bgColor: NSColor = if isSelected {
             .controlAccentColor
+        } else if effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua {
+            .white.withAlphaComponent(0.08)
         } else {
             NSColor.secondaryLabelColor.withAlphaComponent(0.05)
         }

@@ -62,8 +62,11 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
         let f = NSTextField(labelWithString: "")
         f.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         f.textColor = .secondaryLabelColor
-        f.lineBreakMode = .byTruncatingTail
+        f.lineBreakMode = .byTruncatingMiddle
         f.maximumNumberOfLines = 1
+        f.usesSingleLineMode = true
+        f.cell?.wraps = false
+        f.cell?.truncatesLastVisibleLine = true
         f.allowsEditingTextAttributes = false
         return f
     }()
@@ -93,9 +96,10 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
 
     func configure(with model: PasteboardModel, keyword: String) {
         let urlString = model.attributeString.string
+            .trimmingCharacters(in: .whitespacesAndNewlines)
         let url = urlString.asCompleteURL()
 
-        titleLabel.stringValue = model.cachedLinkMetadata?.title
+        titleLabel.stringValue = Self.singleLineTitle(model.cachedLinkMetadata?.title)
             ?? url?.host()
             ?? urlString
 
@@ -129,7 +133,9 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
             await MainActor.run {
                 guard !Task.isCancelled else { return }
                 model.cachedLinkMetadata = meta
-                self.titleLabel.stringValue = meta.title ?? url.host() ?? url.absoluteString
+                self.titleLabel.stringValue = Self.singleLineTitle(meta.title)
+                    ?? url.host()
+                    ?? url.absoluteString
                 self.applyMetadata(meta)
             }
         }
@@ -195,6 +201,7 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
         urlLabel.snp.makeConstraints { make in
             make.top.equalTo(titleLabel.snp.bottom).offset(Const.space4)
             make.leading.trailing.equalToSuperview().inset(Const.space8)
+            make.bottom.lessThanOrEqualToSuperview().inset(Const.space4)
         }
 
         updateBackground()
@@ -234,12 +241,20 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
 
     // MARK: - Private: URL label
 
+    private static func singleLineTitle(_ title: String?) -> String? {
+        guard let title else { return nil }
+        let normalized = title
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacing(/\s+/, with: " ")
+        return normalized.isEmpty || normalized == "/" ? nil : normalized
+    }
+
     private func makeURLAttributedString(
         urlString: String,
         keyword: String
     ) -> NSAttributedString {
         let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.lineBreakMode = .byTruncatingTail
+        paragraphStyle.lineBreakMode = .byTruncatingMiddle
         let baseAttrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize),
             .foregroundColor: NSColor.secondaryLabelColor,

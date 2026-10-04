@@ -19,8 +19,8 @@ enum PasteFilterBuilder {
         }
 
         // 分组筛选
-        if let groupId = criteria.selectedGroupId {
-            clauses.append(Col.group == groupId)
+        if !criteria.selectedGroupIds.isEmpty {
+            clauses.append(groupFilter(for: criteria.selectedGroupIds))
         } else {
             clauses.append(Col.hidden == 0)
         }
@@ -36,9 +36,7 @@ enum PasteFilterBuilder {
             }
             if !tagValues.isEmpty {
                 let tagCondition = tagValues.map { (Col.tag ?? "") == $0 }
-                    .reduce(Expression<Bool>(value: false)) {
-                        result,
-                        condition in
+                    .reduce(Expression<Bool>(value: false)) { result, condition in
                         result || condition
                     }
                 clauses.append(tagCondition)
@@ -46,9 +44,9 @@ enum PasteFilterBuilder {
         }
 
         // 应用筛选
-        if !criteria.selectedAppNames.isEmpty {
-            let appCondition = criteria.selectedAppNames.map {
-                Col.appName == $0
+        if !criteria.selectedAppIDs.isEmpty {
+            let appCondition = criteria.selectedAppIDs.map {
+                Col.appID == $0
             }
             .reduce(Expression<Bool>(value: false)) { $0 || $1 }
             clauses.append(appCondition)
@@ -58,10 +56,10 @@ enum PasteFilterBuilder {
         if let dateFilter = criteria.selectedDateFilter {
             let (start, end) = dateFilter.timestampRange()
             if let endTimestamp = end {
-                let dateCondition = Col.ts >= start && Col.ts < endTimestamp
+                let dateCondition = Col.timestamp >= start && Col.timestamp < endTimestamp
                 clauses.append(dateCondition)
             } else {
-                let dateCondition = Col.ts >= start
+                let dateCondition = Col.timestamp >= start
                 clauses.append(dateCondition)
             }
         }
@@ -72,5 +70,10 @@ enum PasteFilterBuilder {
             }
             return next
         }
+    }
+
+    private static func groupFilter(for groupIds: Set<Int>) -> Expression<Bool> {
+        groupIds.map { Col.group == $0 }
+            .reduce(Expression<Bool>(value: false)) { $0 || $1 }
     }
 }

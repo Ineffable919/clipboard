@@ -39,13 +39,13 @@ enum SettingPage: CaseIterable, Identifiable {
 
     var title: LocalizedStringResource {
         switch self {
-        case .general: .settingPageGeneral
-        case .appearance: .settingPageAppearance
-        case .privacy: .settingPagePrivacy
-        case .keyboard: .settingPageKeyboard
-        case .storage: .settingPageStorage
-        case .ai: .settingPageMcp
-        case .about: .settingPageAbout
+        case .general: .pageGeneral
+        case .appearance: .pageAppearance
+        case .privacy: .pagePrivacy
+        case .keyboard: .pageKeyboard
+        case .storage: .pageStorage
+        case .ai: .pageMcp
+        case .about: .pageAbout
         }
     }
 }
@@ -53,6 +53,7 @@ enum SettingPage: CaseIterable, Identifiable {
 struct SettingView: View {
     @Environment(SettingViewModel.self) private var viewModel
     @FocusState private var isSidebarFocused: Bool
+    @AppStorage(PrefKey.pasteDirect.rawValue) private var pasteDirect = true
 
     var body: some View {
         @Bindable var vm = viewModel
@@ -62,10 +63,38 @@ struct SettingView: View {
                 List(selection: $vm.selectedPage) {
                     ForEach(SettingPage.allCases) { page in
                         NavigationLink(value: page) {
-                            Label {
-                                Text(page.title)
-                            } icon: {
-                                Image(systemName: page.icon)
+                            HStack(spacing: Const.space8) {
+                                Label {
+                                    Text(page.title)
+                                } icon: {
+                                    Image(systemName: page.icon)
+                                }
+
+                                Spacer(minLength: Const.space8)
+
+                                if page == .ai {
+                                    Text(verbatim: "Beta")
+                                        .font(.caption2.weight(.medium))
+                                        .foregroundStyle(.secondary)
+                                }
+
+                                if page == .general,
+                                   pasteDirect,
+                                   !viewModel.hasAccessibilityPermission {
+                                    ZStack {
+                                        Circle()
+                                            .fill(Color(nsColor: .systemRed))
+                                        Image(systemName: "exclamationmark")
+                                            .font(.system(size: 11, weight: .bold))
+                                            .foregroundStyle(.white)
+                                    }
+                                    .frame(width: 18, height: 18)
+                                    .compositingGroup()
+                                    .accessibilityElement(children: .ignore)
+                                    .accessibilityLabel(
+                                        Text(.privacyAccessPermissionDenied)
+                                    )
+                                }
                             }
                         }
                     }
@@ -103,9 +132,17 @@ struct SettingView: View {
             .toolbarTitleDisplayMode(.inline)
         }
         .onAppear {
+            viewModel.refreshAccessibilityPermission()
             Task { @MainActor in
                 isSidebarFocused = true
             }
+        }
+        .onReceive(
+            NotificationCenter.default.publisher(
+                for: NSApplication.didBecomeActiveNotification
+            )
+        ) { _ in
+            viewModel.refreshAccessibilityPermission()
         }
     }
 }
@@ -140,7 +177,7 @@ struct HelpCenterButton: View {
         }) {
             HStack {
                 Image(systemName: "questionmark.circle")
-                Text(.settingHelpCenter)
+                Text(.help)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, Const.space8)

@@ -2,28 +2,20 @@
 //  BackgroundEffectController.swift
 //  Clipboard
 //
-//  统一管理窗口的背景效果视图（NSGlassEffectView / NSVisualEffectView）
-//  以及随用户偏好变化的切换/重建逻辑。
+//  按系统版本构建窗口背景：macOS 26 及以上使用液态玻璃，其余使用毛玻璃。
 //
 
 import AppKit
-import Combine
 import SnapKit
 
 @MainActor
 final class BackgroundEffectController {
-    private(set) var effectView: NSView
+    let effectView: NSView
     let contentContainer: NSView
 
-    private weak var host: NSView?
-    private let cornerRadius: CGFloat
     private let innerPadding: CGFloat
 
-    private var lastBackgroundType: Int = PasteUserDefaults.backgroundType
-    private var cancellables = Set<AnyCancellable>()
-
     init(cornerRadius: CGFloat, innerPadding: CGFloat = 0) {
-        self.cornerRadius = cornerRadius
         self.innerPadding = innerPadding
 
         let container = NSView()
@@ -39,19 +31,11 @@ final class BackgroundEffectController {
             cornerRadius: cornerRadius,
             contentContainer: container
         )
-
-        observeSettings()
     }
 
     func install(in host: NSView) {
-        self.host = host
-        attach()
-    }
-
-    private func attach() {
-        guard let host else { return }
         host.addSubview(effectView)
-        effectView.snp.remakeConstraints { make in
+        effectView.snp.makeConstraints { make in
             make.leading.equalTo(innerPadding)
             make.trailing.equalTo(-innerPadding)
             make.top.equalToSuperview()
@@ -59,7 +43,7 @@ final class BackgroundEffectController {
         }
         if effectView is NSVisualEffectView {
             effectView.addSubview(contentContainer)
-            contentContainer.snp.remakeConstraints { $0.edges.equalToSuperview() }
+            contentContainer.snp.makeConstraints { $0.edges.equalToSuperview() }
         }
     }
 
@@ -68,50 +52,17 @@ final class BackgroundEffectController {
         contentContainer: NSView
     ) -> NSView {
         if #available(macOS 26.0, *) {
-            let bgType = BackgroundType(rawValue: PasteUserDefaults.backgroundType) ?? .liquid
-            if bgType == .liquid {
-                let glassView = NSGlassEffectView()
-                glassView.cornerRadius = cornerRadius
-                glassView.contentView = contentContainer
-                return glassView
-            }
+            let glassView = NSGlassEffectView()
+            glassView.cornerRadius = cornerRadius
+            glassView.contentView = contentContainer
+            return glassView
         }
 
         let visualEffect = NSVisualEffectView()
         visualEffect.wantsLayer = true
         visualEffect.state = .active
         visualEffect.blendingMode = .behindWindow
-        if #available(macOS 26.0, *) {
-            visualEffect.layer?.cornerRadius = cornerRadius
-        }
         visualEffect.material = .popover
         return visualEffect
-    }
-
-    private func observeSettings() {
-        UserDefaults.standard.publisher(for: \.backgroundType)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.handleSettingsChange() }
-            .store(in: &cancellables)
-    }
-
-    private func handleSettingsChange() {
-        let currentBgType = PasteUserDefaults.backgroundType
-        guard currentBgType != lastBackgroundType else { return }
-        lastBackgroundType = currentBgType
-        rebuild()
-    }
-
-    private func rebuild() {
-        guard let host else { return }
-        contentContainer.removeFromSuperview()
-        effectView.removeFromSuperview()
-
-        effectView = Self.buildEffectView(
-            cornerRadius: cornerRadius,
-            contentContainer: contentContainer
-        )
-        attach()
-        host.layoutSubtreeIfNeeded()
     }
 }

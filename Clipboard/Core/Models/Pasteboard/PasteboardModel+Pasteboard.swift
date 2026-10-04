@@ -15,8 +15,7 @@ extension PasteboardModel {
 
         let type: PasteboardType
         if let paths = Self.extractFilePaths(from: pasteboard, item: item),
-           !paths.isEmpty
-        {
+           !paths.isEmpty {
             type = .fileURL
         } else if let matched = item.availableType(from: PasteboardType.supportTypes) {
             type = matched
@@ -43,26 +42,14 @@ extension PasteboardModel {
         guard content != nil else { return nil }
 
         var showData: Data?
-        var showAtt: NSAttributedString?
         if type.isText() {
-            let att =
-                NSAttributedString(with: content, type: type)
-                    ?? NSAttributedString()
-            guard !att.string.allSatisfy(\.isWhitespace) else {
-                return nil
-            }
-            length = att.length
-            showAtt =
-                length > 300
-                    ? att.attributedSubstring(from: NSMakeRange(0, 300)) : att
-            showData = showAtt?.toData(with: type)
-            searchText = Self.normalizeSearchText(att.string)
+            guard let text = Self.prepareText(content, type: type) else { return nil }
+            length = text.source.length
+            showData = text.showData
+            searchText = Self.normalizeSearchText(text.source.string)
         }
 
-        let calculatedTag = Self.calculateTag(
-            type: type,
-            content: content ?? Data()
-        )
+        let calculatedTag = Self.calculateTag(type: type, content: content ?? Data())
 
         let app = sourceApp ?? NSWorkspace.shared.frontmostApplication
 
@@ -76,8 +63,19 @@ extension PasteboardModel {
             searchText: searchText,
             length: length,
             group: -1,
-            tag: calculatedTag
+            tag: calculatedTag,
+            sourceBundleID: app?.bundleIdentifier
         )
+    }
+
+    private static func prepareText(
+        _ content: Data?, type: PasteboardType
+    ) -> (source: NSAttributedString, showData: Data?)? {
+        let text = NSAttributedString(with: content, type: type) ?? NSAttributedString()
+        guard !text.string.allSatisfy(\.isWhitespace) else { return nil }
+        let preview = text.length > 300
+            ? text.attributedSubstring(from: NSRange(location: 0, length: 300)) : text
+        return (text, preview.toData(with: type))
     }
 
     // MARK: - 从剪贴板提取文件路径
@@ -113,7 +111,7 @@ extension PasteboardModel {
             NSPasteboard.PasteboardType.rtf.rawValue,
             NSPasteboard.PasteboardType.rtfd.rawValue,
             "public.utf8-plain-text",
-            "public.html",
+            "public.html"
         ]
         let hasTextContent = item.types.contains { skipTypes.contains($0.rawValue) }
         guard !hasTextContent else { return nil }
@@ -155,9 +153,13 @@ extension PasteboardModel {
         return path.hasPrefix("/") ? path : nil
     }
 
-    static func calculateTag(type: PasteboardType, content: Data)
-        -> String
-    {
+    nonisolated static func calculateTextTag(_ text: String) -> String {
+        if text.isCSSHexColor { return "color" }
+        if text.asCompleteURL() != nil { return "link" }
+        return "string"
+    }
+
+    static func calculateTag(type: PasteboardType, content: Data) -> String {
         switch type {
         case .rtf, .rtfd:
             if let attr = NSAttributedString(with: content, type: type) {
@@ -173,13 +175,7 @@ extension PasteboardModel {
             guard let str = String(data: content, encoding: .utf8) else {
                 return "string"
             }
-            if str.isCSSHexColor {
-                return "color"
-            } else if str.asCompleteURL() != nil {
-                return "link"
-            } else {
-                return "string"
-            }
+            return calculateTextTag(str)
         case .png, .tiff:
             return "image"
         case .fileURL:

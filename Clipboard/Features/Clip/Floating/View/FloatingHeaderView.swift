@@ -8,10 +8,13 @@
 import AppKit
 import Combine
 import SnapKit
+import SwiftUI
 import Sparkle
 
 final class FloatingHeaderView: NSView {
     // MARK: - Subviews
+
+    private let backgroundView = NSView()
 
     private let dragHandle = FloatingDragHandle()
     private let pinButton = FloatingPinButton()
@@ -22,16 +25,15 @@ final class FloatingHeaderView: NSView {
 
     // MARK: - State
 
-    private var effectView: NSView = FloatingHeaderView.buildEffectView()
-    private var lastBackgroundType: Int = PasteUserDefaults.backgroundType
+    private let effectView: NSView = FloatingHeaderView.buildEffectView()
     private weak var topVM: TopBarViewModel?
-    private var cancellables = Set<AnyCancellable>()
 
     // MARK: - Init
 
     override init(frame: NSRect) {
         super.init(frame: frame)
         setup()
+        updateBackground()
     }
 
     @available(*, unavailable)
@@ -45,6 +47,14 @@ final class FloatingHeaderView: NSView {
     var onChipSelected: (() -> Void)?
     var onChipEditingFocusChange: ((Bool) -> Void)?
 
+    func setDisplayMode(_ mode: FloatingDisplayMode) {
+        let isStandard = mode == .standard
+        dragHandle.snp.updateConstraints { $0.height.equalTo(isStandard ? 16 : 12) }
+        searchField.controlSize = isStandard ? .large : .regular
+        searchField.snp.updateConstraints {
+            $0.top.equalTo(dragHandle.snp.bottom).offset(isStandard ? Const.space8 : Const.space4)
+        }
+    }
     func isExcludedFromFocusGesture(_ view: NSView) -> Bool {
         let isEditingChip = topVM?.isEditingChip == true || topVM?.editingNewChip == true
         return view === pinButton || view.isDescendant(of: pinButton) ||
@@ -73,6 +83,7 @@ final class FloatingHeaderView: NSView {
             selectedId: selectedId,
             dotMode: false,
             compact: true,
+            creatingChip: topVM.editingNewChip,
             makeConfig: { [weak self] chip, isSelected, dotMode in
                 let isEditing = topVM.editingChipId == chip.id
                 return .init(
@@ -273,11 +284,7 @@ final class FloatingHeaderView: NSView {
         wantsLayer = true
         layer?.masksToBounds = true
 
-        addSubview(effectView)
-        effectView.snp.makeConstraints { make in
-            make.top.leading.trailing.equalToSuperview()
-            make.bottom.equalToSuperview().offset(Const.windowRadis)
-        }
+        setupBackground()
 
         addSubview(dragHandle)
         addSubview(pinButton)
@@ -296,7 +303,8 @@ final class FloatingHeaderView: NSView {
         // Pin
         pinButton.snp.makeConstraints { make in
             make.leading.equalToSuperview().offset(Const.space12)
-            make.top.equalTo(dragHandle.snp.bottom).offset(Const.space4)
+            make.centerY.equalTo(searchField)
+            make.width.height.equalTo(28)
         }
 
         // 设置
@@ -314,10 +322,9 @@ final class FloatingHeaderView: NSView {
         }
 
         searchField.snp.makeConstraints { make in
-            make.leading.equalTo(pinButton.snp.trailing).offset(Const.space12)
+            make.leading.equalTo(pinButton.snp.trailing).offset(Const.space8)
             make.trailing.equalTo(settingsBtn.snp.leading).offset(-Const.space8)
             make.top.equalTo(dragHandle.snp.bottom).offset(Const.space8)
-            make.centerY.equalTo(pinButton)
         }
 
         addChipBtn.action = { [weak self] in
@@ -325,7 +332,7 @@ final class FloatingHeaderView: NSView {
         }
 
         chipScrollView.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(Const.space8)
+            make.leading.equalToSuperview().offset(Const.space12)
             make.trailing.equalTo(addChipBtn.snp.leading).offset(-Const.space4)
             make.top.equalTo(searchField.snp.bottom).offset(Const.space8)
             make.bottom.equalToSuperview()
@@ -335,11 +342,6 @@ final class FloatingHeaderView: NSView {
             make.trailing.equalToSuperview().offset(-Const.space12)
             make.centerY.equalTo(chipScrollView)
         }
-
-        UserDefaults.standard.publisher(for: \.backgroundType)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.handleBackgroundSettingsChange() }
-            .store(in: &cancellables)
 
         observeUpdateBadge()
     }
@@ -356,45 +358,45 @@ final class FloatingHeaderView: NSView {
 
     // MARK: - Background
 
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        updateBackground()
+    }
+
+    private func setupBackground() {
+        addSubview(effectView)
+        effectView.snp.makeConstraints { make in
+            make.top.leading.trailing.equalToSuperview()
+            make.bottom.equalToSuperview().offset(Const.windowRadis)
+        }
+
+        guard #available(macOS 26.0, *) else { return }
+        backgroundView.wantsLayer = true
+        addSubview(backgroundView)
+        backgroundView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
+    }
+
+    private func updateBackground() {
+        guard #available(macOS 26.0, *) else { return }
+        let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        backgroundView.layer?.backgroundColor = NSColor(WelcomeStyle.background(for: isDark ? .dark : .light))
+            .withAlphaComponent(0.35).cgColor
+    }
+
     private static func buildEffectView() -> NSView {
-        let topCorners: CACornerMask = [.layerMinXMaxYCorner, .layerMaxXMaxYCorner]
         if #available(macOS 26.0, *) {
-            let bgType = BackgroundType(rawValue: PasteUserDefaults.backgroundType) ?? .liquid
-            if bgType == .liquid {
-                let v = NSGlassEffectView()
-                v.cornerRadius = Const.windowRadis
-                v.wantsLayer = true
-                v.layer?.maskedCorners = topCorners
-                return v
-            }
+            let glassView = NSGlassEffectView()
+            glassView.cornerRadius = 0
+            return glassView
         }
         let ve = NSVisualEffectView()
         ve.wantsLayer = true
         ve.state = .active
         ve.blendingMode = .withinWindow
         ve.material = .popover
-        ve.layer?.cornerRadius = Const.windowRadis
-        ve.layer?.maskedCorners = topCorners
-        ve.layer?.masksToBounds = true
         return ve
-    }
-
-    private func handleBackgroundSettingsChange() {
-        let currentBgType = PasteUserDefaults.backgroundType
-        guard currentBgType != lastBackgroundType else { return }
-        lastBackgroundType = currentBgType
-        rebuildEffectView()
-    }
-
-    private func rebuildEffectView() {
-        effectView.removeFromSuperview()
-        effectView = Self.buildEffectView()
-        addSubview(effectView, positioned: .below, relativeTo: dragHandle)
-        effectView.snp.makeConstraints { make in
-            make.top.leading.trailing.equalToSuperview()
-            make.bottom.equalToSuperview().offset(Const.windowRadis)
-        }
-        layoutSubtreeIfNeeded()
     }
 
     // MARK: - Settings Menu
@@ -571,7 +573,7 @@ final class FloatingPinButton: NSButton {
 
     private func setup() {
         isBordered = false
-        imageScaling = .scaleProportionallyUpOrDown
+        imageScaling = .scaleNone
         target = self
         action = #selector(toggle)
         toolTip = String(localized: .pin)
@@ -586,7 +588,7 @@ final class FloatingPinButton: NSButton {
 
     private func updateAppearance() {
         let symbolName = isPinned ? "pin.fill" : "pin"
-        let config = NSImage.SymbolConfiguration(pointSize: 16, weight: .regular)
+        let config = NSImage.SymbolConfiguration(pointSize: 14, weight: .regular)
         image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?
             .withSymbolConfiguration(config)
         contentTintColor = isPinned ? .controlAccentColor : .secondaryLabelColor

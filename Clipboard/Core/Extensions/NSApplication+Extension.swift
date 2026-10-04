@@ -6,7 +6,7 @@
 import AppKit
 
 extension NSApplication {
-    func relaunch() {
+    @objc func relaunch() {
         let url = Bundle.main.bundleURL
         let config = NSWorkspace.OpenConfiguration()
         config.createsNewApplicationInstance = true

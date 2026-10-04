@@ -21,6 +21,76 @@ struct TopBarMenuBuilder {
     @MainActor
     func buildSettingsMenu() -> NSMenu {
         let menu = NSMenu()
+        addUpdateNotice(to: menu)
+
+        let aboutItem = makeItem(
+            title: String(localized: .aboutApp(Self.appName)), action: #selector(TopBarMenuActions.openAboutAction),
+            symbol: "info.circle"
+        )
+        menu.addItem(aboutItem)
+
+        menu.addItem(.separator())
+
+        let newTextItem = makeItem(
+            title: String(localized: .newText), action: #selector(TopBarMenuActions.openNewTextItemAction),
+            symbol: "square.and.pencil", key: "t"
+        )
+        newTextItem.keyEquivalentModifierMask = .command
+        menu.addItem(newTextItem)
+
+        let settingsItem = makeItem(
+            title: String(localized: .settings), action: #selector(TopBarMenuActions.openSettingsAction),
+            symbol: "gearshape", key: ","
+        )
+        menu.addItem(settingsItem)
+
+        menu.addItem(.separator())
+
+        let updateItem = makeItem(
+            title: String(localized: .checkUpdates), action: #selector(TopBarMenuActions.checkForUpdatesAction),
+            symbol: "arrow.clockwise"
+        )
+        menu.addItem(updateItem)
+
+        let helpItem = makeItem(
+            title: String(localized: .menuHelp), action: #selector(TopBarMenuActions.invokeHelpAction),
+            symbol: "questionmark.circle"
+        )
+        menu.addItem(helpItem)
+
+        menu.addItem(.separator())
+
+        addApplicationItems(to: menu)
+
+        return menu
+    }
+
+    private func addApplicationItems(to menu: NSMenu) {
+        let pauseItem = NSMenuItem(
+            title: topVM?.pauseMenuTitle ?? String(localized: .pause),
+            action: nil,
+            keyEquivalent: ""
+        )
+        setMenuItemImage(pauseItem, symbolName: "pause.circle")
+        pauseItem.submenu = buildPauseSubmenu()
+        menu.addItem(pauseItem)
+
+        let restartItem = makeItem(
+            title: String(localized: .restart), action: #selector(NSApplication.relaunch),
+            symbol: "arrow.clockwise.circle", target: NSApplication.shared
+        )
+        menu.addItem(restartItem)
+
+        let quitItem = NSMenuItem(
+            title: String(localized: .quit),
+            action: #selector(NSApplication.shared.terminate),
+            keyEquivalent: "q"
+        )
+        menu.addItem(quitItem)
+    }
+
+    @MainActor
+    private func addUpdateNotice(to menu: NSMenu) {
         let updateManager = UpdateManager.shared
 
         if updateManager.hasUpdate {
@@ -38,8 +108,7 @@ struct TopBarMenuBuilder {
                let image = NSImage(
                    systemSymbolName: "arrow.up.circle.dotted",
                    accessibilityDescription: nil
-               )
-            {
+               ) {
                 let config = NSImage.SymbolConfiguration(
                     pointSize: 16.0,
                     weight: .semibold
@@ -49,79 +118,7 @@ struct TopBarMenuBuilder {
             }
             menu.addItem(newVersionItem)
             menu.addItem(.separator())
-        } else {
-            AppDelegate.shared?.updaterController.updater.checkForUpdatesInBackground()
         }
-
-        let aboutItem = NSMenuItem(
-            title: String(localized: .aboutApp(Self.appName)),
-            action: #selector(TopBarMenuActions.openAboutAction),
-            keyEquivalent: ""
-        )
-        aboutItem.target = target
-        setMenuItemImage(aboutItem, symbolName: "info.circle")
-        menu.addItem(aboutItem)
-
-        menu.addItem(.separator())
-
-        let newTextItem = NSMenuItem(
-            title: String(localized: .newText),
-            action: #selector(TopBarMenuActions.openNewTextItemAction),
-            keyEquivalent: "t"
-        )
-        newTextItem.keyEquivalentModifierMask = .command
-        newTextItem.target = target
-        setMenuItemImage(newTextItem, symbolName: "square.and.pencil")
-        menu.addItem(newTextItem)
-
-        let settingsItem = NSMenuItem(
-            title: String(localized: .settings),
-            action: #selector(TopBarMenuActions.openSettingsAction),
-            keyEquivalent: ","
-        )
-        settingsItem.target = target
-        setMenuItemImage(settingsItem, symbolName: "gearshape")
-        menu.addItem(settingsItem)
-
-        menu.addItem(.separator())
-
-        let updateItem = NSMenuItem(
-            title: String(localized: .checkUpdates),
-            action: #selector(TopBarMenuActions.checkForUpdatesAction),
-            keyEquivalent: ""
-        )
-        updateItem.target = target
-        setMenuItemImage(updateItem, symbolName: "arrow.clockwise")
-        menu.addItem(updateItem)
-
-        let helpItem = NSMenuItem(
-            title: String(localized: .menuHelp),
-            action: #selector(TopBarMenuActions.invokeHelpAction),
-            keyEquivalent: ""
-        )
-        helpItem.target = target
-        setMenuItemImage(helpItem, symbolName: "questionmark.circle")
-        menu.addItem(helpItem)
-
-        menu.addItem(.separator())
-
-        let pauseItem = NSMenuItem(
-            title: topVM?.pauseMenuTitle ?? String(localized: .pause),
-            action: nil,
-            keyEquivalent: ""
-        )
-        setMenuItemImage(pauseItem, symbolName: "pause.circle")
-        pauseItem.submenu = buildPauseSubmenu()
-        menu.addItem(pauseItem)
-
-        let quitItem = NSMenuItem(
-            title: String(localized: .quit),
-            action: #selector(NSApplication.shared.terminate),
-            keyEquivalent: "q"
-        )
-        menu.addItem(quitItem)
-
-        return menu
     }
 
     // MARK: - Private
@@ -152,41 +149,43 @@ struct TopBarMenuBuilder {
             submenu.addItem(.separator())
         }
 
-        let durations: [(String, String, Selector)] = [
-            (
-                String(localized: .pauseFifteen), "15.circle",
-                #selector(TopBarMenuActions.pause15MinutesAction)
+        let items = [
+            makeItem(
+                title: String(localized: .pauseFifteen),
+                action: #selector(TopBarMenuActions.pause15MinutesAction), symbol: "15.circle"
             ),
-            (
-                String(localized: .pauseThirty), "30.circle",
-                #selector(TopBarMenuActions.pause30MinutesAction)
+            makeItem(
+                title: String(localized: .pauseThirty),
+                action: #selector(TopBarMenuActions.pause30MinutesAction), symbol: "30.circle"
             ),
-            (
-                String(localized: .pauseOneHour), "1.circle",
-                #selector(TopBarMenuActions.pause1HourAction)
+            makeItem(
+                title: String(localized: .pauseOneHour),
+                action: #selector(TopBarMenuActions.pause1HourAction), symbol: "1.circle"
             ),
-            (
-                String(localized: .pauseThreeHours), "3.circle",
-                #selector(TopBarMenuActions.pause3HoursAction)
+            makeItem(
+                title: String(localized: .pauseThreeHours),
+                action: #selector(TopBarMenuActions.pause3HoursAction), symbol: "3.circle"
             ),
-            (
-                String(localized: .pauseEightHours), "8.circle",
-                #selector(TopBarMenuActions.pause8HoursAction)
-            ),
-        ]
-
-        for (title, symbol, selector) in durations {
-            let item = NSMenuItem(
-                title: title,
-                action: selector,
-                keyEquivalent: ""
+            makeItem(
+                title: String(localized: .pauseEightHours),
+                action: #selector(TopBarMenuActions.pause8HoursAction), symbol: "8.circle"
             )
-            item.target = target
-            setMenuItemImage(item, symbolName: symbol)
+        ]
+        for item in items {
             submenu.addItem(item)
         }
 
         return submenu
+    }
+
+    private func makeItem(
+        title: String, action: Selector, symbol: String,
+        key: String = "", target: AnyObject? = nil
+    ) -> NSMenuItem {
+        let item = NSMenuItem(title: title, action: action, keyEquivalent: key)
+        item.target = target ?? self.target
+        setMenuItemImage(item, symbolName: symbol)
+        return item
     }
 
     private func setMenuItemImage(_ item: NSMenuItem, symbolName: String) {

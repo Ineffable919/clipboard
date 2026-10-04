@@ -283,14 +283,13 @@ final class CardCommonBottomView: NSView, PassthroughMouseEvents {
 
     private var needsMask: Bool = false
     private var baseColor: NSColor = .controlBackgroundColor
+    private let model: PasteboardModel
 
     init(model: PasteboardModel) {
+        self.model = model
         super.init(frame: .zero)
         wantsLayer = true
 
-        let (base, textColor) = model.colors()
-        baseColor = base
-        label.textColor = textColor
         label.stringValue = model.introString()
 
         needsMask = model.needsBottomMask {
@@ -298,13 +297,16 @@ final class CardCommonBottomView: NSView, PassthroughMouseEvents {
         }
 
         if needsMask {
+            label.drawsBackground = true
             layer?.addSublayer(gradientLayer)
-            updateGradient()
         }
 
+        updateColors()
         addSubview(label)
         label.snp.makeConstraints { make in
-            make.leading.trailing.equalToSuperview().inset(Const.space12)
+            make.centerX.equalToSuperview()
+            make.leading.greaterThanOrEqualToSuperview().inset(Const.space12)
+            make.trailing.lessThanOrEqualToSuperview().inset(Const.space12)
             make.bottom.equalToSuperview().inset(Const.space8)
         }
     }
@@ -321,8 +323,16 @@ final class CardCommonBottomView: NSView, PassthroughMouseEvents {
 
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
-        if needsMask {
-            updateGradient()
+        updateColors()
+    }
+
+    private func updateColors() {
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            let (background, foreground) = model.colors()
+            baseColor = background
+            label.textColor = foreground
+            label.backgroundColor = background
+            if needsMask { updateGradient() }
         }
     }
 
@@ -332,12 +342,12 @@ final class CardCommonBottomView: NSView, PassthroughMouseEvents {
             gradientLayer.colors = [
                 resolved.cgColor,
                 resolved.cgColor,
-                resolved.withAlphaComponent(0.8).cgColor,
                 resolved.withAlphaComponent(0.0).cgColor,
             ]
         }
         gradientLayer.startPoint = CGPoint(x: 0.5, y: 0.0)
         gradientLayer.endPoint = CGPoint(x: 0.5, y: 1.0)
-        gradientLayer.locations = [0.0, 0.6, 0.7, 1.0]
+        // Fade through the upper 24pt; only the bottom 16pt is fully opaque.
+        gradientLayer.locations = [0.0, 0.4, 1.0]
     }
 }

@@ -9,12 +9,14 @@ import AppKit
 import SnapKit
 
 final class AppFilterButton: FilterButton {
+    let appID: Int64
     let appName: String
     let appPath: String
 
     private let appIconView = NSImageView()
 
-    init(icon: NSImage?, title: String, path: String) {
+    init(id: Int64, icon: NSImage?, title: String, path: String) {
+        appID = id
         appName = title
         appPath = path
         super.init(icon: nil, title: title)

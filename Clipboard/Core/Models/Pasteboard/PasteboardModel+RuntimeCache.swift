@@ -12,6 +12,8 @@ struct PasteboardModelRuntimeCache {
     var imageSize: CGSize?
     var backgroundColor: NSColor?
     var foregroundColor: NSColor?
+    var richForegrounds: [NSColor] = []
+    var previewForegrounds: [NSColor]?
     var filePaths: [String]?
     var ocrRegions: [OCRTextRegion]?
     var ocrKeyword: String?
@@ -41,6 +43,16 @@ extension PasteboardModel {
     var cachedForegroundColor: NSColor? {
         get { runtimeCache.foregroundColor }
         set { runtimeCache.foregroundColor = newValue }
+    }
+
+    var cachedRichForegrounds: [NSColor] {
+        get { runtimeCache.richForegrounds }
+        set { runtimeCache.richForegrounds = newValue }
+    }
+
+    var cachedPreviewForegrounds: [NSColor]? {
+        get { runtimeCache.previewForegrounds }
+        set { runtimeCache.previewForegrounds = newValue }
     }
 
     var cachedFilePaths: [String]? {

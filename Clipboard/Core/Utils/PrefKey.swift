@@ -49,10 +49,10 @@ enum PrefKey: String, CaseIterable {
     case globalHotKeys
     /// 粘贴时去掉末尾换行符
     case removeTailingNewline
-    /// 背景类型(仅macOS 26+)
-    case backgroundType
     /// 显示模式（抽屉式/窗口式）
     case displayMode
+    /// 浮窗卡片显示模式（标准/简洁）
+    case floatMode
     /// 窗口位置模式（中心/鼠标/上次位置）
     case windowPosition
     /// 上次窗口位置和大小
@@ -63,6 +63,8 @@ enum PrefKey: String, CaseIterable {
     case showDockIcon
     /// 应用语言
     case appLanguage
+    /// 已完成首次启动欢迎页
+    case welcomeDone
 }
 
 /// 应用语言
@@ -76,8 +78,8 @@ enum AppLanguage: String, CaseIterable, Identifiable {
 
     var title: LocalizedStringResource {
         switch self {
-        case .zhHans: .settingLanguageOptionSimplifiedChinese
-        case .english: .settingLanguageOptionEnglish
+        case .zhHans: .languageOptionChinese
+        case .english: .languageOptionEnglish
         }
     }
 
@@ -95,9 +97,9 @@ enum AppearanceMode: Int, CaseIterable {
 
     var title: LocalizedStringResource {
         switch self {
-        case .system: .settingAppearanceModeSystem
-        case .light: .settingAppearanceModeLight
-        case .dark: .settingAppearanceModeDark
+        case .system: .appearanceModeSystem
+        case .light: .appearanceModeLight
+        case .dark: .appearanceModeDark
         }
     }
 }
@@ -143,28 +145,15 @@ enum HistoryTimeUnit: Equatable {
     var displayText: String {
         switch self {
         case let .days(n):
-            String.localizedStringWithFormat(String(localized: "historyTimeDisplayDays", defaultValue: "%lld days", table: "Localizable"), n)
+            String.localizedStringWithFormat(String(localized: "historyDays", defaultValue: "%lld days", table: "Localizable"), n)
         case let .weeks(n):
-            String.localizedStringWithFormat(String(localized: "historyTimeDisplayWeeks", defaultValue: "%lld weeks", table: "Localizable"), n)
+            String.localizedStringWithFormat(String(localized: "historyWeeks", defaultValue: "%lld weeks", table: "Localizable"), n)
         case let .months(n):
-            String.localizedStringWithFormat(String(localized: "historyTimeDisplayMonths", defaultValue: "%lld months", table: "Localizable"), n)
+            String.localizedStringWithFormat(String(localized: "historyMonths", defaultValue: "%lld months", table: "Localizable"), n)
         case .year:
-            String(localized: .historyTimeDisplayYear)
+            String(localized: .historyYear)
         case .forever:
-            String(localized: .historyTimeDisplayForever)
-        }
-    }
-}
-
-/// 背景类型(仅macOS 26+)
-enum BackgroundType: Int, CaseIterable {
-    case liquid = 0
-    case frosted = 1
-
-    var title: LocalizedStringResource {
-        switch self {
-        case .liquid: .settingAppearanceBackgroundTypeLiquid
-        case .frosted: .settingAppearanceBackgroundTypeFrosted
+            String(localized: .historyForever)
         }
     }
 }
@@ -176,8 +165,8 @@ enum DisplayMode: Int, CaseIterable {
 
     var title: LocalizedStringResource {
         switch self {
-        case .drawer: .settingAppearanceDisplayModeDrawer
-        case .floating: .settingAppearanceDisplayModeWindow
+        case .drawer: .appearanceDisplayDrawer
+        case .floating: .appearanceDisplayWindow
         }
     }
 }
@@ -190,9 +179,9 @@ enum WindowPositionMode: Int, CaseIterable {
 
     var title: LocalizedStringResource {
         switch self {
-        case .center: .settingAppearanceWindowPositionCenter
-        case .mouse: .settingAppearanceWindowPositionMouse
-        case .lastPosition: .settingAppearanceWindowPositionLast
+        case .center: .appearancePositionCenter
+        case .mouse: .appearancePositionMouse
+        case .lastPosition: .appearancePositionLast
         }
     }
 }

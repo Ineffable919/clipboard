@@ -6,9 +6,7 @@
     <div align="center"><a href="https://github.com/Ineffable919/clipboard/blob/master/README_EN.md">English</a> | <strong>中文</strong></div>
 </p>
 
-<img src="temp.png">
-
-<img src="float.png">
+<img src="examples.png">
 
 ## 下载
 

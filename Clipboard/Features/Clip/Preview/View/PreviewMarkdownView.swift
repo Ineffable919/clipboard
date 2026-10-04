@@ -14,18 +14,15 @@ final class PreviewMarkdownView: NSView, WKNavigationDelegate, WKUIDelegate {
     private let sourceScrollView = NSScrollView()
     private let sourceTextView = NSTextView()
     private let model: PasteboardModel
-    private let sourceBackgroundColor: NSColor?
+    private var renderTask: Task<Void, Never>?
+    private var hasLoadedRenderedContent = false
+    private var hasLoadedSourceContent = false
 
     /// 是否处于渲染态
     private(set) var isRendered = true
 
     init(model: PasteboardModel) {
         self.model = model
-        if model.type == .rich, let bg = model.safeBgColor {
-            sourceBackgroundColor = bg
-        } else {
-            sourceBackgroundColor = nil
-        }
         let configuration = Self.makeWebConfiguration()
         webView = WKWebView(frame: .zero, configuration: configuration)
         super.init(frame: .zero)
@@ -44,15 +41,27 @@ final class PreviewMarkdownView: NSView, WKNavigationDelegate, WKUIDelegate {
         fatalError()
     }
 
+    deinit {
+        renderTask?.cancel()
+    }
+
     override func layout() {
         super.layout()
-        let w = sourceScrollView.contentSize.width
-        guard w > 0 else { return }
-        if sourceTextView.frame.width != w {
-            sourceTextView.frame = NSRect(x: 0, y: 0, width: w, height: max(sourceScrollView.contentSize.height, 1))
+        let contentWidth = sourceScrollView.contentSize.width
+        guard contentWidth > 0 else { return }
+        if sourceTextView.frame.width != contentWidth {
+            sourceTextView.frame = NSRect(
+                x: 0,
+                y: 0,
+                width: contentWidth,
+                height: max(sourceScrollView.contentSize.height, 1)
+            )
             sourceTextView.minSize = NSSize(width: 0, height: sourceScrollView.contentSize.height)
-            sourceTextView.maxSize = NSSize(width: w, height: .greatestFiniteMagnitude)
-            sourceTextView.textContainer?.containerSize = NSSize(width: w, height: .greatestFiniteMagnitude)
+            sourceTextView.maxSize = NSSize(width: contentWidth, height: .greatestFiniteMagnitude)
+            sourceTextView.textContainer?.containerSize = NSSize(
+                width: contentWidth,
+                height: .greatestFiniteMagnitude
+            )
         }
     }
 
@@ -70,6 +79,7 @@ final class PreviewMarkdownView: NSView, WKNavigationDelegate, WKUIDelegate {
     private static func makeWebConfiguration() -> WKWebViewConfiguration {
         let configuration = WKWebViewConfiguration()
         configuration.websiteDataStore = .nonPersistent()
+        MarkdownHTMLSanitizer.install(in: configuration.userContentController)
         configuration.defaultWebpagePreferences.allowsContentJavaScript = false
         configuration.preferences.javaScriptCanOpenWindowsAutomatically = false
         configuration.suppressesIncrementalRendering = false
@@ -97,7 +107,7 @@ final class PreviewMarkdownView: NSView, WKNavigationDelegate, WKUIDelegate {
         sourceTextView.isEditable = false
         sourceTextView.isSelectable = true
         sourceTextView.drawsBackground = true
-        sourceTextView.backgroundColor = sourceBackgroundColor ?? .textBackgroundColor
+        sourceTextView.backgroundColor = .textBackgroundColor
         sourceTextView.isAutomaticLinkDetectionEnabled = false
         sourceTextView.textContainerInset = NSSize(width: Const.space8, height: Const.space8)
         sourceTextView.isVerticallyResizable = true
@@ -119,18 +129,44 @@ final class PreviewMarkdownView: NSView, WKNavigationDelegate, WKUIDelegate {
     // MARK: - Content
 
     private func applyContent() {
-        let source = model.markdownSource
         webView.isHidden = !isRendered
         sourceScrollView.isHidden = isRendered
 
         if isRendered {
-            webView.loadHTMLString(
-                MarkdownHTMLRenderer.htmlDocument(for: source),
-                baseURL: URL(fileURLWithPath: "/")
-            )
+            loadRenderedContentIfNeeded()
         } else {
-            applyOriginalContent(source: source)
+            loadSourceContentIfNeeded()
         }
+        updateSourceBackground()
+    }
+
+    private func loadRenderedContentIfNeeded() {
+        guard !hasLoadedRenderedContent, renderTask == nil else { return }
+
+        let source = model.markdownSource
+        if model.length <= Const.maxTextSize {
+            applyRenderedHTML(MarkdownHTMLRenderer.htmlDocument(for: source))
+            return
+        }
+
+        renderTask = Task { @concurrent [weak self] in
+            let html = MarkdownHTMLRenderer.htmlDocument(for: source)
+            guard !Task.isCancelled else { return }
+            await self?.applyRenderedHTML(html)
+        }
+    }
+
+    private func applyRenderedHTML(_ html: String) {
+        guard !hasLoadedRenderedContent else { return }
+        hasLoadedRenderedContent = true
+        renderTask = nil
+        webView.loadHTMLString(html, baseURL: URL(fileURLWithPath: "/"))
+    }
+
+    private func loadSourceContentIfNeeded() {
+        guard !hasLoadedSourceContent else { return }
+        hasLoadedSourceContent = true
+        applyOriginalContent(source: model.markdownSource)
     }
 
     private func applyOriginalContent(source: String) {
@@ -157,6 +193,9 @@ final class PreviewMarkdownView: NSView, WKNavigationDelegate, WKUIDelegate {
             )
             sourceTextView.textStorage?.setAttributedString(mutable)
         }
+        if let content = sourceTextView.textStorage {
+            model.cachePreviewColors(content)
+        }
     }
 
     private func applyMarkdownSourceContent(_ source: String) {
@@ -164,19 +203,23 @@ final class PreviewMarkdownView: NSView, WKNavigationDelegate, WKUIDelegate {
             string: source,
             attributes: [
                 .font: NSFont.monospacedSystemFont(ofSize: NSFont.systemFontSize - 1, weight: .regular),
-                .foregroundColor: NSColor.labelColor,
+                .foregroundColor: NSColor.labelColor
             ]
         ))
     }
 
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
-        if let sourceBackgroundColor {
-            sourceTextView.backgroundColor = sourceBackgroundColor
-            layer?.backgroundColor = sourceBackgroundColor.cgColor
-        } else {
-            sourceTextView.backgroundColor = .textBackgroundColor
-            layer?.backgroundColor = nil
+        updateSourceBackground()
+    }
+
+    private func updateSourceBackground() {
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            let background = model.type == .rich
+                ? model.richBackground(on: .textBackgroundColor, forPreview: true)
+                : nil
+            sourceTextView.backgroundColor = background ?? .textBackgroundColor
+            layer?.backgroundColor = isRendered ? nil : sourceTextView.backgroundColor.cgColor
         }
     }
 
@@ -192,9 +235,16 @@ final class PreviewMarkdownView: NSView, WKNavigationDelegate, WKUIDelegate {
             return
         }
 
-        guard let url = navigationAction.request.url,
-              ["http", "https", "mailto"].contains(url.scheme?.lowercased() ?? "")
-        else {
+        guard let url = navigationAction.request.url else {
+            decisionHandler(.cancel)
+            return
+        }
+        if url.isFileURL, url.path == "/", url.fragment != nil {
+            decisionHandler(.allow)
+            return
+        }
+
+        guard ["http", "https", "mailto"].contains(url.scheme?.lowercased() ?? "") else {
             decisionHandler(.cancel)
             return
         }

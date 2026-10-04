@@ -27,15 +27,15 @@ struct AboutSettingView: View {
     private let currentYear = Calendar.current.component(.year, from: Date())
 
     var body: some View {
-        VStack {
+        ScrollView(.vertical) {
+            VStack {
             VStack(spacing: 8) {
                 if let appIcon = NSImage(named: "AppIcon") {
                     Image(nsImage: appIcon)
                         .resizable()
-                        .frame(width: 120, height: 120)
-                        .clipShape(.rect(cornerRadius: Const.radius))
+                        .frame(width: 96, height: 96)
                         .shadow(
-                            color: Color.accentColor.opacity(0.15),
+                            color: Color.blue.opacity(0.15),
                             radius: Const.radius,
                             x: 0,
                             y: 6
@@ -51,7 +51,7 @@ struct AboutSettingView: View {
                 }
                 Text(appName)
                     .font(
-                        .system(size: 28, weight: .medium, design: .default)
+                        .system(size: 24, weight: .medium, design: .default)
                     )
 
                 Text("\(appVersion) (\(buildNumber))")
@@ -60,13 +60,15 @@ struct AboutSettingView: View {
             }
             .padding(.top, Const.space16)
 
-            Button(action: {
-                checkForUpdates()
-            }) {
+            Button(
+                action: {
+                    checkForUpdates()
+                },
+                label: {
                 HStack(spacing: 8) {
                     Image(systemName: "arrow.down.circle")
                         .font(.system(size: 14))
-                    Text(.settingAboutCheckForUpdates)
+                    Text(.aboutCheckForUpdates)
                         .font(.system(size: 14, weight: .regular))
                         .lineLimit(1)
                         .fixedSize(horizontal: true, vertical: false)
@@ -78,7 +80,8 @@ struct AboutSettingView: View {
                         .fill(Color.accentColor)
                 )
                 .foregroundStyle(.white)
-            }
+                }
+            )
             .buttonStyle(.plain)
             .shadow(
                 color: Color.accentColor.opacity(0.3),
@@ -87,41 +90,44 @@ struct AboutSettingView: View {
                 y: 4
             )
             .padding(Const.space32)
-
-            Spacer()
-
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(spacing: Const.space12) {
                 if let updater = AppDelegate.shared?.updaterController.updater {
                     UpdaterSettingsView(updater: updater)
                 }
                 HStack(spacing: 20) {
                     if let github = URL(string: "https://github.com/Ineffable919/clipboard") {
-                        Link(String(localized: .settingAboutGithub), destination: github)
+                        Link(String(localized: .aboutGithub), destination: github)
                     }
                     if let issues = URL(string: "https://github.com/Ineffable919/clipboard/issues") {
-                        Link(String(localized: .settingAboutFeedback), destination: issues)
+                        Link(String(localized: .aboutFeedback), destination: issues)
                     }
                 }
                 VStack(spacing: Const.space4) {
-                    Text(.settingAboutMadeForMac)
+                    Text(.aboutMadeForMac)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Text(
                         String.localizedStringWithFormat(
                             String(
-                                localized: "settingAboutCopyrightFormat",
+                                localized: "aboutCopyrightFormat",
                                 defaultValue: "Copyright © %lld Crown. All rights reserved.",
                                 table: "Localizable"
                             ),
                             currentYear
-                        )
+                        ),
                     )
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 }
                 .padding(.bottom, Const.space16)
             }
+            .frame(maxWidth: .infinity)
         }
+        .scrollIndicators(.hidden)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 

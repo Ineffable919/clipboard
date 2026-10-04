@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ToggleRow: View {
     @Binding var isEnabled: Bool
-    let title: String
+    let title: LocalizedStringResource
 
     var body: some View {
         HStack(alignment: .center, spacing: Const.space12) {

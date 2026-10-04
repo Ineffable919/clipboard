@@ -146,15 +146,15 @@ enum PasteUserDefaults {
     /// 粘贴时去掉末尾换行符
     @UserDefaultsWrapper(.removeTailingNewline, defaultValue: false)
     static var removeTailingNewline
-    /// 背景类型(仅macOS 26+, 0:液态玻璃 1:毛玻璃)
-    @UserDefaultsWrapper(.backgroundType, defaultValue: 0)
-    static var backgroundType
     /// 状态栏图标
     @UserDefaultsWrapper(.showMenuBarIcon, defaultValue: true)
     static var showMenuBarIcon
     /// Dock 图标
     @UserDefaultsWrapper(.showDockIcon, defaultValue: true)
     static var showDockIcon
+    /// 已完成首次启动欢迎页
+    @UserDefaultsWrapper(.welcomeDone, defaultValue: false)
+    static var welcomeDone
 }
 
 @propertyWrapper
@@ -229,11 +229,6 @@ extension UserDefaults {
     @objc dynamic var appearance: Bool {
         get { bool(forKey: "appearance") }
         set { set(newValue, forKey: "appearance") }
-    }
-
-    @objc dynamic var backgroundType: Int {
-        get { integer(forKey: "backgroundType") }
-        set { set(newValue, forKey: "backgroundType") }
     }
 
     @objc dynamic var displayMode: Int {

@@ -5,9 +5,7 @@
 </div>
     <div align="center"><strong>English</strong> | <a href="https://github.com/Ineffable919/clipboard/blob/master/README.md">中文</a></div>
 </p>
-<img src="temp.png">
-
-<img src="float.png">
+<img src="examples.png">
 
 ## Download
 

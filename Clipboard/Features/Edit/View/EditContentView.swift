@@ -14,7 +14,6 @@ final class EditContentView: NSVisualEffectView {
     var onCancel: (() -> Void)?
     var onSave: ((EditedContent) -> Void)?
     var onModeChange: ((EditMode, Bool) -> Void)?
-    var onInitialContentReady: (() -> Void)?
 
     /// 当前编辑内容
     var currentContent: EditedContent {
@@ -34,6 +33,10 @@ final class EditContentView: NSVisualEffectView {
     private let textEditor = RichTextEditorView()
     private let jsonEditor = JSONEditorView()
     private let statisticsBar = EditStatisticsBar()
+    private let loadingView = NSView()
+    private let loadingIndicator = NSProgressIndicator()
+
+    let initialMode: EditMode
 
     private let editorCard: NSView = {
         let view = NSView()
@@ -48,10 +51,14 @@ final class EditContentView: NSVisualEffectView {
     private var statisticsTask: Task<Void, Never>?
     private var jsonAnalysisTask: Task<Void, Never>?
     private var transformTask: Task<Void, Never>?
+    private var jsonStatistics: TextStatistics?
+    private var isClosed = false
 
     // MARK: - Init
 
     init(model: PasteboardModel) {
+        let prefix = String(bytes: model.data.prefix(4096), encoding: .utf8) ?? ""
+        initialMode = JSONTransformer.looksLikeJSON(prefix) ? .json : .text
         super.init(frame: .zero)
         material = .popover
         blendingMode = .behindWindow
@@ -75,6 +82,16 @@ final class EditContentView: NSVisualEffectView {
         transformTask?.cancel()
     }
 
+    func cancelWork() {
+        isClosed = true
+        contentTask?.cancel()
+        statisticsTask?.cancel()
+        jsonAnalysisTask?.cancel()
+        transformTask?.cancel()
+        jsonEditor.cancelWork()
+        setLoading(false)
+    }
+
     // MARK: - Setup
 
     private func setup() {
@@ -82,6 +99,8 @@ final class EditContentView: NSVisualEffectView {
         addSubview(editorCard)
         editorCard.addSubview(textEditor)
         editorCard.addSubview(jsonEditor)
+        editorCard.addSubview(loadingView)
+        loadingView.addSubview(loadingIndicator)
         addSubview(statisticsBar)
 
         toolbar.snp.makeConstraints { make in
@@ -103,6 +122,8 @@ final class EditContentView: NSVisualEffectView {
             make.edges.equalToSuperview()
         }
 
+        setupLoading()
+
         statisticsBar.snp.makeConstraints { make in
             make.leading.trailing.bottom.equalToSuperview()
             make.height.equalTo(36)
@@ -110,10 +131,11 @@ final class EditContentView: NSVisualEffectView {
 
         toolbar.onCancel = { [weak self] in self?.onCancel?() }
         toolbar.onSave = { [weak self] in
-            guard let self, isLoaded else { return }
+            guard let self, isLoaded, !jsonEditor.isBusy else { return }
             onSave?(currentContent)
         }
         toolbar.onFormat = { [weak self] action in
+            guard self?.isLoaded == true else { return }
             self?.textEditor.applyFormat(action)
         }
         toolbar.onModeChange = { [weak self] mode in
@@ -131,17 +153,34 @@ final class EditContentView: NSVisualEffectView {
         textEditor.onTextChange = { [weak self] in
             self?.scheduleStatsUpdate()
         }
-        jsonEditor.onTextChange = { [weak self] in
-            self?.scheduleJSONAnalysis()
+        jsonEditor.onTextChange = { [weak self] lineCount in
+            guard let self else { return }
+            jsonStatistics = nil
+            scheduleJSONAnalysis(
+                immediately: jsonEditor.knownValidity != nil,
+                knownValidity: jsonEditor.knownValidity, knownLineCount: lineCount
+            )
+        }
+        jsonEditor.onBusyChange = { [weak self] busy in
+            guard let self else { return }
+            if busy {
+                transformTask?.cancel()
+                jsonAnalysisTask?.cancel()
+            }
+            toolbar.setJSONToolsEnabled(!busy)
+            setLoading(busy)
         }
         jsonEditor.onCursorChange = { [weak self] line, column in
             self?.statisticsBar.updateCursor(line: line, column: column)
         }
 
         jsonEditor.isHidden = true
-        toolbar.setMode(.text)
+        textEditor.isHidden = true
+        toolbar.setMode(initialMode)
+        toolbar.setLoading(true)
         toolbar.setModeToggleVisible(false)
-        statisticsBar.setMode(.text)
+        statisticsBar.setMode(initialMode)
+        statisticsBar.isHidden = true
     }
 
     // MARK: - Content
@@ -149,24 +188,11 @@ final class EditContentView: NSVisualEffectView {
     private func loadContent(from model: PasteboardModel) {
         let data = model.data
         let typeRawValue = model.pasteboardType.rawValue
+        let width = jsonEditor.preparationWidth
         contentTask?.cancel()
         contentTask = Task { @MainActor [weak self] in
             let worker = Task.detached(priority: .userInitiated) {
-                let text = EditTextLoader.load(
-                    data: data,
-                    typeRawValue: typeRawValue
-                )
-                let looksLikeJSON = JSONTransformer.looksLikeJSON(text)
-                let isValidJSON = looksLikeJSON
-                    && JSONTransformer.isValid(text)
-                let lineStarts = isValidJSON
-                    ? JSONLineIndex.build(for: text)
-                    : nil
-                return (
-                    text: text,
-                    isValidJSON: isValidJSON,
-                    lineStarts: lineStarts
-                )
+                JSONDocument.load(data: data, type: typeRawValue, width: width)
             }
             let loaded = await withTaskCancellationHandler {
                 await worker.value
@@ -175,13 +201,17 @@ final class EditContentView: NSVisualEffectView {
             }
 
             guard let self, !Task.isCancelled else { return }
-            let initialMode: EditMode = loaded.isValidJSON ? .json : .text
+            let initialMode: EditMode = loaded.isValid ? .json : .text
             isLoaded = true
-            toolbar.setModeToggleVisible(loaded.isValidJSON)
+            toolbar.setLoading(false)
+            setLoading(false)
+            statisticsBar.isHidden = false
+            toolbar.setModeToggleVisible(loaded.isValid)
             applyMode(
                 initialMode,
                 text: loaded.text,
-                initialLineStarts: loaded.lineStarts
+                initialDocument: loaded.index,
+                preparedText: loaded.preparedText
             )
         }
     }
@@ -189,14 +219,15 @@ final class EditContentView: NSVisualEffectView {
     // MARK: - Mode
 
     private func requestMode(_ newMode: EditMode) {
+        guard isLoaded else { return }
         guard newMode != mode else { return }
 
         if newMode == .json, textEditor.hasRichFormatting, let window {
             Task { @MainActor [weak self, weak window] in
                 guard let self, let window else { return }
-                let alert = NSAlert()
-                alert.messageText = String(localized: .jsonRichFormatWarningTitle)
-                alert.informativeText = String(localized: .jsonRichFormatWarningMessage)
+                let alert = NSAlert.appAlert()
+                alert.messageText = String(localized: .jsonRichWarningTitle)
+                alert.informativeText = String(localized: .jsonRichWarningMessage)
                 alert.alertStyle = .warning
                 alert.addButton(withTitle: String(localized: .commonConfirm))
                 alert.addButton(withTitle: String(localized: .commonCancel))
@@ -213,12 +244,13 @@ final class EditContentView: NSVisualEffectView {
     private func applyMode(
         _ newMode: EditMode,
         text initialText: String? = nil,
-        initialLineStarts: [Int]? = nil
+        initialDocument: JSONFoldIndex.Document? = nil,
+        preparedText: JSONPreparedText? = nil
     ) {
         transformTask?.cancel()
         jsonAnalysisTask?.cancel()
+        jsonStatistics = nil
         jsonEditor.isBusy = false
-        toolbar.setJSONToolsEnabled(true)
 
         let text: String = if let initialText {
             initialText
@@ -240,8 +272,10 @@ final class EditContentView: NSVisualEffectView {
         jsonEditor.isHidden = !isJSON
 
         if isJSON {
+            jsonEditor.indentation = JSONIndentation.detect(in: text)
+            toolbar.setIndentation(jsonEditor.indentation)
             textEditor.setText("")
-            jsonEditor.setText(text, lineStarts: initialLineStarts)
+            jsonEditor.setText(text, document: initialDocument, preparedText: preparedText)
         } else {
             jsonEditor.setText("")
             textEditor.setText(text)
@@ -256,7 +290,9 @@ final class EditContentView: NSVisualEffectView {
         if isJSON {
             scheduleJSONAnalysis(
                 immediately: true,
-                knownValidity: isInitialLoad ? true : nil
+                knownValidity: isInitialLoad ? true : nil,
+                knownLineCount: initialDocument?.statisticsLineCount,
+                initialText: initialText
             )
             jsonEditor.focus(revealingSelection: !isInitialLoad)
         } else {
@@ -264,9 +300,6 @@ final class EditContentView: NSVisualEffectView {
             textEditor.focus()
         }
         scrollActiveEditorToTop()
-        if isInitialLoad {
-            onInitialContentReady?()
-        }
     }
 
     func scrollActiveEditorToTop() {
@@ -281,9 +314,14 @@ final class EditContentView: NSVisualEffectView {
     private func updateStats(for text: String) {
         statisticsTask?.cancel()
         statisticsTask = Task { @MainActor [weak self] in
-            let stats = await Task.detached(priority: .utility) {
+            let worker = Task.detached(priority: .utility) {
                 TextStatistics(from: text)
-            }.value
+            }
+            let stats = await withTaskCancellationHandler {
+                await worker.value
+            } onCancel: {
+                worker.cancel()
+            }
 
             guard let self, !Task.isCancelled else { return }
             statisticsBar.update(stats)
@@ -294,63 +332,41 @@ final class EditContentView: NSVisualEffectView {
         statisticsTask?.cancel()
         statisticsTask = Task { @MainActor [weak self] in
             try? await Task.sleep(for: .milliseconds(300))
-            guard let self, !Task.isCancelled else { return }
-
-            let text = textEditor.currentText
-
-            let stats = await Task.detached(priority: .utility) {
-                TextStatistics(from: text)
-            }.value
-
-            guard !Task.isCancelled else { return }
-            statisticsBar.update(stats)
-        }
-    }
-
-    private func scheduleJSONAnalysis(
-        immediately: Bool = false,
-        knownValidity: Bool? = nil
-    ) {
-        jsonAnalysisTask?.cancel()
-        jsonAnalysisTask = Task { @MainActor [weak self] in
-            if !immediately {
-                try? await Task.sleep(for: .milliseconds(300))
-            }
-            guard let self, !Task.isCancelled, mode == .json else { return }
-            let text = jsonEditor.currentText
-            statisticsBar.setProcessing()
-            let worker = Task.detached(priority: .utility) {
-                let stats = TextStatistics(from: text)
-                let isValid = knownValidity
-                    ?? JSONTransformer.isValid(text)
-                return (stats, isValid)
-            }
-            let result = await withTaskCancellationHandler {
-                await worker.value
-            } onCancel: {
-                worker.cancel()
-            }
-
-            guard !Task.isCancelled, mode == .json else { return }
-            statisticsBar.update(result.0)
-            statisticsBar.setJSONValid(result.1)
+            guard !Task.isCancelled, let text = self?.textEditor.currentText else { return }
+            self?.updateStats(for: text)
         }
     }
 
     // MARK: - JSON Actions
 
+    private func setLoading(_ loading: Bool) {
+        loadingView.isHidden = !loading
+        if loading {
+            loadingIndicator.startAnimation(nil)
+        } else {
+            loadingIndicator.stopAnimation(nil)
+        }
+    }
+
     private func performJSONAction(_ action: JSONToolAction) {
+        guard isLoaded, !jsonEditor.isBusy else { return }
         let target = jsonEditor.transformTarget()
+        let replacesDocument = target.range.location == 0
+            && target.range.length == (jsonEditor.currentText as NSString).length
+        let width = jsonEditor.preparationWidth
+        let knownValidity = replacesDocument ? jsonEditor.knownValidity : nil
         transformTask?.cancel()
         jsonAnalysisTask?.cancel()
         jsonEditor.isBusy = true
-        statisticsBar.setProcessing()
 
         transformTask = Task { @MainActor [weak self] in
             let worker = Task.detached(priority: .userInitiated) {
                 do {
-                    return try Result<String, JSONTransformError>.success(
-                        JSONTransformer.transform(target.text, action: action)
+                    return try Result<(JSONDocument, Bool), JSONTransformError>.success(
+                        JSONDocument.transform(
+                            target.text, action: action, entireDocument: replacesDocument,
+                            knownValidity: knownValidity, width: width
+                        )
                     )
                 } catch let error as JSONTransformError {
                     return .failure(error)
@@ -365,23 +381,25 @@ final class EditContentView: NSVisualEffectView {
             }
 
             guard let self, !Task.isCancelled else { return }
-            jsonEditor.isBusy = false
+            defer { jsonEditor.isBusy = false }
 
             switch result {
-            case let .success(text):
-                let changed = jsonEditor.replaceText(text, in: target.range)
-                if !changed {
-                    scheduleJSONAnalysis(immediately: true)
+            case let .success((document, hasChanges)):
+                let changed = hasChanges && jsonEditor.replaceText(
+                    document.text, in: target.range, document: document.index,
+                    previousText: target.text, preparedText: document.preparedText,
+                    knownValidity: document.isValid
+                )
+                if !changed, jsonStatistics == nil {
+                    scheduleJSONAnalysis(
+                        immediately: true, knownValidity: replacesDocument ? document.isValid : jsonEditor.knownValidity
+                    )
                 }
-            case let .failure(error):
-                switch error {
-                case let .duplicateKey(key):
-                    statisticsBar.setError(String(localized: .jsonDuplicateKey(key)))
-                case .invalidJSON:
-                    statisticsBar.setError(String(localized: .jsonTransformFailed))
-                case .cancelled:
-                    scheduleJSONAnalysis(immediately: true)
+                if !changed, let validity = jsonEditor.knownValidity {
+                    statisticsBar.setJSONValid(validity)
                 }
+                jsonEditor.scrollToTop()
+            case let .failure(error): showJSONError(error)
             }
         }
     }
@@ -397,10 +415,89 @@ final class EditContentView: NSVisualEffectView {
         editorCard.layer?.borderWidth = 1
         editorCard.layer?.backgroundColor = NSColor.textBackgroundColor.cgColor
         editorCard.layer?.borderColor = NSColor.separatorColor.cgColor
+        loadingView.layer?.backgroundColor = NSColor.windowBackgroundColor.cgColor
     }
 
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
         needsDisplay = true
+    }
+}
+
+private extension EditContentView {
+    func setupLoading() {
+        loadingView.wantsLayer = true
+        loadingView.layer?.cornerRadius = 8
+        loadingView.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.size.equalTo(48)
+        }
+        loadingIndicator.style = .spinning
+        loadingIndicator.controlSize = .regular
+        loadingIndicator.isDisplayedWhenStopped = false
+        loadingIndicator.startAnimation(nil)
+        loadingIndicator.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+            make.size.equalTo(24)
+        }
+    }
+
+    func scheduleJSONAnalysis(
+        immediately: Bool = false,
+        knownValidity: Bool? = nil,
+        knownLineCount: Int? = nil,
+        initialText: String? = nil
+    ) {
+        guard !isClosed else { return }
+        jsonAnalysisTask?.cancel()
+        jsonEditor.knownValidity = knownValidity
+        if let knownValidity {
+            statisticsBar.setJSONValid(knownValidity)
+        } else {
+            statisticsBar.setProcessing()
+        }
+        jsonAnalysisTask = Task { @MainActor [weak self] in
+            if !immediately {
+                try? await Task.sleep(for: .milliseconds(300))
+            }
+            guard !Task.isCancelled, self?.mode == .json,
+                  let text = initialText ?? self?.jsonEditor.currentText else { return }
+            if knownValidity == nil {
+                let validator = Task.detached(priority: .utility) {
+                    JSONTransformer.isValid(text)
+                }
+                let isValid = await withTaskCancellationHandler {
+                    await validator.value
+                } onCancel: {
+                    validator.cancel()
+                }
+                guard !Task.isCancelled else { return }
+                self?.jsonEditor.knownValidity = isValid
+                self?.statisticsBar.setJSONValid(isValid)
+            }
+            let worker = Task.detached(priority: .utility) {
+                TextStatistics(from: text, lineCount: knownLineCount)
+            }
+            let result = await withTaskCancellationHandler {
+                await worker.value
+            } onCancel: {
+                worker.cancel()
+            }
+
+            guard let self, !Task.isCancelled, mode == .json else { return }
+            jsonStatistics = result
+            statisticsBar.update(result)
+        }
+    }
+
+    func showJSONError(_ error: JSONTransformError) {
+        switch error {
+        case let .duplicateKey(key):
+            statisticsBar.setError(String(localized: .jsonDuplicateKey(key)))
+        case .invalidJSON:
+            statisticsBar.setError(String(localized: .jsonTransformFailed))
+        case .cancelled:
+            scheduleJSONAnalysis(immediately: true, knownValidity: jsonEditor.knownValidity)
+        }
     }
 }

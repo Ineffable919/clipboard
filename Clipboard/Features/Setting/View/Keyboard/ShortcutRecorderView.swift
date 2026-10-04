@@ -12,6 +12,9 @@ import SwiftUI
 struct ShortcutRecorder: View {
     private let hotKeyId: String
     private let onShortcutChanged: (() -> Void)?
+    private let width: CGFloat
+    private let minHeight: CGFloat
+    private let transparent: Bool
 
     @State private var shortcut: KeyboardShortcut
     @State private var displayText: String
@@ -26,9 +29,15 @@ struct ShortcutRecorder: View {
     init(
         _ key: String,
         binding: Binding<KeyboardShortcut>? = nil,
+        width: CGFloat = 120.0,
+        minHeight: CGFloat = 25.0,
+        transparent: Bool = false,
         onShortcutChanged: (() -> Void)? = nil
     ) {
         hotKeyId = key
+        self.width = width
+        self.minHeight = minHeight
+        self.transparent = transparent
         self.onShortcutChanged = onShortcutChanged
 
         let saved =
@@ -55,7 +64,7 @@ struct ShortcutRecorder: View {
                 Button {
                     shortcut = KeyboardShortcut.empty
                     displayText = String(
-                        localized: .settingKeyboardShortcutPlaceholder
+                        localized: .keyboardShortcutHint
                     )
                     save()
                 } label: {
@@ -68,11 +77,16 @@ struct ShortcutRecorder: View {
                 .buttonStyle(.plain)
             }
         }
-        .frame(maxWidth: 120.0, minHeight: 25.0)
+        .frame(width: width)
+        .frame(minHeight: minHeight)
         .padding(.vertical, Const.space2)
         .background(
             RoundedRectangle(cornerRadius: Const.settingsRadius)
-                .fill(colorScheme == .dark ? Const.darkBackground : .white)
+                .fill(
+                    transparent
+                        ? .clear
+                        : colorScheme == .dark ? Const.darkBackground : .white
+                )
                 .overlay(
                     RoundedRectangle(cornerRadius: Const.settingsRadius)
                         .strokeBorder(borderColor, lineWidth: borderSize)
@@ -97,7 +111,7 @@ struct ShortcutRecorder: View {
             value = shortcut
             if shortcut.isEmpty {
                 displayText = String(
-                    localized: .settingKeyboardShortcutPlaceholder
+                    localized: .keyboardShortcutHint
                 )
             }
         }
@@ -106,6 +120,13 @@ struct ShortcutRecorder: View {
         }
         .onChange(of: shortcut) { _, _ in
             value = shortcut
+        }
+        .onChange(of: value) { _, newValue in
+            guard newValue != shortcut else { return }
+            shortcut = newValue
+            displayText = newValue.isEmpty
+                ? String(localized: .keyboardShortcutHint)
+                : newValue.displayString
         }
     }
 
@@ -127,14 +148,14 @@ struct ShortcutRecorder: View {
 
     private func startRecording() {
         isRecording = true
-        displayText = String(localized: .settingKeyboardShortcutPrompt)
+        displayText = String(localized: .keyboardShortcutTip)
         installEventHandle()
     }
 
     private func stopRecording() {
         isRecording = false
         if shortcut.isEmpty {
-            displayText = String(localized: .settingKeyboardShortcutPlaceholder)
+            displayText = String(localized: .keyboardShortcutHint)
         } else {
             displayText = shortcut.displayString
         }
@@ -170,7 +191,7 @@ struct ShortcutRecorder: View {
     private func handleMouseEvent(_ event: NSEvent) -> NSEvent? {
         guard isRecording else { return event }
         guard let window = event.window,
-              window === SettingWindowController.shared.window
+              window.isKeyWindow
         else {
             return event
         }
@@ -187,7 +208,7 @@ struct ShortcutRecorder: View {
     }
 
     private func handleKeyEvent(_ event: NSEvent) -> NSEvent? {
-        guard event.window === SettingWindowController.shared.window else {
+        guard event.window?.isKeyWindow == true else {
             return event
         }
         guard isRecording else { return event }
