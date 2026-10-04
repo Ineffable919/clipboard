@@ -11,7 +11,7 @@ import SwiftUI
 
 struct GeneralSettingView: View {
     var body: some View {
-        ScrollView(.vertical) {
+        let content = ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: 20) {
                 GeneralPreferencesCard()
                 PasteItemsSettingsSection()
@@ -23,6 +23,12 @@ struct GeneralSettingView: View {
         }
         .scrollIndicators(.automatic)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+        if #available(macOS 26.0, *) {
+            content.scrollEdgeEffectStyle(.soft, for: .top)
+        } else {
+            content
+        }
     }
 }
 

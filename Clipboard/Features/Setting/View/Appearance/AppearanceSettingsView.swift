@@ -5,6 +5,7 @@
 //  Created by crown on 2025/12/05.
 //
 
+import AppKit
 import SwiftUI
 
 struct AppearanceSettingsView: View {
@@ -12,6 +13,14 @@ struct AppearanceSettingsView: View {
 
     @AppStorage(PrefKey.displayMode.rawValue) private var displayModeRaw: Int = 0
     @AppStorage(PrefKey.windowPosition.rawValue) private var windowPositionRaw: Int = 0
+
+    @AppStorage(PrefKey.showMenuBarIcon.rawValue)
+    private var showMenuBarIcon = true
+
+    @AppStorage(PrefKey.showDockIcon.rawValue)
+    private var showDockIcon = true
+
+    @State private var dockIconTask: Task<Void, Never>?
 
     private var displayMode: DisplayMode {
         get { .init(rawValue: displayModeRaw) ?? .drawer }
@@ -27,6 +36,33 @@ struct AppearanceSettingsView: View {
         ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(spacing: Const.space4) {
+                    SettingToggleRow(
+                        title: .generalMenuBarIcon,
+                        isOn: $showMenuBarIcon
+                    )
+                    .padding(.horizontal, Const.space16)
+                    .onChange(of: showMenuBarIcon) { _, newValue in
+                        NotificationCenter.default.post(
+                            name: .menuBarIconVisibilityChanged,
+                            object: newValue
+                        )
+                    }
+
+                    Divider()
+                        .padding(.horizontal, Const.space16)
+
+                    SettingToggleRow(
+                        title: .generalDockIcon,
+                        isOn: $showDockIcon
+                    )
+                    .padding(.horizontal, Const.space16)
+                    .onChange(of: showDockIcon) { _, newValue in
+                        scheduleDockIconUpdate(visible: newValue)
+                    }
+
+                    Divider()
+                        .padding(.horizontal, Const.space16)
+
                     AppearanceSettingsRow()
 
                     Divider()
@@ -57,6 +93,25 @@ struct AppearanceSettingsView: View {
         }
         .scrollIndicators(.hidden)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    // MARK: - Dock 图标显隐
+
+    private func scheduleDockIconUpdate(visible: Bool) {
+        dockIconTask?.cancel()
+        dockIconTask = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(350))
+            guard !Task.isCancelled else { return }
+
+            let target: NSApplication.ActivationPolicy =
+                visible ? .regular : .accessory
+            guard NSApp.activationPolicy() != target else { return }
+
+            NSApp.setActivationPolicy(target)
+            if visible {
+                NSApp.activate()
+            }
+        }
     }
 }
 

@@ -33,10 +33,9 @@ struct AboutSettingView: View {
                 if let appIcon = NSImage(named: "AppIcon") {
                     Image(nsImage: appIcon)
                         .resizable()
-                        .frame(width: 120, height: 120)
-                        .clipShape(.rect(cornerRadius: Const.radius))
+                        .frame(width: 96, height: 96)
                         .shadow(
-                            color: Color.accentColor.opacity(0.15),
+                            color: Color.blue.opacity(0.15),
                             radius: Const.radius,
                             x: 0,
                             y: 6
@@ -52,7 +51,7 @@ struct AboutSettingView: View {
                 }
                 Text(appName)
                     .font(
-                        .system(size: 28, weight: .medium, design: .default)
+                        .system(size: 24, weight: .medium, design: .monospaced)
                     )
 
                 Text("\(appVersion) (\(buildNumber))")

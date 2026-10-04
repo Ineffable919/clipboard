@@ -91,7 +91,7 @@ enum Const {
 
     /// 设置页面
     static let settingWidth: CGFloat = 660.0
-    static let settingHeight: CGFloat = 590.0
+    static let settingHeight: CGFloat = 600.0
 
     static let darkBackground: Color = .init(hex: "#363842")
     static let lightBackground: Color = .init(hex: "#f5f5f5")
