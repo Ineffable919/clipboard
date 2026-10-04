@@ -5,6 +5,75 @@
         <description>Clipboard 应用更新源</description>
         <language>zh-CN</language>
 
+        <!-- 2.2.0 -->
+        <item>
+            <title>Version 2.2.0 (arm64)</title>
+            <description sparkle:format="markdown">
+                <![CDATA[
+## What's new
+
+- 窗口模式新增简洁显示，可在窗口底部切换。
+- 抽屉模式支持拖拽调整历史记录顺序，并同步到窗口模式。
+- 支持同时选择多个标签筛选历史记录。
+- 新增首次启动引导和菜单重启入口。
+
+## Improvements
+
+- 优化大文本与 JSON 编辑性能，支持 JSON 折叠并改进输入和语法高亮。
+- 改进 Markdown 预览、富文本背景和深色模式，优化设置布局。
+- 修复搜索标签删除、方向键导航及卡片滚动和视图残留问题。
+- 完善来源应用信息与备份恢复，修复导入排序和分类冲突。
+]]>
+            </description>
+            <sparkle:fullReleaseNotesLink>
+                https://ineffable919.github.io/clipboard/scripts/release-note.html
+            </sparkle:fullReleaseNotesLink>
+            <pubDate>Sun, 04 Oct 2026 12:59:45 +0800</pubDate>
+            <sparkle:version>140</sparkle:version>
+            <sparkle:shortVersionString>2.2.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
+            <enclosure
+                url="https://github.com/Ineffable919/clipboard/releases/download/2.2.0/Clipboard-2.2.0-arm64.zip"
+                sparkle:arch="arm64"
+                sparkle:edSignature="L/7lgUHqLLDaqFaBv3DW3gGoRjdoAy4u55vdI9qSZANFgB7xdgWEQ0iaASnkJy15bzIG19m/HMYliWv94AbJCA=="
+                length="5044623"
+                type="application/octet-stream" />
+        </item>
+        <item>
+            <title>Version 2.2.0 (x86_64)</title>
+            <description sparkle:format="markdown">
+                <![CDATA[
+## What's new
+
+- 窗口模式新增简洁显示，可在窗口底部切换。
+- 抽屉模式支持拖拽调整历史记录顺序，并同步到窗口模式。
+- 支持同时选择多个标签筛选历史记录。
+- 新增首次启动引导和菜单重启入口。
+
+## Improvements
+
+- 优化大文本与 JSON 编辑性能，支持 JSON 折叠并改进输入和语法高亮。
+- 改进 Markdown 预览、富文本背景和深色模式，优化设置布局。
+- 修复搜索标签删除、方向键导航及卡片滚动和视图残留问题。
+- 完善来源应用信息与备份恢复，修复导入排序和分类冲突。
+]]>
+            </description>
+            <sparkle:fullReleaseNotesLink>
+                https://ineffable919.github.io/clipboard/scripts/release-note.html
+            </sparkle:fullReleaseNotesLink>
+            <pubDate>Sun, 04 Oct 2026 12:59:45 +0800</pubDate>
+            <sparkle:version>140</sparkle:version>
+            <sparkle:shortVersionString>2.2.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://github.com/Ineffable919/clipboard/releases/download/2.2.0/Clipboard-2.2.0-x86_64.zip"
+                sparkle:arch="x86_64"
+                sparkle:edSignature="xU60fbpJ0OZP/4aHXEvGDZzq+wNKBfVbGfDtlA8eIvHj9PhwoOypaCoE7KiT7/ARYqWk5zZsRNK2dRRc32KzAA=="
+                length="5333153"
+                type="application/octet-stream" />
+        </item>
+
         <!-- 2.1 -->
         <item>
             <title>Version 2.1 (arm64)</title>
