@@ -1333,6 +1333,60 @@
         }
       }
     },
+    "generalHistoryLimitConfirmTitle" : {
+      "comment" : "Confirmation title when a new retention limit would delete older history",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Some history items exceed the new limit"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "部分历史记录已超出新期限"
+          }
+        }
+      }
+    },
+    "generalHistoryLimitConfirmMessage" : {
+      "comment" : "Cancel keeps the current retention limit; Delete removes expired history and applies the new limit",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete these items and apply the new limit?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "是否删除这些记录并应用新设置？"
+          }
+        }
+      }
+    },
+    "generalHistoryLimitFailed" : {
+      "comment" : "Error when checking or deleting expired history while applying a retention limit",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The history retention limit could not be updated. Your current setting has been kept. Please try again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法更新历史记录的保留期限，当前设置已保留，请稍后重试。"
+          }
+        }
+      }
+    },
     "generalHistoryTitle" : {
       "comment" : "Section title: keep history",
       "extractionState" : "manual",

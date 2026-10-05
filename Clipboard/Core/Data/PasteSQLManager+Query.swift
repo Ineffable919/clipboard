@@ -3,6 +3,12 @@ import Foundation
 import SQLite
 
 extension PasteSQLManager {
+    func hasExpiredHistory(before cutoff: Int64) throws -> Bool {
+        guard let connection else { throw CocoaError(.fileReadUnknown) }
+        let query = table.filter(Col.timestamp < cutoff && Col.group == -1)
+        return try connection.scalar(query.exists)
+    }
+
     func getTotalCount() async -> Int {
         do {
             return try connection?.scalar(table.count) ?? 0

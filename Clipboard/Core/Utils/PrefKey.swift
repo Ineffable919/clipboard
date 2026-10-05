@@ -114,12 +114,12 @@ enum HistoryTimeUnit: Equatable {
 
     var rawValue: Int {
         switch self {
-        case let .days(n):
-            n // 1-6
-        case let .weeks(n):
-            6 + n // 7-9
-        case let .months(n):
-            9 + n // 10-20
+        case let .days(count):
+            count // 1-6
+        case let .weeks(count):
+            6 + count // 7-9
+        case let .months(count):
+            9 + count // 10-20
         case .year:
             21
         case .forever:
@@ -140,6 +140,24 @@ enum HistoryTimeUnit: Equatable {
         default:
             self = .forever
         }
+    }
+
+    /// 与历史清理共用日历计算，永久保留不产生截止时间
+    func cutoffTimestamp(at date: Date = .now, calendar: Calendar = .current) -> Int64? {
+        let components: DateComponents
+        switch self {
+        case let .days(count):
+            components = DateComponents(day: -count)
+        case let .weeks(count):
+            components = DateComponents(day: -count * 7)
+        case let .months(count):
+            components = DateComponents(month: -count)
+        case .year:
+            components = DateComponents(year: -1)
+        case .forever:
+            return nil
+        }
+        return calendar.date(byAdding: components, to: date).map { Int64($0.timeIntervalSince1970) }
     }
 
     var displayText: LocalizedStringResource {

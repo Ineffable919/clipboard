@@ -177,36 +177,62 @@ extension PasteDataStore {
     }
 
     func clearData(for timeUnit: HistoryTimeUnit) {
-        var dateCom = DateComponents()
+        guard let cutoff = timeUnit.cutoffTimestamp() else { return }
+        log.info("清理过期数据，截止时间戳：\(cutoff)")
+        let list = dataList.value.filter { $0.group != -1 || $0.timestamp >= cutoff }
+        updateData(with: list)
+        deleteItems(filter: Col.timestamp < cutoff && Col.group == -1)
+    }
 
-        switch timeUnit {
-        case let .days(days):
-            dateCom = DateComponents(calendar: Calendar.current, day: -days)
-        case let .weeks(weeks):
-            dateCom = DateComponents(
-                calendar: Calendar.current,
-                day: -weeks * 7
-            )
-        case let .months(months):
-            dateCom = DateComponents(
-                calendar: Calendar.current,
-                month: -months
-            )
-        case .year:
-            dateCom = DateComponents(calendar: Calendar.current, year: -1)
-        case .forever:
-            return
-        }
+    /// 确认并清理超出新期限的记录；设置仅由调用方在成功后保存
+    func confirmHistoryLimit(_ timeUnit: HistoryTimeUnit) async -> Bool {
+        guard let cutoff = timeUnit.cutoffTimestamp() else { return true }
+        do {
+            guard try await sqlManager.hasExpiredHistory(before: cutoff) else { return true }
+            guard let window = SettingWindowController.shared.window, window.isVisible else { return false }
+            let alert = NSAlert.appAlert()
+            alert.alertStyle = .warning
+            alert.messageText = String(localized: .generalHistoryLimitConfirmTitle)
+            alert.informativeText = String(localized: .generalHistoryLimitConfirmMessage)
+            alert.addButton(withTitle: String(localized: .commonCancel))
+            let deleteButton = alert.addButton(withTitle: String(localized: .delete))
+            deleteButton.hasDestructiveAction = true
+            guard await alert.beginSheetModal(for: window) == .alertSecondButtonReturn else { return false }
 
-        if let deadDate = Calendar.current.date(byAdding: dateCom, to: Date()) {
-            let deadTime = Int64(deadDate.timeIntervalSince1970)
-            log.info("清理过期数据，截止时间戳：\(deadTime)")
-            let filteredList = dataList.value.filter {
-                $0.timestamp > deadTime
+            try await sqlManager.deleteExpiredHistory(before: cutoff)
+            PasteMetadataCache.shared.invalidateAllCaches()
+            await reloadHistory()
+            return true
+        } catch {
+            log.error("应用历史保留期限失败：\(error)")
+            if let window = SettingWindowController.shared.window, window.isVisible {
+                let alert = NSAlert.appAlert()
+                alert.alertStyle = .warning
+                alert.messageText = String(localized: .generalHistoryLimitFailed)
+                alert.addButton(withTitle: String(localized: .commonConfirm))
+                await alert.beginSheetModal(for: window)
             }
-            updateData(with: filteredList)
-            deleteItems(filter: Col.timestamp < deadTime && Col.group == -1)
+            return false
         }
+    }
+
+    func loadHistoryPage() async -> [PasteboardModel]? {
+        while !Task.isCancelled {
+            let revision = listRevision
+            let filterVersion = filterRevision
+            let filter = isInFilterMode ? currentFilter : nil
+            let rows = await sqlManager.search(filter: filter ?? (Col.hidden == 0), limit: pageSize)
+            let list = await mapRows(rows)
+            let count = await sqlManager.getTotalCount()
+            let filtered = if let filter { await sqlManager.getCount(filter: filter) } else { count }
+            guard !Task.isCancelled else { return nil }
+            guard revision == listRevision, filterVersion == filterRevision else { continue }
+            totalCount = count
+            filteredCount = filtered
+            setHasMoreData(list.count < filtered)
+            return list
+        }
+        return nil
     }
 
     func clearAllData() {

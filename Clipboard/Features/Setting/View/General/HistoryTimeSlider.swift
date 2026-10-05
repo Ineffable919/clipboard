@@ -77,7 +77,6 @@ struct HistoryTimeSlider: View {
                                 ) { index, label in
                                     let position = tickPosition(for: index, in: width)
                                     Text(label)
-                                        .font(.callout)
                                         .foregroundStyle(.primary)
                                         .fixedSize(horizontal: true, vertical: false)
                                         .alignmentGuide(.leading) { dimensions in
@@ -95,8 +94,8 @@ struct HistoryTimeSlider: View {
 
                     if isEditing {
                         Text(currentTimeUnit.displayText)
-                            .font(.caption.weight(.medium))
-                            .foregroundStyle(.secondary)
+                            .font(.caption)
+                            .foregroundStyle(.primary)
                     }
                 }
             }
@@ -104,6 +103,11 @@ struct HistoryTimeSlider: View {
         }
         .onAppear {
             sliderValue = internalValueToSliderValue(selectedTimeUnit.rawValue)
+        }
+        .onChange(of: selectedTimeUnit) { _, newValue in
+            if !isEditing {
+                sliderValue = internalValueToSliderValue(newValue.rawValue)
+            }
         }
     }
 

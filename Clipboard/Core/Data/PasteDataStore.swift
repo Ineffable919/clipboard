@@ -50,6 +50,7 @@ final class PasteDataStore {
     let sqlManager = PasteSQLManager.manager
     private var searchTask: Task<Void, Error>?
     private var loadPageTask: Task<Void, Never>?
+    private var isReloading = false
     var repairingTagIds = Set<Int64>()
     let clearingHistory = CurrentValueSubject<Bool, Never>(false)
     private var orderRevision = 0
@@ -88,7 +89,7 @@ final class PasteDataStore {
 
 extension PasteDataStore {
     func loadNextPage() {
-        guard !isLoadingPage, !isReordering else { return }
+        guard !isLoadingPage, !isReordering, !isReloading else { return }
         let effectiveTotal = isInFilterMode ? filteredCount : totalCount
         guard dataList.value.count < effectiveTotal else { return }
 
@@ -338,6 +339,19 @@ extension PasteDataStore {
         isLoadingPage = false
 
         updateData(with: truncated, changeType: .new)
+    }
+
+    func reloadHistory() async {
+        guard !isReloading else { return }
+        isReloading = true
+        defer { isReloading = false }
+        loadPageTask?.cancel()
+        searchTask?.cancel()
+        isLoadingPage = false
+        guard let list = await loadHistoryPage() else { return }
+        pageIndex = 0
+        lastRequestedPage = 0
+        updateData(with: list, changeType: .delete)
     }
 
     /// 编辑更新
