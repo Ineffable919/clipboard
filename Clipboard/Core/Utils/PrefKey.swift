@@ -142,18 +142,18 @@ enum HistoryTimeUnit: Equatable {
         }
     }
 
-    var displayText: String {
+    var displayText: LocalizedStringResource {
         switch self {
-        case let .days(n):
-            String.localizedStringWithFormat(String(localized: "historyDays", defaultValue: "%lld days", table: "Localizable"), n)
-        case let .weeks(n):
-            String.localizedStringWithFormat(String(localized: "historyWeeks", defaultValue: "%lld weeks", table: "Localizable"), n)
-        case let .months(n):
-            String.localizedStringWithFormat(String(localized: "historyMonths", defaultValue: "%lld months", table: "Localizable"), n)
+        case let .days(count):
+            .historyDays(count)
+        case let .weeks(count):
+            .historyWeeks(count)
+        case let .months(count):
+            .historyMonths(count)
         case .year:
-            String(localized: .historyYear)
+            .historyYear
         case .forever:
-            String(localized: .historyForever)
+            .historyForever
         }
     }
 }
