@@ -210,8 +210,7 @@ final class ClipPreviewController: NSViewController {
             if let attrs = try? FileManager.default.attributesOfItem(
                 atPath: url.path
             ),
-                let size = attrs[.size] as? Int64
-            {
+                let size = attrs[.size] as? Int64 {
                 fileSize = size.formatted(.byteCount(style: .file))
             }
         }

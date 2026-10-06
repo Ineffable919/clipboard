@@ -63,7 +63,7 @@ final class ClipWindowView: NSPanel {
         case "v": #selector(NSText.paste(_:))
         case "x": #selector(NSText.cut(_:))
         case "a": #selector(NSResponder.selectAll(_:))
-        case "z": isShift ? Selector(("redo:")) : Selector(("undo:"))
+        case "z": if isShift { Selector(("redo:")) } else { Selector(("undo:")) }
         default: nil
         }
 

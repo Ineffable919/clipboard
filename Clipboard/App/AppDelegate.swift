@@ -114,8 +114,7 @@ extension AppDelegate {
 
 extension AppDelegate {
     private func initLocalEvent() {
-        monitorToken = NSEvent.addLocalMonitorForEvents(matching: .keyDown) {
-            event in
+        monitorToken = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             if event.modifierFlags.contains(.command) {
                 let modifiers = event.charactersIgnoringModifiers
                 if modifiers == "," || modifiers == "，" {

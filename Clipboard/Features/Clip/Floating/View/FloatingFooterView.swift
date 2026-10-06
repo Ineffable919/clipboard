@@ -221,12 +221,12 @@ final class FloatingFooterView: NSView {
             glassView.cornerRadius = 0
             return glassView
         }
-        let ve = NSVisualEffectView()
-        ve.wantsLayer = true
-        ve.state = .active
-        ve.blendingMode = .withinWindow
-        ve.material = .popover
-        return ve
+        let effect = NSVisualEffectView()
+        effect.wantsLayer = true
+        effect.state = .active
+        effect.blendingMode = .withinWindow
+        effect.material = .popover
+        return effect
     }
 
     private func updatePauseState() {

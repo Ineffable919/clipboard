@@ -83,6 +83,7 @@ extension JSONViewportEditor {
     }
 
     func updateFoldIndex() {
+        guard richContent == nil else { return }
         indexTask?.cancel()
         let text = currentText
         let revision = revision
@@ -155,6 +156,7 @@ extension JSONViewportEditor: NSTextViewDelegate {
     }
 
     func textView(_ textView: NSTextView, doCommandBy selector: Selector) -> Bool {
+        guard richContent == nil else { return false }
         switch selector {
         case #selector(NSResponder.insertTab(_:)):
             textView.insertText(

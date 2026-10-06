@@ -154,8 +154,7 @@ final class JSONLineIndex {
 
         for codeUnit in text.utf16 {
             if offset.isMultiple(of: 16384),
-               withUnsafeCurrentTask(body: { $0?.isCancelled ?? false })
-            {
+               withUnsafeCurrentTask(body: { $0?.isCancelled ?? false }) {
                 return [0]
             }
             if pendingCarriageReturn {

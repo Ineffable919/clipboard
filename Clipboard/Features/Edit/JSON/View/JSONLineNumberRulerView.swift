@@ -79,8 +79,9 @@ final class JSONLineNumberRulerView: NSView {
         )
         var snapshot: [Line] = []
 
-        layoutManager.enumerateLineFragments(forGlyphRange: glyphRange) {
-            [weak self] lineRect, _, _, lineGlyphRange, _ in
+        layoutManager.enumerateLineFragments(
+            forGlyphRange: glyphRange
+        ) { [weak self] lineRect, _, _, lineGlyphRange, _ in
             guard let self else { return }
             let characterRange = layoutManager.characterRange(
                 forGlyphRange: lineGlyphRange,
@@ -130,12 +131,12 @@ final class JSONLineNumberRulerView: NSView {
         let attributes: [NSAttributedString.Key: Any] = [
             .font: NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .regular),
             .foregroundColor: NSColor.tertiaryLabelColor,
-            .paragraphStyle: paragraph,
+            .paragraphStyle: paragraph
         ]
         let currentAttributes: [NSAttributedString.Key: Any] = [
             .font: NSFont.monospacedDigitSystemFont(ofSize: 11, weight: .medium),
             .foregroundColor: NSColor.controlAccentColor,
-            .paragraphStyle: paragraph,
+            .paragraphStyle: paragraph
         ]
 
         for line in visibleLines where line.rect.intersects(dirtyRect) {

@@ -30,7 +30,7 @@ struct WelcomeShortcutPageView: View {
         let defaultShortcut = KeyboardShortcut(
             modifiersRawValue: NSEvent.ModifierFlags([.command, .shift])
                 .rawValue,
-            keyCode: KeyCode.v,
+            keyCode: KeyCode.keyV,
             displayKey: "V"
         )
 

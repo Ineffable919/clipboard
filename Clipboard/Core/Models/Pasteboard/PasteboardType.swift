@@ -13,7 +13,7 @@ extension PasteboardType {
     static let pasteboardModel = PasteboardType("com.clipboard.pasteboardModel")
 
     static var supportTypes: [PasteboardType] = [
-        .rtf, .rtfd, .fileURL, .png, .tiff, .string, .pasteboardModel,
+        .rtf, .rtfd, .fileURL, .png, .tiff, .string, .pasteboardModel
     ]
 
     func isImage() -> Bool {

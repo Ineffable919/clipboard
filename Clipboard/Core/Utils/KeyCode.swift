@@ -13,32 +13,32 @@ import SwiftUI
 enum KeyCode {
     // MARK: - 字母键
 
-    static let a: UInt16 = .init(kVK_ANSI_A) // 0x00
-    static let b: UInt16 = .init(kVK_ANSI_B) // 0x0B
-    static let c: UInt16 = .init(kVK_ANSI_C) // 0x08
-    static let d: UInt16 = .init(kVK_ANSI_D) // 0x02
-    static let e: UInt16 = .init(kVK_ANSI_E) // 0x0E
-    static let f: UInt16 = .init(kVK_ANSI_F) // 0x03
-    static let g: UInt16 = .init(kVK_ANSI_G) // 0x05
-    static let h: UInt16 = .init(kVK_ANSI_H) // 0x04
-    static let i: UInt16 = .init(kVK_ANSI_I) // 0x22
-    static let j: UInt16 = .init(kVK_ANSI_J) // 0x26
-    static let k: UInt16 = .init(kVK_ANSI_K) // 0x28
-    static let l: UInt16 = .init(kVK_ANSI_L) // 0x25
-    static let m: UInt16 = .init(kVK_ANSI_M) // 0x2E
-    static let n: UInt16 = .init(kVK_ANSI_N) // 0x2D
-    static let o: UInt16 = .init(kVK_ANSI_O) // 0x1F
-    static let p: UInt16 = .init(kVK_ANSI_P) // 0x23
-    static let q: UInt16 = .init(kVK_ANSI_Q) // 0x0C
-    static let r: UInt16 = .init(kVK_ANSI_R) // 0x0F
-    static let s: UInt16 = .init(kVK_ANSI_S) // 0x01
-    static let t: UInt16 = .init(kVK_ANSI_T) // 0x11
-    static let u: UInt16 = .init(kVK_ANSI_U) // 0x20
-    static let v: UInt16 = .init(kVK_ANSI_V) // 0x09
-    static let w: UInt16 = .init(kVK_ANSI_W) // 0x0D
-    static let x: UInt16 = .init(kVK_ANSI_X) // 0x07
-    static let y: UInt16 = .init(kVK_ANSI_Y) // 0x10
-    static let z: UInt16 = .init(kVK_ANSI_Z) // 0x06
+    static let keyA: UInt16 = .init(kVK_ANSI_A) // 0x00
+    static let keyB: UInt16 = .init(kVK_ANSI_B) // 0x0B
+    static let keyC: UInt16 = .init(kVK_ANSI_C) // 0x08
+    static let keyD: UInt16 = .init(kVK_ANSI_D) // 0x02
+    static let keyE: UInt16 = .init(kVK_ANSI_E) // 0x0E
+    static let keyF: UInt16 = .init(kVK_ANSI_F) // 0x03
+    static let keyG: UInt16 = .init(kVK_ANSI_G) // 0x05
+    static let keyH: UInt16 = .init(kVK_ANSI_H) // 0x04
+    static let keyI: UInt16 = .init(kVK_ANSI_I) // 0x22
+    static let keyJ: UInt16 = .init(kVK_ANSI_J) // 0x26
+    static let keyK: UInt16 = .init(kVK_ANSI_K) // 0x28
+    static let keyL: UInt16 = .init(kVK_ANSI_L) // 0x25
+    static let keyM: UInt16 = .init(kVK_ANSI_M) // 0x2E
+    static let keyN: UInt16 = .init(kVK_ANSI_N) // 0x2D
+    static let keyO: UInt16 = .init(kVK_ANSI_O) // 0x1F
+    static let keyP: UInt16 = .init(kVK_ANSI_P) // 0x23
+    static let keyQ: UInt16 = .init(kVK_ANSI_Q) // 0x0C
+    static let keyR: UInt16 = .init(kVK_ANSI_R) // 0x0F
+    static let keyS: UInt16 = .init(kVK_ANSI_S) // 0x01
+    static let keyT: UInt16 = .init(kVK_ANSI_T) // 0x11
+    static let keyU: UInt16 = .init(kVK_ANSI_U) // 0x20
+    static let keyV: UInt16 = .init(kVK_ANSI_V) // 0x09
+    static let keyW: UInt16 = .init(kVK_ANSI_W) // 0x0D
+    static let keyX: UInt16 = .init(kVK_ANSI_X) // 0x07
+    static let keyY: UInt16 = .init(kVK_ANSI_Y) // 0x10
+    static let keyZ: UInt16 = .init(kVK_ANSI_Z) // 0x06
 
     // MARK: - 数字键
 
@@ -128,7 +128,7 @@ enum KeyCode {
         kVK_ANSI_KeypadMinus, kVK_ANSI_KeypadEquals,
         kVK_ANSI_Keypad0, kVK_ANSI_Keypad1, kVK_ANSI_Keypad2, kVK_ANSI_Keypad3,
         kVK_ANSI_Keypad4, kVK_ANSI_Keypad5, kVK_ANSI_Keypad6, kVK_ANSI_Keypad7,
-        kVK_ANSI_Keypad8, kVK_ANSI_Keypad9,
+        kVK_ANSI_Keypad8, kVK_ANSI_Keypad9
     ]
 
     // MARK: - 按键判断
@@ -142,10 +142,10 @@ enum KeyCode {
     static func shouldTriggerSearch(for event: NSEvent) -> Bool {
         let modifiers = event.modifierFlags
         let excludedModifiers: NSEvent.ModifierFlags = [
-            .command, .control, .option,
+            .command, .control, .option
         ]
 
-        if modifiers.intersection(excludedModifiers).isEmpty == false {
+        if !modifiers.isDisjoint(with: excludedModifiers) {
             return false
         }
 
@@ -171,8 +171,7 @@ enum KeyCode {
     /// - Parameter modifierIndex: 修饰键索引 (0: Command, 1: Option, 2: Control, 3: Shift)
     /// - Returns: 对应的 EventModifiers
     static func eventModifiers(from modifierIndex: Int)
-        -> SwiftUI.EventModifiers
-    {
+        -> SwiftUI.EventModifiers {
         switch modifierIndex {
         case 0: .command
         case 1: .option

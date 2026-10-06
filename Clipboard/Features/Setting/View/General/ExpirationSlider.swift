@@ -61,13 +61,7 @@ struct ExpirationSlider: View {
     @State private var position: Double = 0
     @State private var isDragging = false
 
-    private let labels = [
-        "天",
-        "周",
-        "月",
-        "年",
-        "永久",
-    ]
+    private let labels = ["天", "周", "月", "年", "永久"]
 
     /// 系统 Slider thumb 左右大概会留出这部分空间。
     /// 用它让顶部文字、刻度和 Slider 轨道尽量保持一致。
@@ -97,7 +91,7 @@ struct ExpirationSlider: View {
                 .days(4),
                 .days(5),
                 .days(6),
-                .weeks(1),
+                .weeks(1)
             ]
         )
 
@@ -114,7 +108,7 @@ struct ExpirationSlider: View {
                 .weeks(1),
                 .weeks(2),
                 .weeks(3),
-                .months(1),
+                .months(1)
             ]
         )
 
@@ -140,7 +134,7 @@ struct ExpirationSlider: View {
             segment: 3,
             values: [
                 .years(1),
-                .forever,
+                .forever
             ]
         )
 
@@ -168,7 +162,7 @@ struct ExpirationSlider: View {
             .frame(height: 24)
 
             VStack(spacing: 0) {
-                
+
                 // MARK: 刻度
 
                 ticksView
@@ -191,7 +185,7 @@ struct ExpirationSlider: View {
                     }
                 )
             }
-            
+
         }
         .padding(.horizontal, 20)
         .onAppear {
@@ -232,14 +226,14 @@ struct ExpirationSlider: View {
                         CGFloat(index)
                         / CGFloat(labels.count - 1)
 
-                    let x =
+                    let position =
                         sliderHorizontalInset
                         + width * progress
 
                     Text(label)
                         .foregroundStyle(.secondary)
                         .position(
-                            x: x,
+                            x: position,
                             y: proxy.size.height / 2
                         )
                 }
@@ -265,7 +259,7 @@ struct ExpirationSlider: View {
                     let progress =
                         CGFloat(point.position / 4)
 
-                    let x =
+                    let position =
                         sliderHorizontalInset
                         + usableWidth * progress
 
@@ -280,7 +274,7 @@ struct ExpirationSlider: View {
                             height: point.isMajor ? 5 : 2
                         )
                         .position(
-                            x: x,
+                            x: position,
                             y: point.isMajor ? 5.5 : 2.5
                         )
                 }

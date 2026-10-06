@@ -17,7 +17,7 @@ final class ClipFloatingWindowController: NSWindowController {
     var isPinned = false
 
     private let clipVC = ClipFloatingViewController()
-    private let db = PasteDataStore.main
+    private let store = PasteDataStore.main
 
     init() {
         let panel = ClipWindowView(
@@ -29,7 +29,7 @@ final class ClipFloatingWindowController: NSWindowController {
             ),
             styleMask: [
                 .nonactivatingPanel, .resizable, .closable,
-                .fullSizeContentView,
+                .fullSizeContentView
             ],
             backing: .buffered,
             defer: false
@@ -55,7 +55,7 @@ final class ClipFloatingWindowController: NSWindowController {
 
         win.hasShadow = true
         win.collectionBehavior = [
-            .canJoinAllSpaces, .fullScreenAuxiliary, .stationary,
+            .canJoinAllSpaces, .fullScreenAuxiliary, .stationary
         ]
 
         win.contentView?.wantsLayer = true
@@ -113,9 +113,9 @@ final class ClipFloatingWindowController: NSWindowController {
         visibleFrame: NSRect,
         windowSize: NSSize
     ) -> NSPoint {
-        let x = visibleFrame.midX - windowSize.width / 2
-        let y = visibleFrame.midY - windowSize.height / 2
-        return NSPoint(x: x, y: y)
+        let originX = visibleFrame.midX - windowSize.width / 2
+        let originY = visibleFrame.midY - windowSize.height / 2
+        return NSPoint(x: originX, y: originY)
     }
 
     private func calculateMousePosition(windowSize: NSSize) -> NSPoint {
@@ -142,39 +142,38 @@ final class ClipFloatingWindowController: NSWindowController {
         let mouseRelativeY =
             (mouseLocation.y - visibleFrame.minY) / visibleFrame.height
 
-        var x: CGFloat
-        var y: CGFloat
+        var originX: CGFloat
+        var originY: CGFloat
 
         // 水平方向：鼠标在屏幕左半边则窗口放右边，反之放左边
         if mouseRelativeX < 0.5 {
             // 鼠标在左半边，窗口放鼠标右侧
-            x = mouseLocation.x + gap
+            originX = mouseLocation.x + gap
         } else {
             // 鼠标在右半边，窗口放鼠标左侧
-            x = mouseLocation.x - windowSize.width - gap
+            originX = mouseLocation.x - windowSize.width - gap
         }
 
         // 垂直方向：鼠标在屏幕下半边则窗口放上边，反之放下边
         if mouseRelativeY < 0.5 {
             // 鼠标在下半边，窗口放鼠标上方
-            y = mouseLocation.y + gap
+            originY = mouseLocation.y + gap
         } else {
             // 鼠标在上半边，窗口放鼠标下方
-            y = mouseLocation.y - windowSize.height - gap
+            originY = mouseLocation.y - windowSize.height - gap
         }
 
-        x = max(visibleFrame.minX, min(x, visibleFrame.maxX - windowSize.width))
-        y = max(
+        originX = max(visibleFrame.minX, min(originX, visibleFrame.maxX - windowSize.width))
+        originY = max(
             visibleFrame.minY,
-            min(y, visibleFrame.maxY - windowSize.height)
+            min(originY, visibleFrame.maxY - windowSize.height)
         )
 
-        return NSPoint(x: x, y: y)
+        return NSPoint(x: originX, y: originY)
     }
 
     private func calculateLastPosition(visibleFrame: NSRect, windowSize: NSSize)
-        -> NSPoint
-    {
+        -> NSPoint {
         guard let frameString = UserDefaults.standard.string(
             forKey: PrefKey.lastWindowFrame.rawValue
         )
@@ -246,11 +245,11 @@ final class ClipFloatingWindowController: NSWindowController {
         NSAnimationContext.runAnimationGroup({ ctx in
             ctx.duration = Const.showDuration
             win.animator().alphaValue = 1
-        }) {
+        }, completionHandler: {
             Task { @MainActor in
                 completionHandler?()
             }
-        }
+        })
     }
 
     func dismiss(_ completionHandler: (@MainActor @Sendable () -> Void)? = nil) {
@@ -262,7 +261,7 @@ final class ClipFloatingWindowController: NSWindowController {
         NSAnimationContext.runAnimationGroup({ ctx in
             ctx.duration = Const.hideDuration
             win.animator().alphaValue = 0
-        }) { [weak self] in
+        }, completionHandler: { [weak self] in
             Task { @MainActor in
                 guard let self, let win = self.window else { return }
                 win.setIsVisible(false)
@@ -270,7 +269,7 @@ final class ClipFloatingWindowController: NSWindowController {
                 win.orderOut(nil)
                 completionHandler?()
             }
-        }
+        })
     }
 
     private func saveWindowFrame() {

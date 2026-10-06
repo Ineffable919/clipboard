@@ -20,7 +20,7 @@ struct StorageSettingView: View {
     @State private var alertTitle = ""
     @State private var alertMessage = ""
 
-    private let db = PasteDataStore.main
+    private let store = PasteDataStore.main
 
     var body: some View {
         ScrollView(.vertical) {
@@ -168,10 +168,10 @@ struct StorageSettingView: View {
                     Task {
                         await PasteDataStore.main.resetDefaultList()
                         let count = await PasteSQLManager.manager.getTotalCount()
-                        db.totalCount = count
+                        store.totalCount = count
                         totalCount = count
                         PasteMetadataCache.shared.invalidateTagTypesCache()
-                        db.notifyCategoryChipsChanged()
+                        store.notifyCategoryChipsChanged()
                     }
                 } else {
                     log.error("数据库导入失败: \(result.message)")

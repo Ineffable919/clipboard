@@ -44,7 +44,7 @@ final class EditToolbarView: NSView {
             makeFormatButton(symbol: "bold", action: .bold),
             makeFormatButton(symbol: "italic", action: .italic),
             makeFormatButton(symbol: "underline", action: .underline),
-            makeFormatButton(symbol: "strikethrough", action: .strikethrough),
+            makeFormatButton(symbol: "strikethrough", action: .strikethrough)
         ])
         stack.orientation = .horizontal
         stack.spacing = Const.space8
@@ -133,6 +133,10 @@ final class EditToolbarView: NSView {
 
     func setIndentation(_ indentation: JSONIndentation) {
         jsonToolbar.setIndentation(indentation)
+    }
+
+    func refreshHover() {
+        modeButton.refreshHover()
     }
 
     private func installModeToolbar(_ toolbar: NSView) {

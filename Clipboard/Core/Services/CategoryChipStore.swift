@@ -18,7 +18,7 @@ final class CategoryChipStore {
 
     let chipsContentDidChange = PassthroughSubject<Void, Never>()
 
-    private let db = PasteDataStore.main
+    private let store = PasteDataStore.main
     private var reservedImportIDs: Set<Int> = []
 
     // MARK: - Initialization
@@ -95,7 +95,7 @@ final class CategoryChipStore {
         }
 
         saveUserCategories()
-        db.deleteItemsByGroup(chip.id)
+        store.deleteItemsByGroup(chip.id)
     }
 
     func clearUserCategories() {
@@ -142,7 +142,7 @@ final class CategoryChipStore {
 
     private func saveUserCategories() {
         PasteUserDefaults.userCategoryChip = chips.filter { !$0.isSystem }
-        db.notifyCategoryChipsChanged()
+        store.notifyCategoryChipsChanged()
         chipsContentDidChange.send()
     }
 }

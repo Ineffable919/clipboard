@@ -23,17 +23,17 @@ final class SearchSuggestionCellView: NSView {
     // MARK: - Subviews
 
     private let iconView: NSImageView = {
-        let iv = NSImageView()
-        iv.imageScaling = .scaleProportionallyUpOrDown
-        return iv
+        let image = NSImageView()
+        image.imageScaling = .scaleProportionallyUpOrDown
+        return image
     }()
 
     private let labelField: NSTextField = {
-        let tf = NSTextField(labelWithString: "")
-        tf.lineBreakMode = .byTruncatingTail
-        tf.maximumNumberOfLines = 1
-        tf.cell?.truncatesLastVisibleLine = true
-        return tf
+        let field = NSTextField(labelWithString: "")
+        field.lineBreakMode = .byTruncatingTail
+        field.maximumNumberOfLines = 1
+        field.cell?.truncatesLastVisibleLine = true
+        return field
     }()
 
     // MARK: - State
@@ -164,7 +164,7 @@ final class SearchSuggestionCellView: NSView {
             string: title,
             attributes: [
                 .font: baseFont,
-                .foregroundColor: dimColor,
+                .foregroundColor: dimColor
             ]
         )
 

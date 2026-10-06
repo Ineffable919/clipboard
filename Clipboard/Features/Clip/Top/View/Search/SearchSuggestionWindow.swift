@@ -24,14 +24,14 @@ final class SearchSuggestionWindow: NSPanel {
     // MARK: - Views
 
     private let effectView: NSVisualEffectView = {
-        let ev = NSVisualEffectView()
-        ev.material = .popover
-        ev.state = .active
-        ev.blendingMode = .behindWindow
-        ev.wantsLayer = true
-        ev.layer?.cornerRadius = Metrics.cornerRadius
-        ev.layer?.masksToBounds = true
-        return ev
+        let effect = NSVisualEffectView()
+        effect.material = .popover
+        effect.state = .active
+        effect.blendingMode = .behindWindow
+        effect.wantsLayer = true
+        effect.layer?.cornerRadius = Metrics.cornerRadius
+        effect.layer?.masksToBounds = true
+        return effect
     }()
 
     // MARK: - Init

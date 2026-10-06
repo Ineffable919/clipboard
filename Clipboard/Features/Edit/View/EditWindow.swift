@@ -19,6 +19,10 @@ final class EditWindow: NSWindow {
             return true
         }
 
+        return performEditingShortcut(event)
+    }
+
+    private func performEditingShortcut(_ event: NSEvent) -> Bool {
         let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
         guard modifiers.contains(.command),
               !modifiers.contains(.option),
@@ -33,7 +37,7 @@ final class EditWindow: NSWindow {
         case "v": #selector(NSText.paste(_:))
         case "x": #selector(NSText.cut(_:))
         case "a": #selector(NSResponder.selectAll(_:))
-        case "z": isShift ? Selector(("redo:")) : Selector(("undo:"))
+        case "z": if isShift { Selector(("redo:")) } else { Selector(("undo:")) }
         default: nil
         }
 

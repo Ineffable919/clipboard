@@ -83,8 +83,7 @@ final class FileThumbnailService: @unchecked Sendable {
             return .thumbnail
         }
         if contentType.conforms(to: .text) || contentType.conforms(to: .pdf)
-            || contentType.conforms(to: .rtf) || contentType.conforms(to: .sourceCode)
-        {
+            || contentType.conforms(to: .rtf) || contentType.conforms(to: .sourceCode) {
             return [.thumbnail, .icon]
         }
         if contentType.conforms(to: .folder) {

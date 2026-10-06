@@ -28,7 +28,7 @@ struct PrivacySettingView: View {
     @AppStorage(PrefKey.delConfirm.rawValue)
     private var delConfirm = false
 
-    @State private var selectedApp: String? = nil
+    @State private var selectedApp: String?
     @State private var ignoredApps: [IgnoredAppInfo] = {
         var list = PasteUserDefaults.ignoredApps
         if #unavailable(macOS 15.0) {
@@ -176,7 +176,7 @@ struct PrivacySettingView: View {
             let appName = url.deletingPathExtension().lastPathComponent
             let appPath = url.path
 
-            var bundleIdentifier: String? = nil
+            var bundleIdentifier: String?
             if let bundle = Bundle(url: url) {
                 bundleIdentifier = bundle.bundleIdentifier
             }
@@ -250,13 +250,11 @@ struct IgnoredAppRow: View {
         HStack(spacing: 10) {
             if let icon = cachedIcon {
                 Image(nsImage: icon)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
+                    .resizable().scaledToFit()
                     .frame(width: 32, height: 32)
             } else {
                 Image(systemName: getFallbackIcon(for: appInfo.name))
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
+                    .resizable().scaledToFit()
                     .frame(width: 28, height: 28)
                     .foregroundStyle(.secondary)
             }
@@ -291,8 +289,7 @@ struct IgnoredAppRow: View {
         if let bundleId = appInfo.bundleIdentifier,
            let appURL = NSWorkspace.shared.urlForApplication(
                withBundleIdentifier: bundleId
-           )
-        {
+           ) {
             return NSWorkspace.shared.icon(forFile: appURL.path)
         }
 
@@ -305,8 +302,7 @@ struct IgnoredAppRow: View {
         if appName.contains("密码") || appName.lowercased().contains("password") {
             "key.fill"
         } else if appName.contains("钥匙串")
-            || appName.lowercased().contains("keychain")
-        {
+            || appName.lowercased().contains("keychain") {
             "key.icloud.fill"
         } else {
             "questionmark.app.dashed"

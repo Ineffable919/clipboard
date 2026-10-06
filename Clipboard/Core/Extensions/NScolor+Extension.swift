@@ -29,25 +29,25 @@ extension NSColor {
     func toHexString(includeAlpha: Bool = false) -> String? {
         guard let rgbColor = usingColorSpace(.sRGB) else { return nil }
 
-        let r = rgbColor.redComponent
-        let g = rgbColor.greenComponent
-        let b = rgbColor.blueComponent
-        let a = rgbColor.alphaComponent
+        let red = rgbColor.redComponent
+        let green = rgbColor.greenComponent
+        let blue = rgbColor.blueComponent
+        let alpha = rgbColor.alphaComponent
 
         if includeAlpha {
             return String(
                 format: "#%02lX%02lX%02lX%02lX",
-                lroundf(Float(r * 255)),
-                lroundf(Float(g * 255)),
-                lroundf(Float(b * 255)),
-                lroundf(Float(a * 255))
+                lroundf(Float(red * 255)),
+                lroundf(Float(green * 255)),
+                lroundf(Float(blue * 255)),
+                lroundf(Float(alpha * 255))
             )
         } else {
             return String(
                 format: "#%02lX%02lX%02lX",
-                lroundf(Float(r * 255)),
-                lroundf(Float(g * 255)),
-                lroundf(Float(b * 255))
+                lroundf(Float(red * 255)),
+                lroundf(Float(green * 255)),
+                lroundf(Float(blue * 255))
             )
         }
     }

@@ -11,7 +11,7 @@ import Foundation
 import SQLite
 
 final class TopBarViewModel {
-    private var displayModeRaw: Int {
+    var displayModeRaw: Int {
         UserDefaults.standard.integer(forKey: PrefKey.displayMode.rawValue)
     }
 
@@ -23,7 +23,8 @@ final class TopBarViewModel {
 
     // MARK: - Search Properties
 
-    private(set) var query: String = ""
+    var query: String = ""
+    let textTagAssociatedValue = "text"
 
     func setQuery(text: String) {
         query = text
@@ -52,16 +53,16 @@ final class TopBarViewModel {
     // MARK: - Filter Properties
 
     /// 类型筛选：支持多选
-    private(set) var selectedTypes: Set<PasteModelType> = []
+    var selectedTypes: Set<PasteModelType> = []
 
     /// 应用筛选：支持多选
-    private(set) var selectedAppIDs: Set<Int64> = []
+    var selectedAppIDs: Set<Int64> = []
 
     /// 日期筛选：单选
-    private(set) var selectedDateFilter: DateFilterOption?
+    var selectedDateFilter: DateFilterOption?
 
     /// 分组筛选：支持多选
-    private(set) var selectedGroupIds: Set<Int> = []
+    var selectedGroupIds: Set<Int> = []
 
     var hasInput: Bool {
         !query.isEmpty || !selectedTypes.isEmpty || !selectedAppIDs.isEmpty
@@ -85,11 +86,11 @@ final class TopBarViewModel {
 
     // MARK: - Private Properties
 
-    private let db = PasteDataStore.main
-    private let chipStore = CategoryChipStore.shared
+    let store = PasteDataStore.main
+    let chipStore = CategoryChipStore.shared
 
-    private var lastSearchCriteria: SearchCriteria?
-    private var isModeResetting = false
+    var lastSearchCriteria: SearchCriteria?
+    var isModeResetting = false
 
     // MARK: - Initialization
 
@@ -140,7 +141,7 @@ final class TopBarViewModel {
         refreshGroupTags()
     }
 
-    private func syncGroupIdsFromChipStore() {
+    func syncGroupIdsFromChipStore() {
         let groupId = chipStore.getSelectChipId()
         let newGroupIds: Set<Int> = groupId == -1 ? [] : [groupId]
         guard selectedGroupIds != newGroupIds else { return }
@@ -167,7 +168,7 @@ final class TopBarViewModel {
         }
     }
 
-    private func resetNewChipState() {
+    func resetNewChipState() {
         editingNewChip = false
         newChipName = String(localized: .untitled)
         newChipColorIndex = cycleColorIndex(newChipColorIndex)
@@ -209,404 +210,8 @@ final class TopBarViewModel {
         editingChipColorIndex = cycleColorIndex(editingChipColorIndex)
     }
 
-    private func cycleColorIndex(_ currentIndex: Int) -> Int {
+    func cycleColorIndex(_ currentIndex: Int) -> Int {
         (currentIndex + 1) % CategoryChip.palette.count
     }
 
-    // MARK: - Filter Methods
-
-    func toggleType(_ type: PasteModelType) {
-        if selectedTypes.contains(type) {
-            selectedTypes.remove(type)
-            removeTagForType(type)
-        } else {
-            selectedTypes.insert(type)
-            addTagForType(type)
-        }
-        filterDidChange.send()
-    }
-
-    func toggleApp(_ id: Int64) {
-        if selectedAppIDs.remove(id) != nil {
-            tags.removeAll { $0.type == .filterApp && $0.associatedValue == String(id) }
-        } else if let app = SourceAppCache.shared.apps[id] {
-            selectedAppIDs.insert(id)
-            let tag = InputTag(
-                icon: AppIconCache.shared.getCachedIcon(forAppID: id)
-                    ?? NSImage(systemSymbolName: "questionmark.app.dashed", accessibilityDescription: nil),
-                label: app.name, type: .filterApp, associatedValue: String(id), appPath: app.path
-            )
-            tags.append(tag)
-            if AppIconCache.shared.getCachedIcon(forAppID: id) == nil {
-                Task { [weak self] in
-                    let icon = await AppIconCache.shared.loadIcon(forAppID: id, path: app.path)
-                    guard let self, let index = tags.firstIndex(where: { $0.id == tag.id }) else { return }
-                    tags[index].icon = icon
-                    filterDidChange.send()
-                }
-            }
-        }
-        filterDidChange.send()
-    }
-
-    func setDateFilter(_ option: DateFilterOption?) {
-        tags.removeAll { $0.type == .filterDate }
-        selectedDateFilter = option
-        if let dateFilter = option {
-            let tag = InputTag(
-                icon: NSImage(
-                    systemSymbolName: "calendar",
-                    accessibilityDescription: nil
-                ),
-                label: dateFilter.displayName,
-                type: .filterDate,
-                associatedValue: dateFilter.rawValue
-            )
-            tags.append(tag)
-        }
-        filterDidChange.send()
-    }
-
-    func refreshGroupTags() {
-        let validGroupIds = Set(
-            chipStore.chips.lazy.filter { !$0.isSystem }.map(\.id)
-        )
-        selectedGroupIds.formIntersection(validGroupIds)
-        tags.removeAll { $0.type == .filterGroup }
-        for chip in chipStore.chips where selectedGroupIds.contains(chip.id) {
-            addTagForGroup(chip)
-        }
-        syncSelectedChip()
-        filterDidChange.send()
-    }
-
-    func toggleGroupFilter(_ groupId: Int) {
-        if selectedGroupIds.remove(groupId) != nil {
-            tags.removeAll {
-                $0.type == .filterGroup
-                    && $0.associatedValue == String(groupId)
-            }
-        } else if let chip = chipStore.chips.first(where: { $0.id == groupId }) {
-            selectedGroupIds.insert(groupId)
-            addTagForGroup(chip)
-        }
-        syncSelectedChip(preferredGroupId: groupId)
-        filterDidChange.send()
-    }
-
-    private func addTagForGroup(_ chip: CategoryChip) {
-        let tag = InputTag(
-            icon: makeColorDotImage(colorIndex: chip.colorIndex),
-            label: chip.name,
-            type: .filterGroup,
-            associatedValue: String(chip.id)
-        )
-        tags.append(tag)
-    }
-
-    private func syncSelectedChip(preferredGroupId: Int? = nil) {
-        let preferredId = preferredGroupId.flatMap {
-            selectedGroupIds.contains($0) ? $0 : nil
-        }
-        let currentId = selectedGroupIds.contains(chipStore.selectedChipId)
-            ? chipStore.selectedChipId
-            : nil
-        let selectedId = preferredId
-            ?? currentId
-            ?? chipStore.chips.first { selectedGroupIds.contains($0.id) }?.id
-            ?? -1
-        if chipStore.selectedChipId != selectedId {
-            chipStore.selectedChipId = selectedId
-        }
-    }
-
-    private func makeColorDotImage(colorIndex: Int) -> NSImage {
-        CategoryDotRenderer.image(colorIndex: colorIndex)
-    }
-
-    func clearAllFilters() {
-        selectedTypes.removeAll()
-        selectedAppIDs.removeAll()
-        selectedDateFilter = nil
-        selectedGroupIds.removeAll()
-        tags.removeAll()
-        if chipStore.selectedChipId != -1 {
-            chipStore.selectedChipId = -1
-        }
-        filterDidChange.send()
-    }
-
-    private let textTagAssociatedValue = "text"
-
-    private func addTagForType(_ type: PasteModelType) {
-        if type == .string || type == .rich {
-            let hasTextTag = tags.contains {
-                $0.type == .filterType
-                    && $0.associatedValue == textTagAssociatedValue
-            }
-            if !hasTextTag {
-                let tag = InputTag(
-                    icon: NSImage(
-                        systemSymbolName: "doc.text",
-                        accessibilityDescription: nil
-                    ),
-                    label: String(localized: .text),
-                    type: .filterType,
-                    associatedValue: textTagAssociatedValue
-                )
-                tags.append(tag)
-            }
-        } else {
-            let (icon, label) = type.iconAndLabel
-            let tag = InputTag(
-                icon: NSImage(
-                    systemSymbolName: icon,
-                    accessibilityDescription: nil
-                ),
-                label: label,
-                type: .filterType,
-                associatedValue: type.rawValue
-            )
-            tags.append(tag)
-        }
-    }
-
-    private func removeTagForType(_ type: PasteModelType) {
-        if type == .string || type == .rich {
-            let hasString = selectedTypes.contains(.string)
-            let hasRich = selectedTypes.contains(.rich)
-            if !hasString, !hasRich {
-                tags.removeAll {
-                    $0.type == .filterType
-                        && $0.associatedValue == textTagAssociatedValue
-                }
-            }
-        } else {
-            tags.removeAll {
-                $0.type == .filterType && $0.associatedValue == type.rawValue
-            }
-        }
-    }
-
-    func removeTag(_ tag: InputTag) {
-        tags.removeAll { $0 == tag }
-
-        switch tag.type {
-        case .filterType:
-            if tag.associatedValue == textTagAssociatedValue {
-                selectedTypes.remove(.string)
-                selectedTypes.remove(.rich)
-            } else if let type = PasteModelType(rawValue: tag.associatedValue) {
-                selectedTypes.remove(type)
-            }
-        case .filterApp:
-            if let id = Int64(tag.associatedValue) { selectedAppIDs.remove(id) }
-        case .filterDate:
-            selectedDateFilter = nil
-        case .filterGroup:
-            if let groupId = Int(tag.associatedValue) {
-                selectedGroupIds.remove(groupId)
-            }
-            syncSelectedChip()
-        }
-        filterDidChange.send()
-    }
-
-    func removeLastFilter() {
-        guard let lastTag = tags.last else { return }
-        removeTag(lastTag)
-    }
-
-    func toggleTextType() {
-        let hasString = selectedTypes.contains(.string)
-        let hasRich = selectedTypes.contains(.rich)
-
-        if hasString, hasRich {
-            selectedTypes.remove(.string)
-            selectedTypes.remove(.rich)
-            tags.removeAll {
-                $0.type == .filterType
-                    && $0.associatedValue == textTagAssociatedValue
-            }
-        } else {
-            let needAddTag = !hasString && !hasRich
-            selectedTypes.insert(.string)
-            selectedTypes.insert(.rich)
-            if needAddTag {
-                let tag = InputTag(
-                    icon: NSImage(
-                        systemSymbolName: "doc.text",
-                        accessibilityDescription: nil
-                    ),
-                    label: String(localized: .text),
-                    type: .filterType,
-                    associatedValue: textTagAssociatedValue
-                )
-                tags.append(tag)
-            }
-        }
-        filterDidChange.send()
-    }
-
-    func isTextTypeSelected() -> Bool {
-        selectedTypes.contains(.string) || selectedTypes.contains(.rich)
-    }
-
-    // MARK: - Search Methods
-
-    /// 处理查询变化，支持快捷指令（如 @img, @text 等）
-    func handleQueryChange() {
-        let trimmedQuery = query.trimmingCharacters(in: .whitespaces)
-
-        if trimmedQuery.hasPrefix("@"), displayModeRaw == 0 {
-            let command = String(trimmedQuery.dropFirst()).lowercased()
-            if let type = parseShortcutCommand(command) {
-                query = ""
-                clearQueryRequested.send()
-                toggleType(type)
-                return
-            }
-        }
-
-        performSearch()
-    }
-
-    private func parseShortcutCommand(_ command: String) -> PasteModelType? {
-        switch command {
-        case "img", "image", "图片": .image
-        case "text", "txt", "文本": .string
-        case "file", "文件": .file
-        case "link", "链接": .link
-        case "color", "颜色": .color
-        case "rich", "富文本": .rich
-        default: nil
-        }
-    }
-
-    func resetFilterState() {
-        isModeResetting = true
-        defer { isModeResetting = false }
-
-        query = ""
-        tags.removeAll()
-        selectedTypes.removeAll()
-        selectedAppIDs.removeAll()
-        selectedDateFilter = nil
-        selectedGroupIds.removeAll()
-
-        if chipStore.selectedChipId != -1 {
-            chipStore.selectedChipId = -1
-        }
-
-        lastSearchCriteria = nil
-    }
-
-    func willSearchCriteriaChange() -> Bool {
-        let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        let criteria = SearchCriteria(
-            keyword: trimmedQuery,
-            selectedTypes: selectedTypes,
-            selectedAppIDs: selectedAppIDs,
-            selectedDateFilter: selectedDateFilter,
-            selectedGroupIds: selectedGroupIds
-        )
-        return criteria != lastSearchCriteria
-    }
-
-    func performSearch() {
-        let trimmedQuery = query.trimmingCharacters(
-            in: .whitespacesAndNewlines
-        )
-
-        let criteria = SearchCriteria(
-            keyword: trimmedQuery,
-            selectedTypes: selectedTypes,
-            selectedAppIDs: selectedAppIDs,
-            selectedDateFilter: selectedDateFilter,
-            selectedGroupIds: selectedGroupIds
-        )
-
-        if criteria == lastSearchCriteria {
-            return
-        }
-        lastSearchCriteria = criteria
-
-        if criteria.isEmpty {
-            db.resetToDefault()
-        } else {
-            db.searchData(criteria)
-        }
-    }
-}
-
-extension TopBarViewModel {
-    // MARK: - Computed
-
-    var pauseMenuTitle: String {
-        guard PasteBoard.main.isPaused else { return String(localized: .pause) }
-        guard let endTime = PasteBoard.main.pauseEndTime else { return String(localized: .paused) }
-        return String(localized: .pauseUntil(pauseTimeString(from: endTime)))
-    }
-
-    var formattedRemainingTime: String {
-        guard let endTime = PasteBoard.main.pauseEndTime else { return String(localized: .paused) }
-        let remaining = max(0, endTime.timeIntervalSinceNow)
-        guard remaining > 0 else { return String(localized: .paused) }
-        return Duration.seconds(remaining).formatted(.time(pattern: .hourMinuteSecond))
-    }
-
-    // MARK: - Actions
-
-    func resume() {
-        PasteBoard.main.resume()
-    }
-
-    func pauseIndefinitely() {
-        PasteBoard.main.pause()
-    }
-
-    func pause(for minutes: Int) {
-        PasteBoard.main.pause(for: TimeInterval(minutes * 60))
-    }
-
-    // MARK: - Private
-
-    private func pauseTimeString(from date: Date) -> String {
-        date.formatted(
-            .dateTime.hour(.twoDigits(amPM: .omitted)).minute(.twoDigits)
-        )
-    }
-}
-
-// MARK: - Drag & Drop
-
-extension TopBarViewModel {
-    func assignModelToChip(model: PasteboardModel, chipId: Int) -> Bool {
-        if model.group == chipId {
-            return true
-        }
-
-        guard let modelId = model.id else {
-            return false
-        }
-
-        Task {
-            await db.updateItemGroupInDB(id: modelId, groupId: chipId)
-        }
-
-        if !selectedGroupIds.isEmpty, !selectedGroupIds.contains(chipId) {
-            var list = db.dataList.value
-            list.removeAll(where: { $0.id == modelId })
-            db.updateData(with: list, changeType: .delete)
-        } else {
-            if let model = db.dataList.value.first(where: { $0.id == modelId }),
-               chipId != model.group
-            {
-                model.updateGroup(val: chipId)
-            }
-            db.updateData(with: db.dataList.value, changeType: .update)
-        }
-
-        return true
-    }
 }

@@ -181,12 +181,12 @@ extension ClipFloatingViewController {
 
         let historyView = floatingContentView.historyView
         switch event.keyCode {
-        case KeyCode.a:
+        case KeyCode.keyA:
             guard focusRegion == .collection else { return event }
             historyView.collectionView.selectAll(nil)
             historyView.updateSelectedItemBorder()
             return nil
-        case KeyCode.c:
+        case KeyCode.keyC:
             let items = historyView.selectedModels
             guard !items.isEmpty else { return nil }
             if items.count == 1 {
@@ -196,7 +196,7 @@ extension ClipFloatingViewController {
                 ClipFloatingWindowController.shared.toggleWindow()
             }
             return nil
-        case KeyCode.e:
+        case KeyCode.keyE:
             historyView.openEditWindow(at: historyView.selectedIndex)
             return nil
         default:

@@ -218,15 +218,15 @@ extension ClipMainViewController {
         }
 
         switch event.keyCode {
-        case KeyCode.a:
+        case KeyCode.keyA:
             collectionView.selectAll(nil)
             updateSelectedItemBorder()
             return nil
 
-        case KeyCode.c:
+        case KeyCode.keyC:
             return handleCopy()
 
-        case KeyCode.e:
+        case KeyCode.keyE:
             return handleEdit()
 
         default:

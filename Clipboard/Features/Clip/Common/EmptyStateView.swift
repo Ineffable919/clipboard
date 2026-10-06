@@ -19,28 +19,28 @@ class EmptyStateView: NSView {
     // MARK: - UI Elements
 
     private lazy var iconImageView: NSImageView = {
-        let iv = NSImageView()
-        iv.contentTintColor = NSColor.controlAccentColor.withAlphaComponent(0.8)
-        return iv
+        let image = NSImageView()
+        image.contentTintColor = NSColor.controlAccentColor.withAlphaComponent(0.8)
+        return image
     }()
 
     private lazy var titleLabel: NSTextField = {
-        let tf = NSTextField(labelWithString: String(localized: .emptyRecord))
-        tf.textColor = .secondaryLabelColor
-        tf.alignment = .center
-        return tf
+        let field = NSTextField(labelWithString: String(localized: .emptyRecord))
+        field.textColor = .secondaryLabelColor
+        field.alignment = .center
+        return field
     }()
 
     private lazy var hintLabel: NSTextField = {
-        let tf = NSTextField(labelWithString: String(localized: .emptyHint))
-        tf.textColor = .secondaryLabelColor
-        tf.alignment = .center
+        let field = NSTextField(labelWithString: String(localized: .emptyHint))
+        field.textColor = .secondaryLabelColor
+        field.alignment = .center
         if style == .floating {
-            tf.font = .systemFont(ofSize: NSFont.systemFontSize)
+            field.font = .systemFont(ofSize: NSFont.systemFontSize)
         } else {
-            tf.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+            field.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         }
-        return tf
+        return field
     }()
 
     // MARK: - Initialization

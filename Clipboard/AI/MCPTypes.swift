@@ -8,16 +8,16 @@ enum JSONRPCId {
 
     init?(from value: Any?) {
         switch value {
-        case let s as String: self = .string(s)
-        case let i as Int: self = .int(i)
+        case let string as String: self = .string(string)
+        case let integer as Int: self = .int(integer)
         default: return nil
         }
     }
 
     var jsonValue: Any {
         switch self {
-        case let .string(s): s
-        case let .int(i): i
+        case let .string(string): string
+        case let .int(integer): integer
         }
     }
 }
@@ -48,7 +48,7 @@ enum JSONRPC {
         serialize([
             "jsonrpc": "2.0",
             "id": id.jsonValue,
-            "error": ["code": code, "message": message],
+            "error": ["code": code, "message": message]
         ])
     }
 

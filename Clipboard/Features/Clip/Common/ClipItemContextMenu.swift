@@ -44,59 +44,8 @@ extension ClipItemMenuActionable where Self: NSObject {
     func buildClipItemMenu(for model: PasteboardModel, pasteTitle: String) -> NSMenu {
         let menu = NSMenu()
 
-        if model.type == .file {
-            if let filePath = model.cachedFilePaths?.first {
-                let fileURL = URL(fileURLWithPath: filePath)
-                let appURL = NSWorkspace.shared.urlForApplication(toOpen: fileURL)
-                let appName = appURL.flatMap { bundleDisplayName(for: $0) } ?? "App"
-                menu.addItem(makeMenuItem(
-                    title: String(localized: .openInApp(appName)),
-                    symbol: "arrow.up.right.square",
-                    action: #selector(ClipItemMenuActionable.handleClipOpenWithDefaultApp)
-                ))
-            }
-            menu.addItem(makeMenuItem(
-                title: String(localized: .showInFinder),
-                symbol: "finder",
-                action: #selector(ClipItemMenuActionable.handleClipRevealInFinder)
-            ))
-            menu.addItem(.separator())
-        } else if model.type == .link {
-            let browserURL = NSWorkspace.shared.urlForApplication(
-                toOpen: URL(string: "https://")!
-            )
-            let browserName = browserURL.flatMap { bundleDisplayName(for: $0) } ?? ""
-            if !browserName.isEmpty {
-                menu.addItem(makeMenuItem(
-                    title: String(localized: .openInApp(browserName)),
-                    symbol: "arrow.up.right.square",
-                    action: #selector(ClipItemMenuActionable.handleClipOpenInBrowser)
-                ))
-                menu.addItem(.separator())
-            }
-        }
-
-        menu.addItem(makeMenuItem(
-            title: pasteTitle,
-            symbol: "doc.on.clipboard",
-            action: #selector(ClipItemMenuActionable.handleClipPaste),
-            keyEquivalent: "\r"
-        ))
-        menu.addItem(makeMenuItem(
-            title: String(localized: .pastePlain),
-            symbol: "text.justify.leading",
-            action: #selector(ClipItemMenuActionable.handleClipPastePlain),
-            keyEquivalent: "\r",
-            modifiers: .shift
-        ))
-        menu.addItem(makeMenuItem(
-            title: String(localized: .copy),
-            symbol: "doc.on.doc",
-            action: #selector(ClipItemMenuActionable.handleClipCopy),
-            keyEquivalent: "c",
-            modifiers: .command
-        ))
-        menu.addItem(.separator())
+        addOpenItems(to: menu, for: model)
+        addPasteItems(to: menu, title: pasteTitle)
 
         if model.pasteboardType.isText() {
             menu.addItem(makeMenuItem(
@@ -131,6 +80,66 @@ extension ClipItemMenuActionable where Self: NSObject {
         return menu
     }
 
+    private func addOpenItems(to menu: NSMenu, for model: PasteboardModel) {
+        if model.type == .file {
+            if let filePath = model.cachedFilePaths?.first {
+                let fileURL = URL(fileURLWithPath: filePath)
+                let appURL = NSWorkspace.shared.urlForApplication(toOpen: fileURL)
+                let appName = appURL.flatMap { bundleDisplayName(for: $0) } ?? "App"
+                menu.addItem(makeMenuItem(
+                    title: String(localized: .openInApp(appName)),
+                    symbol: "arrow.up.right.square",
+                    action: #selector(ClipItemMenuActionable.handleClipOpenWithDefaultApp)
+                ))
+            }
+            menu.addItem(makeMenuItem(
+                title: String(localized: .showInFinder),
+                symbol: "finder",
+                action: #selector(ClipItemMenuActionable.handleClipRevealInFinder)
+            ))
+            menu.addItem(.separator())
+        } else if model.type == .link {
+            let browserURL = NSWorkspace.shared.urlForApplication(
+                toOpen: URL(string: "https://")!
+            )
+            let browserName = browserURL.flatMap { bundleDisplayName(for: $0) } ?? ""
+            if !browserName.isEmpty {
+                menu.addItem(makeMenuItem(
+                    title: String(localized: .openInApp(browserName)),
+                    symbol: "arrow.up.right.square",
+                    action: #selector(ClipItemMenuActionable.handleClipOpenInBrowser)
+                ))
+                menu.addItem(.separator())
+            }
+        }
+
+    }
+
+    private func addPasteItems(to menu: NSMenu, title: String) {
+        menu.addItem(makeMenuItem(
+            title: title,
+            symbol: "doc.on.clipboard",
+            action: #selector(ClipItemMenuActionable.handleClipPaste),
+            keyEquivalent: "\r"
+        ))
+        menu.addItem(makeMenuItem(
+            title: String(localized: .pastePlain),
+            symbol: "text.justify.leading",
+            action: #selector(ClipItemMenuActionable.handleClipPastePlain),
+            keyEquivalent: "\r",
+            modifiers: .shift
+        ))
+        menu.addItem(makeMenuItem(
+            title: String(localized: .copy),
+            symbol: "doc.on.doc",
+            action: #selector(ClipItemMenuActionable.handleClipCopy),
+            keyEquivalent: "c",
+            modifiers: .command
+        ))
+        menu.addItem(.separator())
+
+    }
+
     // MARK: - Item Factories
 
     private func makeShareMenuItem(for model: PasteboardModel) -> NSMenuItem? {
@@ -147,7 +156,9 @@ extension ClipItemMenuActionable where Self: NSObject {
         let submenu = NSMenu()
         for service in services {
             let action = ClipShareAction(service: service, items: items)
-            let item = NSMenuItem(title: service.menuItemTitle, action: #selector(ClipShareAction.shareNow), keyEquivalent: "")
+            let item = NSMenuItem(
+                title: service.menuItemTitle, action: #selector(ClipShareAction.shareNow), keyEquivalent: ""
+            )
             item.image = service.image
             item.target = action
             item.representedObject = action
@@ -158,9 +169,9 @@ extension ClipItemMenuActionable where Self: NSObject {
     }
 
     private func bundleDisplayName(for appURL: URL) -> String? {
-        let b = Bundle(url: appURL)
-        return b?.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
-            ?? b?.object(forInfoDictionaryKey: "CFBundleName") as? String
+        let bundle = Bundle(url: appURL)
+        return bundle?.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
+            ?? bundle?.object(forInfoDictionaryKey: "CFBundleName") as? String
     }
 
     private func makeMenuItem(

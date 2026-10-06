@@ -127,11 +127,11 @@ private extension HUDManager {
 
     func centerWindow(_ window: NSWindow) {
         guard let screen = NSScreen.main else { return }
-        let sf = screen.visibleFrame
-        let wf = window.frame
-        let x = sf.midX - wf.width / 2
-        let y = sf.origin.y + 60
-        window.setFrameOrigin(NSPoint(x: x, y: y))
+        let screenFrame = screen.visibleFrame
+        let windowFrame = window.frame
+        let originX = screenFrame.midX - windowFrame.width / 2
+        let originY = screenFrame.origin.y + 60
+        window.setFrameOrigin(NSPoint(x: originX, y: originY))
     }
 }
 
@@ -169,9 +169,9 @@ private final class HUDWindow: NSPanel {
         if #available(macOS 26.0, *) {
             return makeGlassView()
         } else {
-            let ve = makeVisualEffectView()
-            contentTarget = ve
-            return ve
+            let effect = makeVisualEffectView()
+            contentTarget = effect
+            return effect
         }
     }
 
@@ -190,15 +190,15 @@ private final class HUDWindow: NSPanel {
     }
 
     private func makeVisualEffectView() -> NSVisualEffectView {
-        let ve = NSVisualEffectView(frame: NSRect(origin: .zero, size: Self.hudSize))
-        ve.material = .hudWindow
-        ve.blendingMode = .behindWindow
-        ve.state = .active
-        ve.wantsLayer = true
-        ve.layer?.cornerRadius = Self.cornerRadius
-        ve.layer?.cornerCurve = .continuous
-        ve.layer?.masksToBounds = true
-        return ve
+        let effect = NSVisualEffectView(frame: NSRect(origin: .zero, size: Self.hudSize))
+        effect.material = .hudWindow
+        effect.blendingMode = .behindWindow
+        effect.state = .active
+        effect.wantsLayer = true
+        effect.layer?.cornerRadius = Self.cornerRadius
+        effect.layer?.cornerCurve = .continuous
+        effect.layer?.masksToBounds = true
+        return effect
     }
 }
 

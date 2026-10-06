@@ -95,7 +95,7 @@ final class PasteMetadataCache {
     }
 
     private static let order: [PasteModelType] = [
-        .color, .file, .image, .link, .string,
+        .color, .file, .image, .link, .string
     ]
 
     private static func typeOrder(

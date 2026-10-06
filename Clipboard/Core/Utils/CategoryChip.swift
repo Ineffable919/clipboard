@@ -20,7 +20,7 @@ struct CategoryChip: Identifiable, Equatable, Codable {
         .purple,
         .red,
         .orange,
-        .yellow,
+        .yellow
     ]
 
     static let paletteNSColors: [NSColor] = [
@@ -30,7 +30,7 @@ struct CategoryChip: Identifiable, Equatable, Codable {
         .systemPurple,
         .systemRed,
         .systemOrange,
-        .systemYellow,
+        .systemYellow
     ]
 
     static let palette = paletteNSColors.map { Color(nsColor: $0) }
@@ -70,12 +70,12 @@ struct CategoryChip: Identifiable, Equatable, Codable {
             return [
                 PasteboardType.string.rawValue,
                 PasteboardType.rtf.rawValue,
-                PasteboardType.rtfd.rawValue,
+                PasteboardType.rtfd.rawValue
             ]
         case -3:
             return [
                 PasteboardType.png.rawValue,
-                PasteboardType.tiff.rawValue,
+                PasteboardType.tiff.rawValue
             ]
         case -4:
             return [PasteboardType.fileURL.rawValue]
@@ -110,6 +110,6 @@ struct CategoryChip: Identifiable, Equatable, Codable {
             name: String(localized: .clipboard),
             color: .gray,
             isSystem: true
-        ),
+        )
     ]
 }

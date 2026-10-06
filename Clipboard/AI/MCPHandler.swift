@@ -18,7 +18,7 @@ struct MCPHandler {
             return JSONRPC.success(id: id, result: [
                 "protocolVersion": "2024-11-05",
                 "capabilities": ["tools": [String: Any]()],
-                "serverInfo": ["name": "clipboard", "version": "1.0.0"],
+                "serverInfo": ["name": "clipboard", "version": "1.0.0"]
             ])
 
         case "tools/list":

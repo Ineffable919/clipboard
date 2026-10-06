@@ -7,6 +7,12 @@ import AppKit
 import SnapKit
 
 final class JSONToolbarView: NSView {
+    private struct Item {
+        let title: String
+        let action: Selector
+        let tag: Int
+    }
+
     var onAction: ((JSONToolAction) -> Void)?
     var onIndentationChange: ((JSONIndentation) -> Void)?
 
@@ -24,22 +30,22 @@ final class JSONToolbarView: NSView {
     private lazy var escapeButton = makeMenuButton(
         title: String(localized: .jsonEscape),
         items: [
-            (String(localized: .jsonRemoveEscapes), #selector(removeEscapes), 0),
-            (String(localized: .jsonAddEscapes), #selector(addEscapes), 0),
+            Item(title: String(localized: .jsonRemoveEscapes), action: #selector(removeEscapes), tag: 0),
+            Item(title: String(localized: .jsonAddEscapes), action: #selector(addEscapes), tag: 0)
         ]
     )
     private lazy var unicodeButton = makeMenuButton(
         title: String(localized: .jsonUnicode),
         items: [
-            (String(localized: .jsonDecodeUnicode), #selector(decodeUnicode), 0),
-            (String(localized: .jsonEncodeUnicode), #selector(encodeUnicode), 0),
+            Item(title: String(localized: .jsonDecodeUnicode), action: #selector(decodeUnicode), tag: 0),
+            Item(title: String(localized: .jsonEncodeUnicode), action: #selector(encodeUnicode), tag: 0)
         ]
     )
     private lazy var sortButton = makeMenuButton(
         title: String(localized: .jsonSortKeys),
         items: [
-            (String(localized: .jsonSortAscending), #selector(sortAscending), 0),
-            (String(localized: .jsonSortDescending), #selector(sortDescending), 0),
+            Item(title: String(localized: .jsonSortAscending), action: #selector(sortAscending), tag: 0),
+            Item(title: String(localized: .jsonSortDescending), action: #selector(sortDescending), tag: 0)
         ]
     )
     private lazy var namingButton = makeNamingButton()
@@ -52,7 +58,7 @@ final class JSONToolbarView: NSView {
             escapeButton,
             unicodeButton,
             sortButton,
-            namingButton,
+            namingButton
         ])
         stack.orientation = .horizontal
         stack.alignment = .centerY
@@ -127,18 +133,18 @@ final class JSONToolbarView: NSView {
 
     private func makeMenuButton(
         title: String,
-        items: [(String, Selector, Int)]
+        items: [Item]
     ) -> JSONToolbarButton {
         let button = JSONToolbarButton(title: title, showsMenuIndicator: true)
         let menu = NSMenu()
-        for (itemTitle, action, tag) in items {
+        for entry in items {
             let item = NSMenuItem(
-                title: itemTitle,
-                action: action,
+                title: entry.title,
+                action: entry.action,
                 keyEquivalent: ""
             )
             item.target = self
-            item.tag = tag
+            item.tag = entry.tag
             menu.addItem(item)
         }
         button.popupMenu = menu
@@ -148,7 +154,7 @@ final class JSONToolbarView: NSView {
     }
 
     private func makeNamingButton() -> JSONToolbarButton {
-        let items: [(String, Selector, Int)] = JSONKeyNaming.allCases.map { naming in
+        let items = JSONKeyNaming.allCases.map { naming in
             let title = switch naming {
             case .space: String(localized: .jsonKeySpace)
             case .title: String(localized: .jsonKeyTitle)
@@ -158,7 +164,7 @@ final class JSONToolbarView: NSView {
             case .camel: String(localized: .jsonKeyCamel)
             case .snake: String(localized: .jsonKeySnake)
             }
-            return (title, #selector(renameKeys(_:)), naming.rawValue)
+            return Item(title: title, action: #selector(renameKeys(_:)), tag: naming.rawValue)
         }
         return makeMenuButton(
             title: String(localized: .jsonRenameKeys),

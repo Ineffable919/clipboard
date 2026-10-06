@@ -111,7 +111,9 @@ private actor LoggerState {
         #if DEBUG
             return nil
         #else
-            guard let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            guard let appSupport = FileManager.default.urls(
+                for: .applicationSupportDirectory, in: .userDomainMask
+            ).first else {
                 return nil
             }
             let logsDir = appSupport.appending(path: "com.crown.clipboard/logs")

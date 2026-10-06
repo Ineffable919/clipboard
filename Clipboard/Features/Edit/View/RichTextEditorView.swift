@@ -26,18 +26,24 @@ final class RichTextEditorView: NSView {
 
     private let scrollView: NSScrollView
     private let textView: NSTextView
+    private var viewport: JSONViewportEditor?
 
     /// 当前编辑内容
     var currentContent: NSAttributedString {
-        textView.attributedString()
+        viewport?.richContent.map { NSAttributedString(attributedString: $0) } ?? textView.attributedString()
     }
 
     var currentText: String {
-        textView.string
+        viewport?.currentText ?? textView.string
+    }
+
+    var isEditable: Bool {
+        get { viewport?.isEditable ?? textView.isEditable }
+        set { textView.isEditable = newValue; viewport?.isEditable = newValue }
     }
 
     var hasRichFormatting: Bool {
-        let content = textView.attributedString()
+        let content = currentContent
         guard content.length > 0 else { return false }
         let range = NSRange(location: 0, length: content.length)
         var found = false
@@ -46,8 +52,7 @@ final class RichTextEditorView: NSView {
             if let underline = attributes[.underlineStyle] as? Int, underline != 0 {
                 found = true
             } else if let strikethrough = attributes[.strikethroughStyle] as? Int,
-                      strikethrough != 0
-            {
+                      strikethrough != 0 {
                 found = true
             } else if let font = attributes[.font] as? NSFont {
                 let traits = font.fontDescriptor.symbolicTraits
@@ -100,6 +105,9 @@ final class RichTextEditorView: NSView {
         textView.isHorizontallyResizable = false
         textView.isVerticallyResizable = true
         textView.layoutManager?.allowsNonContiguousLayout = true
+        // 限制长段落的排版范围，避免切换大 JSON 时同步排版全文
+        textView.layoutManager?.backgroundLayoutEnabled = false
+        textView.layoutManager?.typesetter = JSONTypesetter()
 
         textView.backgroundColor = .clear
         textView.drawsBackground = false
@@ -122,22 +130,38 @@ final class RichTextEditorView: NSView {
 
     // MARK: - Content
 
-    func setText(_ text: String) {
+    func setText(_ text: String, prepared: JSONPreparedText? = nil) {
+        if let prepared {
+            installViewport(text, prepared: prepared)
+            return
+        }
+        viewport?.cancelWork()
+        viewport?.removeFromSuperview()
+        viewport = nil
+        scrollView.isHidden = false
+        if #available(macOS 15.2, *) {
+            // 大文本全选会让 Writing Tools 查询全文选区并触发同步排版
+            textView.writingToolsBehavior = text.utf8.count >= 1_048_576 ? .none : .default
+        }
         textView.undoManager?.disableUndoRegistration()
         textView.typingAttributes = [
             .font: NSFont.systemFont(ofSize: 13),
-            .foregroundColor: NSColor.labelColor,
+            .foregroundColor: NSColor.labelColor
         ]
         textView.string = text
+        textView.setSelectedRange(NSRange(location: 0, length: 0))
         textView.undoManager?.enableUndoRegistration()
         textView.undoManager?.removeAllActions()
     }
 
     func focus() {
+        if let viewport { viewport.focus(); return }
+        textView.setSelectedRange(NSRange(location: 0, length: 0))
         window?.makeFirstResponder(textView)
     }
 
     func scrollToTop() {
+        if let viewport { viewport.scrollToTop(); return }
         let clipView = scrollView.contentView
         var targetBounds = clipView.bounds
         targetBounds.origin = .zero
@@ -149,10 +173,10 @@ final class RichTextEditorView: NSView {
     // MARK: - Format Actions
 
     func applyFormat(_ action: FormatAction) {
-        guard let textStorage = textView.textStorage else { return }
-
-        let selectedRange = textView.selectedRange()
+        guard let textStorage: NSMutableAttributedString = viewport?.richContent ?? textView.textStorage else { return }
+        let selectedRange = viewport?.selection ?? textView.selectedRange()
         guard selectedRange.length > 0 else { return }
+        viewport?.registerRichUndo(selectedRange, replacementLength: selectedRange.length)
 
         textStorage.beginEditing()
 
@@ -168,11 +192,10 @@ final class RichTextEditorView: NSView {
         }
 
         textStorage.endEditing()
-
-        onTextChange?()
+        if let viewport { viewport.refreshRich() } else { onTextChange?() }
     }
 
-    private func applyBold(to storage: NSTextStorage, range: NSRange) {
+    private func applyBold(to storage: NSMutableAttributedString, range: NSRange) {
         storage.enumerateAttribute(.font, in: range, options: []) { value, subRange, _ in
             let currentFont =
                 (value as? NSFont)
@@ -190,7 +213,7 @@ final class RichTextEditorView: NSView {
         }
     }
 
-    private func applyItalic(to storage: NSTextStorage, range: NSRange) {
+    private func applyItalic(to storage: NSMutableAttributedString, range: NSRange) {
         storage.enumerateAttribute(.font, in: range, options: []) { value, subRange, _ in
             let currentFont =
                 (value as? NSFont)
@@ -208,7 +231,7 @@ final class RichTextEditorView: NSView {
         }
     }
 
-    private func applyUnderline(to storage: NSTextStorage, range: NSRange) {
+    private func applyUnderline(to storage: NSMutableAttributedString, range: NSRange) {
         var hasUnderline = false
 
         storage.enumerateAttribute(.underlineStyle, in: range, options: []) { value, _, stop in
@@ -229,7 +252,7 @@ final class RichTextEditorView: NSView {
         }
     }
 
-    private func applyStrikethrough(to storage: NSTextStorage, range: NSRange) {
+    private func applyStrikethrough(to storage: NSMutableAttributedString, range: NSRange) {
         var hasStrikethrough = false
 
         storage.enumerateAttribute(.strikethroughStyle, in: range, options: []) { value, _, stop in
@@ -248,6 +271,40 @@ final class RichTextEditorView: NSView {
                 range: range
             )
         }
+    }
+}
+
+private extension RichTextEditorView {
+    func installViewport(_ text: String, prepared: JSONPreparedText) {
+        if viewport == nil {
+            let editor = JSONViewportEditor()
+            editor.enableRichText()
+            editor.textView.usesFontPanel = textView.usesFontPanel
+            editor.textView.usesRuler = textView.usesRuler
+            editor.textView.importsGraphics = textView.importsGraphics
+            editor.textView.allowsImageEditing = textView.allowsImageEditing
+            editor.textView.isAutomaticQuoteSubstitutionEnabled = textView.isAutomaticQuoteSubstitutionEnabled
+            editor.textView.isAutomaticDashSubstitutionEnabled = textView.isAutomaticDashSubstitutionEnabled
+            editor.textView.isAutomaticTextReplacementEnabled = textView.isAutomaticTextReplacementEnabled
+            editor.textView.isAutomaticSpellingCorrectionEnabled = textView.isAutomaticSpellingCorrectionEnabled
+            editor.textView.isContinuousSpellCheckingEnabled = textView.isContinuousSpellCheckingEnabled
+            if #available(macOS 15.2, *) { editor.textView.writingToolsBehavior = .none }
+            editor.onChange = { [weak self] _ in self?.onTextChange?() }
+            addSubview(editor)
+            editor.snp.makeConstraints { $0.edges.equalToSuperview() }
+            viewport = editor
+        }
+        scrollView.isHidden = true
+        textView.string = ""
+        layoutSubtreeIfNeeded()
+        viewport?.setText(text, document: nil, prepared: prepared)
+    }
+}
+
+extension RichTextEditorView {
+    func cancelWork() {
+        viewport?.cancelWork()
+        textView.undoManager?.removeAllActions()
     }
 }
 

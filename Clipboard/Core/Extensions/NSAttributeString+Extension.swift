@@ -29,9 +29,9 @@ extension NSAttributedString {
     func toData(with type: PasteboardType) -> Data? {
         switch type {
         case .rtf:
-            rtf(from: NSMakeRange(0, length))
+            rtf(from: NSRange(location: 0, length: length))
         case .rtfd:
-            rtfd(from: NSMakeRange(0, length))
+            rtfd(from: NSRange(location: 0, length: length))
         case .string:
             string.data(using: .utf8)
         default:

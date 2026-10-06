@@ -97,32 +97,32 @@ private final class TokenAttachmentCell: NSTextAttachmentCell {
         MainActor.assumeIsolated {
             let font = chipFont()
             let baselineOffset = TokenAttachment.alignedBaseline(for: font)
-            let y = baselineOffset - TokenAttachment.lineHeight
-            return NSPoint(x: 0, y: y)
+            let originY = baselineOffset - TokenAttachment.lineHeight
+            return NSPoint(x: 0, y: originY)
         }
     }
 
     // MARK: - Drawing
 
     override func draw(withFrame cellFrame: NSRect, in _: NSView?) {
-        let bg = NSBezierPath(
+        let background = NSBezierPath(
             roundedRect: cellFrame,
             xRadius: cellFrame.height / 2,
             yRadius: cellFrame.height / 2
         )
         Self.bgColor.setFill()
-        bg.fill()
+        background.fill()
 
         if #unavailable(macOS 26), isSelected {
             NSColor.selectedTextBackgroundColor.withAlphaComponent(0.4).setFill()
-            bg.fill()
+            background.fill()
         }
 
-        var x = cellFrame.minX + hPad
+        var originX = cellFrame.minX + hPad
 
         if let icon = inputTag.icon {
             let iconRect = NSRect(
-                x: x,
+                x: originX,
                 y: cellFrame.midY - iconSize / 2,
                 width: iconSize,
                 height: iconSize
@@ -130,23 +130,22 @@ private final class TokenAttachmentCell: NSTextAttachmentCell {
             let displayIcon: NSImage = if icon.isTemplate,
                                           let colored = icon.withSymbolConfiguration(
                                               .init(paletteColors: [.labelColor])
-                                          )
-            {
+                                          ) {
                 colored
             } else {
                 icon
             }
             displayIcon.draw(in: iconRect)
-            x += iconSize + gap
+            originX += iconSize + gap
         }
 
         let font = chipFont()
         let textAttrs: [NSAttributedString.Key: Any] = [
             .font: font,
-            .foregroundColor: NSColor.labelColor,
+            .foregroundColor: NSColor.labelColor
         ]
         let textOrigin = NSPoint(
-            x: x,
+            x: originX,
             y: cellFrame.midY - font.ascender + font.capHeight / 2
         )
         (inputTag.label as NSString).draw(at: textOrigin, withAttributes: textAttrs)

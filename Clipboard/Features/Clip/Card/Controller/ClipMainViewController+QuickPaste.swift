@@ -74,7 +74,7 @@ extension ClipMainViewController {
             UInt16(kVK_ANSI_6): 5,
             UInt16(kVK_ANSI_7): 6,
             UInt16(kVK_ANSI_8): 7,
-            UInt16(kVK_ANSI_9): 8,
+            UInt16(kVK_ANSI_9): 8
         ]
 
         return numberKeyCodes[event.keyCode]

@@ -13,7 +13,7 @@ enum SettingPage: CaseIterable, Identifiable {
     case privacy
     case keyboard
     case storage
-    case ai
+    case mcp
     case about
 
     var id: Self {
@@ -27,7 +27,7 @@ enum SettingPage: CaseIterable, Identifiable {
         case .privacy: "hand.raised"
         case .keyboard: "command"
         case .storage: "externaldrive"
-        case .ai:
+        case .mcp:
             if #available(macOS 15.0, *) {
                 "apple.intelligence"
             } else {
@@ -44,7 +44,7 @@ enum SettingPage: CaseIterable, Identifiable {
         case .privacy: .pagePrivacy
         case .keyboard: .pageKeyboard
         case .storage: .pageStorage
-        case .ai: .pageMcp
+        case .mcp: .pageMcp
         case .about: .pageAbout
         }
     }
@@ -56,11 +56,11 @@ struct SettingView: View {
     @AppStorage(PrefKey.pasteDirect.rawValue) private var pasteDirect = true
 
     var body: some View {
-        @Bindable var vm = viewModel
+        @Bindable var model = viewModel
 
         NavigationSplitView {
             VStack(spacing: 0) {
-                List(selection: $vm.selectedPage) {
+                List(selection: $model.selectedPage) {
                     ForEach(SettingPage.allCases) { page in
                         NavigationLink(value: page) {
                             HStack(spacing: Const.space8) {
@@ -72,7 +72,7 @@ struct SettingView: View {
 
                                 Spacer(minLength: Const.space8)
 
-                                if page == .ai {
+                                if page == .mcp {
                                     Text(verbatim: "Beta")
                                         .font(.caption2.weight(.medium))
                                         .foregroundStyle(.secondary)
@@ -111,7 +111,7 @@ struct SettingView: View {
             .frame(minWidth: 200)
         } detail: {
             Group {
-                switch vm.selectedPage {
+                switch model.selectedPage {
                 case .general:
                     GeneralSettingView()
                 case .appearance:
@@ -122,13 +122,13 @@ struct SettingView: View {
                     KeyboardSettingView()
                 case .storage:
                     StorageSettingView()
-                case .ai:
+                case .mcp:
                     AISettingsView()
                 case .about:
                     AboutSettingView()
                 }
             }
-            .navigationTitle(Text(vm.selectedPage.title))
+            .navigationTitle(Text(model.selectedPage.title))
             .toolbarTitleDisplayMode(.inline)
         }
         .onAppear {
@@ -174,7 +174,7 @@ struct HelpCenterButton: View {
     var body: some View {
         Button(action: {
             NSWorkspace.shared.open(Self.helpURL)
-        }) {
+        }, label: {
             HStack {
                 Image(systemName: "questionmark.circle")
                 Text(.help)
@@ -182,7 +182,7 @@ struct HelpCenterButton: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, Const.space8)
             .padding(.vertical, Const.space6)
-        }
+        })
         .buttonStyle(.plain)
     }
 }

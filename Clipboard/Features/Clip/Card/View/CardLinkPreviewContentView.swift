@@ -16,59 +16,59 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
     // MARK: - Subviews
 
     private lazy var imageContainerView: DynamicBackgroundView = {
-        let v = DynamicBackgroundView()
-        v.wantsLayer = true
-        return v
+        let view = DynamicBackgroundView()
+        view.wantsLayer = true
+        return view
     }()
 
     private lazy var previewImageView: NSImageView = {
-        let iv = NSImageView()
-        iv.imageScaling = .scaleProportionallyUpOrDown
-        iv.isHidden = true
-        return iv
+        let image = NSImageView()
+        image.imageScaling = .scaleProportionallyUpOrDown
+        image.isHidden = true
+        return image
     }()
 
     private lazy var iconImageView: NSImageView = {
-        let iv = NSImageView()
-        iv.imageScaling = .scaleProportionallyUpOrDown
-        iv.isHidden = true
-        return iv
+        let image = NSImageView()
+        image.imageScaling = .scaleProportionallyUpOrDown
+        image.isHidden = true
+        return image
     }()
 
     private lazy var placeholderImageView: NSImageView = {
-        let iv = NSImageView()
-        iv.image = NSImage(systemSymbolName: "link", accessibilityDescription: nil)
-        iv.contentTintColor = .secondaryLabelColor
-        iv.imageScaling = .scaleProportionallyUpOrDown
-        return iv
+        let image = NSImageView()
+        image.image = NSImage(systemSymbolName: "link", accessibilityDescription: nil)
+        image.contentTintColor = .secondaryLabelColor
+        image.imageScaling = .scaleProportionallyUpOrDown
+        return image
     }()
 
     private lazy var infoView: DynamicBackgroundView = {
-        let v = DynamicBackgroundView()
-        v.wantsLayer = true
-        return v
+        let view = DynamicBackgroundView()
+        view.wantsLayer = true
+        return view
     }()
 
     private lazy var titleLabel: NSTextField = {
-        let f = NSTextField(labelWithString: "")
-        f.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .semibold)
-        f.textColor = .labelColor
-        f.lineBreakMode = .byTruncatingTail
-        f.maximumNumberOfLines = 1
-        return f
+        let field = NSTextField(labelWithString: "")
+        field.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .semibold)
+        field.textColor = .labelColor
+        field.lineBreakMode = .byTruncatingTail
+        field.maximumNumberOfLines = 1
+        return field
     }()
 
     private lazy var urlLabel: NSTextField = {
-        let f = NSTextField(labelWithString: "")
-        f.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-        f.textColor = .secondaryLabelColor
-        f.lineBreakMode = .byTruncatingMiddle
-        f.maximumNumberOfLines = 1
-        f.usesSingleLineMode = true
-        f.cell?.wraps = false
-        f.cell?.truncatesLastVisibleLine = true
-        f.allowsEditingTextAttributes = false
-        return f
+        let field = NSTextField(labelWithString: "")
+        field.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        field.textColor = .secondaryLabelColor
+        field.lineBreakMode = .byTruncatingMiddle
+        field.maximumNumberOfLines = 1
+        field.usesSingleLineMode = true
+        field.cell?.wraps = false
+        field.cell?.truncatesLastVisibleLine = true
+        field.allowsEditingTextAttributes = false
+        return field
     }()
 
     // MARK: - State
@@ -258,7 +258,7 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
         let baseAttrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize),
             .foregroundColor: NSColor.secondaryLabelColor,
-            .paragraphStyle: paragraphStyle,
+            .paragraphStyle: paragraphStyle
         ]
 
         let mutable = NSMutableAttributedString(string: urlString, attributes: baseAttrs)

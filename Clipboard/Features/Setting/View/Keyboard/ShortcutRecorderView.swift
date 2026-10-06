@@ -162,11 +162,13 @@ struct ShortcutRecorder: View {
         uninstallEventHandle()
     }
 
+}
+
+extension ShortcutRecorder {
     // MARK: - EventHandle
 
     private func installEventHandle() {
-        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) {
-            event in
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             handleKeyEvent(event)
         }
 
@@ -221,12 +223,12 @@ struct ShortcutRecorder: View {
         }
 
         let modifiers = event.modifierFlags.intersection([
-            .command, .option, .control, .shift,
+            .command, .option, .control, .shift
         ])
 
         let functionKeyCodes: Set<UInt16> = [
             0x7A, 0x78, 0x63, 0x76, 0x60, 0x61,
-            0x62, 0x64, 0x65, 0x6D, 0x67, 0x6F,
+            0x62, 0x64, 0x65, 0x6D, 0x67, 0x6F
         ]
         let isFunctionKey = functionKeyCodes.contains(keyCode)
 
@@ -234,33 +236,7 @@ struct ShortcutRecorder: View {
             return event
         }
 
-        let specialMap: [UInt16: String] = [
-            KeyCode.delete: "⌫",
-            0x75: "⌦",
-            KeyCode.return: "↩",
-            KeyCode.keypadEnter: "⌅",
-            KeyCode.space: "Space",
-            KeyCode.tab: "⇥",
-            KeyCode.leftArrow: "←",
-            KeyCode.rightArrow: "→",
-            KeyCode.downArrow: "↓",
-            KeyCode.upArrow: "↑",
-            0x7A: "F1", 0x78: "F2", 0x63: "F3", 0x76: "F4", 0x60: "F5",
-            0x61: "F6", 0x62: "F7", 0x64: "F8", 0x65: "F9", 0x6D: "F10",
-            0x67: "F11", 0x6F: "F12",
-        ]
-
-        let displayKey: String =
-            if let special = specialMap[keyCode] {
-                special
-            } else if let eventChars = event.charactersIgnoringModifiers,
-                      !eventChars.isEmpty,
-                      eventChars.unicodeScalars.allSatisfy({ $0.value >= 32 })
-            {
-                eventChars.uppercased()
-            } else {
-                keyCodeToDisplayString(keyCode)
-            }
+        let displayKey = displayKey(for: event)
 
         guard !displayKey.isEmpty else {
             return event
@@ -277,15 +253,46 @@ struct ShortcutRecorder: View {
         return nil
     }
 
+    private func displayKey(for event: NSEvent) -> String {
+        let keyCode = event.keyCode
+        let specialMap: [UInt16: String] = [
+            KeyCode.delete: "⌫",
+            0x75: "⌦",
+            KeyCode.return: "↩",
+            KeyCode.keypadEnter: "⌅",
+            KeyCode.space: "Space",
+            KeyCode.tab: "⇥",
+            KeyCode.leftArrow: "←",
+            KeyCode.rightArrow: "→",
+            KeyCode.downArrow: "↓",
+            KeyCode.upArrow: "↑",
+            0x7A: "F1", 0x78: "F2", 0x63: "F3", 0x76: "F4", 0x60: "F5",
+            0x61: "F6", 0x62: "F7", 0x64: "F8", 0x65: "F9", 0x6D: "F10",
+            0x67: "F11", 0x6F: "F12"
+        ]
+
+        return
+            if let special = specialMap[keyCode] {
+                special
+            } else if let eventChars = event.charactersIgnoringModifiers,
+                      !eventChars.isEmpty,
+                      eventChars.unicodeScalars.allSatisfy({ $0.value >= 32 }) {
+                eventChars.uppercased()
+            } else {
+                keyCodeToDisplayString(keyCode)
+            }
+
+    }
+
     private func keyCodeToDisplayString(_ keyCode: UInt16) -> String {
         let keyCodeMap: [UInt16: String] = [
-            KeyCode.a: "A", KeyCode.b: "B", KeyCode.c: "C", KeyCode.d: "D",
-            KeyCode.e: "E", KeyCode.f: "F", KeyCode.g: "G", KeyCode.h: "H",
-            KeyCode.i: "I", KeyCode.j: "J", KeyCode.k: "K", KeyCode.l: "L",
-            KeyCode.m: "M", KeyCode.n: "N", KeyCode.o: "O", KeyCode.p: "P",
-            KeyCode.q: "Q", KeyCode.r: "R", KeyCode.s: "S", KeyCode.t: "T",
-            KeyCode.u: "U", KeyCode.v: "V", KeyCode.w: "W", KeyCode.x: "X",
-            KeyCode.y: "Y", KeyCode.z: "Z",
+            KeyCode.keyA: "A", KeyCode.keyB: "B", KeyCode.keyC: "C", KeyCode.keyD: "D",
+            KeyCode.keyE: "E", KeyCode.keyF: "F", KeyCode.keyG: "G", KeyCode.keyH: "H",
+            KeyCode.keyI: "I", KeyCode.keyJ: "J", KeyCode.keyK: "K", KeyCode.keyL: "L",
+            KeyCode.keyM: "M", KeyCode.keyN: "N", KeyCode.keyO: "O", KeyCode.keyP: "P",
+            KeyCode.keyQ: "Q", KeyCode.keyR: "R", KeyCode.keyS: "S", KeyCode.keyT: "T",
+            KeyCode.keyU: "U", KeyCode.keyV: "V", KeyCode.keyW: "W", KeyCode.keyX: "X",
+            KeyCode.keyY: "Y", KeyCode.keyZ: "Z",
             KeyCode.zero: "0", KeyCode.one: "1", KeyCode.two: "2",
             KeyCode.three: "3", KeyCode.four: "4", KeyCode.five: "5",
             KeyCode.six: "6", KeyCode.seven: "7", KeyCode.eight: "8",
@@ -294,7 +301,7 @@ struct ShortcutRecorder: View {
             KeyCode.leftBracket: "[", KeyCode.rightBracket: "]",
             KeyCode.backslash: "\\", KeyCode.semicolon: ";",
             KeyCode.quote: "'", KeyCode.comma: ",",
-            KeyCode.period: ".", KeyCode.slash: "/", KeyCode.grave: "`",
+            KeyCode.period: ".", KeyCode.slash: "/", KeyCode.grave: "`"
         ]
         return keyCodeMap[keyCode] ?? ""
     }

@@ -83,7 +83,7 @@ class OCRViewService {
                 let options: String.CompareOptions = [
                     .caseInsensitive,
                     .diacriticInsensitive,
-                    .widthInsensitive,
+                    .widthInsensitive
                 ]
 
                 var searchStart = text.startIndex
@@ -93,8 +93,7 @@ class OCRViewService {
                           options: options,
                           range: searchStart ..< text.endIndex,
                           locale: .current
-                      )
-                {
+                      ) {
                     // 用 VNRecognizedText 的 boundingBox(for:) 获取子串精确位置
                     if let box = try? candidate.boundingBox(
                         for: range

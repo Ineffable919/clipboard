@@ -12,11 +12,13 @@ final class EditStatisticsBar: NSView {
     // MARK: - Subviews
 
     private let label: NSTextField = {
-        let f = NSTextField(labelWithString: "")
-        f.font = .systemFont(ofSize: 13)
-        f.textColor = .secondaryLabelColor
-        f.lineBreakMode = .byTruncatingTail
-        return f
+        let field = NSTextField(wrappingLabelWithString: "")
+        field.font = .systemFont(ofSize: 13)
+        field.textColor = .secondaryLabelColor
+        field.isSelectable = false
+        field.maximumNumberOfLines = 2
+        field.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        return field
     }()
 
     private let statusLabel: NSTextField = {
@@ -62,7 +64,7 @@ final class EditStatisticsBar: NSView {
         progressIndicator.setAccessibilityLabel(String(localized: .jsonProcessing))
         label.snp.makeConstraints { make in
             make.leading.equalToSuperview().inset(Const.space12)
-            make.trailing.lessThanOrEqualTo(statusLabel.snp.leading).offset(-Const.space12)
+            make.trailing.equalToSuperview().inset(Const.space12)
             make.centerY.equalToSuperview()
         }
 
@@ -93,6 +95,17 @@ final class EditStatisticsBar: NSView {
         if !isJSON { progressIndicator.stopAnimation(nil) }
         statusLabel.isHidden = !isJSON
         positionLabel.isHidden = !isJSON
+        label.maximumNumberOfLines = isJSON ? 1 : 2
+        label.lineBreakMode = isJSON ? .byTruncatingTail : .byWordWrapping
+        label.snp.remakeConstraints { make in
+            make.leading.equalToSuperview().inset(Const.space12)
+            make.centerY.equalToSuperview()
+            if isJSON {
+                make.trailing.lessThanOrEqualTo(statusLabel.snp.leading).offset(-Const.space12)
+            } else {
+                make.trailing.equalToSuperview().inset(Const.space12)
+            }
+        }
         if isJSON, statusLabel.stringValue.isEmpty {
             setProcessing()
         }

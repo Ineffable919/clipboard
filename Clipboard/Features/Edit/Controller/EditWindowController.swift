@@ -15,13 +15,11 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
     private static let minHeight: CGFloat = 300.0
     private static let jsonWidth: CGFloat = 800.0
     private static let jsonHeight: CGFloat = 600.0
-    private static let modeResizeDuration = 0.18
 
     private(set) var currentModel: PasteboardModel?
 
     private var editContentView: EditContentView?
     private var stableWindowCenter: NSPoint?
-    private var resizeGeneration = 0
     private var isResizingForMode = false
     private var needsInitialPresentation = false
 
@@ -129,8 +127,8 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
         contentView.onSave = { [weak self] content in
             self?.saveContent(content)
         }
-        contentView.onModeChange = { [weak self] mode, animated in
-            self?.updateWindow(for: mode, animated: animated)
+        contentView.onModeChange = { [weak self] mode in
+            self?.updateWindow(for: mode)
         }
         window?.contentView = contentView
         editContentView = contentView
@@ -190,7 +188,6 @@ private extension EditWindowController {
     /// 在装载文本前根据模式同步设定尺寸并居中于当前屏幕
     func prepareInitialWindow(for mode: EditMode) {
         guard let window else { return }
-        resizeGeneration += 1
         isResizingForMode = false
 
         let targetWidth = mode == .json ? Self.jsonWidth : Self.minWidth
@@ -220,7 +217,7 @@ private extension EditWindowController {
         window.makeKeyAndOrderFront(nil)
     }
 
-    func updateWindow(for mode: EditMode, animated: Bool) {
+    func updateWindow(for mode: EditMode) {
         guard let window else { return }
 
         if needsInitialPresentation {
@@ -233,8 +230,6 @@ private extension EditWindowController {
         let targetHeight = mode == .json ? Self.jsonHeight : Self.minHeight
         let center = stableWindowCenter ?? Self.center(of: window.frame)
 
-        resizeGeneration += 1
-        let generation = resizeGeneration
         isResizingForMode = true
         window.minSize = NSSize(width: targetWidth, height: targetHeight)
 
@@ -249,46 +244,13 @@ private extension EditWindowController {
 
         guard window.frame != frame else {
             isResizingForMode = false
-            editContentView?.scrollActiveEditorToTop()
             return
         }
 
-        guard animated else {
-            window.setFrame(frame, display: true)
-            isResizingForMode = false
-            stableWindowCenter = Self.center(of: window.frame)
-            editContentView?.scrollActiveEditorToTop()
-            return
-        }
-
-        animateWindow(window, to: frame, generation: generation)
-    }
-
-    func animateWindow(
-        _ window: NSWindow,
-        to frame: NSRect,
-        generation: Int
-    ) {
-        NSAnimationContext.runAnimationGroup(
-            { context in
-                context.duration = Self.modeResizeDuration
-                context.timingFunction = CAMediaTimingFunction(
-                    name: .easeInEaseOut
-                )
-                window.animator().setFrame(frame, display: true)
-            },
-            completionHandler: { [weak self] in
-                Task { @MainActor in
-                    guard let self,
-                          generation == self.resizeGeneration
-                    else {
-                        return
-                    }
-                    self.isResizingForMode = false
-                    self.editContentView?.scrollActiveEditorToTop()
-                }
-            }
-        )
+        window.setFrame(frame, display: false)
+        window.layoutIfNeeded()
+        isResizingForMode = false
+        stableWindowCenter = Self.center(of: window.frame)
     }
 
     func updateStableWindowCenter() {
@@ -297,7 +259,6 @@ private extension EditWindowController {
     }
 
     func finishModeResize() {
-        resizeGeneration += 1
         isResizingForMode = false
         if let window {
             stableWindowCenter = Self.center(of: window.frame)

@@ -39,10 +39,10 @@ enum PasteUserDefaults {
                 key: "app_launch",
                 shortcut: KeyboardShortcut(
                     modifiersRawValue: NSEvent.ModifierFlags([
-                        .command, .shift,
+                        .command, .shift
                     ])
                     .rawValue,
-                    keyCode: KeyCode.v,
+                    keyCode: KeyCode.keyV,
                     displayKey: "V"
                 ),
                 isEnabled: true,
@@ -67,7 +67,7 @@ enum PasteUserDefaults {
                 ),
                 isEnabled: true,
                 isGlobal: false
-            ),
+            )
         ]
     )
     static var globalHotKeys
@@ -98,7 +98,7 @@ enum PasteUserDefaults {
                     name: String(localized: .keychain),
                     bundleIdentifier: "com.apple.keychainaccess",
                     path: "/System/Applications/Utilities/Keychain Access.app"
-                ),
+                )
             ]
             if #available(macOS 15.0, *) {
                 apps.insert(

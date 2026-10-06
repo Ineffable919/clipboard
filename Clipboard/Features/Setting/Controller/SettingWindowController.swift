@@ -21,7 +21,7 @@ class SettingWindowController: NSWindowController {
                 height: Const.settingHeight
             ),
             styleMask: [
-                .titled, .closable, .miniaturizable, .fullSizeContentView,
+                .titled, .closable, .miniaturizable, .fullSizeContentView
             ],
             backing: .buffered,
             defer: false

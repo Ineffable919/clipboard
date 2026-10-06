@@ -24,30 +24,30 @@ final class PreviewFooterBar: NSView {
     // MARK: - Subviews
 
     private let firstLineLabel: NSTextField = {
-        let f = NSTextField(labelWithString: "")
-        f.font = .systemFont(ofSize: NSFont.systemFontSize)
-        f.textColor = .secondaryLabelColor
-        f.lineBreakMode = .byCharWrapping
-        f.maximumNumberOfLines = 1
-        return f
+        let field = NSTextField(labelWithString: "")
+        field.font = .systemFont(ofSize: NSFont.systemFontSize)
+        field.textColor = .secondaryLabelColor
+        field.lineBreakMode = .byCharWrapping
+        field.maximumNumberOfLines = 1
+        return field
     }()
 
     private let secondLineLabel: NSTextField = {
-        let f = NSTextField(labelWithString: "")
-        f.font = .systemFont(ofSize: NSFont.systemFontSize)
-        f.textColor = .secondaryLabelColor
-        f.lineBreakMode = .byTruncatingHead
-        f.maximumNumberOfLines = 1
-        return f
+        let field = NSTextField(labelWithString: "")
+        field.font = .systemFont(ofSize: NSFont.systemFontSize)
+        field.textColor = .secondaryLabelColor
+        field.lineBreakMode = .byTruncatingHead
+        field.maximumNumberOfLines = 1
+        return field
     }()
 
     private lazy var infoStack: NSStackView = {
-        let sv = NSStackView(views: [firstLineLabel, secondLineLabel])
-        sv.orientation = .vertical
-        sv.alignment = .leading
-        sv.spacing = 0
-        sv.distribution = .fill
-        return sv
+        let stack = NSStackView(views: [firstLineLabel, secondLineLabel])
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 0
+        stack.distribution = .fill
+        return stack
     }()
 
     private let finderButton: PreviewPillButton = {
@@ -205,20 +205,20 @@ final class PreviewFooterBar: NSView {
         }
 
         let chars = Array(text)
-        var lo = 0
-        var hi = chars.count
-        while lo < hi {
-            let mid = (lo + hi + 1) / 2
+        var lower = 0
+        var upper = chars.count
+        while lower < upper {
+            let mid = (lower + upper + 1) / 2
             let sub = String(chars[..<mid])
             if (sub as NSString).size(withAttributes: attrs).width <= maxWidth {
-                lo = mid
+                lower = mid
             } else {
-                hi = mid - 1
+                upper = mid - 1
             }
         }
 
-        let line1 = String(chars[..<lo])
-        let line2 = String(chars[lo...]) + suffix
+        let line1 = String(chars[..<lower])
+        let line2 = String(chars[lower...]) + suffix
         return (line1, line2)
     }
 }

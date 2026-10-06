@@ -103,10 +103,10 @@ final class PasteboardModel: Identifiable, Codable {
             cachedImageSize = Self.computeImageSize(from: data)
         }
 
-        let (bg, fg, hasBg) = computeColors()
-        cachedBackgroundColor = bg
-        cachedForegroundColor = fg
-        cachedHasBackgroundColor = hasBg
+        let colors = computeColors()
+        cachedBackgroundColor = colors.background
+        cachedForegroundColor = colors.foreground
+        cachedHasBackgroundColor = colors.hasBackground
         if type == .rich, hasBgColor, safeBgColor == nil {
             cachedRichForegrounds = Self.richForegrounds(in: attributeString)
         }
@@ -136,7 +136,7 @@ final class PasteboardModel: Identifiable, Codable {
                  .mathSymbol, .currencySymbol, .modifierSymbol, .otherSymbol:
                 output.append(character)
             default:
-                if (scalar.value == 0x23 || scalar.value == 0x2A),
+                if scalar.value == 0x23 || scalar.value == 0x2A,
                    character.unicodeScalars.contains(where: { $0.value == 0x20E3 }) {
                     output.append(character)
                 }

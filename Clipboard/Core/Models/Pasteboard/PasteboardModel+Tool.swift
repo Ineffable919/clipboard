@@ -18,8 +18,7 @@ extension PasteboardModel {
             return "\(prefix.sha256Hex)-\(data.count)"
         case .rtf, .rtfd:
             if let attributeString = NSAttributedString(with: data, type: type),
-               let textData = attributeString.string.data(using: .utf8)
-            {
+               let textData = attributeString.string.data(using: .utf8) {
                 return textData.sha256Hex
             }
             return data.sha256Hex
@@ -64,18 +63,18 @@ extension PasteboardModel {
         let width: CGFloat
         let height: CGFloat
 
-        if let w = properties[kCGImagePropertyPixelWidth] as? Int {
-            width = CGFloat(w)
-        } else if let w = properties[kCGImagePropertyPixelWidth] as? CGFloat {
-            width = w
+        if let pixelWidth = properties[kCGImagePropertyPixelWidth] as? Int {
+            width = CGFloat(pixelWidth)
+        } else if let pixelWidth = properties[kCGImagePropertyPixelWidth] as? CGFloat {
+            width = pixelWidth
         } else {
             return nil
         }
 
-        if let h = properties[kCGImagePropertyPixelHeight] as? Int {
-            height = CGFloat(h)
-        } else if let h = properties[kCGImagePropertyPixelHeight] as? CGFloat {
-            height = h
+        if let pixelHeight = properties[kCGImagePropertyPixelHeight] as? Int {
+            height = CGFloat(pixelHeight)
+        } else if let pixelHeight = properties[kCGImagePropertyPixelHeight] as? CGFloat {
+            height = pixelHeight
         } else {
             return nil
         }

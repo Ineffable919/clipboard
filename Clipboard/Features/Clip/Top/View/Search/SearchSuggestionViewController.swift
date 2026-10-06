@@ -37,40 +37,40 @@ final class SearchSuggestionViewController: NSViewController {
     // MARK: - Views
 
     private lazy var scrollView: NSScrollView = {
-        let sv = NSScrollView()
-        sv.hasVerticalScroller = false
-        sv.hasHorizontalScroller = false
-        sv.drawsBackground = false
-        sv.horizontalScrollElasticity = .none
-        sv.verticalScrollElasticity = .none
-        sv.contentInsets = NSEdgeInsets(
+        let scroll = NSScrollView()
+        scroll.hasVerticalScroller = false
+        scroll.hasHorizontalScroller = false
+        scroll.drawsBackground = false
+        scroll.horizontalScrollElasticity = .none
+        scroll.verticalScrollElasticity = .none
+        scroll.contentInsets = NSEdgeInsets(
             top: Metrics.verticalInset,
             left: 0,
             bottom: Metrics.verticalInset,
             right: 0
         )
-        sv.automaticallyAdjustsContentInsets = false
-        return sv
+        scroll.automaticallyAdjustsContentInsets = false
+        return scroll
     }()
 
     private lazy var tableView: NSTableView = {
-        let tv = NSTableView()
-        tv.headerView = nil
-        tv.rowHeight = Metrics.rowHeight
-        tv.intercellSpacing = .zero
-        tv.backgroundColor = .clear
-        tv.selectionHighlightStyle = .none
-        tv.style = .plain
+        let table = NSTableView()
+        table.headerView = nil
+        table.rowHeight = Metrics.rowHeight
+        table.intercellSpacing = .zero
+        table.backgroundColor = .clear
+        table.selectionHighlightStyle = .none
+        table.style = .plain
 
         let column = NSTableColumn(identifier: .init("suggestion"))
         column.isEditable = false
         column.resizingMask = .autoresizingMask
-        tv.addTableColumn(column)
+        table.addTableColumn(column)
 
-        tv.dataSource = self
-        tv.delegate = self
+        table.dataSource = self
+        table.delegate = self
 
-        return tv
+        return table
     }()
 
     private lazy var trackingArea = NSTrackingArea(
@@ -183,14 +183,12 @@ final class SearchSuggestionViewController: NSViewController {
             let isSelected = row == highlightedIndex
 
             if let rowView = tableView.rowView(atRow: row, makeIfNecessary: false)
-                as? SearchSuggestionRowView
-            {
+                as? SearchSuggestionRowView {
                 rowView.setItemHighlighted(isSelected)
             }
 
             if let cellView = tableView.view(atColumn: 0, row: row, makeIfNecessary: false)
-                as? SearchSuggestionCellView
-            {
+                as? SearchSuggestionCellView {
                 cellView.setHighlighted(isSelected)
             }
         }

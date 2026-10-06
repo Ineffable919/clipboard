@@ -170,12 +170,12 @@ private final class CardFileBottomView: NSView, PassthroughMouseEvents {
     }()
 
     private lazy var stack: NSStackView = {
-        let sv = NSStackView(views: [firstLineLabel, secondLineLabel])
-        sv.orientation = .vertical
-        sv.alignment = .centerX
-        sv.spacing = 0
-        sv.distribution = .fill
-        return sv
+        let stack = NSStackView(views: [firstLineLabel, secondLineLabel])
+        stack.orientation = .vertical
+        stack.alignment = .centerX
+        stack.spacing = 0
+        stack.distribution = .fill
+        return stack
     }()
 
     init(model: PasteboardModel, keyword: String) {
@@ -201,8 +201,12 @@ private final class CardFileBottomView: NSView, PassthroughMouseEvents {
                 firstLineLabel.stringValue = line1
                 secondLineLabel.stringValue = line2
             } else {
-                firstLineLabel.attributedStringValue = highlightLine(line1, keyword: keyword, label: firstLineLabel, textColor: textColor)
-                secondLineLabel.attributedStringValue = highlightLine(line2, keyword: keyword, label: secondLineLabel, textColor: textColor)
+                firstLineLabel.attributedStringValue = highlightLine(
+                    line1, keyword: keyword, label: firstLineLabel, textColor: textColor
+                )
+                secondLineLabel.attributedStringValue = highlightLine(
+                    line2, keyword: keyword, label: secondLineLabel, textColor: textColor
+                )
             }
 
             secondLineLabel.isHidden = line2.isEmpty
@@ -227,29 +231,31 @@ private final class CardFileBottomView: NSView, PassthroughMouseEvents {
         }
 
         let chars = Array(text)
-        var lo = 0
-        var hi = chars.count
-        while lo < hi {
-            let mid = (lo + hi + 1) / 2
+        var lower = 0
+        var upper = chars.count
+        while lower < upper {
+            let mid = (lower + upper + 1) / 2
             let sub = String(chars[..<mid])
             if (sub as NSString).size(withAttributes: attrs).width <= maxWidth {
-                lo = mid
+                lower = mid
             } else {
-                hi = mid - 1
+                upper = mid - 1
             }
         }
 
-        return (String(chars[..<lo]), String(chars[lo...]))
+        return (String(chars[..<lower]), String(chars[lower...]))
     }
 
-    private func highlightLine(_ text: String, keyword: String, label: NSTextField, textColor: NSColor) -> NSAttributedString {
+    private func highlightLine(
+        _ text: String, keyword: String, label: NSTextField, textColor: NSColor
+    ) -> NSAttributedString {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineBreakMode = label.lineBreakMode
         let font = label.font ?? .preferredFont(forTextStyle: .callout)
         let mutable = NSMutableAttributedString(string: text, attributes: [
             .font: font,
             .foregroundColor: textColor,
-            .paragraphStyle: paragraphStyle,
+            .paragraphStyle: paragraphStyle
         ])
         let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return mutable }
@@ -342,7 +348,7 @@ final class CardCommonBottomView: NSView, PassthroughMouseEvents {
             gradientLayer.colors = [
                 resolved.cgColor,
                 resolved.cgColor,
-                resolved.withAlphaComponent(0.0).cgColor,
+                resolved.withAlphaComponent(0.0).cgColor
             ]
         }
         gradientLayer.startPoint = CGPoint(x: 0.5, y: 0.0)

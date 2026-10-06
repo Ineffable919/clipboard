@@ -13,15 +13,13 @@ final class SettingWindow: NSWindow {
 
     override func keyDown(with event: NSEvent) {
         if event.modifierFlags.contains(.command),
-           event.charactersIgnoringModifiers == "w"
-        {
+           event.charactersIgnoringModifiers == "w" {
             onCommandW?()
             return
         }
 
         if event.modifierFlags.contains(.command),
-           event.charactersIgnoringModifiers == "m"
-        {
+           event.charactersIgnoringModifiers == "m" {
             onCommandM?()
             return
         }

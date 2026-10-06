@@ -32,12 +32,12 @@ final class PreviewPillButton: NSView {
     private let style: Style
 
     private let label: NSTextField = {
-        let f = NSTextField(labelWithString: "")
-        f.font = .systemFont(ofSize: NSFont.systemFontSize)
-        f.textColor = .controlTextColor
-        f.lineBreakMode = .byTruncatingTail
-        f.cell?.truncatesLastVisibleLine = true
-        return f
+        let field = NSTextField(labelWithString: "")
+        field.font = .systemFont(ofSize: NSFont.systemFontSize)
+        field.textColor = .controlTextColor
+        field.lineBreakMode = .byTruncatingTail
+        field.cell?.truncatesLastVisibleLine = true
+        return field
     }()
 
     private let backgroundLayer = CALayer()
@@ -172,9 +172,7 @@ final class PreviewPillButton: NSView {
         let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
         let pressedColor: NSColor = switch style {
         case .secondary:
-            isDark
-                ? .white.withAlphaComponent(0.14)
-                : .black.withAlphaComponent(0.10)
+            if isDark { .white.withAlphaComponent(0.14) } else { .black.withAlphaComponent(0.10) }
         case .primary:
             .controlAccentColor.blended(withFraction: 0.2, of: .black) ?? .controlAccentColor
         }

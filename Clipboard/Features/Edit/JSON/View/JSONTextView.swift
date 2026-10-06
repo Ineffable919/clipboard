@@ -5,6 +5,7 @@ final class JSONTextView: NSTextView {
     var onPrepareEdit: ((NSRange) -> NSRange)?
     var onExpand: (() -> Void)?
     var onCopy: ((NSRange) -> String)?
+    var onCopyRich: (() -> NSAttributedString)?
     var onSelectAll: (() -> Void)?
     var onMove: ((Selector) -> Bool)?
     var onInputChange: (() -> Void)?
@@ -73,10 +74,24 @@ final class JSONTextView: NSTextView {
     }
 
     override func writeSelection(to pasteboard: NSPasteboard, type: NSPasteboard.PasteboardType) -> Bool {
+        if type == .rtf, let onCopyRich {
+            let content = onCopyRich()
+            guard let data = try? content.data(
+                from: NSRange(location: 0, length: content.length),
+                documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf]
+            ) else { return false }
+            return pasteboard.setData(data, forType: .rtf)
+        }
         if type == .string, let onCopy {
             return pasteboard.setString(onCopy(selectedRange()), forType: .string)
         }
         return super.writeSelection(to: pasteboard, type: type)
+    }
+
+    override var writablePasteboardTypes: [NSPasteboard.PasteboardType] {
+        if onCopyRich != nil { return [.string, .rtf] }
+        if onCopy != nil { return [.string] }
+        return super.writablePasteboardTypes
     }
 
     override func performFindPanelAction(_ sender: Any?) {

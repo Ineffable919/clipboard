@@ -86,13 +86,24 @@ final class JSONToolbarButton: NSButton {
             options: [
                 .mouseEnteredAndExited,
                 .activeInKeyWindow,
-                .inVisibleRect,
+                .inVisibleRect
             ],
             owner: self,
             userInfo: nil
         )
         addTrackingArea(area)
         trackingAreaReference = area
+        refreshHover()
+    }
+
+    func refreshHover() {
+        // 窗口或按钮移动后，鼠标未移动也需要按实际位置刷新悬停状态
+        if let window, window.isKeyWindow, !isHiddenOrHasHiddenAncestor {
+            isHovering = bounds.contains(convert(window.mouseLocationOutsideOfEventStream, from: nil))
+        } else {
+            isHovering = false
+        }
+        needsDisplay = true
     }
 
     override func mouseEntered(with _: NSEvent) {

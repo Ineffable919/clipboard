@@ -9,4 +9,9 @@ nonisolated final class JSONPreparedText: @unchecked Sendable {
         source = text as NSString
         index = JSONViewportIndex.build(source, lineStarts: lineStarts ?? JSONLineIndex.build(for: text))
     }
+
+    init(source: NSString, index: JSONViewportIndex) {
+        self.source = source.copy() as? NSString ?? source
+        self.index = index
+    }
 }

@@ -8,7 +8,7 @@
 import Combine
 
 final class CardViewModel {
-    private let pd = PasteDataStore.main
+    private let store = PasteDataStore.main
 
     func deleteMultiple(_ items: [PasteboardModel]) {
         guard !items.isEmpty else { return }
@@ -34,26 +34,33 @@ final class CardViewModel {
 
         let viewOnlyIds = Set((toUngroup + toHide).compactMap(\.id))
         if !viewOnlyIds.isEmpty {
-            var list = pd.dataList.value
+            var list = store.dataList.value
             list.removeAll { viewOnlyIds.contains($0.id ?? -1) }
-            pd.updateData(with: list, changeType: .delete)
+            store.updateData(with: list, changeType: .delete)
 
-            if !toUngroup.isEmpty {
-                Task {
-                    for item in toUngroup {
-                        guard let id = item.id else { continue }
-                        await pd.updateItemGroupInDB(id: id, groupId: -1)
-                    }
-                }
-            }
-            for item in toHide {
-                guard let id = item.id else { continue }
-                pd.updateItemHidden(itemId: id, hidden: true)
-            }
+            ungroup(toUngroup)
+            hide(toHide)
         }
 
         if !toPermDelete.isEmpty {
-            pd.deleteItems(toPermDelete)
+            store.deleteItems(toPermDelete)
+        }
+    }
+
+    private func ungroup(_ items: [PasteboardModel]) {
+        guard !items.isEmpty else { return }
+        Task {
+            for item in items {
+                guard let id = item.id else { continue }
+                await store.updateItemGroupInDB(id: id, groupId: -1)
+            }
+        }
+    }
+
+    private func hide(_ items: [PasteboardModel]) {
+        for item in items {
+            guard let id = item.id else { continue }
+            store.updateItemHidden(itemId: id, hidden: true)
         }
     }
 
@@ -64,23 +71,23 @@ final class CardViewModel {
 
         if isInGroup {
             if item.hidden {
-                pd.deleteItems(item)
+                store.deleteItems(item)
             } else {
-                var list = pd.dataList.value
+                var list = store.dataList.value
                 list.removeAll(where: { $0.id == id })
-                pd.updateData(with: list, changeType: .delete)
+                store.updateData(with: list, changeType: .delete)
 
                 Task {
-                    await pd.updateItemGroupInDB(id: id, groupId: -1)
+                    await store.updateItemGroupInDB(id: id, groupId: -1)
                 }
             }
         } else if item.group != -1 {
-            var list = pd.dataList.value
+            var list = store.dataList.value
             list.removeAll(where: { $0.id == id })
-            pd.updateData(with: list, changeType: .delete)
-            pd.updateItemHidden(itemId: id, hidden: true)
+            store.updateData(with: list, changeType: .delete)
+            store.updateItemHidden(itemId: id, hidden: true)
         } else {
-            pd.deleteItems(item)
+            store.deleteItems(item)
         }
     }
 }

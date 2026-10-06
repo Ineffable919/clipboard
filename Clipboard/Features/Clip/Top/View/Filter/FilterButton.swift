@@ -81,22 +81,18 @@ class FilterButton: NSView {
             stack.addArrangedSubview(iconImageView)
         }
 
-        label.stringValue = title
-        label.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .regular)
-        label.isBordered = false
-        label.drawsBackground = false
-        label.isEditable = false
-        label.isSelectable = false
-        label.maximumNumberOfLines = 1
-        label.lineBreakMode = .byTruncatingTail
-        label.cell?.usesSingleLineMode = true
-        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        stack.addArrangedSubview(label)
+        setupLabel(title)
 
         let spacer = NSView()
         spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
         stack.addArrangedSubview(spacer)
 
+        setupTracking()
+
+        updateAppearance(animated: false)
+    }
+
+    private func setupTracking() {
         let area = NSTrackingArea(
             rect: .zero,
             options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
@@ -111,7 +107,21 @@ class FilterButton: NSView {
         )
         addGestureRecognizer(click)
 
-        updateAppearance(animated: false)
+    }
+
+    private func setupLabel(_ title: String) {
+        label.stringValue = title
+        label.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .regular)
+        label.isBordered = false
+        label.drawsBackground = false
+        label.isEditable = false
+        label.isSelectable = false
+        label.maximumNumberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
+        label.cell?.usesSingleLineMode = true
+        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        stack.addArrangedSubview(label)
+
     }
 
     // MARK: - Appearance

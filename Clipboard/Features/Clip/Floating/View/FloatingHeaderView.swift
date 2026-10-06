@@ -14,19 +14,19 @@ import Sparkle
 final class FloatingHeaderView: NSView {
     // MARK: - Subviews
 
-    private let backgroundView = NSView()
+    let backgroundView = NSView()
 
-    private let dragHandle = FloatingDragHandle()
-    private let pinButton = FloatingPinButton()
+    let dragHandle = FloatingDragHandle()
+    let pinButton = FloatingPinButton()
     let searchField = FloatingSearchField()
-    private let settingsBtn = TopBarIconButton(symbolName: "ellipsis")
-    private let chipScrollView = ChipScrollView()
-    private let addChipBtn = TopBarIconButton(symbolName: "plus")
+    let settingsBtn = TopBarIconButton(symbolName: "ellipsis")
+    let chipScrollView = ChipScrollView()
+    let addChipBtn = TopBarIconButton(symbolName: "plus")
 
     // MARK: - State
 
-    private let effectView: NSView = FloatingHeaderView.buildEffectView()
-    private weak var topVM: TopBarViewModel?
+    let effectView: NSView = FloatingHeaderView.buildEffectView()
+    weak var topVM: TopBarViewModel?
 
     // MARK: - Init
 
@@ -73,171 +73,6 @@ final class FloatingHeaderView: NSView {
         window?.firstResponder === searchField
     }
 
-    func reloadChips() {
-        guard let topVM else { return }
-        let chips = topVM.chips()
-        let selectedId = topVM.getSelectChipId()
-
-        chipScrollView.reload(
-            chips: chips,
-            selectedId: selectedId,
-            dotMode: false,
-            compact: true,
-            creatingChip: topVM.editingNewChip,
-            makeConfig: { [weak self] chip, isSelected, dotMode in
-                let isEditing = topVM.editingChipId == chip.id
-                return .init(
-                    chip: chip,
-                    isSelected: isSelected,
-                    dotMode: dotMode,
-                    compact: true,
-                    isEditing: isEditing,
-                    editingName: isEditing ? topVM.editingChipName : chip.name,
-                    editingColorIndex: isEditing ? topVM.editingChipColorIndex : chip.colorIndex,
-                    action: { [weak self] in
-                        self?.chipScrollView.selectedChipId = chip.id
-                        self?.chipScrollView.onSelectionChanged?(chip.id)
-                    },
-                    onEdit: { [weak self] in
-                        topVM.startEditingChip(chip)
-                        self?.reloadChips()
-                    },
-                    onDelete: { [weak self] in
-                        self?.confirmDeleteChip(chip)
-                    },
-                    onColorChange: { [weak self] colorIndex in
-                        topVM.updateChip(chip, colorIndex: colorIndex)
-                        self?.reloadChips()
-                    },
-                    onEditingNameChange: { text in
-                        topVM.editingChipName = text
-                    },
-                    onEditingSubmit: { [weak self] in
-                        topVM.commitEditingChip()
-                        self?.reloadChips()
-                    },
-                    onEditingCancel: { [weak self] in
-                        topVM.cancelEditingChip()
-                        self?.reloadChips()
-                    },
-                    onEditingFocusChange: { [weak self] focused in
-                        self?.onChipEditingFocusChange?(focused)
-                    },
-                    onDrop: { [weak self] model in
-                        self?.topVM?.assignModelToChip(model: model, chipId: chip.id) ?? false
-                    }
-                )
-            }
-        )
-        chipScrollView.onSelectionChanged = { [weak self] id in
-            self?.topVM?.setSelectChipId(chip: id)
-            self?.chipScrollView.scrollToChip(id: id)
-            self?.onChipSelected?()
-        }
-
-        if topVM.editingNewChip {
-            appendNewChipPlaceholder()
-        }
-    }
-
-    // MARK: - New Chip Creation
-
-    private func startCreatingChip() {
-        startCreatingChip(pinModel: nil)
-    }
-
-    func startCreatingChip(pinModel: PasteboardModel?) {
-        guard let topVM else { return }
-        if topVM.editingNewChip {
-            commitNewChip()
-        }
-        if topVM.editingChipId != nil {
-            topVM.commitEditingChip()
-        }
-        topVM.editingNewChip = true
-        topVM.newChipName = String(localized: .untitled)
-        topVM.pendingPinModel = pinModel
-        reloadChips()
-    }
-
-    private func appendNewChipPlaceholder() {
-        guard let topVM else { return }
-        let placeholder = CategoryChip(
-            id: Int.min,
-            name: topVM.newChipName,
-            colorIndex: topVM.newChipColorIndex,
-            isSystem: false
-        )
-        let config = ChipButton.Config(
-            chip: placeholder,
-            isSelected: true,
-            dotMode: false,
-            compact: true,
-            isEditing: true,
-            editingName: topVM.newChipName,
-            editingColorIndex: topVM.newChipColorIndex,
-            action: {},
-            onColorChange: { [weak self] colorIndex in
-                self?.topVM?.newChipColorIndex = colorIndex
-                self?.refreshNewChipPlaceholder()
-            },
-            onEditingNameChange: { [weak self] text in
-                self?.topVM?.newChipName = text
-            },
-            onEditingSubmit: { [weak self] in self?.commitNewChip() },
-            onEditingCancel: { [weak self] in self?.cancelNewChip() },
-            onEditingFocusChange: { [weak self] focused in
-                self?.onChipEditingFocusChange?(focused)
-            }
-        )
-        chipScrollView.appendNewChipButton(config: config)
-        chipScrollView.scrollToEnd()
-    }
-
-    private func refreshNewChipPlaceholder() {
-        guard let topVM, topVM.editingNewChip else { return }
-        chipScrollView.removeNewChipButton()
-        appendNewChipPlaceholder()
-    }
-
-    private func commitNewChip() {
-        endNewChip(commit: true)
-    }
-
-    private func cancelNewChip() {
-        endNewChip(commit: false)
-    }
-
-    private func endNewChip(commit: Bool) {
-        guard let topVM, topVM.editingNewChip else { return }
-        topVM.editingNewChip = false
-        topVM.commitNewChipOrCancel(commitIfNonEmpty: commit)
-        reloadChips()
-        if commit {
-            onChipSelected?()
-        }
-    }
-
-    private func confirmDeleteChip(_ chip: CategoryChip) {
-        guard !chip.isSystem else { return }
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            let count = await PasteDataStore.main.getCountByGroup(groupId: chip.id)
-            if count == 0 {
-                topVM?.removeChip(chip)
-                reloadChips()
-                return
-            }
-
-            guard NSAlert.runConfirm(
-                title: String(localized: .deleteChipTitle(chip.name)),
-                message: String(localized: .deleteChipMessage(chip.name))
-            ) else { return }
-            topVM?.removeChip(chip)
-            reloadChips()
-        }
-    }
-
     func commitKeyboardEditing() {
         guard let topVM else { return }
         if topVM.editingNewChip {
@@ -280,7 +115,7 @@ final class FloatingHeaderView: NSView {
 
     // MARK: - Setup
 
-    private func setup() {
+    func setup() {
         wantsLayer = true
         layer?.masksToBounds = true
 
@@ -346,7 +181,7 @@ final class FloatingHeaderView: NSView {
         observeUpdateBadge()
     }
 
-    private func observeUpdateBadge() {
+    func observeUpdateBadge() {
         withObservationTracking {
             settingsBtn.showBadge = UpdateManager.shared.hasUpdate
         } onChange: { [weak self] in
@@ -363,7 +198,7 @@ final class FloatingHeaderView: NSView {
         updateBackground()
     }
 
-    private func setupBackground() {
+    func setupBackground() {
         addSubview(effectView)
         effectView.snp.makeConstraints { make in
             make.top.leading.trailing.equalToSuperview()
@@ -378,7 +213,7 @@ final class FloatingHeaderView: NSView {
         }
     }
 
-    private func updateBackground() {
+    func updateBackground() {
         guard #available(macOS 26.0, *) else { return }
         let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
         backgroundView.layer?.backgroundColor = NSColor(WelcomeStyle.background(for: isDark ? .dark : .light))
@@ -391,17 +226,17 @@ final class FloatingHeaderView: NSView {
             glassView.cornerRadius = 0
             return glassView
         }
-        let ve = NSVisualEffectView()
-        ve.wantsLayer = true
-        ve.state = .active
-        ve.blendingMode = .withinWindow
-        ve.material = .popover
-        return ve
+        let effect = NSVisualEffectView()
+        effect.wantsLayer = true
+        effect.state = .active
+        effect.blendingMode = .withinWindow
+        effect.material = .popover
+        return effect
     }
 
     // MARK: - Settings Menu
 
-    private func showSettingsMenu() {
+    func showSettingsMenu() {
         let builder = TopBarMenuBuilder(target: self, topVM: topVM)
         let menu = builder.buildSettingsMenu()
         if let event = NSApp.currentEvent {
@@ -411,7 +246,7 @@ final class FloatingHeaderView: NSView {
 
     // MARK: - Actions
 
-    @objc private func clearSearchField() {
+    @objc func clearSearchField() {
         searchField.stringValue = ""
         topVM?.setQuery(text: "")
     }
@@ -468,129 +303,5 @@ extension FloatingHeaderView: TopBarMenuActions {
 
     func pause8HoursAction() {
         topVM?.pause(for: 480)
-    }
-}
-
-// MARK: - FloatingDragHandle
-
-private final class FloatingDragHandle: NSView {
-    private let pill = NSView()
-
-    override init(frame: NSRect) {
-        super.init(frame: frame)
-        pill.wantsLayer = true
-        pill.layer?.cornerRadius = 2
-        addSubview(pill)
-        pill.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-            make.width.equalTo(36)
-            make.height.equalTo(4)
-        }
-        updateColor()
-    }
-
-    @available(*, unavailable)
-    required init?(coder _: NSCoder) {
-        fatalError()
-    }
-
-    override func viewDidChangeEffectiveAppearance() {
-        super.viewDidChangeEffectiveAppearance()
-        updateColor()
-    }
-
-    private func updateColor() {
-        effectiveAppearance.performAsCurrentDrawingAppearance {
-            pill.layer?.backgroundColor = NSColor.secondaryLabelColor
-                .withAlphaComponent(0.3).cgColor
-        }
-    }
-
-    override func mouseDown(with event: NSEvent) {
-        window?.performDrag(with: event)
-    }
-}
-
-// MARK: - FloatingSearchField
-
-final class FloatingSearchField: NSSearchField {
-    @Published private(set) var text: String = ""
-    var onBecomeFirstResponder: (() -> Void)?
-
-    override var stringValue: String {
-        didSet {
-            if stringValue != text {
-                text = stringValue
-            }
-        }
-    }
-
-    override func textDidChange(_ notification: Notification) {
-        super.textDidChange(notification)
-        text = stringValue
-    }
-
-    override init(frame: NSRect) {
-        super.init(frame: frame)
-        placeholderString = String(localized: .search)
-        controlSize = .large
-    }
-
-    @available(*, unavailable)
-    required init?(coder _: NSCoder) {
-        fatalError()
-    }
-
-    override func becomeFirstResponder() -> Bool {
-        let result = super.becomeFirstResponder()
-        if result {
-            onBecomeFirstResponder?()
-        }
-        return result
-    }
-}
-
-// MARK: - FloatingPinButton
-
-final class FloatingPinButton: NSButton {
-    private(set) var isPinned = false {
-        didSet { updateAppearance() }
-    }
-
-    override init(frame: NSRect) {
-        super.init(frame: frame)
-        setup()
-    }
-
-    override var acceptsFirstResponder: Bool {
-        false
-    }
-
-    @available(*, unavailable)
-    required init?(coder _: NSCoder) {
-        fatalError()
-    }
-
-    private func setup() {
-        isBordered = false
-        imageScaling = .scaleNone
-        target = self
-        action = #selector(toggle)
-        toolTip = String(localized: .pin)
-        updateAppearance()
-    }
-
-    @objc private func toggle() {
-        isPinned.toggle()
-        ClipFloatingWindowController.shared.isPinned = isPinned
-        toolTip = String(localized: isPinned ? .unpin : .pin)
-    }
-
-    private func updateAppearance() {
-        let symbolName = isPinned ? "pin.fill" : "pin"
-        let config = NSImage.SymbolConfiguration(pointSize: 14, weight: .regular)
-        image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?
-            .withSymbolConfiguration(config)
-        contentTintColor = isPinned ? .controlAccentColor : .secondaryLabelColor
     }
 }

@@ -84,11 +84,15 @@ extension JSONViewportEditor {
         let end = NSMaxRange(displayBlocks[wanted.upperBound - 1].range)
         page = NSRange(location: start, length: end - start)
         pageText = displayText(page)
-        textView.string = pageText
-        textView.textStorage?.setAttributes([
-            .font: NSFont.monospacedSystemFont(ofSize: 13, weight: .regular),
-            .foregroundColor: NSColor.labelColor
-        ], range: NSRange(location: 0, length: (textView.string as NSString).length))
+        if let richContent {
+            textView.textStorage?.setAttributedString(richContent.attributedSubstring(from: page))
+        } else {
+            textView.string = pageText
+            textView.textStorage?.setAttributes([
+                .font: NSFont.monospacedSystemFont(ofSize: 13, weight: .regular),
+                .foregroundColor: NSColor.labelColor
+            ], range: NSRange(location: 0, length: (textView.string as NSString).length))
+        }
         textView.setFrameSize(NSSize(width: pageWidth, height: 1))
         textView.textContainer?.containerSize = NSSize(
             width: max(100, pageWidth - 20), height: .greatestFiniteMagnitude
@@ -194,6 +198,7 @@ extension JSONViewportEditor {
     }
 
     func scheduleHighlight() {
+        guard richContent == nil else { return }
         let text = textView.string
         let revision = revision
         highlightTask = Task { @MainActor [weak self] in
