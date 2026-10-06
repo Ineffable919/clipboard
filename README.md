@@ -3,7 +3,7 @@
     <h2 align="center">Clipboard</h2>
     <div align="center">A macOS clipboard manager that helps you manage and use your clipboard history more efficiently.
 </div>
-    <div align="center"><strong>English</strong> | <a href="https://github.com/Ineffable919/clipboard/blob/master/README.md">中文</a></div>
+    <div align="center"><strong>English</strong> | <a href="https://github.com/Ineffable919/clipboard/blob/master/README_ZH.md">中文</a></div>
 </p>
 <img src="examples.png">
 
@@ -65,10 +65,6 @@ Download the latest version [releases](https://github.com/Ineffable919/clipboard
 sudo xattr -r -d com.apple.quarantine /Applications/Clipboard.app 
 sudo codesign --force --deep --sign - /Applications/Clipboard.app
 ```
-
-### Accessibility permissions lost after app update?
-  - Please use version 0.3.1, as the subsequent versions have resolved this issue.
-
 
 ## License
 
