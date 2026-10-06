@@ -3,7 +3,7 @@
     <h2 align="center">Clipboard</h2>
     <div align="center">一款 macOS 剪贴板管理工具，帮助您更高效地管理和使用剪贴板历史记录。
 </div>
-    <div align="center"><a href="https://github.com/Ineffable919/clipboard/blob/master/README_EN.md">English</a> | <strong>中文</strong></div>
+    <div align="center"><a href="https://github.com/Ineffable919/clipboard/blob/master/README.md">English</a> | <strong>中文</strong></div>
 </p>
 
 <img src="examples.png">
@@ -65,10 +65,6 @@
 sudo xattr -r -d com.apple.quarantine /Applications/Clipboard.app 
 sudo codesign --force --deep --sign - /Applications/Clipboard.app
 ```
-
-### 应用更新后辅助权限丢失？
-  - 请使用0.3.1版本，后续版本已解决该问题。
-
 
 ## 许可证
 
