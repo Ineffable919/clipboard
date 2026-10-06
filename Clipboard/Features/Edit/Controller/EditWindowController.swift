@@ -121,6 +121,7 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
         saveTask?.cancel()
         saveTask = nil
         editContentView?.cancelWork()
+        window?.orderOut(nil)
         let contentView = EditContentView(model: model)
         contentView.onCancel = { [weak self] in
             self?.closeWindow()
@@ -133,8 +134,7 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
         }
         window?.contentView = contentView
         editContentView = contentView
-        prepareInitialWindow(for: contentView.initialMode)
-        presentPreparedWindow()
+        prepareInitialWindow(for: .text)
     }
 
     func closeWindow() {
@@ -187,10 +187,9 @@ private extension EditWindowController {
         saveContent(contentView.currentContent)
     }
 
-    /// 在装载文本前根据模式同步设定尺寸并居中于当前屏幕。
+    /// 在装载文本前根据模式同步设定尺寸并居中于当前屏幕
     func prepareInitialWindow(for mode: EditMode) {
         guard let window else { return }
-        needsInitialPresentation = false
         resizeGeneration += 1
         isResizingForMode = false
 
@@ -211,11 +210,12 @@ private extension EditWindowController {
         stableWindowCenter = Self.center(of: frame)
     }
 
-    /// 文本、行号宽度和约束都稳定后再显示窗口，首帧即为文档顶部。
+    /// 真实模式确定后按最终尺寸显示窗口，索引构建期间保留加载提示
     func presentPreparedWindow() {
-        guard let window, !needsInitialPresentation else { return }
+        guard let window, needsInitialPresentation else { return }
         window.layoutIfNeeded()
         editContentView?.scrollActiveEditorToTop()
+        needsInitialPresentation = false
         NSApp.activate(ignoringOtherApps: true)
         window.makeKeyAndOrderFront(nil)
     }
@@ -225,6 +225,7 @@ private extension EditWindowController {
 
         if needsInitialPresentation {
             prepareInitialWindow(for: mode)
+            presentPreparedWindow()
             return
         }
 

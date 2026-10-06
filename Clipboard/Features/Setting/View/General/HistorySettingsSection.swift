@@ -7,6 +7,7 @@ import SwiftUI
 
 struct HistorySettingsSection: View {
     @State private var isClearing = false
+    @State private var isUpdating = false
     @State private var selectedHistoryTimeUnit: HistoryTimeUnit =
         .init(rawValue: PasteUserDefaults.historyTime)
 
@@ -25,8 +26,9 @@ struct HistorySettingsSection: View {
                     selectedTimeUnit: $selectedHistoryTimeUnit
                 )
                 .onChange(of: selectedHistoryTimeUnit) { _, newValue in
-                    PasteUserDefaults.historyTime = newValue.rawValue
+                    applyLimit(newValue)
                 }
+                .disabled(isClearing || isUpdating)
                 .padding(.top, Const.space8)
 
                 Divider()
@@ -41,12 +43,25 @@ struct HistorySettingsSection: View {
                         title: .generalClearHistory,
                         action: PasteDataStore.main.clearAllData
                     )
-                    .disabled(isClearing)
+                    .disabled(isClearing || isUpdating)
                 }
             }
             .padding(Const.space12)
             .settingsStyle()
         }
         .onReceive(PasteDataStore.main.clearingHistory) { isClearing = $0 }
+    }
+
+    private func applyLimit(_ timeUnit: HistoryTimeUnit) {
+        guard timeUnit.rawValue != PasteUserDefaults.historyTime else { return }
+        isUpdating = true
+        Task {
+            defer { isUpdating = false }
+            if await PasteDataStore.main.confirmHistoryLimit(timeUnit) {
+                PasteUserDefaults.historyTime = timeUnit.rawValue
+            } else {
+                selectedHistoryTimeUnit = .init(rawValue: PasteUserDefaults.historyTime)
+            }
+        }
     }
 }

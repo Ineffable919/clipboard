@@ -36,8 +36,6 @@ final class EditContentView: NSVisualEffectView {
     private let loadingView = NSView()
     private let loadingIndicator = NSProgressIndicator()
 
-    let initialMode: EditMode
-
     private let editorCard: NSView = {
         let view = NSView()
         view.wantsLayer = true
@@ -57,8 +55,6 @@ final class EditContentView: NSVisualEffectView {
     // MARK: - Init
 
     init(model: PasteboardModel) {
-        let prefix = String(bytes: model.data.prefix(4096), encoding: .utf8) ?? ""
-        initialMode = JSONTransformer.looksLikeJSON(prefix) ? .json : .text
         super.init(frame: .zero)
         material = .popover
         blendingMode = .behindWindow
@@ -176,10 +172,10 @@ final class EditContentView: NSVisualEffectView {
 
         jsonEditor.isHidden = true
         textEditor.isHidden = true
-        toolbar.setMode(initialMode)
+        toolbar.setMode(mode)
         toolbar.setLoading(true)
         toolbar.setModeToggleVisible(false)
-        statisticsBar.setMode(initialMode)
+        statisticsBar.setMode(mode)
         statisticsBar.isHidden = true
     }
 
@@ -191,8 +187,12 @@ final class EditContentView: NSVisualEffectView {
         let width = jsonEditor.preparationWidth
         contentTask?.cancel()
         contentTask = Task { @MainActor [weak self] in
-            let worker = Task.detached(priority: .userInitiated) {
-                JSONDocument.load(data: data, type: typeRawValue, width: width)
+            let worker = Task.detached(priority: .userInitiated) { [weak self] in
+                await JSONDocument.load(data: data, type: typeRawValue, width: width) { [weak self] isValid in
+                    guard let self, !isClosed, !Task.isCancelled else { return }
+                    toolbar.setMode(isValid ? .json : .text)
+                    onModeChange?(isValid ? .json : .text, false)
+                }
             }
             let loaded = await withTaskCancellationHandler {
                 await worker.value

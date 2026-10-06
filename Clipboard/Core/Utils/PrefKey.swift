@@ -114,12 +114,12 @@ enum HistoryTimeUnit: Equatable {
 
     var rawValue: Int {
         switch self {
-        case let .days(n):
-            n // 1-6
-        case let .weeks(n):
-            6 + n // 7-9
-        case let .months(n):
-            9 + n // 10-20
+        case let .days(count):
+            count // 1-6
+        case let .weeks(count):
+            6 + count // 7-9
+        case let .months(count):
+            9 + count // 10-20
         case .year:
             21
         case .forever:
@@ -142,18 +142,36 @@ enum HistoryTimeUnit: Equatable {
         }
     }
 
-    var displayText: String {
+    /// 与历史清理共用日历计算，永久保留不产生截止时间
+    func cutoffTimestamp(at date: Date = .now, calendar: Calendar = .current) -> Int64? {
+        let components: DateComponents
         switch self {
-        case let .days(n):
-            String.localizedStringWithFormat(String(localized: "historyDays", defaultValue: "%lld days", table: "Localizable"), n)
-        case let .weeks(n):
-            String.localizedStringWithFormat(String(localized: "historyWeeks", defaultValue: "%lld weeks", table: "Localizable"), n)
-        case let .months(n):
-            String.localizedStringWithFormat(String(localized: "historyMonths", defaultValue: "%lld months", table: "Localizable"), n)
+        case let .days(count):
+            components = DateComponents(day: -count)
+        case let .weeks(count):
+            components = DateComponents(day: -count * 7)
+        case let .months(count):
+            components = DateComponents(month: -count)
         case .year:
-            String(localized: .historyYear)
+            components = DateComponents(year: -1)
         case .forever:
-            String(localized: .historyForever)
+            return nil
+        }
+        return calendar.date(byAdding: components, to: date).map { Int64($0.timeIntervalSince1970) }
+    }
+
+    var displayText: LocalizedStringResource {
+        switch self {
+        case let .days(count):
+            .historyDays(count)
+        case let .weeks(count):
+            .historyWeeks(count)
+        case let .months(count):
+            .historyMonths(count)
+        case .year:
+            .historyYear
+        case .forever:
+            .historyForever
         }
     }
 }

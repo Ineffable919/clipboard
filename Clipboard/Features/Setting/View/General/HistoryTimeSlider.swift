@@ -43,12 +43,7 @@ struct HistoryTimeSlider: View {
                 .allowsHitTesting(false)
 
                 Slider(
-                    value: Binding(
-                        get: { sliderValue },
-                        set: { newValue in
-                            sliderValue = snapToStep(newValue)
-                        }
-                    ),
+                    value: $sliderValue.snappedHistoryValue,
                     in: 0 ... 4,
                     onEditingChanged: { editing in
                         isEditing = editing
@@ -61,44 +56,58 @@ struct HistoryTimeSlider: View {
                 .accessibilityValue(Text(currentTimeUnit.displayText))
             }
 
-            ZStack {
-                if !isEditing {
-                    GeometryReader { geometry in
-                        let width = geometry.size.width
-                        ZStack(alignment: .leading) {
-                            ForEach(
-                                Array(milestones.enumerated()),
-                                id: \.offset
-                            ) { index, label in
-                                let position = tickPosition(for: index, in: width)
-                                Text(label)
-                                    .font(.callout)
-                                    .foregroundStyle(.primary)
-                                    .fixedSize(horizontal: true, vertical: false)
-                                    .alignmentGuide(.leading) { dimensions in
-                                        let centered = position - dimensions.width / 2
-                                        return -max(0, min(centered, width - dimensions.width))
-                                    }
-                                    .frame(
-                                        width: width,
-                                        alignment: .leading
-                                    )
+            HStack {
+                ForEach(0 ..< 5, id: \.self) { index in
+                    Text(milestones[index])
+                        .font(.callout)
+                }
+            }
+            .hidden()
+            .accessibilityHidden(true)
+            .frame(maxWidth: .infinity, minHeight: Const.space16)
+            .overlay {
+                ZStack {
+                    if !isEditing {
+                        GeometryReader { geometry in
+                            let width = geometry.size.width
+                            ZStack(alignment: .leading) {
+                                ForEach(
+                                    Array(milestones.enumerated()),
+                                    id: \.offset
+                                ) { index, label in
+                                    let position = tickPosition(for: index, in: width)
+                                    Text(label)
+                                        .foregroundStyle(.primary)
+                                        .fixedSize(horizontal: true, vertical: false)
+                                        .alignmentGuide(.leading) { dimensions in
+                                            let centered = position - dimensions.width / 2
+                                            return -max(0, min(centered, width - dimensions.width))
+                                        }
+                                        .frame(
+                                            width: width,
+                                            alignment: .leading
+                                        )
+                                }
                             }
                         }
                     }
-                }
 
-                if isEditing {
-                    Text(currentTimeUnit.displayText)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.secondary)
+                    if isEditing {
+                        Text(currentTimeUnit.displayText)
+                            .font(.caption)
+                            .foregroundStyle(.primary)
+                    }
                 }
             }
-            .frame(height: Const.space16)
             .animation(.easeInOut(duration: 0.2), value: isEditing)
         }
         .onAppear {
             sliderValue = internalValueToSliderValue(selectedTimeUnit.rawValue)
+        }
+        .onChange(of: selectedTimeUnit) { _, newValue in
+            if !isEditing {
+                sliderValue = internalValueToSliderValue(newValue.rawValue)
+            }
         }
     }
 
@@ -162,8 +171,16 @@ struct HistoryTimeSlider: View {
         }
     }
 
-    /// 根据所在区间应用不同的步长
-    private func snapToStep(_ value: Double) -> Double {
+}
+
+private extension Double {
+
+    var snappedHistoryValue: Double {
+        get { self }
+        set { self = Self.snapToStep(newValue) }
+    }
+
+    static func snapToStep(_ value: Double) -> Double {
         let step: Double
         switch value {
         case 0 ..< 1.0:
@@ -178,10 +195,9 @@ struct HistoryTimeSlider: View {
             step = 1.0
         }
 
-        let sectionStart = floor(value)
+        let sectionStart = value.rounded(.down)
         let offsetInSection = value - sectionStart
-        let snappedOffset = round(offsetInSection / step) * step
+        let snappedOffset = (offsetInSection / step).rounded() * step
         return sectionStart + snappedOffset
     }
-
 }

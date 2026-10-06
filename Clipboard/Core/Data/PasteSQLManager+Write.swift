@@ -3,6 +3,13 @@ import Foundation
 import SQLite
 
 extension PasteSQLManager {
+    func deleteExpiredHistory(before cutoff: Int64) async throws {
+        guard let connection else { throw CocoaError(.fileWriteUnknown) }
+        let query = table.filter(Col.timestamp < cutoff && Col.group == -1)
+        try connection.run(query.delete())
+        await refreshAppCache()
+    }
+
     private func resolvedAppID(for item: PasteboardModel) async throws -> Int64 {
         if let id = await item.appID { return id }
         let (name, path, bundleID) = await (item.appName, item.appPath, item.sourceBundleID)

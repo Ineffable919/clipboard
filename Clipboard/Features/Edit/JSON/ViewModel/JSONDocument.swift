@@ -15,12 +15,17 @@ nonisolated struct JSONDocument: Sendable {
             ? JSONPreparedText(text, width: width, lineStarts: index?.lineStarts) : nil
     }
 
-    static func load(data: Data, type: String, width: CGFloat) -> Self {
-        autoreleasepool {
+    static func load(
+        data: Data, type: String, width: CGFloat,
+        onValidation: @MainActor @Sendable (Bool) -> Void
+    ) async -> Self {
+        let (text, isValid) = autoreleasepool {
             let text = EditTextLoader.load(data: data, typeRawValue: type)
             let isValid = JSONTransformer.looksLikeJSON(text) && JSONTransformer.isValid(text)
-            return Self(text, isValid: isValid, prepare: isValid, width: width)
+            return (text, isValid)
         }
+        await onValidation(isValid)
+        return autoreleasepool { Self(text, isValid: isValid, prepare: isValid, width: width) }
     }
 
     static func prepare(_ text: String, knownValidity: Bool? = nil, width: CGFloat) -> Self {
