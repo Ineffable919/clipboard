@@ -90,13 +90,9 @@ extension PasteSQLManager {
         }
     }
 
-    /// 无挂起点，清空和空间整理期间同一 actor 上的数据库操作排队执行。
     func clearHistory() throws -> Bool {
         guard let connection else { throw CocoaError(.fileWriteUnknown) }
-        try connection.transaction(.immediate) {
-            try connection.run(table.delete())
-            try connection.run("DELETE FROM App")
-        }
+        try Self.deleteHistory(on: connection)
         apps.removeAll()
         appIdentities.removeAll()
         do {
@@ -109,6 +105,13 @@ extension PasteSQLManager {
         } catch {
             log.error("历史已清空，空间回收失败：\(error)")
             return false
+        }
+    }
+
+    private nonisolated static func deleteHistory(on database: Connection) throws {
+        try database.transaction(.immediate) {
+            try database.run(Table("Clip").delete())
+            try database.run("DELETE FROM App")
         }
     }
 
