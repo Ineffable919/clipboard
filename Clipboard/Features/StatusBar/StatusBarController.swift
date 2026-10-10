@@ -115,7 +115,7 @@ final class StatusBarController: NSObject {
         button.image = icon
         button.target = self
         button.action = #selector(statusBarClick)
-        button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+        button.sendAction(on: [.leftMouseUp, .rightMouseDown])
     }
 
     private func observeMenuBarIconVisibility() {
@@ -141,7 +141,7 @@ final class StatusBarController: NSObject {
                 frame: sender.window?.screen?.frame
             )
 
-        case .rightMouseUp:
+        case .rightMouseDown:
             guard let menu else { return }
 
             menuBarItem?.menu = menu
@@ -371,6 +371,10 @@ extension StatusBarController {
 // MARK: - NSMenuDelegate
 
 extension StatusBarController: NSMenuDelegate {
+    func menuDidClose(_: NSMenu) {
+        menuBarItem?.menu = nil
+    }
+
     func menuNeedsUpdate(_ menu: NSMenu) {
         if let pauseItem = menu.items.first(where: {
             $0.tag == Self.pauseMenuTag
