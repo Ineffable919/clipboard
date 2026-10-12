@@ -20,7 +20,6 @@ struct PasteboardModelRuntimeCache {
     var hasBackgroundColor = false
     var needsBottomMask: Bool?
     var thumbnailLoadTask: Task<NSImage?, Never>?
-    var linkMetadata: LinkPreviewMetadata?
     var isMarkdown: Bool?
 }
 
@@ -83,11 +82,6 @@ extension PasteboardModel {
     var thumbnailLoadTask: Task<NSImage?, Never>? {
         get { runtimeCache.thumbnailLoadTask }
         set { runtimeCache.thumbnailLoadTask = newValue }
-    }
-
-    var cachedLinkMetadata: LinkPreviewMetadata? {
-        get { runtimeCache.linkMetadata }
-        set { runtimeCache.linkMetadata = newValue }
     }
 
     var cachedIsMarkdown: Bool? {

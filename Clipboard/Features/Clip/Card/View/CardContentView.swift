@@ -99,6 +99,7 @@ final class CardContentView: NSView, PassthroughMouseEvents {
         linkPreviewCancellable = UserDefaults.standard
             .publisher(for: \.enableLinkPreview)
             .removeDuplicates()
+            .dropFirst()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self,

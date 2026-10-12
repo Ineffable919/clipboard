@@ -3,7 +3,7 @@
 //  Clipboard
 //
 //  AppKit re-implementation of the SwiftUI LinkPreviewCardView.
-//  Fetches link metadata via LPMetadataProvider and caches the result on the model.
+//  Fetches link metadata via LPMetadataProvider.
 //
 
 import AppKit
@@ -92,6 +92,10 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
         fatalError()
     }
 
+    isolated deinit {
+        fetchTask?.cancel()
+    }
+
     // MARK: - Public
 
     func configure(with model: PasteboardModel, keyword: String) {
@@ -99,40 +103,31 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
             .trimmingCharacters(in: .whitespacesAndNewlines)
         let url = urlString.asCompleteURL()
 
-        titleLabel.stringValue = Self.singleLineTitle(model.cachedLinkMetadata?.title)
-            ?? url?.host()
-            ?? urlString
-
         urlLabel.attributedStringValue = makeURLAttributedString(
             urlString: urlString,
             keyword: keyword
         )
 
-        if let meta = model.cachedLinkMetadata {
-            applyMetadata(meta)
-            return
-        }
-
+        guard fetchedModelId != model.uniqueId else { return }
+        cancelLoad()
+        titleLabel.stringValue = url?.host() ?? urlString
         resetImageViews()
 
-        guard let url else {
-            fetchedModelId = ""
-            return
-        }
-
-        guard fetchedModelId != model.uniqueId else { return }
+        guard let url else { return }
         fetchedModelId = model.uniqueId
 
-        fetchTask?.cancel()
-
-        fetchTask = Task.detached(priority: .userInitiated) { [weak self, weak model] in
-            guard let self, let model else { return }
+        fetchTask = Task.detached(priority: .userInitiated) { [weak self] in
+            do {
+                try await Task.sleep(for: .milliseconds(250))
+            } catch {
+                return
+            }
+            guard !Task.isCancelled else { return }
 
             let meta = await Self.fetchMetadata(for: url)
 
             await MainActor.run {
-                guard !Task.isCancelled else { return }
-                model.cachedLinkMetadata = meta
+                guard !Task.isCancelled, let self else { return }
                 self.titleLabel.stringValue = Self.singleLineTitle(meta.title)
                     ?? url.host()
                     ?? url.absoluteString
@@ -282,21 +277,26 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
 
         return mutable
     }
+}
 
-    private static func fetchMetadata(for url: URL) async -> LinkPreviewMetadata {
+private extension CardLinkPreviewContentView {
+    static func fetchMetadata(for url: URL) async -> LinkPreviewMetadata {
         let provider = LPMetadataProvider()
         provider.timeout = 5.0
 
         nonisolated(unsafe) let unsafeProvider = provider
 
         do {
+            try Task.checkCancellation()
             let metadata = try await withTaskCancellationHandler {
                 try await provider.startFetchingMetadata(for: url)
             } onCancel: {
                 unsafeProvider.cancel()
             }
 
+            try Task.checkCancellation()
             let previewImage: NSImage? = await loadImage(from: metadata.imageProvider)
+            try Task.checkCancellation()
             let iconImage: NSImage? = previewImage == nil
                 ? await loadImage(from: metadata.iconProvider)
                 : nil
@@ -311,12 +311,19 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
         }
     }
 
-    private static func loadImage(from provider: NSItemProvider?) async -> NSImage? {
-        guard let provider else { return nil }
-        return await withCheckedContinuation { continuation in
-            provider.loadObject(ofClass: NSImage.self) { image, _ in
-                continuation.resume(returning: image as? NSImage)
+    static func loadImage(from provider: NSItemProvider?) async -> NSImage? {
+        guard !Task.isCancelled, let provider else { return nil }
+        let progress = Progress(totalUnitCount: 1)
+        return await withTaskCancellationHandler {
+            await withCheckedContinuation { continuation in
+                let load = provider.loadObject(ofClass: NSImage.self) { image, _ in
+                    continuation.resume(returning: image as? NSImage)
+                }
+                progress.addChild(load, withPendingUnitCount: 1)
+                if Task.isCancelled { load.cancel() }
             }
+        } onCancel: {
+            progress.cancel()
         }
     }
 }

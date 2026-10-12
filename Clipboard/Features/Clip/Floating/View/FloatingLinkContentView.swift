@@ -64,7 +64,7 @@ final class FloatingLinkContentView: NSView {
             urlLabel.attributedStringValue = model.highlightedPlainText(keyword: keyword)
         }
 
-        loadMetadata(for: model, urlString: urlString)
+        loadMetadata(urlString: urlString)
     }
 
     @available(*, unavailable)
@@ -74,18 +74,13 @@ final class FloatingLinkContentView: NSView {
 
     deinit { loadTask?.cancel() }
 
-    private func loadMetadata(for model: PasteboardModel, urlString: String) {
-        if let cached = model.cachedLinkMetadata {
-            applyMetadata(title: cached.title, icon: cached.iconImage, urlString: urlString)
-        } else {
-            applyMetadata(title: nil, icon: nil, urlString: urlString)
-            loadTask = Task { @MainActor [weak self] in
-                guard let url = URL(string: urlString) else { return }
-                let metadata = await FloatingLinkContentView.fetchMetadata(for: url)
-                guard !Task.isCancelled, let self else { return }
-                model.cachedLinkMetadata = metadata
-                applyMetadata(title: metadata.title, icon: metadata.iconImage, urlString: urlString)
-            }
+    private func loadMetadata(urlString: String) {
+        applyMetadata(title: nil, icon: nil, urlString: urlString)
+        loadTask = Task { @MainActor [weak self] in
+            guard let url = URL(string: urlString) else { return }
+            let metadata = await FloatingLinkContentView.fetchMetadata(for: url)
+            guard !Task.isCancelled, let self else { return }
+            applyMetadata(title: metadata.title, icon: metadata.iconImage, urlString: urlString)
         }
     }
 
