@@ -67,7 +67,6 @@ final class LinkPreviewRequest: NSObject {
             }
             await operation()
             guard !Task.isCancelled else { return }
-            // 完成后只保留视图已经显示的内容，重新显示无需再次请求
             self?.operation = nil
             self?.requestID = nil
         }
