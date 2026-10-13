@@ -3,7 +3,7 @@ import AppKit
 @MainActor
 final class LinkPreviewRequest: NSObject {
     private weak var view: NSView?
-    private var task: Task<Void, Never>?
+    private var requestID: UUID?
     private var operation: (@MainActor () async -> Void)?
     private var visibilityObservation: NSKeyValueObservation?
 
@@ -13,7 +13,7 @@ final class LinkPreviewRequest: NSObject {
     }
 
     isolated deinit {
-        task?.cancel()
+        cancel()
         NotificationCenter.default.removeObserver(self)
     }
 
@@ -24,9 +24,13 @@ final class LinkPreviewRequest: NSObject {
     }
 
     func cancel() {
-        task?.cancel()
-        task = nil
+        cancelRequest()
         operation = nil
+    }
+
+    private func cancelRequest() {
+        if let requestID { LinkPreviewQueue.shared.cancel(requestID) }
+        requestID = nil
     }
 
     func viewDidMoveToWindow() {
@@ -51,27 +55,21 @@ final class LinkPreviewRequest: NSObject {
 
     @objc func updateVisibility() {
         guard isVisible else {
-            task?.cancel()
-            task = nil
+            cancelRequest()
             return
         }
-        guard task == nil, let operation else { return }
-        task = Task { @MainActor [weak self] in
-            do {
-                try await Task.sleep(for: .milliseconds(250))
-            } catch {
-                return
-            }
+        guard requestID == nil, let operation else { return }
+        requestID = LinkPreviewQueue.shared.enqueue { [weak self] in
             guard !Task.isCancelled else { return }
             guard self?.isVisible == true else {
-                self?.task = nil
+                self?.requestID = nil
                 return
             }
             await operation()
             guard !Task.isCancelled else { return }
-            // 完成后只保留视图已经显示的内容，重新显示无需再次请求。
+            // 完成后只保留视图已经显示的内容，重新显示无需再次请求
             self?.operation = nil
-            self?.task = nil
+            self?.requestID = nil
         }
     }
 }
