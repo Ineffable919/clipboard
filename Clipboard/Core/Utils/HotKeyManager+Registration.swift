@@ -2,6 +2,44 @@ import AppKit
 import Carbon
 
 extension HotKeyManager {
+    func observeWindowHotKey(dismissing menu: NSMenu) -> CFRunLoopObserver? {
+        let observer = CFRunLoopObserverCreateWithHandler(
+            nil, CFRunLoopActivity.beforeSources.rawValue, true, 0
+        ) { _, _ in
+            MainActor.assumeIsolated {
+                // Leave the hotkey queued for its existing handler after menu tracking ends.
+                guard let event = NSApp.nextEvent(
+                    matching: .any, until: nil,
+                    inMode: .eventTracking, dequeue: false
+                ) else { return }
+                if HotKeyManager.shared.isWindowHotKeyEvent(event) {
+                    menu.cancelTrackingWithoutAnimation()
+                }
+            }
+        }
+        if let observer {
+            CFRunLoopAddObserver(CFRunLoopGetMain(), observer, .commonModes)
+        }
+        return observer
+    }
+
+    private func isWindowHotKeyEvent(_ event: NSEvent) -> Bool {
+        guard let pointer = event.eventRef else { return false }
+        let carbonEvent = OpaquePointer(pointer)
+        guard GetEventClass(carbonEvent) == OSType(kEventClassKeyboard),
+              GetEventKind(carbonEvent) == UInt32(kEventHotKeyPressed)
+        else { return false }
+
+        var hotKeyID = EventHotKeyID()
+        let status = GetEventParameter(
+            carbonEvent, UInt32(kEventParamDirectObject), UInt32(typeEventHotKeyID),
+            nil, MemoryLayout<EventHotKeyID>.size, nil, &hotKeyID
+        )
+        return status == noErr
+            && hotKeyID.signature == Self.hotKeySignature
+            && registrationsByID[hotKeyID.id]?.key == "app_launch"
+    }
+
     func installGlobalEventHandler() {
         var eventTypes = [
             EventTypeSpec(

@@ -17,6 +17,8 @@ final class StatusBarController: NSObject {
 
     private var onCheckUpdateClick: (() -> Void)?
     private var menu: NSMenu?
+    private var isMenuPresented = false
+    private var lastMenuClick: UInt32?
 
     override private init() {
         super.init()
@@ -115,7 +117,7 @@ final class StatusBarController: NSObject {
         button.image = icon
         button.target = self
         button.action = #selector(statusBarClick)
-        button.sendAction(on: [.leftMouseUp, .rightMouseDown])
+        button.sendAction(on: [.leftMouseUp, .rightMouseUp])
     }
 
     private func observeMenuBarIconVisibility() {
@@ -131,29 +133,36 @@ final class StatusBarController: NSObject {
         }
     }
 
-    @objc
-    private func statusBarClick(sender: NSStatusBarButton) {
-        guard let event = NSApplication.shared.currentEvent else { return }
-
-        switch event.type {
-        case .leftMouseUp:
-            WindowManager.shared.toggleWindow(
-                frame: sender.window?.screen?.frame
-            )
-
-        case .rightMouseDown:
-            guard let menu else { return }
-
-            menuBarItem?.menu = menu
-            defer {
-                menuBarItem?.menu = nil
+    @objc private func statusBarClick(sender: NSStatusBarButton) {
+        if NSApp.currentEvent?.type == .rightMouseUp {
+            let click = CGEventSource.counterForEventType(.combinedSessionState, eventType: .rightMouseDown)
+            // AppKit can forward the click that just dismissed the menu back to the button.
+            guard lastMenuClick != click else { return }
+            lastMenuClick = click
+            if isMenuPresented {
+                menu?.cancelTrackingWithoutAnimation()
+                return
             }
-
-            sender.performClick(nil)
-
-        default:
-            break
+            isMenuPresented = true
+            // Let the button finish its mouse tracking before starting menu tracking.
+            Task { @MainActor [weak self] in
+                self?.showMenu()
+            }
+            return
         }
+        WindowManager.shared.toggleWindow(frame: sender.window?.screen?.frame)
+    }
+
+    private func showMenu() {
+        defer { isMenuPresented = false }
+        guard let menuBarItem, let button = menuBarItem.button, let menu else { return }
+        let observer = HotKeyManager.shared.observeWindowHotKey(dismissing: menu)
+        defer {
+            if let observer { CFRunLoopObserverInvalidate(observer) }
+        }
+        menuBarItem.menu = menu
+        defer { menuBarItem.menu = nil }
+        button.performClick(nil)
     }
 
     @objc private func settingsAction() {
@@ -372,6 +381,8 @@ extension StatusBarController {
 
 extension StatusBarController: NSMenuDelegate {
     func menuDidClose(_: NSMenu) {
+        // Remember the closing click so its forwarded action cannot reopen the menu.
+        lastMenuClick = CGEventSource.counterForEventType(.combinedSessionState, eventType: .rightMouseDown)
         menuBarItem?.menu = nil
     }
 
