@@ -178,10 +178,7 @@ final class FloatingHistoryView: NSView {
             var snapshot = NSDiffableDataSourceSnapshot<Int, PasteboardModel>()
             snapshot.appendSections([0])
             snapshot.appendItems(items)
-            // 浮动卡片的操作闭包包含行号，重排后需重新提供 item。
-            let existing = Set(dataSource.snapshot().itemIdentifiers)
-            snapshot.reloadItems(items.filter { existing.contains($0) })
-            dataSource.apply(snapshot, animatingDifferences: false) { [weak self] in
+            dataSource.apply(snapshot, animatingDifferences: true) { [weak self] in
                 self?.restoreSelection()
                 self?.updateQuickPasteDisplay()
             }

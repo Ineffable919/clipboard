@@ -112,16 +112,32 @@ extension FloatingHistoryView {
                 displayMode: displayMode
             )
             item.setShowPlainTextIndicator(isPlainTextModifierPressed)
-            item.onPaste = { [weak self] in self?.pasteItem(at: row) }
-            item.onPastePlainText = { [weak self] in
-                self?.pasteItem(at: row, isAttribute: false)
+            item.onPaste = { [weak self] in
+                guard let self, let row = dataSource.indexPath(for: model)?.item else { return }
+                pasteItem(at: row)
             }
-            item.onCopy = { [weak self] in self?.copyItem(at: row) }
-            item.onEdit = { [weak self] in self?.openEditWindow(at: row) }
-            item.onDelete = { [weak self] in self?.requestDelete(at: row) }
-            item.onTogglePreview = { [weak self] in self?.onTogglePreview?(row) }
+            item.onPastePlainText = { [weak self] in
+                guard let self, let row = dataSource.indexPath(for: model)?.item else { return }
+                pasteItem(at: row, isAttribute: false)
+            }
+            item.onCopy = { [weak self] in
+                guard let self, let row = dataSource.indexPath(for: model)?.item else { return }
+                copyItem(at: row)
+            }
+            item.onEdit = { [weak self] in
+                guard let self, let row = dataSource.indexPath(for: model)?.item else { return }
+                openEditWindow(at: row)
+            }
+            item.onDelete = { [weak self] in
+                guard let self, let row = dataSource.indexPath(for: model)?.item else { return }
+                requestDelete(at: row)
+            }
+            item.onTogglePreview = { [weak self] in
+                guard let self, let row = dataSource.indexPath(for: model)?.item else { return }
+                onTogglePreview?(row)
+            }
             item.onAssignToChip = { [weak self] chipId in
-                guard let self, row < dataList.count else { return }
+                guard let self, let row = dataSource.indexPath(for: model)?.item else { return }
                 _ = topVM?.assignModelToChip(model: dataList[row], chipId: chipId)
             }
             item.onCreateChip = { [weak self] model in
