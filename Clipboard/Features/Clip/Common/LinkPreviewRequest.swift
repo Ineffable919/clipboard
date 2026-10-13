@@ -1,0 +1,77 @@
+import AppKit
+
+@MainActor
+final class LinkPreviewRequest: NSObject {
+    private weak var view: NSView?
+    private var task: Task<Void, Never>?
+    private var operation: (@MainActor () async -> Void)?
+    private var visibilityObservation: NSKeyValueObservation?
+
+    init(view: NSView) {
+        self.view = view
+        super.init()
+    }
+
+    isolated deinit {
+        task?.cancel()
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    func load(_ operation: @escaping @MainActor () async -> Void) {
+        cancel()
+        self.operation = operation
+        updateVisibility()
+    }
+
+    func cancel() {
+        task?.cancel()
+        task = nil
+        operation = nil
+    }
+
+    func viewDidMoveToWindow() {
+        let center = NotificationCenter.default
+        center.removeObserver(self)
+        visibilityObservation = view?.window?.observe(\.isVisible, options: [.new]) { [weak self] _, _ in
+            Task { @MainActor [weak self] in
+                self?.updateVisibility()
+            }
+        }
+        if let clipView = view?.enclosingScrollView?.contentView {
+            center.addObserver(self, selector: #selector(updateVisibility),
+                               name: NSView.boundsDidChangeNotification, object: clipView)
+        }
+        updateVisibility()
+    }
+
+    private var isVisible: Bool {
+        guard let view else { return false }
+        return view.window?.isVisible == true && view.bounds.intersects(view.visibleRect)
+    }
+
+    @objc func updateVisibility() {
+        guard isVisible else {
+            task?.cancel()
+            task = nil
+            return
+        }
+        guard task == nil, let operation else { return }
+        task = Task { @MainActor [weak self] in
+            do {
+                try await Task.sleep(for: .milliseconds(250))
+            } catch {
+                return
+            }
+            guard !Task.isCancelled else { return }
+            guard self?.isVisible == true else {
+                self?.task = nil
+                return
+            }
+            await operation()
+            guard !Task.isCancelled else { return }
+            // 完成后只保留视图已经显示的内容，重新显示无需再次请求。
+            self?.operation = nil
+            self?.task = nil
+        }
+    }
+}

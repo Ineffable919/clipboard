@@ -13,7 +13,7 @@ final class FloatingLinkContentView: NSView {
     private let iconView = NSImageView()
     private let titleLabel = NSTextField(labelWithString: "")
     private let urlLabel = NSTextField(labelWithString: "")
-    private var loadTask: Task<Void, Never>?
+    private lazy var previewRequest = LinkPreviewRequest(view: self)
     private let displayMode: FloatingDisplayMode
 
     init(model: PasteboardModel, keyword: String, displayMode: FloatingDisplayMode) {
@@ -72,11 +72,19 @@ final class FloatingLinkContentView: NSView {
         fatalError()
     }
 
-    deinit { loadTask?.cancel() }
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        previewRequest.viewDidMoveToWindow()
+    }
+
+    override func viewWillDraw() {
+        super.viewWillDraw()
+        previewRequest.updateVisibility()
+    }
 
     private func loadMetadata(urlString: String) {
         applyMetadata(title: nil, icon: nil, urlString: urlString)
-        loadTask = Task { @MainActor [weak self] in
+        previewRequest.load { [weak self] in
             guard let url = URL(string: urlString) else { return }
             let metadata = await FloatingLinkContentView.fetchMetadata(for: url)
             guard !Task.isCancelled, let self else { return }
@@ -103,19 +111,28 @@ final class FloatingLinkContentView: NSView {
         provider.timeout = 5.0
         nonisolated(unsafe) let unsafeProvider = provider
         do {
+            try Task.checkCancellation()
             let metadata = try await withTaskCancellationHandler {
                 try await provider.startFetchingMetadata(for: url)
             } onCancel: {
                 unsafeProvider.cancel()
             }
-            let icon: NSImage? = await withCheckedContinuation { cont in
-                if let source = metadata.iconProvider ?? metadata.imageProvider {
-                    source.loadObject(ofClass: NSImage.self) { img, _ in
-                        cont.resume(returning: img as? NSImage)
+            try Task.checkCancellation()
+            let progress = Progress(totalUnitCount: 1)
+            let icon: NSImage? = await withTaskCancellationHandler {
+                await withCheckedContinuation { cont in
+                    if let source = metadata.iconProvider ?? metadata.imageProvider {
+                        let load = source.loadObject(ofClass: NSImage.self) { img, _ in
+                            cont.resume(returning: img as? NSImage)
+                        }
+                        progress.addChild(load, withPendingUnitCount: 1)
+                        if Task.isCancelled { load.cancel() }
+                    } else {
+                        cont.resume(returning: nil)
                     }
-                } else {
-                    cont.resume(returning: nil)
                 }
+            } onCancel: {
+                progress.cancel()
             }
             return LinkPreviewMetadata(title: metadata.title, previewImage: nil, iconImage: icon)
         } catch {

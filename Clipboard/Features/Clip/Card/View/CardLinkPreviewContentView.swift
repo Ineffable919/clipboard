@@ -73,7 +73,7 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
 
     // MARK: - State
 
-    private var fetchTask: Task<Void, Never>?
+    private lazy var previewRequest = LinkPreviewRequest(view: self)
 
     private var fetchedModelId: String = ""
 
@@ -92,8 +92,14 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
         fatalError()
     }
 
-    isolated deinit {
-        fetchTask?.cancel()
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        previewRequest.viewDidMoveToWindow()
+    }
+
+    override func viewWillDraw() {
+        super.viewWillDraw()
+        previewRequest.updateVisibility()
     }
 
     // MARK: - Public
@@ -116,29 +122,19 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
         guard let url else { return }
         fetchedModelId = model.uniqueId
 
-        fetchTask = Task.detached(priority: .userInitiated) { [weak self] in
-            do {
-                try await Task.sleep(for: .milliseconds(250))
-            } catch {
-                return
-            }
-            guard !Task.isCancelled else { return }
-
+        previewRequest.load { [weak self] in
             let meta = await Self.fetchMetadata(for: url)
 
-            await MainActor.run {
-                guard !Task.isCancelled, let self else { return }
-                self.titleLabel.stringValue = Self.singleLineTitle(meta.title)
-                    ?? url.host()
-                    ?? url.absoluteString
-                self.applyMetadata(meta)
-            }
+            guard !Task.isCancelled, let self else { return }
+            titleLabel.stringValue = Self.singleLineTitle(meta.title)
+                ?? url.host()
+                ?? url.absoluteString
+            applyMetadata(meta)
         }
     }
 
     func cancelLoad() {
-        fetchTask?.cancel()
-        fetchTask = nil
+        previewRequest.cancel()
         fetchedModelId = ""
     }
 
