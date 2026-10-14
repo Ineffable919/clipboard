@@ -2,7 +2,10 @@ import AppKit
 import Carbon
 
 extension HotKeyManager {
-    func observeWindowHotKey(dismissing menu: NSMenu) -> CFRunLoopObserver? {
+    func observeWindowHotKey(
+        dismissing menu: NSMenu,
+        when shouldDismiss: (@MainActor (NSEvent) -> Bool)? = nil
+    ) -> CFRunLoopObserver? {
         let observer = CFRunLoopObserverCreateWithHandler(
             nil, CFRunLoopActivity.beforeSources.rawValue, true, 0
         ) { _, _ in
@@ -12,7 +15,7 @@ extension HotKeyManager {
                     matching: .any, until: nil,
                     inMode: .eventTracking, dequeue: false
                 ) else { return }
-                if HotKeyManager.shared.isWindowHotKeyEvent(event) {
+                if HotKeyManager.shared.isWindowHotKeyEvent(event) || shouldDismiss?(event) == true {
                     menu.cancelTrackingWithoutAnimation()
                 }
             }
