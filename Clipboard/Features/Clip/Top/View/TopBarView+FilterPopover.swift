@@ -33,7 +33,10 @@ extension TopBarView {
 
         CategoryChipStore.shared.chipsContentDidChange
             .sink { [weak self] in
-                self?.topVM?.refreshGroupTags()
+                guard let topVM = self?.topVM,
+                      topVM.displayModeRaw == DisplayMode.drawer.rawValue
+                else { return }
+                topVM.refreshGroupTags()
             }
             .store(in: &cancellables)
     }

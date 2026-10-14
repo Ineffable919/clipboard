@@ -19,6 +19,7 @@ struct WelcomeControlButtonStyle: ButtonStyle {
 #Preview {
     Button(.permissionOpenSettings) {}
         .buttonStyle(WelcomeControlButtonStyle())
-        .frame(width: 104)
+        .lineLimit(1)
+        .fixedSize(horizontal: true, vertical: false)
         .padding(24)
 }

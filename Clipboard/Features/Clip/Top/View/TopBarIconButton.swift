@@ -15,6 +15,7 @@ final class TopBarIconButton: NSView {
     private let backgroundLayer = CALayer()
     private let imageView = NSImageView()
     private let badgeDot = NSView()
+    private let compact: Bool
     private var isHovering = false
 
     var isActive: Bool = false {
@@ -32,7 +33,8 @@ final class TopBarIconButton: NSView {
 
     // MARK: - Init
 
-    init(symbolName: String, pointSize: CGFloat = 15) {
+    init(symbolName: String, pointSize: CGFloat = 15, compact: Bool = false) {
+        self.compact = compact
         super.init(frame: .zero)
         setup(symbolName: symbolName, pointSize: pointSize)
     }
@@ -47,7 +49,7 @@ final class TopBarIconButton: NSView {
     private func setup(symbolName: String, pointSize: CGFloat) {
         wantsLayer = true
 
-        backgroundLayer.cornerRadius = Const.radius
+        backgroundLayer.cornerRadius = compact ? Const.btnRadius : Const.radius
         backgroundLayer.masksToBounds = true
         layer?.addSublayer(backgroundLayer)
 
@@ -66,7 +68,7 @@ final class TopBarIconButton: NSView {
             make.center.equalToSuperview()
         }
         snp.makeConstraints { make in
-            make.width.height.equalTo(30)
+            make.width.height.equalTo(compact ? 24 : 30)
         }
 
         badgeDot.wantsLayer = true

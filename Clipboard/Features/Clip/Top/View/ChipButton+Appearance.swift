@@ -203,7 +203,7 @@ extension ChipButton {
         let pillFrame = bounds.insetBy(dx: haloInset, dy: haloInset)
         backgroundLayer.frame = pillFrame
         if #available(macOS 26.0, *), config.compact {
-            backgroundLayer.cornerRadius = max(0, pillFrame.height / 2)
+            backgroundLayer.cornerRadius = max(0, pillFrame.height / 2.5)
         } else {
             backgroundLayer.cornerRadius = config.compact ? Const.btnRadius : Const.radius
         }

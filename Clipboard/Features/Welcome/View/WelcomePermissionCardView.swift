@@ -71,7 +71,8 @@ struct WelcomePermissionCardView: View {
                         viewModel.openAccessibilitySettings()
                     }
                     .buttonStyle(WelcomeControlButtonStyle())
-                    .frame(width: 104)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
                 }
             }
             .frame(height: 48)

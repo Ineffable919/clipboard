@@ -51,11 +51,15 @@ extension ChipButton {
 
     var contentInsets: NSEdgeInsets {
         if config.compact {
-            let inset: CGFloat = config.dotMode ? Const.space4 : Const.space6
+            var inset: CGFloat = config.dotMode || config.isEditing ? Const.space4 : Const.space6
+            if #available(macOS 26.0, *) {
+                inset += Const.space2
+            }
+            let verticalInset: CGFloat = config.isEditing ? 3 : Const.space4
             return NSEdgeInsets(
-                top: haloInset + Const.space4,
+                top: haloInset + verticalInset,
                 left: haloInset + inset,
-                bottom: haloInset + Const.space4,
+                bottom: haloInset + verticalInset,
                 right: haloInset + inset
             )
         }

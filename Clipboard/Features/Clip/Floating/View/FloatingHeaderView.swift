@@ -19,9 +19,9 @@ final class FloatingHeaderView: NSView {
     let dragHandle = FloatingDragHandle()
     let pinButton = FloatingPinButton()
     let searchField = FloatingSearchField()
-    let settingsBtn = TopBarIconButton(symbolName: "ellipsis")
+    let settingsBtn = TopBarIconButton(symbolName: "ellipsis", compact: true)
     let chipScrollView = ChipScrollView()
-    let addChipBtn = TopBarIconButton(symbolName: "plus")
+    let addChipBtn = TopBarIconButton(symbolName: "plus", compact: true)
 
     // MARK: - State
 

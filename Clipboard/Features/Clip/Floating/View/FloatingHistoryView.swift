@@ -113,6 +113,12 @@ final class FloatingHistoryView: NSView {
         applySnapshot()
         resetToFirst()
         configurePresenter()
+        CategoryChipStore.shared.chipsContentDidChange
+            .sink { [weak self] in
+                guard let self else { return }
+                presenter.reconfigureItems(dataList)
+            }
+            .store(in: &cancellables)
         Task { @MainActor [weak self] in
             guard let self else { return }
             window?.makeFirstResponder(collectionView)
