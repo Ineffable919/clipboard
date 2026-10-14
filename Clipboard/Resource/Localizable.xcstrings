@@ -1268,13 +1268,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Clear History..."
+            "value" : "Clear History…"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "删除历史..."
+            "value" : "删除历史…"
           }
         }
       }
@@ -3056,7 +3056,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重置快键方式为默认..."
+            "value" : "重置快键方式为默认…"
           }
         }
       }
@@ -3068,13 +3068,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reset shortcuts to default..."
+            "value" : "Reset shortcuts to default…"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "重置快捷方式为默认..."
+            "value" : "重置快捷方式为默认…"
           }
         }
       }
@@ -4351,7 +4351,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Open Settings"
+            "value" : "Open Settings…"
           }
         },
         "zh-Hans" : {
@@ -4843,7 +4843,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "去设置..."
+            "value" : "去设置…"
           }
         }
       }
@@ -5077,7 +5077,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "设置..."
+            "value" : "设置…"
           }
         }
       }
@@ -5347,7 +5347,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "备份..."
+            "value" : "备份…"
           }
         }
       }
@@ -5491,7 +5491,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "导入..."
+            "value" : "导入…"
           }
         }
       }
