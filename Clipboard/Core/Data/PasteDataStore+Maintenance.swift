@@ -189,7 +189,6 @@ extension PasteDataStore {
         return try await sqlManager.hasExpiredHistory(before: cutoff)
     }
 
-    /// 清理超出新期限的记录；调用方负责确认，并在成功后保存设置。
     func applyHistoryLimit(_ timeUnit: HistoryTimeUnit) async throws {
         guard let cutoff = timeUnit.cutoffTimestamp() else { return }
         try await sqlManager.deleteExpiredHistory(before: cutoff)
@@ -216,7 +215,6 @@ extension PasteDataStore {
         return nil
     }
 
-    /// 调用方确认后清空历史，返回是否完成空间回收。
     func clearAllData() async throws -> Bool {
         guard !clearingHistory.value else { return false }
         clearingHistory.send(true)
