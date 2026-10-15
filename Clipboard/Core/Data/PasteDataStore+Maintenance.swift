@@ -184,36 +184,17 @@ extension PasteDataStore {
         deleteItems(filter: Col.timestamp < cutoff && Col.group == -1)
     }
 
-    /// 确认并清理超出新期限的记录；设置仅由调用方在成功后保存
-    func confirmHistoryLimit(_ timeUnit: HistoryTimeUnit) async -> Bool {
-        guard let cutoff = timeUnit.cutoffTimestamp() else { return true }
-        do {
-            guard try await sqlManager.hasExpiredHistory(before: cutoff) else { return true }
-            guard let window = SettingWindowController.shared.window, window.isVisible else { return false }
-            let alert = NSAlert.appAlert()
-            alert.alertStyle = .warning
-            alert.messageText = String(localized: .generalHistoryLimitConfirmTitle)
-            alert.informativeText = String(localized: .generalHistoryLimitConfirmMessage)
-            alert.addButton(withTitle: String(localized: .commonCancel))
-            let deleteButton = alert.addButton(withTitle: String(localized: .delete))
-            deleteButton.hasDestructiveAction = true
-            guard await alert.beginSheetModal(for: window) == .alertSecondButtonReturn else { return false }
+    func hasExpiredHistory(_ timeUnit: HistoryTimeUnit) async throws -> Bool {
+        guard let cutoff = timeUnit.cutoffTimestamp() else { return false }
+        return try await sqlManager.hasExpiredHistory(before: cutoff)
+    }
 
-            try await sqlManager.deleteExpiredHistory(before: cutoff)
-            PasteMetadataCache.shared.invalidateAllCaches()
-            await reloadHistory()
-            return true
-        } catch {
-            log.error("应用历史保留期限失败：\(error)")
-            if let window = SettingWindowController.shared.window, window.isVisible {
-                let alert = NSAlert.appAlert()
-                alert.alertStyle = .warning
-                alert.messageText = String(localized: .generalHistoryLimitFailed)
-                alert.addButton(withTitle: String(localized: .commonConfirm))
-                await alert.beginSheetModal(for: window)
-            }
-            return false
-        }
+    /// 清理超出新期限的记录；调用方负责确认，并在成功后保存设置。
+    func applyHistoryLimit(_ timeUnit: HistoryTimeUnit) async throws {
+        guard let cutoff = timeUnit.cutoffTimestamp() else { return }
+        try await sqlManager.deleteExpiredHistory(before: cutoff)
+        PasteMetadataCache.shared.invalidateAllCaches()
+        await reloadHistory()
     }
 
     func loadHistoryPage() async -> [PasteboardModel]? {
@@ -235,45 +216,18 @@ extension PasteDataStore {
         return nil
     }
 
-    func clearAllData() {
-        guard !clearingHistory.value else { return }
-        let alert = NSAlert.appAlert()
-        alert.informativeText = String(localized: .clearDataMessage)
-        alert.addButton(withTitle: String(localized: .commonConfirm))
-        alert.addButton(withTitle: String(localized: .commonCancel))
-        let response = alert.runModal()
-
-        if response == .alertFirstButtonReturn {
-            clearingHistory.send(true)
-            Task {
-                do {
-                    let reclaimed = try await sqlManager.clearHistory()
-                    SourceAppCache.shared.replace([])
-                    AppColorService.shared.clearColors()
-                    PasteMetadataCache.shared.invalidateAllCaches()
-                    CategoryChipStore.shared.clearUserCategories()
-                    resetToDefault()
-                    clearingHistory.send(false)
-                    if reclaimed {
-                        showClearHistoryResult(String(localized: .clearHistorySuccess), style: .informational)
-                    } else {
-                        showClearHistoryResult(String(localized: .clearHistorySpaceFailed))
-                    }
-                } catch {
-                    clearingHistory.send(false)
-                    log.error("清空历史失败：\(error)")
-                    showClearHistoryResult(String(localized: .clearHistoryFailed))
-                }
-            }
-        }
-    }
-
-    private func showClearHistoryResult(_ message: String, style: NSAlert.Style = .warning) {
-        let alert = NSAlert.appAlert()
-        alert.alertStyle = style
-        alert.messageText = message
-        alert.addButton(withTitle: String(localized: .commonConfirm))
-        alert.runModal()
+    /// 调用方确认后清空历史，返回是否完成空间回收。
+    func clearAllData() async throws -> Bool {
+        guard !clearingHistory.value else { return false }
+        clearingHistory.send(true)
+        defer { clearingHistory.send(false) }
+        let reclaimed = try await sqlManager.clearHistory()
+        SourceAppCache.shared.replace([])
+        AppColorService.shared.clearColors()
+        PasteMetadataCache.shared.invalidateAllCaches()
+        CategoryChipStore.shared.clearUserCategories()
+        resetToDefault()
+        return reclaimed
     }
 
     func updateDbItem(id: Int64, item: PasteboardModel) {

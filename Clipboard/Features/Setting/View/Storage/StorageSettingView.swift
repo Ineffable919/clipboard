@@ -123,6 +123,7 @@ struct StorageSettingView: View {
                 if result.success {
                     log.info("数据库导出成功: \(url.lastPathComponent)")
                     alertTitle = result.message
+                    alertMessage = ""
                 } else {
                     log.error("数据库导出失败: \(result.message)")
                     alertTitle = String(localized: .storageExportFailureTitle)

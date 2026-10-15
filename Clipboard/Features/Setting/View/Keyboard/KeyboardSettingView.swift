@@ -49,22 +49,15 @@ struct KeyboardSettingView: View {
                     ) {
                         resetIsPresented = true
                     }
-                    .confirmationDialog(
+                    .alert(
                         String(
                             localized: .keyboardResetConfirmMessage
                         ),
                         isPresented: $resetIsPresented
                     ) {
-                        if #available(macOS 26.0, *) {
-                            Button(.keyboardResetButton, role: .confirm) {
-                                HotKeyManager.shared.resetToDefaults()
-                                refreshID = UUID()
-                            }
-                        } else {
-                            Button(.keyboardResetButton) {
-                                HotKeyManager.shared.resetToDefaults()
-                                refreshID = UUID()
-                            }
+                        Button(.keyboardResetButton) {
+                            HotKeyManager.shared.resetToDefaults()
+                            refreshID = UUID()
                         }
                         Button(.commonCancel, role: .cancel) {
                             resetIsPresented = false

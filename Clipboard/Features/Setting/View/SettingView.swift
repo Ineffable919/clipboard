@@ -129,7 +129,6 @@ struct SettingView: View {
                 }
             }
             .navigationTitle(Text(model.selectedPage.title))
-            .toolbarTitleDisplayMode(.inline)
         }
         .onAppear {
             viewModel.refreshAccessibilityPermission()
