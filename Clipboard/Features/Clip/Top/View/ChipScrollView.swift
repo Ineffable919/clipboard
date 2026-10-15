@@ -131,7 +131,7 @@ final class ChipScrollView: NSView {
         chips: [CategoryChip],
         selectedId: Int,
         dotMode: Bool = false,
-        compact: Bool = false,
+        size: ChipButton.Size = .regular,
         creatingChip: Bool = false,
         makeConfig: ((CategoryChip, Bool, Bool) -> ChipButton.Config)? = nil
     ) {
@@ -159,7 +159,7 @@ final class ChipScrollView: NSView {
                         chip: chip,
                         isSelected: chip.id == selectedId,
                         dotMode: dotMode,
-                        compact: compact,
+                        size: size,
                         action: { [weak self] in self?.select(id: chip.id) }
                     )
                 let button: ChipButton

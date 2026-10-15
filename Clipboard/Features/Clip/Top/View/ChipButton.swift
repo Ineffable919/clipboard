@@ -16,7 +16,7 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         let chip: CategoryChip
         var isSelected: Bool
         var dotMode: Bool = false
-        var compact: Bool = false
+        var size: Size = .regular
         var isEditing: Bool = false
         var editingName: String = ""
         var editingColorIndex: Int = 0
@@ -30,22 +30,6 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         var onEditingCancel: (() -> Void)?
         var onEditingFocusChange: ((Bool) -> Void)?
         var onDrop: ((PasteboardModel) -> Bool)?
-
-        var iconContainerSize: CGFloat {
-            compact ? 14 : 16
-        }
-
-        var smallIconPt: CGFloat {
-            compact ? 10 : 12
-        }
-
-        var labelFontSize: CGFloat {
-            compact ? NSFont.smallSystemFontSize : NSFont.systemFontSize
-        }
-
-        var dotRadius: CGFloat {
-            compact ? 5 : 6
-        }
     }
 
     let backgroundLayer = CALayer()

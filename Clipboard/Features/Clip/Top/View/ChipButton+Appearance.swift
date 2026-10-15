@@ -20,7 +20,7 @@ extension ChipButton {
 
         if config.dotMode {
             if config.chip.isSystem {
-                addSystemClockIcon(pointSize: config.smallIconPt, weight: .medium)
+                addSystemClockIcon(pointSize: config.size.smallIconPt, weight: .medium)
             } else {
                 configureDot(colorIndex: config.chip.colorIndex)
                 stack.addArrangedSubview(dotContainerView)
@@ -29,9 +29,9 @@ extension ChipButton {
             return
         }
 
-        if !config.compact {
+        if !config.size.isCompact {
             if config.chip.id == -1 {
-                addSystemClockIcon(pointSize: config.iconContainerSize, weight: .regular)
+                addSystemClockIcon(pointSize: config.size.iconContainerSize, weight: .regular)
             } else {
                 let colorIndex =
                     config.isEditing
@@ -72,7 +72,7 @@ extension ChipButton {
         let icon = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)
         iconImageView.image = icon?.withSymbolConfiguration(.init(pointSize: pointSize, weight: weight))
         iconImageView.snp.remakeConstraints { make in
-            make.width.height.equalTo(config.iconContainerSize)
+            make.width.height.equalTo(config.size.iconContainerSize)
         }
         stack.addArrangedSubview(iconImageView)
     }
@@ -89,7 +89,7 @@ extension ChipButton {
         CategoryDotRenderer.configure(
             dotView,
             colorIndex: index,
-            diameter: config.dotRadius * 2
+            diameter: config.size.dotRadius * 2
         )
     }
 
@@ -134,7 +134,7 @@ extension ChipButton {
             return true
         }()
 
-        if config.compact {
+        if config.size.isCompact {
             let chipColor = compactChipColor()
             if config.isSelected || config.isEditing {
                 return chipColor
@@ -183,7 +183,7 @@ extension ChipButton {
     }
 
     func resolvedForegroundColor() -> NSColor {
-        if config.compact, config.isSelected || config.isEditing {
+        if config.size.isCompact, config.isSelected || config.isEditing {
             return .white
         }
         return .labelColor.withAlphaComponent(0.85)
@@ -202,11 +202,7 @@ extension ChipButton {
 
         let pillFrame = bounds.insetBy(dx: haloInset, dy: haloInset)
         backgroundLayer.frame = pillFrame
-        if #available(macOS 26.0, *), config.compact {
-            backgroundLayer.cornerRadius = max(0, pillFrame.height / 2.5)
-        } else {
-            backgroundLayer.cornerRadius = config.compact ? Const.btnRadius : Const.radius
-        }
+        backgroundLayer.cornerRadius = config.size.cornerRadius
         if nameField.containerCornerRadius != backgroundLayer.cornerRadius {
             nameField.containerCornerRadius = backgroundLayer.cornerRadius
             nameField.noteFocusRingMaskChanged()

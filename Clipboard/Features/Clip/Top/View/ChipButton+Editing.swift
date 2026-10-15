@@ -119,10 +119,11 @@ extension ChipButton {
     func update(config newConfig: Config) {
         let rebuild = config.chip != newConfig.chip
             || config.dotMode != newConfig.dotMode
-            || config.compact != newConfig.compact
+            || config.size != newConfig.size
             || config.isEditing != newConfig.isEditing
         config = newConfig
         if rebuild {
+            nameField.font = .systemFont(ofSize: config.size.labelFontSize, weight: .regular)
             updateContent()
         }
         updateAppearance(animated: false)

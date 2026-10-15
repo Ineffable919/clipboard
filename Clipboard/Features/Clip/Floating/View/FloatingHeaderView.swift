@@ -27,6 +27,7 @@ final class FloatingHeaderView: NSView {
 
     let effectView: NSView = FloatingHeaderView.buildEffectView()
     weak var topVM: TopBarViewModel?
+    private(set) var displayMode: FloatingDisplayMode = .standard
 
     // MARK: - Init
 
@@ -48,12 +49,14 @@ final class FloatingHeaderView: NSView {
     var onChipEditingFocusChange: ((Bool) -> Void)?
 
     func setDisplayMode(_ mode: FloatingDisplayMode) {
+        displayMode = mode
         let isStandard = mode == .standard
         dragHandle.snp.updateConstraints { $0.height.equalTo(isStandard ? 16 : 12) }
         searchField.controlSize = isStandard ? .large : .regular
         searchField.snp.updateConstraints {
             $0.top.equalTo(dragHandle.snp.bottom).offset(isStandard ? Const.space8 : Const.space4)
         }
+        reloadChips()
     }
     func isExcludedFromFocusGesture(_ view: NSView) -> Bool {
         let isEditingChip = topVM?.isEditingChip == true || topVM?.editingNewChip == true

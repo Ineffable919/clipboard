@@ -3,6 +3,10 @@ import Combine
 import SnapKit
 
 extension FloatingHeaderView {
+    private var chipSize: ChipButton.Size {
+        displayMode == .minimal ? .mini : .small
+    }
+
     func reloadChips() {
         guard let topVM else { return }
         let chips = topVM.chips()
@@ -12,7 +16,7 @@ extension FloatingHeaderView {
             chips: chips,
             selectedId: selectedId,
             dotMode: false,
-            compact: true,
+            size: chipSize,
             creatingChip: topVM.editingNewChip,
             makeConfig: { [weak self] chip, isSelected, dotMode in
                 Self.chipConfig(chip, selected: isSelected, dotMode: dotMode, topVM: topVM, owner: self)
@@ -38,7 +42,7 @@ extension FloatingHeaderView {
             chip: chip,
             isSelected: isSelected,
             dotMode: dotMode,
-            compact: true,
+            size: owner?.chipSize ?? .small,
             isEditing: isEditing,
             editingName: isEditing ? topVM.editingChipName : chip.name,
             editingColorIndex: isEditing ? topVM.editingChipColorIndex : chip.colorIndex,
@@ -110,7 +114,7 @@ extension FloatingHeaderView {
             chip: placeholder,
             isSelected: true,
             dotMode: false,
-            compact: true,
+            size: chipSize,
             isEditing: true,
             editingName: topVM.newChipName,
             editingColorIndex: topVM.newChipColorIndex,

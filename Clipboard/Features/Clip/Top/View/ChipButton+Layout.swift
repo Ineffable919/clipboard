@@ -21,12 +21,12 @@ extension ChipButton {
         iconImageView.imageScaling = .scaleProportionallyDown
 
         dotContainerView.snp.makeConstraints { make in
-            make.width.height.equalTo(config.iconContainerSize)
+            make.width.height.equalTo(config.size.iconContainerSize)
         }
         dotView.wantsLayer = true
         dotContainerView.addSubview(dotView)
         dotView.snp.makeConstraints { make in
-            make.width.height.equalTo(config.smallIconPt)
+            make.width.height.equalTo(config.size.smallIconPt)
             make.center.equalToSuperview()
         }
 
@@ -50,26 +50,12 @@ extension ChipButton {
     }
 
     var contentInsets: NSEdgeInsets {
-        if config.compact {
-            var inset: CGFloat = config.dotMode || config.isEditing ? Const.space4 : Const.space6
-            if #available(macOS 26.0, *) {
-                inset += Const.space2
-            }
-            let verticalInset: CGFloat = config.isEditing ? 3 : Const.space4
-            return NSEdgeInsets(
-                top: haloInset + verticalInset,
-                left: haloInset + inset,
-                bottom: haloInset + verticalInset,
-                right: haloInset + inset
-            )
-        }
-        let horizontalInset: CGFloat =
-            config.dotMode ? Const.space6 : Const.space10
+        let insets = config.size.contentInsets(dotMode: config.dotMode)
         return NSEdgeInsets(
-            top: haloInset + Const.space6,
-            left: haloInset + horizontalInset,
-            bottom: haloInset + Const.space6,
-            right: haloInset + horizontalInset
+            top: haloInset + insets.top,
+            left: haloInset + insets.left,
+            bottom: haloInset + insets.bottom,
+            right: haloInset + insets.right
         )
     }
 
@@ -88,7 +74,7 @@ extension ChipButton {
     private func setupNameField() {
         nameField.delegate = self
         nameField.font = .systemFont(
-            ofSize: config.labelFontSize,
+            ofSize: config.size.labelFontSize,
             weight: .regular
         )
         nameField.isBordered = false
@@ -104,7 +90,7 @@ extension ChipButton {
             for: .horizontal
         )
         nameField.focusRingMaskView = self
-        nameField.containerCornerRadius = config.compact ? Const.btnRadius : Const.radius
+        nameField.containerCornerRadius = config.size.cornerRadius
         nameField.onFocusChange = { [weak self] focused in
             self?.handleNameFieldFocusChange(focused)
         }
