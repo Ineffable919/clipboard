@@ -306,7 +306,9 @@ final class TopBarView: NSView {
         isSearching = true
         applyMode(animated: true)
         filterPopover?.prepare()
-        window?.makeFirstResponder(searchField)
+        if !searchField.isFirstResponder {
+            window?.makeFirstResponder(searchField.tokenTextView)
+        }
         onFocusRegionChange?(.search)
     }
 

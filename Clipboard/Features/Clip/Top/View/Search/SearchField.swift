@@ -41,9 +41,7 @@ final class SearchField: NSView {
         didSet { tokenTextView.placeholderString = placeholderString ?? "" }
     }
 
-    var isFirstResponder: Bool {
-        window?.firstResponder === tokenTextView
-    }
+    var isFirstResponder: Bool { window?.firstResponder === tokenTextView }
 
     override func becomeFirstResponder() -> Bool {
         window?.makeFirstResponder(tokenTextView)
@@ -233,12 +231,14 @@ final class SearchField: NSView {
     }
 
     func clearAllContent() {
-        let hadTokens = !tokenTextView.getAllTokens().isEmpty
-        tokenTextView.clearAllTokens()
-        tokenTextView.string = ""
-        text = ""
         cancelButton.isHidden = true
         hideSuggestions()
+        guard (tokenTextView.textStorage?.length ?? 0) > 0 || !text.isEmpty else { return }
+        let hadTokens = !tokenTextView.getAllTokens().isEmpty
+        tokenTextView.string = ""
+        tokenTextView.setSelectedRange(NSRange(location: 0, length: 0))
+        tokenTextView.restorePlainTextInputState()
+        text = ""
         onTextChanged?("")
         if hadTokens {
             onClearAllFilters?()
