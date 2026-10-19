@@ -13,10 +13,9 @@ class FilterButton: NSView {
     // MARK: - Properties
 
     private let backgroundLayer = CALayer()
-    let stack = NSStackView()
     private let iconImageView = NSImageView()
     private let label = NSTextField()
-    private var hasIcon = false
+    private var leadingView: NSView?
 
     var isSelected: Bool = false {
         didSet {
@@ -48,24 +47,7 @@ class FilterButton: NSView {
         backgroundLayer.masksToBounds = true
         layer?.addSublayer(backgroundLayer)
 
-        stack.orientation = .horizontal
-        stack.alignment = .centerY
-        stack.spacing = Const.space8
-        addSubview(stack)
-
-        stack.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(
-                NSEdgeInsets(
-                    top: Const.space4,
-                    left: Const.space8,
-                    bottom: Const.space4,
-                    right: Const.space8
-                )
-            )
-        }
-
         if let icon {
-            hasIcon = true
             let symConfig = NSImage.SymbolConfiguration(
                 pointSize: 16,
                 weight: .regular
@@ -75,17 +57,10 @@ class FilterButton: NSView {
                 accessibilityDescription: nil
             )?.withSymbolConfiguration(symConfig)
             iconImageView.imageScaling = .scaleProportionallyDown
-            iconImageView.snp.makeConstraints { make in
-                make.width.height.equalTo(20)
-            }
-            stack.addArrangedSubview(iconImageView)
+            setLeadingView(iconImageView)
         }
 
         setupLabel(title)
-
-        let spacer = NSView()
-        spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        stack.addArrangedSubview(spacer)
 
         setupTracking()
 
@@ -120,8 +95,14 @@ class FilterButton: NSView {
         label.lineBreakMode = .byTruncatingTail
         label.cell?.usesSingleLineMode = true
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        stack.addArrangedSubview(label)
+        addSubview(label)
 
+    }
+
+    func setLeadingView(_ view: NSView) {
+        leadingView = view
+        addSubview(view)
+        needsLayout = true
     }
 
     // MARK: - Appearance
@@ -162,7 +143,12 @@ class FilterButton: NSView {
     // MARK: - Layout
 
     override var intrinsicContentSize: NSSize {
-        let fitting = stack.fittingSize
+        let textSize = label.intrinsicContentSize
+        let iconWidth: CGFloat = leadingView == nil ? 0 : 20 + Const.space8
+        let fitting = NSSize(
+            width: textSize.width + iconWidth + Const.space8,
+            height: max(textSize.height, leadingView == nil ? 0 : 20)
+        )
         return NSSize(
             width: fitting.width + Const.space10 * 2,
             height: fitting.height + Const.space6 * 2
@@ -172,6 +158,28 @@ class FilterButton: NSView {
     override func layout() {
         super.layout()
         backgroundLayer.frame = bounds
+
+        let contentRect = bounds.insetBy(dx: Const.space8, dy: Const.space4)
+        var textX = contentRect.minX
+        if let leadingView {
+            leadingView.frame = NSRect(
+                x: contentRect.minX,
+                y: contentRect.midY - 10,
+                width: 20,
+                height: 20
+            )
+            textX += 20 + Const.space8
+        }
+
+        let textSize = label.intrinsicContentSize
+        // 保留原尾部 spacer 前的间距，避免改变文案截断位置
+        let textWidth = max(0, contentRect.maxX - textX - Const.space8)
+        label.frame = NSRect(
+            x: textX,
+            y: contentRect.midY - textSize.height / 2,
+            width: textWidth,
+            height: textSize.height
+        )
     }
 
     override func viewDidChangeEffectiveAppearance() {

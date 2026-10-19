@@ -11,18 +11,18 @@ final class FilterPopover: NSPopover {
     // MARK: - Properties
 
     var onWillClose: (() -> Void)?
-    var onDidClose: (() -> Void)?
+    private(set) var isDisplayed = false
+    private var closingWindow: NSWindow?
 
-    private let filterViewController: FilterPopoverViewController
+    private let controller: FilterPopoverViewController
 
     // MARK: - Init
 
-    init(viewModel: TopBarViewModel) {
-        filterViewController = FilterPopoverViewController(viewModel: viewModel)
+    init(viewController: FilterPopoverViewController) {
+        controller = viewController
         super.init()
         behavior = .transient
-        contentViewController = filterViewController
-        delegate = self
+        contentViewController = controller
     }
 
     @available(*, unavailable)
@@ -30,23 +30,33 @@ final class FilterPopover: NSPopover {
         fatalError("init(coder:) has not been implemented")
     }
 
+    isolated deinit {
+        if let closingWindow {
+            Task { @MainActor in
+                withExtendedLifetime(closingWindow) {}
+            }
+        }
+    }
+
     // MARK: - Public API
 
     func prepare() {
-        filterViewController.prepare()
+        controller.prepare()
     }
 
     func toggle(relativeTo positioningRect: NSRect, of positioningView: NSView) {
-        if isShown {
+        if isDisplayed {
             close()
             return
         }
 
+        animates = !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         show(relativeTo: positioningRect, of: positioningView, preferredEdge: .maxY)
+        animates = false
 
         Task { @MainActor in
-            guard let window = filterViewController.view.window else { return }
-            window.makeFirstResponder(filterViewController.view)
+            guard isDisplayed, let window = controller.view.window else { return }
+            window.makeFirstResponder(controller.view)
         }
     }
 }
@@ -54,11 +64,16 @@ final class FilterPopover: NSPopover {
 // MARK: - NSPopoverDelegate
 
 extension FilterPopover: NSPopoverDelegate {
-    func popoverWillClose(_: Notification) {
-        onWillClose?()
+    func popoverWillShow(_: Notification) {
+        isDisplayed = true
     }
 
-    func popoverDidClose(_: Notification) {
-        onDidClose?()
+    func popoverWillClose(_: Notification) {
+        guard isDisplayed else { return }
+        closingWindow = controller.view.window
+        animates = !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        isDisplayed = false
+        contentViewController = nil
+        onWillClose?()
     }
 }

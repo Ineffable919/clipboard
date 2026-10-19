@@ -30,9 +30,6 @@ final class AppFilterButton: FilterButton {
 
     private func setupAppIcon() {
         appIconView.imageScaling = .scaleProportionallyDown
-        appIconView.snp.makeConstraints { make in
-            make.width.height.equalTo(20)
-        }
-        stack.insertArrangedSubview(appIconView, at: 0)
+        setLeadingView(appIconView)
     }
 }

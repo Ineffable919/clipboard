@@ -18,6 +18,7 @@ final class ClipPreviewPopover: NSPopover {
 
     private let previewVC = ClipPreviewController()
     private nonisolated(unsafe) var keyMonitor: Any?
+    private var closingWindow: NSWindow?
 
     // MARK: - Init
 
@@ -43,10 +44,15 @@ final class ClipPreviewPopover: NSPopover {
         fatalError()
     }
 
-    deinit {
+    isolated deinit {
         let monitor = keyMonitor
         if let monitor {
             NSEvent.removeMonitor(monitor)
+        }
+        if let closingWindow {
+            Task { @MainActor in
+                withExtendedLifetime(closingWindow) {}
+            }
         }
     }
 
@@ -78,6 +84,7 @@ final class ClipPreviewPopover: NSPopover {
     }
 
     func cleanup() {
+        closingWindow = previewVC.view.window
         previewVC.cleanup()
         previewVC.onContentInteraction = nil
         previewVC.onDismiss = nil

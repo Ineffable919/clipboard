@@ -34,6 +34,7 @@ final class TopBarView: NSView {
     // MARK: - Popover
 
     var filterPopover: FilterPopover?
+    var filterController: FilterPopoverViewController?
     enum FilterPopoverCloseDestination {
         case search
         case collection
@@ -93,14 +94,6 @@ final class TopBarView: NSView {
             guard let self, isSearching, !searchField.text.isEmpty else { return }
             searchField.showSuggestions()
         }.store(in: &cancellables)
-
-        filterPopover = FilterPopover(viewModel: topVM)
-        filterPopover?.onWillClose = { [weak self] in
-            self?.handlePopoverWillClose()
-        }
-        filterPopover?.onDidClose = { [weak self] in
-            self?.handlePopoverDidClose()
-        }
 
         chipController.updateViewModel(topVM)
         chipController.onReloadNeeded = { [weak self] in
@@ -305,7 +298,7 @@ final class TopBarView: NSView {
         updateSearchFieldWidth()
         isSearching = true
         applyMode(animated: true)
-        filterPopover?.prepare()
+        prepareFilterPopover()
         if !searchField.isFirstResponder {
             window?.makeFirstResponder(searchField.tokenTextView)
         }

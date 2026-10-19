@@ -60,15 +60,31 @@ extension TopBarView {
     }
 
     func dismissFilterPopoverIfVisible() -> Bool {
-        guard filterPopover?.isShown == true else { return false }
+        guard filterPopover?.isDisplayed == true else { return false }
         explicitFilterPopoverCloseDestination = .search
         togglePopover()
         return true
     }
 
+    func prepareFilterPopover() {
+        guard filterPopover == nil, let topVM else { return }
+        let controller = filterController ?? FilterPopoverViewController(viewModel: topVM)
+        filterController = controller
+        let popover = FilterPopover(viewController: controller)
+        popover.onWillClose = { [weak self, weak popover] in
+            guard let self, let popover, filterPopover === popover else { return }
+            filterPopover = nil
+            removeFilterPopoverMouseMonitor()
+            handlePopoverWillClose()
+        }
+        filterPopover = popover
+        popover.prepare()
+    }
+
     func togglePopover() {
+        prepareFilterPopover()
         guard let filterPopover else { return }
-        if filterPopover.isShown {
+        if filterPopover.isDisplayed {
             explicitFilterPopoverCloseDestination = .search
         } else {
             explicitFilterPopoverCloseDestination = nil
@@ -77,7 +93,7 @@ extension TopBarView {
             relativeTo: searchField.filterButton.bounds,
             of: searchField.filterButton
         )
-        if filterPopover.isShown {
+        if filterPopover.isDisplayed {
             installFilterPopoverMouseMonitor()
             onFocusRegionChange?(.filter)
         }
@@ -89,7 +105,7 @@ extension TopBarView {
             matching: .leftMouseDown
         ) { [weak self] event in
             guard let self,
-                  filterPopover?.isShown == true,
+                  filterPopover?.isDisplayed == true,
                   event.window === window,
                   let hitView = window?.contentView?.hitTest(event.locationInWindow)
             else {
@@ -125,7 +141,8 @@ extension TopBarView {
             }
             if NSApp.currentEvent?.type == .leftMouseDown {
                 Task { @MainActor [weak self] in
-                    self?.onFocusRegionChange?(.collection)
+                    guard let self, filterPopover == nil else { return }
+                    onFocusRegionChange?(.collection)
                 }
             } else {
                 onFocusRegionChange?(.collection)
@@ -133,9 +150,9 @@ extension TopBarView {
             explicitFilterPopoverCloseDestination = nil
             return
         }
+        explicitFilterPopoverCloseDestination = nil
         Task { @MainActor [weak self] in
-            guard let self else { return }
-            defer { explicitFilterPopoverCloseDestination = nil }
+            guard let self, filterPopover == nil else { return }
             guard isSearching else { return }
             switch closeDestination {
             case .search:
@@ -145,10 +162,6 @@ extension TopBarView {
                 onFocusRegionChange?(.collection)
             }
         }
-    }
-
-    func handlePopoverDidClose() {
-        removeFilterPopoverMouseMonitor()
     }
 
     private func currentPopoverCloseDestination() -> FilterPopoverCloseDestination {

@@ -58,12 +58,13 @@ final class FilterPopoverViewController: NSViewController {
     override func viewDidAppear() {
         super.viewDidAppear()
         isViewVisible = true
-        contentView.appSection.prepareRemainingApps()
     }
 
     override func viewDidDisappear() {
         super.viewDidDisappear()
         isViewVisible = false
+        loadingTask?.cancel()
+        loadingTask = nil
     }
 
     // MARK: - Public API
@@ -153,16 +154,18 @@ extension FilterPopoverViewController {
                 .color, .file, .image, .link, .string
             ])
             contentView.appSection.setAvailableApps(appInfo)
-            if isViewVisible {
-                contentView.appSection.prepareRemainingApps()
-            }
 
             let userChips = CategoryChipStore.shared.chips.filter { !$0.isSystem }
             contentView.tagSection.setAvailableGroups(userChips)
 
             updateContentViewState()
 
-            await loadMissingIcons(for: rawAppInfo)
+            let missingIcons = rawAppInfo.filter {
+                AppIconCache.shared.getCachedIcon(forAppID: $0.id) == nil
+            }
+            if !missingIcons.isEmpty {
+                await loadMissingIcons(for: missingIcons)
+            }
         }
     }
 

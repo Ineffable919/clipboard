@@ -13,45 +13,15 @@ enum FilterGridLayout {
     static func layoutThreeColumnGrid(buttons: [FilterButton], in container: NSView) {
         container.subviews.forEach { $0.removeFromSuperview() }
 
-        let columnCount = 3
-        let spacing = Const.space8
-        let buttonWidth: CGFloat = 140
-        let buttonHeight: CGFloat = 30
-
-        let gridView = NSGridView()
-        gridView.rowSpacing = spacing
-        gridView.columnSpacing = spacing
-        gridView.xPlacement = .leading
-        gridView.yPlacement = .center
-
+        let gridView = PersistentFilterGridView()
         container.addSubview(gridView)
         gridView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
-
-        var currentRow: [NSView] = []
-        for (index, button) in buttons.enumerated() {
-            button.snp.remakeConstraints { make in
-                make.width.equalTo(buttonWidth)
-                make.height.equalTo(buttonHeight)
-            }
-
-            currentRow.append(button)
-
-            if currentRow.count == columnCount || index == buttons.count - 1 {
-                while currentRow.count < columnCount {
-                    let spacer = NSView()
-                    spacer.snp.makeConstraints { make in
-                        make.width.equalTo(buttonWidth)
-                        make.height.equalTo(buttonHeight)
-                    }
-                    currentRow.append(spacer)
-                }
-
-                gridView.addRow(with: currentRow)
-                currentRow.removeAll()
-            }
-        }
+        gridView.setItems(
+            buttons.enumerated().map { .init(button: $0.element, position: $0.offset) },
+            visible: buttons
+        )
 
         container.snp.remakeConstraints { make in
             make.width.equalToSuperview()
@@ -92,26 +62,8 @@ final class PersistentFilterGridView: NSView {
                 item.button.removeFromSuperview()
             }
 
-            for item in items {
-                let identifier = ObjectIdentifier(item.button)
-                let oldPosition = oldPositions[identifier]
-                if oldPosition == nil {
-                    addSubview(item.button)
-                }
-                guard oldPosition != item.position else { continue }
-
-                let column = item.position % columnCount
-                let row = item.position / columnCount
-                item.button.snp.remakeConstraints { make in
-                    make.leading.equalToSuperview().offset(
-                        CGFloat(column) * (buttonSize.width + spacing)
-                    )
-                    make.top.equalToSuperview().offset(
-                        CGFloat(row) * (buttonSize.height + spacing)
-                    )
-                    make.width.equalTo(buttonSize.width)
-                    make.height.equalTo(buttonSize.height)
-                }
+            for item in items where oldPositions[ObjectIdentifier(item.button)] == nil {
+                addSubview(item.button)
             }
             self.items = items
         }
@@ -126,6 +78,20 @@ final class PersistentFilterGridView: NSView {
 
         invalidateIntrinsicContentSize()
         needsLayout = true
+    }
+
+    override func layout() {
+        super.layout()
+        for item in items {
+            let column = item.position % columnCount
+            let row = item.position / columnCount
+            item.button.frame = NSRect(
+                x: CGFloat(column) * (buttonSize.width + spacing),
+                y: CGFloat(row) * (buttonSize.height + spacing),
+                width: buttonSize.width,
+                height: buttonSize.height
+            )
+        }
     }
 
     override var intrinsicContentSize: NSSize {

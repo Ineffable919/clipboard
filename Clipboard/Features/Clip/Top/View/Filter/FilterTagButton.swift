@@ -19,18 +19,16 @@ final class FilterTagButton: FilterButton {
 
     private func setupDot(colorIndex: Int) {
         let dotContainer = NSView()
-        dotContainer.snp.makeConstraints { make in
-            make.width.height.equalTo(20)
-        }
-
-        let dotView = NSView()
+        let diameter = CategoryDotRenderer.diameter
+        let origin = (20 - diameter) / 2
+        let dotView = NSView(frame: NSRect(
+            x: origin,
+            y: origin,
+            width: diameter,
+            height: diameter
+        ))
         CategoryDotRenderer.configure(dotView, colorIndex: colorIndex)
         dotContainer.addSubview(dotView)
-        dotView.snp.makeConstraints { make in
-            make.width.height.equalTo(CategoryDotRenderer.diameter)
-            make.center.equalToSuperview()
-        }
-
-        stack.insertArrangedSubview(dotContainer, at: 0)
+        setLeadingView(dotContainer)
     }
 }
