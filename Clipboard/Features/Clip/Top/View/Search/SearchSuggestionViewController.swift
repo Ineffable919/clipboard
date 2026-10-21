@@ -110,7 +110,12 @@ final class SearchSuggestionViewController: NSViewController {
         tableView.reloadData()
         syncLayoutToVisibleBounds()
         if !newItems.isEmpty {
-            scrollView.contentView.scroll(to: NSPoint(x: 0, y: -scrollView.contentInsets.top))
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0
+                scrollView.contentView.animator().setBoundsOrigin(
+                    NSPoint(x: 0, y: -scrollView.contentInsets.top)
+                )
+            }
             scrollView.reflectScrolledClipView(scrollView.contentView)
         }
         updateHighlight()
@@ -135,7 +140,7 @@ final class SearchSuggestionViewController: NSViewController {
         }
         highlightedIndex += 1
         updateHighlight()
-        tableView.animator().scrollRowToVisible(highlightedIndex)
+        scrollToSelection()
         return true
     }
 
@@ -147,7 +152,7 @@ final class SearchSuggestionViewController: NSViewController {
         }
         highlightedIndex -= 1
         updateHighlight()
-        tableView.animator().scrollRowToVisible(highlightedIndex)
+        scrollToSelection()
         return true
     }
 
@@ -177,6 +182,27 @@ final class SearchSuggestionViewController: NSViewController {
     }
 
     // MARK: - Private
+
+    private func scrollToSelection() {
+        let clipView = scrollView.contentView
+        let rowFrame = tableView.rect(ofRow: highlightedIndex)
+        var targetBounds = clipView.bounds
+        let insets = clipView.contentInsets
+        let peek = Metrics.rowHeight / 5
+        if rowFrame.minY < targetBounds.minY + insets.top + peek {
+            targetBounds.origin.y = rowFrame.minY - insets.top - peek
+        } else if rowFrame.maxY > targetBounds.maxY - insets.bottom - peek {
+            targetBounds.origin.y = rowFrame.maxY + insets.bottom + peek - targetBounds.height
+        }
+        let origin = clipView.constrainBoundsRect(targetBounds).origin
+        let event = NSApp.currentEvent
+        let isRepeat = event?.type == .keyDown && event?.isARepeat == true
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = isRepeat || NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? 0 : 0.2
+            clipView.animator().setBoundsOrigin(origin)
+        }
+        scrollView.reflectScrolledClipView(clipView)
+    }
 
     private func updateHighlight() {
         for row in 0 ..< tableView.numberOfRows {
