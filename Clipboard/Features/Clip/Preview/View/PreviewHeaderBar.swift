@@ -34,14 +34,7 @@ final class PreviewHeaderBar: NSView {
         return btn
     }()
 
-    private let appIconView: NSImageView = {
-        let image = NSImageView()
-        image.imageScaling = .scaleProportionallyUpOrDown
-        image.isHidden = true
-        return image
-    }()
-
-    private let appNameLabel: NSTextField = {
+    private let typeLabel: NSTextField = {
         let field = NSTextField(labelWithString: "")
         field.font = .systemFont(ofSize: NSFont.systemFontSize)
         field.textColor = .secondaryLabelColor
@@ -115,8 +108,7 @@ final class PreviewHeaderBar: NSView {
 
     private func setupLayout() {
         addSubview(closeButton)
-        addSubview(appIconView)
-        addSubview(appNameLabel)
+        addSubview(typeLabel)
         addSubview(rightStack)
 
         closeButton.snp.makeConstraints { make in
@@ -124,34 +116,21 @@ final class PreviewHeaderBar: NSView {
             make.width.height.equalTo(20)
         }
 
-        appIconView.snp.makeConstraints { make in
+        typeLabel.snp.makeConstraints { make in
             make.leading.equalTo(closeButton.snp.trailing).offset(Const.space6)
             make.centerY.equalToSuperview()
-            make.width.height.equalTo(18)
+            make.trailing.lessThanOrEqualTo(rightStack.snp.leading).offset(-Const.space8)
         }
 
         rightStack.snp.makeConstraints { make in
             make.trailing.centerY.equalToSuperview()
-        }
-
-        appNameLabel.snp.makeConstraints { make in
-            make.leading.equalTo(appIconView.snp.trailing).offset(Const.space4)
-            make.centerY.equalToSuperview()
-            make.trailing.lessThanOrEqualTo(rightStack.snp.leading).offset(-Const.space8)
         }
     }
 
     // MARK: - Public API
 
     func configure(model: PasteboardModel, appIcon: NSImage?) {
-        appNameLabel.stringValue = model.appName
-
-        if let icon = appIcon {
-            appIconView.image = icon
-            appIconView.isHidden = false
-        } else {
-            appIconView.isHidden = true
-        }
+        typeLabel.stringValue = model.type.string
 
         editButton.isHidden = !model.pasteboardType.isText()
         pinButton.configure(group: model.group)
