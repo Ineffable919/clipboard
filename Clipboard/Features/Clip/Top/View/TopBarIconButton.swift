@@ -148,7 +148,11 @@ final class TopBarIconButton: NSView {
     override func layout() {
         super.layout()
         backgroundLayer.frame = bounds
-        backgroundLayer.cornerRadius = compact ? bounds.height / 2 : Const.radius
+        if #available(macOS 26.0, *) {
+            backgroundLayer.cornerRadius = compact ? bounds.height / 2 : Const.radius
+        } else {
+            backgroundLayer.cornerRadius = Const.radius
+        }
     }
 
     override func viewDidChangeEffectiveAppearance() {
