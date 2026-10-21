@@ -336,6 +336,14 @@ extension FloatingHistoryView: NSCollectionViewDelegate {
     }
 
     func collectionView(
+        _ collectionView: NSCollectionView,
+        draggingSession _: NSDraggingSession, willBeginAt _: NSPoint,
+        forItemsAt indexPaths: Set<IndexPath>
+    ) {
+        for indexPath in indexPaths { collectionView.item(at: indexPath)?.view.isHidden = false }
+    }
+
+    func collectionView(
         _: NSCollectionView,
         validateDrop draggingInfo: any NSDraggingInfo,
         proposedIndexPath _: AutoreleasingUnsafeMutablePointer<NSIndexPath>,

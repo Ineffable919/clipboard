@@ -121,9 +121,11 @@ extension ClipMainViewController: NSCollectionViewDelegate {
         willBeginAt _: NSPoint,
         forItemsAt indexPaths: Set<IndexPath>
     ) {
+        for indexPath in indexPaths {
+            collectionView.item(at: indexPath)?.view.isHidden = false
+        }
         draggedIDs = indexPaths.sorted().compactMap { displayedModel(at: $0)?.id }
         dragFilterRevision = dataStore.filterRevision
-        // 遮罩位于列表上方；hitTest 穿透不会让已注册的拖放目标穿透。
         dropOverlayView.unregisterDraggedTypes()
         dropOverlayView.resetDragState()
     }

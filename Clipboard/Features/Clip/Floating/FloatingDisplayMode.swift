@@ -27,4 +27,5 @@ enum FloatingDisplayMode: Int, CaseIterable {
     var cardSpacing: CGFloat { self == .standard ? 6 : 4 }
     var cardInset: CGFloat { self == .standard ? 10 : 12 }
     var cardRadius: CGFloat { self == .standard ? Const.radius : 8 }
+    var plainTextFontSize: CGFloat { self == .standard ? 12 : 11 }
 }
