@@ -102,3 +102,4 @@ scripts/sign_update.sh
 scripts/release.sh
 scripts/release-notes-*.md
 .release/
+opencode.json

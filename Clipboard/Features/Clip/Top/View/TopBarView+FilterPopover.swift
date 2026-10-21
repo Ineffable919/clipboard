@@ -71,9 +71,13 @@ extension TopBarView {
         let controller = filterController ?? FilterPopoverViewController(viewModel: topVM)
         filterController = controller
         let popover = FilterPopover(viewController: controller)
+        popover.onWillShow = { [weak self] in
+            self?.searchField.setPopoverFocusRingSuppressed(true)
+        }
         popover.onWillClose = { [weak self, weak popover] in
             guard let self, let popover, filterPopover === popover else { return }
             filterPopover = nil
+            defer { searchField.setPopoverFocusRingSuppressed(false) }
             removeFilterPopoverMouseMonitor()
             handlePopoverWillClose()
         }
@@ -151,17 +155,10 @@ extension TopBarView {
             return
         }
         explicitFilterPopoverCloseDestination = nil
-        Task { @MainActor [weak self] in
-            guard let self, filterPopover == nil else { return }
-            guard isSearching else { return }
-            switch closeDestination {
-            case .search:
-                window?.makeFirstResponder(searchField.tokenTextView)
-                onFocusRegionChange?(.search)
-            case .collection:
-                onFocusRegionChange?(.collection)
-            }
+        if !searchField.isFirstResponder {
+            window?.makeFirstResponder(searchField.tokenTextView)
         }
+        onFocusRegionChange?(.search)
     }
 
     private func currentPopoverCloseDestination() -> FilterPopoverCloseDestination {

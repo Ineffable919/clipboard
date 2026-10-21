@@ -17,6 +17,8 @@ private final class FlippedView: NSView {
 }
 
 final class FilterPopoverContentView: NSView {
+    override var acceptsFirstResponder: Bool { true }
+
     // MARK: - Sections
 
     let typeSection = FilterTypeSectionView()

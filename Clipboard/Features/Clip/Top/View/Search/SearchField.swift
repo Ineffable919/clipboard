@@ -11,8 +11,9 @@ import SnapKit
 
 final class SearchField: NSView {
     @Published private(set) var text: String = ""
-    private var isWindowFocusRingSuppressed = false
-    private var isModeFocusRingSuppressed = false
+    private var focusRingState = (window: false, mode: false, popover: false, editing: false)
+    private var usesManualFocusRing = false
+    private let focusRingView = SearchFocusRingView(frame: .zero)
 
     var onResignFirstResponder: (() -> Void)?
     var onBecomeFirstResponder: (() -> Void)?
@@ -96,6 +97,7 @@ final class SearchField: NSView {
         setupFilterButton()
         setupCancelButton()
         setupTokenTextView()
+        setupFocusRing()
         setupSuggestionKeyHandling()
     }
 
@@ -156,13 +158,8 @@ final class SearchField: NSView {
         tokenTextView.onTextChanged = { [weak self] plainText in
             self?.handleTextChanged(plainText)
         }
-        tokenTextView.onBecomeFirstResponder = { [weak self] in
-            self?.onBecomeFirstResponder?()
-        }
-        tokenTextView.onResignFirstResponder = { [weak self] in
-            self?.hideSuggestions()
-            self?.onResignFirstResponder?()
-        }
+        tokenTextView.onBecomeFirstResponder = { [weak self] in self?.handleEditingFocusChange(true) }
+        tokenTextView.onResignFirstResponder = { [weak self] in self?.handleEditingFocusChange(false) }
 
         scrollView.focusRingMaskView = self
 
@@ -337,7 +334,7 @@ extension SearchField: NSTextViewDelegate {
     }
 
     func textDidBeginEditing(_: Notification) {
-        onBecomeFirstResponder?()
+        handleEditingFocusChange(true)
     }
 }
 
@@ -346,16 +343,57 @@ extension SearchField {
     var modeTrailingViews: [NSView] { [cancelButton, filterButton] }
 
     func setFocusRingSuppressed(_ suppressed: Bool) {
-        isWindowFocusRingSuppressed = suppressed
+        focusRingState.window = suppressed
         updateFocusRingSuppression()
     }
 
     func setModeFocusRingSuppressed(_ suppressed: Bool) {
-        isModeFocusRingSuppressed = suppressed
+        focusRingState.mode = suppressed
+        updateFocusRingSuppression()
+    }
+
+    func setPopoverFocusRingSuppressed(_ suppressed: Bool) {
+        focusRingState.popover = suppressed
+        usesManualFocusRing = usesManualFocusRing || suppressed
+        updateFocusRingSuppression()
+    }
+
+    func useSystemFocusRing() {
+        guard usesManualFocusRing else { return }
+        usesManualFocusRing = false
         updateFocusRingSuppression()
     }
 
     private func updateFocusRingSuppression() {
-        scrollView.isFocusRingSuppressed = isWindowFocusRingSuppressed || isModeFocusRingSuppressed
+        scrollView.isFocusRingSuppressed = usesManualFocusRing
+            || focusRingState.window || focusRingState.popover
+        if (scrollView.focusRingMaskView == nil) != usesManualFocusRing {
+            scrollView.focusRingMaskView = usesManualFocusRing ? nil : self
+            scrollView.focusRingType = usesManualFocusRing ? .none : .exterior
+            tokenTextView.focusRingType = usesManualFocusRing ? .none : .default
+        }
+        focusRingView.isHidden = !usesManualFocusRing || !focusRingState.editing || focusRingState.window
+            || focusRingState.mode || focusRingState.popover || window?.isKeyWindow != true
+    }
+
+    private func setupFocusRing() {
+        focusRingView.focusRingType = .none
+        focusRingView.wantsLayer = true
+        focusRingView.isHidden = true
+        addSubview(focusRingView)
+        focusRingView.snp.makeConstraints { make in
+            make.edges.equalToSuperview().inset(-SearchFocusRingView.inset)
+        }
+    }
+
+    private func handleEditingFocusChange(_ focused: Bool) {
+        focusRingState.editing = focused
+        updateFocusRingSuppression()
+        if focused {
+            onBecomeFirstResponder?()
+        } else {
+            hideSuggestions()
+            onResignFirstResponder?()
+        }
     }
 }

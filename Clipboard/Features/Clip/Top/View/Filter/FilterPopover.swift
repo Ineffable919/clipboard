@@ -10,6 +10,7 @@ import AppKit
 final class FilterPopover: NSPopover {
     // MARK: - Properties
 
+    var onWillShow: (() -> Void)?
     var onWillClose: (() -> Void)?
     private(set) var isDisplayed = false
     private var closingWindow: NSWindow?
@@ -54,10 +55,9 @@ final class FilterPopover: NSPopover {
         show(relativeTo: positioningRect, of: positioningView, preferredEdge: .maxY)
         animates = false
 
-        Task { @MainActor in
-            guard isDisplayed, let window = controller.view.window else { return }
-            window.makeFirstResponder(controller.view)
-        }
+        guard isDisplayed, let window = controller.view.window else { return }
+        window.initialFirstResponder = controller.view
+        window.makeFirstResponder(controller.view)
     }
 }
 
@@ -66,6 +66,7 @@ final class FilterPopover: NSPopover {
 extension FilterPopover: NSPopoverDelegate {
     func popoverWillShow(_: Notification) {
         isDisplayed = true
+        onWillShow?()
     }
 
     func popoverWillClose(_: Notification) {

@@ -22,7 +22,7 @@ extension TopBarView {
 
     func applyMode(animated: Bool = false) {
         modeAnimationGeneration += 1
-        searchField.setModeFocusRingSuppressed(!isSearching)
+        searchField.setModeFocusRingSuppressed(true)
         guard animated, window?.isVisible == true,
               !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else {
             finishModeTransition()
@@ -59,6 +59,8 @@ extension TopBarView {
                 view.layer?.removeAnimation(forKey: key)
             }
         }
+        // 展开结束并解除裁剪后再显示完整焦点环。
+        searchField.setModeFocusRingSuppressed(!isSearching)
     }
 
     private func animateModeTransition() {

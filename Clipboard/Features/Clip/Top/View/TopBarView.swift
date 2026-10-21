@@ -152,6 +152,7 @@ final class TopBarView: NSView {
 
     private func setupSearchRow() {
         searchRow.wantsLayer = true
+        searchRow.clipsToBounds = false
         searchRow.orientation = .horizontal
         searchRow.spacing = Const.space8
         searchRow.alignment = .centerY
@@ -297,6 +298,7 @@ final class TopBarView: NSView {
         guard !isSearching else { return }
         updateSearchFieldWidth()
         isSearching = true
+        searchField.useSystemFocusRing()
         applyMode(animated: true)
         prepareFilterPopover()
         if !searchField.isFirstResponder {
