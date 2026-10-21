@@ -93,11 +93,15 @@ final class CardBottomView: NSView, PassthroughMouseEvents {
 // MARK: - CardImageBottomView
 
 private final class CardImageBottomView: NSView, PassthroughMouseEvents {
-    private lazy var labelBg: NSView = {
-        let view = NSView()
+    private lazy var labelBg: NSVisualEffectView = {
+        let view = NSVisualEffectView()
+        view.material = .menu
+        view.blendingMode = .withinWindow
+        view.state = .active
         view.wantsLayer = true
-        view.layer?.cornerRadius = 4.0
+        view.layer?.cornerRadius = 4
         view.layer?.cornerCurve = .continuous
+        view.layer?.masksToBounds = true
         return view
     }()
 
@@ -117,7 +121,7 @@ private final class CardImageBottomView: NSView, PassthroughMouseEvents {
         label.stringValue = introString
 
         addSubview(labelBg)
-        labelBg.addSubview(label)
+        addSubview(label)
 
         labelBg.snp.makeConstraints { make in
             make.bottom.equalToSuperview().inset(Const.space8)
@@ -126,10 +130,8 @@ private final class CardImageBottomView: NSView, PassthroughMouseEvents {
             make.trailing.lessThanOrEqualToSuperview()
         }
         label.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+            make.edges.equalTo(labelBg)
         }
-
-        updateLabelBackground()
     }
 
     @available(*, unavailable)
@@ -137,15 +139,10 @@ private final class CardImageBottomView: NSView, PassthroughMouseEvents {
         fatalError()
     }
 
-    override func viewDidChangeEffectiveAppearance() {
-        super.viewDidChangeEffectiveAppearance()
-        updateLabelBackground()
-    }
-
-    private func updateLabelBackground() {
-        effectiveAppearance.performAsCurrentDrawingAppearance {
-            labelBg.layer?.backgroundColor = NSColor.unemphasizedSelectedContentBackgroundColor
-                .withAlphaComponent(0.8).cgColor
+    override func layout() {
+        super.layout()
+        if #available(macOS 26.0, *) {
+            labelBg.layer?.cornerRadius = labelBg.bounds.height / 2
         }
     }
 }
