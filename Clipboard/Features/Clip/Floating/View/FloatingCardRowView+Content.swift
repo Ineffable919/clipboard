@@ -70,10 +70,11 @@ final class FloatingTextContentView: NSView {
         let text = keyword.isEmpty
             ? model.plainTextAttributedString
             : model.highlightedNSAttributedString(keyword: keyword)
-        if textField.maximumNumberOfLines == 1, model.pasteboardType == .string {
+        if model.pasteboardType == .string {
             let preview = NSMutableAttributedString(attributedString: text)
+            let fontSize: CGFloat = textField.maximumNumberOfLines == 1 ? 11 : 12
             preview.addAttribute(
-                .font, value: NSFont.systemFont(ofSize: 12), range: NSRange(location: 0, length: preview.length)
+                .font, value: NSFont.systemFont(ofSize: fontSize), range: NSRange(location: 0, length: preview.length)
             )
             textField.attributedStringValue = preview
         } else {

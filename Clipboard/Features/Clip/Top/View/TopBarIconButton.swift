@@ -49,7 +49,6 @@ final class TopBarIconButton: NSView {
     private func setup(symbolName: String, pointSize: CGFloat) {
         wantsLayer = true
 
-        backgroundLayer.cornerRadius = compact ? Const.btnRadius : Const.radius
         backgroundLayer.masksToBounds = true
         layer?.addSublayer(backgroundLayer)
 
@@ -149,6 +148,7 @@ final class TopBarIconButton: NSView {
     override func layout() {
         super.layout()
         backgroundLayer.frame = bounds
+        backgroundLayer.cornerRadius = compact ? bounds.height / 2 : Const.radius
     }
 
     override func viewDidChangeEffectiveAppearance() {
