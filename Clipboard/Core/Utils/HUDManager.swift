@@ -7,6 +7,7 @@
 
 import AppKit
 import SnapKit
+import SwiftUI
 
 // MARK: - HUDManager
 
@@ -18,12 +19,8 @@ final class HUDManager {
     private var hudWindow: HUDWindow?
     private var dismissTask: Task<Void, Never>?
 
-    private var contentTarget: NSView? {
-        hudWindow?.contentTarget
-    }
-
     func show(
-        icon: NSImage? = NSImage(systemSymbolName: "hammer", accessibilityDescription: nil),
+        icon: NSImage? = NSImage(systemSymbolName: "hammer.fill", accessibilityDescription: nil),
         text: String = String(localized: "hudCopySucceeded"),
         duration: TimeInterval = 1.5
     ) {
@@ -47,8 +44,11 @@ private extension HUDManager {
             hudWindow = window
         }
 
-        guard let targetView = contentTarget else { return }
-        buildContent(in: targetView, icon: icon, text: text)
+        if #available(macOS 26.0, *) {
+            window.setGlassContent(icon: icon, text: text)
+        } else if let targetView = window.contentTarget {
+            buildContent(in: targetView, icon: icon, text: text)
+        }
 
         centerWindow(window)
 
@@ -104,13 +104,13 @@ private extension HUDManager {
             parent.addSubview(imageView)
             imageView.snp.makeConstraints { make in
                 make.centerX.equalToSuperview()
-                make.centerY.equalToSuperview().offset(-18)
-                make.size.equalTo(120)
+                make.centerY.equalToSuperview().offset(-16)
+                make.size.equalTo(100)
             }
         }
 
         let label = NSTextField(labelWithString: text)
-        label.font = .systemFont(ofSize: NSFont.systemFontSize + 5, weight: .medium)
+        label.font = .systemFont(ofSize: 18, weight: .medium)
         label.textColor = .labelColor
         label.alignment = .center
         label.lineBreakMode = .byWordWrapping
@@ -119,9 +119,9 @@ private extension HUDManager {
         parent.addSubview(label)
         label.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.bottom.equalToSuperview().inset(20)
-            make.leading.greaterThanOrEqualToSuperview().inset(12)
-            make.trailing.lessThanOrEqualToSuperview().inset(12)
+            make.bottom.equalToSuperview().inset(26)
+            make.leading.equalToSuperview().inset(16)
+            make.trailing.equalToSuperview().inset(16)
         }
     }
 
@@ -130,7 +130,7 @@ private extension HUDManager {
         let screenFrame = screen.visibleFrame
         let windowFrame = window.frame
         let originX = screenFrame.midX - windowFrame.width / 2
-        let originY = screenFrame.origin.y + 60
+        let originY = screenFrame.origin.y + 60 - HUDWindow.effectPadding
         window.setFrameOrigin(NSPoint(x: originX, y: originY))
     }
 }
@@ -139,14 +139,33 @@ private extension HUDManager {
 
 @MainActor
 private final class HUDWindow: NSPanel {
+    // HUD-only private API: keep the glass active without making the panel key.
+    @objc(_hasActiveAppearanceIgnoringKeyFocus)
+    dynamic func hasActiveAppearanceIgnoringKeyFocus() -> Bool {
+        true
+    }
+
     private static let hudSize = CGSize(width: 200, height: 200)
-    private static let cornerRadius: CGFloat = 20
+    private static let cornerRadius: CGFloat = 28
+    static var effectPadding: CGFloat {
+        if #available(macOS 26.0, *) {
+            HUDContentView.effectPadding
+        } else {
+            24
+        }
+    }
 
     private(set) var contentTarget: NSView?
 
     init() {
         super.init(
-            contentRect: NSRect(origin: .zero, size: Self.hudSize),
+            contentRect: NSRect(
+                origin: .zero,
+                size: CGSize(
+                    width: Self.hudSize.width + Self.effectPadding * 2,
+                    height: Self.hudSize.height + Self.effectPadding * 2
+                )
+            ),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
@@ -154,39 +173,40 @@ private final class HUDWindow: NSPanel {
 
         isOpaque = false
         backgroundColor = .clear
-        hasShadow = false
+        hasShadow = true
         level = .floating
         ignoresMouseEvents = true
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         isMovable = false
 
-        contentView = makeBackgroundView()
+        if #available(macOS 26.0, *) {
+            // SwiftUI's glass provides its own shadow inside the transparent window.
+            hasShadow = false
+            return
+        }
+
+        let host = NSView(frame: NSRect(origin: .zero, size: frame.size))
+        contentView = host
+        let background = makeVisualEffectView()
+        contentTarget = background
+        host.addSubview(background)
+        background.snp.makeConstraints { make in
+            make.edges.equalToSuperview().inset(Self.effectPadding)
+        }
     }
 
     // MARK: Background
 
-    private func makeBackgroundView() -> NSView {
-        if #available(macOS 26.0, *) {
-            return makeGlassView()
-        } else {
-            let effect = makeVisualEffectView()
-            contentTarget = effect
-            return effect
-        }
-    }
-
     @available(macOS 26.0, *)
-    private func makeGlassView() -> NSView {
-        let glass = NSGlassEffectView()
-        glass.frame = NSRect(origin: .zero, size: Self.hudSize)
-        glass.cornerRadius = Self.cornerRadius
-
-        let container = NSView()
-        container.wantsLayer = true
-        glass.contentView = container
-        contentTarget = container
-
-        return glass
+    func setGlassContent(icon: NSImage?, text: String) {
+        let rootView = HUDContentView(icon: icon, text: text, size: Self.hudSize)
+        if let hosting = contentView as? NSHostingView<HUDContentView> {
+            hosting.rootView = rootView
+        } else {
+            let hosting = NSHostingView(rootView: rootView)
+            hosting.sizingOptions = []
+            contentView = hosting
+        }
     }
 
     private func makeVisualEffectView() -> NSVisualEffectView {
