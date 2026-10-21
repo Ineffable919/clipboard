@@ -101,11 +101,23 @@ final class CollectionViewItem: NSCollectionViewItem {
         }
     }
 
+    private lazy var badgeEffectView: NSVisualEffectView = {
+        let view = NSVisualEffectView()
+        view.material = .menu
+        view.blendingMode = .withinWindow
+        view.state = .active
+        view.isHidden = true
+        return view
+    }()
+
     private lazy var badgeBgView: BadgeBackgroundView = {
         let view = BadgeBackgroundView()
         view.wantsLayer = true
-        view.layer?.cornerRadius = 4.0
+        view.layer?.cornerRadius = 4
         view.layer?.cornerCurve = .continuous
+        view.layer?.masksToBounds = true
+        view.addSubview(badgeEffectView)
+        badgeEffectView.snp.makeConstraints { $0.edges.equalToSuperview() }
         view.isHidden = true
         return view
     }()
@@ -113,7 +125,7 @@ final class CollectionViewItem: NSCollectionViewItem {
     private lazy var badgeStackView: NSStackView = {
         let stack = NSStackView()
         stack.orientation = .horizontal
-        stack.spacing = 0
+        stack.spacing = Const.space4
         stack.distribution = .fill
         return stack
     }()
@@ -121,7 +133,7 @@ final class CollectionViewItem: NSCollectionViewItem {
     private lazy var infoIconView: NSImageView = {
         let icon = NSImageView()
         icon.image = NSImage(systemSymbolName: "text.justify.leading", accessibilityDescription: nil)
-        icon.symbolConfiguration = NSImage.SymbolConfiguration(textStyle: .callout)
+        icon.symbolConfiguration = NSImage.SymbolConfiguration(textStyle: .footnote)
         icon.imageScaling = .scaleProportionallyUpOrDown
         icon.isHidden = true
         icon.setContentHuggingPriority(.required, for: .horizontal)
@@ -131,7 +143,7 @@ final class CollectionViewItem: NSCollectionViewItem {
 
     private lazy var quickPasteLabel: NSTextField = {
         let label = NSTextField(labelWithString: "")
-        label.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .regular)
+        label.font = .preferredFont(forTextStyle: .callout)
         label.textColor = .labelColor
         label.alignment = .center
         label.isHidden = true
@@ -163,23 +175,21 @@ final class CollectionViewItem: NSCollectionViewItem {
     private func updateInfoIconAppearance() {
         view.effectiveAppearance.performAsCurrentDrawingAppearance {
             guard let model = item else { return }
-            let backgroundColor: NSColor
-            let backgroundAlpha: CGFloat
             let tintColor: NSColor
 
-            if model.type == .image {
-                backgroundColor = .unemphasizedSelectedContentBackgroundColor
-                backgroundAlpha = 0.8
-                tintColor = .secondaryLabelColor
+            if model.type == .image || model.type == .string {
+                badgeBgView.dynamicBackgroundColor = .clear
+                badgeBgView.backgroundAlpha = 0
+                badgeEffectView.isHidden = false
+                tintColor = model.type == .image ? .secondaryLabelColor : model.colors().1
             } else {
                 let (base, textColor) = model.colors()
-                backgroundColor = base
-                backgroundAlpha = 1.0
+                badgeBgView.dynamicBackgroundColor = base
+                badgeBgView.backgroundAlpha = 1
+                badgeEffectView.isHidden = true
                 tintColor = textColor
             }
 
-            badgeBgView.dynamicBackgroundColor = backgroundColor
-            badgeBgView.backgroundAlpha = backgroundAlpha
             infoIconView.contentTintColor = tintColor
             quickPasteLabel.textColor = tintColor
         }
@@ -215,6 +225,9 @@ extension CollectionViewItem {
     override func viewDidLayout() {
         super.viewDidLayout()
         updateContentInset()
+        if #available(macOS 26.0, *) {
+            badgeBgView.layer?.cornerRadius = badgeBgView.bounds.height / 2
+        }
     }
 
     override var isSelected: Bool {
@@ -325,7 +338,7 @@ extension CollectionViewItem {
 
         badgeStackView.snp.makeConstraints { make in
             make.centerY.equalToSuperview()
-            make.leading.trailing.equalToSuperview().inset(Const.space2)
+            make.leading.trailing.equalToSuperview().inset(Const.space6)
         }
 
         updateShadow()
