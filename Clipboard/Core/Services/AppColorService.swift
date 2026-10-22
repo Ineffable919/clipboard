@@ -72,6 +72,14 @@ final class AppColorService {
         PasteUserDefaults.appColorData = [:]
     }
 
+    func refreshColor(_ hex: String, name: String) {
+        checkedColors.insert(name)
+        guard colorDict[name] != hex else { return }
+        colorDict[name] = hex
+        PasteUserDefaults.appColorData = colorDict
+        changes.send(name)
+    }
+
     private func needsUpdate(for name: String) -> Bool {
         guard !checkedColors.contains(name) else { return false }
         guard let hex = colorDict[name] else { return true }

@@ -1,7 +1,7 @@
 import AppKit
 
 /// 优先明显主导色，再比较中心位置、局部对比和多处分布，最后应用色系偏好
-enum AppIconColorExtractor {
+nonisolated enum AppIconColorExtractor {
     private static let pixelSize = 32
     private static let mergeDistance: Double = 48
     private static let gridSize = 8
@@ -279,7 +279,7 @@ enum AppIconColorExtractor {
 }
 
 extension AppIconColorExtractor {
-    private static func neutralBackground(from pixels: [ColorArea]) -> String? {
+    private nonisolated static func neutralBackground(from pixels: [ColorArea]) -> String? {
         let total = pixels.reduce(0) { $0 + $1.area }
         guard total > 0 else { return nil }
         let colorful = pixels.filter { $0.saturation >= 0.4 && $0.brightness > 50 }

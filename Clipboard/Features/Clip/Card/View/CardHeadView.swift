@@ -11,6 +11,7 @@ import SnapKit
 final class CardHeadView: NSView {
     private var iconLoadTask: Task<Void, Never>?
     private var colorSubscription: AnyCancellable?
+    private var iconSubscription: AnyCancellable?
 
     // MARK: - Subviews
 
@@ -69,6 +70,7 @@ final class CardHeadView: NSView {
 
     func configure(with model: PasteboardModel) {
         let isDefault = model.group == -1
+        iconSubscription = nil
 
         let color = AppColorService.shared.color(for: model)
         backgroundView.layer?.backgroundColor = color.cgColor
@@ -88,6 +90,11 @@ final class CardHeadView: NSView {
 
         iconView.isHidden = !isDefault
         if isDefault {
+            iconSubscription = AppIconCache.shared.changes.sink { [weak self, weak model] id in
+                guard let self, let model, model.appID == id else { return }
+                iconLoadTask?.cancel()
+                iconView.image = AppIconCache.shared.getCachedIcon(forAppID: id)
+            }
             iconView.image = AppIconCache.shared.getCachedIcon(forAppID: model.appID, path: model.appPath)
             iconLoadTask?.cancel()
             iconLoadTask = Task { @MainActor [weak self] in
@@ -100,6 +107,7 @@ final class CardHeadView: NSView {
 
     func reset() {
         colorSubscription = nil
+        iconSubscription = nil
         iconLoadTask?.cancel()
         iconLoadTask = nil
         iconView.image = nil

@@ -129,7 +129,7 @@ final class PreviewHeaderBar: NSView {
 
     // MARK: - Public API
 
-    func configure(model: PasteboardModel, appIcon: NSImage?) {
+    func configure(model: PasteboardModel) {
         typeLabel.stringValue = model.type.string
 
         editButton.isHidden = !model.pasteboardType.isText()

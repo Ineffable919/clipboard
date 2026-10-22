@@ -301,6 +301,7 @@ extension PasteDataStore {
 
     func insertModel(_ model: PasteboardModel) async {
         guard await prepareApp(for: model) else { return }
+        let sourceAppID = model.appID
         let result = await sqlManager.insert(
             item: model,
             timestamp: model.timestamp,
@@ -309,15 +310,14 @@ extension PasteDataStore {
         guard result.id >= 0 else { return }
         model.appID = result.appID
         await sqlManager.refreshAppCache()
+        SourceAppCache.shared.refreshIconIfNeeded(for: sourceAppID)
         AppColorService.shared.updateColor(for: model)
         let count = await sqlManager.getTotalCount()
-
         model.id = result.id
         if let group = result.group {
             model.updateGroup(val: group)
         }
         totalCount = count
-
         if isInFilterMode, let filter = currentFilter {
             filteredCount = await sqlManager.getCount(filter: filter)
             guard let id = model.id,

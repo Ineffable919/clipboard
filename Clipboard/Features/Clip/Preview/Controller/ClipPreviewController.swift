@@ -14,7 +14,6 @@ final class ClipPreviewController: NSViewController {
     // MARK: - State
 
     private var model: PasteboardModel?
-    private var appIcon: NSImage?
     private var defaultBrowserName: String?
     private var defaultAppForFile: String?
     private var fileSize: String?
@@ -62,7 +61,6 @@ final class ClipPreviewController: NSViewController {
         metadataTask = nil
 
         self.model = model
-        appIcon = nil
         defaultBrowserName = nil
         defaultAppForFile = nil
         fileSize = nil
@@ -70,7 +68,7 @@ final class ClipPreviewController: NSViewController {
         let cappedH = min(Const.maxPreviewHeight, maxHeight)
         let maxContentH = max(cappedH - ClipPreviewPopover.chrome, 0)
 
-        headerView.configure(model: model, appIcon: nil)
+        headerView.configure(model: model)
         contentView.configure(with: model, maxContentH: maxContentH)
         headerView.updateMarkdownToggle(visible: model.usesMarkdownPreview, isRendered: true)
         footerView.configure(
@@ -86,7 +84,7 @@ final class ClipPreviewController: NSViewController {
         view.layoutSubtreeIfNeeded()
 
         metadataTask = Task { @MainActor [weak self] in
-            await self?.loadMetadata(for: model)
+            self?.loadMetadata(for: model)
         }
 
         return size
@@ -94,14 +92,13 @@ final class ClipPreviewController: NSViewController {
 
     func refreshHeader() {
         guard let model else { return }
-        headerView.configure(model: model, appIcon: appIcon)
+        headerView.configure(model: model)
     }
 
     func cleanup() {
         metadataTask?.cancel()
         metadataTask = nil
         model = nil
-        appIcon = nil
         defaultBrowserName = nil
         defaultAppForFile = nil
         fileSize = nil
@@ -164,12 +161,12 @@ final class ClipPreviewController: NSViewController {
         headerView.onPinToChip = { [weak self] chipId in
             guard let model = self?.model else { return }
             self?.onPinToChip?(model, chipId)
-            self?.headerView.configure(model: model, appIcon: self?.appIcon)
+            self?.headerView.configure(model: model)
         }
         headerView.onUnpin = { [weak self] in
             guard let model = self?.model else { return }
             self?.onUnpin?(model)
-            self?.headerView.configure(model: model, appIcon: self?.appIcon)
+            self?.headerView.configure(model: model)
         }
         headerView.onCreateChip = { [weak self] in
             guard let model = self?.model else { return }
@@ -188,12 +185,8 @@ final class ClipPreviewController: NSViewController {
 
     // MARK: - Metadata Loading
 
-    private func loadMetadata(for model: PasteboardModel) async {
+    private func loadMetadata(for model: PasteboardModel) {
         guard !Task.isCancelled else { return }
-
-        let icon = await AppIconCache.shared.loadIcon(forAppID: model.appID, path: model.appPath)
-        guard !Task.isCancelled else { return }
-        appIcon = icon
 
         defaultBrowserName = bundleDisplayName(
             for: NSWorkspace.shared.urlForApplication(
@@ -217,7 +210,7 @@ final class ClipPreviewController: NSViewController {
 
         guard !Task.isCancelled else { return }
 
-        headerView.configure(model: model, appIcon: appIcon)
+        headerView.configure(model: model)
         footerView.configure(
             model: model,
             fileSize: fileSize,

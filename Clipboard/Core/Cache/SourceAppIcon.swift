@@ -5,6 +5,25 @@ nonisolated enum SourceAppIcon {
     static let pixelSize = 256
     static let cacheCost = pixelSize * pixelSize * 4
 
+    struct FileState: Sendable, Equatable {
+        let modified: Date
+        let id: UInt64
+    }
+
+    static func fileState(path: String) -> [FileState]? {
+        guard !path.isEmpty else { return nil }
+        let url = URL(fileURLWithPath: path)
+        let urls = [url, url.appending(path: "Contents/Info.plist"), url.appending(path: "Contents/Resources")]
+        var states: [FileState] = []
+        for url in urls {
+            guard let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
+                  let modified = attributes[.modificationDate] as? Date,
+                  let id = attributes[.systemFileNumber] as? UInt64 else { return nil }
+            states.append(FileState(modified: modified, id: id))
+        }
+        return states
+    }
+
     /// 在后台按需读取；旧图仅在原应用仍可用时更新，不放大低清数据冒充高清图。
     static func read(data: Data?, path: String) -> (image: NSImage?, data: Data?) {
         let stored = data.flatMap { NSBitmapImageRep(data: $0) }?.cgImage

@@ -33,8 +33,8 @@ extension PasteSQLManager {
         return id
     }
 
-    func saveAppIcon(id: Int64, path: String, data: Data) -> SourceApp? {
-        guard let connection, let app = apps[id], app.path == path else { return nil }
+    func saveAppIcon(id: Int64, path: String, data: Data, replacing previous: Data?) -> SourceApp? {
+        guard let connection, let app = apps[id], app.path == path, app.iconData == previous else { return nil }
         do {
             try connection.run("UPDATE App SET icon_data = ? WHERE id = ?", Blob(bytes: [UInt8](data)), id)
             let updated = SourceApp(id: id, bundleID: app.bundleID, name: app.name, path: path, iconData: data)
