@@ -148,9 +148,8 @@ final class CardImageContentView: NSView, PassthroughMouseEvents {
         loadingIndicator.startAnimation(nil)
 
         loadTask = Task { @MainActor [weak self] in
-            guard let self else { return }
             let image = await model.loadThumbnail()
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled, let self else { return }
 
             loadingIndicator.stopAnimation(nil)
             loadingIndicator.isHidden = true
@@ -184,9 +183,8 @@ final class CardImageContentView: NSView, PassthroughMouseEvents {
         }
 
         ocrTask = Task { @MainActor [weak self] in
-            guard let self else { return }
             let regions = await model.loadOCRHighlightRegions(keyword: trimmed)
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled, let self else { return }
             ocrOverlayView.regions = regions
             ocrOverlayView.imageSize = model.cachedImageSize
             ocrOverlayView.isFillMode = isFillMode

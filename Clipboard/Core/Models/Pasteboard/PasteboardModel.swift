@@ -27,14 +27,16 @@ final class PasteboardModel: Identifiable, Codable {
     private(set) lazy var attributeString: NSAttributedString =
         .init(with: showData, type: pasteboardType) ?? NSAttributedString()
 
-    private(set) lazy var writeItem = PasteboardWritingItem(
-        data: data,
-        type: pasteboardType,
-        plainText: plainText,
-        appName: appName,
-        timestamp: timestamp,
-        model: self
-    )
+    var writeItem: PasteboardWritingItem {
+        PasteboardWritingItem(
+            data: data,
+            type: pasteboardType,
+            plainText: plainText,
+            appName: appName,
+            timestamp: timestamp,
+            model: self
+        )
+    }
     private(set) lazy var type = PasteModelType(
         with: pasteboardType,
         model: self
@@ -185,33 +187,13 @@ final class PasteboardModel: Identifiable, Codable {
         cachedImageSize
     }
 
-    func thumbnail() -> NSImage? {
-        cachedThumbnail
-    }
-
     func loadThumbnail() async -> NSImage? {
-        if let cachedThumbnail {
-            return cachedThumbnail
-        }
-
-        if let existingTask = thumbnailLoadTask {
-            return await existingTask.value
-        }
-
-        let task = Task<NSImage?, Never> { @MainActor in
-            let imageData = data
-
-            let image = await Task.detached(priority: .userInitiated) {
-                NSImage(data: imageData)
-            }.value
-
-            cachedThumbnail = image
-            thumbnailLoadTask = nil
-            return image
-        }
-
-        thumbnailLoadTask = task
-        return await task.value
+        let scale = NSScreen.screens.map(\.backingScaleFactor).max() ?? 2
+        let pixels = Int((max(Const.cardSize, Const.cntSize) * scale).rounded(.up))
+        guard let image = await ImageThumbnailCache.shared.image(
+            for: uniqueId, data: data, maxPixelSize: pixels
+        ), !Task.isCancelled else { return nil }
+        return NSImage(cgImage: image, size: .zero)
     }
 
     // MARK: - 状态更新

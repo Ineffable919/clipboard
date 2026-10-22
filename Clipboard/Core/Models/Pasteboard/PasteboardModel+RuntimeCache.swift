@@ -8,7 +8,6 @@
 import AppKit
 
 struct PasteboardModelRuntimeCache {
-    var thumbnail: NSImage?
     var imageSize: CGSize?
     var backgroundColor: NSColor?
     var foregroundColor: NSColor?
@@ -19,16 +18,10 @@ struct PasteboardModelRuntimeCache {
     var ocrKeyword: String?
     var hasBackgroundColor = false
     var needsBottomMask: Bool?
-    var thumbnailLoadTask: Task<NSImage?, Never>?
     var isMarkdown: Bool?
 }
 
 extension PasteboardModel {
-    var cachedThumbnail: NSImage? {
-        get { runtimeCache.thumbnail }
-        set { runtimeCache.thumbnail = newValue }
-    }
-
     var cachedImageSize: CGSize? {
         get { runtimeCache.imageSize }
         set { runtimeCache.imageSize = newValue }
@@ -77,11 +70,6 @@ extension PasteboardModel {
     var cachedNeedsBottomMask: Bool? {
         get { runtimeCache.needsBottomMask }
         set { runtimeCache.needsBottomMask = newValue }
-    }
-
-    var thumbnailLoadTask: Task<NSImage?, Never>? {
-        get { runtimeCache.thumbnailLoadTask }
-        set { runtimeCache.thumbnailLoadTask = newValue }
     }
 
     var cachedIsMarkdown: Bool? {
