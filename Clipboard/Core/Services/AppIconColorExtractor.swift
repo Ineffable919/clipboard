@@ -8,8 +8,9 @@ nonisolated enum AppIconColorExtractor {
     private static let scoreTolerance = 0.75
 
     static func extract(from image: NSImage) -> String? {
-        let pixels = samples(from: image)
-        if let neutral = neutralBackground(from: pixels) { return neutral }
+        let sampled = samples(from: image)
+        let pixels = sampled.colors
+        if let neutral = neutralBackground(from: pixels, context: sampled.context) { return neutral }
         var candidates = clusters(from: pixels.filter { $0.isSuitable })
         if candidates.isEmpty {
             candidates = clusters(from: pixels.filter { $0.brightness > 30 && $0.brightness < 230 })
@@ -33,37 +34,21 @@ nonisolated enum AppIconColorExtractor {
                 && ($0.visualScore >= highestScore * scoreTolerance
                     || ($0.centrality >= 0.6 && $0.area >= totalArea * 0.12))
         }
-        let selected = finalists.sorted { lhs, rhs in
+        let selected = finalists.min { lhs, rhs in
             if lhs.colorPriority != rhs.colorPriority { return lhs.colorPriority > rhs.colorPriority }
             if lhs.visualScore != rhs.visualScore { return lhs.visualScore > rhs.visualScore }
             if lhs.area != rhs.area { return lhs.area > rhs.area }
             return lhs.rgbKey < rhs.rgbKey
-        }.first
+        }
         guard let selected else { return nil }
-        // 色系合并只决定谁胜出；输出该色系中面积最大的相近色簇，避免渐变混成新色
-        let shades = clusters(from: pixels.filter {
-            $0.isSuitable && $0.colorPriority == selected.colorPriority
-        }, mergeFamilies: false)
-        let representative = shades.sorted {
-            if $0.area != $1.area { return $0.area > $1.area }
-            return $0.rgbKey < $1.rgbKey
-        }.first ?? selected
+        // 色系合并只决定谁胜出；优先采用内部颜色稳定的色簇，降低边缘混色的影响
+        let representative = representative(from: pixels, priority: selected.colorPriority) ?? selected
         let hex = String(representative.rgbKey, radix: 16, uppercase: true)
         return "#" + String(repeating: "0", count: 6 - hex.count) + hex
     }
 
-    private static func samples(from image: NSImage) -> [ColorArea] {
-        guard let source = image.cgImage(forProposedRect: nil, context: nil, hints: nil),
-              let space = CGColorSpace(name: CGColorSpace.sRGB),
-              let context = CGContext(
-                  data: nil, width: pixelSize, height: pixelSize, bitsPerComponent: 8,
-                  bytesPerRow: pixelSize * 4, space: space,
-                  bitmapInfo: CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue
-              )
-        else { return [] }
-        context.interpolationQuality = .high
-        context.draw(source, in: CGRect(x: 0, y: 0, width: pixelSize, height: pixelSize))
-        guard let data = context.data else { return [] }
+    private static func samples(from image: NSImage) -> (colors: [ColorArea], context: CGContext?) {
+        guard let context = sampleContext(from: image), let data = context.data else { return ([], nil) }
         let pixels = data.bindMemory(to: UInt8.self, capacity: context.bytesPerRow * pixelSize)
         var buckets: [UInt32: ColorArea] = [:]
         for row in 0 ..< pixelSize {
@@ -75,7 +60,13 @@ nonisolated enum AppIconColorExtractor {
                 let green = min(255, Double(pixels[offset + 1]) * 255 / alpha)
                 let blue = min(255, Double(pixels[offset + 2]) * 255 / alpha)
                 let key = (UInt32(red / 8) << 16) | (UInt32(green / 8) << 8) | UInt32(blue / 8)
-                var sample = ColorArea(red: red, green: green, blue: blue, area: alpha / 255)
+                var sample = ColorArea(
+                    red: red, green: green, blue: blue, area: alpha / 255,
+                    regionAreas: [Double](repeating: 0, count: gridSize * gridSize)
+                )
+                if sample.isSuitable {
+                    sample.stableArea = sample.area * stability(of: sample, row: row, column: column, pixels: pixels)
+                }
                 let center = Double(pixelSize) / 2
                 let distance = max(abs(Double(column) + 0.5 - center), abs(Double(row) + 0.5 - center)) / center
                 sample.centerWeight = sample.area * (1 - distance)
@@ -94,10 +85,11 @@ nonisolated enum AppIconColorExtractor {
             }
         }
         // 先按桶键排序，再稳定地按面积排序，避免字典遍历顺序影响聚类
-        return buckets.keys.sorted().compactMap { buckets[$0] }.sorted {
+        let colors = buckets.keys.sorted().compactMap { buckets[$0] }.sorted {
             if $0.area != $1.area { return $0.area > $1.area }
             return $0.rgbKey < $1.rgbKey
         }
+        return (colors, context)
     }
 
     /// 只比较附近有效彩色像素，黑白文字和透明边缘不制造虚假的颜色对比
@@ -155,6 +147,7 @@ nonisolated enum AppIconColorExtractor {
         var green: Double
         var blue: Double
         var area: Double
+        var stableArea: Double = 0
         var centerWeight: Double = 0
         var centrality: Double { centerWeight / area }
         var contrastWeight: Double = 0
@@ -206,7 +199,8 @@ nonisolated enum AppIconColorExtractor {
             }
             return result
         }
-        var regionAreas = [Double](repeating: 0, count: gridSize * gridSize)
+        // 仅真实采样需要区域数组，局部对比的临时邻居保持为空
+        var regionAreas: [Double] = []
 
         var regionCount: Int {
             let cellSize = pixelSize / gridSize
@@ -253,6 +247,7 @@ nonisolated enum AppIconColorExtractor {
             centerWeight += other.centerWeight
             contrastWeight += other.contrastWeight
             area = total
+            stableArea += other.stableArea
             for index in regionAreas.indices { regionAreas[index] += other.regionAreas[index] }
         }
 
@@ -279,15 +274,63 @@ nonisolated enum AppIconColorExtractor {
 }
 
 extension AppIconColorExtractor {
-    private nonisolated static func neutralBackground(from pixels: [ColorArea]) -> String? {
+    private nonisolated static func sampleContext(from image: NSImage) -> CGContext? {
+        guard let source = image.cgImage(forProposedRect: nil, context: nil, hints: nil),
+              let space = CGColorSpace(name: CGColorSpace.sRGB),
+              let context = CGContext(
+                  data: nil, width: pixelSize, height: pixelSize, bitsPerComponent: 8,
+                  bytesPerRow: pixelSize * 4, space: space,
+                  bitmapInfo: CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue
+              ) else { return nil }
+        context.interpolationQuality = .high
+        context.draw(source, in: CGRect(x: 0, y: 0, width: pixelSize, height: pixelSize))
+        return context
+    }
+
+    private nonisolated static func representative(from pixels: [ColorArea], priority: Int) -> ColorArea? {
+        let shades = clusters(from: pixels.filter {
+            $0.isSuitable && $0.colorPriority == priority
+        }, mergeFamilies: false)
+        return shades.min {
+            if $0.stableArea != $1.stableArea { return $0.stableArea > $1.stableArea }
+            if $0.area != $1.area { return $0.area > $1.area }
+            return $0.rgbKey < $1.rgbKey
+        }
+    }
+
+    /// 邻域颜色越一致，代表色支持度越高；黑白或透明邻居也参与边缘判断
+    private nonisolated static func stability(
+        of sample: ColorArea, row: Int, column: Int, pixels: UnsafeMutablePointer<UInt8>
+    ) -> Double {
+        var similar = 0
+        for deltaRow in -1...1 {
+            for deltaColumn in -1...1 {
+                guard deltaRow != 0 || deltaColumn != 0 else { continue }
+                let nextRow = row + deltaRow
+                let nextColumn = column + deltaColumn
+                guard (0..<pixelSize).contains(nextRow), (0..<pixelSize).contains(nextColumn) else { continue }
+                let offset = (nextRow * pixelSize + nextColumn) * 4
+                let alpha = Double(pixels[offset + 3])
+                guard alpha > 128 else { continue }
+                let red = sample.red - min(255, Double(pixels[offset]) * 255 / alpha)
+                let green = sample.green - min(255, Double(pixels[offset + 1]) * 255 / alpha)
+                let blue = sample.blue - min(255, Double(pixels[offset + 2]) * 255 / alpha)
+                if red * red + green * green + blue * blue < mergeDistance * mergeDistance { similar += 1 }
+            }
+        }
+        let ratio = Double(similar) / 8
+        return ratio * ratio
+    }
+
+    private nonisolated static func neutralBackground(from pixels: [ColorArea], context: CGContext?) -> String? {
         let total = pixels.reduce(0) { $0 + $1.area }
         guard total > 0 else { return nil }
         let colorful = pixels.filter { $0.saturation >= 0.4 && $0.brightness > 50 }
             .reduce(0) { $0 + $1.area }
         guard colorful / total < 0.15 else { return nil }
-        let dark = pixels.filter { $0.saturation < 0.4 && $0.brightness < 90 }
-            .reduce(0) { $0 + $1.area }
-        return dark / total >= 0.55 ? "#061335" : nil
+        if !pixels.contains(where: \.isSuitable), let context,
+           let foreground = NeutralIconColor.extract(from: context) { return foreground }
+        return nil
     }
 
 }
