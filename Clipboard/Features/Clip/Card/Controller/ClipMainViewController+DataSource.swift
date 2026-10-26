@@ -207,7 +207,8 @@ extension ClipMainViewController {
             scrollView.stopScrolling()
             return
         }
-        let padding = Const.cardSpace + Const.cardSize / 5
+        // Paste 的落点预留 2.5 倍卡片间距，使相邻卡片露出 1.5 倍间距
+        let padding = Const.cardSpace * 2.5
         let visibleRect = scrollView.contentView.documentVisibleRect
         var originX = visibleRect.minX
 

@@ -119,10 +119,10 @@ final class ClipMainViewController: NSViewController {
         flowLayout.minimumLineSpacing = Const.cardSpace
         flowLayout.scrollDirection = .horizontal
         flowLayout.sectionInset = NSEdgeInsets(
-            top: 0,
-            left: Const.space20,
-            bottom: 0,
-            right: Const.space20
+            top: Const.selectionBorderWidth,
+            left: Const.space24,
+            bottom: Const.selectionBorderWidth,
+            right: Const.space24
         )
 
         let collectionView = ClipCollectionView()
@@ -291,8 +291,8 @@ extension ClipMainViewController {
 
         scrollView.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview()
-            make.bottom.equalToSuperview().offset(-20)
-            make.top.equalTo(topBarView.snp.bottom).offset(Const.space10)
+            make.bottom.equalToSuperview().offset(-20 + Const.selectionBorderWidth)
+            make.top.equalTo(topBarView.snp.bottom).offset(Const.space10 - Const.selectionBorderWidth)
         }
 
         topBarView.snp.makeConstraints { make in

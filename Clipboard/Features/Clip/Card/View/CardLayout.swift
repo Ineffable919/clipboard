@@ -9,7 +9,7 @@ final class CardLayout: NSCollectionViewFlowLayout {
               let indexPath = attributes.indexPath
         else { return attributes }
 
-        // FlowLayout 的命中结果不会调用下面的间隙布局方法，需要显式使用同一份尺寸。
+        // FlowLayout 的命中结果不会调用下面的间隙布局方法，需要显式使用同一份尺寸
         return layoutAttributesForInterItemGap(before: indexPath)
     }
 
@@ -34,11 +34,9 @@ final class CardLayout: NSCollectionViewFlowLayout {
             centerX = (previousFrame.maxX + frame.minX) / 2
         }
 
-        // 保留原生落点语义，但隐藏系统提示器，由列表绘制整条竖线。
-        let scale = collectionView.window?.backingScaleFactor ?? 2
-        let cardFrame = frame.insetBy(dx: 0, dy: CollectionViewItem.cardInset(for: scale))
+        // 保留原生落点语义，但隐藏系统提示器，由列表绘制整条竖线
         let attributes = NSCollectionViewLayoutAttributes(forInterItemGapBefore: indexPath)
-        attributes.frame = NSRect(x: centerX - 2, y: cardFrame.minY, width: 4, height: cardFrame.height)
+        attributes.frame = NSRect(x: centerX - 2, y: frame.minY, width: 4, height: frame.height)
         attributes.zIndex = 1
         attributes.alpha = 0
         return attributes
