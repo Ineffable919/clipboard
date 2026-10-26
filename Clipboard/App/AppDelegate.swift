@@ -9,6 +9,7 @@ import AppKit
 import Combine
 import QuartzCore
 import Sparkle
+import WebKit
 
 class AppDelegate: NSObject {
     static var shared: AppDelegate?
@@ -21,6 +22,7 @@ class AppDelegate: NSObject {
     )
 
     private var monitorToken: Any?
+    private var warmupView: WKWebView?
 }
 
 extension AppDelegate: NSApplicationDelegate {
@@ -34,6 +36,8 @@ extension AppDelegate: NSApplicationDelegate {
         applyAppearanceSettings()
 
         applyDockIconPolicy()
+
+        warmupWebKit()
 
         Task {
             await initClipboardAsync()
@@ -62,6 +66,11 @@ extension AppDelegate: NSApplicationDelegate {
     private func applyDockIconPolicy() {
         let showDockIcon = PasteUserDefaults.showDockIcon
         NSApp.setActivationPolicy(showDockIcon ? .regular : .accessory)
+    }
+
+    private func warmupWebKit() {
+        guard PasteUserDefaults.enableLinkPreview, warmupView == nil else { return }
+        warmupView = WKWebView(frame: .zero)
     }
 
     private func applyAppearanceSettings() {
