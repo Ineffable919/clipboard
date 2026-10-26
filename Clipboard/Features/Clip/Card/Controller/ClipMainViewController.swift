@@ -260,6 +260,7 @@ extension ClipMainViewController {
 
     override func viewDidDisappear() {
         super.viewDidDisappear()
+        scrollView.stopScrolling()
         PasteDataStore.main.clearExpiredData()
         if let token = monitorToken {
             NSEvent.removeMonitor(token)

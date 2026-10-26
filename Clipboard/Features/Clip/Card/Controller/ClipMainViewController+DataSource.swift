@@ -200,72 +200,29 @@ extension ClipMainViewController {
         updateSelectedItemBorder()
     }
 
-    private func eventIsRepeat() -> Bool {
-        guard let event = NSApp.currentEvent else { return false }
-
-        switch event.type {
-        case .keyDown:
-            return event.isARepeat
-        default:
-            return false
-        }
-    }
-
     func scrollTo(indexPath: IndexPath, animated: Bool = true) {
-        guard displayedItemCount > 0 else { return }
-        guard let attrs = collectionView.layoutAttributesForItem(at: indexPath)
-        else { return }
-        let padding = Const.cardSpace + Const.cardSize / 5
-
-        guard animated, !eventIsRepeat() else {
-            guard let scrollView = collectionView.enclosingScrollView else {
-                return
-            }
-
-            let clipView = scrollView.contentView
-            let visibleRect = clipView.documentVisibleRect
-
-            let targetMinX = attrs.frame.minX - padding
-            let targetMaxX = attrs.frame.maxX + padding
-
-            var newOriginX = visibleRect.origin.x
-
-            if targetMinX < visibleRect.minX {
-                newOriginX = targetMinX
-            } else if targetMaxX > visibleRect.maxX {
-                newOriginX = targetMaxX - visibleRect.width
-            }
-
-            let maxX = max(
-                0,
-                collectionView.bounds.width - visibleRect.width
-            )
-
-            newOriginX = min(max(0, newOriginX), maxX)
-
-            if abs(newOriginX - visibleRect.origin.x) > 1 {
-                clipView.setBoundsOrigin(
-                    NSPoint(x: newOriginX, y: 0)
-                )
-
-                scrollView.reflectScrolledClipView(clipView)
-            }
+        guard displayedItemCount > 0,
+              let attrs = collectionView.layoutAttributesForItem(at: indexPath)
+        else {
+            scrollView.stopScrolling()
             return
         }
+        let padding = Const.cardSpace + Const.cardSize / 5
+        let visibleRect = scrollView.contentView.documentVisibleRect
+        var originX = visibleRect.minX
 
-        NSAnimationContext.runAnimationGroup { ctx in
-            ctx.duration = 0.2
-            ctx.allowsImplicitAnimation = true
-            collectionView.scrollToVisible(
-                NSRect(
-                    x: attrs.frame.origin.x - padding,
-                    y: 0,
-                    width: attrs.frame.width + padding * 2,
-                    height: attrs.frame.height
-                )
-            )
+        // 卡片内容越过可视边界后再滚动，预览空间只参与落点计算
+        if attrs.frame.maxX > visibleRect.maxX {
+            originX = attrs.frame.maxX + padding - visibleRect.width
+        } else if attrs.frame.minX < visibleRect.minX {
+            originX = attrs.frame.minX - padding
         }
+
+        let maxX = max(0, collectionView.bounds.width - visibleRect.width)
+        originX = min(max(0, originX), maxX)
+        scrollView.scroll(to: NSPoint(x: originX, y: 0), animated: animated)
     }
+
 }
 
 // MARK: - CollectionViewItemDelegate

@@ -159,7 +159,7 @@ extension FloatingHistoryView {
     func resetToFirst() {
         guard !dataList.isEmpty else { return }
         selectRow(0)
-        collectionView.scroll(.zero)
+        scrollView.scroll(to: .zero, animated: false)
     }
 
     func adjustSelectionAfterDelete() {
@@ -189,21 +189,22 @@ extension FloatingHistoryView {
 
     // MARK: - Scroll
 
-    private func event_isARepeat() -> Bool {
-        guard let event = NSApp.currentEvent else { return false }
-        return event.type == .keyDown && event.isARepeat
-    }
-
     func scrollTo(index: Int) {
         guard index >= 0,
               collectionView.numberOfSections > 0,
               index < collectionView.numberOfItems(inSection: 0)
-        else { return }
+        else {
+            scrollView.stopScrolling()
+            return
+        }
 
         let indexPath = IndexPath(item: index, section: 0)
         guard let attrs = collectionView.layoutAttributesForItem(at: indexPath),
               let clipView = collectionView.enclosingScrollView?.contentView
-        else { return }
+        else {
+            scrollView.stopScrolling()
+            return
+        }
 
         let visibleRect = clipView.documentVisibleRect
         let topCover = scrollInsets.top - Const.selectionBorderWidth
@@ -219,8 +220,6 @@ extension FloatingHistoryView {
         } else if attrs.frame.maxY > effectiveMaxY {
             newOriginY =
                 attrs.frame.maxY + bottomCover + peek - visibleRect.height
-        } else {
-            return
         }
 
         let maxScrollY = max(
@@ -229,14 +228,7 @@ extension FloatingHistoryView {
         )
         newOriginY = min(max(0, newOriginY), maxScrollY)
 
-        let scrollView = clipView.enclosingScrollView
-        if event_isARepeat() {
-            clipView.setBoundsOrigin(NSPoint(x: 0, y: newOriginY))
-            scrollView?.reflectScrolledClipView(clipView)
-        } else {
-            clipView.animator().setBoundsOrigin(NSPoint(x: 0, y: newOriginY))
-            scrollView?.reflectScrolledClipView(clipView)
-        }
+        scrollView.scroll(to: NSPoint(x: 0, y: newOriginY), animated: true)
     }
 
     // MARK: - Quick Paste Display

@@ -128,6 +128,7 @@ extension ClipMainViewController {
         let next = min(max(anchor.item + (movesRight ? 1 : -1), 0), displayedItemCount - 1)
         if next == anchor.item {
             NSSound.beep()
+            return nil
         }
         // 离屏选中项也按数据顺序导航，避免原生布局导航跳到可见边界或末项
         resetSelectIndex(IndexPath(item: next, section: 0))

@@ -118,6 +118,7 @@ final class ClipFloatingViewController: NSViewController {
 
     override func viewDidDisappear() {
         super.viewDidDisappear()
+        floatingContentView.historyView.scrollView.stopScrolling()
         if let token = monitorToken {
             NSEvent.removeMonitor(token)
             monitorToken = nil

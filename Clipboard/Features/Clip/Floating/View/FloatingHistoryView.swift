@@ -13,8 +13,7 @@ import SnapKit
 
 final class FloatingHistoryView: NSView {
     // MARK: - Subviews
-
-    let scrollView = NSScrollView()
+    let scrollView = AnimatedScrollView()
     let collectionView = ClipCollectionView()
     let collectionLayout = NSCollectionViewFlowLayout()
     let emptyStateView = EmptyStateView(style: .floating)
@@ -77,6 +76,7 @@ final class FloatingHistoryView: NSView {
 
     func setDisplayMode(_ mode: FloatingDisplayMode) {
         guard displayMode != mode else { return }
+        scrollView.stopScrolling()
         displayMode = mode
         collectionLayout.minimumLineSpacing = mode.cardSpacing
         collectionLayout.sectionInset = scrollInsets

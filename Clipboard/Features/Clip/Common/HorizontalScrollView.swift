@@ -7,7 +7,7 @@
 
 import AppKit
 
-final class HorizontalScrollView: NSScrollView {
+final class HorizontalScrollView: AnimatedScrollView {
     override var hasVerticalScroller: Bool {
         get { false }
         set { /* ignore */ }
