@@ -132,8 +132,8 @@ final class CollectionViewItem: NSCollectionViewItem {
         return icon
     }()
 
-    private lazy var quickPasteLabel: NSTextField = {
-        let label = NSTextField(labelWithString: "")
+    private lazy var quickPasteLabel: CardLabelView = {
+        let label = CardLabelView()
         label.font = .preferredFont(forTextStyle: .callout)
         label.textColor = .labelColor
         label.alignment = .center

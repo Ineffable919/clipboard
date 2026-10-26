@@ -21,8 +21,8 @@ final class CardHeadView: NSView {
         return view
     }()
 
-    private lazy var typeLabel: NSTextField = {
-        let field = NSTextField(labelWithString: "")
+    private lazy var typeLabel: CardLabelView = {
+        let field = CardLabelView()
         field.textColor = .white
         field.font = .systemFont(ofSize: NSFont.systemFontSize + 2)
         field.lineBreakMode = .byTruncatingTail
@@ -30,8 +30,8 @@ final class CardHeadView: NSView {
         return field
     }()
 
-    private lazy var timestampLabel: NSTextField = {
-        let field = NSTextField(labelWithString: "")
+    private lazy var timestampLabel: CardLabelView = {
+        let field = CardLabelView()
         field.font = .systemFont(ofSize: NSFont.systemFontSize)
         field.textColor = NSColor.white.withAlphaComponent(0.85)
         field.lineBreakMode = .byTruncatingTail

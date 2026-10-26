@@ -105,8 +105,8 @@ private final class CardImageBottomView: NSView, PassthroughMouseEvents {
         return view
     }()
 
-    private lazy var label: PaddedTextField = {
-        let field = PaddedTextField(padding: NSEdgeInsets(
+    private lazy var label: CardLabelView = {
+        let field = CardLabelView(padding: NSEdgeInsets(
             top: 2, left: Const.space6,
             bottom: 2, right: Const.space6
         ))
@@ -150,16 +150,16 @@ private final class CardImageBottomView: NSView, PassthroughMouseEvents {
 // MARK: - CardFileBottomView
 
 private final class CardFileBottomView: NSView, PassthroughMouseEvents {
-    private lazy var firstLineLabel: NSTextField = {
-        let field = NSTextField(labelWithString: "")
+    private lazy var firstLineLabel: CardLabelView = {
+        let field = CardLabelView()
         field.font = .preferredFont(forTextStyle: .callout)
         field.lineBreakMode = .byCharWrapping
         field.maximumNumberOfLines = 1
         return field
     }()
 
-    private lazy var secondLineLabel: NSTextField = {
-        let field = NSTextField(labelWithString: "")
+    private lazy var secondLineLabel: CardLabelView = {
+        let field = CardLabelView()
         field.font = .preferredFont(forTextStyle: .callout)
         field.lineBreakMode = .byTruncatingHead
         field.maximumNumberOfLines = 1
@@ -244,7 +244,7 @@ private final class CardFileBottomView: NSView, PassthroughMouseEvents {
     }
 
     private func highlightLine(
-        _ text: String, keyword: String, label: NSTextField, textColor: NSColor
+        _ text: String, keyword: String, label: CardLabelView, textColor: NSColor
     ) -> NSAttributedString {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineBreakMode = label.lineBreakMode
@@ -276,8 +276,8 @@ private final class CardFileBottomView: NSView, PassthroughMouseEvents {
 final class CardCommonBottomView: NSView, PassthroughMouseEvents {
     private lazy var gradientLayer = CAGradientLayer()
 
-    private lazy var label: NSTextField = {
-        let field = NSTextField(labelWithString: "")
+    private lazy var label: CardLabelView = {
+        let field = CardLabelView()
         field.font = .preferredFont(forTextStyle: .callout)
         field.alignment = .center
         field.lineBreakMode = .byTruncatingTail
