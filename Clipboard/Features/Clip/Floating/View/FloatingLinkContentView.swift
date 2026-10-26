@@ -4,7 +4,6 @@
 //
 
 import AppKit
-@preconcurrency import LinkPresentation
 import SnapKit
 
 // MARK: - FloatingLinkContentView
@@ -20,6 +19,26 @@ final class FloatingLinkContentView: NSView {
         self.displayMode = displayMode
         super.init(frame: .zero)
 
+        setupViews()
+        configure(with: model, keyword: keyword)
+    }
+
+    @available(*, unavailable)
+    required init?(coder _: NSCoder) {
+        fatalError()
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        previewRequest.viewDidMoveToWindow()
+    }
+
+    override func viewWillDraw() {
+        super.viewWillDraw()
+        previewRequest.updateVisibility()
+    }
+
+    private func setupViews() {
         iconView.imageScaling = .scaleProportionallyUpOrDown
         iconView.image = NSImage(systemSymbolName: "link", accessibilityDescription: nil)
         iconView.contentTintColor = .secondaryLabelColor
@@ -56,7 +75,9 @@ final class FloatingLinkContentView: NSView {
             urlLabel.isHidden = true
             titleLabel.snp.makeConstraints { $0.width.equalTo(textStack) }
         }
+    }
 
+    private func configure(with model: PasteboardModel, keyword: String) {
         let urlString = model.attributeString.string
         if keyword.isEmpty {
             urlLabel.stringValue = urlString
@@ -67,26 +88,11 @@ final class FloatingLinkContentView: NSView {
         loadMetadata(urlString: urlString)
     }
 
-    @available(*, unavailable)
-    required init?(coder _: NSCoder) {
-        fatalError()
-    }
-
-    override func viewDidMoveToWindow() {
-        super.viewDidMoveToWindow()
-        previewRequest.viewDidMoveToWindow()
-    }
-
-    override func viewWillDraw() {
-        super.viewWillDraw()
-        previewRequest.updateVisibility()
-    }
-
     private func loadMetadata(urlString: String) {
         applyMetadata(title: nil, icon: nil, urlString: urlString)
         previewRequest.load { [weak self] in
             guard let url = URL(string: urlString) else { return }
-            let metadata = await FloatingLinkContentView.fetchMetadata(for: url)
+            let metadata = await LinkPreviewLoader.fetch(for: url, imagePolicy: .iconOrPreview)
             guard !Task.isCancelled, let self else { return }
             applyMetadata(title: metadata.title, icon: metadata.iconImage, urlString: urlString)
         }
@@ -102,41 +108,6 @@ final class FloatingLinkContentView: NSView {
         if let icon {
             iconView.image = icon
             iconView.contentTintColor = nil
-        }
-    }
-
-    @preconcurrency
-    private static func fetchMetadata(for url: URL) async -> LinkPreviewMetadata {
-        let provider = LPMetadataProvider()
-        provider.timeout = 5.0
-        nonisolated(unsafe) let unsafeProvider = provider
-        do {
-            try Task.checkCancellation()
-            let metadata = try await withTaskCancellationHandler {
-                try await provider.startFetchingMetadata(for: url)
-            } onCancel: {
-                unsafeProvider.cancel()
-            }
-            try Task.checkCancellation()
-            let progress = Progress(totalUnitCount: 1)
-            let icon: NSImage? = await withTaskCancellationHandler {
-                await withCheckedContinuation { cont in
-                    if let source = metadata.iconProvider ?? metadata.imageProvider {
-                        let load = source.loadObject(ofClass: NSImage.self) { img, _ in
-                            cont.resume(returning: img as? NSImage)
-                        }
-                        progress.addChild(load, withPendingUnitCount: 1)
-                        if Task.isCancelled { load.cancel() }
-                    } else {
-                        cont.resume(returning: nil)
-                    }
-                }
-            } onCancel: {
-                progress.cancel()
-            }
-            return LinkPreviewMetadata(title: metadata.title, previewImage: nil, iconImage: icon)
-        } catch {
-            return LinkPreviewMetadata(title: nil, previewImage: nil, iconImage: nil)
         }
     }
 }
