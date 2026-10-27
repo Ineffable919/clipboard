@@ -137,12 +137,12 @@ final class ClipMainViewController: NSViewController {
         collectionView.registerForDraggedTypes(PasteboardType.supportTypes)
         collectionView.setDraggingSourceOperationMask(.every, forLocal: true)
         collectionView.setDraggingSourceOperationMask(.copy, forLocal: false)
-        collectionView.onBecomeFirstResponder = { [weak self] in
+        collectionView.onInteractionFocus = { [weak self] in
             self?.setFocusRegion(.collection)
+            self?.updateSelectedItemBorder()
         }
         collectionView.onShiftClick = { [weak self] clickedPath in
             guard let self else { return }
-            setFocusRegion(.collection)
             let lower = min(selectIndexPath.item, clickedPath.item)
             let upper = max(selectIndexPath.item, clickedPath.item)
             let paths = Set((lower ... upper).map { IndexPath(item: $0, section: 0) })
@@ -152,7 +152,6 @@ final class ClipMainViewController: NSViewController {
         collectionView.onClick = { [weak self] indexPath in
             guard let self else { return }
             resetSelectIndex(indexPath)
-            setFocusRegion(.collection)
         }
         collectionView.onDragMoved = { [weak self] screenPoint in
             guard let self, let window = view.window else { return }

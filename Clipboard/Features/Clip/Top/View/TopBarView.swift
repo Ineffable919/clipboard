@@ -35,13 +35,13 @@ final class TopBarView: NSView {
 
     var filterPopover: FilterPopover?
     var filterController: FilterPopoverViewController?
-    enum FilterPopoverCloseDestination {
+    enum CloseTarget {
         case search
-        case collection
+        case clickedView
     }
 
-    var explicitFilterPopoverCloseDestination: FilterPopoverCloseDestination?
-    var filterPopoverMouseMonitor: Any?
+    var closeTarget: CloseTarget?
+    var popoverMouseMonitor: Any?
 
     // MARK: - Callbacks
 
@@ -52,7 +52,7 @@ final class TopBarView: NSView {
     private(set) var isSearching = false
     private(set) var topVM: TopBarViewModel?
     var cancellables = Set<AnyCancellable>()
-    var shouldSkipNextTokenSync = false
+    var skipNextTokenSync = false
     private var searchFieldWidth = Const.searchFieldMinWidth
     private var searchFieldWidthConstraint: Constraint?
     var modeAnimationGeneration = 0
@@ -174,7 +174,6 @@ final class TopBarView: NSView {
 
             if isSearching, !topVM.hasInput {
                 deactivateSearch()
-                onFocusRegionChange?(.collection)
             }
         }
 
@@ -197,7 +196,7 @@ final class TopBarView: NSView {
 
         searchField.onTokenDeleted = { [weak self] tag in
             Task { @MainActor [weak self] in
-                self?.handleTokenDeletedFromSearchField(tag)
+                self?.handleTokenDeletion(tag)
             }
         }
 

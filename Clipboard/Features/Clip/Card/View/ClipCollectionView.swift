@@ -11,6 +11,7 @@ final class ClipCollectionView: NSCollectionView {
     var onDragEnded: ((_ screenPoint: NSPoint) -> Void)?
     var onShiftClick: ((_ indexPath: IndexPath) -> Void)?
     var onClick: ((_ indexPath: IndexPath) -> Void)?
+    var onInteractionFocus: (() -> Void)?
     private lazy var clickGesture = CollectionClickGestureRecognizer(
         target: self,
         action: #selector(handleClick(_:))
@@ -69,6 +70,7 @@ final class ClipCollectionView: NSCollectionView {
     }
 
     @objc private func handleClick(_ gesture: NSClickGestureRecognizer) {
+        defer { onInteractionFocus?() }
         guard let indexPath = indexPathForItem(at: gesture.location(in: self)) else { return }
         let modifiers = clickGesture.clickModifiers
         if modifiers.contains(.shift), !modifiers.contains(.command) {
@@ -82,12 +84,20 @@ final class ClipCollectionView: NSCollectionView {
         let result = super.becomeFirstResponder()
         if result {
             onBecomeFirstResponder?()
+            if NSApp.currentEvent?.type == .keyDown {
+                onInteractionFocus?()
+            }
         }
         return result
     }
 
     override var acceptsFirstResponder: Bool {
         true
+    }
+
+    override func draggingSession(_ session: NSDraggingSession, willBeginAt screenPoint: NSPoint) {
+        super.draggingSession(session, willBeginAt: screenPoint)
+        onInteractionFocus?()
     }
 
     override func draggingSession(_ session: NSDraggingSession, movedTo screenPoint: NSPoint) {

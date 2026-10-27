@@ -15,13 +15,13 @@ extension TopBarView {
         searchField.onTokensChanged = { [weak self] tags in
             guard let self, let topVM = self.topVM else { return }
             for tag in topVM.tags where !tags.contains(tag) {
-                handleTokenDeletedFromSearchField(tag)
+                handleTokenDeletion(tag)
             }
         }
 
         topVM.filterDidChange
             .sink { [weak self] in
-                self?.syncTokensToSearchField()
+                self?.syncSearchTokens()
             }
             .store(in: &cancellables)
 
@@ -41,10 +41,10 @@ extension TopBarView {
             .store(in: &cancellables)
     }
 
-    private func syncTokensToSearchField() {
+    private func syncSearchTokens() {
         guard let topVM else { return }
-        if shouldSkipNextTokenSync {
-            shouldSkipNextTokenSync = false
+        if skipNextTokenSync {
+            skipNextTokenSync = false
             updateChipSelection()
             return
         }
@@ -54,14 +54,14 @@ extension TopBarView {
         updateChipSelection()
     }
 
-    func handleTokenDeletedFromSearchField(_ tag: InputTag) {
-        shouldSkipNextTokenSync = true
+    func handleTokenDeletion(_ tag: InputTag) {
+        skipNextTokenSync = true
         topVM?.removeTag(tag)
     }
 
-    func dismissFilterPopoverIfVisible() -> Bool {
+    func dismissFilterPopover() -> Bool {
         guard filterPopover?.isDisplayed == true else { return false }
-        explicitFilterPopoverCloseDestination = .search
+        closeTarget = .search
         togglePopover()
         return true
     }
@@ -78,7 +78,7 @@ extension TopBarView {
             guard let self, let popover, filterPopover === popover else { return }
             filterPopover = nil
             defer { searchField.setPopoverFocusRingSuppressed(false) }
-            removeFilterPopoverMouseMonitor()
+            stopPopoverMonitor()
             handlePopoverWillClose()
         }
         filterPopover = popover
@@ -89,23 +89,23 @@ extension TopBarView {
         prepareFilterPopover()
         guard let filterPopover else { return }
         if filterPopover.isDisplayed {
-            explicitFilterPopoverCloseDestination = .search
+            closeTarget = .search
         } else {
-            explicitFilterPopoverCloseDestination = nil
+            closeTarget = nil
         }
         filterPopover.toggle(
             relativeTo: searchField.filterButton.bounds,
             of: searchField.filterButton
         )
         if filterPopover.isDisplayed {
-            installFilterPopoverMouseMonitor()
+            startPopoverMonitor()
             onFocusRegionChange?(.filter)
         }
     }
 
-    private func installFilterPopoverMouseMonitor() {
-        removeFilterPopoverMouseMonitor()
-        filterPopoverMouseMonitor = NSEvent.addLocalMonitorForEvents(
+    private func startPopoverMonitor() {
+        stopPopoverMonitor()
+        popoverMouseMonitor = NSEvent.addLocalMonitorForEvents(
             matching: .leftMouseDown
         ) { [weak self] event in
             guard let self,
@@ -117,63 +117,56 @@ extension TopBarView {
             }
 
             if hitView === searchField || hitView.isDescendant(of: searchField) {
-                explicitFilterPopoverCloseDestination = .search
+                closeTarget = .search
             } else {
-                explicitFilterPopoverCloseDestination = .collection
+                closeTarget = .clickedView
             }
 
             return event
         }
     }
 
-    private func removeFilterPopoverMouseMonitor() {
-        guard let filterPopoverMouseMonitor else { return }
-        NSEvent.removeMonitor(filterPopoverMouseMonitor)
-        self.filterPopoverMouseMonitor = nil
+    private func stopPopoverMonitor() {
+        guard let popoverMouseMonitor else { return }
+        NSEvent.removeMonitor(popoverMouseMonitor)
+        self.popoverMouseMonitor = nil
     }
 
     func handlePopoverWillClose() {
         guard isSearching else {
-            explicitFilterPopoverCloseDestination = nil
+            closeTarget = nil
             return
         }
-        let closeDestination = currentPopoverCloseDestination()
-        if closeDestination == .collection {
+        let target = resolveCloseTarget()
+        if target != .search {
             window?.makeFirstResponder(nil)
             if topVM?.hasInput == false {
                 deactivateSearch()
             }
-            if NSApp.currentEvent?.type == .leftMouseDown {
-                Task { @MainActor [weak self] in
-                    guard let self, filterPopover == nil else { return }
-                    onFocusRegionChange?(.collection)
-                }
-            } else {
-                onFocusRegionChange?(.collection)
-            }
-            explicitFilterPopoverCloseDestination = nil
+            // 由点击目标接管焦点，不排队恢复尚未更新的旧选区。
+            closeTarget = nil
             return
         }
-        explicitFilterPopoverCloseDestination = nil
+        closeTarget = nil
         if !searchField.isFirstResponder {
             window?.makeFirstResponder(searchField.tokenTextView)
         }
         onFocusRegionChange?(.search)
     }
 
-    private func currentPopoverCloseDestination() -> FilterPopoverCloseDestination {
+    private func resolveCloseTarget() -> CloseTarget {
         guard let event = NSApp.currentEvent,
               event.type == .leftMouseDown,
               event.window === window,
               let hitView = window?.contentView?.hitTest(event.locationInWindow)
         else {
-            return explicitFilterPopoverCloseDestination ?? .collection
+            return closeTarget ?? .clickedView
         }
 
         if hitView === searchField || hitView.isDescendant(of: searchField) {
             return .search
         }
 
-        return .collection
+        return .clickedView
     }
 }
