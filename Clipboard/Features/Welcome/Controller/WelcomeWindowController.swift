@@ -66,9 +66,9 @@ final class WelcomeWindowController: NSWindowController {
     }
 
     func showIfNeeded() {
-        #if !DEBUG
+        // #if !DEBUG
             guard !PasteUserDefaults.welcomeDone else { return }
-        #endif
+        // #endif
 
         NSApp.activate(ignoringOtherApps: true)
         window?.center()
