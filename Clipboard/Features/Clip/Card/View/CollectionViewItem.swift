@@ -60,7 +60,7 @@ final class CollectionViewItem: NSCollectionViewItem {
         view.wantsLayer = true
         view.layer?.masksToBounds = false
         view.layer?.backgroundColor = nil
-        view.layer?.borderWidth = Const.selectionBorderWidth
+        view.layer?.borderWidth = Const.selectionBorderWidth + 0.5
         view.layer?.borderColor = NSColor.clear.cgColor
         view.layer?.cornerRadius = Const.radius + Const.selectionBorderWidth
         view.layer?.cornerCurve = .continuous
