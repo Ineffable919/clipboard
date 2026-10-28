@@ -231,9 +231,15 @@ extension ClipMainViewController {
 
         if monitorToken == nil {
             monitorToken = NSEvent.addLocalMonitorForEvents(
-                matching: .keyDown,
-                handler: keyDownEvent(_:)
-            )
+                matching: [.keyDown, .keyUp]
+            ) { [weak self] event in
+                guard let self else { return event }
+                if event.type == .keyUp {
+                    scrollView.endKeyboardScroll(keyCode: event.keyCode)
+                    return event
+                }
+                return keyDownEvent(event)
+            }
         }
 
         if flagsMonitorToken == nil {
@@ -259,6 +265,7 @@ extension ClipMainViewController {
 
     override func viewDidDisappear() {
         super.viewDidDisappear()
+        scrollView.resetKeyboardScroll()
         scrollView.stopScrolling()
         PasteDataStore.main.clearExpiredData()
         if let token = monitorToken {

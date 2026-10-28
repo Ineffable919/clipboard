@@ -6,6 +6,7 @@ final class LinkPreviewRequest: NSObject {
     private var requestID: UUID?
     private var operation: (@MainActor () async -> Void)?
     private var visibilityObservation: NSKeyValueObservation?
+    private var scrollObservation: NSKeyValueObservation?
 
     init(view: NSView) {
         self.view = view
@@ -41,6 +42,12 @@ final class LinkPreviewRequest: NSObject {
                 self?.updateVisibility()
             }
         }
+        scrollObservation = (view?.enclosingScrollView as? AnimatedScrollView)?
+            .observe(\.defersLinkPreviews, options: [.new]) { [weak self] _, _ in
+                Task { @MainActor [weak self] in
+                    self?.updateVisibility()
+                }
+            }
         if let clipView = view?.enclosingScrollView?.contentView {
             center.addObserver(self, selector: #selector(updateVisibility),
                                name: NSView.boundsDidChangeNotification, object: clipView)
@@ -53,15 +60,20 @@ final class LinkPreviewRequest: NSObject {
         return view.window?.isVisible == true && view.bounds.intersects(view.visibleRect)
     }
 
+    private var canStart: Bool {
+        isVisible && (view?.enclosingScrollView as? AnimatedScrollView)?.defersLinkPreviews != true
+    }
+
     @objc func updateVisibility() {
         guard isVisible else {
             cancelRequest()
             return
         }
-        guard requestID == nil, let operation else { return }
+        guard canStart, requestID == nil, let operation else { return }
         requestID = LinkPreviewQueue.shared.enqueue { [weak self] in
             guard !Task.isCancelled else { return }
-            guard self?.isVisible == true else {
+            // 排队期间可能开始了键盘滚动，实际执行前再次检查。
+            guard self?.canStart == true else {
                 self?.requestID = nil
                 return
             }

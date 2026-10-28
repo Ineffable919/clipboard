@@ -2,14 +2,39 @@ import AppKit
 import QuartzCore
 
 class AnimatedScrollView: NSScrollView {
-    private var scrollLink: CADisplayLink?
+    private var scrollLink: CADisplayLink? {
+        didSet { updatePreviewDeferral() }
+    }
+    private var scrollKeys = Set<UInt16>()
+    @objc dynamic private(set) var defersLinkPreviews = false
     private var lastScrollTime: CFTimeInterval?
     private var startTime: CFTimeInterval = 0
     private var duration: CFTimeInterval = 0
     private var startOrigin = NSPoint.zero
     private var targetOrigin = NSPoint.zero
 
-    func scroll(to origin: NSPoint, animated: Bool) {
+    func beginKeyboardScroll(keyCode: UInt16) {
+        scrollKeys.insert(keyCode)
+        updatePreviewDeferral()
+    }
+
+    func endKeyboardScroll(keyCode: UInt16) {
+        scrollKeys.remove(keyCode)
+        updatePreviewDeferral()
+    }
+
+    func resetKeyboardScroll() {
+        scrollKeys.removeAll()
+        updatePreviewDeferral()
+    }
+
+    private func updatePreviewDeferral() {
+        let deferred = !scrollKeys.isEmpty || scrollLink != nil
+        guard defersLinkPreviews != deferred else { return }
+        defersLinkPreviews = deferred
+    }
+
+    func scroll(to origin: NSPoint, animated: Bool, isKeyRepeat: Bool = false) {
         let current = contentView.bounds.origin
         guard animated else {
             stopScrolling()
@@ -21,7 +46,7 @@ class AnimatedScrollView: NSScrollView {
         let now = CACurrentMediaTime()
         let interval = min(lastScrollTime.map { now - $0 } ?? 0.25, 0.25)
         lastScrollTime = now
-        duration = interval > 0.1 ? interval : 0
+        duration = !isKeyRepeat && interval > 0.1 ? interval : 0
         startTime = now
         startOrigin = current
         targetOrigin = origin

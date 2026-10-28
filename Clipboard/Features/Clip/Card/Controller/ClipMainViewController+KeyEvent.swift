@@ -122,6 +122,9 @@ extension ClipMainViewController {
         else { return event }
         guard displayedItemCount > 0 else { return nil }
 
+        // 从首次按下开始暂缓预览，不能等重复事件出现后才暂停
+        scrollView.beginKeyboardScroll(keyCode: event.keyCode)
+
         let movesRight = event.keyCode == KeyCode.rightArrow
         let selected = collectionView.selectionIndexPaths
         let anchor = (movesRight ? selected.max() : selected.min()) ?? selectIndexPath
@@ -131,7 +134,7 @@ extension ClipMainViewController {
             return nil
         }
         // 离屏选中项也按数据顺序导航，避免原生布局导航跳到可见边界或末项
-        resetSelectIndex(IndexPath(item: next, section: 0))
+        resetSelectIndex(IndexPath(item: next, section: 0), isKeyRepeat: event.isARepeat)
         return nil
     }
 
