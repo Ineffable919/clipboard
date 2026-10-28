@@ -43,13 +43,13 @@ final class PreviewHeaderBar: NSView {
     }()
 
     private let editButton: PreviewPillButton = {
-        let btn = PreviewPillButton(title: String(localized: .edit))
+        let btn = PreviewPillButton(title: String(localized: .edit), interactiveGlass: true)
         btn.isHidden = true
         return btn
     }()
 
     private let openWithButton: PreviewPillButton = {
-        let btn = PreviewPillButton()
+        let btn = PreviewPillButton(interactiveGlass: true)
         btn.isHidden = true
         return btn
     }()

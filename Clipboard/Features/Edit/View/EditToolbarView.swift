@@ -22,12 +22,14 @@ final class EditToolbarView: NSView {
 
     private let cancelButton = PreviewPillButton(
         title: String(localized: .commonCancel),
-        style: .secondary
+        style: .secondary,
+        interactiveGlass: true
     )
 
     private let saveButton = PreviewPillButton(
         title: String(localized: .save),
-        style: .primary
+        style: .primary,
+        interactiveGlass: true
     )
 
     private lazy var modeButton: JSONToolbarButton = {

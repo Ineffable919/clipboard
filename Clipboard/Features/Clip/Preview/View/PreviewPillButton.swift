@@ -30,6 +30,7 @@ final class PreviewPillButton: NSView {
     // MARK: - Private
 
     private let style: Style
+    private let interactiveGlass: Bool
 
     private let label: NSTextField = {
         let field = NSTextField(labelWithString: "")
@@ -46,8 +47,9 @@ final class PreviewPillButton: NSView {
 
     // MARK: - Init
 
-    init(title: String = "", style: Style = .secondary) {
+    init(title: String = "", style: Style = .secondary, interactiveGlass: Bool = false) {
         self.style = style
+        self.interactiveGlass = interactiveGlass
         super.init(frame: .zero)
         label.stringValue = title
         label.textColor = style == .primary ? .white : .controlTextColor
@@ -71,7 +73,22 @@ final class PreviewPillButton: NSView {
         layer?.borderWidth = style == .secondary ? 0.5 : 0
         layer?.insertSublayer(backgroundLayer, at: 0)
 
-        addSubview(label)
+        let contentView: NSView
+        if #available(macOS 27.0, *), interactiveGlass {
+            let glass = NSGlassEffectView()
+            glass.cornerRadius = Const.btnRadius
+            glass.effectIsInteractive = true
+            if style == .primary {
+                glass.tintColor = .controlAccentColor
+            }
+            contentView = NSView()
+            glass.contentView = contentView
+            addSubview(glass)
+            glass.snp.makeConstraints { $0.edges.equalToSuperview() }
+        } else {
+            contentView = self
+        }
+        contentView.addSubview(label)
         label.snp.makeConstraints { make in
             make.centerY.equalToSuperview()
             make.leading.trailing.equalToSuperview().inset(Const.space10)
@@ -117,6 +134,8 @@ final class PreviewPillButton: NSView {
                 ? .controlAccentColor.blended(withFraction: 0.12, of: .black) ?? .controlAccentColor
                 : .controlAccentColor
         }
+
+        if #available(macOS 27.0, *), interactiveGlass { return }
 
         if animated {
             NSAnimationContext.runAnimationGroup { ctx in
@@ -169,6 +188,10 @@ final class PreviewPillButton: NSView {
     // MARK: - Click
 
     override func mouseDown(with event: NSEvent) {
+        if #available(macOS 27.0, *), interactiveGlass {
+            super.mouseDown(with: event)
+            return
+        }
         let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
         let pressedColor: NSColor = switch style {
         case .secondary:

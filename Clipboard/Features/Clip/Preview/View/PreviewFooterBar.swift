@@ -51,13 +51,13 @@ final class PreviewFooterBar: NSView {
     }()
 
     private let finderButton: PreviewPillButton = {
-        let btn = PreviewPillButton(title: String(localized: .showInFinder))
+        let btn = PreviewPillButton(title: String(localized: .showInFinder), interactiveGlass: true)
         btn.isHidden = true
         return btn
     }()
 
     private let browserButton: PreviewPillButton = {
-        let btn = PreviewPillButton()
+        let btn = PreviewPillButton(interactiveGlass: true)
         btn.isHidden = true
         return btn
     }()
