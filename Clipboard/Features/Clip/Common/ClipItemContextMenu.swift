@@ -160,6 +160,9 @@ extension ClipItemMenuActionable where Self: NSObject {
                 title: service.menuItemTitle, action: #selector(ClipShareAction.shareNow), keyEquivalent: ""
             )
             item.image = service.image
+            if #available(macOS 27.0, *) {
+                item.preferredImageVisibility = .visible
+            }
             item.target = action
             item.representedObject = action
             submenu.addItem(item)
@@ -211,6 +214,9 @@ extension ClipItemMenuActionable where Self: NSObject {
             chipItem.tag = chip.id
             chipItem.state = model.group == chip.id ? .on : .off
             chipItem.image = clipChipDotImage(colorIndex: chip.colorIndex)
+            if #available(macOS 27.0, *) {
+                chipItem.preferredImageVisibility = .visible
+            }
             submenu.addItem(chipItem)
         }
 

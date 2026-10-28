@@ -179,6 +179,9 @@ final class PinChipButton: NSView {
             item.tag = chip.id
             item.state = currentGroup == chip.id ? .on : .off
             item.image = chipDotImage(colorIndex: chip.colorIndex)
+            if #available(macOS 27.0, *) {
+                item.preferredImageVisibility = .visible
+            }
             menu.addItem(item)
         }
 
