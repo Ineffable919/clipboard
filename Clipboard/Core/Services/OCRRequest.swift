@@ -8,7 +8,8 @@
 import Foundation
 import Vision
 
-/// 配置和结果只在 OCR actor 内访问；跨线程操作仅限 Vision 的取消接口
+/// 封装可取消的 Vision 文字识别请求，配置和结果只在 OCR actor 内访问
+/// 跨线程操作仅限 Vision 的取消接口
 nonisolated final class OCRRequest: @unchecked Sendable {
     private let request: VNRecognizeTextRequest
 
@@ -16,26 +17,22 @@ nonisolated final class OCRRequest: @unchecked Sendable {
         request = VNRecognizeTextRequest()
         request.recognitionLevel = .accurate
         request.recognitionLanguages = ["zh-Hans", "zh-Hant", "en-US"]
-        request.usesLanguageCorrection = true
+        request.usesLanguageCorrection = false
     }
 
     func cancel() {
         request.cancel()
     }
 
-    func perform(data: Data, keyword: String?) -> [OCRTextRegion] {
-        guard !Task.isCancelled else { return [] }
-        return autoreleasepool {
+    func perform(data: Data, keyword: String?) throws -> [OCRTextRegion] {
+        try Task.checkCancellation()
+        return try autoreleasepool {
             let handler = VNImageRequestHandler(data: data, options: [:])
-            do {
-                try handler.perform([request])
-            } catch {
-                return []
-            }
-            guard !Task.isCancelled else { return [] }
+            try handler.perform([request])
+            try Task.checkCancellation()
             var regions: [OCRTextRegion] = []
             for observation in request.results ?? [] {
-                guard !Task.isCancelled else { return [] }
+                try Task.checkCancellation()
                 guard let candidate = observation.topCandidates(1).first else { continue }
                 let text = candidate.string
                 guard let keyword else {
@@ -48,8 +45,8 @@ nonisolated final class OCRRequest: @unchecked Sendable {
                       let range = text.range(
                           of: keyword, options: options, range: start..<text.endIndex, locale: .current
                       ) {
-                    guard !Task.isCancelled else { return [] }
-                    if let box = try? candidate.boundingBox(for: range)?.boundingBox {
+                    try Task.checkCancellation()
+                    if let box = try candidate.boundingBox(for: range)?.boundingBox {
                         regions.append(OCRTextRegion(text: String(text[range]), boundingBox: box))
                     }
                     start = range.upperBound

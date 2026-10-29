@@ -48,7 +48,7 @@ final class CardContentView: NSView, PassthroughMouseEvents {
     }
 
     func resetContent() {
-        cancelCurrentLoad()
+        cancelCurrentLoad(reason: "卡片复用或重置")
         currentContentView?.removeFromSuperview()
         currentContentView = nil
         currentModel = nil
@@ -89,7 +89,7 @@ final class CardContentView: NSView, PassthroughMouseEvents {
     }
 
     private func replaceContentView(for model: PasteboardModel, keyword: String) {
-        cancelCurrentLoad()
+        cancelCurrentLoad(reason: "卡片内容替换")
         currentContentView?.removeFromSuperview()
         currentContentView = nil
 
@@ -115,9 +115,9 @@ final class CardContentView: NSView, PassthroughMouseEvents {
         }
     }
 
-    private func cancelCurrentLoad() {
+    private func cancelCurrentLoad(reason: String) {
         if let imageView = currentContentView as? CardImageContentView {
-            imageView.cancelLoad()
+            imageView.cancelLoad(reason: reason)
         } else if let linkView = currentContentView as? CardLinkPreviewContentView {
             linkView.cancelLoad()
         } else if let fileView = currentContentView as? CardFileContentView {

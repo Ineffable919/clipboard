@@ -28,7 +28,7 @@ extension PasteboardModel {
     }
 
     /// 加载匹配关键字的 OCR 高亮区域
-    func loadOCRHighlightRegions(keyword: String) async -> [OCRTextRegion] {
+    func loadOCRHighlightRegions(keyword: String, requestId: String = UUID().uuidString) async -> [OCRTextRegion] {
         let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !Task.isCancelled, !trimmed.isEmpty else { return [] }
 
@@ -36,10 +36,11 @@ extension PasteboardModel {
             return cachedOCRRegions
         }
 
-        let regions = await OCRViewService.shared.recognizeHighlightRegions(
+        guard let regions = await OCRViewService.shared.recognizeHighlightRegions(
             from: data,
-            keyword: trimmed
-        )
+            keyword: trimmed,
+            requestId: requestId
+        ) else { return [] }
         guard !Task.isCancelled else { return [] }
         cachedOCRKeyword = trimmed
         cachedOCRRegions = regions
