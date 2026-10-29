@@ -105,6 +105,9 @@ final class CollectionViewItem: NSCollectionViewItem {
         let view = BadgeBackgroundView()
         view.wantsLayer = true
         view.layer?.cornerRadius = 4
+        if #available(macOS 26.0, *) {
+            view.isCapsule = true
+        }
         view.layer?.cornerCurve = .continuous
         view.layer?.masksToBounds = true
         view.addSubview(badgeEffectView)
@@ -211,13 +214,6 @@ extension CollectionViewItem {
         doubleClick.numberOfClicksRequired = 2
         doubleClick.delaysPrimaryMouseButtonEvents = false
         view.addGestureRecognizer(doubleClick)
-    }
-
-    override func viewDidLayout() {
-        super.viewDidLayout()
-        if #available(macOS 26.0, *) {
-            badgeBgView.layer?.cornerRadius = badgeBgView.bounds.height / 2
-        }
     }
 
     override var isSelected: Bool {

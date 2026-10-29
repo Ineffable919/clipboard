@@ -6,6 +6,8 @@
 import AppKit
 
 final class BadgeBackgroundView: NSView {
+    var isCapsule = false
+
     var dynamicBackgroundColor: NSColor = .clear {
         didSet { needsDisplay = true }
     }
@@ -16,6 +18,13 @@ final class BadgeBackgroundView: NSView {
 
     override var wantsUpdateLayer: Bool {
         true
+    }
+
+    override func layout() {
+        super.layout()
+        if isCapsule {
+            layer?.cornerRadius = bounds.height / 2
+        }
     }
 
     override func updateLayer() {
