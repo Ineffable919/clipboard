@@ -132,20 +132,17 @@ final class SearchSuggestionCellView: NSView {
 
     private static func fuzzyMatchRanges(_ title: String, query: String) -> [Range<String.Index>] {
         let queryLower = query.lowercased()
-        let titleLower = title.lowercased()
         var queryIndex = queryLower.startIndex
-        var titleIndex = titleLower.startIndex
+        var titleIndex = title.startIndex
         var ranges: [Range<String.Index>] = []
 
-        while queryIndex < queryLower.endIndex, titleIndex < titleLower.endIndex {
-            if titleLower[titleIndex] == queryLower[queryIndex] {
-                let end = title.index(after: titleIndex)
+        while queryIndex < queryLower.endIndex, titleIndex < title.endIndex {
+            let end = title.index(after: titleIndex)
+            if title[titleIndex].lowercased() == String(queryLower[queryIndex]) {
                 ranges.append(titleIndex ..< end)
-                titleIndex = end
                 queryIndex = queryLower.index(after: queryIndex)
-            } else {
-                titleIndex = titleLower.index(after: titleIndex)
             }
+            titleIndex = end
         }
 
         return ranges
