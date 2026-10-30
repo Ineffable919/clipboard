@@ -99,7 +99,7 @@ final class StatusBarController: NSObject {
     private func configureMenuBarButton() {
         guard let button = menuBarItem?.button else { return }
 
-        let icon = NSImage(named: "StatusBarIcon")
+        let icon = NSImage(named: "Status")
         icon?.isTemplate = true
         button.image = icon
         button.target = self

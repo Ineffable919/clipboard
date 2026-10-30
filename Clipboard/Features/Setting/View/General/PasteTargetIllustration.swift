@@ -11,8 +11,8 @@ struct PasteTargetIllustration: View {
     var body: some View {
         Image(
             mode == .toApp
-                ? .pasteApp
-                : .pasteClipboard
+                ? .app
+                : .clip
         )
         .resizable()
         .interpolation(.high)
