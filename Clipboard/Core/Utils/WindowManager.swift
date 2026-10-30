@@ -48,6 +48,11 @@ final class WindowManager {
         }
     }
 
+    func dismiss() {
+        dismissDrawerIfNeeded()
+        dismissFloatingIfNeeded()
+    }
+
     var isVisible: Bool {
         drawerController.isVisible || floatingController.isVisible
     }

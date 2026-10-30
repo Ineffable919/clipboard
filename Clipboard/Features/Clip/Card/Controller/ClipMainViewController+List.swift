@@ -181,38 +181,6 @@ extension ClipMainViewController {
             }
             .store(in: &cancellables)
 
-        PasteBoard.main.$isPaused
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.updatePauseState() }
-            .store(in: &cancellables)
-
-        appearanceObservation = view.observe(\.effectiveAppearance) { [weak self] _, _ in
-            Task { @MainActor [weak self] in
-                guard let self, !pauseStack.isHidden else { return }
-                view.effectiveAppearance.performAsCurrentDrawingAppearance {
-                    pauseStack.layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.1).cgColor
-                }
-            }
-        }
-    }
-
-    private func updatePauseState() {
-        let isPaused = PasteBoard.main.isPaused
-        pauseStack.isHidden = !isPaused
-        pauseButton.isHidden = !isPaused
-        if isPaused {
-            pauseTimeLabel.stringValue = topVM.formattedRemainingTime
-            pauseTimerCancellable = Timer.publish(every: 1, on: .main, in: .common)
-                .autoconnect()
-                .sink { [weak self] _ in
-                    self?.pauseTimeLabel.stringValue = self?.topVM.formattedRemainingTime ?? ""
-                }
-        } else {
-            pauseTimerCancellable = nil
-        }
-        view.effectiveAppearance.performAsCurrentDrawingAppearance {
-            pauseStack.layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.1).cgColor
-        }
     }
 
     private func adjustSelectionAfterDelete() {

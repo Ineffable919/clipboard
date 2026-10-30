@@ -11,6 +11,7 @@ import SnapKit
 
 final class TopBarView: NSView {
     private let chipRowHeight: CGFloat = 44
+    let pauseBtn = TopBarIconButton(symbolName: "pause.circle", pointSize: 17)
 
     private let settingBtn = TopBarIconButton(
         symbolName: "ellipsis",
@@ -118,6 +119,7 @@ final class TopBarView: NSView {
         setupDefaultRow()
         setupSearchRow()
         setupSettingBtn()
+        setupPauseBtn()
         layoutRows()
         updateChipWidths()
         applyMode()
@@ -222,6 +224,7 @@ final class TopBarView: NSView {
     override func hitTest(_ point: NSPoint) -> NSView? {
         let result = super.hitTest(point)
         if result === settingBtn || result?.isDescendant(of: settingBtn) == true { return result }
+        if result === pauseBtn || result?.isDescendant(of: pauseBtn) == true { return result }
         return modeHitTest(point, fallback: result)
     }
 
@@ -250,6 +253,11 @@ final class TopBarView: NSView {
     // MARK: - Layout
 
     private func layoutRows() {
+        pauseBtn.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(Const.space16)
+            make.centerY.equalToSuperview()
+        }
+
         settingBtn.snp.makeConstraints { make in
             make.trailing.equalToSuperview().offset(-Const.space16)
             make.centerY.equalToSuperview()
@@ -257,7 +265,7 @@ final class TopBarView: NSView {
 
         defaultRow.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.leading.greaterThanOrEqualToSuperview().offset(45)
+            make.leading.greaterThanOrEqualTo(pauseBtn.snp.trailing).offset(Const.space12)
             make.trailing.lessThanOrEqualTo(settingBtn.snp.leading).offset(
                 -Const.space12
             )

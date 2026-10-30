@@ -95,6 +95,11 @@ final class PasteBoard {
             }
             RunLoop.main.add(resumeTimer!, forMode: .common)
         }
+        WindowManager.shared.dismiss()
+        HUDManager.shared.show(
+            icon: NSImage(systemSymbolName: "pause", accessibilityDescription: nil),
+            text: String(localized: .hudClipboardPaused)
+        )
     }
 
     func resume() {
@@ -107,6 +112,10 @@ final class PasteBoard {
         pausedAt = nil
         pauseDuration = nil
         startListening()
+        HUDManager.shared.show(
+            icon: NSImage(systemSymbolName: "arrow.clockwise", accessibilityDescription: nil),
+            text: String(localized: .hudClipboardResumed)
+        )
     }
 
     var pauseEndTime: Date? {

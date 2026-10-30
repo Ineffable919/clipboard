@@ -211,7 +211,7 @@ extension StatusBarController {
 
         let newTextItem = makeItem(
             title: String(localized: .newText), action: #selector(newTextItemAction),
-            symbol: "square.and.pencil", key: "t"
+            symbol: "square.and.pencil", key: "n"
         )
         newTextItem.keyEquivalentModifierMask = .command
         menu.addItem(newTextItem)
@@ -268,7 +268,7 @@ extension StatusBarController {
             let resumeItem = NSMenuItem(
                 title: String(localized: .resume),
                 action: #selector(resumePasteboard),
-                keyEquivalent: ""
+                keyEquivalent: "t"
             )
             setMenuItemImage(resumeItem, symbolName: "play.circle")
             resumeItem.target = self
@@ -278,7 +278,7 @@ extension StatusBarController {
             let pauseIndefinite = NSMenuItem(
                 title: String(localized: .pause),
                 action: #selector(pauseIndefinitely),
-                keyEquivalent: ""
+                keyEquivalent: "t"
             )
             setMenuItemImage(pauseIndefinite, symbolName: "pause.circle")
             pauseIndefinite.target = self
@@ -286,6 +286,7 @@ extension StatusBarController {
 
             submenu.addItem(NSMenuItem.separator())
         }
+        submenu.items.first?.keyEquivalentModifierMask = .command
 
         let pause15 = makeItem(
             title: String(localized: .pauseFifteen), action: #selector(pause15Minutes),

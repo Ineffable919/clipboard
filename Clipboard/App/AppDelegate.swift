@@ -125,7 +125,17 @@ extension AppDelegate {
                     NSApplication.shared.terminate(nil)
                     return nil
                 }
-                if modifiers == "t" || modifiers == "T" {
+                if modifiers == "t" || modifiers == "T",
+                   event.modifierFlags.intersection([.command, .option, .control, .shift]) == .command {
+                    if PasteBoard.main.isPaused {
+                        PasteBoard.main.resume()
+                    } else {
+                        PasteBoard.main.pause()
+                    }
+                    return nil
+                }
+                if modifiers == "n" || modifiers == "N",
+                   event.modifierFlags.intersection([.command, .option, .control, .shift]) == .command {
                     EditWindowController.shared.openNewWindow()
                     return nil
                 }
@@ -181,8 +191,9 @@ extension AppDelegate: SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
         state _: SPUUserUpdateState
     ) {
         guard !willHandle else { return }
-        log.info("发现更新：\(update.displayVersionString)")
-        UpdateManager.shared.setUpdateAvailable(version: update.displayVersionString)
+        UpdateManager.shared.setUpdateAvailable(
+            version: update.displayVersionString
+        )
     }
 
     func standardUserDriverDidReceiveUserAttention(forUpdate _: SUAppcastItem) {
@@ -197,5 +208,7 @@ extension AppDelegate: SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
 // MARK: - Notification.Name
 
 extension Notification.Name {
-    static let menuBarIconVisibilityChanged = Notification.Name("menuBarIconVisibilityChanged")
+    static let menuBarIconVisibilityChanged = Notification.Name(
+        "menuBarIconVisibilityChanged"
+    )
 }

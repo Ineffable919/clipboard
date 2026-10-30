@@ -109,12 +109,12 @@ private extension HUDManager {
             }
         }
 
-        let label = NSTextField(labelWithString: text)
-        label.font = .systemFont(ofSize: 18, weight: .medium)
-        label.textColor = .labelColor
+        let label = NSTextField(wrappingLabelWithString: text)
+        label.font = .preferredFont(forTextStyle: .title1)
+        label.textColor = .secondaryLabelColor
         label.alignment = .center
         label.lineBreakMode = .byWordWrapping
-        label.maximumNumberOfLines = 2
+        label.maximumNumberOfLines = 0
 
         parent.addSubview(label)
         label.snp.makeConstraints { make in
@@ -146,7 +146,7 @@ private final class HUDWindow: NSPanel {
     }
 
     private static let hudSize = CGSize(width: 200, height: 200)
-    private static let cornerRadius: CGFloat = 28
+    private static let cornerRadius: CGFloat = 26
     static var effectPadding: CGFloat {
         if #available(macOS 26.0, *) {
             HUDContentView.effectPadding
@@ -174,7 +174,7 @@ private final class HUDWindow: NSPanel {
         isOpaque = false
         backgroundColor = .clear
         hasShadow = true
-        level = .floating
+        level = .statusBar
         ignoresMouseEvents = true
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         isMovable = false

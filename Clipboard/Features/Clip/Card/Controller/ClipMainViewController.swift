@@ -30,14 +30,6 @@ final class ClipMainViewController: NSViewController {
     var dragFilterRevision = 0
     var restoringSelection = false
 
-    // MARK: - Pause Indicator
-
-    let pauseStack = PauseIndicatorStackView()
-    let pauseTimeLabel = NSTextField(labelWithString: "")
-    let pauseButton = NSButton()
-    var pauseTimerCancellable: AnyCancellable?
-    var appearanceObservation: NSKeyValueObservation?
-
     // MARK: - Preview
 
     var previewPopover: ClipPreviewPopover?
@@ -293,7 +285,6 @@ extension ClipMainViewController {
         contentView.addSubview(topBarView)
         contentView.addSubview(emptyStateView)
         contentView.addSubview(dropOverlayView)
-        setupPauseIndicator()
 
         scrollView.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview()
@@ -316,53 +307,6 @@ extension ClipMainViewController {
         dropOverlayView.snp.makeConstraints { make in
             make.edges.equalTo(scrollView)
         }
-    }
-
-    private func setupPauseIndicator() {
-        let pauseIcon = NSImageView()
-        let iconConfig = NSImage.SymbolConfiguration(pointSize: 12, weight: .medium)
-        pauseIcon.image = NSImage(systemSymbolName: "pause.circle.fill", accessibilityDescription: nil)?
-            .withSymbolConfiguration(iconConfig)
-        pauseIcon.contentTintColor = .controlAccentColor
-        pauseIcon.snp.makeConstraints { make in
-            make.width.height.equalTo(16)
-        }
-
-        pauseTimeLabel.font = .monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
-        pauseTimeLabel.textColor = .secondaryLabelColor
-
-        pauseStack.orientation = .horizontal
-        pauseStack.alignment = .centerY
-        pauseStack.spacing = Const.space6
-        pauseStack.edgeInsets = NSEdgeInsets(top: 0, left: Const.space8, bottom: 0, right: Const.space8)
-        pauseStack.addArrangedSubview(pauseIcon)
-        pauseStack.addArrangedSubview(pauseTimeLabel)
-        pauseStack.wantsLayer = true
-        pauseStack.layer?.cornerRadius = Const.btnRadius
-        pauseStack.layer?.cornerCurve = .continuous
-        pauseStack.isHidden = true
-
-        pauseButton.isBordered = false
-        pauseButton.title = ""
-        pauseButton.isHidden = true
-        pauseButton.setAccessibilityLabel(String(localized: .resume))
-        pauseButton.target = self
-        pauseButton.action = #selector(resumePasteboard)
-        contentView.addSubview(pauseButton)
-        contentView.addSubview(pauseStack)
-
-        pauseStack.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(Const.space12)
-            make.centerY.equalTo(topBarView)
-            make.height.equalTo(28)
-        }
-        pauseButton.snp.makeConstraints { make in
-            make.edges.equalTo(pauseStack)
-        }
-    }
-
-    @objc private func resumePasteboard() {
-        topVM.resume()
     }
 
 }

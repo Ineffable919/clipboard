@@ -123,12 +123,12 @@ final class TopBarIconButton: NSView {
     }
 
     private func backgroundColor() -> NSColor {
-        guard isHovering else { return .clear }
+        guard isHovering || isActive else { return .clear }
 
         let isDark =
             effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
         guard isDark else {
-            return .labelColor.withAlphaComponent(0.06)
+            return .labelColor.withAlphaComponent(isActive ? 0.16 : 0.06)
         }
 
         let isFrostedGlass: Bool = {
@@ -139,8 +139,8 @@ final class TopBarIconButton: NSView {
         }()
 
         return isFrostedGlass
-            ? NSColor(white: 1.0, alpha: 0.10)
-            : .quaternaryLabelColor.withAlphaComponent(0.06)
+            ? NSColor(white: 1.0, alpha: isActive ? 0.22 : 0.10)
+            : .quaternaryLabelColor.withAlphaComponent(isActive ? 0.16 : 0.06)
     }
 
     // MARK: - Layout
@@ -176,5 +176,14 @@ final class TopBarIconButton: NSView {
 
     @objc private func handleClick() {
         action?()
+        if let window {
+            isHovering = bounds.contains(convert(window.mouseLocationOutsideOfEventStream, from: nil))
+            updateAppearance(animated: false)
+        }
+    }
+
+    override func accessibilityPerformPress() -> Bool {
+        handleClick()
+        return true
     }
 }

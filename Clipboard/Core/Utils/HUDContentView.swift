@@ -23,10 +23,9 @@ struct HUDContentView: View {
                 }
 
                 Text(text)
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundStyle(.primary)
+                    .font(.title)
+                    .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                    .lineLimit(2)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
                     .padding(.horizontal, 16)
                     .padding(.bottom, 26)

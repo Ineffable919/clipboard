@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import Combine
 import Sparkle
 
 @objc protocol TopBarMenuActions {
@@ -77,5 +78,27 @@ extension TopBarView: TopBarMenuActions {
 
     func pause8HoursAction() {
         topVM?.pause(for: 480)
+    }
+}
+
+extension TopBarView {
+    func setupPauseBtn() {
+        pauseBtn.setAccessibilityElement(true)
+        pauseBtn.setAccessibilityRole(.button)
+        pauseBtn.action = { [weak self] in self?.showPauseMenu() }
+        addSubview(pauseBtn)
+        PasteBoard.main.$isPaused.sink { [weak self] isPaused in
+            self?.pauseBtn.isHidden = !isPaused
+            let title = isPaused ? String(localized: .resume) : String(localized: .pause)
+            self?.pauseBtn.toolTip = title
+            self?.pauseBtn.setAccessibilityLabel(title)
+        }.store(in: &cancellables)
+    }
+
+    private func showPauseMenu() {
+        let menu = TopBarMenuBuilder(target: self, topVM: topVM).buildPauseMenu()
+        pauseBtn.isActive = true
+        defer { pauseBtn.isActive = false }
+        menu.popUp(positioning: nil, at: NSPoint(x: 0, y: -4), in: pauseBtn)
     }
 }

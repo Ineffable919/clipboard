@@ -1765,6 +1765,42 @@
         }
       }
     },
+    "hudClipboardPaused" : {
+      "comment" : "HUD: clipboard monitoring state",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clipboard Paused"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clipboard 暂停"
+          }
+        }
+      }
+    },
+    "hudClipboardResumed" : {
+      "comment" : "HUD: clipboard monitoring state",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clipboard Resumed"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clipboard 恢复"
+          }
+        }
+      }
+    },
     "hudCopySucceeded" : {
       "comment" : "HUD: copy succeeded",
       "extractionState" : "manual",
