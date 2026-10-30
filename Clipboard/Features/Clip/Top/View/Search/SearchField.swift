@@ -51,6 +51,8 @@ final class SearchField: NSView {
 
     override func layout() {
         super.layout()
+        layer?.cornerRadius = if #available(macOS 26.0, *) { bounds.height / 2 } else { 6 }
+        focusRingView.cornerRadius = layer?.cornerRadius ?? 0
         syncTextViewFrameToScrollView()
     }
 
@@ -89,7 +91,6 @@ final class SearchField: NSView {
 
     private func setup() {
         wantsLayer = true
-        layer?.cornerRadius = Const.topRadius
         layer?.masksToBounds = false
         updateColors()
 
@@ -131,7 +132,7 @@ final class SearchField: NSView {
         addSubview(cancelButton)
 
         cancelButton.snp.makeConstraints { make in
-            make.trailing.equalTo(filterButton.snp.leading).offset(-Const.space2)
+            make.trailing.equalTo(filterButton.snp.leading).offset(-Const.space4)
             make.centerY.equalToSuperview()
             make.size.equalTo(16)
         }
@@ -144,7 +145,7 @@ final class SearchField: NSView {
         addSubview(filterButton)
 
         filterButton.snp.makeConstraints { make in
-            make.trailing.equalToSuperview().offset(-Const.space6)
+            make.trailing.equalToSuperview().offset(-Const.space8)
             make.centerY.equalToSuperview()
         }
     }
@@ -176,10 +177,10 @@ final class SearchField: NSView {
         addSubview(scrollView)
 
         scrollView.snp.makeConstraints { make in
-            make.leading.equalTo(searchIcon.snp.trailing)
+            make.leading.equalTo(searchIcon.snp.trailing).offset(Const.space4)
             make.trailing.equalTo(cancelButton.snp.leading).offset(-Const.space4)
             make.centerY.equalToSuperview()
-            make.height.equalTo(28)
+            make.height.equalTo(TokenAttachment.lineHeight)
         }
 
         syncTextViewFrameToScrollView()

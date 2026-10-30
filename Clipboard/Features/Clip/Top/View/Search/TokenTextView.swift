@@ -9,11 +9,7 @@ import AppKit
 
 final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
     private enum Metrics {
-        static let height: CGFloat = 28
-        static let horizontalInset: CGFloat = 6
-        /// 垂直内边距：使行高在容器中垂直居中
-        /// (scrollView height - lineHeight) / 2 = (28 - 20) / 2 = 4
-        static let verticalInset: CGFloat = 4
+        static let height: CGFloat = TokenAttachment.lineHeight
     }
 
     // MARK: - Factory
@@ -49,10 +45,7 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
 
         textView.restorePlainTextInputState()
         textView.defaultParagraphStyle = Self.fixedParagraphStyle
-        textView.textContainerInset = NSSize(
-            width: Metrics.horizontalInset,
-            height: Metrics.verticalInset
-        )
+        textView.textContainerInset = .zero
         textView.minSize = NSSize(width: 0, height: Metrics.height)
         textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: Metrics.height)
         textView.isVerticallyResizable = false

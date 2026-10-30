@@ -2,6 +2,11 @@ import AppKit
 
 final class SearchFocusRingView: NSView {
     static let inset: CGFloat = 8
+    var cornerRadius: CGFloat = 0 {
+        didSet {
+            if cornerRadius != oldValue { needsDisplay = true }
+        }
+    }
 
     override func hitTest(_: NSPoint) -> NSView? { nil }
 
@@ -24,8 +29,8 @@ final class SearchFocusRingView: NSView {
         NSColor.white.setFill()
         NSBezierPath(
             roundedRect: rect,
-            xRadius: Const.topRadius,
-            yRadius: Const.topRadius
+            xRadius: cornerRadius,
+            yRadius: cornerRadius
         ).fill()
     }
 }
