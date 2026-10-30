@@ -99,22 +99,7 @@ final class StatusBarController: NSObject {
     private func configureMenuBarButton() {
         guard let button = menuBarItem?.button else { return }
 
-        let config = NSImage.SymbolConfiguration(
-            pointSize: 15,
-            weight: .semibold
-        )
-
-        let symbolName =
-            if #available(macOS 15.0, *) {
-                "heart.text.clipboard.fill"
-            } else {
-                "list.clipboard.fill"
-            }
-        let icon = NSImage(
-            systemSymbolName: symbolName,
-            accessibilityDescription: nil
-        )?.withSymbolConfiguration(config)
-
+        let icon = NSImage(named: "StatusBarIcon")
         icon?.isTemplate = true
         button.image = icon
         button.target = self
