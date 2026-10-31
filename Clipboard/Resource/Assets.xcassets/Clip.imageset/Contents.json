@@ -1,15 +1,22 @@
 {
   "images" : [
     {
-      "filename" : "Clip.pdf",
-      "idiom" : "universal"
+      "filename" : "Clip@1x.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "filename" : "Clip@2x.png",
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "3x"
     }
   ],
   "info" : {
-    "author" : "xcode",
+    "author" : "Crown",
     "version" : 1
-  },
-  "properties" : {
-    "preserves-vector-representation" : true
   }
 }
