@@ -121,6 +121,8 @@ extension ClipMainViewController {
             self?.diffableDataSource.snapshot().itemIdentifiers ?? []
         }
         presenter.resetSelection = { [weak self] in
+            // 快照重置时立即回到起点，避免关窗中断滚动动画
+            self?.scrollView.scroll(to: .zero, animated: false)
             self?.resetSelectIndex()
             self?.restoreSelection()
         }
