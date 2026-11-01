@@ -4,6 +4,16 @@ import Combine
 extension TopBarViewModel {
     // MARK: - Search Methods
 
+    func applyInputQuery(_ input: SearchInputQuery) {
+        query = input.text
+        let removedTags = tags.filter { !input.tags.contains($0) }
+        guard !removedTags.isEmpty else { return }
+        for tag in removedTags {
+            removeTag(tag, notify: false)
+        }
+        filterDidChange.send()
+    }
+
     /// 处理查询变化，支持快捷指令（如 @img, @text 等）
     func handleQueryChange() {
         let trimmedQuery = query.trimmingCharacters(in: .whitespaces)

@@ -9,21 +9,28 @@ import AppKit
 import Combine
 import SnapKit
 
+/// 输入框的一次完整查询；光标和输入法组合文本仍由 NSTextView 管理
+struct SearchInputQuery: Equatable {
+    var text = ""
+    var tags: [InputTag] = []
+
+    var isEmpty: Bool { text.isEmpty && tags.isEmpty }
+}
+
 final class SearchField: NSView {
-    @Published private(set) var text: String = ""
+    @Published private(set) var query = SearchInputQuery()
+    var text: String { query.text }
+    private var pendingTags: [InputTag]?
     private var focusRingState = (window: false, mode: false, popover: false, editing: false)
     private var usesManualFocusRing = false
     private let focusRingView = SearchFocusRingView(frame: .zero)
 
     var onResignFirstResponder: (() -> Void)?
     var onBecomeFirstResponder: (() -> Void)?
-    var onTextChanged: ((String) -> Void)?
+    var onQueryChanged: ((SearchInputQuery) -> Void)?
     var onFilterButtonTapped: (() -> Void)?
-    var onTokenDeleted: ((InputTag) -> Void)?
-    var onTokensChanged: (([InputTag]) -> Void)?
-    var onClearAllFilters: (() -> Void)?
-
-    var onSuggestionsNeeded: ((String) -> [SearchSuggestionItem])?
+    var suggestionsTask: Task<Void, Never>?
+    var onSuggestionsNeeded: ((String) async throws -> [SearchSuggestionItem])?
     var onSuggestionSelected: ((SearchSuggestionItem) -> Void)?
 
     var stringValue: String {
@@ -33,7 +40,7 @@ final class SearchField: NSView {
                 clearAllContent()
             } else {
                 tokenTextView.string = newValue
-                updateCancelButtonVisibility()
+                synchronizeQuery()
             }
         }
     }
@@ -153,11 +160,8 @@ final class SearchField: NSView {
     private func setupTokenTextView() {
         tokenTextView.delegate = self
 
-        tokenTextView.onTokenDeleted = { [weak self] tag in
-            self?.handleTokenDeleted(tag)
-        }
-        tokenTextView.onTextChanged = { [weak self] plainText in
-            self?.handleTextChanged(plainText)
+        tokenTextView.onTextChanged = { [weak self] _ in
+            self?.synchronizeQuery()
         }
         tokenTextView.onBecomeFirstResponder = { [weak self] in self?.handleEditingFocusChange(true) }
         tokenTextView.onResignFirstResponder = { [weak self] in self?.handleEditingFocusChange(false) }
@@ -229,64 +233,53 @@ final class SearchField: NSView {
     }
 
     func clearAllContent() {
-        cancelButton.isHidden = true
         hideSuggestions()
-        guard (tokenTextView.textStorage?.length ?? 0) > 0 || !text.isEmpty else { return }
-        let hadTokens = !tokenTextView.getAllTokens().isEmpty
+        pendingTags = nil
         tokenTextView.string = ""
         tokenTextView.setSelectedRange(NSRange(location: 0, length: 0))
         tokenTextView.restorePlainTextInputState()
-        text = ""
-        onTextChanged?("")
-        if hadTokens {
-            onClearAllFilters?()
-        }
+        synchronizeQuery()
     }
 
     func clearTextSilently() {
-        tokenTextView.string = ""
-        text = ""
-        updateCancelButtonVisibility()
+        hideSuggestions()
+        if tokenTextView.hasMarkedText() { tokenTextView.unmarkText() }
+        let length = tokenTextView.textStorage?.length ?? 0
+        let start = min(tokenTextView.findTokenEndIndex(), length)
+        tokenTextView.textStorage?.deleteCharacters(in: NSRange(location: start, length: length - start))
+        tokenTextView.moveCursorToEnd()
+        synchronizeQuery(notify: false)
     }
 
-    func clearTokensOnly() {
-        tokenTextView.clearAllTokens()
-        updateCancelButtonVisibility()
+    func setTokens(_ tags: [InputTag]) {
+        pendingTags = tags
+        guard !tokenTextView.hasMarkedText() else {
+            hideSuggestions()
+            return
+        }
+        pendingTags = nil
+        tokenTextView.replaceTokens(tags)
+        if !synchronizeQuery(notify: false) { updateSuggestions() }
     }
 
-    func insertToken(_ tag: InputTag) {
-        tokenTextView.insertToken(tag)
-        updateCancelButtonVisibility()
-    }
-
-    func insertTokens(_ tags: [InputTag]) {
-        guard !tags.isEmpty else { return }
-        tokenTextView.insertTokens(tags)
-        updateCancelButtonVisibility()
-    }
-
-    func removeToken(_ tag: InputTag) {
-        tokenTextView.removeToken(tag)
-        updateCancelButtonVisibility()
-    }
-
-    func getAllTokens() -> [InputTag] { tokenTextView.getAllTokens() }
-
-    private func handleTokenDeleted(_ tag: InputTag) {
-        onTokenDeleted?(tag)
-        updateCancelButtonVisibility()
-    }
-
-    private func handleTextChanged(_ plainText: String) {
-        text = plainText
-        onTextChanged?(plainText)
-        updateCancelButtonVisibility()
-        updateSuggestions()
-    }
-
-    private func updateCancelButtonVisibility() {
-        let hasContent = !text.isEmpty || !tokenTextView.getAllTokens().isEmpty
-        cancelButton.isHidden = !hasContent
+    @discardableResult
+    private func synchronizeQuery(notify: Bool = true) -> Bool {
+        if let pendingTags, !tokenTextView.hasMarkedText() {
+            self.pendingTags = nil
+            tokenTextView.replaceTokens(pendingTags)
+        }
+        let updated = SearchInputQuery(
+            text: tokenTextView.getPlainText(),
+            tags: pendingTags ?? tokenTextView.getAllTokens()
+        )
+        let changed = updated != query
+        if changed {
+            query = updated
+            if notify { onQueryChanged?(updated) }
+        }
+        cancelButton.isHidden = updated.isEmpty
+        if changed { updateSuggestions() }
+        return changed
     }
 
     private func syncTextViewFrameToScrollView() {
@@ -295,26 +288,10 @@ final class SearchField: NSView {
         tokenTextView.frame = bounds
     }
 
-    func notifyTextChanged(_ value: String) {
-        text = value
-        cancelButton.isHidden = value.isEmpty && tokenTextView.getAllTokens().isEmpty
-        onTextChanged?(value)
-    }
-
     func appendText(_ character: String) {
         guard !character.isEmpty else { return }
-        tokenTextView.insertText(
-            character,
-            replacementRange: NSRange(location: NSNotFound, length: 0)
-        )
-        let plainText = tokenTextView.getPlainText()
-        text = plainText
-        updateCancelButtonVisibility()
-        onTextChanged?(plainText)
+        tokenTextView.insertText(character, replacementRange: NSRange(location: NSNotFound, length: 0))
         moveCursorToEnd()
-        Task { @MainActor [weak self] in
-            self?.updateSuggestions()
-        }
     }
 
 }
@@ -323,15 +300,7 @@ final class SearchField: NSView {
 
 extension SearchField: NSTextViewDelegate {
     func textDidChange(_: Notification) {
-        let plainText = tokenTextView.getPlainText()
-        if plainText != text {
-            text = plainText
-            onTextChanged?(plainText)
-        }
-        // 原生编辑可能只删除标签，关键词不变时也要同步筛选条件。
-        onTokensChanged?(tokenTextView.getAllTokens())
-        updateCancelButtonVisibility()
-        updateSuggestions()
+        synchronizeQuery()
     }
 
     func textDidBeginEditing(_: Notification) {

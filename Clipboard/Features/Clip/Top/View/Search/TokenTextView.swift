@@ -60,7 +60,6 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
     var containerCornerRadius: CGFloat = Const.radius
     var placeholderString: String?
 
-    var onTokenDeleted: ((InputTag) -> Void)?
     var onTextChanged: ((String) -> Void)?
     var onBecomeFirstResponder: (() -> Void)?
     var onResignFirstResponder: (() -> Void)?
@@ -212,6 +211,12 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
 
         super.insertText(string, replacementRange: NSRange(location: NSNotFound, length: 0))
         notifyTextChanged()
+    }
+
+    override func unmarkText() {
+        super.unmarkText()
+        // 等输入法完成本次编辑，再应用等待中的标签更新。
+        Task { @MainActor [weak self] in self?.notifyTextChanged() }
     }
 
     private func isInTokenArea(_ location: Int) -> Bool {

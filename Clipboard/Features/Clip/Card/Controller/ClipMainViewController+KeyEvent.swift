@@ -61,7 +61,6 @@ extension ClipMainViewController {
                 topBarView.activateSearch(with: characters)
             }
             setFocusRegion(.search)
-            view.window?.makeFirstResponder(topBarView.searchField)
             return nil
         }
 
@@ -145,7 +144,7 @@ extension ClipMainViewController {
         }
         if field.isFirstResponder {
             if field.suggestionWindow.isVisible {
-                field.suggestionWindow.hide()
+                field.hideSuggestions()
                 return nil
             }
             if topVM.hasInput {

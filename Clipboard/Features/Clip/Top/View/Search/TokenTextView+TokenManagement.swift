@@ -6,81 +6,28 @@
 import AppKit
 
 extension TokenTextView {
-    func insertToken(_ tag: InputTag) {
-        insertTokens([tag])
-    }
+    /// 只替换标签前缀，保留原始文字及文字区域中的选区
+    func replaceTokens(_ tags: [InputTag]) {
+        guard let storage = textStorage else { return }
+        let current = getAllTokens()
+        guard current.count != tags.count || zip(current, tags).contains(where: {
+            $0 != $1 || $0.label != $1.label || $0.icon !== $1.icon
+        }) else { return }
 
-    func insertTokens(_ tags: [InputTag]) {
-        guard !tags.isEmpty, let storage = textStorage else { return }
-
-        storage.beginEditing()
+        let oldEnd = min(findTokenEndIndex(), storage.length)
+        let selection = selectedRange()
+        let prefix = NSMutableAttributedString()
         for tag in tags {
-            let insertIndex = findTokenEndIndex()
-            storage.insert(NSAttributedString.makeToken(for: tag), at: insertIndex)
-            storage.insert(
-                NSAttributedString(string: " ", attributes: plainTextAttributes),
-                at: insertIndex + 1
-            )
+            prefix.append(.makeToken(for: tag))
+            prefix.append(NSAttributedString(string: " ", attributes: plainTextAttributes))
         }
-        storage.endEditing()
-
-        moveCursorToEnd()
-        notifyTextChanged()
-    }
-
-    func removeToken(_ tag: InputTag) {
-        guard let storage = textStorage else { return }
-
-        let fullRange = NSRange(location: 0, length: storage.length)
-        var foundRange: NSRange?
-
-        storage.enumerateAttribute(.attachment, in: fullRange, options: []) { value, range, stop in
-            if let attachment = value as? TokenAttachment, attachment.tag == tag {
-                foundRange = range
-                stop.pointee = true
-            }
-        }
-
-        guard let range = foundRange else { return }
-
-        storage.beginEditing()
-        let deleteRange = NSRange(
-            location: range.location,
-            length: min(range.length + 1, storage.length - range.location)
-        )
-        storage.deleteCharacters(in: deleteRange)
-        storage.endEditing()
-
-        setSelectedRange(NSRange(location: min(range.location, storage.length), length: 0))
+        storage.replaceCharacters(in: NSRange(location: 0, length: oldEnd), with: prefix)
+        let start = current == tags ? selection.location : prefix.length + max(0, selection.location - oldEnd)
+        let end = current == tags ? NSMaxRange(selection) : prefix.length + max(0, NSMaxRange(selection) - oldEnd)
+        let boundedStart = min(start, storage.length)
+        setSelectedRange(NSRange(location: boundedStart, length: max(0, min(end, storage.length) - boundedStart)))
         restorePlainTextInputState()
-        notifyTextChanged()
-    }
-
-    func clearAllTokens() {
-        guard let storage = textStorage else { return }
-
-        let fullRange = NSRange(location: 0, length: storage.length)
-        var rangesToDelete: [NSRange] = []
-
-        storage.enumerateAttribute(.attachment, in: fullRange, options: []) { value, range, _ in
-            if value is NSTextAttachment {
-                rangesToDelete.append(range)
-            }
-        }
-
-        storage.beginEditing()
-        for range in rangesToDelete.reversed() {
-            let deleteRange = NSRange(
-                location: range.location,
-                length: min(range.length + 1, storage.length - range.location)
-            )
-            storage.deleteCharacters(in: deleteRange)
-        }
-        storage.endEditing()
-
-        setSelectedRange(NSRange(location: 0, length: 0))
-        restorePlainTextInputState()
-        notifyTextChanged()
+        scrollRangeToVisible(selectedRange())
     }
 
     func getAllTokens() -> [InputTag] {
@@ -126,7 +73,11 @@ extension TokenTextView {
 
         storage.enumerateAttribute(.attachment, in: fullRange, options: []) { value, range, _ in
             if value is NSTextAttachment {
-                lastTokenEnd = max(lastTokenEnd, range.location + range.length + 1)
+                var end = NSMaxRange(range)
+                if end < storage.length, (storage.string as NSString).character(at: end) == 0x20 {
+                    end += 1
+                }
+                lastTokenEnd = max(lastTokenEnd, end)
             }
         }
 
@@ -214,23 +165,18 @@ extension TokenTextView {
         setSelectedRange(NSRange(location: range.location, length: 0))
         restorePlainTextInputState()
 
-        for tag in tokensInRange {
-            onTokenDeleted?(tag)
-        }
         notifyTextChanged()
         return true
     }
 
     func deleteTokenBeforeCursor(at location: Int) -> Bool {
         guard let storage = textStorage,
-              let attachment = storage.attribute(
+              storage.attribute(
                   .attachment,
                   at: location,
                   effectiveRange: nil
-              ) as? TokenAttachment
+              ) is TokenAttachment
         else { return false }
-
-        onTokenDeleted?(attachment.tag)
 
         let nextLocation = location + 1
         let hasTrailingSpace = nextLocation < storage.length

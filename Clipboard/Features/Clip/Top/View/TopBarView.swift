@@ -53,7 +53,6 @@ final class TopBarView: NSView {
     private(set) var isSearching = false
     private(set) var topVM: TopBarViewModel?
     var cancellables = Set<AnyCancellable>()
-    var skipNextTokenSync = false
     private var searchFieldWidth = Const.searchFieldMinWidth
     private var searchFieldWidthConstraint: Constraint?
     var modeAnimationGeneration = 0
@@ -179,13 +178,12 @@ final class TopBarView: NSView {
             }
         }
 
-        searchField.onTextChanged = { [weak self] text in
-            guard let self else { return }
-            topVM?.setQuery(text: text)
+        searchField.onQueryChanged = { [weak self] query in
+            self?.topVM?.applyInputQuery(query)
         }
 
         searchField.onSuggestionsNeeded = { [weak self] query in
-            self?.buildSuggestions(query: query) ?? []
+            try await self?.buildSuggestions(query: query) ?? []
         }
 
         searchField.onSuggestionSelected = { [weak self] item in
@@ -194,16 +192,6 @@ final class TopBarView: NSView {
 
         searchField.onFilterButtonTapped = { [weak self] in
             self?.togglePopover()
-        }
-
-        searchField.onTokenDeleted = { [weak self] tag in
-            Task { @MainActor [weak self] in
-                self?.handleTokenDeletion(tag)
-            }
-        }
-
-        searchField.onClearAllFilters = { [weak self] in
-            self?.topVM?.clearAllFilters()
         }
 
         dotChipScrollView.setContentHuggingPriority(.required, for: .horizontal)
@@ -316,6 +304,9 @@ final class TopBarView: NSView {
 
     func activateSearch(with character: String) {
         activateSearch()
+        if !searchField.isFirstResponder {
+            window?.makeFirstResponder(searchField.tokenTextView)
+        }
         searchField.appendText(character)
     }
 

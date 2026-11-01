@@ -12,13 +12,6 @@ extension TopBarView {
     func setupTokenSync() {
         guard let topVM else { return }
 
-        searchField.onTokensChanged = { [weak self] tags in
-            guard let self, let topVM = self.topVM else { return }
-            for tag in topVM.tags where !tags.contains(tag) {
-                handleTokenDeletion(tag)
-            }
-        }
-
         topVM.filterDidChange
             .sink { [weak self] in
                 self?.syncSearchTokens()
@@ -43,20 +36,8 @@ extension TopBarView {
 
     private func syncSearchTokens() {
         guard let topVM else { return }
-        if skipNextTokenSync {
-            skipNextTokenSync = false
-            updateChipSelection()
-            return
-        }
-
-        searchField.clearTokensOnly()
-        searchField.insertTokens(topVM.tags)
+        searchField.setTokens(topVM.tags)
         updateChipSelection()
-    }
-
-    func handleTokenDeletion(_ tag: InputTag) {
-        skipNextTokenSync = true
-        topVM?.removeTag(tag)
     }
 
     func dismissFilterPopover() -> Bool {

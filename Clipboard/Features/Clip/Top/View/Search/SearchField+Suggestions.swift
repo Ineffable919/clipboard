@@ -39,37 +39,51 @@ extension SearchField {
     }
 
     func hideSuggestions() {
-        guard suggestionWindow.isVisible else { return }
-        suggestionWindow.hide()
+        suggestionsTask?.cancel()
+        suggestionsTask = nil
+        if suggestionWindow.isVisible {
+            suggestionWindow.hide()
+        }
     }
 
     func updateSuggestions() {
+        suggestionsTask?.cancel()
+        suggestionsTask = nil
         let query = text
-        guard !query.isEmpty else {
+        guard !query.isEmpty, isFirstResponder, let provider = onSuggestionsNeeded else {
             hideSuggestions()
             return
         }
 
-        let items = onSuggestionsNeeded?(query) ?? []
-        guard !items.isEmpty else {
+        suggestionsTask = Task { @MainActor [weak self] in
+            do {
+                let items = try await provider(query)
+                try Task.checkCancellation()
+                guard let self, text == query, isFirstResponder,
+                      window?.isVisible == true, window?.isKeyWindow == true
+                else { return }
+                suggestionsTask = nil
+                presentSuggestions(items, query: query)
+            } catch is CancellationError {
+                // 已取消的任务不能修改新请求的窗口或任务引用
+            } catch {
+                guard !Task.isCancelled else { return }
+                self?.hideSuggestions()
+            }
+        }
+    }
+
+    private func presentSuggestions(_ items: [SearchSuggestionItem], query: String) {
+        guard !items.isEmpty, let window = tokenTextView.window ?? window else {
             hideSuggestions()
             return
         }
-
         suggestionWindow.suggestionVC.reloadData(items, query: query)
-
-        let cursorScreenOrigin = cursorScreenPosition()
-
-        if !suggestionWindow.isVisible {
-            guard let window = tokenTextView.window ?? window else { return }
-            suggestionWindow.show(
-                at: cursorScreenOrigin,
-                items: items,
-                query: query,
-                parentWindow: window
-            )
+        let origin = cursorScreenPosition()
+        if suggestionWindow.isVisible {
+            suggestionWindow.updateFrame(at: origin, items: items, query: query)
         } else {
-            suggestionWindow.updateFrame(at: cursorScreenOrigin, items: items, query: query)
+            suggestionWindow.show(at: origin, items: items, query: query, parentWindow: window)
         }
     }
 
@@ -105,6 +119,7 @@ extension SearchField {
     }
 
     private func handleSuggestionItemSelected(_ item: SearchSuggestionItem) {
+        guard suggestionsTask == nil else { return }
         hideSuggestions()
         onSuggestionSelected?(item)
     }

@@ -175,7 +175,7 @@ extension TopBarViewModel {
         }
     }
 
-    func removeTag(_ tag: InputTag) {
+    func removeTag(_ tag: InputTag, notify: Bool = true) {
         tags.removeAll { $0 == tag }
 
         switch tag.type {
@@ -196,7 +196,7 @@ extension TopBarViewModel {
             }
             syncSelectedChip()
         }
-        filterDidChange.send()
+        if notify { filterDidChange.send() }
     }
 
     func removeLastFilter() {

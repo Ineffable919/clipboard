@@ -8,20 +8,23 @@
 import AppKit
 
 extension TopBarView {
-    func buildSuggestions(query: String) -> [SearchSuggestionItem] {
+    func buildSuggestions(query: String) async throws -> [SearchSuggestionItem] {
         guard !query.isEmpty else { return [] }
 
-        return typeSuggestions(matching: query)
-            + dateSuggestions(matching: query)
-            + groupSuggestions(matching: query)
-            + appSuggestions(matching: query)
+        var suggestions = try await typeSuggestions(matching: query)
+        suggestions += try await dateSuggestions(matching: query)
+        suggestions += try await groupSuggestions(matching: query)
+        suggestions += try await appSuggestions(matching: query)
+        try Task.checkCancellation()
+        return suggestions
     }
 
-    private func typeSuggestions(matching query: String) -> [SearchSuggestionItem] {
+    private func typeSuggestions(matching query: String) async throws -> [SearchSuggestionItem] {
         let allTypes: [PasteModelType] = [.color, .file, .image, .link, .string]
         var suggestions: [SearchSuggestionItem] = []
 
-        for type in allTypes {
+        for (index, type) in allTypes.enumerated() {
+            try await checkSuggestionCancellation(at: index)
             guard topVM?.selectedTypes.contains(type) != true else { continue }
             let (icon, label) = type.iconAndLabel
             guard fuzzyMatch(label, query: query) else { continue }
@@ -36,10 +39,11 @@ extension TopBarView {
         return suggestions
     }
 
-    private func dateSuggestions(matching query: String) -> [SearchSuggestionItem] {
+    private func dateSuggestions(matching query: String) async throws -> [SearchSuggestionItem] {
         var suggestions: [SearchSuggestionItem] = []
 
-        for option in DateFilterOption.allCases {
+        for (index, option) in DateFilterOption.allCases.enumerated() {
+            try await checkSuggestionCancellation(at: index)
             guard topVM?.selectedDateFilter != option else { continue }
             let label = option.displayName
             guard fuzzyMatch(label, query: query) else { continue }
@@ -57,11 +61,12 @@ extension TopBarView {
         return suggestions
     }
 
-    private func groupSuggestions(matching query: String) -> [SearchSuggestionItem] {
+    private func groupSuggestions(matching query: String) async throws -> [SearchSuggestionItem] {
         let userChips = CategoryChipStore.shared.chips.filter { !$0.isSystem }
         var suggestions: [SearchSuggestionItem] = []
 
-        for chip in userChips {
+        for (index, chip) in userChips.enumerated() {
+            try await checkSuggestionCancellation(at: index)
             guard topVM?.selectedGroupIds.contains(chip.id) != true else {
                 continue
             }
@@ -77,10 +82,11 @@ extension TopBarView {
         return suggestions
     }
 
-    private func appSuggestions(matching query: String) -> [SearchSuggestionItem] {
+    private func appSuggestions(matching query: String) async throws -> [SearchSuggestionItem] {
         var suggestions: [SearchSuggestionItem] = []
 
-        for app in SourceAppCache.shared.orderedApps {
+        for (index, app) in SourceAppCache.shared.orderedApps.enumerated() {
+            try await checkSuggestionCancellation(at: index)
             guard topVM?.selectedAppIDs.contains(app.id) != true else { continue }
             guard fuzzyMatch(app.name, query: query) else { continue }
             suggestions.append(SearchSuggestionItem(
@@ -91,6 +97,13 @@ extension TopBarView {
         }
 
         return suggestions
+    }
+
+    private func checkSuggestionCancellation(at index: Int) async throws {
+        if index.isMultiple(of: 32) {
+            await Task.yield()
+        }
+        try Task.checkCancellation()
     }
 
     private func fuzzyMatch(_ text: String, query: String) -> Bool {

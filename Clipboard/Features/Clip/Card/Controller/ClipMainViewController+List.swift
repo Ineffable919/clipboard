@@ -128,7 +128,7 @@ extension ClipMainViewController {
         }
         presenter.restoreSelection = { [weak self] in self?.restoreSelection() }
         presenter.adjustAfterDelete = { [weak self] in self?.adjustSelectionAfterDelete() }
-        // 抽屉的空状态在快照完成后更新，避免与删除动画重叠。
+        // 抽屉的空状态在快照完成后更新，避免与删除动画重叠
         presenter.reconfigureItems = { [weak self] items in
             guard let self else { return }
             let identifiers = diffableDataSource.snapshot().itemIdentifiers
@@ -155,7 +155,8 @@ extension ClipMainViewController {
 
 extension ClipMainViewController {
     func initObserve() {
-        topBarView.searchField.$text
+        topBarView.searchField.$query
+            .map(\.text)
             .removeDuplicates()
             .dropFirst()
             .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
@@ -182,7 +183,6 @@ extension ClipMainViewController {
                 topVM.performSearch()
             }
             .store(in: &cancellables)
-
     }
 
     private func adjustSelectionAfterDelete() {
