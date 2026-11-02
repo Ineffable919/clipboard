@@ -2,7 +2,7 @@ import SwiftUI
 
 @available(macOS 26.0, *)
 struct HUDContentView: View {
-    // Leave the glass highlight and shadow room to render beyond the visible surface.
+    // Leave the glass highlight and shadow room to render beyond the visible surface
     static let effectPadding: CGFloat = 60
 
     let icon: NSImage?
@@ -34,7 +34,7 @@ struct HUDContentView: View {
             .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
             .padding(Self.effectPadding)
         }
-        // A nonactivating HUD still needs the active glass appearance.
+        // A nonactivating HUD still needs the active glass appearance
         .environment(\.appearsActive, true)
     }
 }

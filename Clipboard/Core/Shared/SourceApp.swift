@@ -1,7 +1,7 @@
 import Foundation
 import SQLite
 
-/// 应用身份和持久化图标；历史记录只保存 id。
+/// 应用身份和持久化图标；历史记录只保存 id
 nonisolated struct SourceApp: Sendable, Equatable {
     let id: Int64
     let bundleID: String?
@@ -48,7 +48,7 @@ nonisolated enum SourceAppSQL {
         }
     }
 
-    /// 仅在身份可确认时合并；名称相同不代表同一个应用。
+    /// 仅在身份可确认时合并；名称相同不代表同一个应用
     static func resolve(
         name: String, path: String, bundleID: String?, iconData: Data? = nil,
         on database: Connection
@@ -74,7 +74,7 @@ nonisolated enum SourceAppSQL {
                          bundleID, name, path, iconData.map { Blob(bytes: [UInt8]($0)) })
         return database.lastInsertRowid
     }
-    /// 仅回收无法辨识且没有持久化图标的失效来源；空路径可能是虚拟来源。
+    /// 仅回收无法辨识且没有持久化图标的失效来源；空路径可能是虚拟来源
     @discardableResult
     static func reassignMissing(on database: Connection, fallback: SourceApp) throws -> Int {
         var count = 0
@@ -135,7 +135,7 @@ nonisolated enum SourceAppSQL {
         }
         var result: [String: Int64] = [:]
         for (key, app) in records {
-            // 已有本机应用优先，导入其他机器的路径不能覆盖当前可用路径。
+            // 已有本机应用优先，导入其他机器的路径不能覆盖当前可用路径
             let existing: Int64?
             if let bundleID = app.bundleID {
                 existing = try destination.scalar("SELECT id FROM App WHERE bundle_id = ?", bundleID) as? Int64

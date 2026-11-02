@@ -2,7 +2,7 @@
 //  HorizontalScrollView.swift
 //  Clipboard
 //
-//  Created by crown on 2026/4/10.
+//  Created by crown on 2026/4/10
 //
 
 import AppKit

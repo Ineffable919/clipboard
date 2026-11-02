@@ -2,7 +2,7 @@
 //  ExpirationSlider.swift
 //  Clipboard
 //
-//  Created by crown on 2026/9/15.
+//  Created by crown on 2026/9/15
 //
 
 import SwiftUI
@@ -63,8 +63,8 @@ struct ExpirationSlider: View {
 
     private let labels = ["天", "周", "月", "年", "永久"]
 
-    /// 系统 Slider thumb 左右大概会留出这部分空间。
-    /// 用它让顶部文字、刻度和 Slider 轨道尽量保持一致。
+    /// 系统 Slider thumb 左右大概会留出这部分空间
+    /// 用它让顶部文字、刻度和 Slider 轨道尽量保持一致
     private let sliderHorizontalInset: CGFloat = 14
 
     // MARK: Points
@@ -117,7 +117,7 @@ struct ExpirationSlider: View {
         //
         // 1个月
         // 2个月
-        // ...
+        // ..
         // 11个月
         // 1年
         result += makePoints(

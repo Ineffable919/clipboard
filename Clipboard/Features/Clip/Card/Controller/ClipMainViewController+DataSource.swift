@@ -2,7 +2,7 @@
 //  ClipMainViewController+DataSource.swift
 //  Clipboard
 //
-//  Created by crown on 2025/9/13.
+//  Created by crown on 2025/9/13
 //
 
 import AppKit
@@ -79,7 +79,7 @@ extension ClipMainViewController: NSCollectionViewDelegate {
                 collectionView.hideDropLine()
                 return []
             }
-            // 落在卡片中央时，根据左右半区选择相邻间隙。
+            // 落在卡片中央时，根据左右半区选择相邻间隙
             let point = collectionView.convert(draggingInfo.draggingLocation, from: nil)
             var index = min(max(0, proposedIndexPath.pointee.item), displayedItemCount)
             if dropOperation.pointee == .on,

@@ -2,8 +2,8 @@
 //  MarkdownAttributedRenderer.swift
 //  Clipboard
 //
-//  基于 apple/swift-markdown 解析，将 markdown 渲染为 NSAttributedString。
-//  样式全部使用动态系统颜色，自动适配深浅色。
+//  基于 apple/swift-markdown 解析，将 markdown 渲染为 NSAttributedString
+//  样式全部使用动态系统颜色，自动适配深浅色
 //
 
 import AppKit

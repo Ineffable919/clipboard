@@ -2,7 +2,7 @@
 //  MarkdownHTMLSanitizer.swift
 //  Clipboard
 //
-//  在独立脚本环境中使用本地 DOMPurify 清理 Markdown 原始 HTML。
+//  在独立脚本环境中使用本地 DOMPurify 清理 Markdown 原始 HTML
 //
 
 import Foundation
@@ -11,7 +11,7 @@ import WebKit
 enum MarkdownHTMLSanitizer {
     private static let contentWorld = WKContentWorld.world(name: "ClipboardMarkdownSanitizer")
 
-    // Keep the isolated browser bootstrap together so its execution order is explicit.
+    // Keep the isolated browser bootstrap together so its execution order is explicit
     private static func bootstrapScript(highlightStylesheet: String?) -> String {
         let stylesheet = javaScriptStringLiteral(highlightStylesheet ?? "")
         return bootstrapScriptPrefix + stylesheet + bootstrapScriptSuffix
@@ -120,7 +120,7 @@ enum MarkdownHTMLSanitizer {
             return nil
         }
         // WKUserScript files have separate top-level scopes. Export the
-        // library explicitly so the later bootstrap script can use it.
+        // library explicitly so the later bootstrap script can use it
         return script + "\n;globalThis.hljs = hljs;"
     }()
 

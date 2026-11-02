@@ -72,7 +72,7 @@ final class LinkPreviewRequest: NSObject {
         guard canStart, requestID == nil, let operation else { return }
         requestID = LinkPreviewQueue.shared.enqueue { [weak self] in
             guard !Task.isCancelled else { return }
-            // 排队期间可能开始了键盘滚动，实际执行前再次检查。
+            // 排队期间可能开始了键盘滚动，实际执行前再次检查
             guard self?.canStart == true else {
                 self?.requestID = nil
                 return

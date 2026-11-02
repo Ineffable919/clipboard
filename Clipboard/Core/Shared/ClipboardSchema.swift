@@ -1,5 +1,5 @@
 // ClipboardSchema.swift
-// Shared between App and clipmcp targets.
+// Shared between App and clipmcp targets
 
 import Foundation
 import SQLite
@@ -18,7 +18,7 @@ struct Col {
         literal: "(SELECT COALESCE(MAX(sort_order), 0) + 1 FROM Clip)"
     )
     nonisolated static let appID = Expression<Int64>("app_id")
-    // 仅供旧备份导入使用。
+    // 仅供旧备份导入使用
     nonisolated static let appPath = Expression<String>("app_path")
     nonisolated static let appName = Expression<String>("app_name")
     nonisolated static let searchText = Expression<String>("search_text")
@@ -46,12 +46,12 @@ enum ClipboardPaths {
         appSupportDir.appending(path: "Clip.sqlite3").path
     }
 
-    /// Presence of this file = MCP enabled. App toggle creates/removes it.
+    /// Presence of this file = MCP enabled. App toggle creates/removes it
     static var mcpEnableFlag: String {
         appSupportDir.appending(path: "mcp_enabled").path
     }
 
-    /// JSON array of disabled tool names.
+    /// JSON array of disabled tool names
     static var mcpDisabledTools: String {
         appSupportDir.appending(path: "mcp_disabled_tools").path
     }

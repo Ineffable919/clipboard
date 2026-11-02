@@ -2,7 +2,7 @@
 //  PreviewWebView.swift
 //  Clipboard
 //
-//  链接网页预览。
+//  链接网页预览
 //
 
 import AppKit

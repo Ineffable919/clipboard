@@ -2,7 +2,7 @@
 //  PreviewMultiFileView.swift
 //  Clipboard
 //
-//  多文件图标堆叠预览。
+//  多文件图标堆叠预览
 //
 
 import AppKit

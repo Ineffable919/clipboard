@@ -2,7 +2,7 @@
 //  TopBarView.swift
 //  Clipboard
 //
-//  Created by crown on 2026/4/9.
+//  Created by crown on 2026/4/9
 //
 
 import AppKit

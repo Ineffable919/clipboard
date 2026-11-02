@@ -2,7 +2,7 @@ import Foundation
 import SQLite
 
 nonisolated enum SourceAppMigration {
-    /// 首次升级仅按不同来源读取应用身份；不读取图标，不把历史内容加载到 Swift 内存。
+    /// 首次升级仅按不同来源读取应用身份；不读取图标，不把历史内容加载到 Swift 内存
     @discardableResult
     static func run(on database: Connection, backupURL: URL) throws -> Bool {
         let columns = try database.prepare("PRAGMA table_info(Clip)").compactMap { $0[1] as? String }
@@ -21,7 +21,7 @@ nonisolated enum SourceAppMigration {
                 ) WITHOUT ROWID
                 """)
             try mapSources(on: database)
-            // 一次顺序复制同时移除两个旧字段；ID、内容、分类、隐藏状态和排序原样保留。
+            // 一次顺序复制同时移除两个旧字段；ID、内容、分类、隐藏状态和排序原样保留
             try database.execute("""
                 CREATE TABLE Clip_app_migration (
                     id INTEGER PRIMARY KEY, unique_id TEXT NOT NULL, type TEXT NOT NULL,

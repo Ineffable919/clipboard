@@ -35,9 +35,9 @@ final class StatusBarMenuController {
 
     private func prepareMenu(for event: NSEvent) -> NSEvent? {
         guard let window = item.button?.window, event.window === window else { return event }
-        // AppKit can forward the click that just dismissed the menu back to the button.
+        // AppKit can forward the click that just dismissed the menu back to the button
         guard lastMenuClick != Self.clickCount else { return nil }
-        // Let the original mouse-down open the native menu, without a second simulated click.
+        // Let the original mouse-down open the native menu, without a second simulated click
         item.menu = menu
         return event
     }
@@ -48,13 +48,13 @@ final class StatusBarMenuController {
             guard let self, event.type == .rightMouseDown,
                   Self.clickCount != lastMenuClick,
                   let window = item.button?.window else { return false }
-            // End tracking before the closing click is forwarded; don't wait for a fade-out.
+            // End tracking before the closing click is forwarded; don't wait for a fade-out
             return window.frame.contains(NSEvent.mouseLocation)
         }
     }
 
     func menuDidClose() {
-        // Remember the closing click so its forwarded action cannot reopen the menu.
+        // Remember the closing click so its forwarded action cannot reopen the menu
         lastMenuClick = Self.clickCount
         item.menu = nil
         if let menuObserver {

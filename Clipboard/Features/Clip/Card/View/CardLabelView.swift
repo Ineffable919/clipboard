@@ -5,7 +5,7 @@
 
 import AppKit
 
-/// A read-only label whose text is rasterized only when its presentation changes.
+/// A read-only label whose text is rasterized only when its presentation changes
 final class CardLabelView: CardRasterView {
     private let cell = NSTextFieldCell(textCell: "")
     private let padding: NSEdgeInsets
@@ -122,7 +122,7 @@ final class CardLabelView: CardRasterView {
 
     override var intrinsicContentSize: NSSize {
         let size = cell.cellSize
-        // NSTextField excludes its cell's horizontal drawing margins from its alignment size.
+        // NSTextField excludes its cell's horizontal drawing margins from its alignment size
         return NSSize(
             width: ceil(max(0, size.width - 4)) + padding.left + padding.right,
             height: ceil(size.height) + padding.top + padding.bottom

@@ -43,8 +43,8 @@ extension PasteSQLManager {
     }
 
     /// 历史版本 `generateUniqueId` 算法变更后，旧行存储的 `unique_id` 与运行时重算值不一致：
-    /// 既会绕过插入去重产生内容相同的多行，又会让 diffable data source 因重复标识符崩溃。
-    /// 本迁移用当前算法重算全表 `unique_id`，合并重复行（保留时间戳最新的），并修正存储值。
+    /// 既会绕过插入去重产生内容相同的多行，又会让 diffable data source 因重复标识符崩溃
+    /// 本迁移用当前算法重算全表 `unique_id`，合并重复行（保留时间戳最新的），并修正存储值
     func migrateUniqueIdIfNeeded() async {
         let currentVersion = databaseUserVersion()
         guard currentVersion < Self.uniqueIdMigrationVersion

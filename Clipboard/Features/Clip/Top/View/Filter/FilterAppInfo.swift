@@ -2,7 +2,7 @@
 //  FilterAppInfo.swift
 //  Clipboard
 //
-//  Application metadata displayed by the filter popover.
+//  Application metadata displayed by the filter popover
 //
 
 import AppKit

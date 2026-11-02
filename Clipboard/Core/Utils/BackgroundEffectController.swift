@@ -2,7 +2,7 @@
 //  BackgroundEffectController.swift
 //  Clipboard
 //
-//  按系统版本构建窗口背景：macOS 26 及以上使用液态玻璃，其余使用毛玻璃。
+//  按系统版本构建窗口背景：macOS 26 及以上使用液态玻璃，其余使用毛玻璃
 //
 
 import AppKit

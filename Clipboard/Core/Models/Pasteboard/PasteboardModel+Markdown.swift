@@ -60,8 +60,8 @@ extension PasteboardModel {
         return (regex, score)
     }
 
-    /// 保守启发式：高置信特征直接命中；普通特征按权重累计。
-    /// 目标是覆盖完整预览需要的图片、列表、标题等场景，同时避免普通文本误判。
+    /// 保守启发式：高置信特征直接命中；普通特征按权重累计
+    /// 目标是覆盖完整预览需要的图片、列表、标题等场景，同时避免普通文本误判
     private static func detectMarkdown(in raw: String) -> Bool {
         let text = raw.count > 8000 ? String(raw.prefix(8000)) : raw
         guard text.contains(where: { !$0.isWhitespace }) else { return false }

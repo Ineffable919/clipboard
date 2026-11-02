@@ -2,7 +2,7 @@
 //  CardBottomView.swift
 //  Clipboard
 //
-//  Created by crown on 2026/4/12.
+//  Created by crown on 2026/4/12
 //
 
 import AppKit
@@ -350,7 +350,7 @@ final class CardCommonBottomView: NSView, PassthroughMouseEvents {
         }
         gradientLayer.startPoint = CGPoint(x: 0.5, y: 0.0)
         gradientLayer.endPoint = CGPoint(x: 0.5, y: 1.0)
-        // Fade through the upper 24pt; only the bottom 16pt is fully opaque.
+        // Fade through the upper 24pt; only the bottom 16pt is fully opaque
         gradientLayer.locations = [0.0, 0.4, 1.0]
     }
 }

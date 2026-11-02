@@ -2,7 +2,7 @@
 //  EditWindowController.swift
 //  Clipboard
 //
-//  Created by crown on 2025/12/28.
+//  Created by crown on 2025/12/28
 //
 
 import AppKit

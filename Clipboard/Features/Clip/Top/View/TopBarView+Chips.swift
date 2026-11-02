@@ -2,7 +2,7 @@
 //  TopBarView+Chips.swift
 //  Clipboard
 //
-//  Chip editing and selection forwarding.
+//  Chip editing and selection forwarding
 //
 
 import Foundation

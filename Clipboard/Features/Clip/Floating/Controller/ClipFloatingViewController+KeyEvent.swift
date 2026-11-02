@@ -2,7 +2,7 @@
 //  ClipFloatingViewController+KeyEvent.swift
 //  Clipboard
 //
-//  Created by crown on 2026/5/4.
+//  Created by crown on 2026/5/4
 //
 
 import AppKit

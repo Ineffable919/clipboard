@@ -215,7 +215,7 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
 
     override func unmarkText() {
         super.unmarkText()
-        // 等输入法完成本次编辑，再应用等待中的标签更新。
+        // 等输入法完成本次编辑，再应用等待中的标签更新
         Task { @MainActor [weak self] in self?.notifyTextChanged() }
     }
 

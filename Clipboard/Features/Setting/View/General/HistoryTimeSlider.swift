@@ -119,7 +119,7 @@ struct HistoryTimeSlider: View {
         HistoryTimeUnit(rawValue: sliderValueToInternalValue(sliderValue))
     }
 
-    /// 主刻度沿滑块行程等分，两端为滑块手柄预留空间。
+    /// 主刻度沿滑块行程等分，两端为滑块手柄预留空间
     private func tickPosition(for index: Int, in width: CGFloat) -> CGFloat {
         let inset: CGFloat = 10
         return inset + max(0, width - inset * 2) * CGFloat(index) / 4

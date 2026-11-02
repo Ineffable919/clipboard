@@ -2,7 +2,7 @@
 //  PreviewColorView.swift
 //  Clipboard
 //
-//  颜色值预览。
+//  颜色值预览
 //
 
 import AppKit

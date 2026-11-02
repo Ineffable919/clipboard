@@ -2,8 +2,8 @@
 //  ClipListPresenter.swift
 //  Clipboard
 //
-//  统一管理 dataList 订阅、DataChangeType 分发、追加加载和滚动触底检测。
-//  使用方通过闭包注入快照更新、选中管理等视图操作。
+//  统一管理 dataList 订阅、DataChangeType 分发、追加加载和滚动触底检测
+//  使用方通过闭包注入快照更新、选中管理等视图操作
 //
 
 import AppKit
@@ -17,12 +17,12 @@ final class ClipListPresenter {
 
     // MARK: - Snapshot
 
-    /// 全量刷新：接收新数据、是否动画、完成回调。
+    /// 全量刷新：接收新数据、是否动画、完成回调
     var applyFull: (_ items: [PasteboardModel], _ animating: Bool, _ completion: (() -> Void)?) -> Void = { _, _, _ in }
     var applyReorder: (_ items: [PasteboardModel]) -> Void = { _ in }
-    /// 追加新条目到现有快照。
+    /// 追加新条目到现有快照
     var appendItems: (_ newItems: [PasteboardModel]) -> Void = { _ in }
-    /// 返回当前快照中的所有条目，用于去重。
+    /// 返回当前快照中的所有条目，用于去重
     var currentSnapshotItems: () -> [PasteboardModel] = { [] }
 
     // MARK: - Selection
@@ -33,7 +33,7 @@ final class ClipListPresenter {
 
     // MARK: - Reconfigure
 
-    /// 强制刷新指定条目的 cell 内容（属性变更但 identity 未变时使用，如 group 变更）。
+    /// 强制刷新指定条目的 cell 内容（属性变更但 identity 未变时使用，如 group 变更）
     var reconfigureItems: (_ items: [PasteboardModel]) -> Void = { _ in }
 
     // MARK: - Empty State

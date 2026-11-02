@@ -2,7 +2,7 @@
 //  SoundManager.swift
 //  Clipboard
 //
-//  Created by crown on 2025/1/8.
+//  Created by crown on 2025/1/8
 //
 
 import AppKit

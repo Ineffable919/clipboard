@@ -2,7 +2,7 @@
 //  StorageSettingView.swift
 //  Clipboard
 //
-//  Created by crown on 2026/1/9.
+//  Created by crown on 2026/1/9
 //
 
 import SwiftUI

@@ -2,7 +2,7 @@
 //  MarkdownHTMLRenderer+Stylesheet.swift
 //  Clipboard
 //
-//  Markdown 预览样式。
+//  Markdown 预览样式
 //
 
 import Foundation

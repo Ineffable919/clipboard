@@ -2,7 +2,7 @@
 //  MarkdownSafeHTMLFormatter.swift
 //  Clipboard
 //
-//  转义 Markdown 生成的文本和属性；原始 HTML 交由 DOMPurify 清理。
+//  转义 Markdown 生成的文本和属性；原始 HTML 交由 DOMPurify 清理
 //
 
 import Foundation
@@ -208,7 +208,7 @@ nonisolated struct MarkdownSafeHTMLFormatter: MarkupVisitor {
 }
 
 nonisolated extension MarkdownSafeHTMLFormatter {
-    // SVG paths and the single-pass alert parser are clearer kept together.
+    // SVG paths and the single-pass alert parser are clearer kept together
     private mutating func renderAlert(_ blockQuote: BlockQuote) -> String? {
         let blocks = Array(blockQuote.children)
         guard let firstParagraph = blocks.first as? Paragraph else { return nil }

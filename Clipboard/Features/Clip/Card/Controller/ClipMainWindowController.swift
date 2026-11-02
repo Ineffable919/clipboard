@@ -2,7 +2,7 @@
 //  ClipMainWindowController.swift
 //  clip
 //
-//  Created by crown on 2025/7/23.
+//  Created by crown on 2025/7/23
 //
 
 import AppKit
@@ -144,7 +144,7 @@ extension ClipMainWindowController {
             }
         }
 
-        // 仅动画呈现位置，避免文字因实际坐标移出窗口而被裁剪。
+        // 仅动画呈现位置，避免文字因实际坐标移出窗口而被裁剪
         let animation = CABasicAnimation(keyPath: "transform.translation.y")
         animation.fromValue = startY
         animation.toValue = visible ? 0 : -view.bounds.height

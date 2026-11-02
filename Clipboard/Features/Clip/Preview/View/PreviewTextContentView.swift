@@ -2,7 +2,7 @@
 //  PreviewTextContentView.swift
 //  Clipboard
 //
-//  纯文本及富文本预览。
+//  纯文本及富文本预览
 //
 
 import AppKit

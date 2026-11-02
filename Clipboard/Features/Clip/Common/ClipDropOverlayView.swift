@@ -2,7 +2,7 @@
 //  ClipDropOverlayView.swift
 //  Clipboard
 //
-//  Created by Crown on 2026/6/1.
+//  Created by Crown on 2026/6/1
 //
 
 import AppKit

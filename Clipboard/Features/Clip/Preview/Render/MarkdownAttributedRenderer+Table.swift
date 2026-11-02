@@ -2,7 +2,7 @@
 //  MarkdownAttributedRenderer+Table.swift
 //  Clipboard
 //
-//  Markdown 富文本表格渲染。
+//  Markdown 富文本表格渲染
 //
 
 import AppKit

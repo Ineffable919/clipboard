@@ -147,7 +147,7 @@ extension TokenTextView {
         var extendedEnd = range.location + range.length
         let followsToken = range.location > 0
             && storage.attribute(.attachment, at: range.location - 1, effectiveRange: nil) is TokenAttachment
-        // 前面的分隔空格已被删除时，保留后面的空格供剩余标签使用。
+        // 前面的分隔空格已被删除时，保留后面的空格供剩余标签使用
         if extendedEnd < storageLength, !followsToken {
             let nextCharacter = (storage.string as NSString).character(at: extendedEnd)
             if nextCharacter == unichar((" " as UnicodeScalar).value) {

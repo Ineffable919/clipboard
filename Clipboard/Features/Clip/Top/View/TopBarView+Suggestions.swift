@@ -2,7 +2,7 @@
 //  TopBarView+Suggestions.swift
 //  Clipboard
 //
-//  Search suggestion construction and application metadata loading.
+//  Search suggestion construction and application metadata loading
 //
 
 import AppKit

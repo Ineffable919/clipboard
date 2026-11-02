@@ -2,7 +2,7 @@
 //  LegacyConfigMigrator.swift
 //  Clipboard
 //
-//  Created by crown on 2026/1/11.
+//  Created by crown on 2026/1/11
 //
 
 import AppKit

@@ -2,7 +2,7 @@
 //  KeyCode.swift
 //  Clipboard
 //
-//  Created by crown on 2025/11/25.
+//  Created by crown on 2025/11/25
 //
 
 import AppKit

@@ -2,7 +2,7 @@
 //  MarkdownHTMLRenderer.swift
 //  Clipboard
 //
-//  将 Markdown 渲染为等待 DOMPurify 清理的预览 HTML。
+//  将 Markdown 渲染为等待 DOMPurify 清理的预览 HTML
 //
 
 import Foundation

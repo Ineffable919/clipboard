@@ -2,7 +2,7 @@
 //  TimeManager.swift
 //  Clipboard
 //
-//  Created by crown on 2025/10/6.
+//  Created by crown on 2025/10/6
 //
 
 import Combine

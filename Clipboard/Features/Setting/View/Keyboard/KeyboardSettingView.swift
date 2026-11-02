@@ -2,7 +2,7 @@
 //  KeyboardSettingView.swift
 //  Clipboard
 //
-//  Created by crown on 2025/10/28.
+//  Created by crown on 2025/10/28
 //
 
 import SwiftUI

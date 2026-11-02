@@ -2,7 +2,7 @@
 //  StatusBarController.swift
 //  clipboard
 //
-//  Created by crown on 2026/2/27.
+//  Created by crown on 2026/2/27
 //
 
 import AppKit

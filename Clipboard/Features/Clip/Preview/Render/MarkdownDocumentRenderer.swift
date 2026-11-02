@@ -2,7 +2,7 @@
 //  MarkdownDocumentRenderer.swift
 //  Clipboard
 //
-//  组织 Frontmatter、脚注和正文的 Markdown 渲染流程。
+//  组织 Frontmatter、脚注和正文的 Markdown 渲染流程
 //
 
 import Foundation

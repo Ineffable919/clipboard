@@ -2,7 +2,7 @@
 //  NScolor+Extension.swift
 //  clipboard
 //
-//  Created by crown on 2025/9/12.
+//  Created by crown on 2025/9/12
 //
 
 import AppKit

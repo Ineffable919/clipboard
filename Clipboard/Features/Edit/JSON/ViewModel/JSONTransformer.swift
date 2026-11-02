@@ -2,7 +2,7 @@
 //  JSONTransformer.swift
 //  Clipboard
 //
-//  JSON 全文转换。所有入口均为纯计算，可安全放到后台任务执行。
+//  JSON 全文转换。所有入口均为纯计算，可安全放到后台任务执行
 //
 
 import Foundation

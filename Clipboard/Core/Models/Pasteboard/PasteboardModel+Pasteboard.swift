@@ -2,7 +2,7 @@
 //  PasteboardModel+Pasteboard.swift
 //  Clipboard
 //
-//  Created by crown on 2026/3/11.
+//  Created by crown on 2026/3/11
 //
 
 import AppKit

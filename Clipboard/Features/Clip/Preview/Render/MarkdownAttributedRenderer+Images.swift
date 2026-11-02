@@ -2,7 +2,7 @@
 //  MarkdownAttributedRenderer+Images.swift
 //  Clipboard
 //
-//  Markdown 富文本图片加载。
+//  Markdown 富文本图片加载
 //
 
 import AppKit

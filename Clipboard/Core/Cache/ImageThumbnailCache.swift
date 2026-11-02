@@ -2,7 +2,7 @@
 //  ImageThumbnailCache.swift
 //  Clipboard
 //
-//  Created by crown on 2026/10/22.
+//  Created by crown on 2026/10/22
 //
 
 import Foundation

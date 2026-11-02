@@ -2,7 +2,7 @@
 //  String+Extension.swift
 //  Clipboard
 //
-//  Created by crown on 2025/10/5.
+//  Created by crown on 2025/10/5
 //
 
 import Foundation

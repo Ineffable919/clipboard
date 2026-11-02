@@ -2,7 +2,7 @@
 //  PreviewFileView.swift
 //  Clipboard
 //
-//  单文件或多文件预览入口。
+//  单文件或多文件预览入口
 //
 
 import AppKit

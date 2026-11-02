@@ -2,7 +2,7 @@
 //  ChipScrollView.swift
 //  Clipboard
 //
-//  Created by crown on 2026/4/9.
+//  Created by crown on 2026/4/9
 //
 
 import AppKit
@@ -286,7 +286,7 @@ private extension ChipScrollView {
             button.removeFromSuperview()
             return
         }
-        // Keep the outgoing view outside the stack's layout until its fade completes.
+        // Keep the outgoing view outside the stack's layout until its fade completes
         NSAnimationContext.runAnimationGroup { context in
             context.duration = 0.18
             button.animator().alphaValue = 0

@@ -23,7 +23,7 @@ final class VerticallyCenteredTextFieldCell: NSTextFieldCell {
                 super.attributedStringValue = newValue
                 return
             }
-            // 仅转换单行预览，保留原始内容及其文字样式。
+            // 仅转换单行预览，保留原始内容及其文字样式
             let preview = NSMutableAttributedString(attributedString: newValue)
             for (range, style) in paragraphUpdates {
                 preview.addAttribute(.paragraphStyle, value: style, range: range)

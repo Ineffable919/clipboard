@@ -12,8 +12,8 @@ extension NSAlert {
         return alert
     }
 
-    /// Shows a warning-style confirm/cancel alert and returns true if the user confirmed.
-    /// Suppresses window resign-key events while the alert is running.
+    /// Shows a warning-style confirm/cancel alert and returns true if the user confirmed
+    /// Suppresses window resign-key events while the alert is running
     static func runConfirm(title: String, message: String) -> Bool {
         AppEnvironment.shared.suppressResignKey = true
         defer { AppEnvironment.shared.suppressResignKey = false }

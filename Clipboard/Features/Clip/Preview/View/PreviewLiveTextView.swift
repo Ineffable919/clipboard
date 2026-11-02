@@ -2,7 +2,7 @@
 //  PreviewLiveTextView.swift
 //  Clipboard
 //
-//  图片实况文本分析与交互覆盖层。
+//  图片实况文本分析与交互覆盖层
 //
 
 import AppKit

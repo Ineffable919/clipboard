@@ -278,7 +278,7 @@ extension PasteSQLManager {
                 }
 
                 if existingColumns.contains("app_id") {
-                    // 读取应用表也验证新备份字段完整性；具体引用在导入事务内校验。
+                    // 读取应用表也验证新备份字段完整性；具体引用在导入事务内校验
                     _ = try sourceDb.prepare("SELECT id, bundle_id, app_name, app_path, icon_data FROM App LIMIT 0")
                 } else if !existingColumns.isSuperset(of: ["app_name", "app_path"]) {
                     return ImportExportResult(success: false,

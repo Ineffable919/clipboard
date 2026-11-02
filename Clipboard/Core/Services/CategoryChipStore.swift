@@ -2,7 +2,7 @@
 //  CategoryChipStore.swift
 //  Clipboard
 //
-//  Created by crown on 2026/1/16.
+//  Created by crown on 2026/1/16
 //
 
 import Combine

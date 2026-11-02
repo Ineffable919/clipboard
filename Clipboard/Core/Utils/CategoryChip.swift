@@ -2,7 +2,7 @@
 //  CategoryChip.swift
 //  Clipboard
 //
-//  Created by crown on 2025/9/21.
+//  Created by crown on 2025/9/21
 //
 
 import SwiftUI

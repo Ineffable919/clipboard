@@ -2,7 +2,7 @@
 //  PasteDataStore.swift
 //  Clipboard
 //
-//  Created by crown on 2025/9/15.
+//  Created by crown on 2025/9/15
 //
 
 import AppKit
@@ -167,7 +167,7 @@ extension PasteDataStore {
         }
     }
 
-    /// 数据库提交成功后再发布顺序，失败时维持当前列表。
+    /// 数据库提交成功后再发布顺序，失败时维持当前列表
     func reorderItems(_ ids: [Int64], before: Int64?, after: Int64?) async -> Bool {
         guard !isReordering else { return false }
         isReordering = true
@@ -183,7 +183,7 @@ extension PasteDataStore {
         if revision == listRevision {
             applyOrder(order)
         } else {
-            // await 期间有新内容或切换筛选时，按最新数据库顺序同步，保留当前列表成员。
+            // await 期间有新内容或切换筛选时，按最新数据库顺序同步，保留当前列表成员
             await refreshOrder()
         }
         return true

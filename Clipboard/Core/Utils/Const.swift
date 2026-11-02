@@ -2,7 +2,7 @@
 //  Const.swift
 //  Clipboard
 //
-//  Created by crown on 2025/9/27.
+//  Created by crown on 2025/9/27
 //
 
 import SwiftUI

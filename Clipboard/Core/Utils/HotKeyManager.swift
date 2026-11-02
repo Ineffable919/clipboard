@@ -2,7 +2,7 @@
 //  HotKeyManager.swift
 //  Clipboard
 //
-//  Created by crown on 2025/11/24.
+//  Created by crown on 2025/11/24
 //
 
 import AppKit
@@ -16,7 +16,7 @@ import SwiftUI
 class HotKeyManager {
     static let shared = HotKeyManager()
 
-    /// 'CLIP' four-char code；Carbon EventHotKeyID.signature 标识本 app。
+    /// 'CLIP' four-char code；Carbon EventHotKeyID.signature 标识本 app
     static let hotKeySignature: OSType = 0x434C_4950
 
     struct Registration {
@@ -32,7 +32,7 @@ class HotKeyManager {
     var handlers: [String: () -> Void] = [:]
 
     /// 边沿过滤：macOS 14 上 Carbon 会按 key-repeat 速率派发多次 Pressed，
-    /// 只在"从未按下 → 按下"的瞬间触发 handler，直到 Released 才解除。
+    /// 只在"从未按下 → 按下"的瞬间触发 handler，直到 Released 才解除
     var pressedKeys: Set<String> = []
 
     var isInitialized = false

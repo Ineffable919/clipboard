@@ -2,7 +2,7 @@
 //  PasteboardModel+RuntimeCache.swift
 //  Clipboard
 //
-//  Non-persistent caches derived from immutable pasteboard payloads.
+//  Non-persistent caches derived from immutable pasteboard payloads
 //
 
 import AppKit

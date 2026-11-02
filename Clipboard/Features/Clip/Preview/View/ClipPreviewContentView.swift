@@ -2,7 +2,7 @@
 //  ClipPreviewContentView.swift
 //  Clipboard
 //
-//  根据剪贴板内容类型切换对应预览视图。
+//  根据剪贴板内容类型切换对应预览视图
 //
 
 import AppKit

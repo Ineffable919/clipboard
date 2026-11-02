@@ -2,7 +2,7 @@
 //  ShortcutRecorderView.swift
 //  Clipboard
 //
-//  Created by crown on 2025/11/23.
+//  Created by crown on 2025/11/23
 //
 
 import SwiftUI

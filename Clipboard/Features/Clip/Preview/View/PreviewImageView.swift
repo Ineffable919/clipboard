@@ -2,7 +2,7 @@
 //  PreviewImageView.swift
 //  Clipboard
 //
-//  图片及实况文本预览。
+//  图片及实况文本预览
 //
 
 import AppKit

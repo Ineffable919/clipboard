@@ -2,7 +2,7 @@
 //  HUDManager.swift
 //  Clipboard
 //
-//  Created by crown on 2026/4/27.
+//  Created by crown on 2026/4/27
 //
 
 import AppKit
@@ -139,7 +139,7 @@ private extension HUDManager {
 
 @MainActor
 private final class HUDWindow: NSPanel {
-    // HUD-only private API: keep the glass active without making the panel key.
+    // HUD-only private API: keep the glass active without making the panel key
     @objc(_hasActiveAppearanceIgnoringKeyFocus)
     dynamic func hasActiveAppearanceIgnoringKeyFocus() -> Bool {
         true
@@ -180,7 +180,7 @@ private final class HUDWindow: NSPanel {
         isMovable = false
 
         if #available(macOS 26.0, *) {
-            // SwiftUI's glass provides its own shadow inside the transparent window.
+            // SwiftUI's glass provides its own shadow inside the transparent window
             hasShadow = false
             return
         }

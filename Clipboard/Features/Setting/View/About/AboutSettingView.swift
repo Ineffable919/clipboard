@@ -2,7 +2,7 @@
 //  AboutSettingView.swift
 //  Clipboard
 //
-//  Created by crown on 2025/11/11.
+//  Created by crown on 2025/11/11
 //
 
 import Sparkle

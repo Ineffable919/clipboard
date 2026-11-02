@@ -68,7 +68,7 @@ extension PasteboardModel {
             guard !colors.contains(foreground),
                   source.rangeOfCharacter(from: visibleCharacters, options: [], range: range).location != NSNotFound
             else { return }
-            // 保留动态颜色，使用时再按视图主题解析；相同颜色只参与一次对比度计算。
+            // 保留动态颜色，使用时再按视图主题解析；相同颜色只参与一次对比度计算
             colors.insert(foreground)
         }
         return Array(colors)

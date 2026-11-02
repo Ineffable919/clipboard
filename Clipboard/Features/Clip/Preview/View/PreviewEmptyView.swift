@@ -2,7 +2,7 @@
 //  PreviewEmptyView.swift
 //  Clipboard
 //
-//  无可用内容时的预览占位。
+//  无可用内容时的预览占位
 //
 
 import AppKit

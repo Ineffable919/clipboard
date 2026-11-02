@@ -2,7 +2,7 @@
 //  PreviewQuickLookView.swift
 //  Clipboard
 //
-//  Quick Look 文件预览。
+//  Quick Look 文件预览
 //
 
 import AppKit

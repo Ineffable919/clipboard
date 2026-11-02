@@ -2,7 +2,7 @@
 //  SettingView.swift
 //  Clipboard
 //
-//  Created on 2025/10/26.
+//  Created on 2025/10/26
 //
 
 import SwiftUI

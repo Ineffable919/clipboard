@@ -2,12 +2,12 @@
 //  MarkdownFootnotes.swift
 //  Clipboard
 //
-//  提取并渲染 Markdown 脚注。
+//  提取并渲染 Markdown 脚注
 //
 
 import Foundation
 
-// The extraction and token-restoration helpers form one parsing boundary.
+// The extraction and token-restoration helpers form one parsing boundary
 nonisolated enum MarkdownFootnotes {
     struct Extraction {
         let markdown: String

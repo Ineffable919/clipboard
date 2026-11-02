@@ -2,7 +2,7 @@
 //  Logger.swift
 //  clipboard
 //
-//  Created by crown on 2025/6/14.
+//  Created by crown on 2025/6/14
 //
 
 import Foundation
@@ -37,8 +37,8 @@ enum LogLevel: String, CaseIterable, Comparable {
     }
 }
 
-/// Thread-safe logger. Public methods are nonisolated so callers need no `await`.
-/// File I/O is serialised inside the actor.
+/// Thread-safe logger. Public methods are nonisolated so callers need no `await`
+/// File I/O is serialised inside the actor
 final class AppLogger: Sendable {
     nonisolated static let shared = AppLogger()
 

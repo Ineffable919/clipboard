@@ -2,7 +2,7 @@
 //  AppearanceSettingsView.swift
 //  Clipboard
 //
-//  Created by crown on 2025/12/05.
+//  Created by crown on 2025/12/05
 //
 
 import AppKit

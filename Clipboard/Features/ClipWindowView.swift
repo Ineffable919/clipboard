@@ -2,7 +2,7 @@
 //  ClipWindowView.swift
 //  clipboard
 //
-//  Created by crown on 2025/9/11.
+//  Created by crown on 2025/9/11
 //
 
 import Cocoa

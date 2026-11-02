@@ -2,7 +2,7 @@
 //  NSImage+Extension.swift
 //  Clip
 //
-//  Created by crown on 2025/8/14.
+//  Created by crown on 2025/8/14
 //
 
 import AppKit

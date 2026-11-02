@@ -2,7 +2,7 @@
 //  UpdateManager.swift
 //  Clipboard
 //
-//  Created by crown on 2025/12/30.
+//  Created by crown on 2025/12/30
 //
 
 import Foundation

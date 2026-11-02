@@ -2,7 +2,7 @@
 //  OCRViewService.swift
 //  Clipboard
 //
-//  Created by crown on 2026/01/01.
+//  Created by crown on 2026/01/01
 //
 
 import Foundation

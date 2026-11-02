@@ -10,7 +10,7 @@ struct MCPHandler {
             let request = JSONRPCRequest(json: json)
         else { return nil }
 
-        // Notifications carry no id and require no response.
+        // Notifications carry no id and require no response
         guard let id = request.id else { return nil }
 
         switch request.method {

@@ -2,7 +2,7 @@
 //  View+Extension.swift
 //  Clipboard
 //
-//  Created by crown on 2025/12/06.
+//  Created by crown on 2025/12/06
 //
 
 import Combine

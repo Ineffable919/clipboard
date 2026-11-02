@@ -2,7 +2,7 @@
 //  LaunchAtLoginHelper.swift
 //  Clipboard
 //
-//  Created on crown 2025/10/28.
+//  Created on crown 2025/10/28
 //
 
 import Foundation

@@ -2,7 +2,7 @@
 //  MarkdownHTMLDirection.swift
 //  Clipboard
 //
-//  为从右向左书写的 Markdown 段落补充方向属性。
+//  为从右向左书写的 Markdown 段落补充方向属性
 //
 
 import Foundation

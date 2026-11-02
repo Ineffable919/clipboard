@@ -1,7 +1,7 @@
 import Foundation
 import SQLite
 
-/// 显示顺序独立于时间戳；只读取 ID 和序号，不加载剪贴板内容。
+/// 显示顺序独立于时间戳；只读取 ID 和序号，不加载剪贴板内容
 enum PasteOrder {
     nonisolated static func setup(on database: Connection) throws {
         try database.transaction(.immediate) {
@@ -37,7 +37,7 @@ enum PasteOrder {
         }
     }
 
-    /// before 优先；结果末尾使用 after，避免误移到尚未加载的历史记录之后。
+    /// before 优先；结果末尾使用 after，避免误移到尚未加载的历史记录之后
     nonisolated static func move(
         _ ids: [Int64],
         before: Int64?,
@@ -65,7 +65,7 @@ enum PasteOrder {
             }
             reordered.insert(contentsOf: ids, at: destination)
 
-            // 将原有序号分配给新顺序；区间外的记录不产生 UPDATE。
+            // 将原有序号分配给新顺序；区间外的记录不产生 UPDATE
             for index in reordered.indices where reordered[index] != previous[index] {
                 try database.run(table.filter(Col.id == reordered[index]).update(
                     Col.sortOrder <- rows[index][Col.sortOrder]

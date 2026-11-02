@@ -2,7 +2,7 @@
 //  TopBarView+FilterPopover.swift
 //  Clipboard
 //
-//  Filter Popover coordination and search-token synchronization.
+//  Filter Popover coordination and search-token synchronization
 //
 
 import AppKit
@@ -124,7 +124,7 @@ extension TopBarView {
             if topVM?.hasInput == false {
                 deactivateSearch()
             }
-            // 由点击目标接管焦点，不排队恢复尚未更新的旧选区。
+            // 由点击目标接管焦点，不排队恢复尚未更新的旧选区
             closeTarget = nil
             return
         }

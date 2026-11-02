@@ -2,7 +2,7 @@
 //  ClipMainViewController.swift
 //  Clipboard
 //
-//  Created by crown on 2025/9/13.
+//  Created by crown on 2025/9/13
 //
 
 import AppKit

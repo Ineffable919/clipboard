@@ -10,7 +10,7 @@ extension HotKeyManager {
             nil, CFRunLoopActivity.beforeSources.rawValue, true, 0
         ) { _, _ in
             MainActor.assumeIsolated {
-                // Leave the hotkey queued for its existing handler after menu tracking ends.
+                // Leave the hotkey queued for its existing handler after menu tracking ends
                 guard let event = NSApp.nextEvent(
                     matching: .any, until: nil,
                     inMode: .eventTracking, dequeue: false

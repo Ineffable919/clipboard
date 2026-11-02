@@ -1,6 +1,6 @@
 import Foundation
 
-/// 分类映射只计算一次，记录导入时按旧 ID 直接查找。
+/// 分类映射只计算一次，记录导入时按旧 ID 直接查找
 nonisolated struct ImportedCategories {
     let groupIDs: [Int: Int]
     let chips: [CategoryChip]

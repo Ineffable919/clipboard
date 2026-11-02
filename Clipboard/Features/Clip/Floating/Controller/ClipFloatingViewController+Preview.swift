@@ -2,7 +2,7 @@
 //  ClipFloatingViewController+Preview.swift
 //  Clipboard
 //
-//  Created by crown on 2026/5/5.
+//  Created by crown on 2026/5/5
 //
 
 import AppKit

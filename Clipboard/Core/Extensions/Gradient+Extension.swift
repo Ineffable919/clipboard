@@ -2,7 +2,7 @@
 //  Gradient+Extension.swift
 //  clipboard
 //
-//  Created by crown on 2026/1/8.
+//  Created by crown on 2026/1/8
 //
 
 import SwiftUI

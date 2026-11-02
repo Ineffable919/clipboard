@@ -2,7 +2,7 @@
 //  InputTag.swift
 //  Clipboard
 //
-//  Created by crown on 2025/12/17.
+//  Created by crown on 2025/12/17
 //
 
 import AppKit
