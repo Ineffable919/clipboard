@@ -56,6 +56,8 @@ final class TopBarView: NSView {
     private var searchFieldWidth = Const.searchFieldMinWidth
     private var searchFieldWidthConstraint: Constraint?
     var modeAnimationGeneration = 0
+    var modeShowsSearch = false
+    var modeRingLink: CADisplayLink?
     var modeChipLayers: [ModeChipLayer] = []
     var modeClips: [ModeClip] = []
     var modeHiddenViews: [NSView] = []
@@ -293,7 +295,6 @@ final class TopBarView: NSView {
         guard !isSearching else { return }
         updateSearchFieldWidth()
         isSearching = true
-        searchField.useSystemFocusRing()
         applyMode(animated: true)
         prepareFilterPopover()
         if !searchField.isFirstResponder {
@@ -313,7 +314,6 @@ final class TopBarView: NSView {
     func deactivateSearch(beforeTransition: () -> Void = {}) {
         guard isSearching else { return beforeTransition() }
         isSearching = false
-        searchField.setModeFocusRingSuppressed(true)
         if searchField.isFirstResponder { window?.makeFirstResponder(nil) }
         searchField.hideSuggestions()
         searchField.clearAllContent()

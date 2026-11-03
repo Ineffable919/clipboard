@@ -48,6 +48,7 @@ final class FilterPopoverContentView: NSView {
 
     private func setup() {
         wantsLayer = true
+        focusRingType = .none
 
         contentView.translatesAutoresizingMaskIntoConstraints = false
         contentView.wantsLayer = true

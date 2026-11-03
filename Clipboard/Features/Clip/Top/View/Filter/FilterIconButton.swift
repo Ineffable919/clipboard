@@ -55,9 +55,11 @@ final class FilterIconButton: NSButton {
         updateAppearance()
     }
 
-    override func mouseDown(with event: NSEvent) {
+    // 鼠标按下即触发，不走按钮的跟踪流程；辅助功能的按下仍经 performClick 发送 action
+    override func mouseDown(with _: NSEvent) {
+        guard isEnabled else { return }
         animateClick()
-        super.mouseDown(with: event)
+        onTap?()
     }
 
     private func animateClick() {

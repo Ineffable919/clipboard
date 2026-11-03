@@ -52,13 +52,9 @@ extension TopBarView {
         let controller = filterController ?? FilterPopoverViewController(viewModel: topVM)
         filterController = controller
         let popover = FilterPopover(viewController: controller)
-        popover.onWillShow = { [weak self] in
-            self?.searchField.setPopoverFocusRingSuppressed(true)
-        }
         popover.onWillClose = { [weak self, weak popover] in
             guard let self, let popover, filterPopover === popover else { return }
             filterPopover = nil
-            defer { searchField.setPopoverFocusRingSuppressed(false) }
             stopPopoverMonitor()
             handlePopoverWillClose()
         }

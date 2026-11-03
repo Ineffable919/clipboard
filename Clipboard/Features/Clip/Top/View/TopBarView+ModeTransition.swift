@@ -22,16 +22,36 @@ extension TopBarView {
 
     func applyMode(animated: Bool = false) {
         modeAnimationGeneration += 1
-        searchField.setModeFocusRingSuppressed(true)
+        let wasSearching = modeShowsSearch
+        modeShowsSearch = isSearching
         guard animated, window?.isVisible == true,
               !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else {
             finishModeTransition()
             return
         }
-        animateModeTransition()
+        animateModeTransition(wasHidden: !wasSearching)
+    }
+
+    /// 展开期间每帧刷新焦点环遮罩，让系统焦点环跟随搜索框的呈现宽度
+    private func startModeRingTracking() {
+        stopModeRingTracking()
+        let link = displayLink(target: self, selector: #selector(modeRingTick))
+        link.add(to: .main, forMode: .common)
+        modeRingLink = link
+    }
+
+    private func stopModeRingTracking() {
+        modeRingLink?.invalidate()
+        modeRingLink = nil
+    }
+
+    @objc private func modeRingTick() {
+        searchField.refreshFocusRingMask()
     }
 
     private func finishModeTransition() {
+        stopModeRingTracking()
+        searchField.refreshFocusRingMask()
         defaultRow.isHidden = isSearching
         searchRow.isHidden = !isSearching
         chipScrollView.alphaValue = 1
@@ -53,22 +73,18 @@ extension TopBarView {
         modeClips = []
         for view in modeHiddenViews { view.isHidden = false }
         modeHiddenViews = []
-        searchField.layer?.masksToBounds = false
         for view in [searchField, searchIconBtn, searchField.modeIconView] + searchField.modeTrailingViews {
             for key in ["modeOpacity", "modeOffset", "modeWidth", "modePosition", "modeIconOpacity"] {
                 view.layer?.removeAnimation(forKey: key)
             }
         }
-        // 展开结束并解除裁剪后再显示完整焦点环
-        searchField.setModeFocusRingSuppressed(!isSearching)
     }
 
-    private func animateModeTransition() {
-        let wasHidden = searchRow.isHidden
+    private func animateModeTransition(wasHidden: Bool) {
         defaultRow.isHidden = false
         searchRow.isHidden = false
         layoutSubtreeIfNeeded()
-        guard let fieldLayer = searchField.layer else {
+        guard searchField.layer != nil else {
             finishModeTransition()
             return
         }
@@ -79,16 +95,17 @@ extension TopBarView {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         CATransaction.setCompletionBlock { [weak self] in
-            Task { @MainActor [weak self] in
-                guard let self, modeAnimationGeneration == generation else { return }
+            guard let self else { return }
+            MainActor.assumeIsolated {
+                guard modeAnimationGeneration == generation else { return }
                 finishModeTransition()
             }
         }
+        if isSearching { startModeRingTracking() } else { stopModeRingTracking() }
         if modeChipLayers.isEmpty { prepareModeChips() }
         animateModeField(buttonFrame: buttonFrame, fieldFrame: fieldFrame, wasHidden: wasHidden)
         animateModeIcon(buttonFrame: buttonFrame, wasHidden: wasHidden)
         for item in modeChipLayers { animateModeChip(item, wasHidden: wasHidden) }
-        fieldLayer.masksToBounds = true
         CATransaction.commit()
     }
 
