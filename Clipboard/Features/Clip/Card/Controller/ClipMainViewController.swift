@@ -33,6 +33,7 @@ final class ClipMainViewController: NSViewController {
     // MARK: - Preview
 
     var previewPopover: ClipPreviewPopover?
+    let previewPool = ClipPreviewPopoverPool()
 
     // MARK: - Quick Paste
 

@@ -15,19 +15,14 @@ final class ClipPreviewPopover: NSPopover {
     var onPinToChip: ((PasteboardModel, Int) -> Void)?
     var onUnpin: ((PasteboardModel) -> Void)?
     var onCreateChip: ((PasteboardModel) -> Void)?
+    var onDidClose: (() -> Void)?
 
     private let previewVC = ClipPreviewController()
     private nonisolated(unsafe) var keyMonitor: Any?
-    private var closingWindow: NSWindow?
 
     // MARK: - Init
 
-    init(
-        model: PasteboardModel,
-        maxHeight: CGFloat = Const.maxPreviewHeight,
-        onContentInteraction: (() -> Void)? = nil
-    ) {
-        self.onContentInteraction = onContentInteraction
+    override init() {
         super.init()
         behavior = .transient
         animates = true
@@ -35,8 +30,14 @@ final class ClipPreviewPopover: NSPopover {
 
         _ = previewVC.view
 
-        configure(with: model, maxHeight: maxHeight)
         installKeyMonitor()
+        // delegate 由宿主控制器占用，关闭完成改用通知回收
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleDidClose),
+            name: NSPopover.didCloseNotification,
+            object: self
+        )
     }
 
     @available(*, unavailable)
@@ -48,11 +49,6 @@ final class ClipPreviewPopover: NSPopover {
         let monitor = keyMonitor
         if let monitor {
             NSEvent.removeMonitor(monitor)
-        }
-        if let closingWindow {
-            Task { @MainActor in
-                withExtendedLifetime(closingWindow) {}
-            }
         }
     }
 
@@ -84,7 +80,6 @@ final class ClipPreviewPopover: NSPopover {
     }
 
     func cleanup() {
-        closingWindow = previewVC.view.window
         previewVC.cleanup()
         previewVC.onContentInteraction = nil
         previewVC.onDismiss = nil
@@ -95,6 +90,10 @@ final class ClipPreviewPopover: NSPopover {
         onPinToChip = nil
         onUnpin = nil
         onCreateChip = nil
+    }
+
+    @objc private func handleDidClose(_: Notification) {
+        onDidClose?()
     }
 
     // MARK: - Size Calculation

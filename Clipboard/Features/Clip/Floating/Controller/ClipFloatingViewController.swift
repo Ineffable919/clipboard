@@ -18,6 +18,7 @@ final class ClipFloatingViewController: NSViewController {
     // MARK: - Preview
 
     var previewPopover: ClipPreviewPopover?
+    let previewPool = ClipPreviewPopoverPool()
 
     // MARK: - Focus
 
