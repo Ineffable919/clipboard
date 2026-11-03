@@ -80,7 +80,7 @@ final class ClipPreviewController: NSViewController {
         updateFooterHeight()
 
         let size = ClipPreviewPopover.fitSize(for: model, maxHeight: maxHeight)
-        view.frame = NSRect(origin: .zero, size: size)
+        view.setFrameSize(size)
         view.layoutSubtreeIfNeeded()
 
         metadataTask = Task { @MainActor [weak self] in
