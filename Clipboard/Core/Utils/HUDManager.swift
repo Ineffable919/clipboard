@@ -22,20 +22,36 @@ final class HUDManager {
     func show(
         icon: NSImage? = NSImage(systemSymbolName: "hammer.fill", accessibilityDescription: nil),
         text: String = String(localized: "hudCopySucceeded"),
+        textColor: Color = .secondary,
         duration: TimeInterval = 1.5
     ) {
-        presentHUD(icon: icon, text: text, duration: duration)
+        presentHUD(icon: icon, text: text, textColor: textColor, duration: duration)
     }
 
     func dismiss() {
         fadeOutAndClose()
     }
+
+    #if DEBUG
+    static func makeLegacyPreview(icon: NSImage?, text: String, textColor: Color = .secondary) -> NSView {
+        let view = HUDWindow.makeVisualEffectView()
+        view.snp.makeConstraints { make in
+            make.size.equalTo(view.frame.size)
+        }
+        updateLegacyPreview(view, icon: icon, text: text, textColor: textColor)
+        return view
+    }
+
+    static func updateLegacyPreview(_ view: NSView, icon: NSImage?, text: String, textColor: Color = .secondary) {
+        shared.buildContent(in: view, icon: icon, text: text, textColor: textColor)
+    }
+    #endif
 }
 
 // MARK: - Private
 
 private extension HUDManager {
-    func presentHUD(icon: NSImage?, text: String, duration: TimeInterval) {
+    func presentHUD(icon: NSImage?, text: String, textColor: Color, duration: TimeInterval) {
         let window: HUDWindow
         if let existing = hudWindow {
             window = existing
@@ -45,9 +61,9 @@ private extension HUDManager {
         }
 
         if #available(macOS 26.0, *) {
-            window.setGlassContent(icon: icon, text: text)
+            window.setGlassContent(icon: icon, text: text, textColor: textColor)
         } else if let targetView = window.contentTarget {
-            buildContent(in: targetView, icon: icon, text: text)
+            buildContent(in: targetView, icon: icon, text: text, textColor: textColor)
         }
 
         centerWindow(window)
@@ -89,7 +105,7 @@ private extension HUDManager {
         }
     }
 
-    func buildContent(in parent: NSView, icon: NSImage?, text: String) {
+    func buildContent(in parent: NSView, icon: NSImage?, text: String, textColor: Color) {
         parent.subviews.forEach { $0.removeFromSuperview() }
 
         if let icon {
@@ -111,7 +127,7 @@ private extension HUDManager {
 
         let label = NSTextField(wrappingLabelWithString: text)
         label.font = .preferredFont(forTextStyle: .title1)
-        label.textColor = .secondaryLabelColor
+        label.textColor = NSColor(textColor)
         label.alignment = .center
         label.lineBreakMode = .byWordWrapping
         label.maximumNumberOfLines = 0
@@ -187,7 +203,7 @@ private final class HUDWindow: NSPanel {
 
         let host = NSView(frame: NSRect(origin: .zero, size: frame.size))
         contentView = host
-        let background = makeVisualEffectView()
+        let background = Self.makeVisualEffectView()
         contentTarget = background
         host.addSubview(background)
         background.snp.makeConstraints { make in
@@ -198,8 +214,8 @@ private final class HUDWindow: NSPanel {
     // MARK: Background
 
     @available(macOS 26.0, *)
-    func setGlassContent(icon: NSImage?, text: String) {
-        let rootView = HUDContentView(icon: icon, text: text, size: Self.hudSize)
+    func setGlassContent(icon: NSImage?, text: String, textColor: Color) {
+        let rootView = HUDContentView(icon: icon, text: text, size: Self.hudSize, textColor: textColor)
         if let hosting = contentView as? NSHostingView<HUDContentView> {
             hosting.rootView = rootView
         } else {
@@ -209,7 +225,7 @@ private final class HUDWindow: NSPanel {
         }
     }
 
-    private func makeVisualEffectView() -> NSVisualEffectView {
+    fileprivate static func makeVisualEffectView() -> NSVisualEffectView {
         let effect = NSVisualEffectView(frame: NSRect(origin: .zero, size: Self.hudSize))
         effect.material = .hudWindow
         effect.blendingMode = .behindWindow
@@ -227,11 +243,11 @@ private final class HUDWindow: NSPanel {
 extension HUDManager {
     func showCopySucceeded() {
         let img = NSImage(systemSymbolName: "checkmark", accessibilityDescription: nil)
-        show(icon: img, text: String(localized: "hudCopySucceeded"))
+        show(icon: img, text: String(localized: "hudCopySucceeded"), textColor: .primary)
     }
 
     func showPasteSucceeded() {
         let img = NSImage(systemSymbolName: "checkmark", accessibilityDescription: nil)
-        show(icon: img, text: String(localized: "hudPasteSucceeded"))
+        show(icon: img, text: String(localized: "hudPasteSucceeded"), textColor: .primary)
     }
 }
