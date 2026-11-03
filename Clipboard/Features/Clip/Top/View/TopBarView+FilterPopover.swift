@@ -49,17 +49,25 @@ extension TopBarView {
 
     func prepareFilterPopover() {
         guard filterPopover == nil, let topVM else { return }
-        let controller = filterController ?? FilterPopoverViewController(viewModel: topVM)
-        filterController = controller
-        let popover = FilterPopover(viewController: controller)
+        // 旧弹窗仍在播放关闭动画时另取一个，保证连点时每次都能立即打开
+        let popover = idlePopovers.popLast() ?? makeFilterPopover(viewModel: topVM)
+        filterPopover = popover
+        popover.prepare()
+    }
+
+    private func makeFilterPopover(viewModel: TopBarViewModel) -> FilterPopover {
+        let popover = FilterPopover(viewController: FilterPopoverViewController(viewModel: viewModel))
         popover.onWillClose = { [weak self, weak popover] in
             guard let self, let popover, filterPopover === popover else { return }
             filterPopover = nil
             stopPopoverMonitor()
             handlePopoverWillClose()
         }
-        filterPopover = popover
-        popover.prepare()
+        popover.onDidClose = { [weak self, weak popover] in
+            guard let self, let popover, filterPopover !== popover else { return }
+            idlePopovers.append(popover)
+        }
+        return popover
     }
 
     func togglePopover() {

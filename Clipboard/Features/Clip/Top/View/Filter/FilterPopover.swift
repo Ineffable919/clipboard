@@ -11,8 +11,8 @@ final class FilterPopover: NSPopover {
     // MARK: - Properties
 
     var onWillClose: (() -> Void)?
+    var onDidClose: (() -> Void)?
     private(set) var isDisplayed = false
-    private var closingWindow: NSWindow?
 
     private let controller: FilterPopoverViewController
 
@@ -28,14 +28,6 @@ final class FilterPopover: NSPopover {
     @available(*, unavailable)
     required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
-    }
-
-    isolated deinit {
-        if let closingWindow {
-            Task { @MainActor in
-                withExtendedLifetime(closingWindow) {}
-            }
-        }
     }
 
     // MARK: - Public API
@@ -69,10 +61,12 @@ extension FilterPopover: NSPopoverDelegate {
 
     func popoverWillClose(_: Notification) {
         guard isDisplayed else { return }
-        closingWindow = controller.view.window
         animates = !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         isDisplayed = false
-        contentViewController = nil
         onWillClose?()
+    }
+
+    func popoverDidClose(_: Notification) {
+        onDidClose?()
     }
 }

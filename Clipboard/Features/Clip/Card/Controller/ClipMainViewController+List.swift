@@ -59,11 +59,11 @@ extension ClipMainViewController {
             self?.setFocusRegion(.search)
         }
 
-        let clickGesture = NSClickGestureRecognizer(
+        // 按下即离开搜索，与搜索框展开收起的响应保持同步
+        let clickGesture = PressDownGestureRecognizer(
             target: self,
             action: #selector(handleContentViewClick(_:))
         )
-        clickGesture.buttonMask = 0x1 // 左键点击
         clickGesture.delegate = self
         contentView.addGestureRecognizer(clickGesture)
     }
@@ -92,8 +92,10 @@ extension ClipMainViewController {
         }
     }
 
-    @objc func handleContentViewClick(_: NSClickGestureRecognizer) {
+    @objc func handleContentViewClick(_: NSGestureRecognizer) {
         setFocusRegion(.collection)
+        // 立即移交焦点，搜索框随按下同步收起
+        view.window?.makeFirstResponder(collectionView)
     }
 }
 

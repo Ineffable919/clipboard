@@ -39,17 +39,7 @@ final class HorizontalScrollView: AnimatedScrollView {
     override var focusRingMaskBounds: NSRect {
         guard let focusRingMaskView else { return super.focusRingMaskBounds }
         guard !isFocusRingSuppressed else { return .zero }
-        return maskRect(of: focusRingMaskView)
-    }
-
-    /// 遮罩视图正在做图层动画时，焦点环跟随呈现层的位置与宽度
-    private func maskRect(of view: NSView) -> NSRect {
-        var rect = view.convert(view.bounds, to: self)
-        guard let layer = view.layer, layer.animationKeys()?.isEmpty == false,
-              let live = layer.presentation() else { return rect }
-        rect.origin.x += live.frame.minX - layer.frame.minX
-        rect.size.width += live.bounds.width - layer.bounds.width
-        return rect
+        return focusRingMaskView.convert(focusRingMaskView.bounds, to: self)
     }
 
     override func drawFocusRingMask() {
@@ -60,7 +50,7 @@ final class HorizontalScrollView: AnimatedScrollView {
         guard !isFocusRingSuppressed else { return }
         let cornerRadius = focusRingMaskView.layer?.cornerRadius ?? 0
         NSBezierPath(
-            roundedRect: maskRect(of: focusRingMaskView),
+            roundedRect: focusRingMaskView.convert(focusRingMaskView.bounds, to: self),
             xRadius: cornerRadius,
             yRadius: cornerRadius
         ).fill()

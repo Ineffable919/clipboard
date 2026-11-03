@@ -35,7 +35,8 @@ final class TopBarView: NSView {
     // MARK: - Popover
 
     var filterPopover: FilterPopover?
-    var filterController: FilterPopoverViewController?
+    /// 已完全关闭、可直接复用的弹窗；内容视图常驻各自窗口，避免每次开关重建窗口与约束
+    var idlePopovers: [FilterPopover] = []
     enum CloseTarget {
         case search
         case clickedView
@@ -57,7 +58,6 @@ final class TopBarView: NSView {
     private var searchFieldWidthConstraint: Constraint?
     var modeAnimationGeneration = 0
     var modeShowsSearch = false
-    var modeRingLink: CADisplayLink?
     var modeChipLayers: [ModeChipLayer] = []
     var modeClips: [ModeClip] = []
     var modeHiddenViews: [NSView] = []

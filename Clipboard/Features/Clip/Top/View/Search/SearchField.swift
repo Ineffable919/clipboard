@@ -313,8 +313,4 @@ extension SearchField {
     func setFocusRingSuppressed(_ suppressed: Bool) {
         scrollView.isFocusRingSuppressed = suppressed
     }
-
-    func refreshFocusRingMask() {
-        scrollView.noteFocusRingMaskChanged()
-    }
 }

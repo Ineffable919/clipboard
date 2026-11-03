@@ -32,26 +32,7 @@ extension TopBarView {
         animateModeTransition(wasHidden: !wasSearching)
     }
 
-    /// 展开期间每帧刷新焦点环遮罩，让系统焦点环跟随搜索框的呈现宽度
-    private func startModeRingTracking() {
-        stopModeRingTracking()
-        let link = displayLink(target: self, selector: #selector(modeRingTick))
-        link.add(to: .main, forMode: .common)
-        modeRingLink = link
-    }
-
-    private func stopModeRingTracking() {
-        modeRingLink?.invalidate()
-        modeRingLink = nil
-    }
-
-    @objc private func modeRingTick() {
-        searchField.refreshFocusRingMask()
-    }
-
     private func finishModeTransition() {
-        stopModeRingTracking()
-        searchField.refreshFocusRingMask()
         defaultRow.isHidden = isSearching
         searchRow.isHidden = !isSearching
         chipScrollView.alphaValue = 1
@@ -101,7 +82,6 @@ extension TopBarView {
                 finishModeTransition()
             }
         }
-        if isSearching { startModeRingTracking() } else { stopModeRingTracking() }
         if modeChipLayers.isEmpty { prepareModeChips() }
         animateModeField(buttonFrame: buttonFrame, fieldFrame: fieldFrame, wasHidden: wasHidden)
         animateModeIcon(buttonFrame: buttonFrame, wasHidden: wasHidden)
