@@ -113,7 +113,7 @@ class FilterButton: NSView {
             label.textColor = .white
             iconImageView.contentTintColor = .white
         } else {
-            label.textColor = .secondaryLabelColor
+            label.textColor = .labelColor
             iconImageView.contentTintColor = .secondaryLabelColor
         }
 

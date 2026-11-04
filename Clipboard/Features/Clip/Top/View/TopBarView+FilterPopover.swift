@@ -83,6 +83,9 @@ extension TopBarView {
             of: searchField.filterButton
         )
         if filterPopover.isDisplayed {
+            // 低版本系统连点时旧弹窗收尾会把 key 还给主窗口，搜索框随之重绘焦点环与光标；
+            // 弹窗期间直接让出第一响应者，关闭时再按 closeTarget 恢复
+            window?.makeFirstResponder(nil)
             startPopoverMonitor()
             onFocusRegionChange?(.filter)
         }
