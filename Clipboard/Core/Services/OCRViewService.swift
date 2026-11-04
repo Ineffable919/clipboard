@@ -14,7 +14,7 @@ nonisolated struct OCRTextRegion: Sendable {
     let boundingBox: CGRect
 }
 
-/// macOS 27 使用 Live Text，旧版 Vision 同一时间只执行一次识别
+/// 全文 Vision OCR 在 actor 内执行，高亮请求独立并发
 actor OCRViewService {
     static let shared = OCRViewService()
 
@@ -34,7 +34,7 @@ actor OCRViewService {
         return regions.map(\.text).joined(separator: "\n")
     }
 
-    func recognizeHighlightRegions(
+    nonisolated func recognizeHighlightRegions(
         from data: Data, keyword: String,
         requestId: String = UUID().uuidString,
         submittedAt: ContinuousClock.Instant = .now
@@ -44,29 +44,47 @@ actor OCRViewService {
         return await recognize(data: data, keyword: trimmed, requestId: requestId, submittedAt: submittedAt)
     }
 
-    private func recognize(
+    private nonisolated(nonsending) func recognize(
         data: Data, keyword: String?, requestId: String, submittedAt: ContinuousClock.Instant
     ) async -> [OCRTextRegion]? {
-        let queued = submittedAt.duration(to: .now)
-        guard !Task.isCancelled else {
-            log.warn("OCR 排队期间取消：id=\(requestId)，等待=\(queued)")
+        let request = OCRRequest()
+        return await withTaskCancellationHandler {
+            if keyword != nil {
+                return await withCheckedContinuation { continuation in
+                    // Vision 的同步调用可能阻塞，使用独立线程避免占满 Swift 的任务线程池
+                    let worker = Thread {
+                        continuation.resume(returning: self.perform(
+                            request, data: data, keyword: keyword, requestId: requestId, submittedAt: submittedAt
+                        ))
+                    }
+                    worker.qualityOfService = .userInitiated
+                    worker.start()
+                }
+            }
+            return perform(request, data: data, keyword: nil, requestId: requestId, submittedAt: submittedAt)
+        } onCancel: {
+            request.cancel()
+        }
+    }
+
+    private nonisolated func perform(
+        _ request: OCRRequest, data: Data, keyword: String?, requestId: String, submittedAt: ContinuousClock.Instant
+    ) -> [OCRTextRegion]? {
+        let scheduled = submittedAt.duration(to: .now)
+        guard !request.isCancelled else {
+            log.info("OCR 开始前取消：id=\(requestId)，等待=\(scheduled)")
             return nil
         }
         let started = ContinuousClock.now
         let kind = keyword == nil ? "全文" : "高亮"
-        log.warn("OCR 开始：id=\(requestId)，类型=\(kind)，输入=\(data.count) bytes，排队=\(queued)")
-        let request = OCRRequest()
+        log.info("OCR 开始：id=\(requestId)，类型=\(kind)，输入=\(data.count) bytes，等待=\(scheduled)")
         do {
-            let regions = try await withTaskCancellationHandler {
-                try request.perform(data: data, keyword: keyword)
-            } onCancel: {
-                request.cancel()
-            }
-            log.warn("OCR 完成：id=\(requestId)，类型=\(kind)，耗时=\(started.duration(to: .now))，区域数=\(regions.count)")
+            let regions = try request.perform(data: data, keyword: keyword)
+            log.info("OCR 完成：id=\(requestId)，类型=\(kind)，耗时=\(started.duration(to: .now))，区域数=\(regions.count)")
             return regions
         } catch {
             let elapsed = started.duration(to: .now)
-            if Task.isCancelled || error is CancellationError {
+            if request.isCancelled || error is CancellationError {
                 log.warn("OCR 取消：id=\(requestId)，类型=\(kind)，耗时=\(elapsed)")
             } else {
                 let error = error as NSError

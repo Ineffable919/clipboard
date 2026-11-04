@@ -6,12 +6,18 @@
 //
 
 import Foundation
+import os
 import Vision
 
-/// 封装可取消的 Vision 文字识别请求，配置和结果只在 OCR actor 内访问
+/// 每次识别独立持有 Vision 请求
 /// 跨线程操作仅限 Vision 的取消接口
 nonisolated final class OCRRequest: @unchecked Sendable {
     private let request: VNRecognizeTextRequest
+    private let cancelled = OSAllocatedUnfairLock(initialState: false)
+
+    var isCancelled: Bool {
+        cancelled.withLock { $0 }
+    }
 
     init() {
         request = VNRecognizeTextRequest()
@@ -21,18 +27,20 @@ nonisolated final class OCRRequest: @unchecked Sendable {
     }
 
     func cancel() {
+        cancelled.withLock { $0 = true }
         request.cancel()
     }
 
     func perform(data: Data, keyword: String?) throws -> [OCRTextRegion] {
-        try Task.checkCancellation()
+        try checkCancellation()
         return try autoreleasepool {
             let handler = VNImageRequestHandler(data: data, options: [:])
+            try checkCancellation()
             try handler.perform([request])
-            try Task.checkCancellation()
+            try checkCancellation()
             var regions: [OCRTextRegion] = []
             for observation in request.results ?? [] {
-                try Task.checkCancellation()
+                try checkCancellation()
                 guard let candidate = observation.topCandidates(1).first else { continue }
                 let text = candidate.string
                 guard let keyword else {
@@ -45,7 +53,7 @@ nonisolated final class OCRRequest: @unchecked Sendable {
                       let range = text.range(
                           of: keyword, options: options, range: start..<text.endIndex, locale: .current
                       ) {
-                    try Task.checkCancellation()
+                    try checkCancellation()
                     if let box = try candidate.boundingBox(for: range)?.boundingBox {
                         regions.append(OCRTextRegion(text: String(text[range]), boundingBox: box))
                     }
@@ -54,5 +62,9 @@ nonisolated final class OCRRequest: @unchecked Sendable {
             }
             return regions
         }
+    }
+
+    private func checkCancellation() throws {
+        if isCancelled { throw CancellationError() }
     }
 }
