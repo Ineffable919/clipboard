@@ -95,7 +95,7 @@ final class CardImageView: NSView {
             while start < text.endIndex,
                   let range = text.range(
                       of: liveTextKeyword, options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive],
-                      range: start..<text.endIndex
+                      range: start..<text.endIndex, locale: .current
                   ) {
                 // 整段外框仅在首次命中时取一次
                 let full = fullRect ?? element.accessibilityFrame(for: NSRange(location: 0, length: text.utf16.count))
