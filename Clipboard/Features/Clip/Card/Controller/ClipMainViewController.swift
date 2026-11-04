@@ -212,16 +212,27 @@ extension ClipMainViewController {
 
     override func viewDidAppear() {
         super.viewDidAppear()
+        restoreFocus()
+        updateSelectedItemBorder()
+        installKeyMonitors()
+    }
 
+    /// 窗口显示时校正焦点
+    private func restoreFocus() {
         if topBarView.isSearching, !topVM.hasInput {
             topBarView.deactivateSearch()
+        }
+        if topBarView.isSearching {
+            guard focusRegion == .filter else { return }
+            setFocusRegion(.search)
+            view.window?.makeFirstResponder(topBarView.searchField.tokenTextView)
+        } else {
             setFocusRegion(.collection)
-        } else if focusRegion == .collection {
             view.window?.makeFirstResponder(collectionView)
         }
+    }
 
-        updateSelectedItemBorder()
-
+    private func installKeyMonitors() {
         if monitorToken == nil {
             monitorToken = NSEvent.addLocalMonitorForEvents(
                 matching: [.keyDown, .keyUp]
