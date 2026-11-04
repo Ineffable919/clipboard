@@ -2,13 +2,12 @@
 //  FilterDateSectionView.swift
 //  Clipboard
 //
-//  日期筛选区域：管理日期按钮的创建、布局和选中状态
+//  日期筛选区域：管理日期按钮的创建和选中状态
 //
 
 import AppKit
-import SnapKit
 
-final class FilterDateSectionView: NSStackView {
+final class FilterDateSectionView: FilterSectionView {
     // MARK: - Callbacks
 
     var onDateFilterChange: ((DateFilterOption?) -> Void)?
@@ -18,41 +17,16 @@ final class FilterDateSectionView: NSStackView {
     private var selectedDateFilter: DateFilterOption?
     private var dateButtons: [DateFilterOption: FilterButton] = [:]
 
-    // MARK: - Views
-
-    private let titleLabel = NSTextField()
-    private let gridContainer = NSView()
-
     // MARK: - Init
 
     init() {
-        super.init(frame: .zero)
-        setup()
-        rebuildGrid()
+        super.init(title: String(localized: .date))
+        buildButtons()
     }
 
     @available(*, unavailable)
     required init?(coder _: NSCoder) {
         fatalError()
-    }
-
-    // MARK: - Setup
-
-    private func setup() {
-        orientation = .vertical
-        alignment = .leading
-        spacing = Const.space8
-
-        titleLabel.stringValue = String(localized: .date)
-        titleLabel.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .semibold)
-        titleLabel.textColor = .secondaryLabelColor
-        titleLabel.isBordered = false
-        titleLabel.drawsBackground = false
-        titleLabel.isEditable = false
-        titleLabel.isSelectable = false
-
-        addArrangedSubview(titleLabel)
-        addArrangedSubview(gridContainer)
     }
 
     // MARK: - Public API
@@ -64,28 +38,19 @@ final class FilterDateSectionView: NSStackView {
         }
     }
 
-    // MARK: - Grid
+    // MARK: - Buttons
 
-    private func rebuildGrid() {
-        gridContainer.subviews.forEach { $0.removeFromSuperview() }
-        dateButtons.removeAll()
-
+    private func buildButtons() {
         var buttons: [FilterButton] = []
         for option in DateFilterOption.allCases {
             let button = FilterButton(icon: "calendar", title: option.displayName)
-            button.action = { [weak self] in
+            button.onTap = { [weak self] in
                 guard let self else { return }
-                if selectedDateFilter == option {
-                    onDateFilterChange?(nil)
-                } else {
-                    onDateFilterChange?(option)
-                }
+                onDateFilterChange?(selectedDateFilter == option ? nil : option)
             }
-            button.isSelected = selectedDateFilter == option
             dateButtons[option] = button
             buttons.append(button)
         }
-
-        FilterGridLayout.layoutThreeColumnGrid(buttons: buttons, in: gridContainer)
+        setButtons(buttons)
     }
 }

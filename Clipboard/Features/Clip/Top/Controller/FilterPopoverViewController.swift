@@ -99,6 +99,11 @@ extension FilterPopoverViewController {
             self?.updateContentViewState()
         }
 
+        contentView.typeSection.onTextToggle = { [weak self] in
+            self?.viewModel?.toggleTextType()
+            self?.updateContentViewState()
+        }
+
         // 应用筛选回调
         contentView.appSection.onAppToggle = { [weak self] id in
             self?.viewModel?.toggleApp(id)
@@ -133,39 +138,33 @@ extension FilterPopoverViewController {
 
     private func loadData() {
         loadingTask?.cancel()
+        loadingTask = nil
+        guard viewModel != nil else { return }
 
-        loadingTask = Task { @MainActor [weak self] in
-            guard let self, viewModel != nil else { return }
+        let rawAppInfo = SourceAppCache.shared.orderedApps
+        var missingIcons: [SourceApp] = []
+        let appInfo = rawAppInfo.map { info in
+            let icon = AppIconCache.shared.getCachedIcon(forAppID: info.id)
+            if icon == nil { missingIcons.append(info) }
+            return FilterAppInfo(
+                id: info.id,
+                name: info.name,
+                path: info.path,
+                icon: icon
+            )
+        }
 
-            let rawAppInfo = SourceAppCache.shared.orderedApps
-            guard !Task.isCancelled else { return }
+        contentView.appSection.setAvailableApps(appInfo)
 
-            let appInfo = rawAppInfo.map { info in
-                let icon = AppIconCache.shared.getCachedIcon(forAppID: info.id)
-                return FilterAppInfo(
-                    id: info.id,
-                    name: info.name,
-                    path: info.path,
-                    icon: icon
-                )
-            }
+        let userChips = CategoryChipStore.shared.chips.filter { !$0.isSystem }
+        contentView.tagSection.setAvailableGroups(userChips)
 
-            contentView.typeSection.setAvailableTypes([
-                .color, .file, .image, .link, .string
-            ])
-            contentView.appSection.setAvailableApps(appInfo)
+        updateContentViewState()
 
-            let userChips = CategoryChipStore.shared.chips.filter { !$0.isSystem }
-            contentView.tagSection.setAvailableGroups(userChips)
-
-            updateContentViewState()
-
-            let missingIcons = rawAppInfo.filter {
-                AppIconCache.shared.getCachedIcon(forAppID: $0.id) == nil
-            }
-            if !missingIcons.isEmpty {
-                await loadMissingIcons(for: missingIcons)
-            }
+        // 只有补全图标需要异步
+        guard !missingIcons.isEmpty else { return }
+        loadingTask = Task { [weak self] in
+            await self?.loadMissingIcons(for: missingIcons)
         }
     }
 

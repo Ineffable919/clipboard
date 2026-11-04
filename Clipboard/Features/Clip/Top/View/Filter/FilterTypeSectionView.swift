@@ -2,33 +2,27 @@
 //  FilterTypeSectionView.swift
 //  Clipboard
 //
-//  类型筛选区域：管理类型按钮的创建、布局和选中状态
+//  类型筛选区域：管理类型按钮的创建和选中状态
 //
 
 import AppKit
-import SnapKit
 
-final class FilterTypeSectionView: NSStackView {
+final class FilterTypeSectionView: FilterSectionView {
     // MARK: - Callbacks
 
     var onTypeToggle: ((PasteModelType) -> Void)?
+    /// 文本按钮同时代表 .string 和 .rich，由外部统一处理
+    var onTextToggle: (() -> Void)?
 
     // MARK: - State
 
-    private var selectedTypes: Set<PasteModelType> = []
-    private var availableTypes: [PasteModelType] = []
     private var typeButtons: [PasteModelType: FilterButton] = [:]
-
-    // MARK: - Views
-
-    private let titleLabel = NSTextField()
-    private let gridContainer = NSView()
 
     // MARK: - Init
 
     init() {
-        super.init(frame: .zero)
-        setup()
+        super.init(title: String(localized: .type))
+        buildButtons()
     }
 
     @available(*, unavailable)
@@ -36,88 +30,42 @@ final class FilterTypeSectionView: NSStackView {
         fatalError()
     }
 
-    // MARK: - Setup
-
-    private func setup() {
-        orientation = .vertical
-        alignment = .leading
-        spacing = Const.space8
-
-        titleLabel.stringValue = String(localized: .type)
-        titleLabel.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .semibold)
-        titleLabel.textColor = .secondaryLabelColor
-        titleLabel.isBordered = false
-        titleLabel.drawsBackground = false
-        titleLabel.isEditable = false
-        titleLabel.isSelectable = false
-
-        addArrangedSubview(titleLabel)
-        addArrangedSubview(gridContainer)
-    }
-
     // MARK: - Public API
 
-    func setAvailableTypes(_ types: [PasteModelType]) {
-        guard availableTypes != types else { return }
-        availableTypes = types
-        rebuildGrid()
-    }
-
     func updateSelection(_ types: Set<PasteModelType>) {
-        selectedTypes = types
         for (type, button) in typeButtons {
-            if type == .string {
-                button.isSelected = types.contains(.string) || types.contains(.rich)
-            } else {
-                button.isSelected = types.contains(type)
-            }
+            button.isSelected = type == .string
+                ? types.contains(.string) || types.contains(.rich)
+                : types.contains(type)
         }
     }
 
-    // MARK: - Grid
+    // MARK: - Buttons
 
-    private func rebuildGrid() {
-        gridContainer.subviews.forEach { $0.removeFromSuperview() }
-        typeButtons.removeAll()
-
-        guard !availableTypes.isEmpty else {
-            isHidden = true
-            return
-        }
-
-        isHidden = false
-
+    private func buildButtons() {
+        let types: [PasteModelType] = [.color, .file, .image, .link, .string]
         var buttons: [FilterButton] = []
-        for type in availableTypes {
+        for type in types {
             let button: FilterButton
             if type == .string {
-                // 文本按钮同时代表 .string 和 .rich，选中态任一存在即高亮
                 var iconText = "doc.text"
                 if #available(macOS 15.0, *) {
                     iconText = "text.document"
                 }
                 button = FilterButton(icon: iconText, title: String(localized: .text))
-                button.action = { [weak self] in
-                    self?.onTypeToggle?(.string)
-                    self?.onTypeToggle?(.rich)
+                button.onTap = { [weak self] in
+                    self?.onTextToggle?()
                 }
-                button.isSelected = selectedTypes.contains(.string) || selectedTypes.contains(.rich)
-            } else if type == .rich {
-                // .rich 由文本按钮统一控制，不单独渲染
-                continue
             } else {
                 let (icon, label) = type.iconAndLabel
                 button = FilterButton(icon: icon, title: label)
-                let capturedType = type
-                button.action = { [weak self] in
-                    self?.onTypeToggle?(capturedType)
+                button.onTap = { [weak self] in
+                    self?.onTypeToggle?(type)
                 }
-                button.isSelected = selectedTypes.contains(type)
             }
             typeButtons[type] = button
             buttons.append(button)
         }
-
-        FilterGridLayout.layoutThreeColumnGrid(buttons: buttons, in: gridContainer)
+        setButtons(buttons)
     }
 }

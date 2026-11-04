@@ -2,13 +2,12 @@
 //  FilterAppSectionView.swift
 //  Clipboard
 //
-//  应用筛选区域：管理应用按钮的创建、布局、展开/收起和选中状态
+//  应用筛选区域：管理应用按钮的创建、展开/收起和选中状态
 //
 
 import AppKit
-import SnapKit
 
-final class FilterAppSectionView: NSStackView {
+final class FilterAppSectionView: FilterSectionView {
     // MARK: - Callbacks
 
     var onAppToggle: ((Int64) -> Void)?
@@ -28,9 +27,6 @@ final class FilterAppSectionView: NSStackView {
 
     // MARK: - Views
 
-    private let titleLabel = NSTextField()
-    private let gridContainer = NSView()
-    private let gridView = PersistentFilterGridView()
     private let expandButton = FilterButton(
         icon: "chevron.down.circle",
         title: String(localized: .more)
@@ -43,45 +39,19 @@ final class FilterAppSectionView: NSStackView {
     // MARK: - Init
 
     init() {
-        super.init(frame: .zero)
-        setup()
+        super.init(title: String(localized: .app))
+        isHidden = true
+        expandButton.onTap = { [weak self] in
+            self?.toggleShowAllApps()
+        }
+        collapseButton.onTap = { [weak self] in
+            self?.toggleShowAllApps()
+        }
     }
 
     @available(*, unavailable)
     required init?(coder _: NSCoder) {
         fatalError()
-    }
-
-    // MARK: - Setup
-
-    private func setup() {
-        isHidden = true
-        orientation = .vertical
-        alignment = .leading
-        spacing = Const.space8
-
-        titleLabel.stringValue = String(localized: .app)
-        titleLabel.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .semibold)
-        titleLabel.textColor = .secondaryLabelColor
-        titleLabel.isBordered = false
-        titleLabel.drawsBackground = false
-        titleLabel.isEditable = false
-        titleLabel.isSelectable = false
-
-        addArrangedSubview(titleLabel)
-        addArrangedSubview(gridContainer)
-
-        gridContainer.addSubview(gridView)
-        gridView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-
-        expandButton.action = { [weak self] in
-            self?.toggleShowAllApps()
-        }
-        collapseButton.action = { [weak self] in
-            self?.toggleShowAllApps()
-        }
     }
 
     // MARK: - Public API
@@ -177,7 +147,7 @@ final class FilterAppSectionView: NSStackView {
             title: appInfo.name,
             path: appInfo.path
         )
-        button.action = { [weak self] in
+        button.onTap = { [weak self] in
             self?.onAppToggle?(appInfo.id)
         }
         button.isSelected = selectedApps.contains(appInfo.id)
@@ -185,40 +155,16 @@ final class FilterAppSectionView: NSStackView {
     }
 
     private func layoutGrid() {
-        guard !appButtons.isEmpty else {
-            isHidden = true
-            gridView.setItems(
-                [
-                    .init(button: expandButton, position: collapsedAppCount),
-                    .init(button: collapseButton, position: 0)
-                ],
-                visible: []
-            )
-            return
-        }
-
-        isHidden = false
-
         let shouldShowMore = appInfoList.count > uncollapsedAppLimit
         let displayed: [AppFilterButton] = shouldShowMore && !showAllApps
             ? Array(appButtons.prefix(collapsedAppCount))
             : appButtons
 
-        var visibleButtons: [FilterButton] = displayed
-        if shouldShowMore {
-            visibleButtons.append(showAllApps ? collapseButton : expandButton)
+        var visible: [FilterButton] = displayed
+        if shouldShowMore, !displayed.isEmpty {
+            visible.append(showAllApps ? collapseButton : expandButton)
         }
-
-        let items = appButtons.enumerated().map {
-            PersistentFilterGridView.Item(button: $0.element, position: $0.offset)
-        } + [
-            .init(button: expandButton, position: collapsedAppCount),
-            .init(button: collapseButton, position: appInfoList.count)
-        ]
-        gridView.setItems(
-            items,
-            visible: visibleButtons
-        )
+        setButtons(all: appButtons + [expandButton, collapseButton], visible: visible)
     }
 
     private func toggleShowAllApps() {

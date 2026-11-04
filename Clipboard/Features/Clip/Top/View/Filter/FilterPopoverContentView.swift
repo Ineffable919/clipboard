@@ -80,7 +80,6 @@ final class FilterPopoverContentView: NSView {
             make.leading.trailing.bottom.equalToSuperview().inset(Const.space16)
         }
 
-        typeSection.isHidden = true
         appSection.isHidden = true
         tagSection.isHidden = true
 
@@ -88,5 +87,12 @@ final class FilterPopoverContentView: NSView {
         mainStack.addArrangedSubview(appSection)
         mainStack.addArrangedSubview(tagSection)
         mainStack.addArrangedSubview(dateSection)
+
+        // 各区域撑满内容宽度，按钮宽度由网格按此推导
+        for section in [typeSection, appSection, tagSection, dateSection] {
+            section.snp.makeConstraints { make in
+                make.width.equalTo(mainStack)
+            }
+        }
     }
 }
