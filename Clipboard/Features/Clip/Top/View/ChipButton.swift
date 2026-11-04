@@ -17,6 +17,7 @@ final class ChipButton: NSView, NSTextFieldDelegate {
         var isSelected: Bool
         var dotMode: Bool = false
         var size: Size = .regular
+        var style: HeaderStyle = .floating
         var isEditing: Bool = false
         var editingName: String = ""
         var editingColorIndex: Int = 0
@@ -38,7 +39,7 @@ final class ChipButton: NSView, NSTextFieldDelegate {
     let dotContainerView = NSView()
     let dotView = NSView()
     let nameField = ChipTextField()
-    lazy var clickGestureRecognizer = NSClickGestureRecognizer(
+    lazy var clickGestureRecognizer = HeaderClickGestureRecognizer(
         target: self,
         action: #selector(handleClick)
     )
@@ -50,6 +51,9 @@ final class ChipButton: NSView, NSTextFieldDelegate {
 
     var config: Config
     var isHovering = false
+    var isPressed = false {
+        didSet { if isPressed != oldValue { updateAppearance(animated: false) } }
+    }
     var isDraggingOver = false
     var didHandleEditingCompletion = false
     var helpTextUpdateTask: Task<Void, Never>?
@@ -80,6 +84,11 @@ final class ChipButton: NSView, NSTextFieldDelegate {
     }
 
     // MARK: - Mouse
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        if window == nil { isPressed = false }
+    }
 
     override func mouseEntered(with _: NSEvent) {
         isHovering = true

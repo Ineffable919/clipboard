@@ -11,20 +11,22 @@ import SnapKit
 
 final class TopBarView: NSView {
     private let chipRowHeight: CGFloat = 44
-    let pauseBtn = TopBarIconButton(symbolName: "pause.circle", pointSize: 17)
+    let pauseBtn = TopBarIconButton(symbolName: "pause.circle", pointSize: 17, style: .mainPanel)
 
     private let settingBtn = TopBarIconButton(
         symbolName: "ellipsis",
-        pointSize: 17
+        pointSize: 17,
+        style: .mainPanel
     )
 
     let defaultRow = NSStackView()
     let searchIconBtn = TopBarIconButton(
         symbolName: "magnifyingglass",
-        pointSize: 18
+        pointSize: 18,
+        style: .mainPanel
     )
     let chipScrollView = ChipScrollView()
-    let addChipBtn = TopBarIconButton(symbolName: "plus")
+    let addChipBtn = TopBarIconButton(symbolName: "plus", style: .mainPanel)
 
     // MARK: - 搜索模式行
 

@@ -43,6 +43,10 @@ extension ChipButton {
             )
         )
 
+        clickGestureRecognizer.onPressChange = { [weak self] pressed in
+            guard let self, config.style == .mainPanel else { return }
+            isPressed = pressed
+        }
         addGestureRecognizer(clickGestureRecognizer)
         dotContainerView.addGestureRecognizer(dotClickGestureRecognizer)
 

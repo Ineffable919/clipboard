@@ -47,8 +47,8 @@ private final class TokenAttachmentCell: NSTextAttachmentCell {
     var isSelected: Bool = false
 
     private let hPad: CGFloat = 6
-    private let gap: CGFloat = 4
-    private let iconSize: CGFloat = 14
+    private let gap: CGFloat = 2
+    private let iconSize: CGFloat = 12
 
     /// Slightly more visible than quaternaryLabelColor, adapts to light/dark
     private static let bgColor = NSColor(name: nil) { appearance in

@@ -107,6 +107,7 @@ final class TopBarChipController {
             chip: placeholder,
             isSelected: true,
             dotMode: false,
+            style: .mainPanel,
             isEditing: true,
             editingName: topVM.newChipName,
             editingColorIndex: topVM.newChipColorIndex,
@@ -260,6 +261,7 @@ final class TopBarChipController {
             chip: chip,
             isSelected: isSelected,
             dotMode: dotMode,
+            style: .mainPanel,
             isEditing: isEditing,
             editingName: isEditing
                 ? (topVM?.editingChipName ?? chip.name) : chip.name,

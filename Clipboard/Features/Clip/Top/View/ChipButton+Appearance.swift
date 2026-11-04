@@ -119,10 +119,27 @@ extension ChipButton {
         }
     }
 
-    func resolvedBackgroundColor() -> NSColor {
-        let isDark =
-            effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+    private func mainPanelBackgroundColor(isDark: Bool) -> NSColor {
+        let state: HeaderHighlight = if config.isEditing {
+            .hover
+        } else if isPressed {
+            .pressed
+        } else if (config.isSelected && !config.dotMode) || isDraggingOver {
+            .selected
+        } else {
+            isHovering ? .hover : .none
+        }
+        return state.color(isDark: isDark)
+    }
 
+    func resolvedBackgroundColor() -> NSColor {
+        let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        return config.style == .mainPanel
+            ? mainPanelBackgroundColor(isDark: isDark)
+            : floatingBackgroundColor(isDark: isDark)
+    }
+
+    private func floatingBackgroundColor(isDark: Bool) -> NSColor {
         if config.dotMode {
             return dotBackgroundColor(isDark: isDark)
         }
