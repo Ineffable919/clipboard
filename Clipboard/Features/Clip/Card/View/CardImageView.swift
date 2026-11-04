@@ -91,13 +91,20 @@ final class CardImageView: NSView {
                 continue
             }
             var start = text.startIndex
+            var fullRect: CGRect?
             while start < text.endIndex,
                   let range = text.range(
                       of: liveTextKeyword, options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive],
                       range: start..<text.endIndex
                   ) {
+                // 整段外框仅在首次命中时取一次
+                let full = fullRect ?? element.accessibilityFrame(for: NSRange(location: 0, length: text.utf16.count))
+                fullRect = full
                 // 原生辅助功能接口返回屏幕坐标，转换为图片坐标后沿用黄色绘制
-                let screenRect = element.accessibilityFrame(for: NSRange(range, in: text))
+                let screenRect = narrowedRect(
+                    element.accessibilityFrame(for: NSRange(range, in: text)),
+                    for: range, in: text, fullRect: full, element: element
+                )
                 if !screenRect.isEmpty {
                     let localRect = convert(window.convertFromScreen(screenRect), from: nil)
                     highlights.append(OCRTextRegion(text: String(text[range]), boundingBox: CGRect(
@@ -110,6 +117,52 @@ final class CardImageView: NSView {
             }
         }
         return highlights
+    }
+
+    /// 辅助功能接口可能按整行或整词返回外框，此时按字符比例收窄到命中范围；
+    /// 接口已返回精确外框时保持原样
+    /// - Parameter fullRect: 整段文字的外框，同一元素内只取一次并复用
+    private func narrowedRect(
+        _ rect: CGRect, for range: Range<String.Index>, in text: String,
+        fullRect: CGRect, element: any NSAccessibilityProtocol
+    ) -> CGRect {
+        guard rect.width > 0, range != text.startIndex..<text.endIndex else { return rect }
+
+        func narrowed(within base: Range<String.Index>) -> CGRect {
+            let utf16 = text.utf16
+            let total = utf16.distance(from: base.lowerBound, to: base.upperBound)
+            guard total > 0 else { return rect }
+            let lead = utf16.distance(from: base.lowerBound, to: range.lowerBound)
+            let count = utf16.distance(from: range.lowerBound, to: range.upperBound)
+            return CGRect(
+                x: rect.minX + rect.width * CGFloat(lead) / CGFloat(total),
+                y: rect.minY,
+                width: rect.width * CGFloat(count) / CGFloat(total),
+                height: rect.height
+            )
+        }
+
+        func matches(_ other: CGRect) -> Bool {
+            abs(other.minX - rect.minX) < 1 && abs(other.width - rect.width) < 1
+        }
+
+        // 外框与整段文字一致，说明按行返回
+        if matches(fullRect) { return narrowed(within: text.startIndex..<text.endIndex) }
+
+        // 否则仅在命中范围所在单词的外框与之一致时，才按词收窄
+        var lower = range.lowerBound
+        while lower > text.startIndex, !text[text.index(before: lower)].isWhitespace {
+            lower = text.index(before: lower)
+        }
+        var upper = range.upperBound
+        while upper < text.endIndex, !text[upper].isWhitespace {
+            upper = text.index(after: upper)
+        }
+        let word = lower..<upper
+        guard word != range,
+              matches(element.accessibilityFrame(for: NSRange(word, in: text)))
+        else { return rect }
+        return narrowed(within: word)
     }
 
     override func draw(_: NSRect) {

@@ -22,7 +22,7 @@ final class LiveTextService {
         data: Data, requestId: String, submittedAt: ContinuousClock.Instant = .now
     ) async throws -> ImageAnalysis {
         let started = ContinuousClock.now
-        log.warn("Live Text 开始：id=\(requestId)，输入=\(data.count) bytes，排队=\(submittedAt.duration(to: started))")
+        log.info("Live Text 开始：id=\(requestId)，输入=\(data.count) bytes，排队=\(submittedAt.duration(to: started))")
         do {
             try Task.checkCancellation()
             let options = [kCGImageSourceShouldCache: false] as CFDictionary
@@ -35,7 +35,7 @@ final class LiveTextService {
             let orientation = CGImagePropertyOrientation(rawValue: rawOrientation) ?? .up
             let analysis = try await analyzer.analyze(image, orientation: orientation, configuration: .init(.text))
             try Task.checkCancellation()
-            log.warn(
+            log.info(
                 "Live Text 完成：id=\(requestId)，耗时=\(started.duration(to: .now))，"
                     + "字数=\(analysis.transcript.count)"
             )
