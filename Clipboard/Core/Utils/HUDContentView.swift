@@ -17,7 +17,7 @@ struct HUDContentView: View {
                     Image(nsImage: icon)
                         .resizable()
                         .scaledToFit()
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.primary.opacity(0.6))
                         .frame(width: 100, height: 100)
                         .offset(y: -16)
                         .accessibilityHidden(true)

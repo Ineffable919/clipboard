@@ -146,7 +146,7 @@ private extension HUDManager {
         let screenFrame = screen.visibleFrame
         let windowFrame = window.frame
         let originX = screenFrame.midX - windowFrame.width / 2
-        let originY = screenFrame.origin.y + 60 - HUDWindow.effectPadding
+        let originY = screenFrame.origin.y + 150 - HUDWindow.effectPadding
         window.setFrameOrigin(NSPoint(x: originX, y: originY))
     }
 }
