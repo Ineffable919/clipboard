@@ -68,4 +68,7 @@ sudo codesign --force --deep --sign - /Applications/Clipboard.app
 
 ## 许可证
 
-Creative Commons Attribution-NonCommercial 4.0 International Public License [LICENSE](LICENSE)
+本项目采用 [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0)（PolyForm 非商业许可证），详见 [LICENSE](LICENSE)。
+
+- **禁止商用**。
+- 二次开发、修改或再分发时，必须保留 [LICENSE](LICENSE) 中的 `Required Notice:` 行（版权与原项目地址：https://github.com/Ineffable919/clipboard），并附带许可证副本或其链接。
