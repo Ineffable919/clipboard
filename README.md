@@ -68,4 +68,7 @@ sudo codesign --force --deep --sign - /Applications/Clipboard.app
 
 ## License
 
-This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International Public License. See the [LICENSE](LICENSE) file for details. 
+This project is licensed under the [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0). See the [LICENSE](LICENSE) file for details.
+
+- Commercial use is **not** allowed.
+- Forks, modifications and redistributions must keep the `Required Notice:` line in [LICENSE](LICENSE) (copyright and original repository: https://github.com/Ineffable919/clipboard) and include a copy of the license or its URL.
