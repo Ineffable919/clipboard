@@ -140,6 +140,7 @@ final class TopBarView: NSView {
         addSubview(defaultRow)
 
         searchIconBtn.action = { [weak self] in self?.activateSearch() }
+        searchIconBtn.toolTip = String(localized: .searchShortcutTooltip)
         addChipBtn.action = { [weak self] in
             self?.chipController.startCreatingChip()
         }
@@ -293,7 +294,7 @@ final class TopBarView: NSView {
 
     // MARK: - 模式切换
 
-    private func activateSearch() {
+    func activateSearch() {
         guard !isSearching else { return }
         updateSearchFieldWidth()
         isSearching = true

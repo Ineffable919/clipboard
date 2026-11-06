@@ -212,13 +212,24 @@ extension ClipMainViewController {
     }
 
     private func handleCommandKeyEvent(_ event: NSEvent) -> NSEvent? {
-        guard focusRegion == .collection else { return event }
-
         guard event.modifierFlags.isDisjoint(with: [
             .option, .control, .shift
         ]) else {
             return event
         }
+
+        if event.keyCode == KeyCode.keyF,
+           let window = event.window,
+           window === view.window || window === topBarView.filterPopover?.contentViewController?.view.window {
+            if topBarView.isSearching {
+                topBarView.togglePopover()
+            } else {
+                topBarView.activateSearch()
+            }
+            return nil
+        }
+
+        guard focusRegion == .collection else { return event }
 
         switch event.keyCode {
         case KeyCode.keyA:
