@@ -143,10 +143,10 @@ private extension HUDManager {
 
     func centerWindow(_ window: NSWindow) {
         guard let screen = NSScreen.main else { return }
-        let screenFrame = screen.visibleFrame
+        let screenFrame = screen.frame
         let windowFrame = window.frame
         let originX = screenFrame.midX - windowFrame.width / 2
-        let originY = screenFrame.origin.y + 150 - HUDWindow.effectPadding
+        let originY = screenFrame.minY + 140 - HUDWindow.effectPadding
         window.setFrameOrigin(NSPoint(x: originX, y: originY))
     }
 }
