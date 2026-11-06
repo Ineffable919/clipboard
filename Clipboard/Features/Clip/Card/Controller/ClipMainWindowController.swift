@@ -30,7 +30,9 @@ final class ClipMainWindowController: NSWindowController {
                 width: initialWidth,
                 height: Const.defaultHeight
             ),
-            styleMask: [.borderless, .nonactivatingPanel, .fullSizeContentView],
+            styleMask: [
+                .borderless, .nonactivatingPanel
+            ],
             backing: .buffered,
             defer: false
         )
@@ -99,10 +101,13 @@ extension ClipMainWindowController {
 
         if initiallyHidden {
             let screenFrame = frame ?? NSScreen.main?.frame ?? .zero
-            AppEnvironment.shared.previousApp = NSWorkspace.shared.frontmostApplication
+            AppEnvironment.shared.previousApp =
+                NSWorkspace.shared.frontmostApplication
             let visibleFrame = NSRect(
-                x: screenFrame.minX, y: screenFrame.minY,
-                width: screenFrame.width, height: Const.defaultHeight
+                x: screenFrame.minX,
+                y: screenFrame.minY,
+                width: screenFrame.width,
+                height: Const.defaultHeight
             )
             window.contentViewController?.view.setFrameOrigin(.zero)
             window.setFrame(visibleFrame, display: false)
@@ -110,7 +115,8 @@ extension ClipMainWindowController {
         }
 
         // 显示窗口前安装动画，避免首帧闪现
-        animateContent(visible: true, initiallyHidden: initiallyHidden) { [weak self] in
+        animateContent(visible: true, initiallyHidden: initiallyHidden) {
+            [weak self] in
             self?.suppressSearchFocusRing(false)
         }
         window.makeKeyAndOrderFront(nil)
@@ -124,21 +130,27 @@ extension ClipMainWindowController {
         initiallyHidden: Bool = false,
         completion: @escaping @MainActor () -> Void
     ) {
-        guard let view = window?.contentViewController?.view, let layer = view.layer else { return }
+        guard let view = window?.contentViewController?.view,
+            let layer = view.layer
+        else { return }
         suppressSearchFocusRing(true)
         slideAnimationGeneration += 1
         let generation = slideAnimationGeneration
         let key = "drawerSlide"
-        let startY = initiallyHidden ? -view.bounds.height : (layer.presentation()?.transform.m42 ?? 0)
+        let startY =
+            initiallyHidden
+            ? -view.bounds.height : (layer.presentation()?.transform.m42 ?? 0)
 
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         layer.removeAnimation(forKey: key)
         CATransaction.setCompletionBlock { [weak self] in
             Task { @MainActor in
-                guard let self, generation == self.slideAnimationGeneration else { return }
+                guard let self, generation == self.slideAnimationGeneration
+                else { return }
                 if visible {
-                    self.window?.contentViewController?.view.layer?.removeAnimation(forKey: key)
+                    self.window?.contentViewController?.view.layer?
+                        .removeAnimation(forKey: key)
                 }
                 completion()
             }

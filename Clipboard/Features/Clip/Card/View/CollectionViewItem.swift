@@ -104,11 +104,9 @@ final class CollectionViewItem: NSCollectionViewItem {
     private lazy var badgeBgView: BadgeBackgroundView = {
         let view = BadgeBackgroundView()
         view.wantsLayer = true
-        view.layer?.cornerRadius = 4
-        if #available(macOS 26.0, *) {
-            view.isCapsule = true
-        }
-        view.layer?.cornerCurve = .continuous
+        view.layer?.cornerRadius = 9
+        view.isCapsule = true
+        view.layer?.cornerCurve = .circular
         view.layer?.masksToBounds = true
         view.addSubview(badgeEffectView)
         badgeEffectView.snp.makeConstraints { $0.edges.equalToSuperview() }
