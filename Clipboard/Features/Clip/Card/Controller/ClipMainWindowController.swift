@@ -115,8 +115,7 @@ extension ClipMainWindowController {
         }
 
         // 显示窗口前安装动画，避免首帧闪现
-        animateContent(visible: true, initiallyHidden: initiallyHidden) {
-            [weak self] in
+        animateContent(visible: true, initiallyHidden: initiallyHidden) { [weak self] in
             self?.suppressSearchFocusRing(false)
         }
         window.makeKeyAndOrderFront(nil)
