@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import Combine
 import QuartzCore
 
 @MainActor
@@ -14,6 +15,7 @@ final class StatusBarController: NSObject {
 
     private var menuBarItem: NSStatusItem?
     private var menuBarIconObserver: NSObjectProtocol?
+    private var pauseObserver: AnyCancellable?
 
     private var onCheckUpdateClick: (() -> Void)?
     private var menu: NSMenu?
@@ -39,9 +41,11 @@ final class StatusBarController: NSObject {
 
         initializeStatusItem()
         observeMenuBarIconVisibility()
+        observePauseState()
     }
 
     func cleanup() {
+        pauseObserver = nil
         menuController?.cleanup()
         menuController = nil
         if let observer = menuBarIconObserver {
@@ -99,11 +103,23 @@ final class StatusBarController: NSObject {
     private func configureMenuBarButton() {
         guard let button = menuBarItem?.button else { return }
 
-        let icon = NSImage(named: "Status")
-        icon?.isTemplate = true
-        button.image = icon
         button.target = self
         button.action = #selector(statusBarClick)
+        updateIcon(paused: PasteBoard.main.isPaused)
+    }
+
+    private func updateIcon(paused: Bool) {
+        let icon = NSImage(named: paused ? "StatusPaused" : "Status")
+        icon?.isTemplate = true
+        menuBarItem?.button?.image = icon
+    }
+
+    private func observePauseState() {
+        pauseObserver = PasteBoard.main.$isPaused
+            .removeDuplicates()
+            .sink { [weak self] paused in
+                self?.updateIcon(paused: paused)
+            }
     }
 
     private func observeMenuBarIconVisibility() {
