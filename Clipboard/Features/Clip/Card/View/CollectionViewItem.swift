@@ -198,7 +198,18 @@ final class CollectionViewItem: NSCollectionViewItem {
     }
 
     private func updateBadgeVisibility() {
-        badgeBgView.isHidden = infoIconView.isHidden && quickPasteLabel.isHidden
+        let hasIcon = !infoIconView.isHidden
+        let hasLabel = !quickPasteLabel.isHidden
+        badgeBgView.isHidden = !hasIcon && !hasLabel
+
+        // 数字标签自带左右各约 2pt 留白:挨着数字的一侧少留 2pt,使纯数字为正圆
+        badgeStackView.spacing = Const.space2
+        badgeStackView.edgeInsets = NSEdgeInsets(
+            top: 0,
+            left: hasIcon ? Const.space6 : Const.space4,
+            bottom: 0,
+            right: hasLabel ? Const.space4 : Const.space6
+        )
     }
 }
 
@@ -313,11 +324,12 @@ extension CollectionViewItem {
             make.trailing.equalToSuperview().inset(Const.space8)
             make.bottom.equalTo(cardBottomView.snp.bottom).inset(Const.space8)
             make.height.equalTo(18)
+            make.width.greaterThanOrEqualTo(18)
         }
 
         badgeStackView.snp.makeConstraints { make in
             make.centerY.equalToSuperview()
-            make.leading.trailing.equalToSuperview().inset(Const.space6)
+            make.leading.trailing.equalToSuperview()
         }
 
         updateShadow()
