@@ -144,7 +144,8 @@ extension ClipMainViewController {
 
         presenter.previewIsShown = { [weak self] in self?.previewPopover?.isShown == true }
         presenter.closePreview = { [weak self] in self?.closePreviewPopover() }
-        presenter.reopenPreview = { [weak self] in self?.updatePreviewForSelectedItem() }
+        presenter.retargetPreview = { [weak self] in self?.retargetPreviewToSelection() }
+        presenter.refreshPreviewHeader = { [weak self] in self?.previewPopover?.refreshHeader() }
 
         presenter.isVerticalScroll = false
         presenter.loadMoreThreshold = (Const.cardSize + Const.cardSpace) * 2

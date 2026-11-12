@@ -123,12 +123,14 @@ extension ClipFloatingViewController {
         let next = min(max(anchor + (movesDown ? 1 : -1), 0), count - 1)
         if next == anchor {
             NSSound.beep()
-        } else {
-            closePreview()
         }
-        // 离屏选中项也按数据顺序导航，再滚动到目标卡片
-        historyView.selectAndScrollTo(index: next)
+
+        let followsSelection = previewPopover?.isShown == true
+        historyView.selectAndScrollTo(index: next, animated: !followsSelection)
         historyView.updateSelectedItemBorder()
+        if followsSelection, next != anchor {
+            retargetPreview(at: next)
+        }
         return nil
     }
 

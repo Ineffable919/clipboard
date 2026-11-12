@@ -53,8 +53,9 @@ extension ClipMainViewController {
             restoringSelection = false
             updateSelectedItemBorder()
             updateQuickPasteDisplay()
-            if previewPopover?.isShown == true {
-                updatePreviewForSelectedItem()
+            if let popover = previewPopover, popover.isShown,
+               displayedModel(at: selectIndexPath) != nil {
+                popover.refreshHeader()
             }
         }
     }

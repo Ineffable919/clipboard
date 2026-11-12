@@ -44,7 +44,8 @@ final class ClipListPresenter {
 
     var previewIsShown: () -> Bool = { false }
     var closePreview: () -> Void = {}
-    var reopenPreview: () -> Void = {}
+    var retargetPreview: () -> Void = {}
+    var refreshPreviewHeader: () -> Void = {}
 
     // MARK: - Load More
 
@@ -79,7 +80,8 @@ final class ClipListPresenter {
         wasEmpty = items.isEmpty
 
         let wasShowingPreview = previewIsShown()
-        let shouldDismissPreview = ![PasteDataStore.DataChangeType.loadMore, .update, .reorder].contains(changeType)
+        let keepsPreview = [PasteDataStore.DataChangeType.new, .loadMore, .update, .reorder].contains(changeType)
+        let shouldDismissPreview = !keepsPreview || items.isEmpty
         if shouldDismissPreview, wasShowingPreview {
             closePreview()
         }
@@ -91,9 +93,8 @@ final class ClipListPresenter {
             applyFull(items, false) { [weak self] in
                 guard let self else { return }
                 resetSelection()
-                // .new 时 preview 关闭后重新定位到新选中项（与 .update 行为一致）
                 if wasShowingPreview, changeType == .new {
-                    reopenPreview()
+                    retargetPreview()
                 }
             }
         case .delete:
@@ -104,7 +105,7 @@ final class ClipListPresenter {
             reconfigureItems(items)
             restoreSelection()
             if wasShowingPreview {
-                reopenPreview()
+                refreshPreviewHeader()
             }
         }
 

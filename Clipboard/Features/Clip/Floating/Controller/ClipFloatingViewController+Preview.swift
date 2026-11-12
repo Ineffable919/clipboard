@@ -20,27 +20,17 @@ extension ClipFloatingViewController {
         let historyView = floatingContentView.historyView
         guard index < historyView.dataList.count else { return }
         let model = historyView.dataList[index]
+        let collection = historyView.collectionView
         let anchorView = historyView.anchorViewForItem(at: index)
-
-        let maxHeight: CGFloat
-        let preferredEdge: NSRectEdge
-        if let window = anchorView.window, let screen = window.screen {
-            maxHeight = screen.visibleFrame.height
-            let anchorOnScreen = window.convertToScreen(anchorView.convert(anchorView.bounds, to: nil))
-            let spaceRight = screen.visibleFrame.maxX - anchorOnScreen.maxX
-            let spaceLeft = anchorOnScreen.minX - screen.visibleFrame.minX
-            preferredEdge = spaceRight >= spaceLeft ? .maxX : .minX
-        } else {
-            maxHeight = Const.maxPreviewHeight
-            preferredEdge = .maxX
-        }
+        let rect = collection.convert(anchorView.bounds, from: anchorView)
+        let (edge, height) = previewPlacement(for: rect)
 
         closePreview()
         let popover = previewPool.dequeue()
         popover.onContentInteraction = { [weak self] in
             self?.focusRegion = .popover
         }
-        popover.configure(with: model, maxHeight: maxHeight)
+        popover.configure(with: model, maxHeight: height)
         popover.onPinToChip = { [weak self] model, chipId in
             _ = self?.floatingContentView.topVM.assignModelToChip(model: model, chipId: chipId)
         }
@@ -53,7 +43,36 @@ extension ClipFloatingViewController {
         }
         popover.delegate = self
         previewPopover = popover
-        popover.show(relativeTo: anchorView.bounds, of: anchorView, preferredEdge: preferredEdge)
+        popover.show(relativeTo: rect, of: collection, preferredEdge: edge)
+    }
+
+    func retargetPreview(at index: Int) {
+        let historyView = floatingContentView.historyView
+        let collection = historyView.collectionView
+        guard let popover = previewPopover, popover.isShown,
+              historyView.dataList.indices.contains(index),
+              let rect = collection.layoutAttributesForItem(at: IndexPath(item: index, section: 0))?.frame
+        else { return }
+
+        let (edge, height) = previewPlacement(for: rect)
+        popover.retarget(
+            to: historyView.dataList[index], relativeTo: rect, of: collection,
+            preferredEdge: edge, maxHeight: height
+        )
+        if focusRegion == .popover {
+            focusCollection()
+        }
+    }
+
+    private func previewPlacement(for rect: NSRect) -> (NSRectEdge, CGFloat) {
+        let collection = floatingContentView.historyView.collectionView
+        guard let window = collection.window, let screen = window.screen
+        else { return (.maxX, Const.maxPreviewHeight) }
+
+        let anchorOnScreen = window.convertToScreen(collection.convert(rect, to: nil))
+        let spaceRight = screen.visibleFrame.maxX - anchorOnScreen.maxX
+        let spaceLeft = anchorOnScreen.minX - screen.visibleFrame.minX
+        return (spaceRight >= spaceLeft ? .maxX : .minX, screen.visibleFrame.height)
     }
 
     func closePreview() {

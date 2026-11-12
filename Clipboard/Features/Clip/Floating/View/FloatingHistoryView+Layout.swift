@@ -149,11 +149,11 @@ extension FloatingHistoryView {
 
     // MARK: - Data
 
-    func applySnapshot(animating: Bool = false) {
+    func applySnapshot(animating: Bool = false, completion: (() -> Void)? = nil) {
         var snapshot = NSDiffableDataSourceSnapshot<Int, PasteboardModel>()
         snapshot.appendSections([0])
         snapshot.appendItems(dataList, toSection: 0)
-        dataSource.apply(snapshot, animatingDifferences: animating)
+        dataSource.apply(snapshot, animatingDifferences: animating, completion: completion)
     }
 
     func resetToFirst() {
@@ -189,7 +189,7 @@ extension FloatingHistoryView {
 
     // MARK: - Scroll
 
-    func scrollTo(index: Int) {
+    func scrollTo(index: Int, animated: Bool = true) {
         guard index >= 0,
               collectionView.numberOfSections > 0,
               index < collectionView.numberOfItems(inSection: 0)
@@ -228,7 +228,7 @@ extension FloatingHistoryView {
         )
         newOriginY = min(max(0, newOriginY), maxScrollY)
 
-        scrollView.scroll(to: NSPoint(x: 0, y: newOriginY), animated: true)
+        scrollView.scroll(to: NSPoint(x: 0, y: newOriginY), animated: animated)
     }
 
     // MARK: - Quick Paste Display

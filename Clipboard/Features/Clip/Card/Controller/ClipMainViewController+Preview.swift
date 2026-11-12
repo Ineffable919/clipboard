@@ -13,20 +13,14 @@ extension ClipMainViewController {
         for model: PasteboardModel,
         relativeTo view: NSView
     ) {
-        let maxHeight: CGFloat
-        if let window = view.window, let screen = window.screen {
-            let anchorOnScreen = window.convertToScreen(view.convert(view.bounds, to: nil))
-            maxHeight = screen.visibleFrame.maxY - anchorOnScreen.maxY
-        } else {
-            maxHeight = Const.maxPreviewHeight
-        }
+        let rect = collectionView.convert(view.bounds, from: view)
 
         closePreviewPopover()
         let popover = previewPool.dequeue()
         popover.onContentInteraction = { [weak self] in
             self?.setFocusRegion(.popover)
         }
-        popover.configure(with: model, maxHeight: maxHeight)
+        popover.configure(with: model, maxHeight: previewHeight(for: rect))
         popover.onPinToChip = { [weak self] model, chipId in
             _ = self?.topVM.assignModelToChip(model: model, chipId: chipId)
         }
@@ -39,7 +33,30 @@ extension ClipMainViewController {
         }
         popover.delegate = self
         previewPopover = popover
-        popover.show(relativeTo: view.bounds, of: view, preferredEdge: .maxY)
+        popover.show(relativeTo: rect, of: collectionView, preferredEdge: .maxY)
+    }
+
+    func retargetPreviewToSelection() {
+        guard let popover = previewPopover, popover.isShown,
+              let model = displayedModel(at: selectIndexPath),
+              let rect = collectionView.layoutAttributesForItem(at: selectIndexPath)?.frame
+        else { return }
+
+        popover.retarget(
+            to: model, relativeTo: rect, of: collectionView,
+            preferredEdge: .maxY, maxHeight: previewHeight(for: rect)
+        )
+        if focusRegion == .popover {
+            setFocusRegion(.collection)
+        }
+    }
+
+    private func previewHeight(for rect: NSRect) -> CGFloat {
+        guard let window = collectionView.window, let screen = window.screen
+        else { return Const.maxPreviewHeight }
+
+        let anchorOnScreen = window.convertToScreen(collectionView.convert(rect, to: nil))
+        return screen.visibleFrame.maxY - anchorOnScreen.maxY
     }
 
     func closePreviewPopover() {
@@ -49,18 +66,6 @@ extension ClipMainViewController {
         if focusRegion == .popover {
             setFocusRegion(.collection)
         }
-    }
-
-    func updatePreviewForSelectedItem() {
-        guard let model = displayedModel(at: selectIndexPath) else { return }
-
-        if let existing = previewPopover, existing.isShown {
-            existing.refreshHeader()
-            return
-        }
-
-        guard let itemView = collectionView.item(at: selectIndexPath)?.view else { return }
-        showPreviewPopover(for: model, relativeTo: itemView)
     }
 }
 

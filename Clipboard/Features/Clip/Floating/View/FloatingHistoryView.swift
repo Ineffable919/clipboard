@@ -99,11 +99,13 @@ final class FloatingHistoryView: NSView {
     func setPreviewHooks(
         isShown: @escaping () -> Bool,
         close: @escaping () -> Void,
-        reopen: @escaping () -> Void
+        retarget: @escaping () -> Void,
+        refreshHeader: @escaping () -> Void
     ) {
         presenter.previewIsShown = isShown
         presenter.closePreview = close
-        presenter.reopenPreview = reopen
+        presenter.retargetPreview = retarget
+        presenter.refreshPreviewHeader = refreshHeader
     }
 
     func configure(topVM: TopBarViewModel) {
@@ -129,8 +131,7 @@ final class FloatingHistoryView: NSView {
         presenter.applyFull = { [weak self] items, animating, completion in
             guard let self else { return }
             dataList = items
-            applySnapshot(animating: animating)
-            completion?()
+            applySnapshot(animating: animating, completion: completion)
         }
         setupReorder()
         presenter.appendItems = { [weak self] newItems in
@@ -171,7 +172,6 @@ final class FloatingHistoryView: NSView {
 
         presenter.isVerticalScroll = true
         presenter.loadMoreThreshold = (FloatConst.cardHeight + FloatConst.cardSpacing) * 5
-
         presenter.startObserving(scrollView: scrollView)
     }
 
@@ -222,9 +222,9 @@ final class FloatingHistoryView: NSView {
         updatePlainTextIndicatorDisplay()
     }
 
-    func selectAndScrollTo(index: Int) {
+    func selectAndScrollTo(index: Int, animated: Bool = true) {
         selectRow(index)
-        scrollTo(index: index)
+        scrollTo(index: index, animated: animated)
     }
 
     func anchorViewForItem(at index: Int) -> NSView {

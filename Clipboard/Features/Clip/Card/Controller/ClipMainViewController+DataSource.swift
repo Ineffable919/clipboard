@@ -192,12 +192,13 @@ extension ClipMainViewController {
 
     func resetSelectIndex(
         _ indexPath: IndexPath = IndexPath(item: 0, section: 0),
-        isKeyRepeat: Bool = false
+        isKeyRepeat: Bool = false,
+        animated: Bool = true
     ) {
         selectIndexPath = indexPath
         guard displayedItemCount > 0 else { return }
         setSelection(to: selectIndexPath)
-        scrollTo(indexPath: selectIndexPath, isKeyRepeat: isKeyRepeat)
+        scrollTo(indexPath: selectIndexPath, animated: animated, isKeyRepeat: isKeyRepeat)
         updateSelectedItemBorder()
     }
 

@@ -56,8 +56,12 @@ final class ClipPreviewPopover: NSPopover {
 
     func configure(with model: PasteboardModel, maxHeight: CGFloat = Const.maxPreviewHeight) {
         let size = previewVC.configure(with: model, maxHeight: maxHeight)
-        contentViewController = nil
-        contentViewController = previewVC
+        // 弹窗关闭后复用时，新尺寸可能需要重挂载控制器才会生效
+        // 弹窗显示期间直接更新尺寸，保留当前窗口供切卡使用
+        if !isShown, contentSize != size {
+            contentViewController = nil
+            contentViewController = previewVC
+        }
         contentSize = size
 
         previewVC.onContentInteraction = { [weak self] in
@@ -75,6 +79,21 @@ final class ClipPreviewPopover: NSPopover {
         previewVC.onCreateChip = { [weak self] model in
             self?.onCreateChip?(model)
         }
+    }
+
+    func retarget(
+        to model: PasteboardModel,
+        relativeTo rect: NSRect,
+        of anchor: NSView,
+        preferredEdge: NSRectEdge,
+        maxHeight: CGFloat
+    ) {
+        let wasAnimated = animates
+        animates = false
+        defer { animates = wasAnimated }
+
+        configure(with: model, maxHeight: maxHeight)
+        show(relativeTo: rect, of: anchor, preferredEdge: preferredEdge)
     }
 
     func refreshHeader() {

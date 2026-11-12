@@ -69,14 +69,11 @@ final class ClipFloatingViewController: NSViewController {
         floatingContentView.historyView.setPreviewHooks(
             isShown: { [weak self] in self?.previewPopover?.isShown == true },
             close: { [weak self] in self?.closePreview() },
-            reopen: { [weak self] in
+            retarget: { [weak self] in
                 guard let self else { return }
-                if let existing = previewPopover, existing.isShown {
-                    existing.refreshHeader()
-                } else {
-                    openPreview(at: floatingContentView.historyView.selectedIndex)
-                }
-            }
+                retargetPreview(at: floatingContentView.historyView.selectedIndex)
+            },
+            refreshHeader: { [weak self] in self?.previewPopover?.refreshHeader() }
         )
 
         floatingContentView.headerView.onChipSelected = { [weak self] in
