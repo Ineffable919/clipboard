@@ -45,7 +45,6 @@ extension ClipMainViewController {
     func closePreviewPopover() {
         guard let popover = previewPopover else { return }
         previewPopover = nil
-        popover.cleanup()
         popover.close()
         if focusRegion == .popover {
             setFocusRegion(.collection)
@@ -72,7 +71,6 @@ extension ClipMainViewController: NSPopoverDelegate {
         guard let closing = notification.object as? ClipPreviewPopover,
               closing === previewPopover else { return }
         previewPopover = nil
-        closing.cleanup()
         if focusRegion == .popover {
             setFocusRegion(.collection)
         }

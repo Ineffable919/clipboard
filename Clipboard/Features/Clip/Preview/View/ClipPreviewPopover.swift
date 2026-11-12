@@ -56,6 +56,8 @@ final class ClipPreviewPopover: NSPopover {
 
     func configure(with model: PasteboardModel, maxHeight: CGFloat = Const.maxPreviewHeight) {
         let size = previewVC.configure(with: model, maxHeight: maxHeight)
+        contentViewController = nil
+        contentViewController = previewVC
         contentSize = size
 
         previewVC.onContentInteraction = { [weak self] in
@@ -79,7 +81,7 @@ final class ClipPreviewPopover: NSPopover {
         previewVC.refreshHeader()
     }
 
-    func cleanup() {
+    private func cleanup() {
         previewVC.cleanup()
         previewVC.onContentInteraction = nil
         previewVC.onDismiss = nil
@@ -93,6 +95,7 @@ final class ClipPreviewPopover: NSPopover {
     }
 
     @objc private func handleDidClose(_: Notification) {
+        cleanup()
         onDidClose?()
     }
 
@@ -193,17 +196,10 @@ final class ClipPreviewPopover: NSPopover {
 
     private func installKeyMonitor() {
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            guard let self, isShown else { return event }
-            switch Int(event.keyCode) {
-            case kVK_Escape:
-                close()
-                return nil
-            case kVK_LeftArrow, kVK_RightArrow:
-                close()
-                return event
-            default:
-                return event
-            }
+            // 方向键交给宿主按焦点处理，焦点在预览内时留给网页、文本等内容
+            guard let self, isShown, Int(event.keyCode) == kVK_Escape else { return event }
+            close()
+            return nil
         }
     }
 }
