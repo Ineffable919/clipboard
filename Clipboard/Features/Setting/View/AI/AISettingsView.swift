@@ -2,13 +2,13 @@ import SwiftUI
 
 // MARK: - MCPClientInfo
 
-private struct MCPClientInfo: Identifiable {
+struct MCPClientInfo: Identifiable {
     var id: String {
         name
     }
 
     let name: String
-    let iconURL: String
+    let icon: String
     let subtitle: String
     let command: String
     let footer: String?
@@ -35,8 +35,6 @@ struct AISettingsView: View {
         let helperPath = Bundle.main.bundleURL
             .appending(path: "Contents/MacOS/clipmcp")
             .path
-        let iconBase = "https://raw.githubusercontent.com/Ineffable919/clipboard/"
-            + "c1d53491f24ff028946e287ec09b9943e5a11caf/Clipboard/Resource/Assets.xcassets"
         let cliSubtitle = String(localized: .mcpCliSub)
         let configSubtitle = String(localized: .mcpConfigSub)
         let configCommand = """
@@ -61,7 +59,7 @@ struct AISettingsView: View {
         return [
             MCPClientInfo(
                 name: "Claude Desktop",
-                iconURL: "\(iconBase)/MCPClaudeIcon.imageset/claude.png",
+                icon: "MCPClaudeIcon",
                 subtitle: configSubtitle,
                 command: configCommand,
                 footer: nil,
@@ -70,7 +68,7 @@ struct AISettingsView: View {
             ),
             MCPClientInfo(
                 name: "Claude Code",
-                iconURL: "\(iconBase)/MCPClaudeIcon.imageset/claude.png",
+                icon: "MCPClaudeIcon",
                 subtitle: cliSubtitle,
                 command:
                 "claude mcp add --transport stdio clipboard -- \(helperPath)",
@@ -79,7 +77,7 @@ struct AISettingsView: View {
             ),
             MCPClientInfo(
                 name: "Codex",
-                iconURL: "\(iconBase)/MCPCodexIcon.imageset/codex.png",
+                icon: "MCPCodexIcon",
                 subtitle: cliSubtitle,
                 command: "codex mcp add clipboard -- \(helperPath)",
                 footer: nil,
@@ -87,7 +85,7 @@ struct AISettingsView: View {
             ),
             MCPClientInfo(
                 name: "Cursor",
-                iconURL: "\(iconBase)/MCPCursorIcon.imageset/cursor.png",
+                icon: "MCPCursorIcon",
                 subtitle: configSubtitle,
                 command: configCommand,
                 footer: nil,
@@ -95,7 +93,7 @@ struct AISettingsView: View {
             ),
             MCPClientInfo(
                 name: "VS Code",
-                iconURL: "\(iconBase)/MCPVSCodeIcon.imageset/vscode.png",
+                icon: "MCPVSCodeIcon",
                 subtitle: configSubtitle,
                 command: vsCodeCommand,
                 footer: nil,
@@ -111,17 +109,11 @@ struct AISettingsView: View {
                 if isEnabled {
                     HStack {
                         Spacer()
-                        Menu {
-                            ForEach(Self.clients) { client in
-                                Button {
-                                    selectedClient = client
-                                } label: {
-                                    Text(client.name)
-                                }
-                            }
-                        } label: {
-                            Text(String(localized: .mcpConnectTools))
-                                .font(.system(size: 13, design: .default))
+                        MCPClientMenu(
+                            title: String(localized: .mcpConnectTools),
+                            clients: Self.clients
+                        ) { client in
+                            selectedClient = client
                         }
                         .fixedSize()
                     }
@@ -194,8 +186,6 @@ private struct MCPToolsSection: View {
 
 private struct MCPClientDetailSheet: View {
     let client: MCPClientInfo
-    @State private var iconImage: NSImage?
-    @State private var isIconLoading = true
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -247,30 +237,15 @@ private struct MCPClientDetailSheet: View {
         }
         .padding(Const.space24)
         .frame(width: 440)
-        .task(id: client.iconURL) {
-            iconImage = nil
-            isIconLoading = true
-            let image = await MCPClientIconLoader.load(client.iconURL)
-            guard !Task.isCancelled else { return }
-            iconImage = image
-            isIconLoading = false
-        }
     }
 
-    @ViewBuilder private var clientIcon: some View {
-        if isIconLoading {
-            ProgressView()
-                .controlSize(.small)
-                .frame(width: 40, height: 40)
-                .padding(.bottom, Const.space16)
-        } else if let iconImage {
-            Image(nsImage: iconImage)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 40, height: 40)
-                .clipShape(.rect(cornerRadius: 8))
-                .padding(.bottom, Const.space16)
-        }
+    private var clientIcon: some View {
+        Image(client.icon)
+            .resizable()
+            .scaledToFit()
+            .frame(width: 40, height: 40)
+            .clipShape(.rect(cornerRadius: 8))
+            .padding(.bottom, Const.space16)
     }
 
     private var commandBlock: some View {
