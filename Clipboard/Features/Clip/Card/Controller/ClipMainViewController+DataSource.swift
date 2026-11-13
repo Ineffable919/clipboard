@@ -192,17 +192,16 @@ extension ClipMainViewController {
 
     func resetSelectIndex(
         _ indexPath: IndexPath = IndexPath(item: 0, section: 0),
-        isKeyRepeat: Bool = false,
         animated: Bool = true
     ) {
         selectIndexPath = indexPath
         guard displayedItemCount > 0 else { return }
         setSelection(to: selectIndexPath)
-        scrollTo(indexPath: selectIndexPath, animated: animated, isKeyRepeat: isKeyRepeat)
+        scrollTo(indexPath: selectIndexPath, animated: animated)
         updateSelectedItemBorder()
     }
 
-    func scrollTo(indexPath: IndexPath, animated: Bool = true, isKeyRepeat: Bool = false) {
+    func scrollTo(indexPath: IndexPath, animated: Bool = true) {
         guard displayedItemCount > 0,
               let attrs = collectionView.layoutAttributesForItem(at: indexPath)
         else {
@@ -222,7 +221,7 @@ extension ClipMainViewController {
 
         let maxX = max(0, collectionView.bounds.width - visibleRect.width)
         originX = min(max(0, originX), maxX)
-        scrollView.scroll(to: NSPoint(x: originX, y: 0), animated: animated, isKeyRepeat: isKeyRepeat)
+        scrollView.scroll(to: NSPoint(x: originX, y: 0), animated: animated)
     }
 
 }

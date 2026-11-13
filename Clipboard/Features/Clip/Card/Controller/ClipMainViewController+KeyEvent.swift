@@ -136,7 +136,6 @@ extension ClipMainViewController {
         // 预览跟随时先把目标卡片滚入视野，再移动预览锚点
         resetSelectIndex(
             IndexPath(item: next, section: 0),
-            isKeyRepeat: event.isARepeat,
             animated: !followsSelection
         )
         if followsSelection, next != anchor.item {
