@@ -211,8 +211,7 @@ nonisolated struct MCPTools {
             return mcpError("Content exceeds 1 MB limit")
         }
 
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(content, forType: .string)
+        NSPasteboard.copy(content)
 
         guard let contentData = content.data(using: .utf8) else {
             return mcpError("Failed to encode content")

@@ -71,8 +71,7 @@ struct MCPHeaderCard: View {
                 .lineLimit(1)
 
             Button {
-                NSPasteboard.general.clearContents()
-                NSPasteboard.general.setString(server.endpoint, forType: .string)
+                NSPasteboard.copy(server.endpoint)
             } label: {
                 Image(systemName: "doc.on.doc")
                     .font(.caption)

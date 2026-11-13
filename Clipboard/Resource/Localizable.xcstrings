@@ -3418,23 +3418,6 @@
         }
       }
     },
-    "mcpCopied" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copied"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已复制"
-          }
-        }
-      }
-    },
     "mcpCopy" : {
       "extractionState" : "manual",
       "localizations" : {

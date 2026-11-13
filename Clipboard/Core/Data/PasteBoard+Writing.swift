@@ -311,3 +311,10 @@ extension NSMutableAttributedString {
         }
     }
 }
+
+extension NSPasteboard {
+    nonisolated static func copy(_ text: String) {
+        general.clearContents()
+        general.setString(text, forType: .string)
+    }
+}

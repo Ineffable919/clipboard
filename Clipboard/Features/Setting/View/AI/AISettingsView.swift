@@ -118,7 +118,7 @@ struct AISettingsView: View {
                 command: vsCodeCommand,
                 footer: nil,
                 configNote: "~/.vscode/mcp.json"
-            ),
+            )
         ]
     }
 
@@ -189,9 +189,7 @@ private struct MCPToolsSection: View {
                 .font(.subheadline.bold())
 
             VStack(spacing: 0) {
-                ForEach(Array(MCPToolInfo.all.enumerated()), id: \.element.id) {
-                    index,
-                    tool in
+                ForEach(Array(MCPToolInfo.all.enumerated()), id: \.element.id) { index, tool in
                     if index > 0 {
                         Divider()
                             .padding(.horizontal, Const.space16)
@@ -240,8 +238,7 @@ private struct MCPClientDetailSheet: View {
                 HStack(spacing: Const.space4) {
                     Text(.mcpPasteInto)
                     Button {
-                        NSPasteboard.general.clearContents()
-                        NSPasteboard.general.setString(note, forType: .string)
+                        NSPasteboard.copy(note)
                     } label: {
                         Text(note)
                             .lineLimit(1)
@@ -288,7 +285,6 @@ private struct MCPClientDetailSheet: View {
 /// 可选中、可一键复制的等宽命令/配置块
 private struct MCPCommandBlock: View {
     let command: String
-    @State private var copied = false
 
     var body: some View {
         Text(command)
@@ -315,26 +311,18 @@ private struct MCPCommandBlock: View {
 
     private var copyButton: some View {
         Button {
-            NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(command, forType: .string)
-            copied = true
+            NSPasteboard.copy(command)
         } label: {
-            Image(systemName: copied ? "checkmark" : "doc.on.doc")
+            Image(systemName: "doc.on.doc")
                 .font(.callout)
-                .foregroundStyle(copied ? Color.green : .secondary)
-                .contentTransition(.symbolEffect(.replace))
+                .foregroundStyle(.secondary)
                 .frame(width: Const.space32, height: Const.space32)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .focusable(false)
-        .help(copied ? Text(.mcpCopied) : Text(.mcpCopy))
+        .help(Text(.mcpCopy))
         .accessibilityLabel(Text(.mcpCopy))
-        .task(id: copied) {
-            guard copied else { return }
-            try? await Task.sleep(for: .seconds(1.5))
-            copied = false
-        }
     }
 }
 
