@@ -1,3 +1,10 @@
+//
+//  DropIllustrationView.swift
+//  Clipboard
+//
+//  Created by crown on 2026/6/1
+//
+
 import AppKit
 import SnapKit
 

@@ -1,3 +1,10 @@
+//
+//  JSONViewportIndex.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/30
+//
+
 import Foundation
 
 /// 分页只保存原文范围和行宽，全文不进入 TextKit

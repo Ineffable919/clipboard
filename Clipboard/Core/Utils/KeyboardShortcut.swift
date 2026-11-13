@@ -1,3 +1,10 @@
+//
+//  KeyboardShortcut.swift
+//  Clipboard
+//
+//  Created by crown on 2026/10/6
+//
+
 import AppKit
 
 // MARK: - 快捷键模型

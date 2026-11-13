@@ -2,6 +2,8 @@
 //  GeneralPreferencesCard.swift
 //  Clipboard
 //
+//  Created by crown on 2026/9/2
+//
 
 import AppKit
 import Foundation

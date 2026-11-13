@@ -2,6 +2,8 @@
 //  FloatingFooterView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/5/5
+//
 //  浮动窗口底部：条目数量 + 暂停指示器
 //
 

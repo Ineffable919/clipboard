@@ -2,6 +2,8 @@
 //  FilterAppInfo.swift
 //  Clipboard
 //
+//  Created by crown on 2026/8/22
+//
 //  Application metadata displayed by the filter popover
 //
 

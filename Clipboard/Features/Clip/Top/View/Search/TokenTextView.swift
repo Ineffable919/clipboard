@@ -2,6 +2,8 @@
 //  TokenTextView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/23
+//
 //  支持 Token 的文本视图，处理 Token 插入、删除和光标控制
 //
 

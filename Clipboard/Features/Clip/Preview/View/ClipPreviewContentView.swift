@@ -2,6 +2,8 @@
 //  ClipPreviewContentView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/25
+//
 //  根据剪贴板内容类型切换对应预览视图
 //
 

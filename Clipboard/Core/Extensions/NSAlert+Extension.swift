@@ -2,6 +2,8 @@
 //  NSAlert+Extension.swift
 //  Clipboard
 //
+//  Created by crown on 2026/5/20
+//
 
 import AppKit
 

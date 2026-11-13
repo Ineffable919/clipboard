@@ -2,6 +2,8 @@
 //  PreviewTextContentView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/8/26
+//
 //  纯文本及富文本预览
 //
 

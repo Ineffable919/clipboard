@@ -2,6 +2,8 @@
 //  PreviewMarkdownView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/7/1
+//
 //  markdown 预览内容视图：默认渲染，可切换查看原文
 //
 

@@ -2,6 +2,8 @@
 //  PreviewHeaderBar.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/27
+//
 //  预览顶部栏
 //
 

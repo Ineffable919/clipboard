@@ -2,6 +2,8 @@
 //  NSApplication+Extension.swift
 //  Clipboard
 //
+//  Created by crown on 2026/3/21
+//
 
 import AppKit
 

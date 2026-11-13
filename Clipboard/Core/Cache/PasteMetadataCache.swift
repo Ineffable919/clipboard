@@ -2,6 +2,8 @@
 //  PasteMetadataCache.swift
 //  Clipboard
 //
+//  Created by crown on 2026/3/25
+//
 //  应用信息和标签类型的缓存管理
 //
 

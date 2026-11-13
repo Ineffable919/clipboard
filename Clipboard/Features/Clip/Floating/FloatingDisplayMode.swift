@@ -1,3 +1,10 @@
+//
+//  FloatingDisplayMode.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/9
+//
+
 import AppKit
 
 enum FloatingDisplayMode: Int, CaseIterable {

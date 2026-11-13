@@ -2,6 +2,8 @@
 //  SearchSuggestionViewController.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/29
+//
 //  联想列表内容管理器：NSTableView
 //
 

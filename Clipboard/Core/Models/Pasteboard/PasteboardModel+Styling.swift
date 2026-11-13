@@ -2,6 +2,8 @@
 //  PasteboardModel+Styling.swift
 //  Clipboard
 //
+//  Created by crown on 2026/3/11
+//
 //  颜色计算、搜索高亮、AttributedString 相关逻辑
 //
 

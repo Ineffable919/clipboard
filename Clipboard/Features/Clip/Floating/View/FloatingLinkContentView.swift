@@ -2,6 +2,8 @@
 //  FloatingLinkContentView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/10/2
+//
 
 import AppKit
 import SnapKit

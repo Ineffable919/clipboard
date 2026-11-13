@@ -1,3 +1,10 @@
+//
+//  CardTextView.swift
+//  Clipboard
+//
+//  Created by crown on 2026/10/26
+//
+
 import AppKit
 
 /// 卡片只读预览保留 TextKit 排版与富文本属性，不创建编辑器视图

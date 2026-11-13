@@ -2,6 +2,8 @@
 //  JSONToolAction.swift
 //  Clipboard
 //
+//  Created by crown on 2026/7/21
+//
 
 enum JSONToolAction: Sendable {
     case format(JSONIndentation)

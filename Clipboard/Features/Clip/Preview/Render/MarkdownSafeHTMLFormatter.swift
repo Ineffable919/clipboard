@@ -2,6 +2,8 @@
 //  MarkdownSafeHTMLFormatter.swift
 //  Clipboard
 //
+//  Created by crown on 2026/8/26
+//
 //  转义 Markdown 生成的文本和属性；原始 HTML 交由 DOMPurify 清理
 //
 

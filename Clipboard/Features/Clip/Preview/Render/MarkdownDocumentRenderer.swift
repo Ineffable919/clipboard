@@ -2,6 +2,8 @@
 //  MarkdownDocumentRenderer.swift
 //  Clipboard
 //
+//  Created by crown on 2026/8/26
+//
 //  组织 Frontmatter、脚注和正文的 Markdown 渲染流程
 //
 

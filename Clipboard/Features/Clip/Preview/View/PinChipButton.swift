@@ -1,3 +1,10 @@
+//
+//  PinChipButton.swift
+//  Clipboard
+//
+//  Created by crown on 2026/4/27
+//
+
 import AppKit
 import SwiftUI
 import SnapKit

@@ -2,6 +2,8 @@
 //  MarkdownHTMLRenderer+Stylesheet.swift
 //  Clipboard
 //
+//  Created by crown on 2026/8/26
+//
 //  Markdown 预览样式
 //
 

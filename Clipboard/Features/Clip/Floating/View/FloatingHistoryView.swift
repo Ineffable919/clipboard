@@ -2,6 +2,8 @@
 //  FloatingHistoryView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/5/5
+//
 //  浮动窗口历史记录列表：NSCollectionView + DiffableDataSource
 //
 

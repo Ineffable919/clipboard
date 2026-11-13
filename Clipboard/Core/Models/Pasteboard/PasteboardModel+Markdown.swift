@@ -2,6 +2,8 @@
 //  PasteboardModel+Markdown.swift
 //  Clipboard
 //
+//  Created by crown on 2026/7/1
+//
 //  markdown 内容检测与渲染入口
 //
 

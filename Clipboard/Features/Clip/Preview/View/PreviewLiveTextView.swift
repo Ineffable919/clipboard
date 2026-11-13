@@ -2,6 +2,8 @@
 //  PreviewLiveTextView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/8/26
+//
 //  图片实况文本分析与交互覆盖层
 //
 

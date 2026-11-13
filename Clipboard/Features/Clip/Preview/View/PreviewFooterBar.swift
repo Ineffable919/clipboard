@@ -2,6 +2,8 @@
 //  PreviewFooterBar.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/27
+//
 //  预览底部栏：信息标签、文件大小、在 Finder 中显示、在浏览器中打开
 //
 

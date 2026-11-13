@@ -2,6 +2,8 @@
 //  MarkdownAttributedRenderer+Images.swift
 //  Clipboard
 //
+//  Created by crown on 2026/8/26
+//
 //  Markdown 富文本图片加载
 //
 

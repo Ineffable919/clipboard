@@ -2,6 +2,8 @@
 //  FilterGridView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/11/4
+//
 //  三列网格：按钮宽度随容器宽度推导，按可见顺序依次排布
 //
 

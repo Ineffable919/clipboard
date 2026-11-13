@@ -1,3 +1,10 @@
+//
+//  ChipButton+Editing.swift
+//  Clipboard
+//
+//  Created by crown on 2026/10/6
+//
+
 import AppKit
 import SnapKit
 

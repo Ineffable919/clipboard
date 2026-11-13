@@ -2,6 +2,8 @@
 //  NSView+ScrollWheel.swift
 //  Clipboard
 //
+//  Created by crown on 2026/3/20
+//
 
 import AppKit
 

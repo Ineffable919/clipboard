@@ -2,6 +2,8 @@
 //  LinkPreviewMetadata.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/12
+//
 //  链接预览加载结果
 //
 

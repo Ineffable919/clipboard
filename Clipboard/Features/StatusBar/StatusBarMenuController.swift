@@ -1,3 +1,10 @@
+//
+//  StatusBarMenuController.swift
+//  Clipboard
+//
+//  Created by crown on 2026/10/14
+//
+
 import AppKit
 
 @MainActor

@@ -2,6 +2,8 @@
 //  ClipListPresenter.swift
 //  Clipboard
 //
+//  Created by crown on 2026/5/8
+//
 //  统一管理 dataList 订阅、DataChangeType 分发、追加加载和滚动触底检测
 //  使用方通过闭包注入快照更新、选中管理等视图操作
 //

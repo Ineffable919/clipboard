@@ -1,3 +1,10 @@
+//
+//  SourceAppIcon.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/23
+//
+
 import AppKit
 
 /// 80pt 卡片在 Retina 屏上需要至少 160px，使用 256px 覆盖各处显示尺寸

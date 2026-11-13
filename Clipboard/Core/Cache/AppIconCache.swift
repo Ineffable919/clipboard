@@ -1,3 +1,10 @@
+//
+//  AppIconCache.swift
+//  Clipboard
+//
+//  Created by crown on 2026/3/3
+//
+
 import AppKit
 import Combine
 

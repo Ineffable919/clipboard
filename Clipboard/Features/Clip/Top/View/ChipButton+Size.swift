@@ -1,3 +1,10 @@
+//
+//  ChipButton+Size.swift
+//  Clipboard
+//
+//  Created by crown on 2026/10/15
+//
+
 import AppKit
 
 extension ChipButton {

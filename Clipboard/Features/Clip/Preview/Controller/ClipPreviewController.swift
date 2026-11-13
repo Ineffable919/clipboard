@@ -2,6 +2,8 @@
 //  ClipPreviewController.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/27
+//
 //  预览 ViewController：组装 header/content/footer 布局
 //
 

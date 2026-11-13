@@ -2,6 +2,8 @@
 //  ClipPreviewPopoverPool.swift
 //  Clipboard
 //
+//  Created by crown on 2026/11/3
+//
 //  预览 Popover 复用池：关闭动画结束后回收，避免每次打开都重建窗口与视图树
 //
 

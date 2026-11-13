@@ -1,3 +1,10 @@
+//
+//  MCPTools.swift
+//  Clipboard
+//
+//  Created by crown on 2026/6/2
+//
+
 import AppKit
 import CryptoKit
 import Foundation

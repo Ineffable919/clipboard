@@ -2,6 +2,8 @@
 //  MarkdownHTMLDirection.swift
 //  Clipboard
 //
+//  Created by crown on 2026/8/26
+//
 //  为从右向左书写的 Markdown 段落补充方向属性
 //
 

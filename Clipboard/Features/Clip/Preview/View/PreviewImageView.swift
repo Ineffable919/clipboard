@@ -2,6 +2,8 @@
 //  PreviewImageView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/8/26
+//
 //  图片及实况文本预览
 //
 

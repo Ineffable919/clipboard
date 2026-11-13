@@ -2,6 +2,8 @@
 //  TopBarView+Suggestions.swift
 //  Clipboard
 //
+//  Created by crown on 2026/8/22
+//
 //  Search suggestion construction and application metadata loading
 //
 

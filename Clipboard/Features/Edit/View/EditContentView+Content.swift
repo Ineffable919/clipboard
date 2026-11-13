@@ -1,3 +1,10 @@
+//
+//  EditContentView+Content.swift
+//  Clipboard
+//
+//  Created by crown on 2026/10/6
+//
+
 import AppKit
 
 extension EditContentView {

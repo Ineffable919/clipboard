@@ -1,3 +1,10 @@
+//
+//  PasteboardTextPreparation.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/30
+//
+
 import AppKit
 
 enum PasteboardTextPreparation {

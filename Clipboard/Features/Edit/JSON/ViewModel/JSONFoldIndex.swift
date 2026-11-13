@@ -1,3 +1,10 @@
+//
+//  JSONFoldIndex.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/30
+//
+
 import Foundation
 
 /// 保存跨行对象和数组的原文 UTF-16 范围

@@ -1,3 +1,10 @@
+//
+//  JSONFoldProjection.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/30
+//
+
 import Foundation
 
 /// 映射原文与折叠显示的范围，保留嵌套节点的折叠状态

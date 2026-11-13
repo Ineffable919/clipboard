@@ -1,3 +1,10 @@
+//
+//  HeaderHighlight.swift
+//  Clipboard
+//
+//  Created by crown on 2026/11/4
+//
+
 import AppKit
 
 /// 主面板头部（Chip / 图标按钮）共用的高亮背景色

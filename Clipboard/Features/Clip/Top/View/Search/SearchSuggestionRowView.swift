@@ -2,6 +2,8 @@
 //  SearchSuggestionRowView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/29
+//
 //  联想列表单行视图：icon + 高亮匹配文字
 //
 

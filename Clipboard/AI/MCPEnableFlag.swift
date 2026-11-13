@@ -1,3 +1,10 @@
+//
+//  MCPEnableFlag.swift
+//  Clipboard
+//
+//  Created by crown on 2026/6/2
+//
+
 import Foundation
 
 enum MCPEnableFlag {

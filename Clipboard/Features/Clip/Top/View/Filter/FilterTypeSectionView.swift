@@ -2,6 +2,8 @@
 //  FilterTypeSectionView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/27
+//
 //  类型筛选区域：管理类型按钮的创建和选中状态
 //
 

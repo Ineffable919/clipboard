@@ -2,6 +2,8 @@
 //  FilterSectionView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/11/4
+//
 //  筛选区域基类：标题 + 三列按钮网格
 //
 

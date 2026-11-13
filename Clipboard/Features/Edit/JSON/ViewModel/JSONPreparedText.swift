@@ -1,3 +1,10 @@
+//
+//  JSONPreparedText.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/30
+//
+
 import AppKit
 
 /// 后台建立分页索引，原文不交给完整文档的文本系统

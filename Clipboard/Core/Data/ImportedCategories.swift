@@ -1,3 +1,10 @@
+//
+//  ImportedCategories.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/15
+//
+
 import Foundation
 
 /// 分类映射只计算一次，记录导入时按旧 ID 直接查找

@@ -1,3 +1,10 @@
+//
+//  HUDContentView.swift
+//  Clipboard
+//
+//  Created by crown on 2026/10/21
+//
+
 import SwiftUI
 
 @available(macOS 26.0, *)

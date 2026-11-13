@@ -1,3 +1,10 @@
+//
+//  MCPTypes.swift
+//  Clipboard
+//
+//  Created by crown on 2026/6/2
+//
+
 import Foundation
 
 // MARK: - JSON-RPC ID

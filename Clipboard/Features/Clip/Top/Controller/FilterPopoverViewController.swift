@@ -2,6 +2,8 @@
 //  FilterPopoverViewController.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/18
+//
 //  Popover 视图控制器：管理筛选内容视图的生命周期与数据加载
 //
 

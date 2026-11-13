@@ -2,6 +2,8 @@
 //  MarkdownHTMLRenderer.swift
 //  Clipboard
 //
+//  Created by crown on 2026/8/26
+//
 //  将 Markdown 渲染为等待 DOMPurify 清理的预览 HTML
 //
 

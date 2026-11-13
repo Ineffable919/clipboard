@@ -2,6 +2,8 @@
 //  JSONIndentation.swift
 //  Clipboard
 //
+//  Created by crown on 2026/7/21
+//
 
 enum JSONIndentation: Int, CaseIterable, Sendable {
     case none = 0

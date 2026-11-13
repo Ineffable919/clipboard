@@ -2,6 +2,8 @@
 //  FloatingCardRowView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/5/5
+//
 //  浮动窗口的单行卡片视图
 //
 

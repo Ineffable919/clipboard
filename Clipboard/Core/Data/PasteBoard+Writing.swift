@@ -1,3 +1,10 @@
+//
+//  PasteBoard+Writing.swift
+//  Clipboard
+//
+//  Created by crown on 2025/11/13
+//
+
 import AppKit
 import Combine
 

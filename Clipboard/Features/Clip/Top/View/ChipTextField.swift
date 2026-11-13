@@ -1,3 +1,10 @@
+//
+//  ChipTextField.swift
+//  Clipboard
+//
+//  Created by crown on 2026/10/6
+//
+
 import AppKit
 
 final class ChipTextField: NSTextField {

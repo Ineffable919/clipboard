@@ -1,3 +1,10 @@
+//
+//  TextStatisticsWorker.swift
+//  Clipboard
+//
+//  Created by crown on 2026/10/6
+//
+
 actor TextStatisticsWorker {
     static let shared = TextStatisticsWorker()
 

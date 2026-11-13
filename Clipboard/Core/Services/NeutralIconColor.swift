@@ -1,3 +1,10 @@
+//
+//  NeutralIconColor.swift
+//  Clipboard
+//
+//  Created by crown on 2026/10/23
+//
+
 import AppKit
 
 /// 处理没有有效彩色候选的图标，背景或主体不可靠时交回原取色流程

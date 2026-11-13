@@ -1,3 +1,10 @@
+//
+//  JSONDocument.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/30
+//
+
 import AppKit
 
 /// 后台生成的文档、索引和首屏排版结果

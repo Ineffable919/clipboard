@@ -2,6 +2,8 @@
 //  EditToolbarView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/6/24
+//
 //  编辑窗口顶部工具栏：取消 + 格式化 + 保存
 //
 

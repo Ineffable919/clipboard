@@ -1,3 +1,10 @@
+//
+//  JSONTextView.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/30
+//
+
 import AppKit
 
 // 编辑前恢复原文，让输入法和撤销继续使用原文坐标

@@ -1,3 +1,10 @@
+//
+//  PasteSQLManager+Write.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/5
+//
+
 import AppKit
 import Foundation
 import SQLite

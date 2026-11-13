@@ -1,3 +1,10 @@
+//
+//  HeaderClickGestureRecognizer.swift
+//  Clipboard
+//
+//  Created by crown on 2026/11/4
+//
+
 import AppKit
 
 /// Keeps the existing click recognition while exposing its pressed appearance.

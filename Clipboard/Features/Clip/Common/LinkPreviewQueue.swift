@@ -1,3 +1,10 @@
+//
+//  LinkPreviewQueue.swift
+//  Clipboard
+//
+//  Created by crown on 2026/10/13
+//
+
 import Foundation
 
 @MainActor

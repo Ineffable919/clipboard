@@ -2,6 +2,8 @@
 //  PasteboardModel+RuntimeCache.swift
 //  Clipboard
 //
+//  Created by crown on 2026/7/1
+//
 //  Non-persistent caches derived from immutable pasteboard payloads
 //
 

@@ -2,6 +2,8 @@
 //  PreviewPillButton.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/25
+//
 //  预览区域通用胶囊按钮
 //
 

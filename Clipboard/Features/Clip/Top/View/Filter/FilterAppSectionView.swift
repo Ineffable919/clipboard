@@ -2,6 +2,8 @@
 //  FilterAppSectionView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/27
+//
 //  应用筛选区域：管理应用按钮的创建、展开/收起和选中状态
 //
 

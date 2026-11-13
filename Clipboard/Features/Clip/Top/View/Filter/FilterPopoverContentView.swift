@@ -2,6 +2,8 @@
 //  FilterPopoverContentView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/27
+//
 //  Popover 内容视图：组装类型、应用和日期三个筛选区域
 //
 

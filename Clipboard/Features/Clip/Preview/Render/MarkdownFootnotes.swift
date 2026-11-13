@@ -2,6 +2,8 @@
 //  MarkdownFootnotes.swift
 //  Clipboard
 //
+//  Created by crown on 2026/8/26
+//
 //  提取并渲染 Markdown 脚注
 //
 

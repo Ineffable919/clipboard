@@ -2,6 +2,8 @@
 //  FloatingHeaderView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/5/5
+//
 //  浮动窗口顶部：拖拽区 + Pin 按钮 + 搜索框 + 分类标签行
 //
 

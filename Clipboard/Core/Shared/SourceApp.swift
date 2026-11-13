@@ -1,3 +1,10 @@
+//
+//  SourceApp.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/23
+//
+
 import Foundation
 import SQLite
 

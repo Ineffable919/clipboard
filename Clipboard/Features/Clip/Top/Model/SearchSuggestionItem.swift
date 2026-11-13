@@ -2,6 +2,8 @@
 //  SearchSuggestionItem.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/29
+//
 //  联想列表数据模型
 //
 

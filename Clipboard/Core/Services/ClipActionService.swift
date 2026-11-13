@@ -1,3 +1,10 @@
+//
+//  ClipActionService.swift
+//  Clipboard
+//
+//  Created by crown on 2025/12/9
+//
+
 import AppKit
 import Foundation
 

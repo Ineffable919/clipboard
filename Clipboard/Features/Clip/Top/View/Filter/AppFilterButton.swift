@@ -2,6 +2,8 @@
 //  AppFilterButton.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/27
+//
 //  应用筛选按钮：带应用图标的 FilterButton 子类
 //
 

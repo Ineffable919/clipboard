@@ -2,7 +2,7 @@
 //  SettingWindowController.swift
 //  Clipboard
 //
-//  Created on crown 2025/10/26
+//  Created by crown on 2025/10/26
 //
 
 import AppKit

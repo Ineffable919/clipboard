@@ -1,3 +1,10 @@
+//
+//  PressDownGestureRecognizer.swift
+//  Clipboard
+//
+//  Created by crown on 2026/11/3
+//
+
 import AppKit
 
 /// 鼠标按下即识别，不等待抬起

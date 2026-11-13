@@ -2,6 +2,8 @@
 //  FloatingWindowContentView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/5/5
+//
 //  浮动窗口主容器：背景 + Header + HistoryView + Footer 的布局
 //
 

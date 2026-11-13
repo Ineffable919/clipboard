@@ -2,6 +2,8 @@
 //  MarkdownHTMLSanitizer.swift
 //  Clipboard
 //
+//  Created by crown on 2026/8/26
+//
 //  在独立脚本环境中使用本地 DOMPurify 清理 Markdown 原始 HTML
 //
 

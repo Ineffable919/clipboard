@@ -1,3 +1,10 @@
+//
+//  CardImageView.swift
+//  Clipboard
+//
+//  Created by crown on 2026/10/29
+//
+
 import AppKit
 import SnapKit
 import VisionKit

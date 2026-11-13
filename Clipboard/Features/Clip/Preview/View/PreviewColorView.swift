@@ -2,6 +2,8 @@
 //  PreviewColorView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/8/26
+//
 //  颜色值预览
 //
 

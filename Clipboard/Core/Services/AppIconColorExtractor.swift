@@ -1,3 +1,10 @@
+//
+//  AppIconColorExtractor.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/24
+//
+
 import AppKit
 
 /// 优先明显主导色，再比较中心位置、局部对比和多处分布，最后应用色系偏好

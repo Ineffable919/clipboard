@@ -1,3 +1,10 @@
+//
+//  TopBarView+ModeHitTesting.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/28
+//
+
 import AppKit
 
 extension TopBarView {

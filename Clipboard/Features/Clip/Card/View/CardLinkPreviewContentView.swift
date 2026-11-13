@@ -2,6 +2,8 @@
 //  CardLinkPreviewContentView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/12
+//
 
 import AppKit
 import SnapKit

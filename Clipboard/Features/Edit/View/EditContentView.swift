@@ -2,6 +2,8 @@
 //  EditContentView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/6/24
+//
 //  编辑窗口内容视图：工具栏 + 编辑器 + 统计栏
 //
 

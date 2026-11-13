@@ -2,6 +2,8 @@
 //  AppColorService.swift
 //  Clipboard
 //
+//  Created by crown on 2026/3/25
+//
 //  应用图标颜色管理：提取、缓存、查询
 //
 

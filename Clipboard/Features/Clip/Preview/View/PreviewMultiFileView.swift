@@ -2,6 +2,8 @@
 //  PreviewMultiFileView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/8/26
+//
 //  多文件图标堆叠预览
 //
 

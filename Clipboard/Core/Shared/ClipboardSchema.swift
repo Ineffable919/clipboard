@@ -1,5 +1,9 @@
-// ClipboardSchema.swift
-// Shared between App and clipmcp targets
+//
+//  ClipboardSchema.swift
+//  Clipboard
+//
+//  Created by crown on 2026/6/2
+//
 
 import Foundation
 import SQLite

@@ -2,6 +2,8 @@
 //  TopBarView+ModeTransition.swift
 //  Clipboard
 //
+//  Created by crown on 2026/9/14
+//
 
 import AppKit
 

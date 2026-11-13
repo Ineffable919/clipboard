@@ -1,7 +1,9 @@
 //
 //  MarkdownFrontmatter.swift
 //  Clipboard
-
+//
+//  Created by crown on 2026/8/26
+//
 //  Adapted from Markdown Preview (MIT License)
 //
 

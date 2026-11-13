@@ -2,6 +2,8 @@
 //  TopBarView+Chips.swift
 //  Clipboard
 //
+//  Created by crown on 2026/8/22
+//
 //  Chip editing and selection forwarding
 //
 

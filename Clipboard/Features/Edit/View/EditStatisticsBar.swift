@@ -2,6 +2,8 @@
 //  EditStatisticsBar.swift
 //  Clipboard
 //
+//  Created by crown on 2026/6/24
+//
 //  编辑窗口底部统计栏（字符数 / 词数 / 行数）
 //
 

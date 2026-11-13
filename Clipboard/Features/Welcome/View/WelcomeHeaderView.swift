@@ -2,6 +2,8 @@
 //  WelcomeHeaderView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/8/19
+//
 
 import AppKit
 import SwiftUI

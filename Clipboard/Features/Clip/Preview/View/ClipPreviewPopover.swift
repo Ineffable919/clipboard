@@ -2,6 +2,8 @@
 //  ClipPreviewPopover.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/27
+//
 //  预览 Popover：NSPopover 子类，负责键盘事件拦截与尺寸计算
 //
 

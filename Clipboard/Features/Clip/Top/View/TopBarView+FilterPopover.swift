@@ -2,6 +2,8 @@
 //  TopBarView+FilterPopover.swift
 //  Clipboard
 //
+//  Created by crown on 2026/8/22
+//
 //  Filter Popover coordination and search-token synchronization
 //
 

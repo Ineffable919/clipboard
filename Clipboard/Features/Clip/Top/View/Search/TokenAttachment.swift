@@ -2,6 +2,8 @@
 //  TokenAttachment.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/23
+//
 //  Token 附件，用于在搜索框中渲染筛选标签
 //
 
