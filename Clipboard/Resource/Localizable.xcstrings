@@ -1333,24 +1333,6 @@
         }
       }
     },
-    "generalHistoryLimitConfirmTitle" : {
-      "comment" : "Confirmation title when a new retention limit would delete older history",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Some history items exceed the new limit"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "部分历史记录已超出新期限"
-          }
-        }
-      }
-    },
     "generalHistoryLimitConfirmMessage" : {
       "comment" : "Cancel keeps the current retention limit; Delete removes expired history and applies the new limit",
       "extractionState" : "manual",
@@ -1365,6 +1347,24 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "是否删除这些记录并应用新设置？"
+          }
+        }
+      }
+    },
+    "generalHistoryLimitConfirmTitle" : {
+      "comment" : "Confirmation title when a new retention limit would delete older history",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Some history items exceed the new limit"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "部分历史记录已超出新期限"
           }
         }
       }
@@ -3315,6 +3315,24 @@
         }
       }
     },
+    "mcpChange" : {
+      "comment" : "Button to edit the MCP server port",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "更改"
+          }
+        }
+      }
+    },
     "mcpClaudeFooter" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3485,6 +3503,23 @@
         }
       }
     },
+    "mcpNodeNote" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This client connects through the mcp-remote bridge, which requires Node.js (npx)."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "该客户端通过 mcp-remote 桥接连接，需要已安装 Node.js（npx）。"
+          }
+        }
+      }
+    },
     "mcpPasteInto" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3502,6 +3537,58 @@
         }
       }
     },
+    "mcpPortSheetNote" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Valid range is 1024–65535. After changing it, connected AI tools must be reconfigured with the new address."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可用范围 1024–65535。更改后，已配置的 AI 工具需要使用新地址重新连接。"
+          }
+        }
+      }
+    },
+    "mcpPortSheetTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP Server Port"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP 服务器端口"
+          }
+        }
+      }
+    },
+    "mcpPortUnavailable" : {
+      "comment" : "MCP server failed to bind its port",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Port already in use"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "端口已被占用"
+          }
+        }
+      }
+    },
     "mcpRunning" : {
       "comment" : "MCP server status while running, with the exposed tool count",
       "extractionState" : "manual",
@@ -3509,13 +3596,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "stdio · @clipboard/mcp · %lld tools exposed"
+            "value" : "HTTP Stream · %lld tools exposed"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "stdio · @clipboard/mcp · 已开放 %lld 个工具"
+            "value" : "HTTP Stream · 已开放 %lld 个工具"
           }
         }
       }
@@ -3527,13 +3614,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "server stopped · 0 tools exposed"
+            "value" : "Server off"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "服务已停止 · 已开放 0 个工具"
+            "value" : "服务已关闭"
           }
         }
       }

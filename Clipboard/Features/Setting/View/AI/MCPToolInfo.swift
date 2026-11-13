@@ -8,29 +8,25 @@
 import SwiftUI
 
 struct MCPToolInfo: Identifiable {
-    let id = UUID()
+    var id: String { name }
     let name: String
-    let description: String
-    let icon: String
-    let color: Color
+    let description: LocalizedStringResource
 
     static let all: [MCPToolInfo] = MCPToolDefinition.all.map {
         .init(
             name: $0.name,
-            description: $0.localizedDescription,
-            icon: $0.icon,
-            color: Color(hex: $0.colorHex)
+            description: $0.localizedDescription
         )
     }
 }
 
 private extension MCPToolDefinition {
-    var localizedDescription: String {
+    var localizedDescription: LocalizedStringResource {
         switch name {
-        case "search_clipboard": String(localized: .mcpToolSearchClipboard)
-        case "write_clipboard": String(localized: .mcpToolWriteClipboard)
-        case "list_tags": String(localized: .mcpToolListCategories)
-        default: description
+        case "search_clipboard": .mcpToolSearchClipboard
+        case "write_clipboard": .mcpToolWriteClipboard
+        case "list_tags": .mcpToolListCategories
+        default: LocalizedStringResource(String.LocalizationValue(description))
         }
     }
 }

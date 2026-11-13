@@ -16,9 +16,9 @@ struct MCPClientInfo: Identifiable {
 
     let name: String
     let icon: String
-    let subtitle: String
+    let subtitle: LocalizedStringResource
     let command: String
-    let footer: String?
+    let footer: LocalizedStringResource?
     let configNote: String?
 }
 
@@ -28,8 +28,13 @@ struct AISettingsView: View {
     @State private var isEnabled: Bool
     @State private var enabledTools: Set<String>
     @State private var selectedClient: MCPClientInfo?
+    private let server: MCPServer
 
-    init(initialEnabled: Bool = MCPEnableFlag.isEnabled) {
+    init(
+        initialEnabled: Bool = MCPEnableFlag.isEnabled,
+        server: MCPServer = .shared
+    ) {
+        self.server = server
         _isEnabled = State(initialValue: initialEnabled)
         _enabledTools = State(
             initialValue: Set(MCPToolInfo.all.map(\.name)).subtracting(
@@ -38,55 +43,63 @@ struct AISettingsView: View {
         )
     }
 
-    private static let clients: [MCPClientInfo] = {
-        let helperPath = Bundle.main.bundleURL
-            .appending(path: "Contents/MacOS/clipmcp")
-            .path
-        let cliSubtitle = String(localized: .mcpCliSub)
-        let configSubtitle = String(localized: .mcpConfigSub)
-        let configCommand = """
-        {
-          "mcpServers": {
-            "clipboard": {
-              "command": "\(helperPath)"
+    private var clients: [MCPClientInfo] {
+        let url = server.endpoint
+        let cliSubtitle = LocalizedStringResource.mcpCliSub
+        let configSubtitle = LocalizedStringResource.mcpConfigSub
+        let bridgeCommand = """
+            {
+              "mcpServers": {
+                "clipboard": {
+                  "command": "npx",
+                  "args": ["-y", "mcp-remote", "\(url)"]
+                }
+              }
             }
-          }
-        }
-        """
+            """
+        let urlCommand = """
+            {
+              "mcpServers": {
+                "clipboard": {
+                  "url": "\(url)"
+                }
+              }
+            }
+            """
         let vsCodeCommand = """
-        {
-          "servers": {
-            "clipboard": {
-              "type": "stdio",
-              "command": "\(helperPath)"
+            {
+              "servers": {
+                "clipboard": {
+                  "type": "http",
+                  "url": "\(url)"
+                }
+              }
             }
-          }
-        }
-        """
+            """
         return [
             MCPClientInfo(
                 name: "Claude Desktop",
                 icon: "MCPClaudeIcon",
                 subtitle: configSubtitle,
-                command: configCommand,
-                footer: nil,
+                command: bridgeCommand,
+                footer: .mcpNodeNote,
                 configNote:
-                "~/Library/Application Support/Claude/claude_desktop_config.json"
+                    "~/Library/Application Support/Claude/claude_desktop_config.json"
             ),
             MCPClientInfo(
                 name: "Claude Code",
                 icon: "MCPClaudeIcon",
                 subtitle: cliSubtitle,
                 command:
-                "claude mcp add --transport stdio clipboard -- \(helperPath)",
-                footer: String(localized: .mcpClaudeFooter),
+                    "claude mcp add --transport http clipboard \(url)",
+                footer: .mcpClaudeFooter,
                 configNote: nil
             ),
             MCPClientInfo(
                 name: "Codex",
                 icon: "MCPCodexIcon",
                 subtitle: cliSubtitle,
-                command: "codex mcp add clipboard -- \(helperPath)",
+                command: "codex mcp add clipboard \\\n  --url \(url)",
                 footer: nil,
                 configNote: nil
             ),
@@ -94,7 +107,7 @@ struct AISettingsView: View {
                 name: "Cursor",
                 icon: "MCPCursorIcon",
                 subtitle: configSubtitle,
-                command: configCommand,
+                command: urlCommand,
                 footer: nil,
                 configNote: "~/.cursor/mcp.json"
             ),
@@ -105,26 +118,31 @@ struct AISettingsView: View {
                 command: vsCodeCommand,
                 footer: nil,
                 configNote: "~/.vscode/mcp.json"
-            )
+            ),
         ]
-    }()
+    }
 
     var body: some View {
         ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: Const.space12) {
-                MCPHeaderCard(isEnabled: $isEnabled, enabledToolCount: enabledTools.count)
+                MCPHeaderCard(
+                    isEnabled: $isEnabled,
+                    enabledToolCount: enabledTools.count,
+                    server: server
+                )
                 if isEnabled {
+                    MCPToolsSection(enabledTools: $enabledTools)
+
                     HStack {
                         Spacer()
                         MCPClientMenu(
                             title: String(localized: .mcpConnectTools),
-                            clients: Self.clients
+                            clients: clients
                         ) { client in
                             selectedClient = client
                         }
                         .fixedSize()
                     }
-                    MCPToolsSection(enabledTools: $enabledTools)
                 }
                 Spacer(minLength: 0)
             }
@@ -141,8 +159,8 @@ struct AISettingsView: View {
 
 // MARK: - Tools Section
 
-private extension Binding where Value == Set<String> {
-    subscript(contains element: String) -> Binding<Bool> {
+extension Binding where Value == Set<String> {
+    fileprivate subscript(contains element: String) -> Binding<Bool> {
         Binding<Bool>(
             get: { wrappedValue.contains(element) },
             set: { newValue in
@@ -167,16 +185,21 @@ private struct MCPToolsSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: Const.space12) {
-            Text(String(localized: "mcpExposedTools", table: "Localizable"))
+            Text(.mcpExposedTools)
                 .font(.subheadline.bold())
 
             VStack(spacing: 0) {
-                ForEach(Array(MCPToolInfo.all.enumerated()), id: \.element.id) { index, tool in
+                ForEach(Array(MCPToolInfo.all.enumerated()), id: \.element.id) {
+                    index,
+                    tool in
                     if index > 0 {
                         Divider()
-                            .padding(.horizontal, Const.space24)
+                            .padding(.horizontal, Const.space16)
                     }
-                    MCPToolRow(tool: tool, isEnabled: isEnabledBinding(for: tool.name))
+                    MCPToolRow(
+                        tool: tool,
+                        isEnabled: isEnabledBinding(for: tool.name)
+                    )
                 }
             }
             .settingsStyle()
@@ -194,19 +217,20 @@ private struct MCPToolsSection: View {
 private struct MCPClientDetailSheet: View {
     let client: MCPClientInfo
     @Environment(\.dismiss) private var dismiss
+    @FocusState private var cancelFocused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             clientIcon
 
-            Text(String(localized: .mcpConnectFormat(client.name)))
+            Text(.mcpConnectFormat(client.name))
                 .font(.title2.bold())
                 .padding(.bottom, Const.space4)
 
             Text(client.subtitle)
                 .padding(.bottom, Const.space16)
 
-            commandBlock
+            MCPCommandBlock(command: client.command)
                 .padding(
                     .bottom,
                     client.configNote != nil ? Const.space8 : Const.space16
@@ -224,6 +248,7 @@ private struct MCPClientDetailSheet: View {
                             .truncationMode(.middle)
                     }
                     .buttonStyle(.plain)
+                    .focusable(false)
                     .help(note)
                 }
                 .padding(.bottom, Const.space16)
@@ -236,14 +261,16 @@ private struct MCPClientDetailSheet: View {
 
             HStack {
                 Spacer()
-                Button(String(localized: .cancelButton)) {
+                Button(.cancelButton) {
                     dismiss()
                 }
                 .buttonStyle(.bordered)
+                .focused($cancelFocused)
             }
         }
         .padding(Const.space24)
         .frame(width: 440)
+        .defaultFocus($cancelFocused, true)
     }
 
     private var clientIcon: some View {
@@ -254,36 +281,59 @@ private struct MCPClientDetailSheet: View {
             .clipShape(.rect(cornerRadius: 8))
             .padding(.bottom, Const.space16)
     }
+}
 
-    private var commandBlock: some View {
-        ZStack(alignment: .topTrailing) {
-            Text(client.command)
-                .font(.system(size: 12, design: .monospaced))
-                .textSelection(.enabled)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, Const.space12)
-                .padding(.vertical, Const.space12)
-                .padding(.trailing, Const.space32)
-                .background(
-                    .quaternary,
-                    in: RoundedRectangle(cornerRadius: Const.space8)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: Const.space8)
-                        .stroke(Color.primary.opacity(0.06))
-                )
+// MARK: - MCPCommandBlock
 
-            Button {
-                NSPasteboard.general.clearContents()
-                NSPasteboard.general.setString(client.command, forType: .string)
-            } label: {
-                Image(systemName: "doc.on.doc")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .frame(width: Const.space32, height: Const.space32)
-                    .contentShape(Rectangle())
+/// 可选中、可一键复制的等宽命令/配置块
+private struct MCPCommandBlock: View {
+    let command: String
+    @State private var copied = false
+
+    var body: some View {
+        Text(command)
+            .font(.callout.monospaced())
+            .lineSpacing(3)
+            .textSelection(.enabled)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.vertical, Const.space12)
+            .padding(.leading, Const.space16)
+            .padding(.trailing, Const.space32 + Const.space8)
+            .background(
+                .quaternary,
+                in: RoundedRectangle(cornerRadius: Const.space8)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: Const.space8)
+                    .stroke(Color.primary.opacity(0.06))
+            )
+            .overlay(alignment: .topTrailing) {
+                copyButton
             }
-            .buttonStyle(.plain)
+    }
+
+    private var copyButton: some View {
+        Button {
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(command, forType: .string)
+            copied = true
+        } label: {
+            Image(systemName: copied ? "checkmark" : "doc.on.doc")
+                .font(.callout)
+                .foregroundStyle(copied ? Color.green : .secondary)
+                .contentTransition(.symbolEffect(.replace))
+                .frame(width: Const.space32, height: Const.space32)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .focusable(false)
+        .help(copied ? Text(.mcpCopied) : Text(.mcpCopy))
+        .accessibilityLabel(Text(.mcpCopy))
+        .task(id: copied) {
+            guard copied else { return }
+            try? await Task.sleep(for: .seconds(1.5))
+            copied = false
         }
     }
 }
@@ -295,34 +345,21 @@ private struct MCPToolRow: View {
     @Binding var isEnabled: Bool
 
     var body: some View {
-        HStack(spacing: Const.space12) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(
-                        isEnabled
-                            ? tool.color.opacity(0.12)
-                            : Color.secondary.opacity(0.1)
-                    )
-                    .frame(width: 28, height: 28)
-                Image(systemName: tool.icon)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(
-                        isEnabled ? tool.color : Color.secondary
-                    )
-            }
-            .animation(.easeInOut(duration: 0.2), value: isEnabled)
+        HStack(alignment: .center, spacing: Const.space12) {
+            Circle()
+                .fill(isEnabled ? Color.green : Color.secondary)
+                .frame(width: 8, height: 8)
+                .animation(.easeInOut(duration: 0.2), value: isEnabled)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(tool.name)
-                    .font(.system(size: 12, design: .default))
                 Text(tool.description)
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .help(tool.description)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
-            Spacer()
+            Spacer(minLength: Const.space12)
 
             Toggle("", isOn: $isEnabled)
                 .toggleStyle(.switch)
@@ -339,7 +376,34 @@ private struct MCPToolRow: View {
         .frame(width: Const.settingWidth - 150, height: Const.settingHeight)
 }
 
+#Preview("Port unavailable") {
+    AISettingsView(
+        initialEnabled: true,
+        server: MCPServer(previewStatus: .failed)
+    )
+    .frame(width: Const.settingWidth - 150, height: Const.settingHeight)
+}
+
 #Preview("Enabled") {
     AISettingsView(initialEnabled: true)
         .frame(width: Const.settingWidth - 150, height: Const.settingHeight)
+}
+
+#Preview("Command block") {
+    VStack(spacing: Const.space16) {
+        MCPCommandBlock(
+            command: "claude mcp add --transport http clipboard http://127.0.0.1:38417/mcp"
+        )
+        MCPCommandBlock(command: """
+        {
+          "mcpServers": {
+            "clipboard": {
+              "url": "http://127.0.0.1:38417/mcp"
+            }
+          }
+        }
+        """)
+    }
+    .padding(Const.space24)
+    .frame(width: 440)
 }

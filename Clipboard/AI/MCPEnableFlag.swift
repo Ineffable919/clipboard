@@ -23,5 +23,6 @@ enum MCPEnableFlag {
                 atPath: ClipboardPaths.mcpEnableFlag
             )
         }
+        MCPServer.shared.sync()
     }
 }

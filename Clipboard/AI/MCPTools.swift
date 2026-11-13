@@ -6,11 +6,10 @@
 //
 
 import AppKit
-import CryptoKit
 import Foundation
 import SQLite
 
-struct MCPTools {
+nonisolated struct MCPTools {
     // MARK: - Tool schema (returned by tools/list)
 
     static var definitions: [[String: Any]] {
@@ -19,7 +18,7 @@ struct MCPTools {
         return allDefinitions.filter { ($0["name"] as? String).map { !disabled.contains($0) } ?? true }
     }
 
-    private static let inputSchemas: [String: [String: Any]] = [
+    private static var inputSchemas: [String: [String: Any]] { [
         "search_clipboard": [
             "type": "object",
             "properties": [
@@ -53,11 +52,14 @@ struct MCPTools {
             "type": "object",
             "properties": [:]
         ]
-    ]
+    ] }
 
-    private static let allDefinitions: [[String: Any]] = MCPToolDefinition.all.compactMap { def in
-        guard let schema = inputSchemas[def.name] else { return nil }
-        return ["name": def.name, "description": def.description, "inputSchema": schema]
+    private static var allDefinitions: [[String: Any]] {
+        let schemas = inputSchemas
+        return MCPToolDefinition.all.compactMap { def in
+            guard let schema = schemas[def.name] else { return nil }
+            return ["name": def.name, "description": def.description, "inputSchema": schema]
+        }
     }
 
     // MARK: - Dispatch
@@ -266,7 +268,7 @@ struct MCPTools {
 
 // MARK: - Helpers
 
-private extension MCPTools {
+private nonisolated extension MCPTools {
 
     private func tagForType(_ type: String) -> String {
         switch type {
@@ -329,15 +331,7 @@ private extension MCPTools {
 
 // MARK: - Minimal category chip for reading app UserDefaults
 
-private struct MCPCategoryChip: Codable {
+private nonisolated struct MCPCategoryChip: Codable {
     let id: Int
     let name: String
-}
-
-// MARK: - SHA-256 (mirrors Data+Extension.swift, local to clipmcp)
-
-private extension Data {
-    var sha256Hex: String {
-        SHA256.hash(data: self).reduce(into: "") { $0 += String(format: "%02hhx", $1) }
-    }
 }

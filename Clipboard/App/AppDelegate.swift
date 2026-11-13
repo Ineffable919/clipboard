@@ -52,6 +52,7 @@ extension AppDelegate: NSApplicationDelegate {
         StatusBarController.shared.cleanup()
         AppIconCache.shared.clearCache()
         HotKeyManager.shared.clear()
+        MCPServer.shared.stop()
     }
 
     func applicationShouldHandleReopen(_: NSApplication, hasVisibleWindows _: Bool) -> Bool {
@@ -101,6 +102,8 @@ extension AppDelegate {
         WelcomeWindowController.shared.showIfNeeded()
 
         syncLaunchAtLoginStatus()
+
+        MCPServer.shared.sync()
     }
 
     private func syncLaunchAtLoginStatus() {

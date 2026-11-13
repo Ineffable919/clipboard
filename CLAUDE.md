@@ -18,11 +18,11 @@ Release tooling lives in `scripts/` (`build.sh <version> [build] [arch]`, `relea
 
 ## Architecture
 
-Two Xcode targets share one SQLite database:
+One Xcode target (the menu-bar app) that also hosts a local MCP server:
 
 - **`Clipboard`** (the menu-bar app, `Clipboard/`) — AppKit app, entry via `App/AppDelegate.swift`.
-- **`clipmcp`** (`Clipboard/AI/`) — a tiny stdio JSON-RPC MCP server (`main.swift` → `MCPHandler` → `MCPTools`) exposing clipboard history to AI clients. It exits immediately unless the enable-flag file (`ClipboardPaths.mcpEnableFlag`, toggled by `MCPEnableFlag`) exists.
-- `Core/Shared/ClipboardSchema.swift` is compiled into **both** targets: it holds the `Col` column definitions and `ClipboardPaths`. Change the DB schema there, and keep it free of app-only dependencies.
+- **MCP server** (`Clipboard/AI/`) — Streamable HTTP endpoint `http://127.0.0.1:23333/mcp` run inside the app (`MCPServer` → `MCPHTTPConnection` → `MCPHandler` → `MCPTools`), exposing clipboard history to AI clients. It is stateless (POST only; no SSE/session), binds loopback only and rejects non-loopback `Host`/`Origin`. `MCPServer.sync()` starts/stops it from the enable-flag file (`ClipboardPaths.mcpEnableFlag`, toggled by `MCPEnableFlag`). MCP types are `nonisolated` because the target defaults to MainActor.
+- `Core/Shared/ClipboardSchema.swift` holds the `Col` column definitions and `ClipboardPaths`; keep it `nonisolated` and free of UI dependencies since MCP code reads it off the main actor.
 
 ### Startup flow
 

@@ -155,6 +155,9 @@ enum PasteUserDefaults {
     /// 已完成首次启动欢迎页
     @UserDefaultsWrapper(.welcomeDone, defaultValue: false)
     static var welcomeDone
+    /// MCP 本地服务端口
+    @UserDefaultsWrapper(.mcpPort, defaultValue: MCPServer.defaultPort)
+    static var mcpPort
 }
 
 @propertyWrapper

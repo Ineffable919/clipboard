@@ -65,6 +65,8 @@ enum PrefKey: String, CaseIterable {
     case appLanguage
     /// 已完成首次启动欢迎页
     case welcomeDone
+    /// MCP 本地服务端口
+    case mcpPort
 }
 
 /// 应用语言

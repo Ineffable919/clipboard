@@ -9,7 +9,7 @@ import Foundation
 
 // MARK: - JSON-RPC ID
 
-enum JSONRPCId {
+nonisolated enum JSONRPCId {
     case string(String)
     case int(Int)
 
@@ -31,7 +31,7 @@ enum JSONRPCId {
 
 // MARK: - Request
 
-struct JSONRPCRequest {
+nonisolated struct JSONRPCRequest {
     let id: JSONRPCId?
     let method: String
     let params: [String: Any]
@@ -46,23 +46,26 @@ struct JSONRPCRequest {
 
 // MARK: - Response builders
 
-enum JSONRPC {
-    static func success(id: JSONRPCId, result: Any) -> String {
-        serialize(["jsonrpc": "2.0", "id": id.jsonValue, "result": result])
+nonisolated enum JSONRPC {
+    static func success(id: JSONRPCId, result: Any) -> [String: Any] {
+        ["jsonrpc": "2.0", "id": id.jsonValue, "result": result]
     }
 
-    static func error(id: JSONRPCId, code: Int, message: String) -> String {
-        serialize([
+    static func error(id: JSONRPCId, code: Int, message: String) -> [String: Any] {
+        [
             "jsonrpc": "2.0",
             "id": id.jsonValue,
             "error": ["code": code, "message": message]
-        ])
+        ]
     }
 
-    private static func serialize(_ dict: [String: Any]) -> String {
-        guard let data = try? JSONSerialization.data(withJSONObject: dict),
-              let str = String(data: data, encoding: .utf8)
-        else { return "" }
-        return str
+    /// 无法解析请求体时的错误响应（id 为 null）
+    static func parseError() -> Data? {
+        let payload: [String: Any] = [
+            "jsonrpc": "2.0",
+            "id": NSNull(),
+            "error": ["code": -32700, "message": "Parse error"]
+        ]
+        return try? JSONSerialization.data(withJSONObject: payload)
     }
 }

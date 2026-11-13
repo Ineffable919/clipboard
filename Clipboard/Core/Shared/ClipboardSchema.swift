@@ -8,7 +8,7 @@
 import Foundation
 import SQLite
 
-// MARK: - Column definitions (source of truth for both targets)
+// MARK: - Column definitions
 
 struct Col {
     nonisolated static let id = Expression<Int64>("id")
@@ -36,7 +36,7 @@ struct Col {
 
 // MARK: - Shared paths
 
-enum ClipboardPaths {
+nonisolated enum ClipboardPaths {
     static let appBundleId = "com.crown.clipboard"
 
     private static var appSupportDir: URL {
@@ -61,39 +61,31 @@ enum ClipboardPaths {
     }
 }
 
-// MARK: - MCP tool registry (shared between App and clipmcp targets)
+// MARK: - MCP tool registry
 
-struct MCPToolDefinition {
+nonisolated struct MCPToolDefinition {
     let name: String
     let description: String
-    let icon: String
-    let colorHex: String
 
     static let all: [MCPToolDefinition] = [
         .init(
             name: "search_clipboard",
-            description: "Search clipboard history by keyword, content type, or user category",
-            icon: "magnifyingglass",
-            colorHex: "#007AFF"
+            description: "Search clipboard history by keyword, content type, or user category"
         ),
         .init(
             name: "write_clipboard",
-            description: "Write plain text to the system clipboard",
-            icon: "bolt.fill",
-            colorHex: "#34C759"
+            description: "Write plain text to the system clipboard"
         ),
         .init(
             name: "list_tags",
-            description: "List available content types and user-defined tags for clipboard search",
-            icon: "tag.fill",
-            colorHex: "#FF9500"
+            description: "List available content types and user-defined tags for clipboard search"
         )
     ]
 }
 
-// MARK: - Per-tool enable flag (shared between App and clipmcp targets)
+// MARK: - Per-tool enable flag 
 
-enum MCPDisabledTools {
+nonisolated enum MCPDisabledTools {
     static func load() -> Set<String> {
         guard let data = FileManager.default.contents(atPath: ClipboardPaths.mcpDisabledTools),
               let names = try? JSONDecoder().decode([String].self, from: data)
