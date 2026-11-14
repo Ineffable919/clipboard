@@ -27,6 +27,7 @@ final class ClipMainViewController: NSViewController {
     var flagsMonitorToken: Any?
     var dragSourceApp: NSRunningApplication?
     var draggedIDs: [Int64] = []
+    var draggedItems: [PasteboardModel] = []
     var dragFilterRevision = 0
     var restoringSelection = false
 
@@ -158,9 +159,11 @@ final class ClipMainViewController: NSViewController {
             guard let self, let window = view.window else { return }
             let visibleRect = effectView.convert(effectView.bounds, to: nil)
             let screenRect = window.convertToScreen(visibleRect)
-            guard screenRect.contains(screenPoint) else { return }
+            // 拖离面板后窗口已收起，此时不能再让它抢回键盘焦点
+            guard ClipMainWindowController.shared.isVisible,
+                  screenRect.contains(screenPoint)
+            else { return }
 
-            let controller = ClipMainWindowController.shared
             AppEnvironment.shared.suppressResignKey = true
             window.resignKey()
             window.makeKey()

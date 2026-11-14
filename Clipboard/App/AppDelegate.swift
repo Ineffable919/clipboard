@@ -38,6 +38,10 @@ extension AppDelegate: NSApplicationDelegate {
         Task {
             await initClipboardAsync()
         }
+
+        Task.detached(priority: .utility) {
+            PasteboardWritingItem.clearDragCache()
+        }
     }
 
     func applicationSupportsSecureRestorableState(_: NSApplication) -> Bool {

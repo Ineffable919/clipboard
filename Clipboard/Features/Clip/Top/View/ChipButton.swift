@@ -218,18 +218,21 @@ final class ChipButton: NSView, NSTextFieldDelegate {
 
         let pasteboard = sender.draggingPasteboard
 
-        guard let data = pasteboard.data(forType: .pasteboardModel) else {
+        let decoder = JSONDecoder()
+        let models = (pasteboard.pasteboardItems ?? []).compactMap { item in
+            item.data(forType: .pasteboardModel).flatMap {
+                try? decoder.decode(PasteboardModel.self, from: $0)
+            }
+        }
+        guard let onDrop = config.onDrop, !models.isEmpty else {
             return false
         }
 
-        guard
-            let model = try? JSONDecoder()
-            .decode(PasteboardModel.self, from: data)
-        else {
-            return false
+        var accepted = false
+        for model in models where onDrop(model) {
+            accepted = true
         }
-
-        return config.onDrop?(model) ?? false
+        return accepted
     }
 
 }

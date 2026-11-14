@@ -24,7 +24,10 @@ extension FloatingHistoryView {
         guard let window else { return }
         let visibleRect = convert(bounds, to: nil)
         let screenRect = window.convertToScreen(visibleRect)
-        guard screenRect.contains(screenPoint) else { return }
+        // 拖离浮窗后窗口已收起，此时不能再让它抢回键盘焦点
+        guard ClipFloatingWindowController.shared.isVisible,
+              screenRect.contains(screenPoint)
+        else { return }
 
         env.suppressResignKey = true
         window.resignKey()

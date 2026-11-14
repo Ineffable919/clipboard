@@ -11,8 +11,8 @@ extension ClipMainViewController {
     var canReorder: Bool {
         guard !draggedIDs.isEmpty, !dataStore.isReordering,
               dragFilterRevision == dataStore.filterRevision else { return false }
-        let displayed = Set(diffableDataSource.snapshot().itemIdentifiers.compactMap(\.id))
-        return Set(draggedIDs).isSubset(of: displayed)
+        // 拖动中会被高频调用，只查询被拖条目，避免每次复制整份快照
+        return draggedItems.allSatisfy { diffableDataSource.indexPath(for: $0) != nil }
     }
 
     func acceptReorder(at indexPath: IndexPath) -> Bool {

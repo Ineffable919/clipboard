@@ -131,7 +131,11 @@ extension ClipMainWindowController {
     ) {
         guard let view = window?.contentViewController?.view,
             let layer = view.layer
-        else { return }
+        else {
+            // 无法动画时仍要完成收尾，避免窗口状态与 targetVisible 不一致
+            completion()
+            return
+        }
         suppressSearchFocusRing(true)
         slideAnimationGeneration += 1
         let generation = slideAnimationGeneration

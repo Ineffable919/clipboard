@@ -117,14 +117,19 @@ extension ClipMainViewController: NSCollectionViewDelegate {
 
     func collectionView(
         _: NSCollectionView,
-        draggingSession _: NSDraggingSession,
+        draggingSession session: NSDraggingSession,
         willBeginAt _: NSPoint,
         forItemsAt indexPaths: Set<IndexPath>
     ) {
         for indexPath in indexPaths {
             collectionView.item(at: indexPath)?.view.isHidden = false
         }
-        draggedIDs = indexPaths.sorted().compactMap { displayedModel(at: $0)?.id }
+        draggedItems = indexPaths.sorted().compactMap { displayedModel(at: $0) }
+        draggedIDs = draggedItems.compactMap(\.id)
+        let extraURLs = draggedItems.flatMap(\.extraDragFileURLs)
+        if !extraURLs.isEmpty {
+            session.draggingPasteboard.writeObjects(extraURLs)
+        }
         dragFilterRevision = dataStore.filterRevision
         dropOverlayView.unregisterDraggedTypes()
         dropOverlayView.resetDragState()
@@ -137,6 +142,7 @@ extension ClipMainViewController: NSCollectionViewDelegate {
         dragOperation _: NSDragOperation
     ) {
         draggedIDs = []
+        draggedItems = []
         collectionView.hideDropLine()
         dropOverlayView.registerForDraggedTypes(PasteboardType.supportTypes)
         dropOverlayView.resetDragState()

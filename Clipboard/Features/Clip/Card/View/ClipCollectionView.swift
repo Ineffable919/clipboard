@@ -38,6 +38,7 @@ final class ClipCollectionView: NSCollectionView {
             hideDropLine()
             return
         }
+        guard dropLine.superlayer == nil || dropLine.frame != frame else { return }
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         if dropLine.superlayer == nil {

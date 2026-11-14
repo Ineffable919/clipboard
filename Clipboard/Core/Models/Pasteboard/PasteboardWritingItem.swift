@@ -30,6 +30,14 @@ final class PasteboardWritingItem: NSObject {
         self.timestamp = timestamp
         self.model = model
     }
+
+    /// 拖出图片时生成的临时文件目录
+    nonisolated static let dragCacheURL = FileManager.default.temporaryDirectory
+        .appending(path: "ClipboardDrag")
+
+    nonisolated static func clearDragCache() {
+        try? FileManager.default.removeItem(at: dragCacheURL)
+    }
 }
 
 extension PasteboardWritingItem: NSPasteboardWriting {
@@ -52,6 +60,16 @@ extension PasteboardWritingItem: NSPasteboardWriting {
         }
         types.append(contentsOf: [type, .string])
         return types
+    }
+
+    /// 模型编码和图片落盘开销较大，推迟到接收方真正读取时再生成
+    func writingOptions(
+        forType requestedType: PasteboardType,
+        pasteboard _: NSPasteboard
+    ) -> NSPasteboard.WritingOptions {
+        if requestedType == .pasteboardModel { return .promised }
+        if type.isImage(), requestedType == .fileURL { return .promised }
+        return []
     }
 
     func pasteboardPropertyList(forType requestedType: PasteboardType) -> Any? {
@@ -113,9 +131,7 @@ extension PasteboardWritingItem: NSPasteboardWriting {
         let name = appName.isEmpty ? "Image" : appName
         let fileName = "\(name) \(safeDateString).\(ext)"
 
-        let tempURL = FileManager.default.temporaryDirectory
-            .appending(path: "ClipboardDrag")
-            .appending(path: fileName)
+        let tempURL = Self.dragCacheURL.appending(path: fileName)
 
         let dir = tempURL.deletingLastPathComponent()
         try? FileManager.default.createDirectory(
@@ -125,5 +141,17 @@ extension PasteboardWritingItem: NSPasteboardWriting {
         try? data.write(to: tempURL)
 
         return tempURL.absoluteString as NSString
+    }
+}
+
+extension PasteboardModel {
+    /// 多文件条目除首个文件外的其余文件；一个写入项只能携带一个文件，其余需作为额外条目写入拖拽剪贴板
+    var extraDragFileURLs: [NSURL] {
+        guard pasteboardType.isFile(), let paths = cachedFilePaths else { return [] }
+        return paths
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .dropFirst()
+            .map { NSURL(fileURLWithPath: $0) }
     }
 }
