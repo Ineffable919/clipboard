@@ -79,7 +79,9 @@ final class CardFileThumbnailView: NSView, PassthroughMouseEvents {
         guard FileManager.default.fileExists(atPath: filePath) else { return }
 
         loadTask = Task { @MainActor [weak self] in
-            let image = await FileThumbnailService.shared.generateThumbnail(for: fileURL)
+            let image = await FileThumbnailService.shared.generateThumbnail(
+                for: fileURL
+            )
             guard !Task.isCancelled else { return }
             self?.imageView.image = image
         }
@@ -108,11 +110,14 @@ final class CardMultipleFilesView: NSView, PassthroughMouseEvents {
     init(filePaths: [String]) {
         super.init(frame: .zero)
 
-        let thumbSize: CGFloat = 64 // 128 * 0.5
+        let thumbSize: CGFloat = 64  // 128 * 0.5
         let paths = Array(filePaths.prefix(4))
 
         for (index, path) in paths.enumerated().reversed() {
-            let thumbView = CardFileThumbnailView(filePath: path, maxSize: thumbSize)
+            let thumbView = CardFileThumbnailView(
+                filePath: path,
+                maxSize: thumbSize
+            )
             thumbnailViews.append(thumbView)
             addSubview(thumbView)
 
@@ -146,8 +151,13 @@ final class CardMultipleFilesView: NSView, PassthroughMouseEvents {
 private final class CardFileIconPlaceholder: NSView {
     private lazy var imageView: NSImageView = {
         let view = NSImageView()
-        view.image = NSImage(systemSymbolName: "doc.text", accessibilityDescription: nil)
-        view.contentTintColor = NSColor.controlAccentColor.withAlphaComponent(0.8)
+        view.image = NSImage(
+            systemSymbolName: "doc.text",
+            accessibilityDescription: nil
+        )
+        view.contentTintColor = NSColor.controlAccentColor.withAlphaComponent(
+            0.8
+        )
         view.imageScaling = .scaleProportionallyUpOrDown
         return view
     }()

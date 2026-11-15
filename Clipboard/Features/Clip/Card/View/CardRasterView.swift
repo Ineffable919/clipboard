@@ -17,11 +17,9 @@ class CardRasterView: NSView {
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
-        // 使用自管图层，避免 AppKit 因滚动可见区域变化维护文字 backing layer
         layer = CALayer()
         wantsLayer = true
         layerContentsRedrawPolicy = .never
-        // 根层留给 AppKit 管理可见区域，独立子层保持完整位图的采样范围
         layer?.addSublayer(imageLayer)
     }
 
@@ -45,22 +43,32 @@ class CardRasterView: NSView {
         super.layout()
         let scale = window?.backingScaleFactor ?? 2
         guard bounds.width > 0, bounds.height > 0,
-              contentsDirty || renderedSize != bounds.size || renderedScale != scale
+            contentsDirty || renderedSize != bounds.size
+                || renderedScale != scale
         else { return }
 
         let width = Int(ceil(bounds.width * scale))
         let height = Int(ceil(bounds.height * scale))
-        guard let context = CGContext(
-            data: nil, width: width, height: height,
-            bitsPerComponent: 8, bytesPerRow: 0,
-            space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
-            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-        ) else { return }
+        guard
+            let context = CGContext(
+                data: nil,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: 0,
+                space: CGColorSpace(name: CGColorSpace.sRGB)
+                    ?? CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            )
+        else { return }
 
         context.translateBy(x: 0, y: CGFloat(height))
         context.scaleBy(x: scale, y: -scale)
         NSGraphicsContext.saveGraphicsState()
-        NSGraphicsContext.current = NSGraphicsContext(cgContext: context, flipped: true)
+        NSGraphicsContext.current = NSGraphicsContext(
+            cgContext: context,
+            flipped: true
+        )
         effectiveAppearance.performAsCurrentDrawingAppearance {
             drawContents(in: NSRect(origin: .zero, size: bounds.size))
         }

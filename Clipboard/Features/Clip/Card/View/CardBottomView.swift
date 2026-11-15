@@ -30,7 +30,10 @@ final class CardBottomView: NSView, PassthroughMouseEvents {
     }
 
     func configure(with model: PasteboardModel, keyword: String = "") {
-        guard currentModel?.uniqueId != model.uniqueId || currentKeyword != keyword else { return }
+        guard
+            currentModel?.uniqueId != model.uniqueId
+                || currentKeyword != keyword
+        else { return }
         currentModel = model
         currentKeyword = keyword
         replaceBottomView(for: model, keyword: keyword)
@@ -49,16 +52,19 @@ final class CardBottomView: NSView, PassthroughMouseEvents {
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 guard let self,
-                      let model = currentModel,
-                      model.type == .link
+                    let model = currentModel,
+                    model.type == .link
                 else { return }
                 replaceBottomView(for: model, keyword: currentKeyword)
             }
     }
 
-    private func replaceBottomView(for model: PasteboardModel, keyword: String) {
+    private func replaceBottomView(for model: PasteboardModel, keyword: String)
+    {
         clearCurrentView()
-        guard let view = makeBottomView(for: model, keyword: keyword) else { return }
+        guard let view = makeBottomView(for: model, keyword: keyword) else {
+            return
+        }
         addSubview(view)
         view.snp.makeConstraints { $0.edges.equalToSuperview() }
         currentView = view
@@ -71,7 +77,9 @@ final class CardBottomView: NSView, PassthroughMouseEvents {
 
     // MARK: - Factory
 
-    private func makeBottomView(for model: PasteboardModel, keyword: String) -> NSView? {
+    private func makeBottomView(for model: PasteboardModel, keyword: String)
+        -> NSView?
+    {
         switch model.type {
         case .image:
             return CardImageBottomView(introString: model.introString())
@@ -106,10 +114,14 @@ private final class CardImageBottomView: NSView, PassthroughMouseEvents {
     }()
 
     private lazy var label: CardLabelView = {
-        let field = CardLabelView(padding: NSEdgeInsets(
-            top: 2, left: Const.space6,
-            bottom: 2, right: Const.space6
-        ))
+        let field = CardLabelView(
+            padding: NSEdgeInsets(
+                top: 2,
+                left: Const.space6,
+                bottom: 2,
+                right: Const.space6
+            )
+        )
         field.font = .preferredFont(forTextStyle: .callout)
         field.textColor = .secondaryLabelColor
         field.lineBreakMode = .byTruncatingTail
@@ -178,7 +190,9 @@ private final class CardFileBottomView: NSView, PassthroughMouseEvents {
     init(model: PasteboardModel, keyword: String) {
         super.init(frame: .zero)
 
-        guard let filePaths = model.cachedFilePaths, !filePaths.isEmpty else { return }
+        guard let filePaths = model.cachedFilePaths, !filePaths.isEmpty else {
+            return
+        }
 
         let (_, textColor) = model.colors()
         firstLineLabel.textColor = textColor
@@ -190,19 +204,32 @@ private final class CardFileBottomView: NSView, PassthroughMouseEvents {
             secondLineLabel.isHidden = true
         } else {
             let text: String = model.introString()
-            let maxWidth = Const.cardSize - Const.selectionBorderWidth * 2 - Const.space12 * 2
-            let font = firstLineLabel.font ?? .preferredFont(forTextStyle: .callout)
-            let (line1, line2) = splitTextIntoTwoLines(text, font: font, maxWidth: maxWidth)
+            let maxWidth =
+                Const.cardSize - Const.selectionBorderWidth * 2 - Const.space12
+                * 2
+            let font =
+                firstLineLabel.font ?? .preferredFont(forTextStyle: .callout)
+            let (line1, line2) = splitTextIntoTwoLines(
+                text,
+                font: font,
+                maxWidth: maxWidth
+            )
 
             if keyword.isEmpty {
                 firstLineLabel.stringValue = line1
                 secondLineLabel.stringValue = line2
             } else {
                 firstLineLabel.attributedStringValue = highlightLine(
-                    line1, keyword: keyword, label: firstLineLabel, textColor: textColor
+                    line1,
+                    keyword: keyword,
+                    label: firstLineLabel,
+                    textColor: textColor
                 )
                 secondLineLabel.attributedStringValue = highlightLine(
-                    line2, keyword: keyword, label: secondLineLabel, textColor: textColor
+                    line2,
+                    keyword: keyword,
+                    label: secondLineLabel,
+                    textColor: textColor
                 )
             }
 
@@ -212,7 +239,10 @@ private final class CardFileBottomView: NSView, PassthroughMouseEvents {
         addSubview(stack)
         stack.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview().inset(Const.space12)
-            make.bottom.equalToSuperview().inset(secondLineLabel.stringValue.isEmpty ? Const.space8 : Const.space4)
+            make.bottom.equalToSuperview().inset(
+                secondLineLabel.stringValue.isEmpty
+                    ? Const.space8 : Const.space4
+            )
         }
     }
 
@@ -221,9 +251,14 @@ private final class CardFileBottomView: NSView, PassthroughMouseEvents {
         fatalError()
     }
 
-    private func splitTextIntoTwoLines(_ text: String, font: NSFont, maxWidth: CGFloat) -> (String, String) {
+    private func splitTextIntoTwoLines(
+        _ text: String,
+        font: NSFont,
+        maxWidth: CGFloat
+    ) -> (String, String) {
         let attrs: [NSAttributedString.Key: Any] = [.font: font]
-        guard (text as NSString).size(withAttributes: attrs).width > maxWidth else {
+        guard (text as NSString).size(withAttributes: attrs).width > maxWidth
+        else {
             return (text, "")
         }
 
@@ -244,25 +279,42 @@ private final class CardFileBottomView: NSView, PassthroughMouseEvents {
     }
 
     private func highlightLine(
-        _ text: String, keyword: String, label: CardLabelView, textColor: NSColor
+        _ text: String,
+        keyword: String,
+        label: CardLabelView,
+        textColor: NSColor
     ) -> NSAttributedString {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineBreakMode = label.lineBreakMode
         let font = label.font ?? .preferredFont(forTextStyle: .callout)
-        let mutable = NSMutableAttributedString(string: text, attributes: [
-            .font: font,
-            .foregroundColor: textColor,
-            .paragraphStyle: paragraphStyle
-        ])
+        let mutable = NSMutableAttributedString(
+            string: text,
+            attributes: [
+                .font: font,
+                .foregroundColor: textColor,
+                .paragraphStyle: paragraphStyle,
+            ]
+        )
         let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return mutable }
         let source = text as NSString
-        let options: NSString.CompareOptions = [.caseInsensitive, .diacriticInsensitive, .widthInsensitive]
+        let options: NSString.CompareOptions = [
+            .caseInsensitive, .diacriticInsensitive, .widthInsensitive,
+        ]
         var searchRange = NSRange(location: 0, length: source.length)
         while searchRange.length > 0 {
-            let found = source.range(of: trimmed, options: options, range: searchRange, locale: .current)
+            let found = source.range(
+                of: trimmed,
+                options: options,
+                range: searchRange,
+                locale: .current
+            )
             guard found.location != NSNotFound else { break }
-            mutable.addAttribute(.backgroundColor, value: NSColor.systemYellow.withAlphaComponent(0.65), range: found)
+            mutable.addAttribute(
+                .backgroundColor,
+                value: NSColor.systemYellow.withAlphaComponent(0.65),
+                range: found
+            )
             let next = found.location + found.length
             guard next < source.length else { break }
             searchRange = NSRange(location: next, length: source.length - next)
@@ -345,7 +397,7 @@ final class CardCommonBottomView: NSView, PassthroughMouseEvents {
             gradientLayer.colors = [
                 resolved.cgColor,
                 resolved.cgColor,
-                resolved.withAlphaComponent(0.0).cgColor
+                resolved.withAlphaComponent(0.0).cgColor,
             ]
         }
         gradientLayer.startPoint = CGPoint(x: 0.5, y: 0.0)

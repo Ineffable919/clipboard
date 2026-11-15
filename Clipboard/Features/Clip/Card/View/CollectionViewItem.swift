@@ -124,12 +124,20 @@ final class CollectionViewItem: NSCollectionViewItem {
 
     private lazy var infoIconView: NSImageView = {
         let icon = NSImageView()
-        icon.image = NSImage(systemSymbolName: "text.justify.leading", accessibilityDescription: nil)
-        icon.symbolConfiguration = NSImage.SymbolConfiguration(textStyle: .footnote)
+        icon.image = NSImage(
+            systemSymbolName: "text.justify.leading",
+            accessibilityDescription: nil
+        )
+        icon.symbolConfiguration = NSImage.SymbolConfiguration(
+            textStyle: .footnote
+        )
         icon.imageScaling = .scaleProportionallyUpOrDown
         icon.isHidden = true
         icon.setContentHuggingPriority(.required, for: .horizontal)
-        icon.setContentCompressionResistancePriority(.required, for: .horizontal)
+        icon.setContentCompressionResistancePriority(
+            .required,
+            for: .horizontal
+        )
         return icon
     }()
 
@@ -140,7 +148,10 @@ final class CollectionViewItem: NSCollectionViewItem {
         label.alignment = .center
         label.isHidden = true
         label.setContentHuggingPriority(.required, for: .horizontal)
-        label.setContentCompressionResistancePriority(.required, for: .horizontal)
+        label.setContentCompressionResistancePriority(
+            .required,
+            for: .horizontal
+        )
         return label
     }()
 
@@ -173,7 +184,9 @@ final class CollectionViewItem: NSCollectionViewItem {
                 badgeBgView.dynamicBackgroundColor = .clear
                 badgeBgView.backgroundAlpha = 0
                 badgeEffectView.isHidden = false
-                tintColor = model.type == .image ? .secondaryLabelColor : model.colors().1
+                tintColor =
+                    model.type == .image
+                    ? .secondaryLabelColor : model.colors().1
             } else {
                 let (base, textColor) = model.colors()
                 badgeBgView.dynamicBackgroundColor = base
@@ -219,7 +232,10 @@ extension CollectionViewItem {
     override func viewDidLoad() {
         super.viewDidLoad()
         initSubView()
-        let doubleClick = CollectionClickGestureRecognizer(target: self, action: #selector(handleDoubleClick))
+        let doubleClick = CollectionClickGestureRecognizer(
+            target: self,
+            action: #selector(handleDoubleClick)
+        )
         doubleClick.numberOfClicksRequired = 2
         doubleClick.delaysPrimaryMouseButtonEvents = false
         view.addGestureRecognizer(doubleClick)
@@ -252,12 +268,14 @@ extension CollectionViewItem {
             updateShadow()
             return
         }
-        let color: NSColor = isFocused
+        let color: NSColor =
+            isFocused
             ? .controlAccentColor
             : .gray.withAlphaComponent(0.5)
-        selectionBorderView.effectiveAppearance.performAsCurrentDrawingAppearance {
-            selectionBorderView.layer?.borderColor = color.cgColor
-        }
+        selectionBorderView.effectiveAppearance
+            .performAsCurrentDrawingAppearance {
+                selectionBorderView.layer?.borderColor = color.cgColor
+            }
         updateShadow()
     }
 

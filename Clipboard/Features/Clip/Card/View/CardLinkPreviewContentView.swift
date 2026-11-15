@@ -35,7 +35,10 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
 
     private lazy var placeholderImageView: NSImageView = {
         let image = NSImageView()
-        image.image = NSImage(systemSymbolName: "link", accessibilityDescription: nil)
+        image.image = NSImage(
+            systemSymbolName: "link",
+            accessibilityDescription: nil
+        )
         image.contentTintColor = .secondaryLabelColor
         image.imageScaling = .scaleProportionallyUpOrDown
         return image
@@ -49,7 +52,10 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
 
     private lazy var titleLabel: NSTextField = {
         let field = NSTextField(labelWithString: "")
-        field.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .semibold)
+        field.font = .systemFont(
+            ofSize: NSFont.systemFontSize,
+            weight: .semibold
+        )
         field.textColor = .labelColor
         field.lineBreakMode = .byTruncatingTail
         field.maximumNumberOfLines = 1
@@ -121,7 +127,10 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
         requestedModelID = model.uniqueId
 
         previewRequest.load { [weak self] in
-            let metadata = await LinkPreviewLoader.fetch(for: url, imagePolicy: .previewThenIcon)
+            let metadata = await LinkPreviewLoader.fetch(
+                for: url,
+                imagePolicy: .previewThenIcon
+            )
 
             guard !Task.isCancelled, let self else { return }
             applyMetadata(metadata, url: url)
@@ -194,8 +203,10 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
     }
 
     private func updateBackground() {
-        let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        let imageBg: NSColor = isDark ? NSColor(hex: "#272835") : NSColor(hex: "#f5f5f5")
+        let isDark =
+            effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        let imageBg: NSColor =
+            isDark ? NSColor(hex: "#272835") : NSColor(hex: "#f5f5f5")
         imageContainerView.dynamicBackgroundColor = imageBg
         infoView.dynamicBackgroundColor = .textBackgroundColor
     }
@@ -209,7 +220,9 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
     }
 
     private func applyMetadata(_ metadata: LinkPreviewMetadata, url: URL) {
-        titleLabel.stringValue = Self.singleLineTitle(metadata.title) ?? url.host() ?? url.absoluteString
+        titleLabel.stringValue =
+            Self.singleLineTitle(metadata.title) ?? url.host()
+            ?? url.absoluteString
         if let image = metadata.previewImage {
             previewImageView.image = image
             previewImageView.imageScaling = .scaleProportionallyUpOrDown
@@ -230,7 +243,8 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
 
     private static func singleLineTitle(_ title: String?) -> String? {
         guard let title else { return nil }
-        let normalized = title
+        let normalized =
+            title
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .replacing(/\s+/, with: " ")
         return normalized.isEmpty || normalized == "/" ? nil : normalized
@@ -245,23 +259,37 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
         let baseAttrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize),
             .foregroundColor: NSColor.secondaryLabelColor,
-            .paragraphStyle: paragraphStyle
+            .paragraphStyle: paragraphStyle,
         ]
 
-        let mutable = NSMutableAttributedString(string: urlString, attributes: baseAttrs)
+        let mutable = NSMutableAttributedString(
+            string: urlString,
+            attributes: baseAttrs
+        )
 
         guard !keyword.isEmpty else {
             return mutable
         }
 
         let plain = urlString as NSString
-        let options: NSString.CompareOptions = [.caseInsensitive, .diacriticInsensitive, .widthInsensitive]
+        let options: NSString.CompareOptions = [
+            .caseInsensitive, .diacriticInsensitive, .widthInsensitive,
+        ]
         var searchRange = NSRange(location: 0, length: plain.length)
 
         while searchRange.length > 0 {
-            let found = plain.range(of: keyword, options: options, range: searchRange, locale: .current)
+            let found = plain.range(
+                of: keyword,
+                options: options,
+                range: searchRange,
+                locale: .current
+            )
             guard found.location != NSNotFound else { break }
-            mutable.addAttribute(.backgroundColor, value: NSColor.systemYellow.withAlphaComponent(0.65), range: found)
+            mutable.addAttribute(
+                .backgroundColor,
+                value: NSColor.systemYellow.withAlphaComponent(0.65),
+                range: found
+            )
             let next = found.location + found.length
             guard next < plain.length else { break }
             searchRange = NSRange(location: next, length: plain.length - next)

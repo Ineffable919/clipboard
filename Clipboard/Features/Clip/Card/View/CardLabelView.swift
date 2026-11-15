@@ -16,7 +16,9 @@ final class CardLabelView: CardRasterView {
     var stringValue: String {
         get { cell.stringValue }
         set {
-            guard hasAttributedContent || cell.stringValue != newValue else { return }
+            guard hasAttributedContent || cell.stringValue != newValue else {
+                return
+            }
             hasAttributedContent = false
             cell.stringValue = newValue
             contentDidChange()
@@ -26,7 +28,10 @@ final class CardLabelView: CardRasterView {
     var attributedStringValue: NSAttributedString {
         get { cell.attributedStringValue }
         set {
-            guard !hasAttributedContent || !cell.attributedStringValue.isEqual(to: newValue) else { return }
+            guard
+                !hasAttributedContent
+                    || !cell.attributedStringValue.isEqual(to: newValue)
+            else { return }
             hasAttributedContent = true
             cell.attributedStringValue = newValue
             contentDidChange()

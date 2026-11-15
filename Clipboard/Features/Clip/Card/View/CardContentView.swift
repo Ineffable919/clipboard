@@ -62,7 +62,8 @@ final class CardContentView: NSView, PassthroughMouseEvents {
 
     override func updateLayer() {
         effectiveAppearance.performAsCurrentDrawingAppearance {
-            let color: NSColor = currentModel == nil || currentModel?.type == .color
+            let color: NSColor =
+                currentModel == nil || currentModel?.type == .color
                 ? .clear : .textBackgroundColor
             layer?.backgroundColor = color.cgColor
         }
@@ -83,14 +84,15 @@ final class CardContentView: NSView, PassthroughMouseEvents {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self,
-                      let model = currentModel,
-                      model.type == .link
+                    let model = currentModel,
+                    model.type == .link
                 else { return }
                 replaceContentView(for: model, keyword: currentKeyword)
             }
     }
 
-    private func replaceContentView(for model: PasteboardModel, keyword: String) {
+    private func replaceContentView(for model: PasteboardModel, keyword: String)
+    {
         cancelCurrentLoad(reason: "卡片内容替换")
         currentContentView?.removeFromSuperview()
         currentContentView = nil
@@ -120,14 +122,18 @@ final class CardContentView: NSView, PassthroughMouseEvents {
     private func cancelCurrentLoad(reason: String) {
         if let imageView = currentContentView as? CardImageContentView {
             imageView.cancelLoad(reason: reason)
-        } else if let linkView = currentContentView as? CardLinkPreviewContentView {
+        } else if let linkView = currentContentView
+            as? CardLinkPreviewContentView
+        {
             linkView.cancelLoad()
         } else if let fileView = currentContentView as? CardFileContentView {
             fileView.cancelLoad()
         }
     }
 
-    private func makeContentView(for model: PasteboardModel, keyword: String) -> NSView {
+    private func makeContentView(for model: PasteboardModel, keyword: String)
+        -> NSView
+    {
         switch model.type {
         case .color:
             return CardColorContentView(model: model)
@@ -143,7 +149,10 @@ final class CardContentView: NSView, PassthroughMouseEvents {
             }
         case .link:
             if PasteUserDefaults.enableLinkPreview {
-                return CardLinkPreviewContentView(model: model, keyword: keyword)
+                return CardLinkPreviewContentView(
+                    model: model,
+                    keyword: keyword
+                )
             }
             return CardStringContentView(model: model, keyword: keyword)
         case .string:
@@ -173,10 +182,15 @@ final class CardStringContentView: NSView, PassthroughMouseEvents {
     }
 
     func updateKeyword(_ keyword: String, model: PasteboardModel) {
-        let attributed: NSAttributedString = keyword.isEmpty
+        let attributed: NSAttributedString =
+            keyword.isEmpty
             ? model.plainTextAttributedString
             : model.highlightedNSAttributedString(keyword: keyword)
-        textView.setText(attributed, font: model.pasteboardType == .string ? .preferredFont(forTextStyle: .body) : nil)
+        textView.setText(
+            attributed,
+            font: model.pasteboardType == .string
+                ? .preferredFont(forTextStyle: .body) : nil
+        )
     }
 }
 
@@ -223,7 +237,10 @@ final class CardRichContentView: NSView, PassthroughMouseEvents {
 final class CardColorContentView: NSView, PassthroughMouseEvents {
     private lazy var label: NSTextField = {
         let field = NSTextField(labelWithString: "")
-        field.font = .systemFont(ofSize: NSFont.systemFontSize + 4, weight: .medium)
+        field.font = .systemFont(
+            ofSize: NSFont.systemFontSize + 4,
+            weight: .medium
+        )
         field.alignment = .center
         field.lineBreakMode = .byTruncatingTail
         return field

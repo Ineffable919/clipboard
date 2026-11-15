@@ -25,7 +25,10 @@ final class CardImageContentView: NSView, PassthroughMouseEvents {
 
     private lazy var placeholderImageView: NSImageView = {
         let view = NSImageView()
-        view.image = NSImage(systemSymbolName: "photo.badge.arrow.down", accessibilityDescription: nil)
+        view.image = NSImage(
+            systemSymbolName: "photo.badge.arrow.down",
+            accessibilityDescription: nil
+        )
         view.contentTintColor = .secondaryLabelColor
         view.imageScaling = .scaleProportionallyUpOrDown
         return view
@@ -127,7 +130,9 @@ final class CardImageContentView: NSView, PassthroughMouseEvents {
         cancelOCR(reason: reason)
         imageView.clearHighlights()
 
-        let trimmed = currentKeyword.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmed = currentKeyword.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
         guard !trimmed.isEmpty, model.type == .image else {
             return
         }
@@ -142,17 +147,25 @@ final class CardImageContentView: NSView, PassthroughMouseEvents {
                     if let cachedAnalysis {
                         analysis = cachedAnalysis
                     } else {
-                        analysis = try await LiveTextService.shared.analyze(data: model.data, requestId: requestId)
+                        analysis = try await LiveTextService.shared.analyze(
+                            data: model.data,
+                            requestId: requestId
+                        )
                     }
-                    guard !Task.isCancelled, let self, ocrRequestId == requestId else { return }
+                    guard !Task.isCancelled, let self, ocrRequestId == requestId
+                    else { return }
                     liveTextAnalysis = analysis
                     imageView.highlight(analysis, keyword: trimmed)
                 } catch {
                     // 失败或取消时不缓存结果，下次搜索重新识别
                 }
             } else {
-                let regions = await model.loadOCRHighlightRegions(keyword: trimmed, requestId: requestId)
-                guard !Task.isCancelled, let self, ocrRequestId == requestId else { return }
+                let regions = await model.loadOCRHighlightRegions(
+                    keyword: trimmed,
+                    requestId: requestId
+                )
+                guard !Task.isCancelled, let self, ocrRequestId == requestId
+                else { return }
                 imageView.regions = regions
             }
             guard let self, ocrRequestId == requestId else { return }

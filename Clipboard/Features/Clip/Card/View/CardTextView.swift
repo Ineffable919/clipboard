@@ -32,7 +32,11 @@ final class CardTextView: CardRasterView {
     func setText(_ text: NSAttributedString, font: NSFont? = nil) {
         textStorage.setAttributedString(text)
         if let font {
-            textStorage.addAttribute(.font, value: font, range: NSRange(location: 0, length: textStorage.length))
+            textStorage.addAttribute(
+                .font,
+                value: font,
+                range: NSRange(location: 0, length: textStorage.length)
+            )
         }
         setAccessibilityValue(text.string)
         invalidateContents()
@@ -45,16 +49,23 @@ final class CardTextView: CardRasterView {
         }
         let origin = NSPoint(x: Const.space10, y: Const.space8)
         let textBounds = NSRect(
-            x: 0, y: 0,
+            x: 0,
+            y: 0,
             width: max(bounds.width - origin.x * 2, 0),
             height: max(bounds.height - origin.y, 0)
         )
-        let size = NSSize(width: textBounds.width, height: .greatestFiniteMagnitude)
+        let size = NSSize(
+            width: textBounds.width,
+            height: .greatestFiniteMagnitude
+        )
         if textContainer.containerSize != size {
             textContainer.containerSize = size
         }
         textLayout.ensureLayout(forBoundingRect: textBounds, in: textContainer)
-        let range = textLayout.glyphRange(forBoundingRect: textBounds, in: textContainer)
+        let range = textLayout.glyphRange(
+            forBoundingRect: textBounds,
+            in: textContainer
+        )
         textLayout.drawBackground(forGlyphRange: range, at: origin)
         textLayout.drawGlyphs(forGlyphRange: range, at: origin)
     }

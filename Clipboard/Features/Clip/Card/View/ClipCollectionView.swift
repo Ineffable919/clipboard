@@ -32,13 +32,18 @@ final class ClipCollectionView: NSCollectionView {
     }
 
     func showDropLine(before indexPath: IndexPath) {
-        guard let frame = collectionViewLayout?.layoutAttributesForInterItemGap(before: indexPath)?.frame,
-              !frame.isEmpty, let layer
+        guard
+            let frame = collectionViewLayout?.layoutAttributesForInterItemGap(
+                before: indexPath
+            )?.frame,
+            !frame.isEmpty, let layer
         else {
             hideDropLine()
             return
         }
-        guard dropLine.superlayer == nil || dropLine.frame != frame else { return }
+        guard dropLine.superlayer == nil || dropLine.frame != frame else {
+            return
+        }
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         if dropLine.superlayer == nil {
@@ -48,7 +53,8 @@ final class ClipCollectionView: NSCollectionView {
         dropLine.cornerRadius = frame.width / 2
         dropLine.zPosition = 10
         effectiveAppearance.performAsCurrentDrawingAppearance {
-            dropLine.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.65).cgColor
+            dropLine.backgroundColor =
+                NSColor.controlAccentColor.withAlphaComponent(0.65).cgColor
         }
         dropLine.isHidden = false
         CATransaction.commit()
@@ -64,9 +70,10 @@ final class ClipCollectionView: NSCollectionView {
     }
 
     var handlesShiftSelection: Bool {
-        // Shift 范围由点击回调统一设置，代理不再叠加系统的范围选择
         guard onShiftClick != nil, let event = NSApp.currentEvent,
-              [.leftMouseDown, .leftMouseDragged, .leftMouseUp].contains(event.type)
+            [.leftMouseDown, .leftMouseDragged, .leftMouseUp].contains(
+                event.type
+            )
         else { return false }
         let modifiers = clickGesture.clickModifiers
         return modifiers.contains(.shift) && !modifiers.contains(.command)
@@ -74,7 +81,8 @@ final class ClipCollectionView: NSCollectionView {
 
     @objc private func handleClick(_ gesture: NSClickGestureRecognizer) {
         defer { onInteractionFocus?() }
-        guard let indexPath = indexPathForItem(at: gesture.location(in: self)) else { return }
+        guard let indexPath = indexPathForItem(at: gesture.location(in: self))
+        else { return }
         let modifiers = clickGesture.clickModifiers
         if modifiers.contains(.shift), !modifiers.contains(.command) {
             onShiftClick?(indexPath)
@@ -98,12 +106,18 @@ final class ClipCollectionView: NSCollectionView {
         true
     }
 
-    override func draggingSession(_ session: NSDraggingSession, willBeginAt screenPoint: NSPoint) {
+    override func draggingSession(
+        _ session: NSDraggingSession,
+        willBeginAt screenPoint: NSPoint
+    ) {
         super.draggingSession(session, willBeginAt: screenPoint)
         onInteractionFocus?()
     }
 
-    override func draggingSession(_ session: NSDraggingSession, movedTo screenPoint: NSPoint) {
+    override func draggingSession(
+        _ session: NSDraggingSession,
+        movedTo screenPoint: NSPoint
+    ) {
         super.draggingSession(session, movedTo: screenPoint)
         onDragMoved?(screenPoint)
     }
@@ -114,7 +128,11 @@ final class ClipCollectionView: NSCollectionView {
         operation: NSDragOperation
     ) {
         hideDropLine()
-        super.draggingSession(session, endedAt: screenPoint, operation: operation)
+        super.draggingSession(
+            session,
+            endedAt: screenPoint,
+            operation: operation
+        )
 
         if #unavailable(macOS 26.0) {
             onDragEnded?(screenPoint)
