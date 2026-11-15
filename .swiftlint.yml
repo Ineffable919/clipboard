@@ -1,0 +1,2 @@
+opening_brace:
+  ignore_multiline_statement_conditions: true
