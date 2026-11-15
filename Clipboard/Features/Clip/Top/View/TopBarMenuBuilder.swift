@@ -14,7 +14,7 @@ struct TopBarMenuBuilder {
 
     private static let appName: String =
         Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
-            ?? "Clipboard"
+        ?? "Clipboard"
 
     // MARK: - Public
 
@@ -105,10 +105,11 @@ struct TopBarMenuBuilder {
             )
             newVersionItem.target = target
             if #available(macOS 26.0, *),
-               let image = NSImage(
-                   systemSymbolName: "arrow.up.circle.dotted",
-                   accessibilityDescription: nil
-               ) {
+                let image = NSImage(
+                    systemSymbolName: "arrow.up.circle.dotted",
+                    accessibilityDescription: nil
+                )
+            {
                 let config = NSImage.SymbolConfiguration(
                     pointSize: 16.0,
                     weight: .semibold

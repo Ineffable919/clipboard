@@ -31,8 +31,9 @@ extension TopBarView {
         guard visible.opacity > 0.1 || (view === searchIconBtn && !isSearching) else { return nil }
         let parentPoint = convert(point, to: view.superview)
         guard visible.frame.contains(parentPoint) else { return nil }
-        let modelPoint = NSPoint(x: parentPoint.x + layer.frame.minX - visible.frame.minX,
-                                 y: parentPoint.y + layer.frame.minY - visible.frame.minY)
+        let modelPoint = NSPoint(
+            x: parentPoint.x + layer.frame.minX - visible.frame.minX,
+            y: parentPoint.y + layer.frame.minY - visible.frame.minY)
         return view.hitTest(modelPoint) ?? view
     }
 }

@@ -10,7 +10,8 @@ import AppKit
 extension ClipMainViewController {
     var canReorder: Bool {
         guard !draggedIDs.isEmpty, !dataStore.isReordering,
-              dragFilterRevision == dataStore.filterRevision else { return false }
+            dragFilterRevision == dataStore.filterRevision
+        else { return false }
         // 拖动中会被高频调用，只查询被拖条目，避免每次复制整份快照
         return draggedItems.allSatisfy { diffableDataSource.indexPath(for: $0) != nil }
     }
@@ -19,7 +20,7 @@ extension ClipMainViewController {
         guard canReorder, indexPath.section == 0 else { return false }
         let items = diffableDataSource.snapshot().itemIdentifiers
         let ids = items.compactMap(\.id)
-        guard ids.count == items.count, (0 ... ids.count).contains(indexPath.item) else { return false }
+        guard ids.count == items.count, (0...ids.count).contains(indexPath.item) else { return false }
         let movedIDs = draggedIDs
         let moved = Set(movedIDs)
         let before = ids.dropFirst(indexPath.item).first { !moved.contains($0) }
@@ -46,10 +47,11 @@ extension ClipMainViewController {
         applySnapshot(items: items, animating: true) { [weak self] in
             guard let self else { return }
             let current = diffableDataSource.snapshot().itemIdentifiers
-            let paths = Set(current.enumerated().compactMap { index, model -> IndexPath? in
-                guard let id = model.id, selected.contains(id) else { return nil }
-                return IndexPath(item: index, section: 0)
-            })
+            let paths = Set(
+                current.enumerated().compactMap { index, model -> IndexPath? in
+                    guard let id = model.id, selected.contains(id) else { return nil }
+                    return IndexPath(item: index, section: 0)
+                })
             if let index = current.firstIndex(where: { $0.id == primary }) {
                 selectIndexPath = IndexPath(item: index, section: 0)
             } else if let first = paths.min() {
@@ -61,7 +63,8 @@ extension ClipMainViewController {
             updateSelectedItemBorder()
             updateQuickPasteDisplay()
             if let popover = previewPopover, popover.isShown,
-               displayedModel(at: selectIndexPath) != nil {
+                displayedModel(at: selectIndexPath) != nil
+            {
                 popover.refreshHeader()
             }
         }

@@ -10,8 +10,8 @@
 import AppKit
 import Combine
 import SnapKit
-import SwiftUI
 import Sparkle
+import SwiftUI
 
 final class FloatingHeaderView: NSView {
     // MARK: - Subviews
@@ -62,11 +62,10 @@ final class FloatingHeaderView: NSView {
     }
     func isExcludedFromFocusGesture(_ view: NSView) -> Bool {
         let isEditingChip = topVM?.isEditingChip == true || topVM?.editingNewChip == true
-        return view === pinButton || view.isDescendant(of: pinButton) ||
-            view === searchField || view.isDescendant(of: searchField) ||
-            view === settingsBtn || view.isDescendant(of: settingsBtn) ||
-            view === addChipBtn || view.isDescendant(of: addChipBtn) ||
-            (isEditingChip && view.isDescendant(of: chipScrollView))
+        return view === pinButton || view.isDescendant(of: pinButton) || view === searchField
+            || view.isDescendant(of: searchField) || view === settingsBtn || view.isDescendant(of: settingsBtn)
+            || view === addChipBtn || view.isDescendant(of: addChipBtn)
+            || (isEditingChip && view.isDescendant(of: chipScrollView))
     }
 
     func configure(topVM: TopBarViewModel) {
@@ -221,7 +220,8 @@ final class FloatingHeaderView: NSView {
     func updateBackground() {
         guard #available(macOS 26.0, *) else { return }
         let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        backgroundView.layer?.backgroundColor = NSColor(WelcomeStyle.background(for: isDark ? .dark : .light))
+        backgroundView.layer?.backgroundColor =
+            NSColor(WelcomeStyle.background(for: isDark ? .dark : .light))
             .withAlphaComponent(0.35).cgColor
     }
 

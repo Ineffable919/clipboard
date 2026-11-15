@@ -43,13 +43,16 @@ nonisolated struct MCPHandler {
         switch request.method {
         case "initialize":
             let requested = request.params["protocolVersion"] as? String
-            let version = requested.flatMap { Self.supportedVersions.contains($0) ? $0 : nil }
+            let version =
+                requested.flatMap { Self.supportedVersions.contains($0) ? $0 : nil }
                 ?? Self.supportedVersions[0]
-            return JSONRPC.success(id: id, result: [
-                "protocolVersion": version,
-                "capabilities": ["tools": [String: Any]()],
-                "serverInfo": ["name": "clipboard", "version": "1.0.0"]
-            ])
+            return JSONRPC.success(
+                id: id,
+                result: [
+                    "protocolVersion": version,
+                    "capabilities": ["tools": [String: Any]()],
+                    "serverInfo": ["name": "clipboard", "version": "1.0.0"]
+                ])
 
         case "ping":
             return JSONRPC.success(id: id, result: [String: Any]())

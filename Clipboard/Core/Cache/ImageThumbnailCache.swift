@@ -40,14 +40,16 @@ actor ImageThumbnailCache {
         return autoreleasepool {
             let options = [kCGImageSourceShouldCache: false] as CFDictionary
             guard let source = CGImageSourceCreateWithData(data as CFData, options) else { return nil }
-            let thumbnailOptions = [
-                kCGImageSourceCreateThumbnailFromImageAlways: true,
-                kCGImageSourceCreateThumbnailWithTransform: true,
-                kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
-                kCGImageSourceShouldCacheImmediately: true
-            ] as CFDictionary
+            let thumbnailOptions =
+                [
+                    kCGImageSourceCreateThumbnailFromImageAlways: true,
+                    kCGImageSourceCreateThumbnailWithTransform: true,
+                    kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
+                    kCGImageSourceShouldCacheImmediately: true
+                ] as CFDictionary
             guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, thumbnailOptions),
-                  !Task.isCancelled else { return nil }
+                !Task.isCancelled
+            else { return nil }
             let cost = image.bytesPerRow * image.height
             guard cost <= costLimit else { return image }
             while totalCost + cost > costLimit || entries.count >= 100 {

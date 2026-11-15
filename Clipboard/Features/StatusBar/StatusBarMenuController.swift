@@ -53,8 +53,9 @@ final class StatusBarMenuController {
         lastMenuClick = Self.clickCount
         menuObserver = HotKeyManager.shared.observeWindowHotKey(dismissing: menu) { [weak self] event in
             guard let self, event.type == .rightMouseDown,
-                  Self.clickCount != lastMenuClick,
-                  let window = item.button?.window else { return false }
+                Self.clickCount != lastMenuClick,
+                let window = item.button?.window
+            else { return false }
             // End tracking before the closing click is forwarded; don't wait for a fade-out
             return window.frame.contains(NSEvent.mouseLocation)
         }

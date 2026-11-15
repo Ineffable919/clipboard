@@ -73,7 +73,8 @@ final class PreviewIconButton: NSView {
 
     private func updateAppearance(animated: Bool) {
         let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        let bgColor: NSColor = isHovering
+        let bgColor: NSColor =
+            isHovering
             ? (isDark ? .white.withAlphaComponent(0.08) : .black.withAlphaComponent(0.06))
             : .clear
 
@@ -120,7 +121,8 @@ final class PreviewIconButton: NSView {
 
     override func mouseDown(with event: NSEvent) {
         let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        let pressedColor: NSColor = isDark
+        let pressedColor: NSColor =
+            isDark
             ? .white.withAlphaComponent(0.14)
             : .black.withAlphaComponent(0.10)
         CATransaction.begin()

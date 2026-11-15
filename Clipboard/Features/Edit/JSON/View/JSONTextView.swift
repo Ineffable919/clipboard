@@ -83,10 +83,12 @@ final class JSONTextView: NSTextView {
     override func writeSelection(to pasteboard: NSPasteboard, type: NSPasteboard.PasteboardType) -> Bool {
         if type == .rtf, let onCopyRich {
             let content = onCopyRich()
-            guard let data = try? content.data(
-                from: NSRange(location: 0, length: content.length),
-                documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf]
-            ) else { return false }
+            guard
+                let data = try? content.data(
+                    from: NSRange(location: 0, length: content.length),
+                    documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf]
+                )
+            else { return false }
             return pasteboard.setData(data, forType: .rtf)
         }
         if type == .string, let onCopy {

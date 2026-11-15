@@ -139,7 +139,7 @@ final class ClipMainViewController: NSViewController {
             guard let self else { return }
             let lower = min(selectIndexPath.item, clickedPath.item)
             let upper = max(selectIndexPath.item, clickedPath.item)
-            let paths = Set((lower ... upper).map { IndexPath(item: $0, section: 0) })
+            let paths = Set((lower...upper).map { IndexPath(item: $0, section: 0) })
             collectionView.selectionIndexPaths = paths
             scrollTo(indexPath: clickedPath)
         }
@@ -161,7 +161,7 @@ final class ClipMainViewController: NSViewController {
             let screenRect = window.convertToScreen(visibleRect)
             // 拖离面板后窗口已收起，此时不能再让它抢回键盘焦点
             guard ClipMainWindowController.shared.isVisible,
-                  screenRect.contains(screenPoint)
+                screenRect.contains(screenPoint)
             else { return }
 
             AppEnvironment.shared.suppressResignKey = true

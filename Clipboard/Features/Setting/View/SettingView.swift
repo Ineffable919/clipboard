@@ -79,8 +79,9 @@ struct SettingView: View {
                                 }
 
                                 if page == .general,
-                                   pasteDirect,
-                                   !viewModel.hasAccessibilityPermission {
+                                    pasteDirect,
+                                    !viewModel.hasAccessibilityPermission
+                                {
                                     ZStack {
                                         Circle()
                                             .fill(Color(nsColor: .systemRed))
@@ -171,17 +172,20 @@ struct HelpCenterButton: View {
     private static let helpURL = URL(string: "https://github.com/Ineffable919/clipboard/blob/master/README.md")!
 
     var body: some View {
-        Button(action: {
-            NSWorkspace.shared.open(Self.helpURL)
-        }, label: {
-            HStack {
-                Image(systemName: "questionmark.circle")
-                Text(.help)
+        Button(
+            action: {
+                NSWorkspace.shared.open(Self.helpURL)
+            },
+            label: {
+                HStack {
+                    Image(systemName: "questionmark.circle")
+                    Text(.help)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, Const.space8)
+                .padding(.vertical, Const.space6)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, Const.space8)
-            .padding(.vertical, Const.space6)
-        })
+        )
         .buttonStyle(.plain)
     }
 }

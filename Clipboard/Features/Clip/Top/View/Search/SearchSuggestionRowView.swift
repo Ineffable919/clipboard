@@ -94,7 +94,7 @@ final class SearchSuggestionCellView: NSView {
     func configure(item: SearchSuggestionItem, query: String) {
         iconLoadTask?.cancel()
         iconView.image = item.icon
-        if item.icon == nil, case let .toggleApp(id) = item.action {
+        if item.icon == nil, case .toggleApp(let id) = item.action {
             iconLoadTask = Task { [weak self] in
                 let icon = await AppIconCache.shared.loadIcon(forAppID: id)
                 guard !Task.isCancelled else { return }
@@ -141,7 +141,7 @@ final class SearchSuggestionCellView: NSView {
         while queryIndex < queryLower.endIndex, titleIndex < title.endIndex {
             let end = title.index(after: titleIndex)
             if title[titleIndex].lowercased() == String(queryLower[queryIndex]) {
-                ranges.append(titleIndex ..< end)
+                ranges.append(titleIndex..<end)
                 queryIndex = queryLower.index(after: queryIndex)
             }
             titleIndex = end

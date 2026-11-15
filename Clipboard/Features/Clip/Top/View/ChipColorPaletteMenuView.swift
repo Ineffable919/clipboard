@@ -6,8 +6,8 @@
 //
 
 import AppKit
-import SwiftUI
 import SnapKit
+import SwiftUI
 
 final class ChipColorPaletteMenuView: NSView {
     private let stack = NSStackView()

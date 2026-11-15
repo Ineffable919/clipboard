@@ -76,8 +76,9 @@ nonisolated enum CodeFenceLanguageDetector {
         }
         if (text.hasPrefix("{") && text.hasSuffix("}"))
             || (text.hasPrefix("[") && text.hasSuffix("]")),
-           let data = text.data(using: .utf8),
-           (try? JSONSerialization.jsonObject(with: data)) != nil {
+            let data = text.data(using: .utf8),
+            (try? JSONSerialization.jsonObject(with: data)) != nil
+        {
             return "json"
         }
         if matches(htmlPattern, in: text) {
@@ -113,11 +114,13 @@ nonisolated enum CodeFenceLanguageDetector {
             return "css"
         }
         if matches(javaScriptVariablePattern, in: text)
-            || matches(javaScriptFunctionPattern, in: text) {
+            || matches(javaScriptFunctionPattern, in: text)
+        {
             return "javascript"
         }
         if matches(yamlPattern, in: text)
-            && !text.contains("{") && !text.contains(";") {
+            && !text.contains("{") && !text.contains(";")
+        {
             return "yaml"
         }
         if matches(shellCommandPattern, in: text) {

@@ -185,7 +185,7 @@ final class TopBarViewModel {
 
     func commitEditingChip() {
         guard let chipId = editingChipId,
-              let chip = chipStore.chips.first(where: { $0.id == chipId })
+            let chip = chipStore.chips.first(where: { $0.id == chipId })
         else {
             cancelEditingChip()
             return

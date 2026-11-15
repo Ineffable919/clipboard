@@ -25,7 +25,8 @@ extension ClipFloatingViewController {
         }
 
         if KeyCode.shouldTriggerSearch(for: event),
-           !floatingContentView.headerView.isSearchFieldFirstResponder {
+            !floatingContentView.headerView.isSearchFieldFirstResponder
+        {
             floatingContentView.historyView.activateSearchField(with: event.characters)
             return nil
         }
@@ -67,8 +68,8 @@ extension ClipFloatingViewController {
 
     func flagsChangedEvent(_ event: NSEvent) -> NSEvent? {
         guard event.window == ClipFloatingWindowController.shared.window,
-              ClipFloatingWindowController.shared.isVisible,
-              floatingContentView.historyView.collectionView.isFirstResponder
+            ClipFloatingWindowController.shared.isVisible,
+            floatingContentView.historyView.collectionView.isFirstResponder
         else { return event }
 
         isQuickPastePressed = KeyCode.isQuickPasteModifierPressed()
@@ -110,7 +111,7 @@ extension ClipFloatingViewController {
 
     private func arrowKeyDown(_ event: NSEvent) -> NSEvent? {
         guard focusRegion == .collection,
-              event.modifierFlags.isDisjoint(with: [.command, .option, .control, .shift])
+            event.modifierFlags.isDisjoint(with: [.command, .option, .control, .shift])
         else { return event }
 
         let historyView = floatingContentView.historyView
@@ -224,22 +225,24 @@ extension ClipFloatingViewController {
         let eventModifiers = event.modifierFlags.intersection(relevantModifiers)
 
         if previousTabInfo.isEnabled,
-           event.keyCode == previousTabInfo.shortcut.keyCode,
-           eventModifiers
-           == previousTabInfo.shortcut.modifiers.intersection(
-               relevantModifiers
-           ) {
+            event.keyCode == previousTabInfo.shortcut.keyCode,
+            eventModifiers
+                == previousTabInfo.shortcut.modifiers.intersection(
+                    relevantModifiers
+                )
+        {
             viewModel.selectPreviousChip()
             floatingContentView.headerView.updateChipSelection()
             return true
         }
 
         if nextTabInfo.isEnabled,
-           event.keyCode == nextTabInfo.shortcut.keyCode,
-           eventModifiers
-           == nextTabInfo.shortcut.modifiers.intersection(
-               relevantModifiers
-           ) {
+            event.keyCode == nextTabInfo.shortcut.keyCode,
+            eventModifiers
+                == nextTabInfo.shortcut.modifiers.intersection(
+                    relevantModifiers
+                )
+        {
             viewModel.selectNextChip()
             floatingContentView.headerView.updateChipSelection()
             return true
@@ -281,7 +284,7 @@ extension ClipFloatingViewController: NSGestureRecognizerDelegate {
     ) -> Bool {
         guard
             let hitView = view.window?.contentView?
-            .hitTest(event.locationInWindow)
+                .hitTest(event.locationInWindow)
         else {
             return true
         }

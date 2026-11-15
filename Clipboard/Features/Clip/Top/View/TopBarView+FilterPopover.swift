@@ -29,7 +29,7 @@ extension TopBarView {
         CategoryChipStore.shared.chipsContentDidChange
             .sink { [weak self] in
                 guard let topVM = self?.topVM,
-                      topVM.displayModeRaw == DisplayMode.drawer.rawValue
+                    topVM.displayModeRaw == DisplayMode.drawer.rawValue
                 else { return }
                 topVM.refreshGroupTags()
             }
@@ -99,9 +99,9 @@ extension TopBarView {
             matching: .leftMouseDown
         ) { [weak self] event in
             guard let self,
-                  filterPopover?.isDisplayed == true,
-                  event.window === window,
-                  let hitView = window?.contentView?.hitTest(event.locationInWindow)
+                filterPopover?.isDisplayed == true,
+                event.window === window,
+                let hitView = window?.contentView?.hitTest(event.locationInWindow)
             else {
                 return event
             }
@@ -146,9 +146,9 @@ extension TopBarView {
 
     private func resolveCloseTarget() -> CloseTarget {
         guard let event = NSApp.currentEvent,
-              event.type == .leftMouseDown,
-              event.window === window,
-              let hitView = window?.contentView?.hitTest(event.locationInWindow)
+            event.type == .leftMouseDown,
+            event.window === window,
+            let hitView = window?.contentView?.hitTest(event.locationInWindow)
         else {
             return closeTarget ?? .clickedView
         }

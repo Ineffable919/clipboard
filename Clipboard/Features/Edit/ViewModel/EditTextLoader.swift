@@ -16,14 +16,15 @@ enum EditTextLoader {
         }
 
         return autoreleasepool {
-            let attributedString: NSAttributedString? = switch type {
-            case .rtf:
-                NSAttributedString(rtf: data, documentAttributes: nil)
-            case .rtfd:
-                NSAttributedString(rtfd: data, documentAttributes: nil)
-            default:
-                nil
-            }
+            let attributedString: NSAttributedString? =
+                switch type {
+                case .rtf:
+                    NSAttributedString(rtf: data, documentAttributes: nil)
+                case .rtfd:
+                    NSAttributedString(rtfd: data, documentAttributes: nil)
+                default:
+                    nil
+                }
             return attributedString?.string
                 ?? decode(data)
         }

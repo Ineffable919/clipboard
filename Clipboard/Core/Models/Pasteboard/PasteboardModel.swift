@@ -89,10 +89,12 @@ final class PasteboardModel: Identifiable, Codable {
         self.tag = tag
         self.hidden = hidden
 
-        self.uniqueId = uniqueId ?? Self.generateUniqueId(
-            for: pasteboardType,
-            data: data
-        )
+        self.uniqueId =
+            uniqueId
+            ?? Self.generateUniqueId(
+                for: pasteboardType,
+                data: data
+            )
 
         if pasteboardType == .fileURL {
             if let urlString = String(data: data, encoding: .utf8) {
@@ -134,12 +136,13 @@ final class PasteboardModel: Identifiable, Codable {
             guard let scalar = character.unicodeScalars.first else { continue }
             switch scalar.properties.generalCategory {
             case .uppercaseLetter, .lowercaseLetter, .titlecaseLetter, .modifierLetter, .otherLetter,
-                 .decimalNumber, .letterNumber, .otherNumber,
-                 .mathSymbol, .currencySymbol, .modifierSymbol, .otherSymbol:
+                .decimalNumber, .letterNumber, .otherNumber,
+                .mathSymbol, .currencySymbol, .modifierSymbol, .otherSymbol:
                 output.append(character)
             default:
                 if scalar.value == 0x23 || scalar.value == 0x2A,
-                   character.unicodeScalars.contains(where: { $0.value == 0x20E3 }) {
+                    character.unicodeScalars.contains(where: { $0.value == 0x20E3 })
+                {
                     output.append(character)
                 }
             }
@@ -190,9 +193,11 @@ final class PasteboardModel: Identifiable, Codable {
     func loadThumbnail() async -> NSImage? {
         let scale = NSScreen.screens.map(\.backingScaleFactor).max() ?? 2
         let pixels = Int((max(Const.cardSize, Const.cntSize) * scale).rounded(.up))
-        guard let image = await ImageThumbnailCache.shared.image(
-            for: uniqueId, data: data, maxPixelSize: pixels
-        ), !Task.isCancelled else { return nil }
+        guard
+            let image = await ImageThumbnailCache.shared.image(
+                for: uniqueId, data: data, maxPixelSize: pixels
+            ), !Task.isCancelled
+        else { return nil }
         return NSImage(cgImage: image, size: .zero)
     }
 

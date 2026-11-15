@@ -92,7 +92,7 @@ extension FloatingHistoryView {
             guard let self else { return }
             let lower = min(selectedIndex, clickedPath.item)
             let upper = max(selectedIndex, clickedPath.item)
-            collectionView.selectionIndexPaths = Set((lower ... upper).map { IndexPath(item: $0, section: 0) })
+            collectionView.selectionIndexPaths = Set((lower...upper).map { IndexPath(item: $0, section: 0) })
             scrollTo(index: clickedPath.item)
         }
         collectionView.onClick = { [weak self] indexPath in
@@ -106,10 +106,12 @@ extension FloatingHistoryView {
             collectionView: collectionView
         ) { [weak self] collectionView, indexPath, model in
             guard let self else { return nil }
-            guard let item = collectionView.makeItem(
-                withIdentifier: FloatingCollectionItem.id,
-                for: indexPath
-            ) as? FloatingCollectionItem else { return nil }
+            guard
+                let item = collectionView.makeItem(
+                    withIdentifier: FloatingCollectionItem.id,
+                    for: indexPath
+                ) as? FloatingCollectionItem
+            else { return nil }
             let row = indexPath.item
             item.configure(
                 with: model,
@@ -198,8 +200,8 @@ extension FloatingHistoryView {
 
     func scrollTo(index: Int, animated: Bool = true) {
         guard index >= 0,
-              collectionView.numberOfSections > 0,
-              index < collectionView.numberOfItems(inSection: 0)
+            collectionView.numberOfSections > 0,
+            index < collectionView.numberOfItems(inSection: 0)
         else {
             scrollView.stopScrolling()
             return
@@ -207,7 +209,7 @@ extension FloatingHistoryView {
 
         let indexPath = IndexPath(item: index, section: 0)
         guard let attrs = collectionView.layoutAttributesForItem(at: indexPath),
-              let clipView = collectionView.enclosingScrollView?.contentView
+            let clipView = collectionView.enclosingScrollView?.contentView
         else {
             scrollView.stopScrolling()
             return
@@ -242,7 +244,8 @@ extension FloatingHistoryView {
 
     func updateQuickPasteDisplay() {
         for case let item as FloatingCollectionItem
-        in collectionView.visibleItems() {
+            in collectionView.visibleItems()
+        {
             guard let indexPath = collectionView.indexPath(for: item) else {
                 continue
             }

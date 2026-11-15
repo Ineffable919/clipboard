@@ -150,7 +150,8 @@ final class ClipPreviewContentView: NSView {
             PreviewFileView(model: model)
         case .link:
             if PasteUserDefaults.enableLinkPreview, model.isLink,
-               let url = model.attributeString.string.asCompleteURL() {
+                let url = model.attributeString.string.asCompleteURL()
+            {
                 PreviewWebView(url: url)
             } else {
                 PreviewTextContentView(model: model)

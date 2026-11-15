@@ -207,16 +207,18 @@ final class SearchSuggestionViewController: NSViewController {
     }
 
     private func updateHighlight() {
-        for row in 0 ..< tableView.numberOfRows {
+        for row in 0..<tableView.numberOfRows {
             let isSelected = row == highlightedIndex
 
             if let rowView = tableView.rowView(atRow: row, makeIfNecessary: false)
-                as? SearchSuggestionRowView {
+                as? SearchSuggestionRowView
+            {
                 rowView.setItemHighlighted(isSelected)
             }
 
             if let cellView = tableView.view(atColumn: 0, row: row, makeIfNecessary: false)
-                as? SearchSuggestionCellView {
+                as? SearchSuggestionCellView
+            {
                 cellView.setHighlighted(isSelected)
             }
         }
@@ -244,7 +246,8 @@ extension SearchSuggestionViewController: NSTableViewDataSource {
 extension SearchSuggestionViewController: NSTableViewDelegate {
     func tableView(_ tableView: NSTableView, viewFor _: NSTableColumn?, row: Int) -> NSView? {
         let id = NSUserInterfaceItemIdentifier("SuggestionCell")
-        let cellView = (tableView.makeView(withIdentifier: id, owner: nil) as? SearchSuggestionCellView)
+        let cellView =
+            (tableView.makeView(withIdentifier: id, owner: nil) as? SearchSuggestionCellView)
             ?? SearchSuggestionCellView()
         cellView.identifier = id
 
@@ -257,7 +260,8 @@ extension SearchSuggestionViewController: NSTableViewDelegate {
 
     func tableView(_ tableView: NSTableView, rowViewForRow row: Int) -> NSTableRowView? {
         let id = NSUserInterfaceItemIdentifier("SuggestionRowView")
-        let rowView = (tableView.makeView(withIdentifier: id, owner: nil) as? SearchSuggestionRowView)
+        let rowView =
+            (tableView.makeView(withIdentifier: id, owner: nil) as? SearchSuggestionRowView)
             ?? SearchSuggestionRowView()
         rowView.identifier = id
         rowView.setItemHighlighted(row == highlightedIndex)

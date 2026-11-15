@@ -118,7 +118,8 @@ extension ClipMainViewController {
             guard let self else { return }
             var snapshot = diffableDataSource.snapshot()
             let existing = Set(snapshot.itemIdentifiers.map(\.uniqueId))
-            let appended = newItems
+            let appended =
+                newItems
                 .filter { !existing.contains($0.uniqueId) }
             guard !appended.isEmpty else { return }
             snapshot.appendItems(appended, toSection: .main)

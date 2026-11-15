@@ -81,17 +81,19 @@ enum JSONFoldIndex {
                 case 34:
                     quoted = true
                 case 123, 91:
-                    stack.append(Opening(
-                        character: byte,
-                        location: offset,
-                        lineStart: lineStart,
-                        node: nodes.count
-                    ))
+                    stack.append(
+                        Opening(
+                            character: byte,
+                            location: offset,
+                            lineStart: lineStart,
+                            node: nodes.count
+                        ))
                     nodes.append(Node(lineStart: lineStart, body: NSRange(location: offset + 1, length: 0)))
                 case 125, 93:
                     if let opening = stack.popLast(),
-                       (opening.character == 123 && byte == 125)
-                       || (opening.character == 91 && byte == 93) {
+                        (opening.character == 123 && byte == 125)
+                            || (opening.character == 91 && byte == 93)
+                    {
                         if lineStart > opening.lineStart {
                             nodes[opening.node] = Node(
                                 lineStart: opening.lineStart,
@@ -115,7 +117,8 @@ enum JSONFoldIndex {
             if byte == 11 || byte == 12
                 || (byte == 194 && index + 1 < bytes.count && bytes[index + 1] == 133)
                 || (byte == 226 && index + 2 < bytes.count && bytes[index + 1] == 128
-                    && (bytes[index + 2] == 168 || bytes[index + 2] == 169)) {
+                    && (bytes[index + 2] == 168 || bytes[index + 2] == 169))
+            {
                 extraLineBreaks += 1
             }
             if byte == 10 || byte == 13 {

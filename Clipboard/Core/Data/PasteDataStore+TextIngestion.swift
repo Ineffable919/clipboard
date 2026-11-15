@@ -22,9 +22,14 @@ extension PasteDataStore {
         let tag = PasteboardModel.calculateTag(type: .string, content: data)
         return Task {
             await previous?.value
-            guard let content = await Task.detached(priority: .utility, operation: {
-                PasteboardTextPreparation.prepare(data)
-            }).value else { return }
+            guard
+                let content = await Task.detached(
+                    priority: .utility,
+                    operation: {
+                        PasteboardTextPreparation.prepare(data)
+                    }
+                ).value
+            else { return }
             let model = PasteboardModel(
                 pasteboardType: .string,
                 data: data,

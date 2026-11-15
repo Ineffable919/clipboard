@@ -31,11 +31,12 @@ extension TopBarView {
             let (icon, label) = type.iconAndLabel
             guard fuzzyMatch(label, query: query) else { continue }
             let image = NSImage(systemSymbolName: icon, accessibilityDescription: nil)
-            suggestions.append(SearchSuggestionItem(
-                title: label,
-                icon: image,
-                action: .toggleType(type)
-            ))
+            suggestions.append(
+                SearchSuggestionItem(
+                    title: label,
+                    icon: image,
+                    action: .toggleType(type)
+                ))
         }
 
         return suggestions
@@ -53,11 +54,12 @@ extension TopBarView {
                 systemSymbolName: "calendar",
                 accessibilityDescription: nil
             )
-            suggestions.append(SearchSuggestionItem(
-                title: label,
-                icon: image,
-                action: .setDate(option)
-            ))
+            suggestions.append(
+                SearchSuggestionItem(
+                    title: label,
+                    icon: image,
+                    action: .setDate(option)
+                ))
         }
 
         return suggestions
@@ -74,11 +76,12 @@ extension TopBarView {
             }
             guard fuzzyMatch(chip.name, query: query) else { continue }
             let dotIcon = makeChipDotIcon(colorIndex: chip.colorIndex)
-            suggestions.append(SearchSuggestionItem(
-                title: chip.name,
-                icon: dotIcon,
-                action: .setGroup(chip.id)
-            ))
+            suggestions.append(
+                SearchSuggestionItem(
+                    title: chip.name,
+                    icon: dotIcon,
+                    action: .setGroup(chip.id)
+                ))
         }
 
         return suggestions
@@ -91,11 +94,12 @@ extension TopBarView {
             try await checkSuggestionCancellation(at: index)
             guard topVM?.selectedAppIDs.contains(app.id) != true else { continue }
             guard fuzzyMatch(app.name, query: query) else { continue }
-            suggestions.append(SearchSuggestionItem(
-                title: app.name,
-                icon: AppIconCache.shared.getCachedIcon(forAppID: app.id),
-                action: .toggleApp(app.id)
-            ))
+            suggestions.append(
+                SearchSuggestionItem(
+                    title: app.name,
+                    icon: AppIconCache.shared.getCachedIcon(forAppID: app.id),
+                    action: .toggleApp(app.id)
+                ))
         }
 
         return suggestions
@@ -129,13 +133,13 @@ extension TopBarView {
         topVM.setQuery(text: "")
 
         switch item.action {
-        case let .toggleType(type):
+        case .toggleType(let type):
             topVM.toggleType(type)
-        case let .toggleApp(id):
+        case .toggleApp(let id):
             topVM.toggleApp(id)
-        case let .setDate(option):
+        case .setDate(let option):
             topVM.setDateFilter(option)
-        case let .setGroup(id):
+        case .setGroup(let id):
             topVM.toggleGroupFilter(id)
         }
     }

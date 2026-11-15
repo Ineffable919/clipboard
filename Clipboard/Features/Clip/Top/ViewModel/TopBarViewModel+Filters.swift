@@ -104,10 +104,12 @@ extension TopBarViewModel {
         let preferredId = preferredGroupId.flatMap {
             selectedGroupIds.contains($0) ? $0 : nil
         }
-        let currentId = selectedGroupIds.contains(chipStore.selectedChipId)
+        let currentId =
+            selectedGroupIds.contains(chipStore.selectedChipId)
             ? chipStore.selectedChipId
             : nil
-        let selectedId = preferredId
+        let selectedId =
+            preferredId
             ?? currentId
             ?? chipStore.chips.first { selectedGroupIds.contains($0.id) }?.id
             ?? -1

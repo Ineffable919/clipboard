@@ -56,8 +56,9 @@ final class LinkPreviewRequest: NSObject {
                 }
             }
         if let clipView = view?.enclosingScrollView?.contentView {
-            center.addObserver(self, selector: #selector(updateVisibility),
-                               name: NSView.boundsDidChangeNotification, object: clipView)
+            center.addObserver(
+                self, selector: #selector(updateVisibility),
+                name: NSView.boundsDidChangeNotification, object: clipView)
         }
         updateVisibility()
     }

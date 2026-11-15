@@ -91,8 +91,7 @@ final class CardContentView: NSView, PassthroughMouseEvents {
             }
     }
 
-    private func replaceContentView(for model: PasteboardModel, keyword: String)
-    {
+    private func replaceContentView(for model: PasteboardModel, keyword: String) {
         cancelCurrentLoad(reason: "卡片内容替换")
         currentContentView?.removeFromSuperview()
         currentContentView = nil
@@ -131,9 +130,7 @@ final class CardContentView: NSView, PassthroughMouseEvents {
         }
     }
 
-    private func makeContentView(for model: PasteboardModel, keyword: String)
-        -> NSView
-    {
+    private func makeContentView(for model: PasteboardModel, keyword: String) -> NSView {
         switch model.type {
         case .color:
             return CardColorContentView(model: model)

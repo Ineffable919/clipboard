@@ -50,8 +50,8 @@ extension ClipFloatingViewController {
         let historyView = floatingContentView.historyView
         let collection = historyView.collectionView
         guard let popover = previewPopover, popover.isShown,
-              historyView.dataList.indices.contains(index),
-              let rect = collection.layoutAttributesForItem(at: IndexPath(item: index, section: 0))?.frame
+            historyView.dataList.indices.contains(index),
+            let rect = collection.layoutAttributesForItem(at: IndexPath(item: index, section: 0))?.frame
         else { return }
 
         let (edge, height) = previewPlacement(for: rect)
@@ -90,7 +90,8 @@ extension ClipFloatingViewController {
 extension ClipFloatingViewController: NSPopoverDelegate {
     func popoverWillClose(_ notification: Notification) {
         guard let closing = notification.object as? ClipPreviewPopover,
-              closing === previewPopover else { return }
+            closing === previewPopover
+        else { return }
         previewPopover = nil
         if focusRegion == .popover {
             focusRegion = .collection

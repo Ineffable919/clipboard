@@ -22,13 +22,13 @@ extension SearchField {
         guard suggestionWindow.isVisible else { return false }
 
         switch event.keyCode {
-        case 125: // ↓
+        case 125:  // ↓
             return suggestionWindow.suggestionVC.selectNext()
-        case 126: // ↑
+        case 126:  // ↑
             return suggestionWindow.suggestionVC.selectPrevious()
-        case 36: // Enter
+        case 36:  // Enter
             return suggestionWindow.suggestionVC.applySelection()
-        case 53: // Esc
+        case 53:  // Esc
             hideSuggestions()
             return true
         default:
@@ -62,7 +62,7 @@ extension SearchField {
                 let items = try await provider(query)
                 try Task.checkCancellation()
                 guard let self, text == query, isFirstResponder,
-                      window?.isVisible == true, window?.isKeyWindow == true
+                    window?.isVisible == true, window?.isKeyWindow == true
                 else { return }
                 suggestionsTask = nil
                 presentSuggestions(items, query: query)
@@ -91,7 +91,7 @@ extension SearchField {
 
     private func cursorScreenPosition() -> NSPoint {
         guard let layoutManager = tokenTextView.layoutManager,
-              let textContainer = tokenTextView.textContainer
+            let textContainer = tokenTextView.textContainer
         else {
             let fieldBounds = convert(bounds, to: nil)
             let screenFrame = window?.convertToScreen(fieldBounds) ?? .zero

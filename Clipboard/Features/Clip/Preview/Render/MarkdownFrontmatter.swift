@@ -52,9 +52,11 @@ nonisolated enum MarkdownFrontmatter {
         var lines: [String] = []
         stripped.enumerateLines { line, _ in lines.append(line) }
 
-        guard let close = lines.dropFirst().firstIndex(where: {
-            delimiter.closes($0)
-        }) else { return SplitResult(raw: nil, format: nil, body: markdown) }
+        guard
+            let close = lines.dropFirst().firstIndex(where: {
+                delimiter.closes($0)
+            })
+        else { return SplitResult(raw: nil, format: nil, body: markdown) }
 
         let raw = lines[1..<close].joined(separator: "\n")
         let body = lines[(close + 1)...].joined(separator: "\n")
@@ -117,7 +119,8 @@ nonisolated enum MarkdownFrontmatter {
                 // follows; continuation lines fill it in, folded with spaces
                 value = ""
             } else if value.first != "\"", value.first != "'",
-                      let comment = value.range(of: " #") {
+                let comment = value.range(of: " #")
+            {
                 value = value[..<comment.lowerBound].trimmingCharacters(in: .whitespaces)
             }
             entries.append(ParsedEntry(key: key, value: unquote(value), items: []))
@@ -146,12 +149,13 @@ nonisolated enum MarkdownFrontmatter {
             guard !key.isEmpty else { continue }
 
             if let items = flowSequenceItems(value) {
-                entries.append(FrontmatterEntry(
-                    id: entries.count,
-                    key: key,
-                    value: items.joined(separator: ", "),
-                    items: items
-                ))
+                entries.append(
+                    FrontmatterEntry(
+                        id: entries.count,
+                        key: key,
+                        value: items.joined(separator: ", "),
+                        items: items
+                    ))
             } else {
                 entries.append(FrontmatterEntry(id: entries.count, key: key, value: unquote(value)))
             }
@@ -186,16 +190,17 @@ nonisolated enum MarkdownFrontmatter {
             }
         }
         items.append(current)
-        return items
+        return
+            items
             .map { unquote($0.trimmingCharacters(in: .whitespaces)) }
             .filter { !$0.isEmpty }
     }
 
     private static func unquote(_ value: String) -> String {
         guard value.count >= 2,
-              let first = value.first,
-              first == value.last,
-              first == "\"" || first == "'"
+            let first = value.first,
+            first == value.last,
+            first == "\"" || first == "'"
         else { return value }
 
         return String(value.dropFirst().dropLast())

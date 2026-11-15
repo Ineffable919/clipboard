@@ -18,7 +18,7 @@ final class MCPServer {
     static let shared = MCPServer()
 
     static let defaultPort = 38417
-    static let portRange: ClosedRange<Int> = 1024 ... 65535
+    static let portRange: ClosedRange<Int> = 1024...65535
 
     enum Status: Equatable {
         case stopped
@@ -111,7 +111,7 @@ final class MCPServer {
         case .ready:
             log.info("MCP 服务已监听 \(endpoint)")
             status = .running
-        case let .failed(error):
+        case .failed(let error):
             log.error("MCP 服务异常: \(error.localizedDescription)")
             source.cancel()
             listener = nil

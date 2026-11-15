@@ -34,8 +34,9 @@ extension PasteSQLManager {
         guard let connection else { throw CocoaError(.fileReadUnknown) }
         let id = try SourceAppSQL.resolve(name: name, path: path, bundleID: bundleID, on: connection)
         let previous = try apps[id] ?? SourceAppSQL.readAll(on: connection, id: id).first
-        apps[id] = SourceApp(id: id, bundleID: bundleID ?? previous?.bundleID,
-                             name: name, path: path, iconData: previous?.iconData)
+        apps[id] = SourceApp(
+            id: id, bundleID: bundleID ?? previous?.bundleID,
+            name: name, path: path, iconData: previous?.iconData)
         appIdentities[key] = id
         return id
     }

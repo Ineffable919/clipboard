@@ -22,7 +22,8 @@ extension EditContentView {
     func performJSONAction(_ action: JSONToolAction) {
         guard isLoaded, !jsonEditor.isBusy else { return }
         let target = jsonEditor.transformTarget()
-        let replacesDocument = target.range.location == 0
+        let replacesDocument =
+            target.range.location == 0
             && target.range.length == (jsonEditor.currentText as NSString).length
         let width = jsonEditor.preparationWidth
         let knownValidity = replacesDocument ? jsonEditor.knownValidity : nil
@@ -55,12 +56,14 @@ extension EditContentView {
             defer { jsonEditor.isBusy = false }
 
             switch result {
-            case let .success((document, hasChanges)):
-                let changed = hasChanges && jsonEditor.replaceText(
-                    document.text, in: target.range, document: document.index,
-                    previousText: target.text, preparedText: document.preparedText,
-                    knownValidity: document.isValid
-                )
+            case .success((let document, let hasChanges)):
+                let changed =
+                    hasChanges
+                    && jsonEditor.replaceText(
+                        document.text, in: target.range, document: document.index,
+                        previousText: target.text, preparedText: document.preparedText,
+                        knownValidity: document.isValid
+                    )
                 if !changed, statistics == nil {
                     scheduleJSONAnalysis(
                         immediately: true, knownValidity: replacesDocument ? document.isValid : jsonEditor.knownValidity
@@ -70,14 +73,14 @@ extension EditContentView {
                     statisticsBar.setJSONValid(validity)
                 }
                 jsonEditor.scrollToTop()
-            case let .failure(error): showJSONError(error)
+            case .failure(let error): showJSONError(error)
             }
         }
     }
 
     func showJSONError(_ error: JSONTransformError) {
         switch error {
-        case let .duplicateKey(key):
+        case .duplicateKey(let key):
             statisticsBar.setError(String(localized: .jsonDuplicateKey(key)))
         case .invalidJSON:
             statisticsBar.setError(String(localized: .jsonTransformFailed))

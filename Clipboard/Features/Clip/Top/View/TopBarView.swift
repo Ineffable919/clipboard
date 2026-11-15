@@ -330,7 +330,8 @@ final class TopBarView: NSView {
 private extension TopBarView {
     func updateChipWidths() {
         let rightInset = Const.space16 + settingBtn.fittingSize.width + Const.space12
-        let controlsWidth = searchIconBtn.fittingSize.width + addChipBtn.fittingSize.width
+        let controlsWidth =
+            searchIconBtn.fittingSize.width + addChipBtn.fittingSize.width
             + 2 * Const.space12
         chipScrollView.maximumWidth = max(0, bounds.width - 2 * rightInset - controlsWidth)
         dotChipScrollView.maximumWidth = max(

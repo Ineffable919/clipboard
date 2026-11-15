@@ -20,8 +20,9 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         let storage = NSTextStorage()
         let layout = NSLayoutManager()
         let container = NSTextContainer(
-            size: NSSize(width: CGFloat.greatestFiniteMagnitude,
-                         height: Metrics.height)
+            size: NSSize(
+                width: CGFloat.greatestFiniteMagnitude,
+                height: Metrics.height)
         )
         container.widthTracksTextView = false
         container.heightTracksTextView = true
@@ -142,8 +143,9 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         }
 
         if range.length == 0,
-           range.location > 0,
-           deleteTokenBeforeCursor(at: range.location - 1) {
+            range.location > 0,
+            deleteTokenBeforeCursor(at: range.location - 1)
+        {
             return
         }
 
@@ -170,8 +172,9 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         }
 
         if range.length == 0,
-           range.location < (textStorage?.length ?? 0),
-           deleteSelectedTokens(in: NSRange(location: range.location, length: 1)) {
+            range.location < (textStorage?.length ?? 0),
+            deleteSelectedTokens(in: NSRange(location: range.location, length: 1))
+        {
             return
         }
 
@@ -194,7 +197,8 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         )
 
         if index < (textStorage?.length ?? 0),
-           textStorage?.attribute(.attachment, at: index, effectiveRange: nil) != nil {
+            textStorage?.attribute(.attachment, at: index, effectiveRange: nil) != nil
+        {
             setSelectedRange(NSRange(location: index, length: 1))
             return
         }
@@ -257,7 +261,7 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         super.draw(dirtyRect)
 
         guard let placeholder = placeholderString,
-              (textStorage?.length ?? 0) == 0
+            (textStorage?.length ?? 0) == 0
         else { return }
 
         let font = Self.baselineFont

@@ -63,31 +63,33 @@ class HotKeyManager {
         var needsSave = false
 
         if !hotKeyList.contains(where: { $0.key == "previous_tab" }) {
-            hotKeyList.append(HotKeyInfo(
-                key: "previous_tab",
-                shortcut: KeyboardShortcut(
-                    modifiersRawValue: NSEvent.ModifierFlags.command.rawValue,
-                    keyCode: KeyCode.leftArrow,
-                    displayKey: "←"
-                ),
-                isEnabled: true,
-                isGlobal: false
-            ))
+            hotKeyList.append(
+                HotKeyInfo(
+                    key: "previous_tab",
+                    shortcut: KeyboardShortcut(
+                        modifiersRawValue: NSEvent.ModifierFlags.command.rawValue,
+                        keyCode: KeyCode.leftArrow,
+                        displayKey: "←"
+                    ),
+                    isEnabled: true,
+                    isGlobal: false
+                ))
             needsSave = true
             log.info("新增 previous_tab 默认快捷键")
         }
 
         if !hotKeyList.contains(where: { $0.key == "next_tab" }) {
-            hotKeyList.append(HotKeyInfo(
-                key: "next_tab",
-                shortcut: KeyboardShortcut(
-                    modifiersRawValue: NSEvent.ModifierFlags.command.rawValue,
-                    keyCode: KeyCode.rightArrow,
-                    displayKey: "→"
-                ),
-                isEnabled: true,
-                isGlobal: false
-            ))
+            hotKeyList.append(
+                HotKeyInfo(
+                    key: "next_tab",
+                    shortcut: KeyboardShortcut(
+                        modifiersRawValue: NSEvent.ModifierFlags.command.rawValue,
+                        keyCode: KeyCode.rightArrow,
+                        displayKey: "→"
+                    ),
+                    isEnabled: true,
+                    isGlobal: false
+                ))
             needsSave = true
             log.info("新增 next_tab 默认快捷键")
         }

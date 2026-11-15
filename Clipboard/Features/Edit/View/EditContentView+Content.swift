@@ -60,16 +60,17 @@ extension EditContentView {
         jsonEditor.isBusy = false
 
         let needsReload = newMode == .json ? needsJSONReload : needsTextReload
-        let text: String = if let initialText {
-            initialText
-        } else if !needsReload, statistics != nil || statisticsTask != nil {
-            ""
-        } else {
-            switch mode {
-            case .text: textEditor.currentText
-            case .json: jsonEditor.currentText
+        let text: String =
+            if let initialText {
+                initialText
+            } else if !needsReload, statistics != nil || statisticsTask != nil {
+                ""
+            } else {
+                switch mode {
+                case .text: textEditor.currentText
+                case .json: jsonEditor.currentText
+                }
             }
-        }
 
         // 两种编辑器共用窗口撤销栈，切换时保留原有清空行为，避免撤销修改隐藏的编辑器
         if newMode != mode { window?.undoManager?.removeAllActions() }
@@ -219,7 +220,11 @@ extension EditContentView {
             let worker = Task.detached(priority: .userInitiated) {
                 JSONDocument.prepare(text, knownValidity: validity, width: width)
             }
-            let document = await withTaskCancellationHandler { await worker.value } onCancel: { worker.cancel() }
+            let document = await withTaskCancellationHandler {
+                await worker.value
+            } onCancel: {
+                worker.cancel()
+            }
             guard let self, !Task.isCancelled, !isClosed else { return }
             isLoaded = true
             textEditor.isEditable = true
@@ -251,7 +256,8 @@ extension EditContentView {
                 try? await Task.sleep(for: .milliseconds(300))
             }
             guard !Task.isCancelled, self?.mode == .json,
-                  let text = initialText ?? self?.jsonEditor.currentText else { return }
+                let text = initialText ?? self?.jsonEditor.currentText
+            else { return }
             if knownValidity == nil {
                 let validator = Task.detached(priority: .utility) {
                     JSONTransformer.isValid(text)

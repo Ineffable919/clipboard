@@ -89,14 +89,16 @@ extension PasteSQLManager {
     func getDistinctAppInfo() -> [SourceApp] {
         guard let connection else { return [] }
         do {
-            let ids = try connection.prepare("""
+            let ids = try connection.prepare(
+                """
                 SELECT a.id FROM App a
                 WHERE EXISTS (SELECT 1 FROM Clip WHERE app_id = a.id)
                 ORDER BY MAX(
                     COALESCE((SELECT MAX(timestamp) FROM Clip WHERE app_id = a.id AND hidden = 0), -1),
                     COALESCE((SELECT MAX(timestamp) FROM Clip WHERE app_id = a.id AND hidden = 1), -1)
                 ) DESC, a.id DESC
-                """).compactMap { $0[0] as? Int64 }
+                """
+            ).compactMap { $0[0] as? Int64 }
             return ids.compactMap { apps[$0] }
         } catch {
             log.error("获取应用列表失败：\(error)")
@@ -113,7 +115,8 @@ extension PasteSQLManager {
             if let result = try connection?.prepare(query) {
                 for row in result {
                     if let tag = try? row.get(Col.tag),
-                       !tag.isEmpty {
+                        !tag.isEmpty
+                    {
                         tags.insert(tag)
                     }
                 }

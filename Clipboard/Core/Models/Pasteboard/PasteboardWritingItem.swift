@@ -105,11 +105,11 @@ extension PasteboardWritingItem: NSPasteboardWriting {
         }
         let firstPath =
             pathString
-                .components(separatedBy: "\n")
-                .first {
-                    !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                }?
-                .trimmingCharacters(in: .whitespacesAndNewlines)
+            .components(separatedBy: "\n")
+            .first {
+                !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            }?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
         guard let firstPath else { return nil }
         let url = URL(fileURLWithPath: firstPath)
         return url.absoluteString as NSString
@@ -148,7 +148,8 @@ extension PasteboardModel {
     /// 多文件条目除首个文件外的其余文件；一个写入项只能携带一个文件，其余需作为额外条目写入拖拽剪贴板
     var extraDragFileURLs: [NSURL] {
         guard pasteboardType.isFile(), let paths = cachedFilePaths else { return [] }
-        return paths
+        return
+            paths
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
             .dropFirst()

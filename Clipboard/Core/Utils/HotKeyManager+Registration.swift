@@ -18,10 +18,12 @@ extension HotKeyManager {
         ) { _, _ in
             MainActor.assumeIsolated {
                 // Leave the hotkey queued for its existing handler after menu tracking ends
-                guard let event = NSApp.nextEvent(
-                    matching: .any, until: nil,
-                    inMode: .eventTracking, dequeue: false
-                ) else { return }
+                guard
+                    let event = NSApp.nextEvent(
+                        matching: .any, until: nil,
+                        inMode: .eventTracking, dequeue: false
+                    )
+                else { return }
                 if HotKeyManager.shared.isWindowHotKeyEvent(event) || shouldDismiss?(event) == true {
                     menu.cancelTrackingWithoutAnimation()
                 }
@@ -37,7 +39,7 @@ extension HotKeyManager {
         guard let pointer = event.eventRef else { return false }
         let carbonEvent = OpaquePointer(pointer)
         guard GetEventClass(carbonEvent) == OSType(kEventClassKeyboard),
-              GetEventKind(carbonEvent) == UInt32(kEventHotKeyPressed)
+            GetEventKind(carbonEvent) == UInt32(kEventHotKeyPressed)
         else { return false }
 
         var hotKeyID = EventHotKeyID()

@@ -36,7 +36,7 @@ final class PasteBoard {
         "com.dashlane.dashlanephonefinal",  // Dashlane
         "com.keeper.KeeperPassManager",  // Keeper
         "io.enpass.Enpass",  // Enpass
-        "com.bitwarden.desktop",  // Bitwarden
+        "com.bitwarden.desktop"  // Bitwarden
     ]
 
     private static let ephemeralTypes: Set<String> = [
@@ -45,7 +45,7 @@ final class PasteBoard {
         "org.nspasteboard.RestoredType",  // 恢复的内容
         "de.petermaurer.TransientPasteboardType",  // TextExpander/Butler
         "com.typeit4me.clipping",  // TypeIt4Me
-        "com.apple.pasteboard.promised-file-content-type",
+        "com.apple.pasteboard.promised-file-content-type"
     ]
 
     init() {

@@ -34,9 +34,10 @@ nonisolated struct ImportedCategories {
                 newID = chip.id
             }
             mapping[chip.id] = newID
-            mappedChips.append(CategoryChip(
-                id: newID, name: chip.name, colorIndex: chip.colorIndex, isSystem: false
-            ))
+            mappedChips.append(
+                CategoryChip(
+                    id: newID, name: chip.name, colorIndex: chip.colorIndex, isSystem: false
+                ))
         }
         groupIDs = mapping
         chips = mappedChips

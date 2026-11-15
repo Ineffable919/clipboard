@@ -114,7 +114,8 @@ final class EditToolbarView: NSView {
         self.mode = mode
         let isJSON = mode == .json
         installModeToolbar(isJSON ? jsonToolbar : formatStack)
-        let modeTooltip = isJSON
+        let modeTooltip =
+            isJSON
             ? String(localized: .textModeTooltip)
             : String(localized: .jsonModeTooltip)
         modeButton.toolTip = modeTooltip

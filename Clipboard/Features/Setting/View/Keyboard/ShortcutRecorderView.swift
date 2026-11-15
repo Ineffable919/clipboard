@@ -47,10 +47,10 @@ struct ShortcutRecorder: View {
         _displayText = State(initialValue: saved.displayString)
         _value =
             binding
-                ?? Binding(
-                    get: { saved },
-                    set: { _ in }
-                )
+            ?? Binding(
+                get: { saved },
+                set: { _ in }
+            )
     }
 
     var body: some View {
@@ -124,7 +124,8 @@ struct ShortcutRecorder: View {
         .onChange(of: value) { _, newValue in
             guard newValue != shortcut else { return }
             shortcut = newValue
-            displayText = newValue.isEmpty
+            displayText =
+                newValue.isEmpty
                 ? String(localized: .keyboardShortcutHint)
                 : newValue.displayString
         }
@@ -193,7 +194,7 @@ extension ShortcutRecorder {
     private func handleMouseEvent(_ event: NSEvent) -> NSEvent? {
         guard isRecording else { return event }
         guard let window = event.window,
-              window.isKeyWindow
+            window.isKeyWindow
         else {
             return event
         }
@@ -271,17 +272,16 @@ extension ShortcutRecorder {
             0x67: "F11", 0x6F: "F12"
         ]
 
-        return
-            if let special = specialMap[keyCode] {
-                special
-            } else if let eventChars = event.charactersIgnoringModifiers,
-                      !eventChars.isEmpty,
-                      eventChars.unicodeScalars.allSatisfy({ $0.value >= 32 }) {
-                eventChars.uppercased()
-            } else {
-                keyCodeToDisplayString(keyCode)
-            }
-
+        if let special = specialMap[keyCode] {
+            return special
+        }
+        if let eventChars = event.charactersIgnoringModifiers,
+            !eventChars.isEmpty,
+            eventChars.unicodeScalars.allSatisfy({ $0.value >= 32 })
+        {
+            return eventChars.uppercased()
+        }
+        return keyCodeToDisplayString(keyCode)
     }
 
     private func keyCodeToDisplayString(_ keyCode: UInt16) -> String {

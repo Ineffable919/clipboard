@@ -36,9 +36,10 @@ final class ClipFloatingWindowController: NSWindowController {
         )
         panel.contentViewController = clipVC
         super.init(window: panel)
-        let displayMode = FloatingDisplayMode(
-            rawValue: UserDefaults.standard.integer(forKey: PrefKey.floatMode.rawValue)
-        ) ?? .standard
+        let displayMode =
+            FloatingDisplayMode(
+                rawValue: UserDefaults.standard.integer(forKey: PrefKey.floatMode.rawValue)
+            ) ?? .standard
         clipVC.floatingContentView.setDisplayMode(displayMode)
         setupWindow()
     }
@@ -127,7 +128,7 @@ final class ClipFloatingWindowController: NSWindowController {
 
         guard
             let screen = screenWithMouse ?? NSScreen.main
-            ?? NSScreen.screens.first
+                ?? NSScreen.screens.first
         else {
             return mouseLocation
         }
@@ -172,11 +173,11 @@ final class ClipFloatingWindowController: NSWindowController {
         return NSPoint(x: originX, y: originY)
     }
 
-    private func calculateLastPosition(visibleFrame: NSRect, windowSize: NSSize)
-        -> NSPoint {
-        guard let frameString = UserDefaults.standard.string(
-            forKey: PrefKey.lastWindowFrame.rawValue
-        )
+    private func calculateLastPosition(visibleFrame: NSRect, windowSize: NSSize) -> NSPoint {
+        guard
+            let frameString = UserDefaults.standard.string(
+                forKey: PrefKey.lastWindowFrame.rawValue
+            )
         else {
             return calculateCenterPosition(
                 visibleFrame: visibleFrame,
@@ -242,14 +243,16 @@ final class ClipFloatingWindowController: NSWindowController {
         win.setIsVisible(true)
         win.makeKeyAndOrderFront(nil)
 
-        NSAnimationContext.runAnimationGroup({ ctx in
-            ctx.duration = Const.showDuration
-            win.animator().alphaValue = 1
-        }, completionHandler: {
-            Task { @MainActor in
-                completionHandler?()
-            }
-        })
+        NSAnimationContext.runAnimationGroup(
+            { ctx in
+                ctx.duration = Const.showDuration
+                win.animator().alphaValue = 1
+            },
+            completionHandler: {
+                Task { @MainActor in
+                    completionHandler?()
+                }
+            })
     }
 
     func dismiss(_ completionHandler: (@MainActor @Sendable () -> Void)? = nil) {
@@ -258,18 +261,20 @@ final class ClipFloatingWindowController: NSWindowController {
             return
         }
 
-        NSAnimationContext.runAnimationGroup({ ctx in
-            ctx.duration = Const.hideDuration
-            win.animator().alphaValue = 0
-        }, completionHandler: { [weak self] in
-            Task { @MainActor in
-                guard let self, let win = self.window else { return }
-                win.setIsVisible(false)
-                win.alphaValue = 1
-                win.orderOut(nil)
-                completionHandler?()
-            }
-        })
+        NSAnimationContext.runAnimationGroup(
+            { ctx in
+                ctx.duration = Const.hideDuration
+                win.animator().alphaValue = 0
+            },
+            completionHandler: { [weak self] in
+                Task { @MainActor in
+                    guard let self, let win = self.window else { return }
+                    win.setIsVisible(false)
+                    win.alphaValue = 1
+                    win.orderOut(nil)
+                    completionHandler?()
+                }
+            })
     }
 
     private func saveWindowFrame() {

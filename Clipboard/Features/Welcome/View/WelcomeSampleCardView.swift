@@ -269,53 +269,61 @@ private struct WelcomeSwiftCodeView: View {
                 ("View", WelcomeSwiftSyntaxColor.member),
                 (" {", plainText)
             ])
-            codeLine([
-                ("var ", WelcomeSwiftSyntaxColor.keyword),
-                ("body", WelcomeSwiftSyntaxColor.type),
-                (": ", plainText),
-                ("some ", WelcomeSwiftSyntaxColor.keyword),
-                ("View", WelcomeSwiftSyntaxColor.member),
-                (" {", plainText)
-            ], indent: 7)
-            codeLine([
-                ("VStack", WelcomeSwiftSyntaxColor.type),
-                (" {", plainText)
-            ], indent: 13)
-            codeLine([
-                ("Image", WelcomeSwiftSyntaxColor.type),
-                ("(systemName: ", plainText),
-                ("\"bolt.fill\"", WelcomeSwiftSyntaxColor.string),
-                (")", plainText)
-            ], indent: 20)
-            codeLine([
-                (".font", WelcomeSwiftSyntaxColor.type),
-                ("(", plainText),
-                (".largeTitle", WelcomeSwiftSyntaxColor.member),
-                (")", plainText)
-            ], indent: 27)
-            codeLine([
-                (".foregroundStyle", plainText),
-                ("(", plainText),
-                (".blue", WelcomeSwiftSyntaxColor.member),
-                (")", plainText)
-            ], indent: 27)
-            codeLine([
-                ("Text", WelcomeSwiftSyntaxColor.type),
-                ("(", plainText),
-                ("\"Clip is fast.\"", WelcomeSwiftSyntaxColor.string),
-                (")", plainText)
-            ], indent: 20)
-            codeLine([
-                (".font", WelcomeSwiftSyntaxColor.type),
-                ("(", plainText),
-                (".title2", WelcomeSwiftSyntaxColor.member),
-                (")", plainText)
-            ], indent: 27)
+            codeLine(
+                [
+                    ("var ", WelcomeSwiftSyntaxColor.keyword),
+                    ("body", WelcomeSwiftSyntaxColor.type),
+                    (": ", plainText),
+                    ("some ", WelcomeSwiftSyntaxColor.keyword),
+                    ("View", WelcomeSwiftSyntaxColor.member),
+                    (" {", plainText)
+                ], indent: 7)
+            codeLine(
+                [
+                    ("VStack", WelcomeSwiftSyntaxColor.type),
+                    (" {", plainText)
+                ], indent: 13)
+            codeLine(
+                [
+                    ("Image", WelcomeSwiftSyntaxColor.type),
+                    ("(systemName: ", plainText),
+                    ("\"bolt.fill\"", WelcomeSwiftSyntaxColor.string),
+                    (")", plainText)
+                ], indent: 20)
+            codeLine(
+                [
+                    (".font", WelcomeSwiftSyntaxColor.type),
+                    ("(", plainText),
+                    (".largeTitle", WelcomeSwiftSyntaxColor.member),
+                    (")", plainText)
+                ], indent: 27)
+            codeLine(
+                [
+                    (".foregroundStyle", plainText),
+                    ("(", plainText),
+                    (".blue", WelcomeSwiftSyntaxColor.member),
+                    (")", plainText)
+                ], indent: 27)
+            codeLine(
+                [
+                    ("Text", WelcomeSwiftSyntaxColor.type),
+                    ("(", plainText),
+                    ("\"Clip is fast.\"", WelcomeSwiftSyntaxColor.string),
+                    (")", plainText)
+                ], indent: 20)
+            codeLine(
+                [
+                    (".font", WelcomeSwiftSyntaxColor.type),
+                    ("(", plainText),
+                    (".title2", WelcomeSwiftSyntaxColor.member),
+                    (")", plainText)
+                ], indent: 27)
             codeLine([("}", plainText)], indent: 13)
-            codeLine([
-                (".padding", WelcomeSwiftSyntaxColor.member),
-                ("()", plainText)
-            ], indent: 13)
+            codeLine(
+                [
+                    (".padding", WelcomeSwiftSyntaxColor.member),
+                    ("()", plainText)
+                ], indent: 13)
             codeLine([("}", plainText)], indent: 7)
             codeLine([("}", plainText)])
         }

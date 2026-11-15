@@ -25,9 +25,10 @@ final class AppIconCache {
         changes.send(id)
     }
 
-    private let fallback = NSImage(
-        systemSymbolName: "questionmark.app.dashed", accessibilityDescription: nil
-    ) ?? NSImage()
+    private let fallback =
+        NSImage(
+            systemSymbolName: "questionmark.app.dashed", accessibilityDescription: nil
+        ) ?? NSImage()
 
     private init() {
         cache.countLimit = 200
@@ -55,7 +56,8 @@ final class AppIconCache {
                 SourceAppIcon.read(data: iconData, path: sourcePath)
             }.value
             guard self.generation == currentGeneration,
-                  self.revisions[key, default: 0] == revision else {
+                self.revisions[key, default: 0] == revision
+            else {
                 return self.cache.object(forKey: key as NSString) ?? fallback
             }
             if let data = loaded.data, let id {
@@ -65,7 +67,8 @@ final class AppIconCache {
                         id: id, path: sourcePath, data: data, replacing: iconData
                     )
                     guard generation == currentGeneration,
-                          revisions[key, default: 0] == revision, let updated else { return }
+                        revisions[key, default: 0] == revision, let updated
+                    else { return }
                     SourceAppCache.shared.update(updated)
                 }
             }

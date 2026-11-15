@@ -143,14 +143,16 @@ extension PasteSQLManager {
                 )
                 for row in rows {
                     guard !Task.isCancelled else {
-                        throw NSError(domain: "ImportCancelled", code: -1,
+                        throw NSError(
+                            domain: "ImportCancelled", code: -1,
                             userInfo: [NSLocalizedDescriptionKey: Self.localize("importCancelled")]
                         )
                     }
 
                     let group = categories.groupIDs[(try? row.get(Col.group)) ?? -1] ?? -1
-                    let appID = try SourceAppSQL.importID(for: row, mapping: appIDs,
-                                                          normalized: columns.contains("app_id"))
+                    let appID = try SourceAppSQL.importID(
+                        for: row, mapping: appIDs,
+                        normalized: columns.contains("app_id"))
                     guard try await importRow(row, into: destDb, group: group, appID: appID) else {
                         skippedCount += 1
                         continue
@@ -228,13 +230,15 @@ extension PasteSQLManager {
     }
 
     private nonisolated static func readChips(from database: Connection) -> Data? {
-        let metaExists = (try? database.scalar(
-            "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='\(metaTable)'"
-        ) as? Int64) ?? 0
+        let metaExists =
+            (try? database.scalar(
+                "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='\(metaTable)'"
+            ) as? Int64) ?? 0
         guard metaExists > 0,
-              let rows = try? database.prepare(
-                  "SELECT value FROM \(metaTable) WHERE key='\(metaChipsKey)'"
-              ) else { return nil }
+            let rows = try? database.prepare(
+                "SELECT value FROM \(metaTable) WHERE key='\(metaChipsKey)'"
+            )
+        else { return nil }
         for row in rows {
             return (row[0] as? String)?.data(using: .utf8)
         }
@@ -253,9 +257,10 @@ extension PasteSQLManager {
             do {
                 let sourceDb = try Connection(url.path, readonly: true)
 
-                let tableExists = try sourceDb.scalar(
-                    "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='Clip'"
-                ) as? Int64 ?? 0
+                let tableExists =
+                    try sourceDb.scalar(
+                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='Clip'"
+                    ) as? Int64 ?? 0
 
                 guard tableExists > 0 else {
                     return ImportExportResult(
@@ -269,8 +274,9 @@ extension PasteSQLManager {
                     "search_text", "length"
                 ]
 
-                let existingColumns = Set(try sourceDb.prepare("PRAGMA table_info(Clip)")
-                    .compactMap { $0[1] as? String })
+                let existingColumns = Set(
+                    try sourceDb.prepare("PRAGMA table_info(Clip)")
+                        .compactMap { $0[1] as? String })
 
                 for column in requiredColumns {
                     guard existingColumns.contains(column) else {
@@ -288,7 +294,8 @@ extension PasteSQLManager {
                     // 读取应用表也验证新备份字段完整性；具体引用在导入事务内校验
                     _ = try sourceDb.prepare("SELECT id, bundle_id, app_name, app_path, icon_data FROM App LIMIT 0")
                 } else if !existingColumns.isSuperset(of: ["app_name", "app_path"]) {
-                    return ImportExportResult(success: false,
+                    return ImportExportResult(
+                        success: false,
                         message: Self.localize("backupInvalid", Self.localize("missingColumn", "app_id")))
                 }
                 return ImportExportResult(success: true, message: Self.localize("backupValid"))

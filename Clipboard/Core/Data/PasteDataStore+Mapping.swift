@@ -11,8 +11,7 @@ import SQLite
 // MARK: - Row → Model 映射
 
 extension PasteDataStore {
-    func getItems(limit: Int = 50, offset: Int? = nil) async
-        -> [PasteboardModel] {
+    func getItems(limit: Int = 50, offset: Int? = nil) async -> [PasteboardModel] {
         let rows = await sqlManager.search(
             filter: Col.hidden == 0,
             limit: limit,
@@ -25,9 +24,10 @@ extension PasteDataStore {
         await loadMissingApps(in: rows)
         return rows.compactMap { row in
             if let type = try? row.get(Col.type),
-               let data = try? row.get(Col.data),
-               let timestamp = try? row.get(Col.timestamp),
-               let uniqueId = try? row.get(Col.uniqueId) {
+                let data = try? row.get(Col.data),
+                let timestamp = try? row.get(Col.timestamp),
+                let uniqueId = try? row.get(Col.uniqueId)
+            {
                 let id = try? row.get(Col.id)
                 let appID = try? row.get(Col.appID)
                 var showData = try? row.get(Col.showData)
@@ -84,16 +84,16 @@ extension PasteDataStore {
 
     private func repairTagIfNeeded(_ model: PasteboardModel) {
         guard let storedType = PasteModelType(rawValue: model.tag),
-              storedType == .link || storedType == .color,
-              model.type != storedType,
-              let id = model.id
+            storedType == .link || storedType == .color,
+            model.type != storedType,
+            let id = model.id
         else {
             return
         }
 
         let correctedTag = model.type.tagValue
         guard !correctedTag.isEmpty,
-              repairingTagIds.insert(id).inserted
+            repairingTagIds.insert(id).inserted
         else {
             return
         }

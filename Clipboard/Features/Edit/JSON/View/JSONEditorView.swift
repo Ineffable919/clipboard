@@ -222,8 +222,8 @@ final class JSONEditorView: NSView {
         let resized = bounds.size != editorSize
         let viewportSize = scrollView.contentView.bounds.size
         guard viewportSize.width > 0,
-              viewportSize.height > 0,
-              viewportSize != lineNumberViewportSize
+            viewportSize.height > 0,
+            viewportSize != lineNumberViewportSize
         else { return }
 
         lineNumberViewportSize = viewportSize

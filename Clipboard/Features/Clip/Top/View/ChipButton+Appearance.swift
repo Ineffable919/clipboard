@@ -42,7 +42,7 @@ extension ChipButton {
             } else {
                 let colorIndex =
                     config.isEditing
-                        ? config.editingColorIndex : config.chip.colorIndex
+                    ? config.editingColorIndex : config.chip.colorIndex
                 configureDot(colorIndex: colorIndex)
                 stack.addArrangedSubview(dotContainerView)
             }
@@ -71,11 +71,12 @@ extension ChipButton {
     }
 
     func addSystemClockIcon(pointSize: CGFloat, weight: NSFont.Weight) {
-        let symbolName = if #available(macOS 15.0, *) {
-            "clock.arrow.trianglehead.counterclockwise.rotate.90"
-        } else {
-            "clock.arrow.circlepath"
-        }
+        let symbolName =
+            if #available(macOS 15.0, *) {
+                "clock.arrow.trianglehead.counterclockwise.rotate.90"
+            } else {
+                "clock.arrow.circlepath"
+            }
         let icon = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)
         iconImageView.image = icon?.withSymbolConfiguration(.init(pointSize: pointSize, weight: weight))
         iconImageView.snp.remakeConstraints { make in
@@ -127,15 +128,16 @@ extension ChipButton {
     }
 
     private func mainPanelBackgroundColor(isDark: Bool) -> NSColor {
-        let state: HeaderHighlight = if config.isEditing {
-            .hover
-        } else if isPressed {
-            .pressed
-        } else if (config.isSelected && !config.dotMode) || isDraggingOver {
-            .selected
-        } else {
-            isHovering ? .hover : .none
-        }
+        let state: HeaderHighlight =
+            if config.isEditing {
+                .hover
+            } else if isPressed {
+                .pressed
+            } else if (config.isSelected && !config.dotMode) || isDraggingOver {
+                .selected
+            } else {
+                isHovering ? .hover : .none
+            }
         return state.color(isDark: isDark)
     }
 
@@ -239,7 +241,7 @@ extension ChipButton {
 
         let colorIndex =
             config.isEditing
-                ? config.editingColorIndex : config.chip.colorIndex
+            ? config.editingColorIndex : config.chip.colorIndex
         if !config.chip.isSystem || !config.dotMode {
             configureDot(colorIndex: colorIndex)
         }

@@ -102,7 +102,8 @@ final class FloatingLinkContentView: NSView {
 
     private func applyMetadata(title: String?, icon: NSImage?, urlString: String) {
         let title = title?.trimmingCharacters(in: .whitespacesAndNewlines)
-        titleLabel.stringValue = title.flatMap { $0.isEmpty ? nil : $0 }
+        titleLabel.stringValue =
+            title.flatMap { $0.isEmpty ? nil : $0 }
             ?? URL(string: urlString)?.host() ?? urlString
         if displayMode == .minimal {
             toolTip = "\(titleLabel.stringValue)\n\(urlString)"

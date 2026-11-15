@@ -35,16 +35,18 @@ extension ChipButton {
         }
 
         func contentInsets(dotMode: Bool) -> NSEdgeInsets {
-            var horizontal: CGFloat = switch self {
-            case .regular: dotMode ? Const.space6 : Const.space10
-            case .small: dotMode ? Const.space4 : Const.space6
-            case .mini: dotMode ? Const.space2 : Const.space4
-            }
-            let vertical: CGFloat = switch self {
-            case .regular: Const.space6
-            case .small: 3
-            case .mini: 2
-            }
+            var horizontal: CGFloat =
+                switch self {
+                case .regular: dotMode ? Const.space6 : Const.space10
+                case .small: dotMode ? Const.space4 : Const.space6
+                case .mini: dotMode ? Const.space2 : Const.space4
+                }
+            let vertical: CGFloat =
+                switch self {
+                case .regular: Const.space6
+                case .small: 3
+                case .mini: 2
+                }
             if #available(macOS 26.0, *), isCompact {
                 horizontal += Const.space2
             }

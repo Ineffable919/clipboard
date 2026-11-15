@@ -57,7 +57,8 @@ extension JSONTransformer {
                 output.append(byte)
                 index += 2
             } else if bytes[index + 1] == Byte.lowercaseU,
-                      let decoded = decodeUnicodeEscape(bytes, at: index) {
+                let decoded = decodeUnicodeEscape(bytes, at: index)
+            {
                 appendUTF8(decoded.scalar, to: &output)
                 index = decoded.nextIndex
             } else {
@@ -123,7 +124,8 @@ extension JSONTransformer {
             let byte = bytes[index]
             if byte == Byte.backslash {
                 if precedingBackslashes.isMultiple(of: 2),
-                   let decoded = decodeUnicodeEscape(bytes, at: index) {
+                    let decoded = decodeUnicodeEscape(bytes, at: index)
+                {
                     appendUTF8(decoded.scalar, to: &output)
                     index = decoded.nextIndex
                     precedingBackslashes = 0

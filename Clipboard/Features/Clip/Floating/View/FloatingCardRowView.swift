@@ -140,11 +140,12 @@ final class FloatingCardRowView: NSView {
         currentKeyword = keyword
 
         let (bgColor, fgColor) = model.colors()
-        let resolvedBg: NSColor = if model.cachedBackgroundColor != nil {
-            bgColor
-        } else {
-            .controlBackgroundColor
-        }
+        let resolvedBg: NSColor =
+            if model.cachedBackgroundColor != nil {
+                bgColor
+            } else {
+                .controlBackgroundColor
+            }
         backgroundView.layer?.backgroundColor = resolvedBg.cgColor
 
         timestampLabel.stringValue = model.timestamp.timeAgo(
@@ -187,7 +188,8 @@ final class FloatingCardRowView: NSView {
             layer.borderWidth = 0
             return
         }
-        let color: NSColor = isFocusedState
+        let color: NSColor =
+            isFocusedState
             ? .controlAccentColor
             : .gray.withAlphaComponent(0.5)
         layer.borderColor = color.cgColor
@@ -243,7 +245,8 @@ final class FloatingCardRowView: NSView {
             updateShadow()
             guard let model = currentModel else { return }
             let (bgColor, _) = model.colors()
-            let resolvedBg: NSColor = model.cachedBackgroundColor != nil
+            let resolvedBg: NSColor =
+                model.cachedBackgroundColor != nil
                 ? bgColor : .controlBackgroundColor
             backgroundView.layer?.backgroundColor = resolvedBg.cgColor
         }

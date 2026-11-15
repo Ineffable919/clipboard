@@ -79,9 +79,10 @@ final class EditWindowController: NSWindowController, NSWindowDelegate {
     // MARK: - Public Methods
 
     func openNewWindow() {
-        let appName = Bundle.main.object(
-            forInfoDictionaryKey: "CFBundleName"
-        ) as? String ?? "Clipboard"
+        let appName =
+            Bundle.main.object(
+                forInfoDictionaryKey: "CFBundleName"
+            ) as? String ?? "Clipboard"
 
         let emptyModel = PasteboardModel(
             pasteboardType: .string,

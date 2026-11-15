@@ -39,8 +39,9 @@ struct PasteItemsSettingsSection: View {
                                 )
 
                                 if mode == .toApp,
-                                   selectedPasteTarget == .toApp,
-                                   !viewModel.hasAccessibilityPermission {
+                                    selectedPasteTarget == .toApp,
+                                    !viewModel.hasAccessibilityPermission
+                                {
                                     AccessibilityButton(
                                         action: viewModel.openAccessibilitySettings
                                     )

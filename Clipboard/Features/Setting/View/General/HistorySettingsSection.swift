@@ -17,7 +17,7 @@ struct HistorySettingsSection: View {
             switch self {
             case .clearHistory: String(localized: .clearDataMessage)
             case .historyLimit: String(localized: .generalHistoryLimitConfirmTitle)
-            case let .result(message): message
+            case .result(let message): message
             }
         }
     }
@@ -74,7 +74,7 @@ struct HistorySettingsSection: View {
                     clearHistory()
                 }
                 Button(.commonCancel, role: .cancel) {}
-            case let .historyLimit(timeUnit):
+            case .historyLimit(let timeUnit):
                 Button(.delete, role: .destructive) {
                     applyConfirmedLimit(timeUnit)
                 }

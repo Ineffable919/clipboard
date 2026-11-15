@@ -46,7 +46,8 @@ extension MarkdownAttributedRenderer {
 
     static func trimTrailingNewlines(_ result: NSMutableAttributedString) {
         while result.length > 0,
-              (result.string as NSString).substring(from: result.length - 1) == "\n" {
+            (result.string as NSString).substring(from: result.length - 1) == "\n"
+        {
             result.deleteCharacters(in: NSRange(location: result.length - 1, length: 1))
         }
     }

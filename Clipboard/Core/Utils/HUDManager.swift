@@ -33,18 +33,18 @@ final class HUDManager {
     }
 
     #if DEBUG
-    static func makeLegacyPreview(icon: NSImage?, text: String, textColor: Color = .secondary) -> NSView {
-        let view = HUDWindow.makeVisualEffectView()
-        view.snp.makeConstraints { make in
-            make.size.equalTo(view.frame.size)
+        static func makeLegacyPreview(icon: NSImage?, text: String, textColor: Color = .secondary) -> NSView {
+            let view = HUDWindow.makeVisualEffectView()
+            view.snp.makeConstraints { make in
+                make.size.equalTo(view.frame.size)
+            }
+            updateLegacyPreview(view, icon: icon, text: text, textColor: textColor)
+            return view
         }
-        updateLegacyPreview(view, icon: icon, text: text, textColor: textColor)
-        return view
-    }
 
-    static func updateLegacyPreview(_ view: NSView, icon: NSImage?, text: String, textColor: Color = .secondary) {
-        shared.buildContent(in: view, icon: icon, text: text, textColor: textColor)
-    }
+        static func updateLegacyPreview(_ view: NSView, icon: NSImage?, text: String, textColor: Color = .secondary) {
+            shared.buildContent(in: view, icon: icon, text: text, textColor: textColor)
+        }
     #endif
 }
 

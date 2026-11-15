@@ -128,7 +128,8 @@ final class ClipPreviewController: NSViewController {
         footerView.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview().inset(Const.space12)
             make.bottom.equalToSuperview().inset(Const.space12)
-            footerHeightConstraint = make.height
+            footerHeightConstraint =
+                make.height
                 .equalTo(PreviewFooterBar.minimumHeight).constraint
         }
     }
@@ -205,7 +206,8 @@ final class ClipPreviewController: NSViewController {
             if let attrs = try? FileManager.default.attributesOfItem(
                 atPath: url.path
             ),
-                let size = attrs[.size] as? Int64 {
+                let size = attrs[.size] as? Int64
+            {
                 fileSize = size.formatted(.byteCount(style: .file))
             }
         }

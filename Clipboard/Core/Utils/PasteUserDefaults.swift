@@ -11,7 +11,7 @@ import Foundation
 // MARK: - 应用信息模型
 
 struct IgnoredAppInfo: Codable, Hashable, Identifiable {
-    let id: String // 使用 bundleIdentifier 或 path 作为 id
+    let id: String  // 使用 bundleIdentifier 或 path 作为 id
     let name: String
     let bundleIdentifier: String?
     let path: String

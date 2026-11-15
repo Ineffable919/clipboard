@@ -181,7 +181,10 @@ extension FilterPopoverViewController {
                 }
             }
             while let (id, icon) = await group.next() {
-                guard !Task.isCancelled else { group.cancelAll(); return }
+                guard !Task.isCancelled else {
+                    group.cancelAll()
+                    return
+                }
                 contentView.appSection.updateIcon(icon, forAppID: id)
                 if let app = pending.next() {
                     group.addTask {

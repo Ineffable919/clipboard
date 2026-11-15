@@ -144,7 +144,8 @@ extension JSONEditorView {
 
     @objc func prepareUndo(_ notification: Notification) {
         guard let manager = notification.object as? UndoManager,
-              manager === textView.undoManager else { return }
+            manager === textView.undoManager
+        else { return }
         expandFolds()
     }
 }

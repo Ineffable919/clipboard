@@ -17,11 +17,13 @@ nonisolated enum SourceAppMigration {
         let backup = try database.backup(usingConnection: Connection(backupURL.path))
         try backup.step()
 
-        let hadUniqueIndex = (try database.scalar(
-            "SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name='uidx_unique_id'"
-        ) as? Int64 ?? 0) > 0
+        let hadUniqueIndex =
+            (try database.scalar(
+                "SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name='uidx_unique_id'"
+            ) as? Int64 ?? 0) > 0
         try database.transaction(.immediate) {
-            try database.run("""
+            try database.run(
+                """
                 CREATE TEMP TABLE AppMigration (
                     app_name TEXT NOT NULL, app_path TEXT NOT NULL, app_id INTEGER NOT NULL,
                     PRIMARY KEY (app_name, app_path)
@@ -29,7 +31,8 @@ nonisolated enum SourceAppMigration {
                 """)
             try mapSources(on: database)
             // 一次顺序复制同时移除两个旧字段；ID、内容、分类、隐藏状态和排序原样保留
-            try database.execute("""
+            try database.execute(
+                """
                 CREATE TABLE Clip_app_migration (
                     id INTEGER PRIMARY KEY, unique_id TEXT NOT NULL, type TEXT NOT NULL,
                     data BLOB NOT NULL, show_data BLOB, timestamp INTEGER NOT NULL,
@@ -45,7 +48,8 @@ nonisolated enum SourceAppMigration {
             let originalCount = try database.scalar("SELECT COUNT(*) FROM Clip") as? Int64
             let migratedCount = try database.scalar("SELECT COUNT(*) FROM Clip_app_migration") as? Int64
             guard originalCount == migratedCount else { throw CocoaError(.fileReadCorruptFile) }
-            try database.execute("""
+            try database.execute(
+                """
                 DROP TABLE Clip;
                 ALTER TABLE Clip_app_migration RENAME TO Clip;
                 DROP TABLE AppMigration;
@@ -60,7 +64,8 @@ nonisolated enum SourceAppMigration {
     }
 
     private static func mapSources(on database: Connection) throws {
-        let sources = try database.prepare("""
+        let sources = try database.prepare(
+            """
             SELECT app_name, app_path, MAX(timestamp) AS latest FROM Clip
             GROUP BY app_name, app_path ORDER BY latest
             """)
@@ -70,6 +75,6 @@ nonisolated enum SourceAppMigration {
             let bundleID = path.isEmpty ? nil : Bundle(url: URL(filePath: path))?.bundleIdentifier
             let id = try SourceAppSQL.resolve(name: name, path: path, bundleID: bundleID, on: database)
             try database.run("INSERT INTO AppMigration VALUES (?, ?, ?)", name, path, id)
-    }
+        }
     }
 }

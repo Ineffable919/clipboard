@@ -34,7 +34,7 @@ extension PasteboardModel {
             .compactMap { $0.usingColorSpace(.sRGB) }
 
         guard !foregrounds.isEmpty,
-              let background = background.usingColorSpace(.sRGB)
+            let background = background.usingColorSpace(.sRGB)
         else { return nil }
 
         func minimumContrast(on color: NSColor) -> CGFloat {
@@ -54,7 +54,8 @@ extension PasteboardModel {
     /// 完整预览首次加载后分析；空数组也缓存，避免反复扫描无适配需求的文本
     func cachePreviewColors(_ content: NSAttributedString) {
         guard cachedPreviewForegrounds == nil else { return }
-        cachedPreviewForegrounds = hasBgColor && safeBgColor == nil
+        cachedPreviewForegrounds =
+            hasBgColor && safeBgColor == nil
             ? Self.richForegrounds(in: content) : []
     }
 
@@ -64,11 +65,14 @@ extension PasteboardModel {
         let visibleCharacters = CharacterSet.whitespacesAndNewlines.inverted
         content.enumerateAttributes(in: NSRange(location: 0, length: content.length)) { attributes, range, _ in
             if let background = attributes[.backgroundColor] as? NSColor,
-               background.alphaComponent > 0.01 { return }
+                background.alphaComponent > 0.01
+            {
+                return
+            }
             guard attributes[.attachment] == nil else { return }
             let foreground = attributes[.foregroundColor] as? NSColor ?? .textColor
             guard !colors.contains(foreground),
-                  source.rangeOfCharacter(from: visibleCharacters, options: [], range: range).location != NSNotFound
+                source.rangeOfCharacter(from: visibleCharacters, options: [], range: range).location != NSNotFound
             else { return }
             // 保留动态颜色，使用时再按视图主题解析；相同颜色只参与一次对比度计算
             colors.insert(foreground)
@@ -110,7 +114,8 @@ extension PasteboardModel {
         }
 
         if attributeString.length > 0,
-           let background = attributeString.attribute(.backgroundColor, at: 0, effectiveRange: nil) as? NSColor {
+            let background = attributeString.attribute(.backgroundColor, at: 0, effectiveRange: nil) as? NSColor
+        {
             return Colors(background: background, foreground: contrastingNSColor(for: background), hasBackground: true)
         }
         return Colors()
@@ -227,7 +232,10 @@ private func textContrast(_ foreground: NSColor, on background: NSColor) -> CGFl
 
 func contrastingNSColor(for color: NSColor) -> NSColor {
     let color = color.usingColorSpace(.sRGB) ?? color
-    var red: CGFloat = 0, green: CGFloat = 0, blue: CGFloat = 0, alpha: CGFloat = 0
+    var red: CGFloat = 0
+    var green: CGFloat = 0
+    var blue: CGFloat = 0
+    var alpha: CGFloat = 0
     color.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
     let brightness = 0.299 * red + 0.587 * green + 0.114 * blue
     return brightness > 0.5

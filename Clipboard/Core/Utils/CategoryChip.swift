@@ -10,7 +10,7 @@ import SwiftUI
 struct CategoryChip: Identifiable, Equatable, Codable {
     let id: Int
     var name: String
-    var colorIndex: Int // 存储颜色在调色板中的索引
+    var colorIndex: Int  // 存储颜色在调色板中的索引
     var isSystem: Bool
 
     private static let semanticPalette: [Color] = [
@@ -52,7 +52,8 @@ struct CategoryChip: Identifiable, Equatable, Codable {
         }
         set {
             if let index = CategoryChip.semanticPalette.firstIndex(of: newValue)
-                ?? CategoryChip.palette.firstIndex(of: newValue) {
+                ?? CategoryChip.palette.firstIndex(of: newValue)
+            {
                 colorIndex = index
             } else {
                 colorIndex = 0
@@ -90,7 +91,8 @@ struct CategoryChip: Identifiable, Equatable, Codable {
         self.isSystem = isSystem
 
         if let index = CategoryChip.semanticPalette.firstIndex(of: color)
-            ?? CategoryChip.palette.firstIndex(of: color) {
+            ?? CategoryChip.palette.firstIndex(of: color)
+        {
             colorIndex = index
         } else {
             colorIndex = 0

@@ -39,9 +39,10 @@ extension PasteSQLManager {
     private func indexExists(named name: String) -> Bool {
         guard let connection else { return false }
         do {
-            let count = try connection.scalar(
-                "SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name='\(name)'"
-            ) as? Int64 ?? 0
+            let count =
+                try connection.scalar(
+                    "SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name='\(name)'"
+                ) as? Int64 ?? 0
             return count > 0
         } catch {
             log.error("读取数据库索引失败: \(error)")
@@ -54,8 +55,9 @@ extension PasteSQLManager {
     /// 本迁移用当前算法重算全表 `unique_id`，合并重复行（保留时间戳最新的），并修正存储值
     func migrateUniqueIdIfNeeded() async {
         let currentVersion = databaseUserVersion()
-        guard currentVersion < Self.uniqueIdMigrationVersion
-            || !indexExists(named: "uidx_unique_id")
+        guard
+            currentVersion < Self.uniqueIdMigrationVersion
+                || !indexExists(named: "uidx_unique_id")
         else {
             log.debug("unique_id 已迁移，跳过")
             return
@@ -75,13 +77,14 @@ extension PasteSQLManager {
         for row in try connection.prepare(query) {
             let type = PasteboardType(row[Col.type])
             let correct = await PasteboardModel.generateUniqueId(for: type, data: row[Col.data])
-            infos.append(PasteIdentity(
-                id: row[Col.id],
-                storedUniqueId: row[Col.uniqueId],
-                correctUniqueId: correct,
-                timestamp: row[Col.timestamp],
-                group: row[Col.group]
-            ))
+            infos.append(
+                PasteIdentity(
+                    id: row[Col.id],
+                    storedUniqueId: row[Col.uniqueId],
+                    correctUniqueId: correct,
+                    timestamp: row[Col.timestamp],
+                    group: row[Col.group]
+                ))
         }
         return infos
     }
@@ -138,8 +141,9 @@ extension PasteSQLManager {
                 try connection.run(table.filter(Col.id == id).delete())
             }
             for update in updates {
-                try connection.run(table.filter(Col.id == update.row.id)
-                    .update(Col.uniqueId <- "__migrating__\(update.row.id)"))
+                try connection.run(
+                    table.filter(Col.id == update.row.id)
+                        .update(Col.uniqueId <- "__migrating__\(update.row.id)"))
             }
             for update in updates {
                 var setters: [Setter] = [Col.uniqueId <- update.row.correctUniqueId]

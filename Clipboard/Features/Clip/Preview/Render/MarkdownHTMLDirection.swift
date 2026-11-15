@@ -44,12 +44,14 @@ nonisolated enum MarkdownHTMLDirection {
         var cursor = 0
 
         for match in matches {
-            output += nsHTML.substring(with: NSRange(
-                location: cursor,
-                length: match.range.location - cursor
-            ))
+            output += nsHTML.substring(
+                with: NSRange(
+                    location: cursor,
+                    length: match.range.location - cursor
+                ))
             let tag = nsHTML.substring(with: match.range(at: 1))
-            let attributes = match.range(at: 2).location == NSNotFound
+            let attributes =
+                match.range(at: 2).location == NSNotFound
                 ? ""
                 : nsHTML.substring(with: match.range(at: 2))
 
@@ -64,7 +66,8 @@ nonisolated enum MarkdownHTMLDirection {
                     range: NSRange(location: 0, length: (content as NSString).length),
                     withTemplate: ""
                 )
-                output += firstStrongCharacter(in: plainText).map(isRTL) == true
+                output +=
+                    firstStrongCharacter(in: plainText).map(isRTL) == true
                     ? "<\(tag)\(attributes) dir=\"rtl\">"
                     : nsHTML.substring(with: match.range)
             }
@@ -79,8 +82,8 @@ nonisolated enum MarkdownHTMLDirection {
             guard let scalar = character.unicodeScalars.first else { return false }
             switch scalar.properties.generalCategory {
             case .uppercaseLetter, .lowercaseLetter, .titlecaseLetter,
-                 .modifierLetter, .otherLetter, .nonspacingMark,
-                 .spacingMark, .enclosingMark:
+                .modifierLetter, .otherLetter, .nonspacingMark,
+                .spacingMark, .enclosingMark:
                 return true
             default:
                 return false

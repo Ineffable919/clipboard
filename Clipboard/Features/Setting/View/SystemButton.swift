@@ -25,9 +25,9 @@ struct SystemButton: View {
         Button(action: action) {
             label
         }
-            .focusable(false)
-            .buttonStyle(.bordered)
-            .controlSize(.regular)
+        .focusable(false)
+        .buttonStyle(.bordered)
+        .controlSize(.regular)
     }
 }
 

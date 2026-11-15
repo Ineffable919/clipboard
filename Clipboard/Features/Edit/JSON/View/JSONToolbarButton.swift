@@ -62,10 +62,12 @@ final class JSONToolbarButton: NSButton {
 
     override func draw(_ dirtyRect: NSRect) {
         if isHovering, isEnabled {
-            let isDark = effectiveAppearance.bestMatch(
-                from: [.darkAqua, .aqua]
-            ) == .darkAqua
-            let color = isDark
+            let isDark =
+                effectiveAppearance.bestMatch(
+                    from: [.darkAqua, .aqua]
+                ) == .darkAqua
+            let color =
+                isDark
                 ? NSColor.white.withAlphaComponent(0.08)
                 : NSColor.black.withAlphaComponent(0.06)
             color.setFill()

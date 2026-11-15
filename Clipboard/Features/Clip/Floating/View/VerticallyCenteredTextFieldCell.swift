@@ -22,7 +22,8 @@ final class VerticallyCenteredTextFieldCell: NSTextFieldCell {
             ) { value, range, _ in
                 let style = value as? NSParagraphStyle ?? .default
                 guard style.lineBreakMode != .byTruncatingTail,
-                      let updated = style.mutableCopy() as? NSMutableParagraphStyle else { return }
+                    let updated = style.mutableCopy() as? NSMutableParagraphStyle
+                else { return }
                 updated.lineBreakMode = .byTruncatingTail
                 paragraphUpdates.append((range, updated))
             }

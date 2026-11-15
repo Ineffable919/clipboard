@@ -83,8 +83,9 @@ extension ClipMainViewController: NSCollectionViewDelegate {
             let point = collectionView.convert(draggingInfo.draggingLocation, from: nil)
             var index = min(max(0, proposedIndexPath.pointee.item), displayedItemCount)
             if dropOperation.pointee == .on,
-               let frame = collectionView.layoutAttributesForItem(at: IndexPath(item: index, section: 0))?.frame,
-               point.x >= frame.midX {
+                let frame = collectionView.layoutAttributesForItem(at: IndexPath(item: index, section: 0))?.frame,
+                point.x >= frame.midX
+            {
                 index += 1
             }
             let dropPath = IndexPath(item: min(index, displayedItemCount), section: 0)
@@ -209,7 +210,7 @@ extension ClipMainViewController {
 
     func scrollTo(indexPath: IndexPath, animated: Bool = true) {
         guard displayedItemCount > 0,
-              let attrs = collectionView.layoutAttributesForItem(at: indexPath)
+            let attrs = collectionView.layoutAttributesForItem(at: indexPath)
         else {
             scrollView.stopScrolling()
             return
@@ -241,7 +242,7 @@ extension ClipMainViewController: CollectionViewItemDelegate {
 
     func itemDidRequestSelect(_ item: CollectionViewItem) {
         guard let indexPath = collectionView.indexPath(for: item),
-              indexPath != selectIndexPath
+            indexPath != selectIndexPath
         else {
             if focusRegion != .collection {
                 setFocusRegion(.collection)

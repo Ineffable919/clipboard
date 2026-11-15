@@ -177,9 +177,10 @@ struct StorageSettingView: View {
                 } else {
                     log.error("数据库导入失败: \(result.message)")
                     alertTitle = String(localized: .storageImportFailureTitle)
-                    alertMessage = result.message.contains(
-                        String(localized: .importCancelled)
-                    )
+                    alertMessage =
+                        result.message.contains(
+                            String(localized: .importCancelled)
+                        )
                         ? String(localized: .storageImportCancelled)
                         : result.message
                 }

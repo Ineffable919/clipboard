@@ -61,7 +61,8 @@ final class FilterGridView: NSView {
 
     override var intrinsicContentSize: NSSize {
         let rows = (visibleButtons.count + columnCount - 1) / columnCount
-        let height = rows == 0
+        let height =
+            rows == 0
             ? 0
             : rowHeight * CGFloat(rows) + spacing * CGFloat(rows - 1)
         return NSSize(width: NSView.noIntrinsicMetric, height: height)

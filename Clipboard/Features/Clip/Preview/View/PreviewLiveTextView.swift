@@ -84,7 +84,7 @@ final class PreviewLiveTextView: NSView, ImageAnalysisOverlayViewDelegate, Previ
 
     func contentsRect(for _: ImageAnalysisOverlayView) -> CGRect {
         guard let image = imageView.image,
-              bounds.width > 0, bounds.height > 0
+            bounds.width > 0, bounds.height > 0
         else { return CGRect(x: 0, y: 0, width: 1, height: 1) }
 
         let imageSize = image.size
@@ -148,9 +148,9 @@ final class PreviewLiveTextView: NSView, ImageAnalysisOverlayViewDelegate, Previ
 
     private func scheduleAnalysisIfNeeded() {
         guard window != nil,
-              imageView.image != nil,
-              overlayView.analysis == nil,
-              Self.sharedAnalyzer != nil
+            imageView.image != nil,
+            overlayView.analysis == nil,
+            Self.sharedAnalyzer != nil
         else { return }
 
         analysisTask?.cancel()
@@ -162,9 +162,9 @@ final class PreviewLiveTextView: NSView, ImageAnalysisOverlayViewDelegate, Previ
             }
 
             guard let self,
-                  !Task.isCancelled,
-                  window != nil,
-                  let image = imageView.image
+                !Task.isCancelled,
+                window != nil,
+                let image = imageView.image
             else { return }
 
             let previous = Self.activeAnalysisTask
@@ -184,8 +184,8 @@ final class PreviewLiveTextView: NSView, ImageAnalysisOverlayViewDelegate, Previ
 
     private func analyzeImage(_ image: NSImage) async {
         guard let analyzer = Self.sharedAnalyzer,
-              let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil),
-              !Task.isCancelled
+            let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil),
+            !Task.isCancelled
         else { return }
 
         let configuration = ImageAnalyzer.Configuration([.text, .machineReadableCode])

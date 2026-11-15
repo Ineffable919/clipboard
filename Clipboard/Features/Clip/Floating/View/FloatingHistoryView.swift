@@ -31,8 +31,7 @@ final class FloatingHistoryView: NSView {
 
     // MARK: - Data Source
 
-    var dataSource:
-        NSCollectionViewDiffableDataSource<Int, PasteboardModel>!
+    var dataSource: NSCollectionViewDiffableDataSource<Int, PasteboardModel>!
 
     // MARK: - State
 
@@ -140,7 +139,8 @@ final class FloatingHistoryView: NSView {
             guard let self else { return }
             var snapshot = dataSource.snapshot()
             let existing = Set(snapshot.itemIdentifiers.map(\.uniqueId))
-            let appended = newItems
+            let appended =
+                newItems
                 .filter { !existing.contains($0.uniqueId) }
             guard !appended.isEmpty else { return }
             dataList.append(contentsOf: appended)
@@ -202,7 +202,8 @@ final class FloatingHistoryView: NSView {
     func updateSelectedItemBorder() {
         let focused = env.focusRegion == .collection
         for case let item as FloatingCollectionItem
-        in collectionView.visibleItems() {
+            in collectionView.visibleItems()
+        {
             item.setFocused(focused)
         }
     }
@@ -254,10 +255,12 @@ final class FloatingHistoryView: NSView {
     func requestDelete(at index: Int) {
         let items = selectedModels
         if items.count > 1 {
-            guard NSAlert.runConfirm(
-                title: String(localized: .deleteTitle),
-                message: String(localized: .deleteMessage)
-            ) else { return }
+            guard
+                NSAlert.runConfirm(
+                    title: String(localized: .deleteTitle),
+                    message: String(localized: .deleteMessage)
+                )
+            else { return }
             let minIndex = collectionView.selectionIndexPaths.map(\.item).min() ?? index
             let countAfterDelete = dataList.count - items.count
             if countAfterDelete > 0 {

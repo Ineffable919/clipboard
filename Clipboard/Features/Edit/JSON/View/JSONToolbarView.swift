@@ -157,15 +157,16 @@ final class JSONToolbarView: NSView {
 
     private func makeNamingButton() -> JSONToolbarButton {
         let items = JSONKeyNaming.allCases.map { naming in
-            let title = switch naming {
-            case .space: String(localized: .jsonKeySpace)
-            case .title: String(localized: .jsonKeyTitle)
-            case .kebab: String(localized: .jsonKeyKebab)
-            case .screamingSnake: String(localized: .jsonKeyScreamingSnake)
-            case .pascal: String(localized: .jsonKeyPascal)
-            case .camel: String(localized: .jsonKeyCamel)
-            case .snake: String(localized: .jsonKeySnake)
-            }
+            let title =
+                switch naming {
+                case .space: String(localized: .jsonKeySpace)
+                case .title: String(localized: .jsonKeyTitle)
+                case .kebab: String(localized: .jsonKeyKebab)
+                case .screamingSnake: String(localized: .jsonKeyScreamingSnake)
+                case .pascal: String(localized: .jsonKeyPascal)
+                case .camel: String(localized: .jsonKeyCamel)
+                case .snake: String(localized: .jsonKeySnake)
+                }
             return Item(title: title, action: #selector(renameKeys(_:)), tag: naming.rawValue)
         }
         return makeMenuButton(
@@ -181,7 +182,8 @@ final class JSONToolbarView: NSView {
     }
 
     @objc private func showMenu(_ sender: JSONToolbarButton) {
-        let bottomY = sender.isFlipped
+        let bottomY =
+            sender.isFlipped
             ? sender.bounds.maxY + Const.space8
             : sender.bounds.minY - Const.space8
         sender.popupMenu?.popUp(

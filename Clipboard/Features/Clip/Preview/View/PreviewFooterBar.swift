@@ -108,7 +108,8 @@ final class PreviewFooterBar: NSView {
 
     var preferredHeight: CGFloat {
         let firstLineHeight = firstLineLabel.intrinsicContentSize.height
-        let secondLineHeight = secondLineLabel.isHidden
+        let secondLineHeight =
+            secondLineLabel.isHidden
             ? 0
             : secondLineLabel.intrinsicContentSize.height
         return max(Self.minimumHeight, ceil(firstLineHeight + secondLineHeight))
@@ -122,7 +123,8 @@ final class PreviewFooterBar: NSView {
     ) {
         statisticsTask?.cancel()
         let isSingleFile = model.type == .file && model.fileSize() == 1
-        let showLinkPreview = model.type == .link
+        let showLinkPreview =
+            model.type == .link
             && PasteUserDefaults.enableLinkPreview
             && model.isLink
 

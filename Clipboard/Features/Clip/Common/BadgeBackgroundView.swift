@@ -31,7 +31,8 @@ final class BadgeBackgroundView: NSView {
 
     override func updateLayer() {
         effectiveAppearance.performAsCurrentDrawingAppearance {
-            layer?.backgroundColor = dynamicBackgroundColor
+            layer?.backgroundColor =
+                dynamicBackgroundColor
                 .withAlphaComponent(backgroundAlpha).cgColor
         }
     }

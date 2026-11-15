@@ -83,7 +83,8 @@ final class EditFormatButton: NSView {
     private func updateAppearance(animated: Bool) {
         let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
 
-        let bgColor: NSColor = isHovering
+        let bgColor: NSColor =
+            isHovering
             ? (isDark ? .white.withAlphaComponent(0.08) : .black.withAlphaComponent(0.06))
             : .clear
 

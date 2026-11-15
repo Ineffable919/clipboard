@@ -92,7 +92,8 @@ nonisolated enum MarkdownFootnotes {
 
     static func renderReferences(in html: String, extraction: Extraction) -> String {
         let replacements = extraction.references.map { reference in
-            let referenceID = reference.ordinal == 1
+            let referenceID =
+                reference.ordinal == 1
                 ? "fnref-\(reference.number)"
                 : "fnref-\(reference.number)-\(reference.ordinal)"
             return "<sup class=\"footnote-ref\"><a id=\"\(referenceID)\" "
@@ -111,7 +112,8 @@ nonisolated enum MarkdownFootnotes {
         let referencesByNumber = Dictionary(grouping: extraction.references, by: \.number)
         let items = extraction.definitions.map { definition in
             let backReferences = (referencesByNumber[definition.number] ?? []).map { reference in
-                let referenceID = reference.ordinal == 1
+                let referenceID =
+                    reference.ordinal == 1
                     ? "fnref-\(reference.number)"
                     : "fnref-\(reference.number)-\(reference.ordinal)"
                 return "<a href=\"#\(referenceID)\" class=\"footnote-backref\">&#8617;</a>"
@@ -125,13 +127,13 @@ nonisolated enum MarkdownFootnotes {
 
         return """
 
-        <section class="footnotes" role="doc-endnotes">
-        <hr />
-        <ol>
-        \(items)
-        </ol>
-        </section>
-        """
+            <section class="footnotes" role="doc-endnotes">
+            <hr />
+            <ol>
+            \(items)
+            </ol>
+            </section>
+            """
     }
 }
 
@@ -205,10 +207,11 @@ nonisolated extension MarkdownFootnotes {
         var output = ""
         var cursor = 0
         for match in matches {
-            output += nsSource.substring(with: NSRange(
-                location: cursor,
-                length: match.range.location - cursor
-            ))
+            output += nsSource.substring(
+                with: NSRange(
+                    location: cursor,
+                    length: match.range.location - cursor
+                ))
             output += transform(
                 nsSource.substring(with: match.range(at: 1)),
                 nsSource.substring(with: match.range)
@@ -234,10 +237,11 @@ nonisolated extension MarkdownFootnotes {
         var output = ""
         var cursor = 0
         for match in matches {
-            output += nsSource.substring(with: NSRange(
-                location: cursor,
-                length: match.range.location - cursor
-            ))
+            output += nsSource.substring(
+                with: NSRange(
+                    location: cursor,
+                    length: match.range.location - cursor
+                ))
             output += transform(nsSource.substring(with: match.range))
             cursor = match.range.location + match.range.length
         }
@@ -264,9 +268,10 @@ nonisolated extension MarkdownFootnotes {
                 numberEnd = source.index(after: numberEnd)
             }
             guard numberEnd > tokenRange.upperBound,
-                  source[numberEnd...].hasPrefix("Token"),
-                  let index = Int(source[tokenRange.upperBound..<numberEnd]),
-                  replacements.indices.contains(index) else {
+                source[numberEnd...].hasPrefix("Token"),
+                let index = Int(source[tokenRange.upperBound..<numberEnd]),
+                replacements.indices.contains(index)
+            else {
                 output += prefix
                 cursor = tokenRange.upperBound
                 continue

@@ -73,12 +73,14 @@ final class SourceAppTracker {
 
         let now = Date()
         if let copyKeyApp, let copyKeyDate,
-           now.timeIntervalSince(copyKeyDate) <= Self.copyKeyValidity {
+            now.timeIntervalSince(copyKeyDate) <= Self.copyKeyValidity
+        {
             return copyKeyApp
         }
 
         if let previousApp, let activatedAt,
-           now.timeIntervalSince(activatedAt) <= pollInterval {
+            now.timeIntervalSince(activatedAt) <= pollInterval
+        {
             return previousApp
         }
 
@@ -107,8 +109,8 @@ final class SourceAppTracker {
 
     private func declaredApp(in pasteboard: NSPasteboard) -> NSRunningApplication? {
         guard pasteboard.types?.contains(Self.sourceType) == true,
-              let bundleID = pasteboard.string(forType: Self.sourceType),
-              !bundleID.isEmpty
+            let bundleID = pasteboard.string(forType: Self.sourceType),
+            !bundleID.isEmpty
         else { return nil }
         return NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).first
     }

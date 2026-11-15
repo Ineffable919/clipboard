@@ -34,7 +34,7 @@ final class LiveTextService {
             try Task.checkCancellation()
             let options = [kCGImageSourceShouldCache: false] as CFDictionary
             guard let source = CGImageSourceCreateWithData(data as CFData, options),
-                  let image = CGImageSourceCreateImageAtIndex(source, 0, options)
+                let image = CGImageSourceCreateImageAtIndex(source, 0, options)
             else { throw CocoaError(.fileReadCorruptFile) }
 
             let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any]

@@ -99,13 +99,13 @@ final class CheckerboardView: NSView {
         ctx.setFillColor(lightColor.cgColor)
         ctx.fill([
             CGRect(x: 0, y: 0, width: half, height: half),
-            CGRect(x: half, y: half, width: half, height: half),
+            CGRect(x: half, y: half, width: half, height: half)
         ])
 
         ctx.setFillColor(darkColor.cgColor)
         ctx.fill([
             CGRect(x: half, y: 0, width: half, height: half),
-            CGRect(x: 0, y: half, width: half, height: half),
+            CGRect(x: 0, y: half, width: half, height: half)
         ])
 
         return ctx.makeImage()

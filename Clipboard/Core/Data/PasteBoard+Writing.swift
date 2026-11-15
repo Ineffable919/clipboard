@@ -156,11 +156,11 @@ extension PasteBoard {
             }
             let urls =
                 filePaths
-                    .components(separatedBy: "\n")
-                    .lazy
-                    .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-                    .filter { !$0.isEmpty && fileManager.fileExists(atPath: $0) }
-                    .map { URL(fileURLWithPath: $0) }
+                .components(separatedBy: "\n")
+                .lazy
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty && fileManager.fileExists(atPath: $0) }
+                .map { URL(fileURLWithPath: $0) }
             allURLs.append(contentsOf: urls)
         }
 
@@ -209,8 +209,7 @@ extension PasteBoard {
 
     /// 将数据写入系统剪贴板
     /// - Returns: 是否成功写入
-    func writeToPasteboard(_ data: PasteboardModel, isAttribute: Bool)
-        -> Bool {
+    func writeToPasteboard(_ data: PasteboardModel, isAttribute: Bool) -> Bool {
         let shouldPasteAsPlainText =
             !isAttribute || PasteUserDefaults.pasteOnlyText
 
@@ -244,11 +243,11 @@ extension PasteBoard {
         let fileManager = FileManager.default
         let validURLs =
             filePaths
-                .components(separatedBy: "\n")
-                .lazy
-                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-                .filter { !$0.isEmpty && fileManager.fileExists(atPath: $0) }
-                .map { URL(fileURLWithPath: $0) }
+            .components(separatedBy: "\n")
+            .lazy
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty && fileManager.fileExists(atPath: $0) }
+            .map { URL(fileURLWithPath: $0) }
 
         let urlArray = Array(validURLs)
         guard !urlArray.isEmpty else { return false }
@@ -261,11 +260,12 @@ extension PasteBoard {
     private func writeRawData(_ data: PasteboardModel) {
         // 处理需要去除末尾换行的富文本
         if data.pasteboardType.isText(),
-           PasteUserDefaults.removeTailingNewline,
-           let attributedString = NSAttributedString(
-               with: data.data,
-               type: data.pasteboardType
-           ) {
+            PasteUserDefaults.removeTailingNewline,
+            let attributedString = NSAttributedString(
+                with: data.data,
+                type: data.pasteboardType
+            )
+        {
             let mutableString = NSMutableAttributedString(
                 attributedString: attributedString
             )
@@ -283,7 +283,8 @@ extension PasteBoard {
         }
 
         NSPasteboard.general.setData(data.data, forType: data.pasteboardType)
-    }}
+    }
+}
 
 // MARK: - NSMutableAttributedString Extension
 

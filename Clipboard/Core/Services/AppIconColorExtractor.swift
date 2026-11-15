@@ -32,15 +32,19 @@ nonisolated enum AppIconColorExtractor {
         let leader = ranked[0]
         let nextRegionCount = ranked.dropFirst().map(\.regionCount).max() ?? 0
         // 主导色必须同时具备足够面积和分布优势，避免局部色块压过全图主色
-        let isDominant = leader.area >= totalArea * 0.45
+        let isDominant =
+            leader.area >= totalArea * 0.45
             && Double(leader.regionCount) >= Double(nextRegionCount) * 1.4
         let highestScore = candidates.map(\.visualScore).max() ?? 0
-        let finalists = isDominant ? [leader] : candidates.filter {
-            // 高对比也不能让微小装饰色抢走主色；中心主体允许分布范围略小
-            $0.area >= totalArea * 0.1
-                && ($0.visualScore >= highestScore * scoreTolerance
-                    || ($0.centrality >= 0.6 && $0.area >= totalArea * 0.12))
-        }
+        let finalists =
+            isDominant
+            ? [leader]
+            : candidates.filter {
+                // 高对比也不能让微小装饰色抢走主色；中心主体允许分布范围略小
+                $0.area >= totalArea * 0.1
+                    && ($0.visualScore >= highestScore * scoreTolerance
+                        || ($0.centrality >= 0.6 && $0.area >= totalArea * 0.12))
+            }
         let selected = finalists.min { lhs, rhs in
             if lhs.colorPriority != rhs.colorPriority { return lhs.colorPriority > rhs.colorPriority }
             if lhs.visualScore != rhs.visualScore { return lhs.visualScore > rhs.visualScore }
@@ -58,8 +62,8 @@ nonisolated enum AppIconColorExtractor {
         guard let context = sampleContext(from: image), let data = context.data else { return ([], nil) }
         let pixels = data.bindMemory(to: UInt8.self, capacity: context.bytesPerRow * pixelSize)
         var buckets: [UInt32: ColorArea] = [:]
-        for row in 0 ..< pixelSize {
-            for column in 0 ..< pixelSize {
+        for row in 0..<pixelSize {
+            for column in 0..<pixelSize {
                 let offset = row * context.bytesPerRow + column * 4
                 let alpha = Double(pixels[offset + 3])
                 guard alpha > 128 else { continue }
@@ -77,9 +81,11 @@ nonisolated enum AppIconColorExtractor {
                 let center = Double(pixelSize) / 2
                 let distance = max(abs(Double(column) + 0.5 - center), abs(Double(row) + 0.5 - center)) / center
                 sample.centerWeight = sample.area * (1 - distance)
-                sample.contrastWeight = sample.area * localContrast(
-                    of: sample, row: row, column: column, pixels: pixels
-                )
+                sample.contrastWeight =
+                    sample.area
+                    * localContrast(
+                        of: sample, row: row, column: column, pixels: pixels
+                    )
                 let cellSize = pixelSize / gridSize
                 let region = (row / cellSize) * gridSize + column / cellSize
                 sample.regionAreas[region] = sample.area
@@ -108,7 +114,7 @@ nonisolated enum AppIconColorExtractor {
         for (deltaRow, deltaColumn) in [(-4, 0), (4, 0), (0, -4), (0, 4)] {
             let nextRow = row + deltaRow
             let nextColumn = column + deltaColumn
-            guard (0 ..< pixelSize).contains(nextRow), (0 ..< pixelSize).contains(nextColumn) else { continue }
+            guard (0..<pixelSize).contains(nextRow), (0..<pixelSize).contains(nextColumn) else { continue }
             let offset = (nextRow * pixelSize + nextColumn) * 4
             let alpha = Double(pixels[offset + 3])
             guard alpha > 128 else { continue }
@@ -132,7 +138,8 @@ nonisolated enum AppIconColorExtractor {
             for index in groups.indices {
                 let group = groups[index]
                 // 同色系的渐变共同统计，避免粉紫、深浅蓝被分成多个竞争者
-                let sameFamily = mergeFamilies && group.saturation >= 0.2 && sample.saturation >= 0.2
+                let sameFamily =
+                    mergeFamilies && group.saturation >= 0.2 && sample.saturation >= 0.2
                     && group.colorPriority == sample.colorPriority
                 let candidate = sameFamily ? 0 : group.squaredDistance(to: sample)
                 if candidate < distance {
@@ -183,8 +190,10 @@ nonisolated enum AppIconColorExtractor {
                     weight += regionAreas[index]
                     horizontal += Double(column) * regionAreas[index]
                     vertical += Double(row) * regionAreas[index]
-                    for next in remaining.sorted() where abs(next / gridSize - row) <= 1
-                        && abs(next % gridSize - column) <= 1 {
+                    for next in remaining.sorted()
+                    where abs(next / gridSize - row) <= 1
+                        && abs(next % gridSize - column) <= 1
+                    {
                         remaining.remove(next)
                         pending.append(next)
                     }
@@ -198,7 +207,8 @@ nonisolated enum AppIconColorExtractor {
                 for second in components.indices where second > first {
                     let lhs = components[first]
                     let rhs = components[second]
-                    let distance = hypot(lhs.center.x - rhs.center.x, lhs.center.y - rhs.center.y)
+                    let distance =
+                        hypot(lhs.center.x - rhs.center.x, lhs.center.y - rhs.center.y)
                         / Double(gridSize - 1)
                     let balance = min(lhs.area, rhs.area) / max(lhs.area, rhs.area)
                     result = max(result, min(1, distance) * balance.squareRoot())
@@ -269,10 +279,10 @@ nonisolated enum AppIconColorExtractor {
         var colorPriority: Int {
             guard saturation >= 0.2 else { return 1 }
             switch hue {
-            case 180 ..< 250: return 4
-            case 20 ..< 90: return 3
-            case 90 ..< 180: return 2
-            case 0 ..< 20, 330...: return 0
+            case 180..<250: return 4
+            case 20..<90: return 3
+            case 90..<180: return 2
+            case 0..<20, 330...: return 0
             default: return 1
             }
         }
@@ -283,21 +293,23 @@ nonisolated enum AppIconColorExtractor {
 extension AppIconColorExtractor {
     private nonisolated static func sampleContext(from image: NSImage) -> CGContext? {
         guard let source = image.cgImage(forProposedRect: nil, context: nil, hints: nil),
-              let space = CGColorSpace(name: CGColorSpace.sRGB),
-              let context = CGContext(
-                  data: nil, width: pixelSize, height: pixelSize, bitsPerComponent: 8,
-                  bytesPerRow: pixelSize * 4, space: space,
-                  bitmapInfo: CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue
-              ) else { return nil }
+            let space = CGColorSpace(name: CGColorSpace.sRGB),
+            let context = CGContext(
+                data: nil, width: pixelSize, height: pixelSize, bitsPerComponent: 8,
+                bytesPerRow: pixelSize * 4, space: space,
+                bitmapInfo: CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue
+            )
+        else { return nil }
         context.interpolationQuality = .high
         context.draw(source, in: CGRect(x: 0, y: 0, width: pixelSize, height: pixelSize))
         return context
     }
 
     private nonisolated static func representative(from pixels: [ColorArea], priority: Int) -> ColorArea? {
-        let shades = clusters(from: pixels.filter {
-            $0.isSuitable && $0.colorPriority == priority
-        }, mergeFamilies: false)
+        let shades = clusters(
+            from: pixels.filter {
+                $0.isSuitable && $0.colorPriority == priority
+            }, mergeFamilies: false)
         return shades.min {
             if $0.stableArea != $1.stableArea { return $0.stableArea > $1.stableArea }
             if $0.area != $1.area { return $0.area > $1.area }
@@ -336,7 +348,10 @@ extension AppIconColorExtractor {
             .reduce(0) { $0 + $1.area }
         guard colorful / total < 0.15 else { return nil }
         if !pixels.contains(where: \.isSuitable), let context,
-           let foreground = NeutralIconColor.extract(from: context) { return foreground }
+            let foreground = NeutralIconColor.extract(from: context)
+        {
+            return foreground
+        }
         return nil
     }
 

@@ -32,11 +32,11 @@ extension JSONTransformer {
             try JSONTransformer.checkCancellation()
 
             switch node {
-            case let .scalar(range):
+            case .scalar(let range):
                 output.append(contentsOf: source[range])
-            case let .array(values):
+            case .array(let values):
                 try writeArray(values, depth: depth)
-            case let .object(members):
+            case .object(let members):
                 try writeObject(members, depth: depth)
             }
         }
@@ -118,10 +118,11 @@ extension JSONTransformer {
         private mutating func appendNewline(depth: Int) {
             output.append(Byte.newline)
             guard indentation > 0 else { return }
-            output.append(contentsOf: repeatElement(
-                Byte.space,
-                count: depth * indentation
-            ))
+            output.append(
+                contentsOf: repeatElement(
+                    Byte.space,
+                    count: depth * indentation
+                ))
         }
     }
 

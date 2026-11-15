@@ -145,15 +145,17 @@ extension JSONTransformer {
                 index += 1
                 switch escaped {
                 case Byte.quote, Byte.backslash, Byte.slash,
-                     Byte.lowercaseB, Byte.lowercaseF, Byte.lowercaseN,
-                     Byte.lowercaseR, Byte.lowercaseT:
+                    Byte.lowercaseB, Byte.lowercaseF, Byte.lowercaseN,
+                    Byte.lowercaseR, Byte.lowercaseT:
                     break
                 case Byte.lowercaseU:
                     let escapeStart = index - 2
-                    guard let result = JSONTransformer.decodeUnicodeEscape(
-                        bytes,
-                        at: escapeStart
-                    ) else {
+                    guard
+                        let result = JSONTransformer.decodeUnicodeEscape(
+                            bytes,
+                            at: escapeStart
+                        )
+                    else {
                         throw JSONTransformError.invalidJSON
                     }
                     index = result.nextIndex
@@ -174,8 +176,9 @@ extension JSONTransformer {
                 if index >= nextCancellationCheck { try checkpoint() }
                 let word = raw.loadUnaligned(fromByteOffset: index, as: UInt64.self)
                 guard !containsZero(word ^ 0x2222_2222_2222_2222),
-                      !containsZero(word ^ 0x5C5C_5C5C_5C5C_5C5C),
-                      !containsZero(word & 0xE0E0_E0E0_E0E0_E0E0) else { return }
+                    !containsZero(word ^ 0x5C5C_5C5C_5C5C_5C5C),
+                    !containsZero(word & 0xE0E0_E0E0_E0E0_E0E0)
+                else { return }
                 index += 8
             }
         }
@@ -213,10 +216,12 @@ extension JSONTransformer {
                 try skipDigits()
             }
             if index < bytes.count,
-               bytes[index] == Byte.lowercaseE || bytes[index] == Byte.uppercaseE {
+                bytes[index] == Byte.lowercaseE || bytes[index] == Byte.uppercaseE
+            {
                 index += 1
                 if index < bytes.count,
-                   bytes[index] == Byte.plus || bytes[index] == Byte.minus {
+                    bytes[index] == Byte.plus || bytes[index] == Byte.minus
+                {
                     index += 1
                 }
                 guard index < bytes.count, JSONTransformer.isDigit(bytes[index]) else {
@@ -245,7 +250,8 @@ extension JSONTransformer {
                     nextCancellationCheck = index + 16384
                 }
                 if bytes.count - index >= 8,
-                   raw.loadUnaligned(fromByteOffset: index, as: UInt64.self) == 0x2020_2020_2020_2020 {
+                    raw.loadUnaligned(fromByteOffset: index, as: UInt64.self) == 0x2020_2020_2020_2020
+                {
                     index += 8
                     continue
                 }

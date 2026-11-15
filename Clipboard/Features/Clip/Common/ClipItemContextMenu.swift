@@ -50,30 +50,33 @@ extension ClipItemMenuActionable where Self: NSObject {
         addPasteItems(to: menu, title: pasteTitle)
 
         if model.pasteboardType.isText() {
-            menu.addItem(makeMenuItem(
-                title: String(localized: .edit),
-                symbol: "pencil",
-                action: #selector(ClipItemMenuActionable.handleClipEdit),
-                keyEquivalent: "e",
-                modifiers: .command
-            ))
+            menu.addItem(
+                makeMenuItem(
+                    title: String(localized: .edit),
+                    symbol: "pencil",
+                    action: #selector(ClipItemMenuActionable.handleClipEdit),
+                    keyEquivalent: "e",
+                    modifiers: .command
+                ))
         }
 
-        menu.addItem(makeMenuItem(
-            title: String(localized: .delete),
-            symbol: "trash",
-            action: #selector(ClipItemMenuActionable.handleClipDelete),
-            keyEquivalent: "\u{08}"
-        ))
+        menu.addItem(
+            makeMenuItem(
+                title: String(localized: .delete),
+                symbol: "trash",
+                action: #selector(ClipItemMenuActionable.handleClipDelete),
+                keyEquivalent: "\u{08}"
+            ))
         menu.addItem(.separator())
         menu.addItem(makePinMenuItem(for: model))
         menu.addItem(.separator())
-        menu.addItem(makeMenuItem(
-            title: String(localized: .preview),
-            symbol: "eye",
-            action: #selector(ClipItemMenuActionable.handleClipPreview),
-            keyEquivalent: " "
-        ))
+        menu.addItem(
+            makeMenuItem(
+                title: String(localized: .preview),
+                symbol: "eye",
+                action: #selector(ClipItemMenuActionable.handleClipPreview),
+                keyEquivalent: " "
+            ))
 
         if let shareItem = makeShareMenuItem(for: model) {
             menu.addItem(shareItem)
@@ -88,17 +91,19 @@ extension ClipItemMenuActionable where Self: NSObject {
                 let fileURL = URL(fileURLWithPath: filePath)
                 let appURL = NSWorkspace.shared.urlForApplication(toOpen: fileURL)
                 let appName = appURL.flatMap { bundleDisplayName(for: $0) } ?? "App"
-                menu.addItem(makeMenuItem(
-                    title: String(localized: .openInApp(appName)),
-                    symbol: "arrow.up.right.square",
-                    action: #selector(ClipItemMenuActionable.handleClipOpenWithDefaultApp)
-                ))
+                menu.addItem(
+                    makeMenuItem(
+                        title: String(localized: .openInApp(appName)),
+                        symbol: "arrow.up.right.square",
+                        action: #selector(ClipItemMenuActionable.handleClipOpenWithDefaultApp)
+                    ))
             }
-            menu.addItem(makeMenuItem(
-                title: String(localized: .showInFinder),
-                symbol: "finder",
-                action: #selector(ClipItemMenuActionable.handleClipRevealInFinder)
-            ))
+            menu.addItem(
+                makeMenuItem(
+                    title: String(localized: .showInFinder),
+                    symbol: "finder",
+                    action: #selector(ClipItemMenuActionable.handleClipRevealInFinder)
+                ))
             menu.addItem(.separator())
         } else if model.type == .link {
             let browserURL = NSWorkspace.shared.urlForApplication(
@@ -106,11 +111,12 @@ extension ClipItemMenuActionable where Self: NSObject {
             )
             let browserName = browserURL.flatMap { bundleDisplayName(for: $0) } ?? ""
             if !browserName.isEmpty {
-                menu.addItem(makeMenuItem(
-                    title: String(localized: .openInApp(browserName)),
-                    symbol: "arrow.up.right.square",
-                    action: #selector(ClipItemMenuActionable.handleClipOpenInBrowser)
-                ))
+                menu.addItem(
+                    makeMenuItem(
+                        title: String(localized: .openInApp(browserName)),
+                        symbol: "arrow.up.right.square",
+                        action: #selector(ClipItemMenuActionable.handleClipOpenInBrowser)
+                    ))
                 menu.addItem(.separator())
             }
         }
@@ -118,26 +124,29 @@ extension ClipItemMenuActionable where Self: NSObject {
     }
 
     private func addPasteItems(to menu: NSMenu, title: String) {
-        menu.addItem(makeMenuItem(
-            title: title,
-            symbol: "doc.on.clipboard",
-            action: #selector(ClipItemMenuActionable.handleClipPaste),
-            keyEquivalent: "\r"
-        ))
-        menu.addItem(makeMenuItem(
-            title: String(localized: .pastePlain),
-            symbol: "text.justify.leading",
-            action: #selector(ClipItemMenuActionable.handleClipPastePlain),
-            keyEquivalent: "\r",
-            modifiers: .shift
-        ))
-        menu.addItem(makeMenuItem(
-            title: String(localized: .copy),
-            symbol: "doc.on.doc",
-            action: #selector(ClipItemMenuActionable.handleClipCopy),
-            keyEquivalent: "c",
-            modifiers: .command
-        ))
+        menu.addItem(
+            makeMenuItem(
+                title: title,
+                symbol: "doc.on.clipboard",
+                action: #selector(ClipItemMenuActionable.handleClipPaste),
+                keyEquivalent: "\r"
+            ))
+        menu.addItem(
+            makeMenuItem(
+                title: String(localized: .pastePlain),
+                symbol: "text.justify.leading",
+                action: #selector(ClipItemMenuActionable.handleClipPastePlain),
+                keyEquivalent: "\r",
+                modifiers: .shift
+            ))
+        menu.addItem(
+            makeMenuItem(
+                title: String(localized: .copy),
+                symbol: "doc.on.doc",
+                action: #selector(ClipItemMenuActionable.handleClipCopy),
+                keyEquivalent: "c",
+                modifiers: .command
+            ))
         menu.addItem(.separator())
 
     }

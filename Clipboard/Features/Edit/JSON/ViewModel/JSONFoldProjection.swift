@@ -51,10 +51,11 @@ struct JSONFoldProjection {
             if let previous = segments.last, body.location < NSMaxRange(previous.source) {
                 continue
             }
-            segments.append(Segment(
-                source: body,
-                display: NSRange(location: body.location - removed, length: 3)
-            ))
+            segments.append(
+                Segment(
+                    source: body,
+                    display: NSRange(location: body.location - removed, length: 3)
+                ))
             removed += body.length - 3
         }
     }
@@ -93,8 +94,10 @@ struct JSONFoldProjection {
         }
         var output = ""
         var location = range.location
-        for segment in segments where segment.source.location >= range.location
-            && NSMaxRange(segment.source) <= NSMaxRange(range) {
+        for segment in segments
+        where segment.source.location >= range.location
+            && NSMaxRange(segment.source) <= NSMaxRange(range)
+        {
             output += source.substring(with: NSRange(location: location, length: segment.source.location - location))
             output += " … "
             location = NSMaxRange(segment.source)

@@ -94,7 +94,10 @@ nonisolated struct JSONViewportIndex: Sendable {
         for offset in 0..<count {
             let unit = buffer[offset]
             if unit == 10 || unit == 13 {
-                if unit != 10 || !previousCR { counts[width, default: 0] += 1; width = 0 }
+                if unit != 10 || !previousCR {
+                    counts[width, default: 0] += 1
+                    width = 0
+                }
                 previousCR = unit == 13
             } else {
                 previousCR = false

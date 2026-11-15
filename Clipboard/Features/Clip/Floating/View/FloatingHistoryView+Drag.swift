@@ -15,7 +15,8 @@ extension FloatingHistoryView {
         let visibleRect = convert(bounds, to: nil)
         let screenRect = window.convertToScreen(visibleRect)
         if !screenRect.contains(screenPoint),
-           ClipFloatingWindowController.shared.isVisible {
+            ClipFloatingWindowController.shared.isVisible
+        {
             ClipFloatingWindowController.shared.toggleWindow()
         }
     }
@@ -26,7 +27,7 @@ extension FloatingHistoryView {
         let screenRect = window.convertToScreen(visibleRect)
         // 拖离浮窗后窗口已收起，此时不能再让它抢回键盘焦点
         guard ClipFloatingWindowController.shared.isVisible,
-              screenRect.contains(screenPoint)
+            screenRect.contains(screenPoint)
         else { return }
 
         env.suppressResignKey = true

@@ -63,8 +63,10 @@ final class FilterAppSectionView: FilterSectionView {
         let oldAppNames = appInfoList.map(\.name)
         let newAppPaths = apps.map(\.path)
         let oldAppPaths = appInfoList.map(\.path)
-        guard apps.map(\.id) != appInfoList.map(\.id)
-            || newAppNames != oldAppNames || newAppPaths != oldAppPaths else { return }
+        guard
+            apps.map(\.id) != appInfoList.map(\.id)
+                || newAppNames != oldAppNames || newAppPaths != oldAppPaths
+        else { return }
 
         cancelButtonPreparation()
         appInfoList = apps
@@ -81,9 +83,11 @@ final class FilterAppSectionView: FilterSectionView {
     }
 
     func updateIcon(_ icon: NSImage, forAppID id: Int64) {
-        guard let index = appInfoList.firstIndex(where: {
-            $0.id == id
-        }) else {
+        guard
+            let index = appInfoList.firstIndex(where: {
+                $0.id == id
+            })
+        else {
             return
         }
 
@@ -95,7 +99,7 @@ final class FilterAppSectionView: FilterSectionView {
 
     func prepareRemainingApps() {
         guard buttonPreparationTask == nil,
-              appButtons.count < appInfoList.count
+            appButtons.count < appInfoList.count
         else {
             return
         }
@@ -112,7 +116,7 @@ final class FilterAppSectionView: FilterSectionView {
             while appButtons.count < appInfoList.count {
                 await Task.yield()
                 guard !Task.isCancelled,
-                      buttonPreparationGeneration == generation
+                    buttonPreparationGeneration == generation
                 else {
                     return
                 }
@@ -121,7 +125,7 @@ final class FilterAppSectionView: FilterSectionView {
                     appButtons.count + preparationBatchSize,
                     appInfoList.count
                 )
-                for index in appButtons.count ..< endIndex {
+                for index in appButtons.count..<endIndex {
                     appButtons.append(makeButton(for: appInfoList[index]))
                 }
                 layoutGrid()
@@ -134,10 +138,11 @@ final class FilterAppSectionView: FilterSectionView {
     private func rebuildInitialButtons() {
         appButtons.removeAll()
 
-        let initialCount = appInfoList.count > uncollapsedAppLimit
+        let initialCount =
+            appInfoList.count > uncollapsedAppLimit
             ? collapsedAppCount
             : appInfoList.count
-        for index in 0 ..< initialCount {
+        for index in 0..<initialCount {
             appButtons.append(makeButton(for: appInfoList[index]))
         }
     }
@@ -158,7 +163,8 @@ final class FilterAppSectionView: FilterSectionView {
 
     private func layoutGrid() {
         let shouldShowMore = appInfoList.count > uncollapsedAppLimit
-        let displayed: [AppFilterButton] = shouldShowMore && !showAllApps
+        let displayed: [AppFilterButton] =
+            shouldShowMore && !showAllApps
             ? Array(appButtons.prefix(collapsedAppCount))
             : appButtons
 
@@ -181,7 +187,7 @@ final class FilterAppSectionView: FilterSectionView {
         guard appButtons.count < appInfoList.count else { return }
 
         cancelButtonPreparation()
-        for index in appButtons.count ..< appInfoList.count {
+        for index in appButtons.count..<appInfoList.count {
             appButtons.append(makeButton(for: appInfoList[index]))
         }
     }

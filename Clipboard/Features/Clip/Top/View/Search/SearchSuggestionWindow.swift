@@ -136,7 +136,8 @@ final class SearchSuggestionWindow: NSPanel {
     // MARK: - Private
 
     private func calculateWidth(for items: [SearchSuggestionItem], query: String) -> CGFloat {
-        let contentWidth = items
+        let contentWidth =
+            items
             .map { SearchSuggestionCellView.preferredWidth(for: $0.title, query: query) }
             .max() ?? Metrics.minWidth
         return max(ceil(contentWidth) + Metrics.widthBuffer, Metrics.minWidth)

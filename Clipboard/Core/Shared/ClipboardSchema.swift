@@ -83,12 +83,12 @@ nonisolated struct MCPToolDefinition {
     ]
 }
 
-// MARK: - Per-tool enable flag 
+// MARK: - Per-tool enable flag
 
 nonisolated enum MCPDisabledTools {
     static func load() -> Set<String> {
         guard let data = FileManager.default.contents(atPath: ClipboardPaths.mcpDisabledTools),
-              let names = try? JSONDecoder().decode([String].self, from: data)
+            let names = try? JSONDecoder().decode([String].self, from: data)
         else { return [] }
         return Set(names)
     }

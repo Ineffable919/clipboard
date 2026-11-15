@@ -115,7 +115,8 @@ final class EditStatisticsBar: NSView {
 
     func setJSONValid(_ valid: Bool) {
         progressIndicator.stopAnimation(nil)
-        statusLabel.stringValue = valid
+        statusLabel.stringValue =
+            valid
             ? String(localized: .jsonValid)
             : String(localized: .jsonInvalid)
         statusLabel.textColor = valid ? .systemGreen : .systemRed

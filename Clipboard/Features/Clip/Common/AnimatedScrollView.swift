@@ -93,10 +93,12 @@ class AnimatedScrollView: NSScrollView {
 
     @objc private func updateScroll(_ link: CADisplayLink) {
         if duration == 0,
-           link.targetTimestamp - startTime < link.duration * Self.jumpDelayFrames {
+            link.targetTimestamp - startTime < link.duration * Self.jumpDelayFrames
+        {
             return
         }
-        let progress = duration > 0
+        let progress =
+            duration > 0
             ? min(max((CACurrentMediaTime() - startTime) / duration, 0), 1)
             : 1
         if progress >= 1 {
@@ -107,10 +109,11 @@ class AnimatedScrollView: NSScrollView {
         }
 
         let eased = Self.ease(progress, tolerance: max(duration * 0.005, 0.0001))
-        apply(NSPoint(
-            x: startOrigin.x + (targetOrigin.x - startOrigin.x) * eased,
-            y: startOrigin.y + (targetOrigin.y - startOrigin.y) * eased
-        ))
+        apply(
+            NSPoint(
+                x: startOrigin.x + (targetOrigin.x - startOrigin.x) * eased,
+                y: startOrigin.y + (targetOrigin.y - startOrigin.y) * eased
+            ))
     }
 
     private func apply(_ origin: NSPoint) {
@@ -129,7 +132,7 @@ class AnimatedScrollView: NSScrollView {
         var lower = 0.0
         var upper = 1.0
         var parameter = progress
-        for _ in 0 ..< 20 {
+        for _ in 0..<20 {
             let position = parameter * (0.75 + parameter * (-0.75 + parameter))
             if abs(position - progress) <= tolerance { break }
             if position < progress {

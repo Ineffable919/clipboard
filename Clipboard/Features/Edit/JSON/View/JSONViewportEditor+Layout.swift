@@ -22,10 +22,11 @@ extension JSONViewportEditor {
             } else {
                 let text = displayText(range) as NSString
                 for part in JSONViewportIndex.build(text).blocks {
-                    displayBlocks.append(.init(
-                        range: NSRange(location: start + part.range.location, length: part.range.length),
-                        widths: part.widths
-                    ))
+                    displayBlocks.append(
+                        .init(
+                            range: NSRange(location: start + part.range.location, length: part.range.length),
+                            widths: part.widths
+                        ))
                 }
             }
         }
@@ -42,9 +43,10 @@ extension JSONViewportEditor {
     func updateOffsets() {
         offsets = [0]
         for height in heights { offsets.append((offsets.last ?? 0) + max(lineHeight, height)) }
-        surface.setFrameSize(NSSize(
-            width: pageWidth, height: max(scrollView.contentSize.height, (offsets.last ?? 0) + 16)
-        ))
+        surface.setFrameSize(
+            NSSize(
+                width: pageWidth, height: max(scrollView.contentSize.height, (offsets.last ?? 0) + 16)
+            ))
     }
 
     func block(at height: CGFloat) -> Int {
@@ -84,7 +86,10 @@ extension JSONViewportEditor {
         guard !textView.hasMarkedText() else { return }
         isRendering = true
         suppressChanges = true
-        defer { suppressChanges = false; isRendering = false }
+        defer {
+            suppressChanges = false
+            isRendering = false
+        }
         highlightTask?.cancel()
         pageBlocks = wanted
         let start = displayBlocks[wanted.lowerBound].range.location
@@ -95,10 +100,11 @@ extension JSONViewportEditor {
             textView.textStorage?.setAttributedString(richContent.attributedSubstring(from: page))
         } else {
             textView.string = pageText
-            textView.textStorage?.setAttributes([
-                .font: NSFont.monospacedSystemFont(ofSize: 13, weight: .regular),
-                .foregroundColor: NSColor.labelColor
-            ], range: NSRange(location: 0, length: (textView.string as NSString).length))
+            textView.textStorage?.setAttributes(
+                [
+                    .font: NSFont.monospacedSystemFont(ofSize: 13, weight: .regular),
+                    .foregroundColor: NSColor.labelColor
+                ], range: NSRange(location: 0, length: (textView.string as NSString).length))
         }
         textView.setFrameSize(NSSize(width: pageWidth, height: 1))
         textView.textContainer?.containerSize = NSSize(
@@ -154,7 +160,8 @@ extension JSONViewportEditor {
         let character = min(length - 1, max(0, location - page.location))
         let glyph = layout.glyphIndexForCharacter(at: character)
         let rect = layout.lineFragmentRect(forGlyphAt: glyph, effectiveRange: nil)
-        let offset = textView.frame.minY + textView.textContainerOrigin.y + rect.minY
+        let offset =
+            textView.frame.minY + textView.textContainerOrigin.y + rect.minY
             - scrollView.contentView.bounds.minY
         return (folds.sourceLocation(for: location), offset)
     }
@@ -188,7 +195,8 @@ extension JSONViewportEditor {
         renderPage()
         let location = folds.displayLocation(for: sourceLocation) - page.location
         if location >= 0, location < (textView.string as NSString).length,
-           let layout = textView.layoutManager {
+            let layout = textView.layoutManager
+        {
             let glyph = layout.glyphIndexForCharacter(at: location)
             let rect = layout.lineFragmentRect(forGlyphAt: glyph, effectiveRange: nil)
             scrollView.contentView.scroll(to: NSPoint(x: 0, y: textView.frame.minY + rect.minY))
@@ -210,9 +218,14 @@ extension JSONViewportEditor {
         let revision = revision
         highlightTask = Task { @MainActor [weak self] in
             let worker = Task.detached(priority: .utility) { JSONSyntaxHighlighter.spans(in: text, offset: 0) }
-            let spans = await withTaskCancellationHandler { await worker.value } onCancel: { worker.cancel() }
+            let spans = await withTaskCancellationHandler {
+                await worker.value
+            } onCancel: {
+                worker.cancel()
+            }
             guard let self, !Task.isCancelled, revision == self.revision,
-                  let layout = textView.layoutManager else { return }
+                let layout = textView.layoutManager
+            else { return }
             let dark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
             let colors: [JSONSyntaxHighlighter.Kind: NSColor] = [
                 .string: NSColor(hex: dark ? "#7ECF87" : "#008000"),

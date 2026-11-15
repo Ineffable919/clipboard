@@ -82,9 +82,11 @@ final class JSONViewportEditor: NSView {
         pendingReplacement = nil
         currentText = text
         if richContent != nil {
-            richContent = NSMutableAttributedString(string: text, attributes: [
-                .font: NSFont.systemFont(ofSize: 13), .foregroundColor: NSColor.labelColor
-            ])
+            richContent = NSMutableAttributedString(
+                string: text,
+                attributes: [
+                    .font: NSFont.systemFont(ofSize: 13), .foregroundColor: NSColor.labelColor
+                ])
         }
         source = prepared.source
         blocks = prepared.index.blocks

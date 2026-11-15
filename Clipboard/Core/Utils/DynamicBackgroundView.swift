@@ -21,7 +21,8 @@ final class DynamicBackgroundView: NSView {
             layer?.backgroundColor = dynamicBackgroundColor.cgColor
 
             let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-            layer?.borderColor = isDark
+            layer?.borderColor =
+                isDark
                 ? NSColor.secondaryLabelColor.withAlphaComponent(0.05).cgColor
                 : NSColor.black.withAlphaComponent(0.06).cgColor
         }

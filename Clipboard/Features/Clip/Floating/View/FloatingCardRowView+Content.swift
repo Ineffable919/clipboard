@@ -72,7 +72,8 @@ final class FloatingTextContentView: NSView {
     }
 
     func update(keyword: String, model: PasteboardModel) {
-        let text = keyword.isEmpty
+        let text =
+            keyword.isEmpty
             ? model.plainTextAttributedString
             : model.highlightedNSAttributedString(keyword: keyword)
         if model.pasteboardType == .string {

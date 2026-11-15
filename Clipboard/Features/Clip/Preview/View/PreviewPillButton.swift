@@ -124,15 +124,18 @@ final class PreviewPillButton: NSView {
         let bgColor: NSColor
         switch style {
         case .secondary:
-            bgColor = isHovering
+            bgColor =
+                isHovering
                 ? (isDark ? .white.withAlphaComponent(0.08) : .black.withAlphaComponent(0.06))
                 : .clear
-            let borderColor: NSColor = isDark
+            let borderColor: NSColor =
+                isDark
                 ? .white.withAlphaComponent(0.2)
                 : .separatorColor
             layer?.borderColor = borderColor.cgColor
         case .primary:
-            bgColor = isHovering
+            bgColor =
+                isHovering
                 ? .controlAccentColor.blended(withFraction: 0.12, of: .black) ?? .controlAccentColor
                 : .controlAccentColor
         }
@@ -195,12 +198,13 @@ final class PreviewPillButton: NSView {
             return
         }
         let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        let pressedColor: NSColor = switch style {
-        case .secondary:
-            if isDark { .white.withAlphaComponent(0.14) } else { .black.withAlphaComponent(0.10) }
-        case .primary:
-            .controlAccentColor.blended(withFraction: 0.2, of: .black) ?? .controlAccentColor
-        }
+        let pressedColor: NSColor =
+            switch style {
+            case .secondary:
+                if isDark { .white.withAlphaComponent(0.14) } else { .black.withAlphaComponent(0.10) }
+            case .primary:
+                .controlAccentColor.blended(withFraction: 0.2, of: .black) ?? .controlAccentColor
+            }
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         backgroundLayer.backgroundColor = pressedColor.cgColor

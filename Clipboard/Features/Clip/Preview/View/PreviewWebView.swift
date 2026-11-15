@@ -36,11 +36,12 @@ final class PreviewWebView: NSView, WKNavigationDelegate, PreviewResettable {
         loadingIndicator.snp.makeConstraints { $0.center.equalToSuperview() }
 
         loadingIndicator.startAnimation(nil)
-        webView.load(URLRequest(
-            url: url,
-            cachePolicy: .reloadIgnoringLocalAndRemoteCacheData,
-            timeoutInterval: 10
-        ))
+        webView.load(
+            URLRequest(
+                url: url,
+                cachePolicy: .reloadIgnoringLocalAndRemoteCacheData,
+                timeoutInterval: 10
+            ))
     }
 
     @available(*, unavailable)

@@ -57,7 +57,7 @@ extension JSONTransformer {
                 }
                 let keyStart = index
                 let key = try parseDecodedString()
-                let keyRange = keyStart ..< index
+                let keyRange = keyStart..<index
                 skipWhitespace()
                 try require(Byte.colon)
                 skipWhitespace()
@@ -96,7 +96,7 @@ extension JSONTransformer {
         private mutating func parseRawString() throws -> Range<Int> {
             let start = index
             _ = try parseString(shouldDecode: false)
-            return start ..< index
+            return start..<index
         }
 
         private mutating func parseDecodedString() throws -> String {
@@ -165,7 +165,7 @@ extension JSONTransformer {
                 throw JSONTransformError.invalidJSON
             }
             index += literal.count
-            return start ..< index
+            return start..<index
         }
 
         private mutating func parseNumber() throws -> Range<Int> {
@@ -198,15 +198,17 @@ extension JSONTransformer {
             }
 
             try parseExponent()
-            return start ..< index
+            return start..<index
         }
 
         private mutating func parseExponent() throws {
             if index < bytes.count,
-               bytes[index] == Byte.lowercaseE || bytes[index] == Byte.uppercaseE {
+                bytes[index] == Byte.lowercaseE || bytes[index] == Byte.uppercaseE
+            {
                 index += 1
                 if index < bytes.count,
-                   bytes[index] == Byte.plus || bytes[index] == Byte.minus {
+                    bytes[index] == Byte.plus || bytes[index] == Byte.minus
+                {
                     index += 1
                 }
                 guard index < bytes.count, isDigit(bytes[index]) else {

@@ -200,9 +200,10 @@ extension PasteDataStore {
     }
 
     private func applyOrder(_ ids: [Int64]) {
-        let models = Dictionary(dataList.value.compactMap { model in
-            model.id.map { ($0, model) }
-        }, uniquingKeysWith: { first, _ in first })
+        let models = Dictionary(
+            dataList.value.compactMap { model in
+                model.id.map { ($0, model) }
+            }, uniquingKeysWith: { first, _ in first })
         updateData(with: ids.compactMap { models[$0] }, changeType: .reorder)
     }
 
@@ -244,9 +245,10 @@ extension PasteDataStore {
     @discardableResult
     func addNewItem(_ item: NSPasteboard, sourceApp: NSRunningApplication? = nil, chipId: Int = -1) -> Bool {
         if let first = item.pasteboardItems?.first,
-           first.availableType(from: PasteboardType.supportTypes) == .string,
-           PasteboardModel.extractFilePaths(from: item, item: first) == nil,
-           let data = first.data(forType: .string), data.count > 1_048_576 {
+            first.availableType(from: PasteboardType.supportTypes) == .string,
+            PasteboardModel.extractFilePaths(from: item, item: first) == nil,
+            let data = first.data(forType: .string), data.count > 1_048_576
+        {
             ingestionTask = ingestText(data, sourceApp: sourceApp, chipId: chipId, after: ingestionTask)
             return true
         }
@@ -321,7 +323,7 @@ extension PasteDataStore {
         if isInFilterMode, let filter = currentFilter {
             filteredCount = await sqlManager.getCount(filter: filter)
             guard let id = model.id,
-                  await sqlManager.getCount(filter: filter && Col.id == id) > 0
+                await sqlManager.getCount(filter: filter && Col.id == id) > 0
             else { return }
         } else {
             filteredCount = count
@@ -364,11 +366,13 @@ extension PasteDataStore {
         loadPageTask?.cancel()
         isLoadingPage = false
 
-        guard await sqlManager.updateItemContent(
-            id: id,
-            content: content,
-            searchText: searchText
-        ) else {
+        guard
+            await sqlManager.updateItemContent(
+                id: id,
+                content: content,
+                searchText: searchText
+            )
+        else {
             return false
         }
 

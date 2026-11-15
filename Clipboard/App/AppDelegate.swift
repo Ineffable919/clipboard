@@ -70,9 +70,10 @@ extension AppDelegate: NSApplicationDelegate {
     }
 
     private func applyAppearanceSettings() {
-        let appearanceMode = AppearanceMode(
-            rawValue: PasteUserDefaults.appearance
-        ) ?? .system
+        let appearanceMode =
+            AppearanceMode(
+                rawValue: PasteUserDefaults.appearance
+            ) ?? .system
 
         switch appearanceMode {
         case .system:
@@ -133,7 +134,8 @@ extension AppDelegate {
                     return nil
                 }
                 if modifiers == "t" || modifiers == "T",
-                   event.modifierFlags.intersection([.command, .option, .control, .shift]) == .command {
+                    event.modifierFlags.intersection([.command, .option, .control, .shift]) == .command
+                {
                     if PasteBoard.main.isPaused {
                         PasteBoard.main.resume()
                     } else {
@@ -142,7 +144,8 @@ extension AppDelegate {
                     return nil
                 }
                 if modifiers == "n" || modifiers == "N",
-                   event.modifierFlags.intersection([.command, .option, .control, .shift]) == .command {
+                    event.modifierFlags.intersection([.command, .option, .control, .shift]) == .command
+                {
                     EditWindowController.shared.openNewWindow()
                     return nil
                 }

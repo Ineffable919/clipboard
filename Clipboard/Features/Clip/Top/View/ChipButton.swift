@@ -112,12 +112,14 @@ final class ChipButton: NSView, NSTextFieldDelegate {
 
         let menu = NSMenu()
 
-        menu.addItem(makeMenuItem(
-            title: String(localized: .rename), action: #selector(handleEditAction), symbolName: "pencil"
-        ))
-        menu.addItem(makeMenuItem(
-            title: String(localized: .delete), action: #selector(handleDeleteAction), symbolName: "trash"
-        ))
+        menu.addItem(
+            makeMenuItem(
+                title: String(localized: .rename), action: #selector(handleEditAction), symbolName: "pencil"
+            ))
+        menu.addItem(
+            makeMenuItem(
+                title: String(localized: .delete), action: #selector(handleDeleteAction), symbolName: "trash"
+            ))
 
         menu.addItem(.separator())
 

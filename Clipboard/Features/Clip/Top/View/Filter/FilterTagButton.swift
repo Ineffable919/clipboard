@@ -23,12 +23,13 @@ final class FilterTagButton: FilterButton {
         let dotContainer = NSView()
         let diameter = CategoryDotRenderer.diameter
         let origin = (20 - diameter) / 2
-        let dotView = NSView(frame: NSRect(
-            x: origin,
-            y: origin,
-            width: diameter,
-            height: diameter
-        ))
+        let dotView = NSView(
+            frame: NSRect(
+                x: origin,
+                y: origin,
+                width: diameter,
+                height: diameter
+            ))
         CategoryDotRenderer.configure(dotView, colorIndex: colorIndex)
         dotContainer.addSubview(dotView)
         setLeadingView(dotContainer)

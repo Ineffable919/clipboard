@@ -65,8 +65,8 @@ final class JSONLineNumberRulerView: NSView {
 
     func refreshVisibleLines() {
         guard let textView,
-              let layoutManager = textView.layoutManager,
-              let textContainer = textView.textContainer
+            let layoutManager = textView.layoutManager,
+            let textContainer = textView.textContainer
         else { return }
 
         let origin = textView.textContainerOrigin
@@ -97,16 +97,17 @@ final class JSONLineNumberRulerView: NSView {
                 NSPoint(x: 0, y: lineRect.minY + origin.y),
                 to: self
             )
-            snapshot.append(Line(
-                number: line,
-                rect: NSRect(
-                    x: 4,
-                    y: point.y,
-                    width: bounds.width - 32,
-                    height: lineRect.height
-                ),
-                fold: foldAtLine?(location)
-            ))
+            snapshot.append(
+                Line(
+                    number: line,
+                    rect: NSRect(
+                        x: 4,
+                        y: point.y,
+                        width: bounds.width - 32,
+                        height: lineRect.height
+                    ),
+                    fold: foldAtLine?(location)
+                ))
         }
 
         visibleLines = snapshot
@@ -158,8 +159,9 @@ final class JSONLineNumberRulerView: NSView {
         refreshVisibleLines()
         let point = convert(event.locationInWindow, from: nil)
         guard point.x >= bounds.width - 24,
-              let line = visibleLines.first(where: { point.y >= $0.rect.minY && point.y < $0.rect.maxY }),
-              let fold = line.fold else {
+            let line = visibleLines.first(where: { point.y >= $0.rect.minY && point.y < $0.rect.maxY }),
+            let fold = line.fold
+        else {
             super.mouseDown(with: event)
             return
         }
@@ -195,9 +197,10 @@ final class JSONLineNumberRulerView: NSView {
             element.setAccessibilityRole(.button)
             element.setAccessibilityEnabled(true)
             element.setAccessibilityParent(self)
-            element.setAccessibilityLabel(fold.collapsed
-                ? String(localized: .jsonExpandLine(line.number))
-                : String(localized: .jsonCollapseLine(line.number)))
+            element.setAccessibilityLabel(
+                fold.collapsed
+                    ? String(localized: .jsonExpandLine(line.number))
+                    : String(localized: .jsonCollapseLine(line.number)))
             let rect = NSRect(x: bounds.width - 24, y: line.rect.minY, width: 24, height: line.rect.height)
             element.setAccessibilityFrame(window.convertToScreen(convert(rect, to: nil)))
             element.onPress = { [weak self] in self?.onToggleFold?(fold.node) }

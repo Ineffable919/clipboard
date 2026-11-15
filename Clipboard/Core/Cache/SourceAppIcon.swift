@@ -24,8 +24,9 @@ nonisolated enum SourceAppIcon {
         var states: [FileState] = []
         for url in urls {
             guard let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
-                  let modified = attributes[.modificationDate] as? Date,
-                  let id = attributes[.systemFileNumber] as? UInt64 else { return nil }
+                let modified = attributes[.modificationDate] as? Date,
+                let id = attributes[.systemFileNumber] as? UInt64
+            else { return nil }
             states.append(FileState(modified: modified, id: id))
         }
         return states
@@ -47,10 +48,11 @@ nonisolated enum SourceAppIcon {
         var rect = NSRect(origin: .zero, size: size)
         let bitmapInfo = CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue
         guard let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
-              let source = icon.cgImage(forProposedRect: &rect, context: nil, hints: nil),
-              let context = CGContext(data: nil, width: pixelSize, height: pixelSize, bitsPerComponent: 8,
-                                      bytesPerRow: pixelSize * 4, space: colorSpace,
-                                      bitmapInfo: bitmapInfo)
+            let source = icon.cgImage(forProposedRect: &rect, context: nil, hints: nil),
+            let context = CGContext(
+                data: nil, width: pixelSize, height: pixelSize, bitsPerComponent: 8,
+                bytesPerRow: pixelSize * 4, space: colorSpace,
+                bitmapInfo: bitmapInfo)
         else { return (stored.map { image(from: $0) } ?? icon, nil) }
         context.interpolationQuality = .high
         context.draw(source, in: CGRect(origin: .zero, size: size))

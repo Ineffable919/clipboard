@@ -82,7 +82,7 @@ extension JSONEditorView {
     ) -> Bool {
         let source = currentText as NSString
         guard range.location <= source.length,
-              NSMaxRange(range) <= source.length
+            NSMaxRange(range) <= source.length
         else { return false }
 
         let previousText = preparedPreviousText ?? source.substring(with: range)
@@ -91,7 +91,8 @@ extension JSONEditorView {
         let replacementValidity = entireDocument ? knownValidity : nil
         if viewport != nil || preparedText != nil {
             return replaceViewport(
-                text, replacement: JSONViewportReplacement(
+                text,
+                replacement: JSONViewportReplacement(
                     range: range, entireDocument: entireDocument, index: document, prepared: preparedText,
                     previousText: previousText, previousValidity: previousValidity,
                     validity: replacementValidity, registeringUndo: registeringUndo
@@ -99,7 +100,7 @@ extension JSONEditorView {
             )
         }
         guard preparedPreviousText != nil || !(previousText as NSString).isEqual(to: text),
-              let textStorage = textView.textStorage
+            let textStorage = textView.textStorage
         else { return false }
 
         expandFolds()
@@ -118,8 +119,9 @@ extension JSONEditorView {
         suppressChanges = false
 
         if registeringUndo {
-            registerReplacementUndo(text, previous: previousText, range: range,
-                                    validity: replacementValidity, entireDocument: entireDocument)
+            registerReplacementUndo(
+                text, previous: previousText, range: range,
+                validity: replacementValidity, entireDocument: entireDocument)
         }
         applyIndexes(document)
         resetScroll()
@@ -153,8 +155,9 @@ extension JSONEditorView {
                     previous, validity: previousValidity, reversing: text, oppositeValidity: validity
                 )
             } else {
-                target.replaceText(previous, in: NSRange(location: range.location, length: length),
-                                   knownValidity: previousValidity)
+                target.replaceText(
+                    previous, in: NSRange(location: range.location, length: length),
+                    knownValidity: previousValidity)
             }
         }
     }
@@ -216,7 +219,10 @@ extension JSONEditorView {
     }
 
     func focus(revealingSelection: Bool = true) {
-        if let viewport { viewport.focus(); return }
+        if let viewport {
+            viewport.focus()
+            return
+        }
         window?.makeFirstResponder(textView)
         if revealingSelection {
             textView.scrollRangeToVisible(textView.selectedRange())
@@ -242,12 +248,16 @@ extension JSONEditorView {
 
     /// 首屏排版稳定后重置滚动位置，避免长文档后续调整高度时偏离顶部
     func scrollToTop() {
-        if let viewport { viewport.scrollToTop(); return }
+        if let viewport {
+            viewport.scrollToTop()
+            return
+        }
         textView.setSelectedRange(NSRange(location: 0, length: 0))
         layoutSubtreeIfNeeded()
         let clipView = scrollView.contentView
         if let layoutManager = textView.layoutManager,
-           let textContainer = textView.textContainer {
+            let textContainer = textView.textContainer
+        {
             layoutManager.ensureLayout(
                 forBoundingRect: NSRect(origin: .zero, size: clipView.bounds.size),
                 in: textContainer

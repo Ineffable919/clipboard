@@ -53,10 +53,11 @@ enum CategoryDotRenderer {
     }
 
     static func draw(in rect: NSRect, color: NSColor) {
-        let path = NSBezierPath(ovalIn: rect.insetBy(
-            dx: borderWidth / 2,
-            dy: borderWidth / 2
-        ))
+        let path = NSBezierPath(
+            ovalIn: rect.insetBy(
+                dx: borderWidth / 2,
+                dy: borderWidth / 2
+            ))
         color.setFill()
         path.fill()
 

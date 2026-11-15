@@ -287,9 +287,10 @@ struct IgnoredAppRow: View {
         }
 
         if let bundleId = appInfo.bundleIdentifier,
-           let appURL = NSWorkspace.shared.urlForApplication(
-               withBundleIdentifier: bundleId
-           ) {
+            let appURL = NSWorkspace.shared.urlForApplication(
+                withBundleIdentifier: bundleId
+            )
+        {
             return NSWorkspace.shared.icon(forFile: appURL.path)
         }
 
@@ -302,7 +303,8 @@ struct IgnoredAppRow: View {
         if appName.contains("密码") || appName.lowercased().contains("password") {
             "key.fill"
         } else if appName.contains("钥匙串")
-            || appName.lowercased().contains("keychain") {
+            || appName.lowercased().contains("keychain")
+        {
             "key.icloud.fill"
         } else {
             "questionmark.app.dashed"

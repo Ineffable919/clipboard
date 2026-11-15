@@ -178,9 +178,10 @@ final class FloatingFooterView: NSView {
             symbolName = "line.3.horizontal"
         }
         modeButton.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?
-            .withSymbolConfiguration(NSImage.SymbolConfiguration(
-                pointSize: displayMode == .standard ? 15 : 12, weight: .regular
-            ))
+            .withSymbolConfiguration(
+                NSImage.SymbolConfiguration(
+                    pointSize: displayMode == .standard ? 15 : 12, weight: .regular
+                ))
     }
 
     // MARK: - Background
@@ -213,7 +214,8 @@ final class FloatingFooterView: NSView {
     private func updateBackground() {
         guard #available(macOS 26.0, *) else { return }
         let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        backgroundView.layer?.backgroundColor = NSColor(WelcomeStyle.background(for: isDark ? .dark : .light))
+        backgroundView.layer?.backgroundColor =
+            NSColor(WelcomeStyle.background(for: isDark ? .dark : .light))
             .withAlphaComponent(0.35).cgColor
     }
 
@@ -255,7 +257,8 @@ final class FloatingFooterView: NSView {
 
     private func updatePauseBackground() {
         effectiveAppearance.performAsCurrentDrawingAppearance {
-            pauseStack.layer?.backgroundColor = NSColor.controlAccentColor
+            pauseStack.layer?.backgroundColor =
+                NSColor.controlAccentColor
                 .withAlphaComponent(0.1).cgColor
         }
     }

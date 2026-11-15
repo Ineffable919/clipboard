@@ -26,7 +26,8 @@ extension JSONEditorView {
         let prefix = source.substring(with: prefixRange)
         let leading = prefix.prefix(while: { $0 == " " || $0 == "\t" })
         let trimmed = prefix.trimmingCharacters(in: .whitespaces)
-        let extra = trimmed.last == "{" || trimmed.last == "["
+        let extra =
+            trimmed.last == "{" || trimmed.last == "["
             ? String(repeating: " ", count: indentation.rawValue)
             : ""
         textView.insertText(
@@ -71,8 +72,8 @@ extension JSONEditorView: NSTextViewDelegate {
 
     func textViewDidChangeSelection(_: Notification) {
         guard !suppressChanges, isLineIndexReady,
-              textView.selectedRange() != reportedSelection
-              || lineIndexRevision != reportedLineIndexRevision
+            textView.selectedRange() != reportedSelection
+                || lineIndexRevision != reportedLineIndexRevision
         else { return }
         updateCursor()
     }
@@ -101,21 +102,23 @@ extension JSONEditorView: NSTextStorageDelegate {
         changeInLength delta: Int
     ) {
         guard !suppressChanges,
-              editedMask.contains(.editedCharacters)
+            editedMask.contains(.editedCharacters)
         else { return }
 
         let edit: (range: NSRange, replacement: String)?
         if let pendingEdit,
-           pendingEdit.replacement.utf16.count - pendingEdit.range.length == delta {
+            pendingEdit.replacement.utf16.count - pendingEdit.range.length == delta
+        {
             edit = pendingEdit
         } else {
             let markedRange = textView.markedRange()
-            let replacedRange = markedRange.location == NSNotFound
+            let replacedRange =
+                markedRange.location == NSNotFound
                 ? textView.selectedRange()
                 : markedRange
             let replacementLength = replacedRange.length + delta
             guard delta != 0,
-                  replacementLength >= 0
+                replacementLength >= 0
             else {
                 pendingEdit = nil
                 return
@@ -126,7 +129,7 @@ extension JSONEditorView: NSTextStorageDelegate {
                 length: replacementLength
             )
             guard replacementRange.location <= textStorage.length,
-                  NSMaxRange(replacementRange) <= textStorage.length
+                NSMaxRange(replacementRange) <= textStorage.length
             else {
                 pendingEdit = nil
                 shouldRebuildLineIndex = true
@@ -142,8 +145,8 @@ extension JSONEditorView: NSTextStorageDelegate {
 
         guard let edit else { return }
         guard isLineIndexReady,
-              edit.range.location <= textStorage.length,
-              max(edit.range.length, edit.replacement.utf16.count) <= 65536
+            edit.range.location <= textStorage.length,
+            max(edit.range.length, edit.replacement.utf16.count) <= 65536
         else {
             shouldRebuildLineIndex = true
             return

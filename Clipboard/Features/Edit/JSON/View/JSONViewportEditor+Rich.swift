@@ -46,7 +46,8 @@ extension JSONViewportEditor {
         registerRichUndo(range, replacementLength: content.length)
         var anchor = anchor ?? scrollAnchor()
         if range.location < anchor.location {
-            anchor.location = anchor.location <= NSMaxRange(range)
+            anchor.location =
+                anchor.location <= NSMaxRange(range)
                 ? range.location + content.length : anchor.location + content.length - range.length
         }
         let unchanged = richContent.attributedSubstring(from: range).string == content.string

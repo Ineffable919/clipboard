@@ -138,7 +138,8 @@ final class ChipScrollView: NSView {
         let oldButtons = Dictionary(uniqueKeysWithValues: zip(self.chips.map(\.id), chipButtons))
         let changed = self.chips.map(\.id) != chips.map(\.id)
         let hadPlaceholder = newChipButton != nil
-        let animate = !self.chips.isEmpty
+        let animate =
+            !self.chips.isEmpty
             && ((changed && !hadPlaceholder) || (hadPlaceholder && !changed && !creatingChip))
 
         animateChanges(animate) { animated in
@@ -154,7 +155,8 @@ final class ChipScrollView: NSView {
             self.chips = chips
             chipButtons = []
             for (index, chip) in chips.enumerated() {
-                let config = makeConfig?(chip, chip.id == selectedId, dotMode)
+                let config =
+                    makeConfig?(chip, chip.id == selectedId, dotMode)
                     ?? .init(
                         chip: chip,
                         isSelected: chip.id == selectedId,
@@ -223,8 +225,8 @@ final class ChipScrollView: NSView {
 
     func scrollToChip(id: Int) {
         guard scrollMode,
-              let index = chips.firstIndex(where: { $0.id == id }),
-              index < chipButtons.count
+            let index = chips.firstIndex(where: { $0.id == id }),
+            index < chipButtons.count
         else { return }
         let btn = chipButtons[index]
         Task { @MainActor in btn.scrollToVisible(btn.bounds) }
@@ -250,8 +252,8 @@ private extension ChipScrollView {
 
     func animateChanges(_ requested: Bool, changes: (Bool) -> Void) {
         guard requested, let window, window.isVisible, !isHiddenOrHasHiddenAncestor,
-              !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion,
-              let root = window.contentView
+            !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion,
+            let root = window.contentView
         else {
             changes(false)
             invalidateWidth()

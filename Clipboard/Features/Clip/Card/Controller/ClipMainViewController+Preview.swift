@@ -38,8 +38,8 @@ extension ClipMainViewController {
 
     func retargetPreviewToSelection() {
         guard let popover = previewPopover, popover.isShown,
-              let model = displayedModel(at: selectIndexPath),
-              let rect = collectionView.layoutAttributesForItem(at: selectIndexPath)?.frame
+            let model = displayedModel(at: selectIndexPath),
+            let rect = collectionView.layoutAttributesForItem(at: selectIndexPath)?.frame
         else { return }
 
         popover.retarget(
@@ -74,7 +74,8 @@ extension ClipMainViewController {
 extension ClipMainViewController: NSPopoverDelegate {
     func popoverWillClose(_ notification: Notification) {
         guard let closing = notification.object as? ClipPreviewPopover,
-              closing === previewPopover else { return }
+            closing === previewPopover
+        else { return }
         previewPopover = nil
         if focusRegion == .popover {
             setFocusRegion(.collection)

@@ -37,7 +37,7 @@ enum JSONTransformer {
         try checkCancellation()
 
         return switch action {
-        case let .format(indentation):
+        case .format(let indentation):
             try format(text, indentation: indentation)
         case .compact:
             try compact(text)
@@ -49,14 +49,14 @@ enum JSONTransformer {
             try encodeUnicode(text)
         case .decodeUnicode:
             try decodeUnicode(text)
-        case let .sortKeys(ascending, indentation):
+        case .sortKeys(let ascending, let indentation):
             try rewriteObjects(
                 text,
                 indentation: indentation,
                 ascending: ascending,
                 naming: nil
             )
-        case let .renameKeys(naming, indentation):
+        case .renameKeys(let naming, let indentation):
             try rewriteObjects(
                 text,
                 indentation: indentation,

@@ -128,7 +128,8 @@ final class ClipDropOverlayView: NSView {
 
     private func updateColors() {
         effectiveAppearance.performAsCurrentDrawingAppearance {
-            dimmingView.layer?.backgroundColor = NSColor.windowBackgroundColor
+            dimmingView.layer?.backgroundColor =
+                NSColor.windowBackgroundColor
                 .withAlphaComponent(0.78)
                 .cgColor
         }
@@ -194,11 +195,13 @@ private final class DropZoneView: NSView {
 
     func updateColors() {
         effectiveAppearance.performAsCurrentDrawingAppearance {
-            fillLayer.backgroundColor = NSColor.controlBackgroundColor
+            fillLayer.backgroundColor =
+                NSColor.controlBackgroundColor
                 .withAlphaComponent(0.86)
                 .cgColor
             fillLayer.shadowColor = NSColor.controlAccentColor.cgColor
-            borderLayer.strokeColor = NSColor.controlAccentColor
+            borderLayer.strokeColor =
+                NSColor.controlAccentColor
                 .withAlphaComponent(0.86)
                 .cgColor
         }

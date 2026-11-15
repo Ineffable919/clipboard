@@ -32,7 +32,8 @@ extension PasteSQLManager {
         ).first
 
         if let row = existing,
-           let existingId = try? row.get(Col.id) {
+            let existingId = try? row.get(Col.id)
+        {
             let existingGroup = (try? row.get(Col.group)) ?? -1
             let query = table.filter(Col.id == existingId)
             do {
@@ -203,11 +204,13 @@ extension PasteSQLManager {
         let timestamp = Int64(Date().timeIntervalSince1970)
 
         do {
-            guard let currentRow = try connection.pluck(
-                table
-                    .select(Col.group)
-                    .filter(Col.id == id)
-            ) else {
+            guard
+                let currentRow = try connection.pluck(
+                    table
+                        .select(Col.group)
+                        .filter(Col.id == id)
+                )
+            else {
                 log.error("更新文本内容失败：记录不存在，id：\(id)")
                 return false
             }

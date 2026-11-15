@@ -48,41 +48,41 @@ struct HUDContentView: View {
 }
 
 #if DEBUG
-#Preview("macOS 26+ · Liquid Glass", traits: .fixedLayout(width: 320, height: 320)) {
-    if #available(macOS 26.0, *) {
-        HUDContentView(
-            icon: NSImage(systemSymbolName: "checkmark", accessibilityDescription: nil),
-            text: String(localized: "hudCopySucceeded"),
-            size: CGSize(width: 200, height: 200),
-            textColor: .primary
-        )
-    }
-}
-
-#Preview("macOS 14–25 · HUD Material", traits: .fixedLayout(width: 248, height: 248)) {
-    HUDLegacyPreview(textColor: .primary)
-        .frame(width: 200, height: 200)
-        .padding(24)
-}
-
-private struct HUDLegacyPreview: NSViewRepresentable {
-    var textColor: Color = .secondary
-
-    func makeNSView(context: Context) -> NSView {
-        HUDManager.makeLegacyPreview(
-            icon: NSImage(systemSymbolName: "checkmark", accessibilityDescription: nil),
-            text: String(localized: "hudCopySucceeded"),
-            textColor: textColor
-        )
+    #Preview("macOS 26+ · Liquid Glass", traits: .fixedLayout(width: 320, height: 320)) {
+        if #available(macOS 26.0, *) {
+            HUDContentView(
+                icon: NSImage(systemSymbolName: "checkmark", accessibilityDescription: nil),
+                text: String(localized: "hudCopySucceeded"),
+                size: CGSize(width: 200, height: 200),
+                textColor: .primary
+            )
+        }
     }
 
-    func updateNSView(_ nsView: NSView, context: Context) {
-        HUDManager.updateLegacyPreview(
-            nsView,
-            icon: NSImage(systemSymbolName: "checkmark", accessibilityDescription: nil),
-            text: String(localized: "hudCopySucceeded"),
-            textColor: textColor
-        )
+    #Preview("macOS 14–25 · HUD Material", traits: .fixedLayout(width: 248, height: 248)) {
+        HUDLegacyPreview(textColor: .primary)
+            .frame(width: 200, height: 200)
+            .padding(24)
     }
-}
+
+    private struct HUDLegacyPreview: NSViewRepresentable {
+        var textColor: Color = .secondary
+
+        func makeNSView(context: Context) -> NSView {
+            HUDManager.makeLegacyPreview(
+                icon: NSImage(systemSymbolName: "checkmark", accessibilityDescription: nil),
+                text: String(localized: "hudCopySucceeded"),
+                textColor: textColor
+            )
+        }
+
+        func updateNSView(_ nsView: NSView, context: Context) {
+            HUDManager.updateLegacyPreview(
+                nsView,
+                icon: NSImage(systemSymbolName: "checkmark", accessibilityDescription: nil),
+                text: String(localized: "hudCopySucceeded"),
+                textColor: textColor
+            )
+        }
+    }
 #endif

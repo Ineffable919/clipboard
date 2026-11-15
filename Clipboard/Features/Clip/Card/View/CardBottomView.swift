@@ -59,8 +59,7 @@ final class CardBottomView: NSView, PassthroughMouseEvents {
             }
     }
 
-    private func replaceBottomView(for model: PasteboardModel, keyword: String)
-    {
+    private func replaceBottomView(for model: PasteboardModel, keyword: String) {
         clearCurrentView()
         guard let view = makeBottomView(for: model, keyword: keyword) else {
             return
@@ -77,9 +76,7 @@ final class CardBottomView: NSView, PassthroughMouseEvents {
 
     // MARK: - Factory
 
-    private func makeBottomView(for model: PasteboardModel, keyword: String)
-        -> NSView?
-    {
+    private func makeBottomView(for model: PasteboardModel, keyword: String) -> NSView? {
         switch model.type {
         case .image:
             return CardImageBottomView(introString: model.introString())
@@ -292,14 +289,14 @@ private final class CardFileBottomView: NSView, PassthroughMouseEvents {
             attributes: [
                 .font: font,
                 .foregroundColor: textColor,
-                .paragraphStyle: paragraphStyle,
+                .paragraphStyle: paragraphStyle
             ]
         )
         let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return mutable }
         let source = text as NSString
         let options: NSString.CompareOptions = [
-            .caseInsensitive, .diacriticInsensitive, .widthInsensitive,
+            .caseInsensitive, .diacriticInsensitive, .widthInsensitive
         ]
         var searchRange = NSRange(location: 0, length: source.length)
         while searchRange.length > 0 {
@@ -397,7 +394,7 @@ final class CardCommonBottomView: NSView, PassthroughMouseEvents {
             gradientLayer.colors = [
                 resolved.cgColor,
                 resolved.cgColor,
-                resolved.withAlphaComponent(0.0).cgColor,
+                resolved.withAlphaComponent(0.0).cgColor
             ]
         }
         gradientLayer.startPoint = CGPoint(x: 0.5, y: 0.0)

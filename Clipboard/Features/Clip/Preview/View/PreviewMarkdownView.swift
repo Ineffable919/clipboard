@@ -181,7 +181,8 @@ final class PreviewMarkdownView: NSView, WKNavigationDelegate, WKUIDelegate {
     }
 
     private func applyOriginalRichContent() {
-        let base = NSAttributedString(with: model.data, type: model.pasteboardType)
+        let base =
+            NSAttributedString(with: model.data, type: model.pasteboardType)
             ?? model.attributeString
 
         if model.hasBgColor {
@@ -201,13 +202,14 @@ final class PreviewMarkdownView: NSView, WKNavigationDelegate, WKUIDelegate {
     }
 
     private func applyMarkdownSourceContent(_ source: String) {
-        sourceTextView.textStorage?.setAttributedString(NSAttributedString(
-            string: source,
-            attributes: [
-                .font: NSFont.monospacedSystemFont(ofSize: NSFont.systemFontSize - 1, weight: .regular),
-                .foregroundColor: NSColor.labelColor
-            ]
-        ))
+        sourceTextView.textStorage?.setAttributedString(
+            NSAttributedString(
+                string: source,
+                attributes: [
+                    .font: NSFont.monospacedSystemFont(ofSize: NSFont.systemFontSize - 1, weight: .regular),
+                    .foregroundColor: NSColor.labelColor
+                ]
+            ))
     }
 
     override func viewDidChangeEffectiveAppearance() {
@@ -217,7 +219,8 @@ final class PreviewMarkdownView: NSView, WKNavigationDelegate, WKUIDelegate {
 
     private func updateSourceBackground() {
         effectiveAppearance.performAsCurrentDrawingAppearance {
-            let background = model.type == .rich
+            let background =
+                model.type == .rich
                 ? model.richBackground(on: .textBackgroundColor, forPreview: true)
                 : nil
             sourceTextView.backgroundColor = background ?? .textBackgroundColor
@@ -264,7 +267,7 @@ final class PreviewMarkdownView: NSView, WKNavigationDelegate, WKUIDelegate {
         windowFeatures _: WKWindowFeatures
     ) -> WKWebView? {
         guard let url = navigationAction.request.url,
-              ["http", "https", "mailto"].contains(url.scheme?.lowercased() ?? "")
+            ["http", "https", "mailto"].contains(url.scheme?.lowercased() ?? "")
         else {
             return nil
         }

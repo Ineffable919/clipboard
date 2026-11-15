@@ -110,7 +110,7 @@ final class CardImageView: NSView {
                     of: liveTextKeyword,
                     options: [
                         .caseInsensitive, .diacriticInsensitive,
-                        .widthInsensitive,
+                        .widthInsensitive
                     ],
                     range: start..<text.endIndex,
                     locale: .current

@@ -37,16 +37,19 @@ final class SourceAppCache {
             SourceAppIcon.fileState(path: app.path)
         }.value
         guard !Task.isCancelled, revision == expected, apps[app.id] == app,
-              let files else { return }
+            let files
+        else { return }
         if let checked = checkedFiles[app.id], checked.path == app.path, checked.files == files { return }
         let loaded = await Task.detached(priority: .utility) {
             let icon = SourceAppIcon.read(data: nil, path: app.path)
-            let color = icon.data != app.iconData
+            let color =
+                icon.data != app.iconData
                 ? icon.image.flatMap { AppIconColorExtractor.extract(from: $0) } : nil
             return (image: icon.image, data: icon.data, color: color, files: SourceAppIcon.fileState(path: app.path))
         }.value
         guard !Task.isCancelled, revision == expected, apps[app.id] == app,
-              loaded.files == files, let image = loaded.image, let data = loaded.data else { return }
+            loaded.files == files, let image = loaded.image, let data = loaded.data
+        else { return }
         if data == app.iconData {
             checkedFiles[app.id] = (app.path, files)
             return
@@ -55,7 +58,8 @@ final class SourceAppCache {
             id: app.id, path: app.path, data: data, replacing: app.iconData
         )
         guard let updated,
-              !Task.isCancelled, revision == expected, apps[app.id] == app else { return }
+            !Task.isCancelled, revision == expected, apps[app.id] == app
+        else { return }
         update(updated)
         // 阻止旧的按需加载任务在刷新后把旧图重新写回缓存
         AppIconCache.shared.install(image, for: app.id)

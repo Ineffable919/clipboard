@@ -25,8 +25,8 @@ extension JSONEditorView {
                 worker.cancel()
             }
             guard let self,
-                  !Task.isCancelled,
-                  generation == self.generation
+                !Task.isCancelled,
+                generation == self.generation
             else { return }
 
             lineIndex.replace(with: starts)
@@ -49,7 +49,8 @@ extension JSONEditorView {
         }
 
         if textView.selectedRange() != reportedSelection
-            || lineIndexRevision != reportedLineIndexRevision {
+            || lineIndexRevision != reportedLineIndexRevision
+        {
             updateCursor()
         }
     }
@@ -75,9 +76,9 @@ extension JSONEditorView {
                 try? await Task.sleep(for: .milliseconds(16))
             }
             guard let self,
-                  !Task.isCancelled,
-                  isLineIndexReady,
-                  !isHidden
+                !Task.isCancelled,
+                isLineIndexReady,
+                !isHidden
             else { return }
 
             lineRuler.refreshVisibleLines()
@@ -120,10 +121,11 @@ extension JSONEditorView {
                 try? await Task.sleep(for: .milliseconds(80))
                 guard !Task.isCancelled else { return }
                 guard requestID == highlightRequestID,
-                      generation == self.generation
+                    generation == self.generation
                 else { continue }
                 guard let range = highlightScanRange(),
-                      let storage = textView.textStorage else { return }
+                    let storage = textView.textStorage
+                else { return }
                 let segment = storage.mutableString.substring(with: range)
                 let worker = Task.detached(priority: .utility) {
                     JSONSyntaxHighlighter.spans(in: segment, offset: range.location)
@@ -136,7 +138,7 @@ extension JSONEditorView {
 
                 guard !Task.isCancelled else { return }
                 guard requestID == highlightRequestID,
-                      generation == self.generation
+                    generation == self.generation
                 else { continue }
                 applyHighlight(spans, in: range)
                 return
@@ -146,7 +148,8 @@ extension JSONEditorView {
 
     func applyHighlight(_ spans: [JSONSyntaxHighlighter.Span], in range: NSRange) {
         guard let layoutManager = textView.layoutManager,
-              let storage = textView.textStorage else { return }
+            let storage = textView.textStorage
+        else { return }
         let removableRange = NSIntersectionRange(highlightedRange, NSRange(location: 0, length: storage.length))
         if removableRange.length > 0 {
             layoutManager.removeTemporaryAttribute(.foregroundColor, forCharacterRange: removableRange)
@@ -168,7 +171,7 @@ extension JSONEditorView {
 
     func highlightScanRange() -> NSRange? {
         guard let layoutManager = textView.layoutManager,
-              let textContainer = textView.textContainer
+            let textContainer = textView.textContainer
         else { return nil }
 
         let textLength = textView.textStorage?.length ?? 0
@@ -185,7 +188,8 @@ extension JSONEditorView {
             actualGlyphRange: nil
         )
         if highlightedGeneration == generation,
-           NSIntersectionRange(highlightedRange, visibleCharacters) == visibleCharacters {
+            NSIntersectionRange(highlightedRange, visibleCharacters) == visibleCharacters
+        {
             return nil
         }
         let lookaround = 32768

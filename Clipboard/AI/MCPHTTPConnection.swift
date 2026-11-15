@@ -33,8 +33,8 @@ nonisolated struct MCPHTTPConnection {
 
         let response: MCPHTTPResponse
         switch await readRequest() {
-        case let .success(request): response = route(request)
-        case let .failure(status): response = .status(status)
+        case .success(let request): response = route(request)
+        case .failure(let status): response = .status(status)
         case .none: return
         }
         await send(response.serialized)
@@ -46,7 +46,8 @@ nonisolated struct MCPHTTPConnection {
         // 防 DNS rebinding / 浏览器跨站调用：Host 与 Origin 都必须是回环地址
         guard Self.isLoopback(host: request.headers["host"]) else { return .status(403) }
         if let origin = request.headers["origin"],
-           !Self.isLoopback(host: URL(string: origin)?.host(percentEncoded: false)) {
+            !Self.isLoopback(host: URL(string: origin)?.host(percentEncoded: false))
+        {
             return .status(403)
         }
 
@@ -56,7 +57,8 @@ nonisolated struct MCPHTTPConnection {
         guard request.method == "POST" else { return .status(405, allow: "POST") }
 
         if let version = request.headers["mcp-protocol-version"],
-           !MCPHandler.supportedVersions.contains(version) {
+            !MCPHandler.supportedVersions.contains(version)
+        {
             return .status(400)
         }
 
@@ -101,10 +103,11 @@ nonisolated struct MCPHTTPConnection {
             }
 
             if let head, buffer.count - bodyStart >= head.length {
-                let body = buffer[bodyStart ..< bodyStart + head.length]
-                return .success(MCPHTTPRequest(
-                    method: head.method, path: head.path, headers: head.headers, body: Data(body)
-                ))
+                let body = buffer[bodyStart..<bodyStart + head.length]
+                return .success(
+                    MCPHTTPRequest(
+                        method: head.method, path: head.path, headers: head.headers, body: Data(body)
+                    ))
             }
 
             guard let chunk = await receive() else { return nil }
@@ -122,8 +125,9 @@ nonisolated struct MCPHTTPConnection {
 
     private func send(_ data: Data) async {
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            connection.send(content: data, contentContext: .finalMessage, isComplete: true,
-                            completion: .contentProcessed { _ in continuation.resume() })
+            connection.send(
+                content: data, contentContext: .finalMessage, isComplete: true,
+                completion: .contentProcessed { _ in continuation.resume() })
         }
     }
 }

@@ -23,8 +23,8 @@ nonisolated enum JSONRPCId {
 
     var jsonValue: Any {
         switch self {
-        case let .string(string): string
-        case let .int(integer): integer
+        case .string(let string): string
+        case .int(let integer): integer
         }
     }
 }

@@ -382,15 +382,16 @@ private struct MCPToolRow: View {
         MCPCommandBlock(
             command: "claude mcp add --transport http clipboard http://127.0.0.1:38417/mcp"
         )
-        MCPCommandBlock(command: """
-        {
-          "mcpServers": {
-            "clipboard": {
-              "url": "http://127.0.0.1:38417/mcp"
-            }
-          }
-        }
-        """)
+        MCPCommandBlock(
+            command: """
+                {
+                  "mcpServers": {
+                    "clipboard": {
+                      "url": "http://127.0.0.1:38417/mcp"
+                    }
+                  }
+                }
+                """)
     }
     .padding(Const.space24)
     .frame(width: 440)

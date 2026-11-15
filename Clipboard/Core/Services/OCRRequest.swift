@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import os
 import Vision
+import os
 
 /// 每次识别独立持有 Vision 请求
 /// 跨线程操作仅限 Vision 的取消接口
@@ -50,9 +50,10 @@ nonisolated final class OCRRequest: @unchecked Sendable {
                 let options: String.CompareOptions = [.caseInsensitive, .diacriticInsensitive, .widthInsensitive]
                 var start = text.startIndex
                 while start < text.endIndex,
-                      let range = text.range(
-                          of: keyword, options: options, range: start..<text.endIndex, locale: .current
-                      ) {
+                    let range = text.range(
+                        of: keyword, options: options, range: start..<text.endIndex, locale: .current
+                    )
+                {
                     try checkCancellation()
                     if let box = try candidate.boundingBox(for: range)?.boundingBox {
                         regions.append(OCRTextRegion(text: String(text[range]), boundingBox: box))

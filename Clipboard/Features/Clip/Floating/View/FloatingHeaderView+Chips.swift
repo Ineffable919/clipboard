@@ -178,10 +178,12 @@ extension FloatingHeaderView {
                 return
             }
 
-            guard NSAlert.runConfirm(
-                title: String(localized: .deleteChipTitle(chip.name)),
-                message: String(localized: .deleteChipMessage(chip.name))
-            ) else { return }
+            guard
+                NSAlert.runConfirm(
+                    title: String(localized: .deleteChipTitle(chip.name)),
+                    message: String(localized: .deleteChipMessage(chip.name))
+                )
+            else { return }
             topVM?.removeChip(chip)
             reloadChips()
         }

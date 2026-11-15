@@ -69,7 +69,7 @@ final class WelcomeWindowController: NSWindowController {
 
     func showIfNeeded() {
         // #if !DEBUG
-            guard !PasteUserDefaults.welcomeDone else { return }
+        guard !PasteUserDefaults.welcomeDone else { return }
         // #endif
 
         NSApp.activate(ignoringOtherApps: true)

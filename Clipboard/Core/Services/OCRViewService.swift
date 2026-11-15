@@ -28,9 +28,11 @@ actor OCRViewService {
                 from: data, requestId: requestId, submittedAt: submittedAt
             )
         }
-        guard let regions = await recognize(
-            data: data, keyword: nil, requestId: requestId, submittedAt: submittedAt
-        ) else { return "" }
+        guard
+            let regions = await recognize(
+                data: data, keyword: nil, requestId: requestId, submittedAt: submittedAt
+            )
+        else { return "" }
         return regions.map(\.text).joined(separator: "\n")
     }
 
@@ -53,9 +55,10 @@ actor OCRViewService {
                 return await withCheckedContinuation { continuation in
                     // Vision 的同步调用可能阻塞，使用独立线程避免占满 Swift 的任务线程池
                     let worker = Thread {
-                        continuation.resume(returning: self.perform(
-                            request, data: data, keyword: keyword, requestId: requestId, submittedAt: submittedAt
-                        ))
+                        continuation.resume(
+                            returning: self.perform(
+                                request, data: data, keyword: keyword, requestId: requestId, submittedAt: submittedAt
+                            ))
                     }
                     worker.qualityOfService = .userInitiated
                     worker.start()

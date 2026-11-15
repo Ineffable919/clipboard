@@ -23,9 +23,10 @@ extension JSONViewportEditor {
             )
             if richContent != nil {
                 let location = pendingReplacement == nil ? edit.range.location - page.location : inputOffset
-                let content = textView.attributedString().attributedSubstring(from: NSRange(
-                    location: location, length: (edit.replacement as NSString).length
-                ))
+                let content = textView.attributedString().attributedSubstring(
+                    from: NSRange(
+                        location: location, length: (edit.replacement as NSString).length
+                    ))
                 replaceRich(content, in: edit.range, anchor: pendingAnchor, selectedRange: range)
             } else {
                 replace(edit.replacement, in: edit.range, anchor: pendingAnchor, selectedRange: range)
@@ -35,9 +36,11 @@ extension JSONViewportEditor {
                 let content = textView.attributedString()
                 if !content.isEqual(to: richContent.attributedSubstring(from: page)) {
                     let selected = textView.selectedRange()
-                    replaceRich(content, in: page, anchor: pendingAnchor, selectedRange: NSRange(
-                        location: page.location + selected.location, length: selected.length
-                    ))
+                    replaceRich(
+                        content, in: page, anchor: pendingAnchor,
+                        selectedRange: NSRange(
+                            location: page.location + selected.location, length: selected.length
+                        ))
                     return
                 }
             }
@@ -69,8 +72,9 @@ extension JSONViewportEditor {
         if prefix > 0, (0xD800...0xDBFF).contains(previous.character(at: prefix - 1)) { prefix -= 1 }
         var suffix = 0
         while suffix < limit - prefix,
-              previous.character(at: previous.length - suffix - 1)
-                == updated.character(at: updated.length - suffix - 1) {
+            previous.character(at: previous.length - suffix - 1)
+                == updated.character(at: updated.length - suffix - 1)
+        {
             suffix += 1
         }
         if suffix > 0, (0xDC00...0xDFFF).contains(previous.character(at: previous.length - suffix)) {

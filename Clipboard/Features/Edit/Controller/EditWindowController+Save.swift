@@ -19,7 +19,8 @@ extension EditWindowController {
             let prepared = await makePasteContent(editedContent)
             guard !Task.isCancelled, currentModel === model else { return }
             guard let content = prepared,
-                  !content.searchText.allSatisfy(\.isWhitespace) else {
+                !content.searchText.allSatisfy(\.isWhitespace)
+            else {
                 closeWindow()
                 return
             }
@@ -31,9 +32,11 @@ extension EditWindowController {
             if inserting {
                 await insertContent(content, searchText: searchText, source: model)
             } else if let id = model.id {
-                guard await PasteDataStore.main.updateItemContent(
-                    id: id, content: content, searchText: searchText
-                ) else { return }
+                guard
+                    await PasteDataStore.main.updateItemContent(
+                        id: id, content: content, searchText: searchText
+                    )
+                else { return }
             }
             guard !Task.isCancelled, currentModel === model else { return }
             closeWindow()
@@ -48,20 +51,22 @@ extension EditWindowController {
         let length: Int
 
         switch content {
-        case let .plainText(plainText):
+        case .plainText(let plainText):
             return await Task.detached(priority: .userInitiated) {
                 PasteboardTextPreparation.prepareForSave(plainText)
             }.value
-        case let .attributedText(attributedText):
+        case .attributedText(let attributedText):
             text = attributedText.string
             length = attributedText.length
             type = Self.hasRichTextAttributes(attributedText) ? .rtf : .string
-            data = if type == .string {
-                Data(text.utf8)
-            } else {
-                attributedText.toData(with: type) ?? Data()
-            }
-            let preview = length > 250
+            data =
+                if type == .string {
+                    Data(text.utf8)
+                } else {
+                    attributedText.toData(with: type) ?? Data()
+                }
+            let preview =
+                length > 250
                 ? attributedText.attributedSubstring(
                     from: NSRange(location: 0, length: 250)
                 )
@@ -125,14 +130,16 @@ extension EditWindowController {
             options: []
         ) { attributes, _, stop in
             if let underline = attributes[.underlineStyle] as? Int,
-               underline != 0 {
+                underline != 0
+            {
                 found = true
                 stop.pointee = true
                 return
             }
 
             if let strikethrough = attributes[.strikethroughStyle] as? Int,
-               strikethrough != 0 {
+                strikethrough != 0
+            {
                 found = true
                 stop.pointee = true
                 return

@@ -49,7 +49,7 @@ extension MarkdownAttributedRenderer {
         table: NSTextTable,
         into result: NSMutableAttributedString
     ) {
-        for column in 0 ..< table.numberOfColumns {
+        for column in 0..<table.numberOfColumns {
             let block = NSTextTableBlock(
                 table: table,
                 startingRow: row,
@@ -67,11 +67,12 @@ extension MarkdownAttributedRenderer {
             let style = NSMutableParagraphStyle()
             style.textBlocks = [block]
 
-            let cellContent: NSMutableAttributedString = if column < cells.count {
-                inlineChildren(of: cells[column])
-            } else {
-                NSMutableAttributedString()
-            }
+            let cellContent: NSMutableAttributedString =
+                if column < cells.count {
+                    inlineChildren(of: cells[column])
+                } else {
+                    NSMutableAttributedString()
+                }
             if cellContent.length == 0 {
                 cellContent.append(NSAttributedString(string: " ", attributes: baseAttributes()))
             }

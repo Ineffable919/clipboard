@@ -18,7 +18,8 @@ extension PasteboardModel {
             return "\(prefix.sha256Hex)-\(data.count)"
         case .rtf, .rtfd:
             if let attributeString = NSAttributedString(with: data, type: type),
-               let textData = attributeString.string.data(using: .utf8) {
+                let textData = attributeString.string.data(using: .utf8)
+            {
                 return textData.sha256Hex
             }
             return data.sha256Hex
@@ -36,11 +37,13 @@ extension PasteboardModel {
             return cachedOCRRegions
         }
 
-        guard let regions = await OCRViewService.shared.recognizeHighlightRegions(
-            from: data,
-            keyword: trimmed,
-            requestId: requestId
-        ) else { return [] }
+        guard
+            let regions = await OCRViewService.shared.recognizeHighlightRegions(
+                from: data,
+                keyword: trimmed,
+                requestId: requestId
+            )
+        else { return [] }
         guard !Task.isCancelled else { return [] }
         cachedOCRKeyword = trimmed
         cachedOCRRegions = regions

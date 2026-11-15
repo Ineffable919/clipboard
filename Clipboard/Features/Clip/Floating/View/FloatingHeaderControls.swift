@@ -39,7 +39,8 @@ final class FloatingDragHandle: NSView {
 
     private func updateColor() {
         effectiveAppearance.performAsCurrentDrawingAppearance {
-            pill.layer?.backgroundColor = NSColor.secondaryLabelColor
+            pill.layer?.backgroundColor =
+                NSColor.secondaryLabelColor
                 .withAlphaComponent(0.3).cgColor
         }
     }

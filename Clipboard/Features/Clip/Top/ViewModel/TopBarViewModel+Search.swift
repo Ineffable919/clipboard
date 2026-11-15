@@ -167,7 +167,8 @@ extension TopBarViewModel {
             store.updateData(with: list, changeType: .delete)
         } else {
             if let model = store.dataList.value.first(where: { $0.id == modelId }),
-               chipId != model.group {
+                chipId != model.group
+            {
                 model.updateGroup(val: chipId)
             }
             store.updateData(with: store.dataList.value, changeType: .update)

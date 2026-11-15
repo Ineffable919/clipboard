@@ -242,7 +242,8 @@ extension PasteDataStore {
 
     func updateItemHidden(itemId: Int64, hidden: Bool) {
         if let model = dataList.value.first(where: { $0.id == itemId }),
-           hidden != model.hidden {
+            hidden != model.hidden
+        {
             model.updateHidden(val: hidden)
         }
 

@@ -36,7 +36,8 @@ final class FilterTypeSectionView: FilterSectionView {
 
     func updateSelection(_ types: Set<PasteModelType>) {
         for (type, button) in typeButtons {
-            button.isSelected = type == .string
+            button.isSelected =
+                type == .string
                 ? types.contains(.string) || types.contains(.rich)
                 : types.contains(type)
         }

@@ -60,14 +60,15 @@ extension JSONTransformer {
             }
 
             let previous = index > characters.startIndex ? characters[index - 1] : nil
-            let next = index < characters.index(before: characters.endIndex)
+            let next =
+                index < characters.index(before: characters.endIndex)
                 ? characters[index + 1]
                 : nil
-            let startsWord = character.isUppercase && (
-                previous?.isLowercase == true
+            let startsWord =
+                character.isUppercase
+                && (previous?.isLowercase == true
                     || previous?.isNumber == true
-                    || (previous?.isUppercase == true && next?.isLowercase == true)
-            )
+                    || (previous?.isUppercase == true && next?.isLowercase == true))
 
             if startsWord {
                 flush(&current, into: &words)
@@ -107,7 +108,7 @@ extension JSONTransformer {
                 output.append(contentsOf: [Byte.backslash, Byte.quote])
             case 0x5C:
                 output.append(contentsOf: [Byte.backslash, Byte.backslash])
-            case 0x00 ... 0x1F:
+            case 0x00...0x1F:
                 appendUnicodeEscape(UInt16(scalar.value), to: &output)
             default:
                 appendUTF8(scalar, to: &output)
@@ -121,29 +122,30 @@ extension JSONTransformer {
         at index: Int
     ) -> (scalar: UnicodeScalar, nextIndex: Int)? where Bytes.Element == UInt8, Bytes.Index == Int {
         guard index + 5 < bytes.count,
-              bytes[index] == Byte.backslash,
-              bytes[index + 1] == Byte.lowercaseU,
-              let first = hexValue(bytes[(index + 2) ... (index + 5)])
+            bytes[index] == Byte.backslash,
+            bytes[index + 1] == Byte.lowercaseU,
+            let first = hexValue(bytes[(index + 2)...(index + 5)])
         else { return nil }
 
-        if (0xD800 ... 0xDBFF).contains(first) {
+        if (0xD800...0xDBFF).contains(first) {
             let secondStart = index + 6
             guard secondStart + 5 < bytes.count,
-                  bytes[secondStart] == Byte.backslash,
-                  bytes[secondStart + 1] == Byte.lowercaseU,
-                  let second = hexValue(bytes[(secondStart + 2) ... (secondStart + 5)]),
-                  (0xDC00 ... 0xDFFF).contains(second)
+                bytes[secondStart] == Byte.backslash,
+                bytes[secondStart + 1] == Byte.lowercaseU,
+                let second = hexValue(bytes[(secondStart + 2)...(secondStart + 5)]),
+                (0xDC00...0xDFFF).contains(second)
             else { return nil }
 
-            let value = 0x10000
+            let value =
+                0x10000
                 + ((UInt32(first) - 0xD800) << 10)
                 + (UInt32(second) - 0xDC00)
             guard let scalar = UnicodeScalar(value) else { return nil }
             return (scalar, secondStart + 6)
         }
 
-        guard !(0xDC00 ... 0xDFFF).contains(first),
-              let scalar = UnicodeScalar(UInt32(first))
+        guard !(0xDC00...0xDFFF).contains(first),
+            let scalar = UnicodeScalar(UInt32(first))
         else { return nil }
         return (scalar, index + 6)
     }
@@ -171,11 +173,11 @@ extension JSONTransformer {
         for byte in bytes {
             let digit: UInt16
             switch byte {
-            case Byte.zero ... Byte.nine:
+            case Byte.zero...Byte.nine:
                 digit = UInt16(byte - Byte.zero)
-            case Byte.uppercaseA ... Byte.uppercaseF:
+            case Byte.uppercaseA...Byte.uppercaseF:
                 digit = UInt16(byte - Byte.uppercaseA + 10)
-            case Byte.lowercaseA ... Byte.lowercaseF:
+            case Byte.lowercaseA...Byte.lowercaseF:
                 digit = UInt16(byte - Byte.lowercaseA + 10)
             default:
                 return nil
@@ -193,11 +195,11 @@ extension JSONTransformer {
     }
 
     nonisolated static func isDigit(_ byte: UInt8) -> Bool {
-        (Byte.zero ... Byte.nine).contains(byte)
+        (Byte.zero...Byte.nine).contains(byte)
     }
 
     nonisolated static func isOneToNine(_ byte: UInt8) -> Bool {
-        ((Byte.zero + 1) ... Byte.nine).contains(byte)
+        ((Byte.zero + 1)...Byte.nine).contains(byte)
     }
 
     nonisolated static func checkCancellation() throws {
@@ -238,4 +240,5 @@ extension JSONTransformer {
         nonisolated static let lowercaseR: UInt8 = 0x72
         nonisolated static let lowercaseT: UInt8 = 0x74
         nonisolated static let lowercaseU: UInt8 = 0x75
-    }}
+    }
+}

@@ -18,41 +18,43 @@ nonisolated struct MCPTools {
         return allDefinitions.filter { ($0["name"] as? String).map { !disabled.contains($0) } ?? true }
     }
 
-    private static var inputSchemas: [String: [String: Any]] { [
-        "search_clipboard": [
-            "type": "object",
-            "properties": [
-                "query": [
-                    "type": "string",
-                    "description": "Search keyword (optional if filtering by type or tag)"
-                ],
-                "type": [
-                    "type": "string",
-                    "enum": ["text", "link", "image", "file", "color", "rich"],
-                    "description": """
-                    Filter by content type: text (plain text), link (URL), image (PNG/TIFF), \
-                    file (file path), color (hex color), rich (formatted/RTF text)
-                    """
-                ],
-                "tag": [
-                    "type": "string",
-                    "description": "Filter by user-defined tag name. Call list_tags first to see available names."
-                ],
-                "limit": ["type": "integer", "description": "Max results, default 20, max 50"]
-            ]
-        ],
-        "write_clipboard": [
-            "type": "object",
-            "properties": [
-                "content": ["type": "string", "description": "Plain text to write"]
+    private static var inputSchemas: [String: [String: Any]] {
+        [
+            "search_clipboard": [
+                "type": "object",
+                "properties": [
+                    "query": [
+                        "type": "string",
+                        "description": "Search keyword (optional if filtering by type or tag)"
+                    ],
+                    "type": [
+                        "type": "string",
+                        "enum": ["text", "link", "image", "file", "color", "rich"],
+                        "description": """
+                        Filter by content type: text (plain text), link (URL), image (PNG/TIFF), \
+                        file (file path), color (hex color), rich (formatted/RTF text)
+                        """
+                    ],
+                    "tag": [
+                        "type": "string",
+                        "description": "Filter by user-defined tag name. Call list_tags first to see available names."
+                    ],
+                    "limit": ["type": "integer", "description": "Max results, default 20, max 50"]
+                ]
             ],
-            "required": ["content"]
-        ],
-        "list_tags": [
-            "type": "object",
-            "properties": [:]
+            "write_clipboard": [
+                "type": "object",
+                "properties": [
+                    "content": ["type": "string", "description": "Plain text to write"]
+                ],
+                "required": ["content"]
+            ],
+            "list_tags": [
+                "type": "object",
+                "properties": [:]
+            ]
         ]
-    ] }
+    }
 
     private static var allDefinitions: [[String: Any]] {
         let schemas = inputSchemas
@@ -69,7 +71,7 @@ nonisolated struct MCPTools {
             return mcpError("MCP is disabled. Enable it in Clipboard → Settings → AI.")
         }
         guard let name = params["name"] as? String,
-              let arguments = params["arguments"] as? [String: Any]
+            let arguments = params["arguments"] as? [String: Any]
         else {
             return mcpError("Invalid tool call params")
         }
@@ -103,7 +105,8 @@ nonisolated struct MCPTools {
         }
 
         let table = Table("Clip")
-        var queryExpr = table
+        var queryExpr =
+            table
             .select(Col.type, Col.data, Col.searchText, Col.timestamp, Col.tag)
             .filter(Col.hidden == 0)
             .order(Col.sortOrder.desc, Col.id.desc)
@@ -186,8 +189,9 @@ nonisolated struct MCPTools {
 
         let userDefaults = UserDefaults(suiteName: ClipboardPaths.appBundleId)
         if let data = userDefaults?.data(forKey: "userCategoryChip"),
-           let chips = try? JSONDecoder().decode([MCPCategoryChip].self, from: data),
-           !chips.isEmpty {
+            let chips = try? JSONDecoder().decode([MCPCategoryChip].self, from: data),
+            !chips.isEmpty
+        {
             lines.append("")
             lines.append("User-defined tags (use the 'tag' parameter):")
             for chip in chips {
@@ -231,15 +235,19 @@ nonisolated struct MCPTools {
 
         let existing = table.select(Col.id).filter(Col.uniqueId == uniqueId)
         if let row = try? database.pluck(existing), let existingId = try? row.get(Col.id) {
-            _ = try? database.run(table.filter(Col.id == existingId)
-                .update(Col.timestamp <- timestamp, Col.hidden <- 0, Col.sortOrder <- Col.nextSortOrder)
+            _ = try? database.run(
+                table.filter(Col.id == existingId)
+                    .update(Col.timestamp <- timestamp, Col.hidden <- 0, Col.sortOrder <- Col.nextSortOrder)
             )
             return ["content": [["type": "text", "text": "Clipboard updated"]]]
         }
 
         let appPath = NSWorkspace.shared.urlForApplication(withBundleIdentifier: ClipboardPaths.appBundleId)?.path ?? ""
-        guard let appID = try? SourceAppSQL.resolve(name: "Clip", path: appPath,
-                                                  bundleID: ClipboardPaths.appBundleId, on: database) else {
+        guard
+            let appID = try? SourceAppSQL.resolve(
+                name: "Clip", path: appPath,
+                bundleID: ClipboardPaths.appBundleId, on: database)
+        else {
             return mcpError("Cannot resolve source application")
         }
         let insert = table.insert(
@@ -311,7 +319,7 @@ private nonisolated extension MCPTools {
     private func resolveCategory(name: String) -> Int? {
         let userDefaults = UserDefaults(suiteName: ClipboardPaths.appBundleId)
         guard let data = userDefaults?.data(forKey: "userCategoryChip"),
-              let chips = try? JSONDecoder().decode([MCPCategoryChip].self, from: data)
+            let chips = try? JSONDecoder().decode([MCPCategoryChip].self, from: data)
         else { return nil }
         return chips.first { $0.name.localizedCaseInsensitiveCompare(name) == .orderedSame }?.id
     }

@@ -17,7 +17,7 @@ extension ClipMainViewController: NSGestureRecognizerDelegate {
     ) -> Bool {
         guard
             let hitView = view.window?.contentView?
-            .hitTest(event.locationInWindow)
+                .hitTest(event.locationInWindow)
         else {
             return true
         }
@@ -55,8 +55,9 @@ extension ClipMainViewController {
         }
 
         if KeyCode.shouldTriggerSearch(for: event),
-           !topBarView.searchField.isFirstResponder,
-           focusRegion == .collection {
+            !topBarView.searchField.isFirstResponder,
+            focusRegion == .collection
+        {
             if let characters = event.characters, !characters.isEmpty {
                 topBarView.activateSearch(with: characters)
             }
@@ -117,7 +118,7 @@ extension ClipMainViewController {
 
     private func arrowKeyDown(_ event: NSEvent) -> NSEvent? {
         guard focusRegion == .collection,
-              event.modifierFlags.isDisjoint(with: [.command, .option, .control, .shift])
+            event.modifierFlags.isDisjoint(with: [.command, .option, .control, .shift])
         else { return event }
         guard displayedItemCount > 0 else { return nil }
 
@@ -187,7 +188,7 @@ extension ClipMainViewController {
             guard confirmDelete() else { return nil }
             let minIndex =
                 collectionView.selectionIndexPaths.map(\.item).min()
-                    ?? selectIndexPath.item
+                ?? selectIndexPath.item
             let countAfterDelete = displayedItemCount - items.count
             if countAfterDelete > 0 {
                 let newItem = min(minIndex, countAfterDelete - 1)
@@ -223,15 +224,18 @@ extension ClipMainViewController {
     }
 
     private func handleCommandKeyEvent(_ event: NSEvent) -> NSEvent? {
-        guard event.modifierFlags.isDisjoint(with: [
-            .option, .control, .shift
-        ]) else {
+        guard
+            event.modifierFlags.isDisjoint(with: [
+                .option, .control, .shift
+            ])
+        else {
             return event
         }
 
         if event.keyCode == KeyCode.keyF,
-           let window = event.window,
-           window === view.window || window === topBarView.filterPopover?.contentViewController?.view.window {
+            let window = event.window,
+            window === view.window || window === topBarView.filterPopover?.contentViewController?.view.window
+        {
             if topBarView.isSearching {
                 topBarView.togglePopover()
             } else {
@@ -286,18 +290,20 @@ extension ClipMainViewController {
         let eventModifiers = event.modifierFlags.intersection(relevantModifiers)
 
         if let previousTabInfo = HotKeyManager.shared.getHotKey(key: "previous_tab"),
-           previousTabInfo.isEnabled,
-           event.keyCode == previousTabInfo.shortcut.keyCode,
-           eventModifiers == previousTabInfo.shortcut.modifiers.intersection(relevantModifiers) {
+            previousTabInfo.isEnabled,
+            event.keyCode == previousTabInfo.shortcut.keyCode,
+            eventModifiers == previousTabInfo.shortcut.modifiers.intersection(relevantModifiers)
+        {
             topVM.selectPreviousChip()
             topBarView.updateChipSelection()
             return true
         }
 
         if let nextTabInfo = HotKeyManager.shared.getHotKey(key: "next_tab"),
-           nextTabInfo.isEnabled,
-           event.keyCode == nextTabInfo.shortcut.keyCode,
-           eventModifiers == nextTabInfo.shortcut.modifiers.intersection(relevantModifiers) {
+            nextTabInfo.isEnabled,
+            event.keyCode == nextTabInfo.shortcut.keyCode,
+            eventModifiers == nextTabInfo.shortcut.modifiers.intersection(relevantModifiers)
+        {
             topVM.selectNextChip()
             topBarView.updateChipSelection()
             return true

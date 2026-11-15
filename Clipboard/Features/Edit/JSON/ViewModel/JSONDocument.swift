@@ -18,7 +18,8 @@ nonisolated struct JSONDocument: Sendable {
         self.text = text
         self.isValid = isValid
         index = prepare && !Task.isCancelled ? JSONFoldIndex.document(for: text) : nil
-        preparedText = (prepare || paging) && !Task.isCancelled && text.utf8.count >= 1_048_576
+        preparedText =
+            (prepare || paging) && !Task.isCancelled && text.utf8.count >= 1_048_576
             ? JSONPreparedText(text, width: width, lineStarts: index?.lineStarts) : nil
     }
 
@@ -53,11 +54,12 @@ nonisolated struct JSONDocument: Sendable {
             if !changed, let knownValidity {
                 isValid = knownValidity
             } else {
-                isValid = switch action {
-                case .format, .compact, .sortKeys, .renameKeys: true
-                case .encodeUnicode: knownValidity ?? JSONTransformer.isValid(text)
-                default: JSONTransformer.isValid(text)
-                }
+                isValid =
+                    switch action {
+                    case .format, .compact, .sortKeys, .renameKeys: true
+                    case .encodeUnicode: knownValidity ?? JSONTransformer.isValid(text)
+                    default: JSONTransformer.isValid(text)
+                    }
             }
             return (
                 Self(text, isValid: isValid, prepare: changed && entireDocument, width: width),

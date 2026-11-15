@@ -39,7 +39,10 @@ final class RichTextEditorView: NSView {
 
     var isEditable: Bool {
         get { viewport?.isEditable ?? textView.isEditable }
-        set { textView.isEditable = newValue; viewport?.isEditable = newValue }
+        set {
+            textView.isEditable = newValue
+            viewport?.isEditable = newValue
+        }
     }
 
     var hasRichFormatting: Bool {
@@ -52,7 +55,8 @@ final class RichTextEditorView: NSView {
             if let underline = attributes[.underlineStyle] as? Int, underline != 0 {
                 found = true
             } else if let strikethrough = attributes[.strikethroughStyle] as? Int,
-                      strikethrough != 0 {
+                strikethrough != 0
+            {
                 found = true
             } else if let font = attributes[.font] as? NSFont {
                 let traits = font.fontDescriptor.symbolicTraits
@@ -155,13 +159,19 @@ final class RichTextEditorView: NSView {
     }
 
     func focus() {
-        if let viewport { viewport.focus(); return }
+        if let viewport {
+            viewport.focus()
+            return
+        }
         textView.setSelectedRange(NSRange(location: 0, length: 0))
         window?.makeFirstResponder(textView)
     }
 
     func scrollToTop() {
-        if let viewport { viewport.scrollToTop(); return }
+        if let viewport {
+            viewport.scrollToTop()
+            return
+        }
         let clipView = scrollView.contentView
         var targetBounds = clipView.bounds
         targetBounds.origin = .zero
@@ -199,7 +209,7 @@ final class RichTextEditorView: NSView {
         storage.enumerateAttribute(.font, in: range, options: []) { value, subRange, _ in
             let currentFont =
                 (value as? NSFont)
-                    ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+                ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
             let fontManager = NSFontManager.shared
 
             let newFont: NSFont =
@@ -217,7 +227,7 @@ final class RichTextEditorView: NSView {
         storage.enumerateAttribute(.font, in: range, options: []) { value, subRange, _ in
             let currentFont =
                 (value as? NSFont)
-                    ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
+                ?? NSFont.systemFont(ofSize: NSFont.systemFontSize)
             let fontManager = NSFontManager.shared
 
             let newFont: NSFont =

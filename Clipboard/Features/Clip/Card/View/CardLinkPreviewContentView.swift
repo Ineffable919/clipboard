@@ -259,7 +259,7 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
         let baseAttrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize),
             .foregroundColor: NSColor.secondaryLabelColor,
-            .paragraphStyle: paragraphStyle,
+            .paragraphStyle: paragraphStyle
         ]
 
         let mutable = NSMutableAttributedString(
@@ -273,7 +273,7 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
 
         let plain = urlString as NSString
         let options: NSString.CompareOptions = [
-            .caseInsensitive, .diacriticInsensitive, .widthInsensitive,
+            .caseInsensitive, .diacriticInsensitive, .widthInsensitive
         ]
         var searchRange = NSRange(location: 0, length: plain.length)
 

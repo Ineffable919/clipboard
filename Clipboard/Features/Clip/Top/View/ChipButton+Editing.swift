@@ -35,7 +35,8 @@ extension ChipButton {
     func updateNameFieldWidth() {
         let displayText: String =
             if let editor = nameField.currentEditor() as? NSTextView,
-            !editor.string.isEmpty {
+                !editor.string.isEmpty
+            {
                 editor.string
             } else {
                 nameField.stringValue
@@ -53,9 +54,9 @@ extension ChipButton {
 
     func controlTextDidEndEditing(_ obj: Notification) {
         guard let field = obj.object as? NSTextField,
-              field === nameField,
-              config.isEditing,
-              !didHandleEditingCompletion
+            field === nameField,
+            config.isEditing,
+            !didHandleEditingCompletion
         else { return }
 
         didHandleEditingCompletion = true
@@ -106,7 +107,8 @@ extension ChipButton {
             ),
                 let nextInfo = HotKeyManager.shared.getHotKey(key: "next_tab"),
                 prevInfo.isEnabled,
-                nextInfo.isEnabled {
+                nextInfo.isEnabled
+            {
                 let prevDisplay = prevInfo.shortcut.displayString
                 let nextDisplay = nextInfo.shortcut.displayString
                 shortcutText = String(
@@ -124,7 +126,8 @@ extension ChipButton {
 
 extension ChipButton {
     func update(config newConfig: Config) {
-        let rebuild = config.chip != newConfig.chip
+        let rebuild =
+            config.chip != newConfig.chip
             || config.dotMode != newConfig.dotMode
             || config.size != newConfig.size
             || config.isEditing != newConfig.isEditing
