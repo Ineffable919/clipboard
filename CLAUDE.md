@@ -41,7 +41,7 @@ Organized per feature, each with Controller / View / ViewModel subfolders: `Clip
 
 ### Services and caches
 
-`Core/Services` holds OCR / Live Text (`OCRViewService`, `LiveTextService`), category chips, app-icon color extraction, and filter building (`PasteFilterBuilder`); `Core/Cache` holds icon/thumbnail/metadata caches. `LegacyConfigMigrator` and `PasteSQLManager+Migration` handle upgrades from older versions.
+`Core/Services` holds Vision OCR (`OCRViewService`, `OCRRequest`), category chips, app-icon color extraction, and filter building (`PasteFilterBuilder`); `Core/Cache` holds icon/thumbnail/metadata caches. `LegacyConfigMigrator` and `PasteSQLManager+Migration` handle upgrades from older versions.
 
 ### Localization
 

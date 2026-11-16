@@ -264,7 +264,8 @@ extension PasteDataStore {
         ingestionTask = Task {
             await previous?.value
             await insertModel(model)
-            await runOCRIfNeeded(model)
+            // 识别不放进入库队列：Vision 首次加载模型可能耗时十几秒，不能阻塞后续条目入库
+            Task { await self.runOCRIfNeeded(model) }
         }
         return true
     }

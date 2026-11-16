@@ -23,11 +23,6 @@ actor OCRViewService {
         requestId: String = UUID().uuidString,
         submittedAt: ContinuousClock.Instant = .now
     ) async -> String {
-        if #available(macOS 27.0, *), LiveTextService.isSupported {
-            return await LiveTextService.shared.recognizeText(
-                from: data, requestId: requestId, submittedAt: submittedAt
-            )
-        }
         guard
             let regions = await recognize(
                 data: data, keyword: nil, requestId: requestId, submittedAt: submittedAt

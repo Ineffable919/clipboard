@@ -7,7 +7,6 @@
 
 import AppKit
 import SnapKit
-import VisionKit
 
 // MARK: - CardImageContentView
 
@@ -39,7 +38,6 @@ final class CardImageContentView: NSView, PassthroughMouseEvents {
     private var ocrRequestId: String?
     private var currentModelId: String = ""
     private var currentKeyword: String = ""
-    private var liveTextAnalysis: ImageAnalysis?
 
     init(model: PasteboardModel, keyword: String) {
         super.init(frame: .zero)
@@ -102,7 +100,6 @@ final class CardImageContentView: NSView, PassthroughMouseEvents {
         loadTask?.cancel()
         currentModelId = model.uniqueId
         currentKeyword = keyword
-        liveTextAnalysis = nil
         imageView.isHidden = true
         placeholderImageView.isHidden = true
         loadingIndicator.isHidden = false
@@ -128,7 +125,7 @@ final class CardImageContentView: NSView, PassthroughMouseEvents {
 
     private func updateOCR(model: PasteboardModel, reason: String) {
         cancelOCR(reason: reason)
-        imageView.clearHighlights()
+        imageView.regions = []
 
         let trimmed = currentKeyword.trimmingCharacters(
             in: .whitespacesAndNewlines
@@ -139,36 +136,14 @@ final class CardImageContentView: NSView, PassthroughMouseEvents {
 
         let requestId = UUID().uuidString
         ocrRequestId = requestId
-        let cachedAnalysis = liveTextAnalysis
         ocrTask = Task { @MainActor [weak self] in
-            if #available(macOS 27.0, *), LiveTextService.isSupported {
-                do {
-                    let analysis: ImageAnalysis
-                    if let cachedAnalysis {
-                        analysis = cachedAnalysis
-                    } else {
-                        analysis = try await LiveTextService.shared.analyze(
-                            data: model.data,
-                            requestId: requestId
-                        )
-                    }
-                    guard !Task.isCancelled, let self, ocrRequestId == requestId
-                    else { return }
-                    liveTextAnalysis = analysis
-                    imageView.highlight(analysis, keyword: trimmed)
-                } catch {
-                    // 失败或取消时不缓存结果，下次搜索重新识别
-                }
-            } else {
-                let regions = await model.loadOCRHighlightRegions(
-                    keyword: trimmed,
-                    requestId: requestId
-                )
-                guard !Task.isCancelled, let self, ocrRequestId == requestId
-                else { return }
-                imageView.regions = regions
-            }
-            guard let self, ocrRequestId == requestId else { return }
+            let regions = await model.loadOCRHighlightRegions(
+                keyword: trimmed,
+                requestId: requestId
+            )
+            guard !Task.isCancelled, let self, ocrRequestId == requestId
+            else { return }
+            imageView.regions = regions
             ocrTask = nil
             ocrRequestId = nil
         }
