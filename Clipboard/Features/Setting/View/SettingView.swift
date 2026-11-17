@@ -45,7 +45,7 @@ enum SettingPage: CaseIterable, Identifiable {
     }
 }
 
-struct SettingView: View {
+struct SettingSidebarView: View {
     @Environment(SettingViewModel.self) private var viewModel
     @FocusState private var isSidebarFocused: Bool
     @AppStorage(PrefKey.pasteDirect.rawValue) private var pasteDirect = true
@@ -53,71 +53,47 @@ struct SettingView: View {
     var body: some View {
         @Bindable var model = viewModel
 
-        NavigationSplitView {
-            VStack(spacing: 0) {
-                List(selection: $model.selectedPage) {
-                    ForEach(SettingPage.allCases) { page in
-                        NavigationLink(value: page) {
-                            HStack(spacing: Const.space8) {
-                                Label {
-                                    Text(page.title)
-                                } icon: {
-                                    Image(systemName: page.icon)
-                                }
+        VStack(spacing: 0) {
+            List(selection: $model.selectedPage) {
+                ForEach(SettingPage.allCases) { page in
+                    HStack(spacing: Const.space8) {
+                        Label {
+                            Text(page.title)
+                        } icon: {
+                            Image(systemName: page.icon)
+                        }
 
-                                Spacer(minLength: Const.space8)
+                        Spacer(minLength: Const.space8)
 
-                                if page == .mcp {
-                                    Text(verbatim: "Beta")
-                                        .font(.caption2.weight(.medium))
-                                        .foregroundStyle(.secondary)
-                                }
+                        if page == .mcp {
+                            Text(verbatim: "Beta")
+                                .font(.caption2.weight(.medium))
+                                .foregroundStyle(.secondary)
+                        }
 
-                                if page == .general,
-                                    pasteDirect,
-                                    !viewModel.hasAccessibilityPermission
-                                {
-                                    AccessibilityWarningBadge(diameter: Const.iconSize18)
-                                        .compositingGroup()
-                                        .accessibilityElement(children: .ignore)
-                                        .accessibilityLabel(
-                                            Text(.privacyAccessPermissionDenied)
-                                        )
-                                }
-                            }
+                        if page == .general,
+                            pasteDirect,
+                            !viewModel.hasAccessibilityPermission
+                        {
+                            AccessibilityWarningBadge(diameter: Const.iconSize18)
+                                .compositingGroup()
+                                .accessibilityElement(children: .ignore)
+                                .accessibilityLabel(
+                                    Text(.privacyAccessPermissionDenied)
+                                )
                         }
                     }
-                }
-                .listStyle(.sidebar)
-                .focused($isSidebarFocused)
-
-                Spacer()
-
-                HelpCenterButton()
-                    .padding(.bottom, Const.space12)
-                    .padding(.horizontal, Const.space8)
-            }
-            .frame(minWidth: 200)
-        } detail: {
-            Group {
-                switch model.selectedPage {
-                case .general:
-                    GeneralSettingView()
-                case .appearance:
-                    AppearanceSettingsView()
-                case .privacy:
-                    PrivacySettingView()
-                case .keyboard:
-                    KeyboardSettingView()
-                case .storage:
-                    StorageSettingView()
-                case .mcp:
-                    AISettingsView()
-                case .about:
-                    AboutSettingView()
+                    .tag(page)
                 }
             }
-            .navigationTitle(Text(model.selectedPage.title))
+            .listStyle(.sidebar)
+            .focused($isSidebarFocused)
+
+            Spacer()
+
+            HelpCenterButton()
+                .padding(.bottom, Const.space12)
+                .padding(.horizontal, Const.space8)
         }
         .onAppear {
             viewModel.refreshAccessibilityPermission()
@@ -179,8 +155,5 @@ struct HelpCenterButton: View {
 }
 
 #Preview {
-    let viewModel = SettingViewModel()
-    SettingView()
-        .frame(width: Const.settingWidth, height: Const.settingHeight)
-        .environment(viewModel)
+    SettingWindowController.makeContentController(viewModel: SettingViewModel())
 }
