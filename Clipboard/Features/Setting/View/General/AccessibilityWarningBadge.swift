@@ -2,7 +2,7 @@
 //  AccessibilityWarningBadge.swift
 //  Clipboard
 //
-//  Created by crown on 2026/8/14
+//  Created by crown on 2026/11/17
 //
 
 import SwiftUI
