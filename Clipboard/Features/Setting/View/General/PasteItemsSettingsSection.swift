@@ -20,12 +20,13 @@ struct PasteItemsSettingsSection: View {
     private var removeTailingNewline = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: Const.space12) {
             Text(.generalPasteItemsTitle)
                 .font(.headline)
-                .bold()
+                .fontWeight(.semibold)
+                .padding(.leading, Const.space10)
 
-            VStack(alignment: .leading, spacing: Const.space12) {
+            VStack(alignment: .leading, spacing: Const.space8) {
                 HStack(alignment: .top, spacing: Const.space8) {
                     VStack(alignment: .leading, spacing: Const.space4) {
                         ForEach(PasteTargetMode.allCases, id: \.rawValue) { mode in
@@ -45,7 +46,7 @@ struct PasteItemsSettingsSection: View {
                                     AccessibilityButton(
                                         action: viewModel.openAccessibilitySettings
                                     )
-                                    .padding(.leading, Const.space32)
+                                    .padding(.leading, Const.space16 + Const.space12)
                                 }
                             }
                         }
@@ -66,7 +67,7 @@ struct PasteItemsSettingsSection: View {
                     title: .generalRemoveTailingNewline
                 )
             }
-            .padding(Const.space8)
+            .padding(Const.space10)
             .settingsStyle()
         }
     }

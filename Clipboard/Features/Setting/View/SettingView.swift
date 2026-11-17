@@ -27,12 +27,7 @@ enum SettingPage: CaseIterable, Identifiable {
         case .privacy: "hand.raised"
         case .keyboard: "command"
         case .storage: "externaldrive"
-        case .mcp:
-            if #available(macOS 15.0, *) {
-                "apple.intelligence"
-            } else {
-                "lasso.badge.sparkles"
-            }
+        case .mcp: "sparkles"
         case .about: "info.circle"
         }
     }
@@ -82,19 +77,12 @@ struct SettingView: View {
                                     pasteDirect,
                                     !viewModel.hasAccessibilityPermission
                                 {
-                                    ZStack {
-                                        Circle()
-                                            .fill(Color(nsColor: .systemRed))
-                                        Image(systemName: "exclamationmark")
-                                            .font(.system(size: 11, weight: .bold))
-                                            .foregroundStyle(.white)
-                                    }
-                                    .frame(width: 18, height: 18)
-                                    .compositingGroup()
-                                    .accessibilityElement(children: .ignore)
-                                    .accessibilityLabel(
-                                        Text(.privacyAccessPermissionDenied)
-                                    )
+                                    AccessibilityWarningBadge(diameter: Const.iconSize18)
+                                        .compositingGroup()
+                                        .accessibilityElement(children: .ignore)
+                                        .accessibilityLabel(
+                                            Text(.privacyAccessPermissionDenied)
+                                        )
                                 }
                             }
                         }

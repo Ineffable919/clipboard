@@ -145,6 +145,13 @@ final class ChipButton: NSView, NSTextFieldDelegate {
 
     @objc func handleClick() {
         guard !config.isEditing else { return }
+        // 双击自定义 chip 进入重命名；首次单击已完成选中
+        if let event = NSApp.currentEvent, event.clickCount == 2,
+            !config.dotMode, !config.chip.isSystem
+        {
+            config.onEdit?()
+            return
+        }
         config.action()
     }
 

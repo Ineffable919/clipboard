@@ -146,7 +146,7 @@ struct AISettingsView: View {
                 }
                 Spacer(minLength: 0)
             }
-            .padding([.horizontal, .bottom], Const.space24)
+            .padding([.horizontal, .bottom], Const.space20)
         }
         .scrollIndicators(.hidden)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -187,12 +187,13 @@ private struct MCPToolsSection: View {
         VStack(alignment: .leading, spacing: Const.space12) {
             Text(.mcpExposedTools)
                 .font(.subheadline.bold())
+                .padding(.leading, Const.space10)
 
             VStack(spacing: 0) {
                 ForEach(Array(MCPToolInfo.all.enumerated()), id: \.element.id) { index, tool in
                     if index > 0 {
                         Divider()
-                            .padding(.horizontal, Const.space16)
+                            .padding(.horizontal, Const.space10)
                     }
                     MCPToolRow(
                         tool: tool,
@@ -354,7 +355,7 @@ private struct MCPToolRow: View {
                 .labelsHidden()
                 .controlSize(.mini)
         }
-        .padding(.horizontal, Const.space16)
+        .padding(.horizontal, Const.space10)
         .padding(.vertical, Const.space10)
     }
 }

@@ -17,16 +17,12 @@ struct SettingsStyleModifier: ViewModifier {
         content
             .frame(maxWidth: .infinity)
             .background(
-                RoundedRectangle(cornerRadius: Const.settingsRadius)
+                RoundedRectangle(cornerRadius: Const.settingsCardRadius)
                     .fill(
                         colorScheme == .dark
                             ? AnyShapeStyle(Const.darkBackground)
                             : AnyShapeStyle(.fill.quaternary)
                     )
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: Const.settingsRadius)
-                    .stroke(Color.gray.opacity(0.1), lineWidth: 1)
             )
     }
 }

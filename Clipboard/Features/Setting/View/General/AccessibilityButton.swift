@@ -10,24 +10,24 @@ import SwiftUI
 struct AccessibilityButton: View {
     let action: () -> Void
 
+    private var title: LocalizedStringResource {
+        if #available(macOS 27.0, *) {
+            .generalAllowDeviceControlAndDataAccess
+        } else {
+            .generalEnableAccess
+        }
+    }
+
     var body: some View {
         Button(action: action) {
             HStack(spacing: Const.space6) {
-                ZStack {
-                    Circle()
-                        .fill(Color(nsColor: .systemRed))
-                    Image(systemName: "exclamationmark")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(.white)
-                }
-                .frame(width: Const.iconSize16, height: Const.iconSize16)
-                .accessibilityHidden(true)
+                AccessibilityWarningBadge(diameter: Const.iconSize16)
+                    .accessibilityHidden(true)
 
-                Text(.generalEnableAccess)
+                Text(title)
                     .font(.callout)
                     .foregroundStyle(.primary)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
+                    .fixedSize(horizontal: false, vertical: true)
                     .layoutPriority(1)
 
                 Image(systemName: "chevron.right")

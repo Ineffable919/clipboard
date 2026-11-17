@@ -49,6 +49,9 @@ enum Const {
             8.0
         }
 
+    /// 设置页卡片圆角
+    static let settingsCardRadius: CGFloat = 12.0
+
     static let settingsRadius: CGFloat =
         if #available(macOS 26.0, *) {
             10.0

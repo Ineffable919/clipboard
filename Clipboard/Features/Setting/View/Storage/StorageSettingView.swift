@@ -14,6 +14,7 @@ struct StorageSettingView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     @State private var totalCount: Int = 0
+    @State private var databaseSize: Int64 = 0
     @State private var isExporting = false
     @State private var isImporting = false
     @State private var showAlert = false
@@ -28,22 +29,21 @@ struct StorageSettingView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     DataStatRow(
                         title: String(localized: .storageItemCount),
-                        value: String.localizedStringWithFormat(
-                            String(
-                                localized: "storageItemCountValue",
-                                defaultValue: "%lld items",
-                                table: "Localizable"
-                            ),
-                            totalCount
+                        value: String(
+                            localized: .storageItemCountSizeValue(
+                                totalCount,
+                                databaseSize.formatted(.byteCount(style: .file))
+                            )
                         )
                     )
                 }
-                .padding(.horizontal, Const.space16)
+                .padding(.horizontal, Const.space10)
                 .settingsStyle()
 
                 Text(.storageBackupTitle)
                     .font(.headline)
-                    .bold()
+                    .fontWeight(.semibold)
+                    .padding(.leading, Const.space10)
 
                 VStack(alignment: .leading, spacing: 0) {
                     DataActionRow(
@@ -66,29 +66,32 @@ struct StorageSettingView: View {
                         importDatabase()
                     }
                 }
-                .padding(.horizontal, Const.space16)
+                .padding(.horizontal, Const.space10)
                 .settingsStyle()
 
-                Text(.storageNotesTitle)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-
                 VStack(alignment: .leading, spacing: Const.space4) {
-                    Text(.storageNoteDeduplicate)
-                    Text(.storageNotePreserveExistingData)
-                    Text(.storageNoteBackupRegularly)
+                    Text(.storageNotesTitle)
+                        .font(.caption)
+
+                    VStack(alignment: .leading, spacing: Const.space4) {
+                        Text(.storageNoteDeduplicate)
+                        Text(.storageNotePreserveExistingData)
+                        Text(.storageNoteBackupRegularly)
+                    }
+                    .font(.caption2)
                 }
-                .font(.caption2)
                 .foregroundStyle(.secondary)
+                .padding(.leading, Const.space10)
 
                 Spacer(minLength: 20)
             }
-            .padding([.horizontal, .bottom], Const.space24)
+            .padding([.horizontal, .bottom], Const.space20)
         }
         .scrollIndicators(.hidden)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .task {
             totalCount = await PasteSQLManager.manager.getTotalCount()
+            databaseSize = Self.databaseFileSize()
         }
         .alert(alertTitle, isPresented: $showAlert) {
             Button(.commonConfirm, role: .cancel) {}
@@ -171,6 +174,7 @@ struct StorageSettingView: View {
                         let count = await PasteSQLManager.manager.getTotalCount()
                         store.totalCount = count
                         totalCount = count
+                        databaseSize = Self.databaseFileSize()
                         PasteMetadataCache.shared.invalidateTagTypesCache()
                         store.notifyCategoryChipsChanged()
                     }
@@ -186,6 +190,15 @@ struct StorageSettingView: View {
                 }
                 showAlert = true
             }
+        }
+    }
+
+    /// 数据库占用大小（含 WAL / SHM 文件）
+    private static func databaseFileSize() -> Int64 {
+        let path = ClipboardPaths.database
+        return ["", "-wal", "-shm"].reduce(into: 0) { total, suffix in
+            let attrs = try? FileManager.default.attributesOfItem(atPath: path + suffix)
+            total += (attrs?[.size] as? NSNumber)?.int64Value ?? 0
         }
     }
 

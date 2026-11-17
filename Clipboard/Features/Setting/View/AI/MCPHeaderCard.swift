@@ -17,8 +17,7 @@ struct MCPHeaderCard: View {
     private var failed: Bool { isEnabled && server.status == .failed }
 
     private var status: LocalizedStringResource {
-        guard isEnabled else { return .mcpStopped }
-        return failed ? .mcpPortUnavailable : .mcpRunning(enabledToolCount)
+        failed ? .mcpPortUnavailable : .mcpRunning(enabledToolCount)
     }
 
     var body: some View {
@@ -30,7 +29,7 @@ struct MCPHeaderCard: View {
                 addressRow
             }
         }
-        .padding(Const.space16)
+        .padding(Const.space10)
         .settingsStyle()
         .sheet(isPresented: $showPortSheet) {
             MCPPortSheet(server: server)
@@ -40,12 +39,14 @@ struct MCPHeaderCard: View {
     private var titleRow: some View {
         HStack(spacing: Const.space12) {
             VStack(alignment: .leading, spacing: Const.space4) {
-                Text("MCP")
-                    .font(.headline)
-                Text(status)
-                    .font(.caption)
-                    .foregroundStyle(failed ? .red : .secondary)
-                    .lineLimit(1)
+                Text(.mcpEnable)
+
+                if isEnabled {
+                    Text(status)
+                        .font(.caption)
+                        .foregroundStyle(failed ? .red : .secondary)
+                        .lineLimit(1)
+                }
             }
 
             Spacer()

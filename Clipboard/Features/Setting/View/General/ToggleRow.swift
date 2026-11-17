@@ -15,9 +15,16 @@ struct ToggleRow: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: Const.space12) {
-            Image(systemName: isEnabled ? "checkmark.circle.fill" : "circle")
-                .foregroundColor(isEnabled ? .accentColor : .secondary)
-                .font(.system(size: Const.space16))
+            RoundedRectangle(cornerRadius: Const.space6)
+                .fill(isEnabled ? Color.accentColor : Color.primary.opacity(0.08))
+                .frame(width: Const.iconSize16, height: Const.iconSize16)
+                .overlay {
+                    if isEnabled {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: Const.space10, weight: .bold))
+                            .foregroundStyle(.white)
+                    }
+                }
                 .onTapGesture {
                     isEnabled.toggle()
                 }
@@ -26,7 +33,7 @@ struct ToggleRow: View {
 
             Spacer()
         }
-        .padding(Const.space4)
+        .padding(.vertical, Const.space4)
         .contentShape(Rectangle())
         .onTapGesture {
             isEnabled.toggle()

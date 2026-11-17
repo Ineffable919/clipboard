@@ -1261,6 +1261,24 @@
         }
       }
     },
+    "generalAllowDeviceControlAndDataAccess" : {
+      "comment" : "Button shown on macOS 27 and later when direct paste requires device control and data access",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow Device Control and Data Access"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "允许设备控制和数据访问"
+          }
+        }
+      }
+    },
     "generalClearHistory" : {
       "comment" : "Button: clear all history",
       "extractionState" : "manual",
@@ -3295,9 +3313,6 @@
         }
       }
     },
-    "MCP" : {
-      "shouldTranslate" : false
-    },
     "mcpAddTo" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3971,13 +3986,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "AI"
+            "value" : "Intelligence"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "AI"
+            "value" : "智能"
           }
         }
       }
@@ -5747,37 +5762,37 @@
       }
     },
     "storageItemCount" : {
-      "comment" : "Statistic title: clipboard item count",
+      "comment" : "Statistic title: clipboard data (item count and size)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Number of clipboard records"
+            "value" : "Clipboard Data"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "剪贴板记录数"
+            "value" : "剪贴板数据"
           }
         }
       }
     },
-    "storageItemCountValue" : {
-      "comment" : "Clipboard item count value with placeholder",
+    "storageItemCountSizeValue" : {
+      "comment" : "Clipboard item count with database size, e.g. 120 items (5.4 MB)",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld items"
+            "value" : "%1$lld items (%2$@)"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld 条"
+            "value" : "%1$lld 条（%2$@）"
           }
         }
       }

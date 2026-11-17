@@ -20,6 +20,7 @@ struct WelcomeShortcutGuideView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(.welcomeShortcutResult)
                 .font(.headline)
+                .fontWeight(.semibold)
 
             previewRow(
                 systemImage: "chevron.left.forwardslash.chevron.right",

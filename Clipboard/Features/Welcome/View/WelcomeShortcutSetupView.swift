@@ -24,6 +24,7 @@ struct WelcomeShortcutSetupView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text(.shortcutGlobalTitle)
                     .font(.headline)
+                    .fontWeight(.semibold)
 
                 Text(.welcomeShortcutCurrent)
                     .font(.footnote)

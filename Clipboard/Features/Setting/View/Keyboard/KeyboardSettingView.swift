@@ -38,8 +38,7 @@ struct KeyboardSettingView: View {
                     PlainTextModifierView(refreshID: $refreshID)
                 }
                 .padding(.vertical, Const.space8)
-                .padding(.leading, Const.space16)
-                .padding(.trailing, Const.space10)
+                .padding(.horizontal, Const.space10)
                 .settingsStyle()
 
                 HStack {
@@ -65,7 +64,7 @@ struct KeyboardSettingView: View {
                     }
                 }
             }
-            .padding([.horizontal, .bottom], Const.space24)
+            .padding([.horizontal, .bottom], Const.space20)
         }
         .scrollIndicators(.hidden)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -96,8 +95,7 @@ struct StartupShortcutsView: View {
             }
         }
         .padding(.vertical, Const.space4)
-        .padding(.leading, Const.space16)
-        .padding(.trailing, Const.space8)
+        .padding(.horizontal, Const.space10)
     }
 }
 
@@ -109,8 +107,7 @@ struct PreviousTabView: View {
             ShortcutRecorder("previous_tab")
         }
         .padding(.vertical, Const.space4)
-        .padding(.leading, Const.space16)
-        .padding(.trailing, Const.space8)
+        .padding(.horizontal, Const.space10)
     }
 }
 
@@ -122,8 +119,7 @@ struct NextTabView: View {
             ShortcutRecorder("next_tab")
         }
         .padding(.vertical, Const.space4)
-        .padding(.leading, Const.space16)
-        .padding(.trailing, Const.space8)
+        .padding(.horizontal, Const.space10)
     }
 }
 

@@ -72,13 +72,14 @@ struct PrivacySettingView: View {
                             isOn: $delConfirm
                         )
                     }
-                    .padding(.horizontal, Const.space16)
+                    .padding(.horizontal, Const.space10)
                     .settingsStyle()
 
                     VStack(alignment: .leading, spacing: Const.space4) {
                         Text(.privacyIgnoredAppsTitle)
                             .font(.headline)
-                            .bold()
+                            .fontWeight(.semibold)
+
                         Text(.privacyIgnoredAppsDesc)
                             .font(.caption2)
                             .foregroundStyle(.secondary)
@@ -152,7 +153,7 @@ struct PrivacySettingView: View {
                     }
                     .padding(.horizontal, Const.space4)
                 }
-                .padding([.horizontal, .bottom], Const.space24)
+                .padding([.horizontal, .bottom], Const.space20)
             }
             .scrollIndicators(.hidden)
         }

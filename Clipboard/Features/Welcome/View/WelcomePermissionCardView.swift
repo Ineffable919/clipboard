@@ -30,6 +30,7 @@ struct WelcomePermissionCardView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(.privacyAccessPermissionTitle)
                         .font(.headline)
+                        .fontWeight(.semibold)
                         .lineLimit(1)
                         .fixedSize(horizontal: true, vertical: false)
 

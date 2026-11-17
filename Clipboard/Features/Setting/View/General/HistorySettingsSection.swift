@@ -30,14 +30,16 @@ struct HistorySettingsSection: View {
         .init(rawValue: PasteUserDefaults.historyTime)
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: Const.space12) {
             HStack {
                 Text(.generalHistoryTitle)
                     .font(.headline)
-                    .bold()
+                    .fontWeight(.semibold)
+
                 Image(systemName: "exclamationmark.circle")
                     .help(Text(.generalHistoryCleanupHint))
             }
+            .padding(.leading, Const.space10)
 
             VStack(alignment: .leading, spacing: Const.space8) {
                 HistoryTimeSlider(
@@ -63,7 +65,7 @@ struct HistorySettingsSection: View {
                     .disabled(isClearing || isUpdating)
                 }
             }
-            .padding(Const.space12)
+            .padding(Const.space10)
             .settingsStyle()
         }
         .onReceive(PasteDataStore.main.clearingHistory) { isClearing = $0 }
