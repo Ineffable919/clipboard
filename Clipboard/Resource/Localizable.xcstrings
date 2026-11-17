@@ -3422,13 +3422,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connect AI Tools"
+            "value" : "Connect AI Tools…"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "连接 AI 工具"
+            "value" : "连接 AI 工具…"
           }
         }
       }
@@ -3629,13 +3629,30 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "List available content types and user-defined tags for clipboard search"
+            "value" : "List content types and user tags with item counts"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "列出可用的内容类型和用户自定义标签"
+            "value" : "列出内容类型和用户标签及其条目数"
+          }
+        }
+      }
+    },
+    "mcpToolReadItem" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read the full content of an item by id (text, link, file paths, or downscaled image)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按 id 读取条目完整内容（文本、链接、文件路径或缩小后的图片）"
           }
         }
       }
@@ -3646,13 +3663,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Search clipboard history by keyword, content type, or user tag"
+            "value" : "Search clipboard history by keyword, type, tag, source app, or date, returning item summaries"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "按关键词、内容类型或标签搜索剪贴板历史"
+            "value" : "按关键词、类型、标签、来源应用或日期搜索剪贴板历史，返回条目摘要"
           }
         }
       }

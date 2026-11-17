@@ -25,22 +25,58 @@ nonisolated struct MCPTools {
                 "properties": [
                     "query": [
                         "type": "string",
-                        "description": "Search keyword (optional if filtering by type or tag)"
+                        "description": "Keyword matched against item content. Punctuation and whitespace are ignored."
                     ],
                     "type": [
                         "type": "string",
-                        "enum": ["text", "link", "image", "file", "color", "rich"],
-                        "description": """
-                        Filter by content type: text (plain text), link (URL), image (PNG/TIFF), \
-                        file (file path), color (hex color), rich (formatted/RTF text)
-                        """
+                        "enum": ["text", "link", "image", "file", "color"],
+                        "description": "Item type filter. `text` covers both plain and rich text."
                     ],
                     "tag": [
                         "type": "string",
-                        "description": "Filter by user-defined tag name. Call list_tags first to see available names."
+                        "description": "Tag name filter (from list_tags), case-insensitive."
                     ],
-                    "limit": ["type": "integer", "description": "Max results, default 20, max 50"]
+                    "app": [
+                        "type": "string",
+                        "description": "Source application filter: case-insensitive substring of the `app` field."
+                    ],
+                    "date_from": [
+                        "type": "string",
+                        "description": """
+                            ISO-8601 start (inclusive), e.g. 2026-05-01T08:00:00+08:00. \
+                            A date-only value starts at the beginning of that day in the user's time zone.
+                            """
+                    ],
+                    "date_to": [
+                        "type": "string",
+                        "description": """
+                            ISO-8601 end (exclusive). A date-only value covers that whole day \
+                            in the user's time zone.
+                            """
+                    ],
+                    "limit": [
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": MCPTools.maxSearchLimit,
+                        "description": "Maximum number of items, default 20, max \(MCPTools.maxSearchLimit)."
+                    ]
                 ]
+            ],
+            "read_item": [
+                "type": "object",
+                "properties": [
+                    "id": ["type": "string", "description": "Item id from search_clipboard."],
+                    "max_chars": [
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": MCPTools.maxReadChars,
+                        "description": """
+                            Maximum characters of text to return, default \(MCPTools.defaultReadChars), \
+                            max \(MCPTools.maxReadChars).
+                            """
+                    ]
+                ],
+                "required": ["id"]
             ],
             "write_clipboard": [
                 "type": "object",
@@ -60,7 +96,17 @@ nonisolated struct MCPTools {
         let schemas = inputSchemas
         return MCPToolDefinition.all.compactMap { def in
             guard let schema = schemas[def.name] else { return nil }
-            return ["name": def.name, "description": def.description, "inputSchema": schema]
+            return [
+                "name": def.name,
+                "description": def.description,
+                "inputSchema": schema,
+                "annotations": [
+                    "readOnlyHint": def.isReadOnly,
+                    "destructiveHint": false,
+                    "idempotentHint": def.isReadOnly,
+                    "openWorldHint": false
+                ]
+            ]
         }
     }
 
@@ -68,141 +114,25 @@ nonisolated struct MCPTools {
 
     func call(params: [String: Any]) -> [String: Any] {
         guard FileManager.default.fileExists(atPath: ClipboardPaths.mcpEnableFlag) else {
-            return mcpError("MCP is disabled. Enable it in Clipboard → Settings → AI.")
+            return mcpError("MCP is disabled. Enable it in Clip → Settings → AI.")
         }
-        guard let name = params["name"] as? String,
-            let arguments = params["arguments"] as? [String: Any]
-        else {
+        guard let name = params["name"] as? String else {
             return mcpError("Invalid tool call params")
         }
+        // 无参数工具的客户端可能省略 arguments
+        let arguments = params["arguments"] as? [String: Any] ?? [:]
 
         guard !MCPDisabledTools.load().contains(name) else {
-            return mcpError("Tool \(name) is disabled.")
+            return mcpError("Tool \(name) is disabled in Clip → Settings → AI.")
         }
 
         switch name {
         case "search_clipboard": return searchClipboard(arguments)
+        case "read_item": return readItem(arguments)
         case "write_clipboard": return writeClipboard(arguments)
         case "list_tags": return listTags()
         default: return mcpError("Unknown tool: \(name)")
         }
-    }
-
-    // MARK: - search_clipboard
-
-    private func searchClipboard(_ args: [String: Any]) -> [String: Any] {
-        let query = args["query"] as? String ?? ""
-        let typeFilter = args["type"] as? String
-        let tagName = args["tag"] as? String
-        let limit = min(args["limit"] as? Int ?? 20, 50)
-
-        guard !query.isEmpty || typeFilter != nil || tagName != nil else {
-            return mcpError("Provide at least one of: query, type, or tag")
-        }
-
-        guard let database = try? Connection(ClipboardPaths.database, readonly: true) else {
-            return mcpError("Cannot open clipboard database")
-        }
-
-        let table = Table("Clip")
-        var queryExpr =
-            table
-            .select(Col.type, Col.data, Col.searchText, Col.timestamp, Col.tag)
-            .filter(Col.hidden == 0)
-            .order(Col.sortOrder.desc, Col.id.desc)
-            .limit(limit)
-
-        if !query.isEmpty {
-            queryExpr = queryExpr.filter(Col.searchText.like("%\(query)%"))
-        }
-
-        if let typeFilter {
-            queryExpr = queryExpr.filter(Col.tag == tagForType(typeFilter))
-        }
-
-        if let tagName {
-            guard let groupId = resolveCategory(name: tagName) else {
-                return mcpError("Tag \"\(tagName)\" not found. Use list_tags to see available tags.")
-            }
-            queryExpr = queryExpr.filter(Col.group == groupId)
-        }
-
-        var contentBlocks: [[String: Any]] = []
-        var count = 0
-
-        if let rows = try? database.prepare(queryExpr) {
-            for row in rows {
-                if count > 0 {
-                    contentBlocks.append(["type": "text", "text": "---"])
-                }
-
-                contentBlocks += blocks(for: row)
-
-                count += 1
-            }
-        }
-
-        if contentBlocks.isEmpty {
-            let desc = query.isEmpty ? "with current filters" : "for \"\(query)\""
-            return ["content": [["type": "text", "text": "No results \(desc)"]]]
-        }
-
-        return ["content": contentBlocks]
-    }
-
-    private func blocks(for row: Row) -> [[String: Any]] {
-        var blocks: [[String: Any]] = []
-        let type = (try? row.get(Col.type)) ?? ""
-        let tag = (try? row.get(Col.tag)) ?? ""
-        let timestamp = (try? row.get(Col.timestamp)) ?? 0
-        let date = Date(timeIntervalSince1970: TimeInterval(timestamp))
-            .formatted(date: .abbreviated, time: .shortened)
-        let typeLabel = labelForTag(tag)
-        let header = "[\(typeLabel)] \(date)"
-
-        if tag == "image" {
-            blocks.append(["type": "text", "text": header])
-            if let data = try? row.get(Col.data) {
-                let mimeType = type == "public.tiff" ? "image/tiff" : "image/png"
-                blocks.append([
-                    "type": "image",
-                    "data": data.base64EncodedString(),
-                    "mimeType": mimeType
-                ])
-            }
-        } else {
-            let body = extractText(from: row, type: type)
-            blocks.append(["type": "text", "text": "\(header)\n\(body)"])
-        }
-        return blocks
-    }
-
-    // MARK: - list_tags
-
-    private func listTags() -> [String: Any] {
-        var lines: [String] = []
-
-        lines.append("Content types (use the 'type' parameter):")
-        for type in ["text", "rich", "link", "image", "file", "color"] {
-            lines.append("  \(type)")
-        }
-
-        let userDefaults = UserDefaults(suiteName: ClipboardPaths.appBundleId)
-        if let data = userDefaults?.data(forKey: "userCategoryChip"),
-            let chips = try? JSONDecoder().decode([MCPCategoryChip].self, from: data),
-            !chips.isEmpty
-        {
-            lines.append("")
-            lines.append("User-defined tags (use the 'tag' parameter):")
-            for chip in chips {
-                lines.append("  \(chip.name)")
-            }
-        } else {
-            lines.append("")
-            lines.append("No user-defined tags.")
-        }
-
-        return ["content": [["type": "text", "text": lines.joined(separator: "\n")]]]
     }
 
     // MARK: - write_clipboard
@@ -275,53 +205,38 @@ nonisolated struct MCPTools {
 
 // MARK: - Helpers
 
-private nonisolated extension MCPTools {
+nonisolated extension MCPTools {
+    static let maxSearchLimit = 100
+    static let defaultReadChars = 20_000
+    static let maxReadChars = 100_000
 
-    private func tagForType(_ type: String) -> String {
-        switch type {
-        case "text": "string"
-        case "rich": "rich"
-        case "link": "link"
-        case "image": "image"
-        case "file": "file"
-        case "color": "color"
-        default: type
-        }
+    func mcpError(_ message: String) -> [String: Any] {
+        ["content": [["type": "text", "text": message]], "isError": true]
     }
 
-    private func labelForTag(_ tag: String) -> String {
-        switch tag {
-        case "string": "Text"
-        case "rich": "Rich Text"
-        case "link": "Link"
-        case "image": "Image"
-        case "file": "File"
-        case "color": "Color"
-        default: "Text"
-        }
+    /// 结构化结果：文本块放 JSON 以兼容旧客户端，structuredContent 供新客户端直接解析
+    func jsonResult(_ object: [String: Any]) -> [String: Any] {
+        let data = try? JSONSerialization.data(
+            withJSONObject: object, options: [.sortedKeys, .withoutEscapingSlashes])
+        let text = data.flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
+        return ["content": [["type": "text", "text": text]], "structuredContent": object]
     }
 
-    private func extractText(from row: Row, type: String) -> String {
-        guard let data = try? row.get(Col.data) else {
-            return (try? row.get(Col.searchText)) ?? ""
-        }
-
-        switch type {
-        case "public.rtf":
-            return NSAttributedString(rtf: data, documentAttributes: nil)?.string ?? ""
-        case "com.apple.rtfd":
-            return NSAttributedString(rtfd: data, documentAttributes: nil)?.string ?? ""
-        default:
-            return String(data: data, encoding: .utf8) ?? ""
-        }
+    /// 只读打开数据库
+    func openDatabase() -> Connection? {
+        let database = try? Connection(ClipboardPaths.database, readonly: true)
+        database?.busyTimeout = 5.0
+        return database
     }
 
-    private func resolveCategory(name: String) -> Int? {
-        let userDefaults = UserDefaults(suiteName: ClipboardPaths.appBundleId)
-        guard let data = userDefaults?.data(forKey: "userCategoryChip"),
+    /// 用户自定义标签（系统标签 -1 不在其中）
+    ///
+    /// MCP 运行在 App 进程内，直接读标准域；以自身 bundle id 作为 suiteName 不受系统支持，会读不到数据
+    func userTags() -> [MCPCategoryChip] {
+        guard let data = UserDefaults.standard.data(forKey: PrefKey.userCategoryChip.rawValue),
             let chips = try? JSONDecoder().decode([MCPCategoryChip].self, from: data)
-        else { return nil }
-        return chips.first { $0.name.localizedCaseInsensitiveCompare(name) == .orderedSame }?.id
+        else { return [] }
+        return chips
     }
 
     private func tagValue(for text: String) -> String {
@@ -330,15 +245,11 @@ private nonisolated extension MCPTools {
         }
         return "string"
     }
-
-    private func mcpError(_ message: String) -> [String: Any] {
-        ["content": [["type": "text", "text": message]], "isError": true]
-    }
 }
 
 // MARK: - Minimal category chip for reading app UserDefaults
 
-private nonisolated struct MCPCategoryChip: Codable {
+nonisolated struct MCPCategoryChip: Codable {
     let id: Int
     let name: String
 }

@@ -24,6 +24,7 @@ private extension MCPToolDefinition {
     var localizedDescription: LocalizedStringResource {
         switch name {
         case "search_clipboard": .mcpToolSearchClipboard
+        case "read_item": .mcpToolReadItem
         case "write_clipboard": .mcpToolWriteClipboard
         case "list_tags": .mcpToolListCategories
         default: LocalizedStringResource(String.LocalizationValue(description))

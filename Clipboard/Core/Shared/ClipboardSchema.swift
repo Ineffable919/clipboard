@@ -66,19 +66,46 @@ nonisolated enum ClipboardPaths {
 nonisolated struct MCPToolDefinition {
     let name: String
     let description: String
+    /// 只读工具不修改剪贴板或数据库，客户端可据此免确认调用
+    let isReadOnly: Bool
 
     static let all: [MCPToolDefinition] = [
         .init(
             name: "search_clipboard",
-            description: "Search clipboard history by keyword, content type, or user category"
+            description: """
+                Search the user's saved clipboard items (history and tagged items) with optional filters. \
+                With no arguments, returns the most recent items. Filters combine: `query` (keyword matched \
+                against content; punctuation and whitespace are ignored), `type`, `tag` (name from \
+                list_tags), `app` (case-insensitive substring of the source app name), and \
+                `date_from` / `date_to` (ISO-8601, half-open range). Returns `{hasMore, items}` where each \
+                item is a summary (id, type, preview, length, timestamp, app, tag); call read_item with the \
+                id for full content. Ordered newest first.
+                """,
+            isReadOnly: true
+        ),
+        .init(
+            name: "read_item",
+            description: """
+                Read the full content of a clipboard item by id (from search_clipboard). Text comes back \
+                verbatim, cut at `max_chars` (default 20000, max 100000) with `truncated` and `totalLength` \
+                set when longer; links return their URL; colors return their hex value; files return their \
+                paths one per line; images return the image itself as JPEG, downscaled to at most 1024px \
+                on the long edge.
+                """,
+            isReadOnly: true
         ),
         .init(
             name: "write_clipboard",
-            description: "Write plain text to the system clipboard"
+            description: "Write plain text to the system clipboard. Replaces what the user currently has copied.",
+            isReadOnly: false
         ),
         .init(
             name: "list_tags",
-            description: "List available content types and user-defined tags for clipboard search"
+            description: """
+                List the content types and the user's tags with their ids and item counts, \
+                for filtering search_clipboard by `type` or `tag`.
+                """,
+            isReadOnly: true
         )
     ]
 }

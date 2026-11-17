@@ -14,6 +14,16 @@ nonisolated struct MCPHandler {
 
     private let tools = MCPTools()
 
+    private static let appVersion =
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
+
+    /// initialize 时告知客户端服务用途与推荐调用顺序
+    private static let instructions = """
+        Clip is a clipboard manager for macOS. Use these tools to search and read the user's \
+        clipboard history. Call search_clipboard to find items (it returns short summaries with ids), \
+        then read_item with an id for the full content. Use list_tags to discover tag names for filtering.
+        """
+
     /// 处理一次 POST body（单个消息或批量数组）
     /// - Returns: 响应体；仅含通知/响应时返回 nil（对应 HTTP 202）
     func handle(body: Data) -> Data? {
@@ -51,7 +61,8 @@ nonisolated struct MCPHandler {
                 result: [
                     "protocolVersion": version,
                     "capabilities": ["tools": [String: Any]()],
-                    "serverInfo": ["name": "clipboard", "version": "1.0.0"]
+                    "serverInfo": ["name": "clipboard", "version": Self.appVersion],
+                    "instructions": Self.instructions
                 ])
 
         case "ping":

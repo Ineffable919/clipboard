@@ -186,7 +186,8 @@ private struct MCPToolsSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Const.space12) {
             Text(.mcpExposedTools)
-                .font(.subheadline.bold())
+                .font(.headline)
+                .fontWeight(.semibold)
                 .padding(.leading, Const.space10)
 
             VStack(spacing: 0) {
