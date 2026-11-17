@@ -22,7 +22,7 @@ final class HUDManager {
     func show(
         icon: NSImage? = NSImage(systemSymbolName: "hammer.fill", accessibilityDescription: nil),
         text: String = String(localized: "hudCopySucceeded"),
-        textColor: Color = .secondary,
+        textColor: Color = .primary,
         duration: TimeInterval = 1.5
     ) {
         presentHUD(icon: icon, text: text, textColor: textColor, duration: duration)

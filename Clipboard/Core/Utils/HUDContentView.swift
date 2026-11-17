@@ -15,7 +15,7 @@ struct HUDContentView: View {
     let icon: NSImage?
     let text: String
     let size: CGSize
-    var textColor: Color = .secondary
+    var textColor: Color = .primary
 
     var body: some View {
         GlassEffectContainer {
@@ -24,7 +24,7 @@ struct HUDContentView: View {
                     Image(nsImage: icon)
                         .resizable()
                         .scaledToFit()
-                        .foregroundStyle(.primary.opacity(0.6))
+                        .foregroundStyle(.secondary)
                         .frame(width: 100, height: 100)
                         .offset(y: -16)
                         .accessibilityHidden(true)
@@ -35,15 +35,12 @@ struct HUDContentView: View {
                     .foregroundStyle(textColor)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-                    .padding(.horizontal, 16)
                     .padding(.bottom, 26)
             }
             .frame(width: size.width, height: size.height)
             .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 26, style: .continuous))
             .padding(Self.effectPadding)
         }
-        // A nonactivating HUD still needs the active glass appearance
-        .environment(\.appearsActive, true)
     }
 }
 
@@ -59,7 +56,7 @@ struct HUDContentView: View {
         }
     }
 
-    #Preview("macOS 14–25 · HUD Material", traits: .fixedLayout(width: 248, height: 248)) {
+    #Preview("macOS 14–15 · HUD Material", traits: .fixedLayout(width: 248, height: 248)) {
         HUDLegacyPreview(textColor: .primary)
             .frame(width: 200, height: 200)
             .padding(24)
