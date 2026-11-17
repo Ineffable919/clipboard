@@ -16,8 +16,6 @@ struct GeneralSettingView: View {
                 GeneralPreferencesCard()
                 PasteItemsSettingsSection()
                 HistorySettingsSection()
-
-                Spacer(minLength: 20)
             }
             .padding([.horizontal, .bottom], Const.space20)
         }

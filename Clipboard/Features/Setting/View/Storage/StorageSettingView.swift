@@ -82,8 +82,6 @@ struct StorageSettingView: View {
                 }
                 .foregroundStyle(.secondary)
                 .padding(.leading, Const.space10)
-
-                Spacer(minLength: 20)
             }
             .padding([.horizontal, .bottom], Const.space20)
         }
