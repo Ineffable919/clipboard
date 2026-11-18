@@ -28,7 +28,7 @@ struct WelcomePermissionCardView: View {
                     .background(WelcomeStyle.accent, in: .rect(cornerRadius: 10))
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(.privacyAccessPermissionTitle)
+                    Text(DirectPastePermissionText.current.title)
                         .font(.headline)
                         .fontWeight(.semibold)
                         .lineLimit(1)

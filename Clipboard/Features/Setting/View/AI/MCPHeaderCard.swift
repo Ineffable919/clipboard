@@ -9,49 +9,39 @@ import SwiftUI
 
 struct MCPHeaderCard: View {
     @Binding var isEnabled: Bool
-    let enabledToolCount: Int
 
-    @State private var showPortSheet = false
+    @State private var showDetails = false
 
     var server: MCPServer = .shared
-    private var failed: Bool { isEnabled && server.status == .failed }
-
-    private var status: LocalizedStringResource {
-        failed ? .mcpPortUnavailable : .mcpRunning(enabledToolCount)
-    }
 
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: Const.space4) {
             titleRow
-            if isEnabled {
-                Divider()
-                    .padding(.vertical, Const.space12)
-                addressRow
-            }
+
+            Text(.mcpDesc)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(Const.space10)
         .settingsStyle()
-        .sheet(isPresented: $showPortSheet) {
-            MCPPortSheet(server: server)
+        .sheet(isPresented: $showDetails) {
+            MCPConnectionDetails(server: server)
         }
     }
 
     private var titleRow: some View {
-        HStack(spacing: Const.space12) {
-            VStack(alignment: .leading, spacing: Const.space4) {
-                Text(.mcpEnable)
-
-                if isEnabled {
-                    Text(status)
-                        .font(.caption)
-                        .foregroundStyle(failed ? .red : .secondary)
-                        .lineLimit(1)
-                }
-            }
-
+        HStack(spacing: Const.space8) {
+            Text(.mcpEnable)
             Spacer()
 
-            Toggle("", isOn: $isEnabled)
+            if isEnabled {
+                Button(.mcpDetails) { showDetails = true }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+            }
+
+            Toggle(.mcpEnable, isOn: $isEnabled)
                 .toggleStyle(.switch)
                 .controlSize(.mini)
                 .labelsHidden()
@@ -59,34 +49,135 @@ struct MCPHeaderCard: View {
                     MCPEnableFlag.setEnabled(newValue)
                 }
         }
+        .frame(minHeight: Const.space24)
+    }
+}
+
+// MARK: - Connection details
+
+private struct MCPConnectionDetails: View {
+    @Environment(\.dismiss) private var dismiss
+    let server: MCPServer
+
+    @State private var showPortSheet = false
+    @State private var confirmRegenerate = false
+    @State private var showToken = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Const.space16) {
+            Text(.mcpDetailsTitle)
+                .font(.title3.bold())
+
+            Grid(alignment: .leading, horizontalSpacing: Const.space10, verticalSpacing: Const.space6) {
+                addressRow
+                if server.status == .failed {
+                    Text(.mcpPortUnavailable)
+                        .foregroundStyle(.red)
+                        .padding(.leading, Const.space12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .gridCellUnsizedAxes(.horizontal)
+                }
+                Divider()
+                    .gridCellUnsizedAxes(.horizontal)
+                tokenRow
+            }
+            .font(.caption)
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+            .padding(.horizontal, Const.space12)
+            .padding(.vertical, Const.space8)
+            .background(.fill.quaternary, in: .rect(cornerRadius: Const.space10))
+
+            Button(.close) { dismiss() }
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.defaultAction)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+        }
+        .padding(Const.space24)
+        .frame(width: 480)
+        .sheet(isPresented: $showPortSheet) {
+            MCPPortSheet(server: server)
+        }
+        .alert(Text(.mcpRegenerateTitle), isPresented: $confirmRegenerate) {
+            Button(.cancelButton, role: .cancel) {}
+            Button(.mcpRegenerate, role: .destructive) {
+                showToken = false
+                server.regenerateToken()
+            }
+        } message: {
+            Text(.mcpRegenerateMessage)
+        }
     }
 
     private var addressRow: some View {
-        HStack(spacing: Const.space8) {
-            Circle()
-                .fill(statusColor)
-                .frame(width: 8, height: 8)
+        GridRow {
+            HStack(spacing: Const.space6) {
+                Circle()
+                    .fill(statusColor)
+                    .frame(width: Const.space6, height: Const.space6)
 
-            Text(server.endpoint)
-                .textSelection(.enabled)
-                .lineLimit(1)
-
-            Button {
-                NSPasteboard.copy(server.endpoint)
-            } label: {
-                Image(systemName: "doc.on.doc")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(server.endpoint)
+                    .font(.callout)
+                    .textSelection(.enabled)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
             }
-            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity, minHeight: Const.space24, alignment: .leading)
 
-            Spacer()
+            Button(.mcpCopy) {
+                NSPasteboard.copy(server.endpoint)
+            }
 
             Button(.mcpChange) {
                 showPortSheet = true
             }
-            .buttonStyle(.bordered)
-            .controlSize(.regular)
+        }
+    }
+
+    private var maskedToken: String {
+        MCPToken.prefix + String(repeating: "•", count: 8) + server.token.suffix(4)
+    }
+
+    private var tokenRow: some View {
+        GridRow {
+            HStack(spacing: Const.space8) {
+                Text(.mcpToken)
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+                    .fixedSize()
+
+                Text(verbatim: showToken ? server.token : maskedToken)
+                    .font(.callout)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                tokenVisibilityButton
+            }
+
+            Button(.mcpCopy) {
+                NSPasteboard.copy(server.token)
+            }
+
+            Button(.mcpRegenerate) {
+                confirmRegenerate = true
+            }
+        }
+    }
+
+    private var tokenVisibilityButton: some View {
+        Button {
+            showToken.toggle()
+        } label: {
+            Image(systemName: showToken ? "eye.slash" : "eye")
+                .foregroundStyle(.secondary)
+                .frame(width: Const.space20, height: Const.space24)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityRepresentation {
+            Toggle(.mcpToken, isOn: $showToken)
+                .toggleStyle(.switch)
         }
     }
 
@@ -155,7 +246,7 @@ private struct MCPPortSheet: View {
 
 #Preview("Enabled") {
     @Previewable @State var isEnabled = true
-    MCPHeaderCard(isEnabled: $isEnabled, enabledToolCount: 3)
+    MCPHeaderCard(isEnabled: $isEnabled)
         .padding(Const.space24)
         .frame(width: Const.settingWidth - 150)
 }
@@ -164,7 +255,6 @@ private struct MCPPortSheet: View {
     @Previewable @State var isEnabled = true
     MCPHeaderCard(
         isEnabled: $isEnabled,
-        enabledToolCount: 3,
         server: MCPServer(previewStatus: .failed)
     )
     .padding(Const.space24)
@@ -173,7 +263,7 @@ private struct MCPPortSheet: View {
 
 #Preview("Disabled") {
     @Previewable @State var isEnabled = false
-    MCPHeaderCard(isEnabled: $isEnabled, enabledToolCount: 0)
+    MCPHeaderCard(isEnabled: $isEnabled)
         .padding(Const.space24)
         .frame(width: Const.settingWidth - 150)
 }

@@ -54,7 +54,7 @@ nonisolated enum MCPSecretMasker {
     }
 
     private static func isSecret(_ token: String) -> Bool {
-        if token.wholeMatch(of: jwt) != nil {
+        if token.wholeMatch(of: jwt) != nil || MCPToken.matches(token) {
             return true
         }
         if token.count >= 20, knownPrefixes.contains(where: { token.hasPrefix($0) }) {

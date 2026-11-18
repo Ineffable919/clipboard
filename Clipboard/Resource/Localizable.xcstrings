@@ -1048,6 +1048,114 @@
         }
       }
     },
+    "deviceControlAndDataAccessMessage" : {
+      "comment" : "Direct paste permission alert message on macOS 27.0–27.2",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To paste directly into other apps, allow Clipboard under Device Control and Data Access in System Settings."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要直接粘贴到其他应用，请在系统设置的「设备控制和数据访问」中为 Clipboard 授权。"
+          }
+        }
+      }
+    },
+    "deviceControlAndDataAccessRequired" : {
+      "comment" : "Direct paste permission alert title on macOS 27.0–27.2",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Device Control and Data Access Required"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要设备控制和数据访问权限"
+          }
+        }
+      }
+    },
+    "deviceControlAndDataAccessTitle" : {
+      "comment" : "Direct paste permission card title on macOS 27.0–27.2",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Device Control and Data Access"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "设备控制和数据访问"
+          }
+        }
+      }
+    },
+    "directPastePermissionMessage" : {
+      "comment" : "Direct paste permission alert message without naming a specific system settings pane",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To paste directly into other apps, grant Clipboard permission in Privacy & Security in System Settings."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "要直接粘贴到其他应用，请在系统设置的「隐私与安全性」中为 Clipboard 授权。"
+          }
+        }
+      }
+    },
+    "directPastePermissionRequired" : {
+      "comment" : "Direct paste permission alert title without naming a specific system permission",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Direct Paste Permission Required"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "直接粘贴需要授权"
+          }
+        }
+      }
+    },
+    "directPastePermissionTitle" : {
+      "comment" : "Direct paste permission card title without naming a specific system permission",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Direct Paste Permission"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "直接粘贴权限"
+          }
+        }
+      }
+    },
     "dropOverlaySub" : {
       "comment" : "Drop overlay subtitle shown while dragging content into the main list",
       "extractionState" : "manual",
@@ -3354,13 +3462,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Launch Claude Code, type /mcp, then select Clipboard to complete setup."
+            "value" : "Launch Claude Code and type /mcp to check that Clipboard is connected."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "启动 Claude Code，输入 /mcp，然后选择 Clipboard 并完成认证。"
+            "value" : "启动 Claude Code，输入 /mcp 确认 Clipboard 已连接。"
           }
         }
       }
@@ -3456,13 +3564,49 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Allow AI tools like Claude Code and Codex to access your clipboard history."
+            "value" : "Allow AI apps to connect to Clipboard.\nOnly apps with an access token can use clipboard items and tags."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "允许 Claude Code、Codex 等 AI 工具访问剪贴板历史。"
+            "value" : "允许 AI 应用连接到 Clipboard。只有持有访问令牌的应用才能访问你的剪贴板项目和标签。"
+          }
+        }
+      }
+    },
+    "mcpDetails" : {
+      "comment" : "Button to open the MCP connection details sheet",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "详情…"
+          }
+        }
+      }
+    },
+    "mcpDetailsTitle" : {
+      "comment" : "Title of the sheet for the MCP address and access token",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection Details"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接详情"
           }
         }
       }
@@ -3484,19 +3628,36 @@
         }
       }
     },
-    "mcpExposedTools" : {
+    "mcpGoPaste" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Exposed tools"
+            "value" : "Copy & Show in Finder"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "已开放工具"
+            "value" : "去粘贴"
+          }
+        }
+      }
+    },
+    "mcpGoToTerminal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Terminal"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "去终端"
           }
         }
       }
@@ -3621,24 +3782,6 @@
         }
       }
     },
-    "mcpRunning" : {
-      "comment" : "MCP server status while running, with the exposed tool count",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "HTTP Stream · %lld tools exposed"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "HTTP Stream · 已开放 %lld 个工具"
-          }
-        }
-      }
-    },
     "mcpSensitiveData" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3670,210 +3813,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "服务已关闭"
-          }
-        }
-      }
-    },
-    "mcpToolCopyItem" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copy a saved item (including images and files) back to the system clipboard"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "将已保存的条目（含图片和文件）重新复制到系统剪贴板"
-          }
-        }
-      }
-    },
-    "mcpToolCreateTag" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Create a new tag"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "新建标签"
-          }
-        }
-      }
-    },
-    "mcpToolDeleteItems" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Permanently delete items after a preview and confirmation; off by default"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "预览并确认后永久删除条目，默认关闭"
-          }
-        }
-      }
-    },
-    "mcpToolDeleteTag" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete a tag after a preview and confirmation; its items stay in history. Off by default"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "预览并确认后删除标签，其中的条目保留在历史中，默认关闭"
-          }
-        }
-      }
-    },
-    "mcpToolListCategories" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "List content types and user tags with item counts"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "列出内容类型和用户标签及其条目数"
-          }
-        }
-      }
-    },
-    "mcpToolReadItem" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Read the full content of an item by id (text, link, file paths, or downscaled image)"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "按 id 读取条目完整内容（文本、链接、文件路径或缩小后的图片）"
-          }
-        }
-      }
-    },
-    "mcpToolRenameTag" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rename a tag"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "重命名标签"
-          }
-        }
-      }
-    },
-    "mcpToolSaveItem" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Save text to history or a tag without changing the system clipboard"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "将文本保存到历史或标签，不改动系统剪贴板"
-          }
-        }
-      }
-    },
-    "mcpToolSearchClipboard" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search clipboard history by keyword, type, tag, source app, or date, returning item summaries"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "按关键词、类型、标签、来源应用或日期搜索剪贴板历史，返回条目摘要"
-          }
-        }
-      }
-    },
-    "mcpToolSetItemTag" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add items to a tag or remove them from their tag"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "将条目加入标签或移出标签"
-          }
-        }
-      }
-    },
-    "mcpToolUpdateItem" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Replace the content of a text item"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "替换文本条目的内容"
-          }
-        }
-      }
-    },
-    "mcpToolWriteClipboard" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Put plain text on the system clipboard; it is recorded in history like a normal copy"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "将纯文本写入系统剪贴板，并像普通复制一样记入历史"
           }
         }
       }
@@ -6519,6 +6458,74 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "昨天"
+          }
+        }
+      }
+    },
+    "mcpToken" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Token"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "令牌"
+          }
+        }
+      }
+    },
+    "mcpRegenerate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regenerate"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新生成"
+          }
+        }
+      }
+    },
+    "mcpRegenerateTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regenerate access token?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新生成访问令牌？"
+          }
+        }
+      }
+    },
+    "mcpRegenerateMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected AI tools will stop working. Copy the config again from Connect AI Tools… and update each tool."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已连接的 AI 工具会断开。需要在「连接 AI 工具…」中重新复制配置，并更新到每个工具里。"
           }
         }
       }

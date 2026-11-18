@@ -14,10 +14,9 @@ nonisolated struct MCPTools {
 
     static var definitions: [[String: Any]] {
         guard FileManager.default.fileExists(atPath: ClipboardPaths.mcpEnableFlag) else { return [] }
-        let enabled = MCPToolSettings.enabledNames()
         let schemas = MCPToolSchemas.all
         return MCPToolDefinition.all.compactMap { def in
-            guard enabled.contains(def.name), let schema = schemas[def.name] else { return nil }
+            guard let schema = schemas[def.name] else { return nil }
             return [
                 "name": def.name,
                 "description": def.description,
@@ -38,11 +37,6 @@ nonisolated struct MCPTools {
         }
         // 无参数工具的客户端可能省略 arguments
         let arguments = params["arguments"] as? [String: Any] ?? [:]
-
-        guard MCPToolSettings.isEnabled(name) else {
-            let known = MCPToolDefinition.all.contains { $0.name == name }
-            return mcpError(known ? "Tool \(name) is disabled in Clip → Settings → AI." : "Unknown tool: \(name)")
-        }
 
         if let result = callReadTool(name, arguments) {
             return result

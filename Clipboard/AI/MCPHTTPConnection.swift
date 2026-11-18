@@ -53,6 +53,8 @@ nonisolated struct MCPHTTPConnection {
 
         guard request.path == "/mcp" else { return .status(404) }
 
+        guard MCPToken.isAuthorized(request.headers["authorization"]) else { return .unauthorized }
+
         // 无状态、不主动推送：不提供 GET 的 SSE 流，也没有 session 可 DELETE
         guard request.method == "POST" else { return .status(405, allow: "POST") }
 

@@ -56,6 +56,7 @@ class SettingWindowController: NSWindowController {
         sidebarItem.canCollapse = false
 
         let detail = NSHostingController(rootView: SettingDetailView().environment(viewModel))
+        detail.sizingOptions = .minSize
         detail.safeAreaRegions = []
 
         let controller = NSSplitViewController()

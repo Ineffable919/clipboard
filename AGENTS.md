@@ -42,7 +42,8 @@ You are a **Senior macOS Engineer**, specializing in AppKit, SwiftData, Swift co
 - Use a consistent project structure, with folder layout determined by app features.
 - Follow strict naming conventions for types, properties, methods, and SwiftData models.
 - Generally place new independent types in separate Swift files. Do not split existing types that the current task does not otherwise need to change solely to satisfy this rule.
-- Add code comments and documentation comments as needed.
+- Keep comments concise. Explain intent or constraints instead of repeating the code.
+- Add a file header comment to new source files. For Swift files, follow the existing filename, project name, author, and creation date format.
 - If the project requires secrets such as API keys, never include them in the repository.
 
 

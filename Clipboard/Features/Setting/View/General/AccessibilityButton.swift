@@ -10,12 +10,8 @@ import SwiftUI
 struct AccessibilityButton: View {
     let action: () -> Void
 
-    private var title: LocalizedStringResource {
-        if #available(macOS 27.0, *) {
-            .generalAllowDeviceControlAndDataAccess
-        } else {
-            .generalEnableAccess
-        }
+    private var permissionTitle: LocalizedStringResource {
+        DirectPastePermissionText.current.button
     }
 
     var body: some View {
@@ -24,10 +20,11 @@ struct AccessibilityButton: View {
                 AccessibilityWarningBadge(diameter: Const.iconSize16)
                     .accessibilityHidden(true)
 
-                Text(title)
+                Text(permissionTitle)
                     .font(.callout)
                     .foregroundStyle(.primary)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
                     .layoutPriority(1)
 
                 Image(systemName: "chevron.right")
@@ -43,5 +40,6 @@ struct AccessibilityButton: View {
             )
         }
         .buttonStyle(.plain)
+        .help(Text(permissionTitle))
     }
 }

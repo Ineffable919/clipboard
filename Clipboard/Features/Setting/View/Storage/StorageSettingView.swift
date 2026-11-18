@@ -25,7 +25,7 @@ struct StorageSettingView: View {
 
     var body: some View {
         ScrollView(.vertical) {
-            VStack(alignment: .leading, spacing: Const.space16) {
+            VStack(alignment: .leading, spacing: Const.space20) {
                 VStack(alignment: .leading, spacing: 0) {
                     DataStatRow(
                         title: String(localized: .storageItemCount),
@@ -40,48 +40,50 @@ struct StorageSettingView: View {
                 .padding(.horizontal, Const.space10)
                 .settingsStyle()
 
-                Text(.storageBackupTitle)
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                    .padding(.leading, Const.space10)
+                VStack(alignment: .leading, spacing: Const.space12) {
+                    Text(.storageBackupTitle)
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .padding(.leading, Const.space10)
 
-                VStack(alignment: .leading, spacing: 0) {
-                    DataActionRow(
-                        title: String(localized: .storageExportTitle),
-                        subtitle: String(localized: .storageExportDesc),
-                        buttonTitle: String(localized: .storageExportButton),
-                        isLoading: isExporting
-                    ) {
-                        exportDatabase()
+                    VStack(alignment: .leading, spacing: 0) {
+                        DataActionRow(
+                            title: String(localized: .storageExportTitle),
+                            subtitle: String(localized: .storageExportDesc),
+                            buttonTitle: String(localized: .storageExportButton),
+                            isLoading: isExporting
+                        ) {
+                            exportDatabase()
+                        }
+
+                        Divider()
+
+                        DataActionRow(
+                            title: String(localized: .storageImportTitle),
+                            subtitle: String(localized: .storageImportDesc),
+                            buttonTitle: String(localized: .storageImportButton),
+                            isLoading: isImporting
+                        ) {
+                            importDatabase()
+                        }
                     }
-
-                    Divider()
-
-                    DataActionRow(
-                        title: String(localized: .storageImportTitle),
-                        subtitle: String(localized: .storageImportDesc),
-                        buttonTitle: String(localized: .storageImportButton),
-                        isLoading: isImporting
-                    ) {
-                        importDatabase()
-                    }
-                }
-                .padding(.horizontal, Const.space10)
-                .settingsStyle()
-
-                VStack(alignment: .leading, spacing: Const.space4) {
-                    Text(.storageNotesTitle)
-                        .font(.caption)
+                    .padding(.horizontal, Const.space10)
+                    .settingsStyle()
 
                     VStack(alignment: .leading, spacing: Const.space4) {
-                        Text(.storageNoteDeduplicate)
-                        Text(.storageNotePreserveExistingData)
-                        Text(.storageNoteBackupRegularly)
+                        Text(.storageNotesTitle)
+                            .font(.caption)
+
+                        VStack(alignment: .leading, spacing: Const.space4) {
+                            Text(.storageNoteDeduplicate)
+                            Text(.storageNotePreserveExistingData)
+                            Text(.storageNoteBackupRegularly)
+                        }
+                        .font(.caption2)
                     }
-                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .padding(.leading, Const.space10)
                 }
-                .foregroundStyle(.secondary)
-                .padding(.leading, Const.space10)
             }
             .padding([.horizontal, .bottom], Const.space20)
         }

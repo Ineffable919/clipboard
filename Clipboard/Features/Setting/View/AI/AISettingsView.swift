@@ -7,26 +7,10 @@
 
 import SwiftUI
 
-// MARK: - MCPClientInfo
-
-struct MCPClientInfo: Identifiable {
-    var id: String {
-        name
-    }
-
-    let name: String
-    let icon: String
-    let subtitle: LocalizedStringResource
-    let command: String
-    let footer: LocalizedStringResource?
-    let configNote: String?
-}
-
 // MARK: - AISettingsView
 
 struct AISettingsView: View {
     @State private var isEnabled: Bool
-    @State private var enabledTools: Set<String>
     @State private var selectedClient: MCPClientInfo?
     private let server: MCPServer
 
@@ -36,98 +20,20 @@ struct AISettingsView: View {
     ) {
         self.server = server
         _isEnabled = State(initialValue: initialEnabled)
-        _enabledTools = State(initialValue: MCPToolSettings.enabledNames())
     }
 
     private var clients: [MCPClientInfo] {
-        let url = server.endpoint
-        let cliSubtitle = LocalizedStringResource.mcpCliSub
-        let configSubtitle = LocalizedStringResource.mcpConfigSub
-        let bridgeCommand = """
-            {
-              "mcpServers": {
-                "clipboard": {
-                  "command": "npx",
-                  "args": ["-y", "mcp-remote", "\(url)"]
-                }
-              }
-            }
-            """
-        let urlCommand = """
-            {
-              "mcpServers": {
-                "clipboard": {
-                  "url": "\(url)"
-                }
-              }
-            }
-            """
-        let vsCodeCommand = """
-            {
-              "servers": {
-                "clipboard": {
-                  "type": "http",
-                  "url": "\(url)"
-                }
-              }
-            }
-            """
-        return [
-            MCPClientInfo(
-                name: "Claude Desktop",
-                icon: "MCPClaudeIcon",
-                subtitle: configSubtitle,
-                command: bridgeCommand,
-                footer: .mcpNodeNote,
-                configNote:
-                    "~/Library/Application Support/Claude/claude_desktop_config.json"
-            ),
-            MCPClientInfo(
-                name: "Claude Code",
-                icon: "MCPClaudeIcon",
-                subtitle: cliSubtitle,
-                command:
-                    "claude mcp add --transport http clipboard \(url)",
-                footer: .mcpClaudeFooter,
-                configNote: nil
-            ),
-            MCPClientInfo(
-                name: "Codex",
-                icon: "MCPCodexIcon",
-                subtitle: cliSubtitle,
-                command: "codex mcp add clipboard \\\n  --url \(url)",
-                footer: nil,
-                configNote: nil
-            ),
-            MCPClientInfo(
-                name: "Cursor",
-                icon: "MCPCursorIcon",
-                subtitle: configSubtitle,
-                command: urlCommand,
-                footer: nil,
-                configNote: "~/.cursor/mcp.json"
-            ),
-            MCPClientInfo(
-                name: "VS Code",
-                icon: "MCPVSCodeIcon",
-                subtitle: configSubtitle,
-                command: vsCodeCommand,
-                footer: nil,
-                configNote: "~/.vscode/mcp.json"
-            )
-        ]
+        MCPClientInfo.all(endpoint: server.endpoint, token: server.token)
     }
 
     var body: some View {
         ScrollView(.vertical) {
-            VStack(alignment: .leading, spacing: Const.space12) {
+            VStack(alignment: .leading, spacing: Const.space20) {
                 MCPHeaderCard(
                     isEnabled: $isEnabled,
-                    enabledToolCount: enabledTools.count,
                     server: server
                 )
                 if isEnabled {
-                    MCPToolsSection(enabledTools: $enabledTools)
                     MCPSensitiveDataSection()
 
                     HStack {
@@ -154,62 +60,11 @@ struct AISettingsView: View {
     }
 }
 
-// MARK: - Tools Section
-
-extension Binding where Value == Set<String> {
-    fileprivate subscript(contains element: String) -> Binding<Bool> {
-        Binding<Bool>(
-            get: { wrappedValue.contains(element) },
-            set: { newValue in
-                var updated = wrappedValue
-                if newValue {
-                    updated.insert(element)
-                } else {
-                    updated.remove(element)
-                }
-                wrappedValue = updated
-            }
-        )
-    }
-}
-
-private struct MCPToolsSection: View {
-    @Binding var enabledTools: Set<String>
-
-    private func isEnabledBinding(for name: String) -> Binding<Bool> {
-        $enabledTools[contains: name]
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Const.space12) {
-            Text(.mcpExposedTools)
-                .font(.headline)
-                .fontWeight(.semibold)
-                .padding(.leading, Const.space10)
-
-            VStack(spacing: 0) {
-                ForEach(Array(MCPToolInfo.all.enumerated()), id: \.element.id) { index, tool in
-                    if index > 0 {
-                        Divider()
-                            .padding(.horizontal, Const.space10)
-                    }
-                    MCPToolRow(
-                        tool: tool,
-                        isEnabled: isEnabledBinding(for: tool.name)
-                    )
-                }
-            }
-            .settingsStyle()
-            .onChange(of: enabledTools) { _, newValue in
-                MCPToolSettings.save(enabled: newValue)
-            }
-        }
-    }
-}
-
 // MARK: - MCPClientDetailSheet
 
 private struct MCPClientDetailSheet: View {
+    static let width: CGFloat = 440
+
     let client: MCPClientInfo
     @Environment(\.dismiss) private var dismiss
     @FocusState private var cancelFocused: Bool
@@ -225,7 +80,7 @@ private struct MCPClientDetailSheet: View {
             Text(client.subtitle)
                 .padding(.bottom, Const.space16)
 
-            MCPCommandBlock(command: client.command)
+            MCPCommandBlock(client: client)
                 .padding(
                     .bottom,
                     client.configNote != nil ? Const.space8 : Const.space16
@@ -260,10 +115,16 @@ private struct MCPClientDetailSheet: View {
                 }
                 .buttonStyle(.bordered)
                 .focused($cancelFocused)
+
+                Button(client.configNote == nil ? .mcpGoToTerminal : .mcpGoPaste) {
+                    Task { await openDestination() }
+                }
+                .buttonStyle(.borderedProminent)
             }
+            .focusEffectDisabled()
         }
         .padding(Const.space24)
-        .frame(width: 440)
+        .frame(width: Self.width)
         .defaultFocus($cancelFocused, true)
     }
 
@@ -275,19 +136,35 @@ private struct MCPClientDetailSheet: View {
             .clipShape(.rect(cornerRadius: 8))
             .padding(.bottom, Const.space16)
     }
+
+    private func openDestination() async {
+        let workspace = NSWorkspace.shared
+        if let path = client.configNote {
+            let url = URL(filePath: (path as NSString).expandingTildeInPath)
+            var isDirectory: ObjCBool = false
+            guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory),
+                  !isDirectory.boolValue else { return }
+
+            NSPasteboard.copy(client.commandForCopy)
+            workspace.activateFileViewerSelecting([url])
+        } else {
+            NSPasteboard.copy(client.commandForCopy)
+            guard let url = workspace.urlForApplication(withBundleIdentifier: "com.apple.Terminal") else { return }
+            _ = try? await workspace.openApplication(at: url, configuration: .init())
+        }
+    }
 }
 
 // MARK: - MCPCommandBlock
 
-/// 可选中、可一键复制的等宽命令/配置块
+/// 可一键复制的等宽命令/配置块
 private struct MCPCommandBlock: View {
-    let command: String
+    let client: MCPClientInfo
 
     var body: some View {
-        Text(command)
+        Text(client.displayCommand)
             .font(.callout.monospaced())
             .lineSpacing(3)
-            .textSelection(.enabled)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.vertical, Const.space12)
@@ -308,7 +185,7 @@ private struct MCPCommandBlock: View {
 
     private var copyButton: some View {
         Button {
-            NSPasteboard.copy(command)
+            NSPasteboard.copy(client.commandForCopy)
         } label: {
             Image(systemName: "doc.on.doc")
                 .font(.callout)
@@ -320,39 +197,6 @@ private struct MCPCommandBlock: View {
         .focusable(false)
         .help(Text(.mcpCopy))
         .accessibilityLabel(Text(.mcpCopy))
-    }
-}
-
-// MARK: - MCPToolRow
-
-private struct MCPToolRow: View {
-    let tool: MCPToolInfo
-    @Binding var isEnabled: Bool
-
-    var body: some View {
-        HStack(alignment: .center, spacing: Const.space12) {
-            Circle()
-                .fill(isEnabled ? Color.green : Color.secondary)
-                .frame(width: 8, height: 8)
-                .animation(.easeInOut(duration: 0.2), value: isEnabled)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(tool.name)
-                Text(tool.description)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            Spacer(minLength: Const.space12)
-
-            Toggle("", isOn: $isEnabled)
-                .toggleStyle(.switch)
-                .labelsHidden()
-                .controlSize(.mini)
-        }
-        .padding(.horizontal, Const.space10)
-        .padding(.vertical, Const.space10)
     }
 }
 
@@ -375,21 +219,15 @@ private struct MCPToolRow: View {
 }
 
 #Preview("Command block") {
+    let clients = MCPClientInfo.all(
+        endpoint: "http://127.0.0.1:38417/mcp",
+        token: "clip0123456789abcdefghijklmn"
+    )
     VStack(spacing: Const.space16) {
-        MCPCommandBlock(
-            command: "claude mcp add --transport http clipboard http://127.0.0.1:38417/mcp"
-        )
-        MCPCommandBlock(
-            command: """
-                {
-                  "mcpServers": {
-                    "clipboard": {
-                      "url": "http://127.0.0.1:38417/mcp"
-                    }
-                  }
-                }
-                """)
+        ForEach(clients.filter { $0.name == "Claude Code" || $0.name == "Cursor" }) { client in
+            MCPCommandBlock(client: client)
+        }
     }
     .padding(Const.space24)
-    .frame(width: 440)
+    .frame(width: MCPClientDetailSheet.width)
 }

@@ -55,21 +55,16 @@ nonisolated enum ClipboardPaths {
         appSupportDir.appending(path: "mcp_enabled").path
     }
 
-    /// JSON array of disabled tool names (tools enabled by default)
-    static var mcpDisabledTools: String {
-        appSupportDir.appending(path: "mcp_disabled_tools").path
-    }
-
-    /// JSON array of enabled tool names (tools disabled by default, e.g. destructive ones)
-    static var mcpEnabledTools: String {
-        appSupportDir.appending(path: "mcp_enabled_tools").path
+    /// MCP access token (Bearer), readable by the owner only
+    static var mcpToken: String {
+        appSupportDir.appending(path: "mcp_token").path
     }
 }
 
 // MARK: - MCP tool registry
 
 nonisolated struct MCPToolDefinition {
-    /// 工具对数据的影响程度，决定 annotations 与默认开关
+    /// 工具对数据的影响，用于生成 annotations
     enum Effect {
         /// 不修改任何数据
         case readOnly
@@ -77,17 +72,13 @@ nonisolated struct MCPToolDefinition {
         case idempotent
         /// 修改数据，重复调用会产生新的结果
         case additive
-        /// 不可恢复地删除数据，默认关闭
+        /// 不可恢复地删除数据
         case destructive
     }
 
     let name: String
     let description: String
     let effect: Effect
-
-    var isDefaultEnabled: Bool {
-        effect != .destructive
-    }
 
     var annotations: [String: Bool] {
         [
@@ -99,44 +90,4 @@ nonisolated struct MCPToolDefinition {
     }
 
     static let all: [MCPToolDefinition] = MCPToolDefinition.readTools + MCPToolDefinition.writeTools
-}
-
-// MARK: - Per-tool enable state
-
-/// 默认开启的工具记录在「已关闭」列表，默认关闭的工具记录在「已开启」列表，
-/// 这样新增工具时按各自默认值生效，无需迁移已有配置
-nonisolated enum MCPToolSettings {
-    static func enabledNames() -> Set<String> {
-        let disabled = load(ClipboardPaths.mcpDisabledTools)
-        let optedIn = load(ClipboardPaths.mcpEnabledTools)
-        return Set(
-            MCPToolDefinition.all
-                .filter { $0.isDefaultEnabled ? !disabled.contains($0.name) : optedIn.contains($0.name) }
-                .map(\.name)
-        )
-    }
-
-    static func isEnabled(_ name: String) -> Bool {
-        enabledNames().contains(name)
-    }
-
-    static func save(enabled: Set<String>) {
-        let all = MCPToolDefinition.all
-        let disabled = all.filter { $0.isDefaultEnabled && !enabled.contains($0.name) }.map(\.name)
-        let optedIn = all.filter { !$0.isDefaultEnabled && enabled.contains($0.name) }.map(\.name)
-        write(disabled, to: ClipboardPaths.mcpDisabledTools)
-        write(optedIn, to: ClipboardPaths.mcpEnabledTools)
-    }
-
-    private static func load(_ path: String) -> Set<String> {
-        guard let data = FileManager.default.contents(atPath: path),
-            let names = try? JSONDecoder().decode([String].self, from: data)
-        else { return [] }
-        return Set(names)
-    }
-
-    private static func write(_ names: [String], to path: String) {
-        guard let data = try? JSONEncoder().encode(names.sorted()) else { return }
-        FileManager.default.createFile(atPath: path, contents: data)
-    }
 }

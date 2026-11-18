@@ -65,12 +65,6 @@ struct SettingSidebarView: View {
 
                         Spacer(minLength: Const.space8)
 
-                        if page == .mcp {
-                            Text(verbatim: "Beta")
-                                .font(.caption2.weight(.medium))
-                                .foregroundStyle(.secondary)
-                        }
-
                         if page == .general,
                             pasteDirect,
                             !viewModel.hasAccessibilityPermission

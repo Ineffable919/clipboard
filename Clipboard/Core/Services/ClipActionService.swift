@@ -134,9 +134,10 @@ final class ClipActionService {
         isAttribute: Bool = true,
         showTip: Bool = false
     ) {
+        let permissionText = DirectPastePermissionText.current
         let alert = NSAlert.appAlert()
-        alert.messageText = String(localized: .accessTitle)
-        alert.informativeText = String(localized: .accessMessage)
+        alert.messageText = String(localized: permissionText.alertTitle)
+        alert.informativeText = String(localized: permissionText.alertMessage)
         alert.alertStyle = .informational
         alert.addButton(withTitle: String(localized: .openSettings))
         alert.addButton(withTitle: String(localized: .copyLater))

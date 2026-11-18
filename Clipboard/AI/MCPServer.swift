@@ -28,6 +28,8 @@ final class MCPServer {
 
     private(set) var status: Status = .stopped
     private(set) var port: Int
+    /// 客户端访问令牌，修改端口不会改变它
+    private(set) var token: String
 
     var endpoint: String {
         "http://127.0.0.1:\(port)/mcp"
@@ -40,12 +42,14 @@ final class MCPServer {
     private init() {
         let saved = PasteUserDefaults.mcpPort
         port = Self.portRange.contains(saved) ? saved : Self.defaultPort
+        token = MCPToken.current()
         isPreview = false
     }
 
     init(previewStatus: Status, port: Int = MCPServer.defaultPort) {
         status = previewStatus
         self.port = port
+        token = MCPToken.prefix + "preview"
         isPreview = true
     }
 
@@ -69,6 +73,12 @@ final class MCPServer {
         stop()
         sync()
         return true
+    }
+
+    /// 换新令牌，已连接的客户端需要重新配置
+    func regenerateToken() {
+        guard !isPreview else { return }
+        token = MCPToken.regenerate()
     }
 
     func start() {
