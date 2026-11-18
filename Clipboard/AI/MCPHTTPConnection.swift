@@ -33,7 +33,7 @@ nonisolated struct MCPHTTPConnection {
 
         let response: MCPHTTPResponse
         switch await readRequest() {
-        case .success(let request): response = route(request)
+        case .success(let request): response = await route(request)
         case .failure(let status): response = .status(status)
         case .none: return
         }
@@ -42,7 +42,7 @@ nonisolated struct MCPHTTPConnection {
 
     // MARK: - Routing
 
-    private func route(_ request: MCPHTTPRequest) -> MCPHTTPResponse {
+    private func route(_ request: MCPHTTPRequest) async -> MCPHTTPResponse {
         // 防 DNS rebinding / 浏览器跨站调用：Host 与 Origin 都必须是回环地址
         guard Self.isLoopback(host: request.headers["host"]) else { return .status(403) }
         if let origin = request.headers["origin"],
@@ -62,7 +62,7 @@ nonisolated struct MCPHTTPConnection {
             return .status(400)
         }
 
-        guard let body = handler.handle(body: request.body) else { return .status(202) }
+        guard let body = await handler.handle(body: request.body) else { return .status(202) }
         return .json(body)
     }
 

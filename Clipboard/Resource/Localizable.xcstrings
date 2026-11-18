@@ -3501,6 +3501,40 @@
         }
       }
     },
+    "mcpMaskSecrets" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide keys from AI"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "对 AI 隐藏密钥"
+          }
+        }
+      }
+    },
+    "mcpMaskSecretsDesc" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When AI tools browse your clipboard history, anything that looks like an API key or access token is shown partly hidden. AI tools see it in full only when they open that one item."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AI 浏览剪贴板历史时，看起来像 API Key、访问令牌的内容只显示开头几位。只有 AI 打开这一条时，才能看到完整内容。"
+          }
+        }
+      }
+    },
     "mcpNodeNote" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3605,6 +3639,23 @@
         }
       }
     },
+    "mcpSensitiveData" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sensitive Data"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "敏感信息"
+          }
+        }
+      }
+    },
     "mcpStopped" : {
       "comment" : "MCP server status while stopped",
       "extractionState" : "manual",
@@ -3619,6 +3670,74 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "服务已关闭"
+          }
+        }
+      }
+    },
+    "mcpToolCopyItem" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy a saved item (including images and files) back to the system clipboard"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将已保存的条目（含图片和文件）重新复制到系统剪贴板"
+          }
+        }
+      }
+    },
+    "mcpToolCreateTag" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Create a new tag"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "新建标签"
+          }
+        }
+      }
+    },
+    "mcpToolDeleteItems" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permanently delete items after a preview and confirmation; off by default"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "预览并确认后永久删除条目，默认关闭"
+          }
+        }
+      }
+    },
+    "mcpToolDeleteTag" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete a tag after a preview and confirmation; its items stay in history. Off by default"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "预览并确认后删除标签，其中的条目保留在历史中，默认关闭"
           }
         }
       }
@@ -3657,6 +3776,40 @@
         }
       }
     },
+    "mcpToolRenameTag" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rename a tag"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重命名标签"
+          }
+        }
+      }
+    },
+    "mcpToolSaveItem" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save text to history or a tag without changing the system clipboard"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将文本保存到历史或标签，不改动系统剪贴板"
+          }
+        }
+      }
+    },
     "mcpToolSearchClipboard" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3674,19 +3827,53 @@
         }
       }
     },
+    "mcpToolSetItemTag" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add items to a tag or remove them from their tag"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "将条目加入标签或移出标签"
+          }
+        }
+      }
+    },
+    "mcpToolUpdateItem" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Replace the content of a text item"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "替换文本条目的内容"
+          }
+        }
+      }
+    },
     "mcpToolWriteClipboard" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Write plain text to the system clipboard"
+            "value" : "Put plain text on the system clipboard; it is recorded in history like a normal copy"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "将纯文本写入系统剪贴板"
+            "value" : "将纯文本写入系统剪贴板，并像普通复制一样记入历史"
           }
         }
       }

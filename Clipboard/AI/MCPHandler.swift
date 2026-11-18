@@ -7,7 +7,7 @@
 
 import Foundation
 
-/// MCP JSON-RPC 请求分发；无状态，可在任意线程调用
+/// MCP JSON-RPC 请求分发；无状态，可在任意线程调用，写操作工具内部切到主线程
 nonisolated struct MCPHandler {
     /// 按优先级从新到旧
     static let supportedVersions = ["2025-06-18", "2025-03-26", "2024-11-05"]
@@ -26,13 +26,16 @@ nonisolated struct MCPHandler {
 
     /// 处理一次 POST body（单个消息或批量数组）
     /// - Returns: 响应体；仅含通知/响应时返回 nil（对应 HTTP 202）
-    func handle(body: Data) -> Data? {
+    func handle(body: Data) async -> Data? {
         guard let object = try? JSONSerialization.jsonObject(with: body) else {
             return JSONRPC.parseError()
         }
 
         if let batch = object as? [[String: Any]] {
-            let responses = batch.compactMap(handle(message:))
+            var responses: [[String: Any]] = []
+            for message in batch {
+                if let response = await handle(message: message) { responses.append(response) }
+            }
             guard !responses.isEmpty else { return nil }
             return try? JSONSerialization.data(withJSONObject: responses)
         }
@@ -40,11 +43,11 @@ nonisolated struct MCPHandler {
         guard let message = object as? [String: Any] else {
             return JSONRPC.parseError()
         }
-        guard let response = handle(message: message) else { return nil }
+        guard let response = await handle(message: message) else { return nil }
         return try? JSONSerialization.data(withJSONObject: response)
     }
 
-    private func handle(message: [String: Any]) -> [String: Any]? {
+    private func handle(message: [String: Any]) async -> [String: Any]? {
         guard let request = JSONRPCRequest(json: message) else { return nil }
 
         // 通知不带 id，无需响应
@@ -72,7 +75,7 @@ nonisolated struct MCPHandler {
             return JSONRPC.success(id: id, result: ["tools": MCPTools.definitions])
 
         case "tools/call":
-            return JSONRPC.success(id: id, result: tools.call(params: request.params))
+            return JSONRPC.success(id: id, result: await tools.call(params: request.params))
 
         default:
             return JSONRPC.error(id: id, code: -32601, message: "Method not found: \(request.method)")

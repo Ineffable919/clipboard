@@ -158,6 +158,9 @@ enum PasteUserDefaults {
     /// MCP 本地服务端口
     @UserDefaultsWrapper(.mcpPort, defaultValue: MCPServer.defaultPort)
     static var mcpPort
+    /// MCP 搜索结果中隐藏疑似密钥（MCP 线程通过 `MCPSecretMasker.isEnabled` 读取同一个键）
+    @UserDefaultsWrapper(.mcpMaskSecrets, defaultValue: true)
+    static var mcpMaskSecrets
 }
 
 @propertyWrapper

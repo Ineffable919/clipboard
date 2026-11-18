@@ -47,13 +47,16 @@ nonisolated struct MCPSearchFilter {
         bindings += tags.map { $0 as Binding? }
     }
 
-    mutating func addTag(_ name: String?, in tags: [MCPCategoryChip]) throws(MCPArgumentError) {
-        guard let name, !name.isEmpty else { return }
-        guard let tag = tags.first(where: { $0.name.localizedCaseInsensitiveCompare(name) == .orderedSame }) else {
-            throw MCPArgumentError(message: "Tag \"\(name)\" not found. Use list_tags to see available tags.")
-        }
+    mutating func addTag(_ tag: MCPCategoryChip?) {
+        guard let tag else { return }
         clauses.append(#"c."group" = ?"#)
         bindings.append(Int64(tag.id))
+    }
+
+    mutating func addIds(_ ids: [Int64]) {
+        guard !ids.isEmpty else { return }
+        clauses.append("c.id IN (\(ids.map { _ in "?" }.joined(separator: ", ")))")
+        bindings += ids.map { $0 as Binding? }
     }
 
     mutating func addApp(_ app: String?) {

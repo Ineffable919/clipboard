@@ -55,73 +55,88 @@ nonisolated enum ClipboardPaths {
         appSupportDir.appending(path: "mcp_enabled").path
     }
 
-    /// JSON array of disabled tool names
+    /// JSON array of disabled tool names (tools enabled by default)
     static var mcpDisabledTools: String {
         appSupportDir.appending(path: "mcp_disabled_tools").path
+    }
+
+    /// JSON array of enabled tool names (tools disabled by default, e.g. destructive ones)
+    static var mcpEnabledTools: String {
+        appSupportDir.appending(path: "mcp_enabled_tools").path
     }
 }
 
 // MARK: - MCP tool registry
 
 nonisolated struct MCPToolDefinition {
+    /// 工具对数据的影响程度，决定 annotations 与默认开关
+    enum Effect {
+        /// 不修改任何数据
+        case readOnly
+        /// 修改数据，重复调用结果相同
+        case idempotent
+        /// 修改数据，重复调用会产生新的结果
+        case additive
+        /// 不可恢复地删除数据，默认关闭
+        case destructive
+    }
+
     let name: String
     let description: String
-    /// 只读工具不修改剪贴板或数据库，客户端可据此免确认调用
-    let isReadOnly: Bool
+    let effect: Effect
 
-    static let all: [MCPToolDefinition] = [
-        .init(
-            name: "search_clipboard",
-            description: """
-                Search the user's saved clipboard items (history and tagged items) with optional filters. \
-                With no arguments, returns the most recent items. Filters combine: `query` (keyword matched \
-                against content; punctuation and whitespace are ignored), `type`, `tag` (name from \
-                list_tags), `app` (case-insensitive substring of the source app name), and \
-                `date_from` / `date_to` (ISO-8601, half-open range). Returns `{hasMore, items}` where each \
-                item is a summary (id, type, preview, length, timestamp, app, tag); call read_item with the \
-                id for full content. Ordered newest first.
-                """,
-            isReadOnly: true
-        ),
-        .init(
-            name: "read_item",
-            description: """
-                Read the full content of a clipboard item by id (from search_clipboard). Text comes back \
-                verbatim, cut at `max_chars` (default 20000, max 100000) with `truncated` and `totalLength` \
-                set when longer; links return their URL; colors return their hex value; files return their \
-                paths one per line; images return the image itself as JPEG, downscaled to at most 1024px \
-                on the long edge.
-                """,
-            isReadOnly: true
-        ),
-        .init(
-            name: "write_clipboard",
-            description: "Write plain text to the system clipboard. Replaces what the user currently has copied.",
-            isReadOnly: false
-        ),
-        .init(
-            name: "list_tags",
-            description: """
-                List the content types and the user's tags with their ids and item counts, \
-                for filtering search_clipboard by `type` or `tag`.
-                """,
-            isReadOnly: true
-        )
-    ]
+    var isDefaultEnabled: Bool {
+        effect != .destructive
+    }
+
+    var annotations: [String: Bool] {
+        [
+            "readOnlyHint": effect == .readOnly,
+            "destructiveHint": effect == .destructive,
+            "idempotentHint": effect == .readOnly || effect == .idempotent,
+            "openWorldHint": false
+        ]
+    }
+
+    static let all: [MCPToolDefinition] = MCPToolDefinition.readTools + MCPToolDefinition.writeTools
 }
 
-// MARK: - Per-tool enable flag
+// MARK: - Per-tool enable state
 
-nonisolated enum MCPDisabledTools {
-    static func load() -> Set<String> {
-        guard let data = FileManager.default.contents(atPath: ClipboardPaths.mcpDisabledTools),
+/// 默认开启的工具记录在「已关闭」列表，默认关闭的工具记录在「已开启」列表，
+/// 这样新增工具时按各自默认值生效，无需迁移已有配置
+nonisolated enum MCPToolSettings {
+    static func enabledNames() -> Set<String> {
+        let disabled = load(ClipboardPaths.mcpDisabledTools)
+        let optedIn = load(ClipboardPaths.mcpEnabledTools)
+        return Set(
+            MCPToolDefinition.all
+                .filter { $0.isDefaultEnabled ? !disabled.contains($0.name) : optedIn.contains($0.name) }
+                .map(\.name)
+        )
+    }
+
+    static func isEnabled(_ name: String) -> Bool {
+        enabledNames().contains(name)
+    }
+
+    static func save(enabled: Set<String>) {
+        let all = MCPToolDefinition.all
+        let disabled = all.filter { $0.isDefaultEnabled && !enabled.contains($0.name) }.map(\.name)
+        let optedIn = all.filter { !$0.isDefaultEnabled && enabled.contains($0.name) }.map(\.name)
+        write(disabled, to: ClipboardPaths.mcpDisabledTools)
+        write(optedIn, to: ClipboardPaths.mcpEnabledTools)
+    }
+
+    private static func load(_ path: String) -> Set<String> {
+        guard let data = FileManager.default.contents(atPath: path),
             let names = try? JSONDecoder().decode([String].self, from: data)
         else { return [] }
         return Set(names)
     }
 
-    static func save(_ disabled: Set<String>) {
-        guard let data = try? JSONEncoder().encode(Array(disabled)) else { return }
-        FileManager.default.createFile(atPath: ClipboardPaths.mcpDisabledTools, contents: data)
+    private static func write(_ names: [String], to path: String) {
+        guard let data = try? JSONEncoder().encode(names.sorted()) else { return }
+        FileManager.default.createFile(atPath: path, contents: data)
     }
 }

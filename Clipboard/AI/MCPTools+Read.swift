@@ -14,20 +14,39 @@ nonisolated extension MCPTools {
 
     func searchClipboard(_ args: [String: Any]) -> [String: Any] {
         var filter = MCPSearchFilter()
+        let limit = min(max(intArgument(args["limit"]) ?? 20, 1), Self.maxSearchLimit)
         do {
             try filter.addQuery(args["query"] as? String)
             try filter.addType(args["type"] as? String)
-            try filter.addTag(args["tag"] as? String, in: userTags())
+            if let tag = args["tag"] as? String, !tag.isEmpty {
+                filter.addTag(try resolveTag(tag))
+            }
             filter.addApp(args["app"] as? String)
             try filter.addDateRange(from: args["date_from"], to: args["date_to"])
+            // 多取一条用于判断 hasMore
+            let items = try fetchSummaries(filter, limit: limit + 1)
+            return jsonResult(["hasMore": items.count > limit, "items": Array(items.prefix(limit))])
         } catch {
             return mcpError(error.message)
         }
+    }
 
-        let limit = min(max(intArgument(args["limit"]) ?? 20, 1), Self.maxSearchLimit)
-        // 多取一条用于判断 hasMore
-        let bindings = filter.bindings + [Int64(limit + 1)]
+    /// 按 id 取摘要，任一 id 不存在即报错；结果顺序与传入顺序一致
+    func summaries(forIds ids: [Int64]) throws(MCPArgumentError) -> [[String: Any]] {
+        var filter = MCPSearchFilter()
+        filter.addIds(ids)
+        let items = try fetchSummaries(filter, limit: ids.count)
+        let byId = Dictionary(items.map { ($0["id"] as? String ?? "", $0) }, uniquingKeysWith: { first, _ in first })
+        return try ids.map { id throws(MCPArgumentError) in
+            guard let item = byId[String(id)] else {
+                throw MCPArgumentError(
+                    message: "No clipboard item found with id \(id). Use search_clipboard to find valid item ids.")
+            }
+            return item
+        }
+    }
 
+    private func fetchSummaries(_ filter: MCPSearchFilter, limit: Int) throws(MCPArgumentError) -> [[String: Any]] {
         let sql = """
             SELECT c.id, c.type, c.tag, c.show_data, c.search_text, c.timestamp, c.length,
                    c."group", c.hidden, a.app_name,
@@ -37,41 +56,33 @@ nonisolated extension MCPTools {
             ORDER BY c.sort_order DESC, c.id DESC
             LIMIT ?
             """
-
         guard let database = openDatabase() else {
-            return mcpError("Cannot open clipboard database.")
+            throw MCPArgumentError(message: "Cannot open clipboard database.")
         }
         let tagNames = Dictionary(userTags().map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first })
-
-        var items: [[String: Any]] = []
+        let redacts = MCPSecretMasker.isEnabled
         do {
-            for row in try database.prepare(sql, bindings) {
-                items.append(summary(of: row, tagNames: tagNames))
+            return try database.prepare(sql, filter.bindings + [Int64(limit)]).map {
+                summary(of: $0, tagNames: tagNames, redacts: redacts)
             }
         } catch {
-            return mcpError("Search failed: \(error.localizedDescription)")
+            throw MCPArgumentError(message: "Search failed: \(error.localizedDescription)")
         }
-
-        let hasMore = items.count > limit
-        return jsonResult(["hasMore": hasMore, "items": Array(items.prefix(limit))])
     }
 
-    /// 行列顺序与 searchClipboard 的 SELECT 一致
-    private func summary(of row: Statement.Element, tagNames: [Int: String]) -> [String: Any] {
+    /// 行列顺序与 fetchSummaries 的 SELECT 一致
+    private func summary(of row: Statement.Element, tagNames: [Int: String], redacts: Bool) -> [String: Any] {
         let id = row[0] as? Int64 ?? 0
         let pasteboardType = row[1] as? String ?? ""
         let tag = row[2] as? String
         let showData = (row[3] as? Blob).map { Data($0.bytes) }
         let searchText = row[4] as? String ?? ""
-        let timestamp = row[5] as? Int64 ?? 0
         let length = row[6] as? Int64 ?? 0
         let group = Int(row[7] as? Int64 ?? -1)
-        let hidden = (row[8] as? Int64 ?? 0) != 0
-        let appName = row[9] as? String
         let fileData = (row[10] as? Blob).map { Data($0.bytes) }
 
         let type = MCPItemReader.publicType(forTag: tag)
-        let preview: String
+        var preview: String
         switch type {
         case "image":
             preview = "[image]"
@@ -85,26 +96,31 @@ nonisolated extension MCPTools {
         var item: [String: Any] = [
             "id": String(id),
             "type": type,
-            "preview": preview,
-            "timestamp": isoString(fromTimestamp: timestamp)
+            "timestamp": isoString(fromTimestamp: row[5] as? Int64 ?? 0)
         ]
+        if redacts, type == "text" || type == "link", let masked = MCPSecretMasker.mask(preview) {
+            preview = masked
+            item["sensitive"] = true
+        }
+        item["preview"] = preview
         if type == "text", length > 0 { item["length"] = length }
-        if let appName, !appName.isEmpty { item["app"] = appName }
+        if let appName = row[9] as? String, !appName.isEmpty { item["app"] = appName }
         if group != -1, let name = tagNames[group] { item["tag"] = name }
         // 已从历史移除、仅保留在标签中的条目
-        if hidden { item["inHistory"] = false }
+        if (row[8] as? Int64 ?? 0) != 0 { item["inHistory"] = false }
         return item
     }
 
     // MARK: - read_item
 
     func readItem(_ args: [String: Any]) -> [String: Any] {
-        guard let rawId = args["id"] as? String ?? intArgument(args["id"]).map({ String($0) }) else {
-            return mcpError("`id` is required. Use search_clipboard to find item ids.")
+        let id: Int64
+        do {
+            id = try itemId(args["id"])
+        } catch {
+            return mcpError(error.message)
         }
-        guard let id = Int64(rawId) else {
-            return mcpError("No clipboard item found with id \(rawId). Use search_clipboard to find valid item ids.")
-        }
+        let rawId = String(id)
         let maxChars = min(max(intArgument(args["max_chars"]) ?? Self.defaultReadChars, 1), Self.maxReadChars)
 
         guard let database = openDatabase() else {
@@ -173,9 +189,9 @@ nonisolated extension MCPTools {
     }
 }
 
-// MARK: - Helpers
+// MARK: - Argument helpers
 
-private nonisolated extension MCPTools {
+nonisolated extension MCPTools {
     /// JSON 数字可能被解析为 Int 或 Double
     func intArgument(_ value: Any?) -> Int? {
         switch value {
@@ -184,6 +200,26 @@ private nonisolated extension MCPTools {
         case let string as String: Int(string)
         default: nil
         }
+    }
+
+    func itemId(_ value: Any?) throws(MCPArgumentError) -> Int64 {
+        guard let raw = value as? String ?? intArgument(value).map({ String($0) }) else {
+            throw MCPArgumentError(message: "`id` is required. Use search_clipboard to find item ids.")
+        }
+        guard let id = Int64(raw) else {
+            throw MCPArgumentError(
+                message: "No clipboard item found with id \(raw). Use search_clipboard to find valid item ids.")
+        }
+        return id
+    }
+
+    /// 解析 id 数组并去重，保持原顺序
+    func itemIds(_ value: Any?) throws(MCPArgumentError) -> [Int64] {
+        guard let raws = value as? [Any], !raws.isEmpty else {
+            throw MCPArgumentError(message: "`ids` must be a non-empty array of item ids from search_clipboard.")
+        }
+        var seen = Set<Int64>()
+        return try raws.map { raw throws(MCPArgumentError) in try itemId(raw) }.filter { seen.insert($0).inserted }
     }
 
     /// 带用户时区偏移的 ISO-8601，便于模型按本地日期理解

@@ -36,11 +36,7 @@ struct AISettingsView: View {
     ) {
         self.server = server
         _isEnabled = State(initialValue: initialEnabled)
-        _enabledTools = State(
-            initialValue: Set(MCPToolInfo.all.map(\.name)).subtracting(
-                MCPDisabledTools.load()
-            )
-        )
+        _enabledTools = State(initialValue: MCPToolSettings.enabledNames())
     }
 
     private var clients: [MCPClientInfo] {
@@ -132,6 +128,7 @@ struct AISettingsView: View {
                 )
                 if isEnabled {
                     MCPToolsSection(enabledTools: $enabledTools)
+                    MCPSensitiveDataSection()
 
                     HStack {
                         Spacer()
@@ -204,9 +201,7 @@ private struct MCPToolsSection: View {
             }
             .settingsStyle()
             .onChange(of: enabledTools) { _, newValue in
-                MCPDisabledTools.save(
-                    Set(MCPToolInfo.all.map(\.name)).subtracting(newValue)
-                )
+                MCPToolSettings.save(enabled: newValue)
             }
         }
     }

@@ -25,8 +25,16 @@ private extension MCPToolDefinition {
         switch name {
         case "search_clipboard": .mcpToolSearchClipboard
         case "read_item": .mcpToolReadItem
-        case "write_clipboard": .mcpToolWriteClipboard
         case "list_tags": .mcpToolListCategories
+        case "write_clipboard": .mcpToolWriteClipboard
+        case "save_item": .mcpToolSaveItem
+        case "copy_item": .mcpToolCopyItem
+        case "update_item": .mcpToolUpdateItem
+        case "set_item_tag": .mcpToolSetItemTag
+        case "create_tag": .mcpToolCreateTag
+        case "rename_tag": .mcpToolRenameTag
+        case "delete_items": .mcpToolDeleteItems
+        case "delete_tag": .mcpToolDeleteTag
         default: LocalizedStringResource(String.LocalizationValue(description))
         }
     }
