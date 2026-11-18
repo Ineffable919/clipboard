@@ -107,6 +107,11 @@ private struct MCPClientDetailSheet: View {
                         }
                     }
 
+                    if let footer = client.footer {
+                        Text(footer)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
                     if let notice {
                         Label {
                             Text(notice.text)
@@ -119,11 +124,6 @@ private struct MCPClientDetailSheet: View {
                             )
                                 .foregroundStyle(notice.isError ? .orange : .green)
                         }
-                    }
-
-                    if let footer = client.footer {
-                        Text(footer)
-                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
                 .padding(.bottom, Const.space16)
