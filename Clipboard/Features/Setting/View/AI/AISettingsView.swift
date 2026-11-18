@@ -34,8 +34,6 @@ struct AISettingsView: View {
                     server: server
                 )
                 if isEnabled {
-                    MCPSensitiveDataSection()
-
                     HStack {
                         Spacer()
                         MCPClientMenu(
@@ -66,8 +64,16 @@ private struct MCPClientDetailSheet: View {
     static let width: CGFloat = 440
 
     let client: MCPClientInfo
+    /// 每次打开弹窗重新检查，用户中途装好客户端后再次打开即可恢复
+    private let destination: MCPConfigDestination
+    @State private var addState: AddState = .idle
     @Environment(\.dismiss) private var dismiss
     @FocusState private var cancelFocused: Bool
+
+    init(client: MCPClientInfo) {
+        self.client = client
+        destination = MCPConfigDestination(client: client)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -81,51 +87,98 @@ private struct MCPClientDetailSheet: View {
                 .padding(.bottom, Const.space16)
 
             MCPCommandBlock(client: client)
-                .padding(
-                    .bottom,
-                    client.configNote != nil ? Const.space8 : Const.space16
-                )
+                .padding(.bottom, hasDetails ? Const.space8 : Const.space16)
 
-            if let note = client.configNote {
-                HStack(spacing: Const.space4) {
-                    Text(.mcpPasteInto)
-                    Button {
-                        NSPasteboard.copy(note)
-                    } label: {
-                        Text(note)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
+            if hasDetails {
+                VStack(alignment: .leading, spacing: Const.space8) {
+                    if let note = client.configNote {
+                        HStack(spacing: Const.space4) {
+                            Text(.mcpPasteInto)
+                            Button {
+                                NSPasteboard.copy(note)
+                            } label: {
+                                Text(note)
+                                    .lineLimit(1)
+                                    .truncationMode(.middle)
+                            }
+                            .buttonStyle(.plain)
+                            .focusable(false)
+                            .help(note)
+                        }
                     }
-                    .buttonStyle(.plain)
-                    .focusable(false)
-                    .help(note)
+
+                    if let notice {
+                        Label {
+                            Text(notice.text)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        } icon: {
+                            Image(
+                                systemName: notice.isError
+                                    ? "exclamationmark.triangle.fill" : "checkmark.circle.fill"
+                            )
+                                .foregroundStyle(notice.isError ? .orange : .green)
+                        }
+                    }
+
+                    if let footer = client.footer {
+                        Text(footer)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
                 .padding(.bottom, Const.space16)
             }
 
-            if let footer = client.footer {
-                Text(footer)
-                    .padding(.bottom, Const.space16)
-            }
-
             HStack {
                 Spacer()
-                Button(.cancelButton) {
-                    dismiss()
+                if addState != .succeeded {
+                    Button(.cancelButton) {
+                        dismiss()
+                    }
+                    .buttonStyle(.bordered)
+                    .focused($cancelFocused)
                 }
-                .buttonStyle(.bordered)
-                .focused($cancelFocused)
 
-                Button(client.configNote == nil ? .mcpGoToTerminal : .mcpGoPaste) {
+                Button(primaryTitle) {
                     Task { await openDestination() }
                 }
                 .buttonStyle(.borderedProminent)
+                .disabled(addState == .running)
             }
             .focusEffectDisabled()
         }
         .padding(Const.space24)
         .frame(width: Self.width)
         .defaultFocus($cancelFocused, true)
+    }
+
+    private var primaryTitle: LocalizedStringResource {
+        switch destination {
+        case .terminal: .mcpGoToTerminal
+        case .file, .folder: .mcpGoPaste
+        case .missing: .mcpCopyConfig
+        case .appMissing: .mcpCopyCommand
+        case .cli: addState == .succeeded ? .close : .mcpAddToFormat(client.name)
+        }
+    }
+
+    /// 命令块下方是否有路径、提示或说明
+    private var hasDetails: Bool {
+        client.configNote != nil || notice != nil || client.footer != nil
+    }
+
+    /// 命令块下方的状态提示
+    private var notice: (text: LocalizedStringResource, isError: Bool)? {
+        switch addState {
+        case .succeeded: return (.mcpAddedFormat(client.name), false)
+        case .failed(let message): return (.mcpAddFailed(message), true)
+        case .idle, .running: break
+        }
+        switch destination {
+        case .missing: return (.mcpConfigMissing(client.name), true)
+        case .appMissing: return (.mcpAppMissing(client.name), true)
+        default: return nil
+        }
     }
 
     private var clientIcon: some View {
@@ -138,19 +191,82 @@ private struct MCPClientDetailSheet: View {
     }
 
     private func openDestination() async {
+        if case .cli(let executable) = destination {
+            await add(with: executable)
+            return
+        }
+        NSPasteboard.copy(client.commandForCopy)
         let workspace = NSWorkspace.shared
-        if let path = client.configNote {
-            let url = URL(filePath: (path as NSString).expandingTildeInPath)
-            var isDirectory: ObjCBool = false
-            guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory),
-                  !isDirectory.boolValue else { return }
-
-            NSPasteboard.copy(client.commandForCopy)
+        switch destination {
+        case .file(let url):
             workspace.activateFileViewerSelecting([url])
-        } else {
-            NSPasteboard.copy(client.commandForCopy)
+        case .folder(let url):
+            workspace.open(url)
+        case .missing, .appMissing:
+            dismiss()
+        case .terminal:
             guard let url = workspace.urlForApplication(withBundleIdentifier: "com.apple.Terminal") else { return }
             _ = try? await workspace.openApplication(at: url, configuration: .init())
+        case .cli:
+            break
+        }
+    }
+
+    private func add(with executable: URL) async {
+        guard addState != .succeeded, let cli = client.cli else {
+            dismiss()
+            return
+        }
+        addState = .running
+        do {
+            try await cli.run(executable)
+            addState = .succeeded
+        } catch {
+            addState = .failed(error.localizedDescription)
+        }
+    }
+}
+
+// MARK: - AddState
+
+private enum AddState: Equatable {
+    case idle
+    case running
+    case succeeded
+    case failed(String)
+}
+
+// MARK: - MCPConfigDestination
+
+/// 主按钮的落点：直接调用客户端命令行、打开终端，或配置文件 / 其所在目录
+private enum MCPConfigDestination: Equatable {
+    case cli(URL)
+    /// 支持命令行添加，但客户端未安装
+    case appMissing
+    case terminal
+    case file(URL)
+    case folder(URL)
+    /// 配置目录不存在：客户端未安装或从未启动
+    case missing
+
+    init(client: MCPClientInfo) {
+        if let cli = client.cli {
+            self = cli.executable.map { .cli($0) } ?? .appMissing
+            return
+        }
+        guard let path = client.configNote else {
+            self = .terminal
+            return
+        }
+        let file = URL(filePath: (path as NSString).expandingTildeInPath)
+        let folder = file.deletingLastPathComponent()
+        let fileManager = FileManager.default
+        if fileManager.fileExists(atPath: file.path) {
+            self = .file(file)
+        } else if fileManager.fileExists(atPath: folder.path) {
+            self = .folder(folder)
+        } else {
+            self = .missing
         }
     }
 }
@@ -230,4 +346,14 @@ private struct MCPCommandBlock: View {
     }
     .padding(Const.space24)
     .frame(width: MCPClientDetailSheet.width)
+}
+
+#Preview("Detail sheet") {
+    let clients = MCPClientInfo.all(
+        endpoint: "http://127.0.0.1:38417/mcp",
+        token: "clip0123456789abcdefghijklmn"
+    )
+    if let client = clients.first(where: { $0.name == "Claude Desktop" }) {
+        MCPClientDetailSheet(client: client)
+    }
 }

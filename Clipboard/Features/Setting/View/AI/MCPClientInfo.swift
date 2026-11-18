@@ -22,6 +22,8 @@ struct MCPClientInfo: Identifiable {
     let displayCommand: String
     let footer: LocalizedStringResource?
     let configNote: String?
+    /// 可由 App 直接调用客户端自带命令行完成添加
+    var cli: MCPClientCLI?
     private let token: String
 
     var commandForCopy: String {
@@ -48,12 +50,7 @@ extension MCPClientInfo {
                 name: "Claude Code",
                 icon: "MCPClaudeIcon",
                 subtitle: .mcpCliSub,
-                displayCommand: """
-                    claude mcp add \\
-                      --transport http \\
-                      clipboard \(url) \\
-                      --header "Authorization: \(auth)"
-                    """,
+                displayCommand: claudeCodeCommand(url: url, auth: auth),
                 footer: .mcpClaudeFooter,
                 configNote: nil,
                 token: token
@@ -61,10 +58,11 @@ extension MCPClientInfo {
             MCPClientInfo(
                 name: "VS Code",
                 icon: "MCPVSCodeIcon",
-                subtitle: .mcpConfigSub,
-                displayCommand: urlConfig(root: "servers", url: url, auth: auth, type: "http"),
+                subtitle: .mcpCliAddSub,
+                displayCommand: vsCodeCommand(url: url, auth: auth),
                 footer: nil,
-                configNote: "~/.vscode/mcp.json",
+                configNote: nil,
+                cli: vsCodeCLI(url: url, token: token),
                 token: token
             ),
             MCPClientInfo(
@@ -80,7 +78,7 @@ extension MCPClientInfo {
                 name: "Cursor",
                 icon: "MCPCursorIcon",
                 subtitle: .mcpConfigSub,
-                displayCommand: urlConfig(root: "mcpServers", url: url, auth: auth, type: nil),
+                displayCommand: cursorConfig(url: url, auth: auth),
                 footer: nil,
                 configNote: "~/.cursor/mcp.json",
                 token: token
@@ -107,6 +105,17 @@ extension MCPClientInfo {
         """
     }
 
+    /// 用户级作用域，任何项目里都能使用
+    private static func claudeCodeCommand(url: String, auth: String) -> String {
+        """
+        claude mcp add \\
+          --transport http \\
+          --scope user \\
+          clipboard \(url) \\
+          --header "Authorization: \(auth)"
+        """
+    }
+
     /// Codex 的 config.toml 片段
     private static func codexConfig(url: String, auth: String) -> String {
         """
@@ -118,20 +127,51 @@ extension MCPClientInfo {
         """
     }
 
-    /// Cursor、VS Code
-    private static func urlConfig(root: String, url: String, auth: String, type: String?) -> String {
-        let typeLine = type.map { "\n      \"type\": \"\($0)\"," } ?? ""
-        return """
-            {
-              "\(root)": {
-                "clipboard": {\(typeLine)
-                  "url": "\(url)",
-                  "headers": {
-                    "Authorization": "\(auth)"
-                  }
-                }
+    /// VS Code 用 `code --add-mcp` 写入用户 profile，避开平台相关的配置路径
+    private static func vsCodeCommand(url: String, auth: String) -> String {
+        """
+        code --add-mcp '{
+          "name": "clipboard",
+          "type": "http",
+          "url": "\(url)",
+          "headers": {
+            "Authorization": "\(auth)"
+          }
+        }'
+        """
+    }
+
+    /// 正式版优先，其次 Insiders；参数直接传给进程，无需 shell 转义
+    private static func vsCodeCLI(url: String, token: String) -> MCPClientCLI? {
+        let config: [String: Any] = [
+            "name": "clipboard",
+            "type": "http",
+            "url": url,
+            "headers": ["Authorization": "Bearer \(token)"]
+        ]
+        guard let data = try? JSONSerialization.data(withJSONObject: config),
+            let json = String(bytes: data, encoding: .utf8)
+        else { return nil }
+        return MCPClientCLI(
+            bundleIDs: ["com.microsoft.VSCode", "com.microsoft.VSCodeInsiders"],
+            path: "Contents/Resources/app/bin/code",
+            arguments: ["--add-mcp", json]
+        )
+    }
+
+    /// Cursor 的 mcp.json 片段
+    private static func cursorConfig(url: String, auth: String) -> String {
+        """
+        {
+          "mcpServers": {
+            "clipboard": {
+              "url": "\(url)",
+              "headers": {
+                "Authorization": "\(auth)"
               }
             }
-            """
+          }
+        }
+        """
     }
 }

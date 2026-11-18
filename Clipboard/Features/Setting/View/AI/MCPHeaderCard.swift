@@ -11,19 +11,35 @@ struct MCPHeaderCard: View {
     @Binding var isEnabled: Bool
 
     @State private var showDetails = false
+    @AppStorage(PrefKey.mcpMaskSecrets.rawValue)
+    private var maskSecrets = true
 
     var server: MCPServer = .shared
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Const.space4) {
-            titleRow
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: Const.space4) {
+                titleRow
 
-            Text(.mcpDesc)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+                Text(.mcpDesc)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(Const.space10)
+
+            if isEnabled {
+                Divider()
+                    .padding(.horizontal, Const.space10)
+
+                PrivacyToggleRow(
+                    title: String(localized: .mcpMaskSecrets),
+                    subtitle: String(localized: .mcpMaskSecretsDesc),
+                    isOn: $maskSecrets
+                )
+                .padding(.horizontal, Const.space10)
+            }
         }
-        .padding(Const.space10)
         .settingsStyle()
         .sheet(isPresented: $showDetails) {
             MCPConnectionDetails(server: server)

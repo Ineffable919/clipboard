@@ -90,7 +90,10 @@ nonisolated enum MCPToolSchemas {
     private static var confirm: [String: Any] {
         [
             "type": "boolean",
-            "description": "Must be true to actually delete. Omit or false to preview only."
+            "description": """
+                Pass true to delete. Omit or pass false to preview. \
+                For compatibility, the server also accepts numeric 1 for deletion and 0 for preview.
+                """
         ]
     }
 

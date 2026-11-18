@@ -3462,13 +3462,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Launch Claude Code and type /mcp to check that Clipboard is connected."
+            "value" : "Launch Claude Code and type /mcp to check that Clipboard is connected"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "启动 Claude Code，输入 /mcp 确认 Clipboard 已连接。"
+            "value" : "启动 Claude Code，输入 /mcp 确认 Clipboard 已连接"
           }
         }
       }
@@ -3702,13 +3702,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This client connects through the mcp-remote bridge, which requires Node.js (npx)."
+            "value" : "This client connects through the mcp-remote bridge, which requires Node.js (npx)"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "该客户端通过 mcp-remote 桥接连接，需要已安装 Node.js（npx）。"
+            "value" : "该客户端通过 mcp-remote 桥接连接，需要已安装 Node.js（npx）"
           }
         }
       }
@@ -3778,23 +3778,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "端口已被占用"
-          }
-        }
-      }
-    },
-    "mcpSensitiveData" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sensitive Data"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "敏感信息"
           }
         }
       }
@@ -6526,6 +6509,142 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已连接的 AI 工具会断开。需要在「连接 AI 工具…」中重新复制配置，并更新到每个工具里。"
+          }
+        }
+      }
+    },
+    "mcpConfigMissing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No config folder found. Install and open %@ once first"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未找到配置目录，请先安装并启动一次 %@"
+          }
+        }
+      }
+    },
+    "mcpCopyConfig" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Config"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制配置"
+          }
+        }
+      }
+    },
+    "mcpCliAddSub" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add it with one click, or run this command in Terminal:"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可一键添加，或在\"终端\"中运行此命令："
+          }
+        }
+      }
+    },
+    "mcpAddToFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add to %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加到 %@"
+          }
+        }
+      }
+    },
+    "mcpAddedFormat" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Added to %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已添加到 %@"
+          }
+        }
+      }
+    },
+    "mcpAddFailed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't add: %@"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加失败：%@"
+          }
+        }
+      }
+    },
+    "mcpAppMissing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ not found. Install it first"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "未找到 %@，请先安装"
+          }
+        }
+      }
+    },
+    "mcpCopyCommand" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy Command"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制命令"
           }
         }
       }
