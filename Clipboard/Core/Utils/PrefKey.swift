@@ -67,8 +67,6 @@ enum PrefKey: String, CaseIterable {
     case welcomeDone
     /// MCP 本地服务端口
     case mcpPort
-    /// MCP 搜索结果中隐藏疑似密钥
-    case mcpMaskSecrets
 }
 
 /// 应用语言

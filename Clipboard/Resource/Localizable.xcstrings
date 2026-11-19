@@ -3626,40 +3626,6 @@
         }
       }
     },
-    "mcpMaskSecrets" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hide keys from AI"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "对 AI 隐藏密钥"
-          }
-        }
-      }
-    },
-    "mcpMaskSecretsDesc" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "When AI tools browse your clipboard history, anything that looks like an API key or access token is shown partly hidden. AI tools see it in full only when they open that one item."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AI 浏览剪贴板历史时，看起来像 API Key、访问令牌的内容只显示开头几位。只有 AI 打开这一条时，才能看到完整内容。"
-          }
-        }
-      }
-    },
     "mcpPasteInto" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6643,40 +6609,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "安装扩展"
-          }
-        }
-      }
-    },
-    "mcpAddress" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Address"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "地址"
-          }
-        }
-      }
-    },
-    "mcpConnectionInfo" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connection"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "连接信息"
           }
         }
       }

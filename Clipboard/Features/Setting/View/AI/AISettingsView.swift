@@ -29,20 +29,17 @@ struct AISettingsView: View {
     var body: some View {
         ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: Const.space20) {
-                MCPHeaderCard(isEnabled: $isEnabled)
+                MCPHeaderCard(isEnabled: $isEnabled, server: server)
                 if isEnabled {
-                    VStack(spacing: Const.space10) {
-                        MCPConnectionCard(server: server)
-                        HStack {
-                            Spacer()
-                            MCPClientMenu(
-                                title: String(localized: .mcpConnectTools),
-                                clients: clients
-                            ) { client in
-                                selectedClient = client
-                            }
-                            .fixedSize()
+                    HStack {
+                        Spacer()
+                        MCPClientMenu(
+                            title: String(localized: .mcpConnectTools),
+                            clients: clients
+                        ) { client in
+                            selectedClient = client
                         }
+                        .fixedSize()
                     }
                 }
                 Spacer(minLength: 0)

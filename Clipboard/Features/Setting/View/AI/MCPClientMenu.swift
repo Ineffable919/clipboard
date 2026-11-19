@@ -42,7 +42,7 @@ struct MCPClientMenu: NSViewRepresentable {
             )
             item.target = context.coordinator
             item.tag = index
-            item.image = Self.menuIcon(named: client.icon, scale: client.iconScale)
+            item.image = Self.menuIcon(named: client.icon)
             if #available(macOS 27.0, *) {
                 item.preferredImageVisibility = .visible
             }
@@ -59,11 +59,11 @@ struct MCPClientMenu: NSViewRepresentable {
     }
 
     /// NSMenu 不会缩放大图，需预先绘制成 16pt，并裁成圆角以统一方形底图标的外观
-    private static func menuIcon(named name: String, scale: CGFloat) -> NSImage? {
+    private static func menuIcon(named name: String) -> NSImage? {
         guard let source = NSImage(named: name) else { return nil }
         return NSImage(size: NSSize(width: 16, height: 16), flipped: false) { rect in
             NSBezierPath(roundedRect: rect, xRadius: 4, yRadius: 4).addClip()
-            source.draw(in: rect.insetBy(dx: rect.width * (1 - scale) / 2, dy: rect.height * (1 - scale) / 2))
+            source.draw(in: rect)
             return true
         }
     }

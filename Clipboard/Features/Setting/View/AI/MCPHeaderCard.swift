@@ -10,8 +10,7 @@ import SwiftUI
 struct MCPHeaderCard: View {
     @Binding var isEnabled: Bool
 
-    @AppStorage(PrefKey.mcpMaskSecrets.rawValue)
-    private var maskSecrets = true
+    var server: MCPServer = .shared
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -26,15 +25,7 @@ struct MCPHeaderCard: View {
             .padding(Const.space10)
 
             if isEnabled {
-                Divider()
-                    .padding(.horizontal, Const.space10)
-
-                PrivacyToggleRow(
-                    title: String(localized: .mcpMaskSecrets),
-                    subtitle: String(localized: .mcpMaskSecretsDesc),
-                    isOn: $maskSecrets
-                )
-                .padding(.horizontal, Const.space10)
+                MCPConnectionRows(server: server)
             }
         }
         .settingsStyle()
@@ -59,9 +50,22 @@ struct MCPHeaderCard: View {
 
 #Preview("Enabled") {
     @Previewable @State var isEnabled = true
-    MCPHeaderCard(isEnabled: $isEnabled)
-        .padding(Const.space24)
-        .frame(width: Const.settingWidth - 150)
+    MCPHeaderCard(
+        isEnabled: $isEnabled,
+        server: MCPServer(previewStatus: .running)
+    )
+    .padding(Const.space24)
+    .frame(width: Const.settingWidth - 150)
+}
+
+#Preview("Port unavailable") {
+    @Previewable @State var isEnabled = true
+    MCPHeaderCard(
+        isEnabled: $isEnabled,
+        server: MCPServer(previewStatus: .failed)
+    )
+    .padding(Const.space24)
+    .frame(width: Const.settingWidth - 150)
 }
 
 #Preview("Disabled") {

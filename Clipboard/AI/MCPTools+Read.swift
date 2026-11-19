@@ -60,10 +60,9 @@ nonisolated extension MCPTools {
             throw MCPArgumentError(message: "Cannot open clipboard database.")
         }
         let tagNames = Dictionary(userTags().map { ($0.id, $0.name) }, uniquingKeysWith: { first, _ in first })
-        let redacts = MCPSecretMasker.isEnabled
         do {
             return try database.prepare(sql, filter.bindings + [Int64(limit)]).map {
-                summary(of: $0, tagNames: tagNames, redacts: redacts)
+                summary(of: $0, tagNames: tagNames)
             }
         } catch {
             throw MCPArgumentError(message: "Search failed: \(error.localizedDescription)")
@@ -71,7 +70,7 @@ nonisolated extension MCPTools {
     }
 
     /// 行列顺序与 fetchSummaries 的 SELECT 一致
-    private func summary(of row: Statement.Element, tagNames: [Int: String], redacts: Bool) -> [String: Any] {
+    private func summary(of row: Statement.Element, tagNames: [Int: String]) -> [String: Any] {
         let id = row[0] as? Int64 ?? 0
         let pasteboardType = row[1] as? String ?? ""
         let tag = row[2] as? String
@@ -98,7 +97,7 @@ nonisolated extension MCPTools {
             "type": type,
             "timestamp": isoString(fromTimestamp: row[5] as? Int64 ?? 0)
         ]
-        if redacts, type == "text" || type == "link", let masked = MCPSecretMasker.mask(preview) {
+        if type == "text" || type == "link", let masked = MCPSecretMasker.mask(preview) {
             preview = masked
             item["sensitive"] = true
         }

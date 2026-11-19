@@ -1,5 +1,5 @@
 //
-//  MCPConnectionCard.swift
+//  MCPConnectionRows.swift
 //  Clipboard
 //
 //  Created by crown on 2026/11/19
@@ -7,10 +7,10 @@
 
 import SwiftUI
 
-// MARK: - MCPConnectionCard
+// MARK: - MCPConnectionRows
 
-/// 连接信息：地址与令牌，修改端口、重新生成令牌各走一层弹窗
-struct MCPConnectionCard: View {
+/// 连接信息：地址与令牌两行，嵌在设置卡片内；修改端口、重新生成令牌各走一层弹窗
+struct MCPConnectionRows: View {
     let server: MCPServer
 
     @State private var showPortSheet = false
@@ -18,26 +18,20 @@ struct MCPConnectionCard: View {
     @State private var showToken = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Const.space6) {
-            Text(.mcpConnectionInfo)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, Const.space4)
-
-            VStack(alignment: .leading, spacing: 0) {
-                addressRow
-                if server.status == .failed {
-                    Text(.mcpPortUnavailable)
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                        .padding(.leading, Const.space10 + Const.space6 + Const.space32 + Const.space8)
-                        .padding(.bottom, Const.space8)
-                }
-                Divider()
-                    .padding(.horizontal, Const.space10)
-                tokenRow
+        VStack(alignment: .leading, spacing: 0) {
+            Divider()
+                .padding(.horizontal, Const.space10)
+            addressRow
+            if server.status == .failed {
+                Text(.mcpPortUnavailable)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .padding(.leading, Const.space10 + Const.space6 + Const.space6)
+                    .padding(.bottom, Const.space8)
             }
-            .settingsStyle()
+            Divider()
+                .padding(.horizontal, Const.space10)
+            tokenRow
         }
         .sheet(isPresented: $showPortSheet) {
             MCPPortSheet(server: server)
@@ -54,38 +48,30 @@ struct MCPConnectionCard: View {
     }
 
     private var addressRow: some View {
-        row(title: .mcpAddress) {
+        HStack(spacing: Const.space6) {
             Circle()
                 .fill(statusColor)
                 .frame(width: Const.space6, height: Const.space6)
             CopyValue(shown: server.endpoint, copied: server.endpoint)
-            IconButton(systemName: "square.and.pencil", label: .mcpChange) {
+            SystemButton(title: .mcpChange) {
                 showPortSheet = true
             }
         }
+        .padding(.horizontal, Const.space10)
+        .frame(minHeight: Const.space32 + Const.space8)
     }
 
     private var tokenRow: some View {
-        row(title: .mcpToken) {
+        HStack(spacing: Const.space6) {
+            Text(.mcpToken)
+                .foregroundStyle(.secondary)
             CopyValue(shown: showToken ? server.token : maskedToken, copied: server.token)
             IconButton(systemName: showToken ? "eye.slash" : "eye", label: .mcpToken) {
                 showToken.toggle()
             }
-            IconButton(systemName: "arrow.triangle.2.circlepath", label: .mcpRegenerate) {
+            SystemButton(title: .mcpRegenerate) {
                 confirmRegenerate = true
             }
-        }
-    }
-
-    private func row(
-        title: LocalizedStringResource,
-        @ViewBuilder content: () -> some View
-    ) -> some View {
-        HStack(spacing: Const.space6) {
-            Text(title)
-                .foregroundStyle(.secondary)
-                .frame(width: Const.space32 + Const.space8, alignment: .leading)
-            content()
         }
         .padding(.horizontal, Const.space10)
         .frame(minHeight: Const.space32 + Const.space8)
@@ -204,18 +190,6 @@ private struct MCPPortSheet: View {
         server.setPort(port)
         dismiss()
     }
-}
-
-#Preview("Running") {
-    MCPConnectionCard(server: MCPServer(previewStatus: .running))
-        .padding(Const.space24)
-        .frame(width: Const.settingWidth - 150)
-}
-
-#Preview("Port unavailable") {
-    MCPConnectionCard(server: MCPServer(previewStatus: .failed))
-        .padding(Const.space24)
-        .frame(width: Const.settingWidth - 150)
 }
 
 #Preview("Port sheet") {

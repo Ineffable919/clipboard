@@ -9,11 +9,6 @@ import Foundation
 
 /// 在搜索摘要中遮挡疑似密钥，避免 AI 浏览列表时把密钥带进上下文；read_item 仍返回原文
 nonisolated enum MCPSecretMasker {
-    /// 对应 `PasteUserDefaults.mcpMaskSecrets`，默认开启
-    static var isEnabled: Bool {
-        UserDefaults.standard.object(forKey: PrefKey.mcpMaskSecrets.rawValue) as? Bool ?? true
-    }
-
     /// 常见服务的密钥前缀
     private static let knownPrefixes = [
         "sk-", "sk_live_", "sk_test_", "rk_live_", "pk_live_",
