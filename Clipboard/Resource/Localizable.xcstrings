@@ -3564,13 +3564,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Allow AI apps to connect to Clipboard.\nOnly apps with an access token can use clipboard items and tags."
+            "value" : "Allow AI apps on this Mac to connect to Clipboard and read or manage clipboard items and tags."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "允许 AI 应用连接到 Clipboard。只有持有访问令牌的应用才能访问你的剪贴板项目和标签。"
+            "value" : "允许本机的 AI 应用连接到 Clipboard，读取和管理剪贴板项目与标签。"
           }
         }
       }
@@ -6358,74 +6358,6 @@
         }
       }
     },
-    "mcpToken" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Token"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "令牌"
-          }
-        }
-      }
-    },
-    "mcpRegenerate" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Regenerate"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "重新生成"
-          }
-        }
-      }
-    },
-    "mcpRegenerateTitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Regenerate access token?"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "重新生成访问令牌？"
-          }
-        }
-      }
-    },
-    "mcpRegenerateMessage" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connected AI tools will stop working. Copy the config again from Connect AI Tools… and update each tool."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已连接的 AI 工具会断开。需要在「连接 AI 工具…」中重新复制配置，并更新到每个工具里。"
-          }
-        }
-      }
-    },
     "mcpConfigMissing" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6568,13 +6500,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "After changing the port or regenerating the token, install the extension again."
+            "value" : "After changing the port, install the extension again."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "修改端口或重新生成令牌后，需要重新安装扩展。"
+            "value" : "修改端口后，需要重新安装扩展。"
           }
         }
       }
@@ -6609,6 +6541,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "安装扩展"
+          }
+        }
+      }
+    },
+    "mcpSectionTitle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP & AI Tools"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MCP 与 AI 工具"
           }
         }
       }

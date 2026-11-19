@@ -25,7 +25,7 @@ struct MCPHeaderCard: View {
             .padding(Const.space10)
 
             if isEnabled {
-                MCPConnectionRows(server: server)
+                MCPAddressRow(server: server)
             }
         }
         .settingsStyle()

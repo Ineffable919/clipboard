@@ -63,19 +63,6 @@ nonisolated struct MCPHTTPResponse {
         Self(status: code, headers: allow.map { ["Allow": $0] } ?? [:])
     }
 
-    /// 正文提示用户如何修复
-    static var unauthorized: Self {
-        let message = """
-            Missing or invalid access token. Copy the connection config again from \
-            Clip → Settings → AI → Connect AI Tools…, then update this client.
-            """
-        return Self(
-            status: 401,
-            headers: ["WWW-Authenticate": #"Bearer realm="Clip""#, "Content-Type": "text/plain; charset=utf-8"],
-            body: Data(message.utf8)
-        )
-    }
-
     static func json(_ body: Data) -> Self {
         Self(status: 200, headers: ["Content-Type": "application/json"], body: body)
     }
@@ -96,7 +83,6 @@ nonisolated struct MCPHTTPResponse {
         case 200: "OK"
         case 202: "Accepted"
         case 400: "Bad Request"
-        case 401: "Unauthorized"
         case 403: "Forbidden"
         case 404: "Not Found"
         case 405: "Method Not Allowed"

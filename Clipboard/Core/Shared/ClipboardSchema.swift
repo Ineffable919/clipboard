@@ -54,11 +54,6 @@ nonisolated enum ClipboardPaths {
     static var mcpEnableFlag: String {
         appSupportDir.appending(path: "mcp_enabled").path
     }
-
-    /// MCP access token (Bearer), readable by the owner only
-    static var mcpToken: String {
-        appSupportDir.appending(path: "mcp_token").path
-    }
 }
 
 // MARK: - MCP tool registry

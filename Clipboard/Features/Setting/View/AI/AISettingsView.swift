@@ -23,12 +23,17 @@ struct AISettingsView: View {
     }
 
     private var clients: [MCPClientInfo] {
-        MCPClientInfo.all(endpoint: server.endpoint, token: server.token)
+        MCPClientInfo.all(endpoint: server.endpoint)
     }
 
     var body: some View {
         ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: Const.space20) {
+                Text(.mcpSectionTitle)
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                    .padding(.leading, Const.space10)
+                    .padding(.bottom, -Const.space8)
                 MCPHeaderCard(isEnabled: $isEnabled, server: server)
                 if isEnabled {
                     HStack {

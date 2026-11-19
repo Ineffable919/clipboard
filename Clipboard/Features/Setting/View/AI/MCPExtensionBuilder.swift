@@ -14,7 +14,7 @@ nonisolated enum MCPExtensionBuilder {
     static let bundleID = "com.anthropic.claudefordesktop"
 
     /// 打包并返回 .mcpb 路径，端点和令牌直接写入扩展环境变量
-    static func build(endpoint: String, token: String) async throws -> URL {
+    static func build(endpoint: String) async throws -> URL {
         let fileManager = FileManager.default
         removeStale()
         let root = fileManager.temporaryDirectory.appending(path: "clipboard-mcpb-\(UUID().uuidString)")
@@ -25,7 +25,7 @@ nonisolated enum MCPExtensionBuilder {
             attributes: [.posixPermissions: 0o700]
         )
         let icon = iconPNG()
-        try manifest(endpoint: endpoint, token: token, iconPNG: icon)
+        try manifest(endpoint: endpoint, iconPNG: icon)
             .write(to: source.appending(path: "manifest.json"), atomically: true, encoding: .utf8)
         if let icon {
             try icon.write(to: source.appending(path: "icon.png"))
@@ -57,7 +57,7 @@ nonisolated enum MCPExtensionBuilder {
         }
     }
 
-    private static func manifest(endpoint: String, token: String, iconPNG: Data?) throws -> String {
+    private static func manifest(endpoint: String, iconPNG: Data?) throws -> String {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.0"
         var manifest: [String: Any] = [
             "manifest_version": "0.2",
@@ -72,10 +72,7 @@ nonisolated enum MCPExtensionBuilder {
                 "mcp_config": [
                     "command": "node",
                     "args": ["${__dirname}/server/index.js"],
-                    "env": [
-                        "CLIPBOARD_MCP_URL": endpoint,
-                        "CLIPBOARD_MCP_TOKEN": token
-                    ]
+                    "env": ["CLIPBOARD_MCP_URL": endpoint]
                 ]
             ],
             "compatibility": ["platforms": ["darwin"]]
@@ -142,7 +139,6 @@ nonisolated enum MCPExtensionBuilder {
     const readline = require("node:readline");
 
     const url = process.env.CLIPBOARD_MCP_URL;
-    const token = process.env.CLIPBOARD_MCP_TOKEN;
 
     const send = (message) => process.stdout.write(JSON.stringify(message) + "\n");
 
@@ -173,7 +169,6 @@ nonisolated enum MCPExtensionBuilder {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json, text/event-stream",
-            Authorization: `Bearer ${token}`,
           },
           body: line,
         });

@@ -21,7 +21,7 @@ Release tooling lives in `scripts/` (`build.sh <version> [build] [arch]`, `relea
 One Xcode target (the menu-bar app) that also hosts a local MCP server:
 
 - **`Clipboard`** (the menu-bar app, `Clipboard/`) — AppKit app, entry via `App/AppDelegate.swift`.
-- **MCP server** (`Clipboard/AI/`) — Streamable HTTP endpoint `http://127.0.0.1:23333/mcp` run inside the app (`MCPServer` → `MCPHTTPConnection` → `MCPHandler` → `MCPTools`), exposing clipboard history to AI clients. It is stateless (POST only; no SSE/session), binds loopback only and rejects non-loopback `Host`/`Origin`. `MCPServer.sync()` starts/stops it from the enable-flag file (`ClipboardPaths.mcpEnableFlag`, toggled by `MCPEnableFlag`). MCP types are `nonisolated` because the target defaults to MainActor.
+- **MCP server** (`Clipboard/AI/`) — Streamable HTTP endpoint `http://127.0.0.1:38417/mcp` run inside the app (`MCPServer` → `MCPHTTPConnection` → `MCPHandler` → `MCPTools`), exposing clipboard history to AI clients. It is stateless (POST only; no SSE/session), binds loopback only and rejects non-loopback `Host`/`Origin`. `MCPServer.sync()` starts/stops it from the enable-flag file (`ClipboardPaths.mcpEnableFlag`, toggled by `MCPEnableFlag`). MCP types are `nonisolated` because the target defaults to MainActor.
 - `Core/Shared/ClipboardSchema.swift` holds the `Col` column definitions and `ClipboardPaths`; keep it `nonisolated` and free of UI dependencies since MCP code reads it off the main actor.
 
 ### Startup flow

@@ -153,7 +153,7 @@ struct MCPClientDetailSheet: View {
             return
         }
         if !client.installsExtension {
-            NSPasteboard.copy(client.commandForCopy)
+            NSPasteboard.copy(client.displayCommand)
         }
         let workspace = NSWorkspace.shared
         switch destination {
@@ -174,7 +174,7 @@ struct MCPClientDetailSheet: View {
     private func install(extensionIn app: URL) async {
         addState = .running
         do {
-            let bundle = try await MCPExtensionBuilder.build(endpoint: server.endpoint, token: server.token)
+            let bundle = try await MCPExtensionBuilder.build(endpoint: server.endpoint)
             let configuration = NSWorkspace.OpenConfiguration()
             configuration.activates = true
             try await NSWorkspace.shared.open([bundle], withApplicationAt: app, configuration: configuration)
@@ -280,7 +280,7 @@ private struct MCPCommandBlock: View {
 
     private var copyButton: some View {
         Button {
-            NSPasteboard.copy(client.commandForCopy)
+            NSPasteboard.copy(client.displayCommand)
         } label: {
             Image(systemName: "doc.on.doc")
                 .font(.callout)
@@ -297,8 +297,7 @@ private struct MCPCommandBlock: View {
 
 private func previewClient(_ name: String) -> MCPClientInfo? {
     MCPClientInfo.all(
-        endpoint: "http://127.0.0.1:38417/mcp",
-        token: "clip0123456789abcdefghijklmn"
+        endpoint: "http://127.0.0.1:38417/mcp"
     )
     .first { $0.name == name }
 }
