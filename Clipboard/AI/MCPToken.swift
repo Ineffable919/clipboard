@@ -34,7 +34,8 @@ nonisolated enum MCPToken {
     static func regenerate() -> String {
         // 只用字母和数字，24 位约 142 位熵
         var generator = SystemRandomNumberGenerator()
-        let token = prefix + String((0..<randomLength).map { _ in alphabet[Int.random(in: alphabet.indices, using: &generator)] })
+        let random = (0..<randomLength).map { _ in alphabet[Int.random(in: alphabet.indices, using: &generator)] }
+        let token = prefix + String(random)
         let path = ClipboardPaths.mcpToken
         let directory = URL(filePath: path).deletingLastPathComponent()
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

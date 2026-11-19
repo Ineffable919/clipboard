@@ -162,7 +162,8 @@ private nonisolated enum LogFormat {
     static let timestamp = Date.VerbatimFormatStyle(
         format: """
             \(year: .defaultDigits)-\(month: .twoDigits)-\(day: .twoDigits) \
-            \(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased)):\(minute: .twoDigits):\(second: .twoDigits)\
+            \(hour: .twoDigits(clock: .twentyFourHour, hourCycle: .zeroBased)):\
+            \(minute: .twoDigits):\(second: .twoDigits)\
             .\(secondFraction: .fractional(3))
             """,
         timeZone: .current,

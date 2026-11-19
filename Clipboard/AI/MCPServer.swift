@@ -54,7 +54,11 @@ final class MCPServer {
     }
 
     func sync() {
-        MCPEnableFlag.isEnabled ? start() : stop()
+        if MCPEnableFlag.isEnabled {
+            start()
+        } else {
+            stop()
+        }
     }
 
     /// 修改端口并在运行时重启服务
