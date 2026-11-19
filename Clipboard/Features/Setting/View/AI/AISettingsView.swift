@@ -67,6 +67,7 @@ private struct MCPClientDetailSheet: View {
     /// 每次打开弹窗重新检查，用户中途装好客户端后再次打开即可恢复
     private let destination: MCPConfigDestination
     @State private var addState: AddState = .idle
+    private let server = MCPServer.shared
     @Environment(\.dismiss) private var dismiss
     @FocusState private var cancelFocused: Bool
 
@@ -81,13 +82,15 @@ private struct MCPClientDetailSheet: View {
 
             Text(.mcpConnectFormat(client.name))
                 .font(.title2.bold())
-                .padding(.bottom, Const.space4)
+                .padding(.bottom, Const.space8)
 
             Text(client.subtitle)
-                .padding(.bottom, Const.space16)
+                .padding(.bottom, client.installsExtension && hasDetails ? Const.space4 : Const.space16)
 
-            MCPCommandBlock(client: client)
-                .padding(.bottom, hasDetails ? Const.space8 : Const.space16)
+            if !client.installsExtension {
+                MCPCommandBlock(client: client)
+                    .padding(.bottom, hasDetails ? Const.space8 : Const.space16)
+            }
 
             if hasDetails {
                 VStack(alignment: .leading, spacing: Const.space8) {
@@ -157,8 +160,9 @@ private struct MCPClientDetailSheet: View {
         case .terminal: .mcpGoToTerminal
         case .file, .folder: .mcpGoPaste
         case .missing: .mcpCopyConfig
-        case .appMissing: .mcpCopyCommand
+        case .appMissing: client.installsExtension ? .close : .mcpCopyCommand
         case .cli: addState == .succeeded ? .close : .mcpAddToFormat(client.name)
+        case .extensionApp: .mcpInstallExtension
         }
     }
 
@@ -195,7 +199,13 @@ private struct MCPClientDetailSheet: View {
             await add(with: executable)
             return
         }
-        NSPasteboard.copy(client.commandForCopy)
+        if case .extensionApp(let app) = destination {
+            await install(extensionIn: app)
+            return
+        }
+        if !client.installsExtension {
+            NSPasteboard.copy(client.commandForCopy)
+        }
         let workspace = NSWorkspace.shared
         switch destination {
         case .file(let url):
@@ -207,8 +217,21 @@ private struct MCPClientDetailSheet: View {
         case .terminal:
             guard let url = workspace.urlForApplication(withBundleIdentifier: "com.apple.Terminal") else { return }
             _ = try? await workspace.openApplication(at: url, configuration: .init())
-        case .cli:
+        case .cli, .extensionApp:
             break
+        }
+    }
+
+    private func install(extensionIn app: URL) async {
+        addState = .running
+        do {
+            let bundle = try await MCPExtensionBuilder.build(endpoint: server.endpoint, token: server.token)
+            let configuration = NSWorkspace.OpenConfiguration()
+            configuration.activates = true
+            try await NSWorkspace.shared.open([bundle], withApplicationAt: app, configuration: configuration)
+            dismiss()
+        } catch {
+            addState = .failed(error.localizedDescription)
         }
     }
 
@@ -241,6 +264,8 @@ private enum AddState: Equatable {
 /// 主按钮的落点：直接调用客户端命令行、打开终端，或配置文件 / 其所在目录
 private enum MCPConfigDestination: Equatable {
     case cli(URL)
+    /// 通过 .mcpb 扩展安装到指定 App
+    case extensionApp(URL)
     /// 支持命令行添加，但客户端未安装
     case appMissing
     case terminal
@@ -250,6 +275,11 @@ private enum MCPConfigDestination: Equatable {
     case missing
 
     init(client: MCPClientInfo) {
+        if client.installsExtension {
+            self = NSWorkspace.shared.urlForApplication(withBundleIdentifier: MCPExtensionBuilder.bundleID)
+                .map { .extensionApp($0) } ?? .appMissing
+            return
+        }
         if let cli = client.cli {
             self = cli.executable.map { .cli($0) } ?? .appMissing
             return

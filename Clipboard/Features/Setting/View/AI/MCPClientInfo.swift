@@ -24,6 +24,8 @@ struct MCPClientInfo: Identifiable {
     let configNote: String?
     /// 可由 App 直接调用客户端自带命令行完成添加
     var cli: MCPClientCLI?
+    /// 通过 .mcpb 扩展安装（Claude Desktop）
+    var installsExtension = false
     private let token: String
 
     var commandForCopy: String {
@@ -40,10 +42,11 @@ extension MCPClientInfo {
             MCPClientInfo(
                 name: "Claude Desktop",
                 icon: "MCPClaudeIcon",
-                subtitle: .mcpConfigSub,
-                displayCommand: bridgeConfig(url: url, auth: auth),
-                footer: .mcpNodeNote,
-                configNote: "~/Library/Application Support/Claude/claude_desktop_config.json",
+                subtitle: .mcpExtensionSub,
+                displayCommand: url,
+                footer: .mcpExtensionNote,
+                configNote: nil,
+                installsExtension: true,
                 token: token
             ),
             MCPClientInfo(
@@ -84,25 +87,6 @@ extension MCPClientInfo {
                 token: token
             )
         ]
-    }
-
-    /// Claude Desktop 经 mcp-remote 桥接
-    private static func bridgeConfig(url: String, auth: String) -> String {
-        """
-        {
-          "mcpServers": {
-            "clipboard": {
-              "command": "npx",
-              "args": [
-                "-y", "mcp-remote",
-                "\(url)",
-                "--header",
-                "Authorization: \(auth)"
-              ]
-            }
-          }
-        }
-        """
     }
 
     /// 用户级作用域，任何项目里都能使用

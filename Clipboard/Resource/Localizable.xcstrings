@@ -3696,23 +3696,6 @@
         }
       }
     },
-    "mcpNodeNote" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This client connects through the mcp-remote bridge, which requires Node.js (npx)"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "该客户端通过 mcp-remote 桥接连接，需要已安装 Node.js（npx）"
-          }
-        }
-      }
-    },
     "mcpPasteInto" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6645,6 +6628,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "复制命令"
+          }
+        }
+      }
+    },
+    "mcpExtensionNote" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After changing the port or regenerating the token, install the extension again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "修改端口或重新生成令牌后，需要重新安装扩展。"
+          }
+        }
+      }
+    },
+    "mcpExtensionSub" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude Desktop will open. Install the Clipboard extension there to finish connecting."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Claude Desktop 将打开，在其中安装 Clipboard 扩展以完成连接。"
+          }
+        }
+      }
+    },
+    "mcpInstallExtension" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install Extension"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装扩展"
           }
         }
       }
