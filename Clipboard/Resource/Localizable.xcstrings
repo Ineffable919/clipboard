@@ -3575,42 +3575,6 @@
         }
       }
     },
-    "mcpDetails" : {
-      "comment" : "Button to open the MCP connection details sheet",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Details…"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "详情…"
-          }
-        }
-      }
-    },
-    "mcpDetailsTitle" : {
-      "comment" : "Title of the sheet for the MCP address and access token",
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connection Details"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "连接详情"
-          }
-        }
-      }
-    },
     "mcpEnable" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6679,6 +6643,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "安装扩展"
+          }
+        }
+      }
+    },
+    "mcpAddress" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Address"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "地址"
+          }
+        }
+      }
+    },
+    "mcpConnectionInfo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "连接信息"
           }
         }
       }
