@@ -39,12 +39,6 @@ extension ClipMainViewController: NSGestureRecognizerDelegate {
 
 extension ClipMainViewController {
     func keyDownEvent(_ event: NSEvent) -> NSEvent? {
-        log.debug(
-            """
-            keyDown keyCode=\(event.keyCode) modifiers=\(event.modifierFlags.rawValue) \
-            focusRegion=\(focusRegion) firstResponder=\(String(describing: view.window?.firstResponder))
-            """
-        )
         if focusRegion == .popover || focusRegion == .chipEditing {
             return handleFocusedKeyEvent(event)
         }
