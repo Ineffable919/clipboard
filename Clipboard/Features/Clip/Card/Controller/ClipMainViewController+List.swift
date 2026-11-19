@@ -23,7 +23,7 @@ extension ClipMainViewController {
                 return item
             }
             cItem.delegate = self
-            cItem.configure(with: model, keyword: topVM.query)
+            cItem.configure(with: model, keyword: PasteDataStore.main.searchWord)
             cItem.quickPasteIndex = quickPasteIndex(for: indexPath.item)
             return cItem
         }
@@ -146,7 +146,7 @@ extension ClipMainViewController {
             for item in items {
                 guard let idx = indexMap[item.uniqueId] else { continue }
                 (collectionView.item(at: IndexPath(item: idx, section: 0)) as? CollectionViewItem)?
-                    .configure(with: item, keyword: topVM.query)
+                    .configure(with: item, keyword: PasteDataStore.main.searchWord)
             }
         }
 

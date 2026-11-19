@@ -115,7 +115,7 @@ extension FloatingHistoryView {
             let row = indexPath.item
             item.configure(
                 with: model,
-                keyword: topVM?.query ?? "",
+                keyword: PasteDataStore.main.searchWord,
                 isFocused: env.focusRegion == .collection,
                 quickPasteIndex: quickPasteDisplayIndex(for: row),
                 displayMode: displayMode

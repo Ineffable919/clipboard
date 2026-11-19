@@ -164,7 +164,7 @@ final class FloatingHistoryView: NSView {
                 (collectionView.item(at: IndexPath(item: idx, section: 0)) as? FloatingCollectionItem)?
                     .configure(
                         with: item,
-                        keyword: topVM?.query ?? "",
+                        keyword: PasteDataStore.main.searchWord,
                         isFocused: focused,
                         quickPasteIndex: quickPasteDisplayIndex(for: idx),
                         displayMode: displayMode
