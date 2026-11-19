@@ -14,21 +14,32 @@ nonisolated struct OCRTextRegion: Sendable {
     let boundingBox: CGRect
 }
 
-/// 全文 Vision OCR 在 actor 内执行，高亮请求独立并发
+/// Vision 识别统一在独立线程执行；全文识别串行，高亮请求独立并发
 actor OCRViewService {
     static let shared = OCRViewService()
+
+    private var fullTextTail: Task<[OCRTextRegion]?, Never>?
 
     func recognizeText(
         from data: Data,
         requestId: String = UUID().uuidString,
         submittedAt: ContinuousClock.Instant = .now
     ) async -> String {
-        guard
-            let regions = await recognize(
-                data: data, keyword: nil, requestId: requestId, submittedAt: submittedAt
+        // 串行排队，连续入库多张图片时一次只识别一张
+        let previous = fullTextTail
+        let task = Task {
+            _ = await previous?.value
+            return await recognize(
+                data: data, keyword: nil, qos: .utility, requestId: requestId, submittedAt: submittedAt
             )
-        else { return "" }
-        return regions.map(\.text).joined(separator: "\n")
+        }
+        fullTextTail = task
+        let regions = await withTaskCancellationHandler {
+            await task.value
+        } onCancel: {
+            task.cancel()
+        }
+        return regions?.map(\.text).joined(separator: "\n") ?? ""
     }
 
     nonisolated func recognizeHighlightRegions(
@@ -38,28 +49,27 @@ actor OCRViewService {
     ) async -> [OCRTextRegion]? {
         let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return [] }
-        return await recognize(data: data, keyword: trimmed, requestId: requestId, submittedAt: submittedAt)
+        return await recognize(
+            data: data, keyword: trimmed, qos: .userInitiated, requestId: requestId, submittedAt: submittedAt
+        )
     }
 
-    private nonisolated(nonsending) func recognize(
-        data: Data, keyword: String?, requestId: String, submittedAt: ContinuousClock.Instant
+    private nonisolated func recognize(
+        data: Data, keyword: String?, qos: QualityOfService, requestId: String, submittedAt: ContinuousClock.Instant
     ) async -> [OCRTextRegion]? {
         let request = OCRRequest()
         return await withTaskCancellationHandler {
-            if keyword != nil {
-                return await withCheckedContinuation { continuation in
-                    // Vision 的同步调用可能阻塞，使用独立线程避免占满 Swift 的任务线程池
-                    let worker = Thread {
-                        continuation.resume(
-                            returning: self.perform(
-                                request, data: data, keyword: keyword, requestId: requestId, submittedAt: submittedAt
-                            ))
-                    }
-                    worker.qualityOfService = .userInitiated
-                    worker.start()
+            await withCheckedContinuation { continuation in
+                // Vision 同步调用耗时且可能阻塞，使用独立线程避免占用 Swift 并发线程池
+                let worker = Thread {
+                    continuation.resume(
+                        returning: self.perform(
+                            request, data: data, keyword: keyword, requestId: requestId, submittedAt: submittedAt
+                        ))
                 }
+                worker.qualityOfService = qos
+                worker.start()
             }
-            return perform(request, data: data, keyword: nil, requestId: requestId, submittedAt: submittedAt)
         } onCancel: {
             request.cancel()
         }

@@ -265,22 +265,16 @@ extension PasteDataStore {
             await previous?.value
             await insertModel(model)
             // 识别不放进入库队列：Vision 首次加载模型可能耗时十几秒，不能阻塞后续条目入库
-            Task { await self.runOCRIfNeeded(model) }
+            Task(priority: .utility) { await self.runOCRIfNeeded(model) }
         }
         return true
     }
 
     func runOCRIfNeeded(_ model: PasteboardModel) async {
         guard model.type == .image, let id = model.id else { return }
-
-        let rawText = await OCRViewService.shared.recognizeText(
-            from: model.data
-        )
-
+        let rawText = await OCRViewService.shared.recognizeText(from: model.data)
         guard !rawText.isEmpty else { return }
-
-        let searchText = PasteboardModel.normalizeSearchText(rawText)
-        model.updateSearchText(val: searchText)
+        model.updateSearchText(val: PasteboardModel.normalizeSearchText(rawText))
         await sqlManager.update(id: id, item: model)
     }
 
@@ -379,10 +373,7 @@ extension PasteDataStore {
 
         let list: [PasteboardModel]
         if isInFilterMode, let currentFilter {
-            let rows = await sqlManager.search(
-                filter: currentFilter,
-                limit: loadedLimit
-            )
+            let rows = await sqlManager.search(filter: currentFilter, limit: loadedLimit)
             list = await mapRows(rows)
         } else {
             list = await getItems(limit: loadedLimit)
@@ -401,5 +392,4 @@ extension PasteDataStore {
         updateData(with: list, changeType: .moveToFirst)
         return true
     }
-
 }

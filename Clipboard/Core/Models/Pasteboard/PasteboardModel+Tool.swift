@@ -32,22 +32,13 @@ extension PasteboardModel {
     func loadOCRHighlightRegions(keyword: String, requestId: String = UUID().uuidString) async -> [OCRTextRegion] {
         let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !Task.isCancelled, !trimmed.isEmpty else { return [] }
-
-        if cachedOCRKeyword == trimmed, let cachedOCRRegions {
-            return cachedOCRRegions
-        }
-
-        guard
-            let regions = await OCRViewService.shared.recognizeHighlightRegions(
-                from: data,
-                keyword: trimmed,
-                requestId: requestId
-            )
-        else { return [] }
+        let regions = await OCRViewService.shared.recognizeHighlightRegions(
+            from: data,
+            keyword: trimmed,
+            requestId: requestId
+        )
         guard !Task.isCancelled else { return [] }
-        cachedOCRKeyword = trimmed
-        cachedOCRRegions = regions
-        return regions
+        return regions ?? []
     }
 
     // MARK: - 计算图片尺寸

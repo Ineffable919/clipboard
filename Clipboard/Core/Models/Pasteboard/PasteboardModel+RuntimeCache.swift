@@ -16,8 +16,6 @@ struct PasteboardModelRuntimeCache {
     var richForegrounds: [NSColor] = []
     var previewForegrounds: [NSColor]?
     var filePaths: [String]?
-    var ocrRegions: [OCRTextRegion]?
-    var ocrKeyword: String?
     var hasBackgroundColor = false
     var needsBottomMask: Bool?
     var isMarkdown: Bool?
@@ -52,16 +50,6 @@ extension PasteboardModel {
     var cachedFilePaths: [String]? {
         get { runtimeCache.filePaths }
         set { runtimeCache.filePaths = newValue }
-    }
-
-    var cachedOCRRegions: [OCRTextRegion]? {
-        get { runtimeCache.ocrRegions }
-        set { runtimeCache.ocrRegions = newValue }
-    }
-
-    var cachedOCRKeyword: String? {
-        get { runtimeCache.ocrKeyword }
-        set { runtimeCache.ocrKeyword = newValue }
     }
 
     var cachedHasBackgroundColor: Bool {
