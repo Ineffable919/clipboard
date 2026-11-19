@@ -26,6 +26,8 @@ struct MCPClientInfo: Identifiable {
     var cli: MCPClientCLI?
     /// 通过 .mcpb 扩展安装（Claude Desktop）
     var installsExtension = false
+    /// 素材自带留白较多时放大显示
+    var iconScale: CGFloat = 1
     private let token: String
 
     var commandForCopy: String {
@@ -75,7 +77,7 @@ extension MCPClientInfo {
                 displayCommand: codexConfig(url: url, auth: auth),
                 footer: nil,
                 configNote: "~/.codex/config.toml",
-                token: token
+                iconScale: 1.3, token: token
             ),
             MCPClientInfo(
                 name: "Cursor",

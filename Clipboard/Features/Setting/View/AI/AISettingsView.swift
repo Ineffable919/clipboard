@@ -189,6 +189,7 @@ private struct MCPClientDetailSheet: View {
         Image(client.icon)
             .resizable()
             .scaledToFit()
+            .scaleEffect(client.iconScale)
             .frame(width: 40, height: 40)
             .clipShape(.rect(cornerRadius: 8))
             .padding(.bottom, Const.space16)

@@ -3485,7 +3485,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "在\"终端\"中运行此命令："
+            "value" : "在“终端”中运行此命令："
           }
         }
       }
@@ -6542,7 +6542,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "可一键添加，或在\"终端\"中运行此命令："
+            "value" : "可一键添加，或在“终端”中运行此命令："
           }
         }
       }
