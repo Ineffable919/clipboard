@@ -71,6 +71,7 @@ enum PrefKey: String, CaseIterable {
 
 /// 应用语言
 enum AppLanguage: String, CaseIterable, Identifiable {
+    case system
     case zhHans = "zh-Hans"
     case english = "en"
 
@@ -80,13 +81,18 @@ enum AppLanguage: String, CaseIterable, Identifiable {
 
     var title: LocalizedStringResource {
         switch self {
+        case .system: .appearanceModeSystem
         case .zhHans: .languageOptionChinese
         case .english: .languageOptionEnglish
         }
     }
 
     func apply() -> Bool {
-        UserDefaults.standard.set([rawValue], forKey: "AppleLanguages")
+        if self == .system {
+            UserDefaults.standard.removeObject(forKey: "AppleLanguages")
+        } else {
+            UserDefaults.standard.set([rawValue], forKey: "AppleLanguages")
+        }
         UserDefaults.standard.synchronize()
         return true
     }
