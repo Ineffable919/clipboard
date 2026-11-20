@@ -16,6 +16,7 @@
 - 新增搜索快捷键 ⌘F，重复按下可切换筛选。
 - 暂停记录时，状态栏图标会变为暂停样式。
 - 标签支持双击重命名。
+- 语言设置新增“跟随系统”选项，并设为默认。
 
 ## Improvements
 
@@ -36,6 +37,7 @@
 - Added the ⌘F search shortcut; press it again to toggle the filters.
 - The status bar icon now changes to a pause icon while recording is paused.
 - Tags can now be renamed by double-clicking them.
+- Added a Follow System option for the language setting, now the default.
 
 ## Improvements
 
@@ -51,16 +53,16 @@
             <sparkle:fullReleaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
             </sparkle:fullReleaseNotesLink>
-            <pubDate>Fri, 20 Nov 2026 16:12:31 +0800</pubDate>
-            <sparkle:version>143</sparkle:version>
+            <pubDate>Fri, 20 Nov 2026 17:52:54 +0800</pubDate>
+            <sparkle:version>144</sparkle:version>
             <sparkle:shortVersionString>2.3.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
             <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
             <enclosure
                 url="https://github.com/Ineffable919/clipboard/releases/download/2.3.0/Clipboard-2.3.0-arm64.zip"
                 sparkle:arch="arm64"
-                sparkle:edSignature="TSY3f00/CDZ7OruTZyUGhglVdTRLCJ1AzReBjOYZR5jFfhP+/Wjq6bPoVPI0AE45YmQ8HKuJvijGVfkOUSntAQ=="
-                length="5003271"
+                sparkle:edSignature="RBCABSntVbGNQ0qjf+t8JigOpWpxvCWAk0L08bWDQr7eZ+N+teDagCnSwZi1C/BddpgONhY5BNpmvfyW/hX8Bw=="
+                length="5003495"
                 type="application/octet-stream" />
         </item>
         <item>
@@ -73,6 +75,7 @@
 - 新增搜索快捷键 ⌘F，重复按下可切换筛选。
 - 暂停记录时，状态栏图标会变为暂停样式。
 - 标签支持双击重命名。
+- 语言设置新增“跟随系统”选项，并设为默认。
 
 ## Improvements
 
@@ -93,6 +96,7 @@
 - Added the ⌘F search shortcut; press it again to toggle the filters.
 - The status bar icon now changes to a pause icon while recording is paused.
 - Tags can now be renamed by double-clicking them.
+- Added a Follow System option for the language setting, now the default.
 
 ## Improvements
 
@@ -108,15 +112,15 @@
             <sparkle:fullReleaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
             </sparkle:fullReleaseNotesLink>
-            <pubDate>Fri, 20 Nov 2026 16:12:31 +0800</pubDate>
-            <sparkle:version>143</sparkle:version>
+            <pubDate>Fri, 20 Nov 2026 17:52:54 +0800</pubDate>
+            <sparkle:version>144</sparkle:version>
             <sparkle:shortVersionString>2.3.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
             <enclosure
                 url="https://github.com/Ineffable919/clipboard/releases/download/2.3.0/Clipboard-2.3.0-x86_64.zip"
                 sparkle:arch="x86_64"
-                sparkle:edSignature="4G1f7J3mQIMj93e6PQysWv6VyAnwpfbKtEoDcw11uMj+SWQ5l8QaD+RQNquRYmzro79n4PxKUC8FE9vmtZD+Cw=="
-                length="5292622"
+                sparkle:edSignature="YXzYZHRIIe2vo4w+c4h5gwWxASFdwiruZXN8+mh67FNtkTJoTVCyAGb/AeyRq5WCxsuaHJxrUEKxuee+3CbTAg=="
+                length="5292873"
                 type="application/octet-stream" />
         </item>
 

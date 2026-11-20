@@ -120,7 +120,7 @@ struct AppearanceSettingsView: View {
 struct AppearanceSettingsRow: View {
     @AppStorage(PrefKey.appearance.rawValue) private var appearanceRaw: Int = 0
     @AppStorage(PrefKey.appLanguage.rawValue) private var languageRaw: String =
-        AppLanguage.zhHans.rawValue
+        AppLanguage.system.rawValue
     @State private var pendingLanguage: AppLanguage?
 
     private var selectedAppearance: AppearanceMode {
@@ -129,7 +129,7 @@ struct AppearanceSettingsRow: View {
     }
 
     private var selectedLanguage: AppLanguage {
-        AppLanguage(rawValue: languageRaw) ?? .zhHans
+        AppLanguage(rawValue: languageRaw) ?? .system
     }
 
     private let options: [(mode: AppearanceMode, icon: String)] = [
