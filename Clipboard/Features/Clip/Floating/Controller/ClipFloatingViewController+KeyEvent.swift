@@ -2,7 +2,7 @@
 //  ClipFloatingViewController+KeyEvent.swift
 //  Clipboard
 //
-//  Created by crown on 2026/5/4.
+//  Created by crown on 2026/5/4
 //
 
 import AppKit
@@ -25,7 +25,8 @@ extension ClipFloatingViewController {
         }
 
         if KeyCode.shouldTriggerSearch(for: event),
-           !floatingContentView.headerView.isSearchFieldFirstResponder {
+            !floatingContentView.headerView.isSearchFieldFirstResponder
+        {
             floatingContentView.historyView.activateSearchField(with: event.characters)
             return nil
         }
@@ -67,8 +68,8 @@ extension ClipFloatingViewController {
 
     func flagsChangedEvent(_ event: NSEvent) -> NSEvent? {
         guard event.window == ClipFloatingWindowController.shared.window,
-              ClipFloatingWindowController.shared.isVisible,
-              floatingContentView.historyView.collectionView.isFirstResponder
+            ClipFloatingWindowController.shared.isVisible,
+            floatingContentView.historyView.collectionView.isFirstResponder
         else { return event }
 
         isQuickPastePressed = KeyCode.isQuickPasteModifierPressed()
@@ -110,7 +111,7 @@ extension ClipFloatingViewController {
 
     private func arrowKeyDown(_ event: NSEvent) -> NSEvent? {
         guard focusRegion == .collection,
-              event.modifierFlags.isDisjoint(with: [.command, .option, .control, .shift])
+            event.modifierFlags.isDisjoint(with: [.command, .option, .control, .shift])
         else { return event }
 
         let historyView = floatingContentView.historyView
@@ -124,9 +125,13 @@ extension ClipFloatingViewController {
         if next == anchor {
             NSSound.beep()
         }
-        // 离屏选中项也按数据顺序导航，再滚动到目标卡片
-        historyView.selectAndScrollTo(index: next)
+
+        let followsSelection = previewPopover?.isShown == true
+        historyView.selectAndScrollTo(index: next, animated: !followsSelection)
         historyView.updateSelectedItemBorder()
+        if followsSelection, next != anchor {
+            retargetPreview(at: next)
+        }
         return nil
     }
 
@@ -181,12 +186,12 @@ extension ClipFloatingViewController {
 
         let historyView = floatingContentView.historyView
         switch event.keyCode {
-        case KeyCode.a:
+        case KeyCode.keyA:
             guard focusRegion == .collection else { return event }
             historyView.collectionView.selectAll(nil)
             historyView.updateSelectedItemBorder()
             return nil
-        case KeyCode.c:
+        case KeyCode.keyC:
             let items = historyView.selectedModels
             guard !items.isEmpty else { return nil }
             if items.count == 1 {
@@ -196,7 +201,7 @@ extension ClipFloatingViewController {
                 ClipFloatingWindowController.shared.toggleWindow()
             }
             return nil
-        case KeyCode.e:
+        case KeyCode.keyE:
             historyView.openEditWindow(at: historyView.selectedIndex)
             return nil
         default:
@@ -220,22 +225,24 @@ extension ClipFloatingViewController {
         let eventModifiers = event.modifierFlags.intersection(relevantModifiers)
 
         if previousTabInfo.isEnabled,
-           event.keyCode == previousTabInfo.shortcut.keyCode,
-           eventModifiers
-           == previousTabInfo.shortcut.modifiers.intersection(
-               relevantModifiers
-           ) {
+            event.keyCode == previousTabInfo.shortcut.keyCode,
+            eventModifiers
+                == previousTabInfo.shortcut.modifiers.intersection(
+                    relevantModifiers
+                )
+        {
             viewModel.selectPreviousChip()
             floatingContentView.headerView.updateChipSelection()
             return true
         }
 
         if nextTabInfo.isEnabled,
-           event.keyCode == nextTabInfo.shortcut.keyCode,
-           eventModifiers
-           == nextTabInfo.shortcut.modifiers.intersection(
-               relevantModifiers
-           ) {
+            event.keyCode == nextTabInfo.shortcut.keyCode,
+            eventModifiers
+                == nextTabInfo.shortcut.modifiers.intersection(
+                    relevantModifiers
+                )
+        {
             viewModel.selectNextChip()
             floatingContentView.headerView.updateChipSelection()
             return true
@@ -277,7 +284,7 @@ extension ClipFloatingViewController: NSGestureRecognizerDelegate {
     ) -> Bool {
         guard
             let hitView = view.window?.contentView?
-            .hitTest(event.locationInWindow)
+                .hitTest(event.locationInWindow)
         else {
             return true
         }

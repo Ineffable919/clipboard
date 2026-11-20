@@ -2,7 +2,7 @@
 //  PrefKey.swift
 //  Clipboard
 //
-//  Created by crown on 2025/9/16.
+//  Created by crown on 2025/9/16
 //
 
 import Foundation
@@ -65,6 +65,8 @@ enum PrefKey: String, CaseIterable {
     case appLanguage
     /// 已完成首次启动欢迎页
     case welcomeDone
+    /// MCP 本地服务端口
+    case mcpPort
 }
 
 /// 应用语言
@@ -106,20 +108,20 @@ enum AppearanceMode: Int, CaseIterable {
 
 /// 历史时间单位
 enum HistoryTimeUnit: Equatable {
-    case days(Int) // 1-6 天
-    case weeks(Int) // 1-3 周
-    case months(Int) // 1-11 月
-    case year // 1 年
-    case forever // 永久
+    case days(Int)  // 1-6 天
+    case weeks(Int)  // 1-3 周
+    case months(Int)  // 1-11 月
+    case year  // 1 年
+    case forever  // 永久
 
     var rawValue: Int {
         switch self {
-        case let .days(count):
-            count // 1-6
-        case let .weeks(count):
-            6 + count // 7-9
-        case let .months(count):
-            9 + count // 10-20
+        case .days(let count):
+            count  // 1-6
+        case .weeks(let count):
+            6 + count  // 7-9
+        case .months(let count):
+            9 + count  // 10-20
         case .year:
             21
         case .forever:
@@ -129,11 +131,11 @@ enum HistoryTimeUnit: Equatable {
 
     init(rawValue: Int) {
         switch rawValue {
-        case 1 ... 6:
+        case 1...6:
             self = .days(rawValue)
-        case 7 ... 9:
+        case 7...9:
             self = .weeks(rawValue - 6)
-        case 10 ... 20:
+        case 10...20:
             self = .months(rawValue - 9)
         case 21:
             self = .year
@@ -146,11 +148,11 @@ enum HistoryTimeUnit: Equatable {
     func cutoffTimestamp(at date: Date = .now, calendar: Calendar = .current) -> Int64? {
         let components: DateComponents
         switch self {
-        case let .days(count):
+        case .days(let count):
             components = DateComponents(day: -count)
-        case let .weeks(count):
+        case .weeks(let count):
             components = DateComponents(day: -count * 7)
-        case let .months(count):
+        case .months(let count):
             components = DateComponents(month: -count)
         case .year:
             components = DateComponents(year: -1)
@@ -162,11 +164,11 @@ enum HistoryTimeUnit: Equatable {
 
     var displayText: LocalizedStringResource {
         switch self {
-        case let .days(count):
+        case .days(let count):
             .historyDays(count)
-        case let .weeks(count):
+        case .weeks(let count):
             .historyWeeks(count)
-        case let .months(count):
+        case .months(let count):
             .historyMonths(count)
         case .year:
             .historyYear

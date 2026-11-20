@@ -2,7 +2,7 @@
 //  TopBarIconButton.swift
 //  Clipboard
 //
-//  Created by crown on 2026/4/9.
+//  Created by crown on 2026/4/9
 //
 
 import AppKit
@@ -15,6 +15,9 @@ final class TopBarIconButton: NSView {
     private let backgroundLayer = CALayer()
     private let imageView = NSImageView()
     private let badgeDot = NSView()
+    private let compact: Bool
+    private let style: HeaderStyle
+    private var isPressed = false
     private var isHovering = false
 
     var isActive: Bool = false {
@@ -32,7 +35,9 @@ final class TopBarIconButton: NSView {
 
     // MARK: - Init
 
-    init(symbolName: String, pointSize: CGFloat = 15) {
+    init(symbolName: String, pointSize: CGFloat = 15, compact: Bool = false, style: HeaderStyle = .floating) {
+        self.compact = compact
+        self.style = style
         super.init(frame: .zero)
         setup(symbolName: symbolName, pointSize: pointSize)
     }
@@ -47,7 +52,6 @@ final class TopBarIconButton: NSView {
     private func setup(symbolName: String, pointSize: CGFloat) {
         wantsLayer = true
 
-        backgroundLayer.cornerRadius = Const.radius
         backgroundLayer.masksToBounds = true
         layer?.addSublayer(backgroundLayer)
 
@@ -66,7 +70,7 @@ final class TopBarIconButton: NSView {
             make.center.equalToSuperview()
         }
         snp.makeConstraints { make in
-            make.width.height.equalTo(30)
+            make.width.height.equalTo(compact ? 24 : 30)
         }
 
         badgeDot.wantsLayer = true
@@ -88,10 +92,16 @@ final class TopBarIconButton: NSView {
         )
         addTrackingArea(area)
 
-        let click = NSClickGestureRecognizer(
+        let click = HeaderClickGestureRecognizer(
             target: self,
             action: #selector(handleClick)
         )
+        if style == .mainPanel {
+            click.onPressChange = { [weak self] pressed in
+                self?.isPressed = pressed
+                self?.updateAppearance(animated: false)
+            }
+        }
         addGestureRecognizer(click)
 
         updateAppearance(animated: false)
@@ -122,12 +132,17 @@ final class TopBarIconButton: NSView {
     }
 
     private func backgroundColor() -> NSColor {
-        guard isHovering else { return .clear }
+        if style == .mainPanel {
+            let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            let state: HeaderHighlight = isPressed || isActive ? .pressed : (isHovering ? .hover : .none)
+            return state.color(isDark: isDark)
+        }
+        guard isHovering || isActive else { return .clear }
 
         let isDark =
             effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
         guard isDark else {
-            return .labelColor.withAlphaComponent(0.06)
+            return .labelColor.withAlphaComponent(isActive ? 0.16 : 0.06)
         }
 
         let isFrostedGlass: Bool = {
@@ -138,8 +153,8 @@ final class TopBarIconButton: NSView {
         }()
 
         return isFrostedGlass
-            ? NSColor(white: 1.0, alpha: 0.10)
-            : .quaternaryLabelColor.withAlphaComponent(0.06)
+            ? NSColor(white: 1.0, alpha: isActive ? 0.22 : 0.10)
+            : .quaternaryLabelColor.withAlphaComponent(isActive ? 0.16 : 0.06)
     }
 
     // MARK: - Layout
@@ -147,6 +162,19 @@ final class TopBarIconButton: NSView {
     override func layout() {
         super.layout()
         backgroundLayer.frame = bounds
+        if #available(macOS 26.0, *) {
+            backgroundLayer.cornerRadius = compact ? bounds.height / 2 : Const.radius
+        } else {
+            backgroundLayer.cornerRadius = Const.radius
+        }
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        if window == nil, isPressed {
+            isPressed = false
+            updateAppearance(animated: false)
+        }
     }
 
     override func viewDidChangeEffectiveAppearance() {
@@ -170,5 +198,14 @@ final class TopBarIconButton: NSView {
 
     @objc private func handleClick() {
         action?()
+        if let window {
+            isHovering = bounds.contains(convert(window.mouseLocationOutsideOfEventStream, from: nil))
+            updateAppearance(animated: false)
+        }
+    }
+
+    override func accessibilityPerformPress() -> Bool {
+        handleClick()
+        return true
     }
 }

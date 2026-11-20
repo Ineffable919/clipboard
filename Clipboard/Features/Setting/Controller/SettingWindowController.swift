@@ -2,7 +2,7 @@
 //  SettingWindowController.swift
 //  Clipboard
 //
-//  Created on crown 2025/10/26.
+//  Created by crown on 2025/10/26
 //
 
 import AppKit
@@ -21,28 +21,23 @@ class SettingWindowController: NSWindowController {
                 height: Const.settingHeight
             ),
             styleMask: [
-                .titled, .closable, .miniaturizable, .fullSizeContentView,
+                .titled, .closable, .miniaturizable, .fullSizeContentView
             ],
             backing: .buffered,
             defer: false
         )
 
         window.level = .normal
-        window.center()
         window.isReleasedWhenClosed = false
+        window.titleVisibility = .hidden
+        window.titlebarAppearsTransparent = true
         window.titlebarSeparatorStyle = .none
-
-        if #available(macOS 27, *) {
-            window.titlebarAppearsTransparent = false
-        } else {
-            window.titlebarAppearsTransparent = true
-        }
-
-        let settingView = SettingView()
-            .environment(viewModel)
-        window.contentView = NSHostingView(rootView: settingView)
+        window.contentViewController = Self.makeContentController(viewModel: viewModel)
+        window.setContentSize(NSSize(width: Const.settingWidth, height: Const.settingHeight))
+        window.center()
 
         super.init(window: window)
+        updateWindowTitle()
 
         window.onCommandW = { [weak self] in
             self?.hideWindow()
@@ -50,6 +45,35 @@ class SettingWindowController: NSWindowController {
 
         window.onCommandM = { [weak self] in
             self?.minWindow()
+        }
+    }
+
+    static func makeContentController(viewModel: SettingViewModel) -> NSSplitViewController {
+        let sidebar = NSHostingController(rootView: SettingSidebarView().environment(viewModel))
+        let sidebarItem = NSSplitViewItem(sidebarWithViewController: sidebar)
+        sidebarItem.minimumThickness = 200
+        sidebarItem.maximumThickness = sidebarItem.minimumThickness
+        sidebarItem.canCollapse = false
+
+        let detail = NSHostingController(rootView: SettingDetailView().environment(viewModel))
+        detail.sizingOptions = .minSize
+        detail.safeAreaRegions = []
+
+        let controller = NSSplitViewController()
+        controller.splitView.isVertical = true
+        controller.splitView.dividerStyle = .thin
+        controller.addSplitViewItem(sidebarItem)
+        controller.addSplitViewItem(NSSplitViewItem(viewController: detail))
+        return controller
+    }
+
+    private func updateWindowTitle() {
+        withObservationTracking {
+            window?.title = String(localized: viewModel.selectedPage.title)
+        } onChange: { [weak self] in
+            Task { @MainActor [weak self] in
+                self?.updateWindowTitle()
+            }
         }
     }
 

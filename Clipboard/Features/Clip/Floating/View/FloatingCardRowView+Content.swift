@@ -2,6 +2,8 @@
 //  FloatingCardRowView+Content.swift
 //  Clipboard
 //
+//  Created by crown on 2026/10/2
+//
 
 import AppKit
 import SnapKit
@@ -22,18 +24,18 @@ extension FloatingCardRowView {
                 )
             }
             return FloatingTextContentView(
-                model: model, keyword: keyword, maximumLines: displayMode == .standard ? 0 : 1
+                model: model, keyword: keyword, displayMode: displayMode
             )
         case .link:
             if PasteUserDefaults.enableLinkPreview {
                 return FloatingLinkContentView(model: model, keyword: keyword, displayMode: displayMode)
             }
             return FloatingTextContentView(
-                model: model, keyword: keyword, maximumLines: displayMode == .standard ? 0 : 1
+                model: model, keyword: keyword, displayMode: displayMode
             )
         case .string:
             return FloatingTextContentView(
-                model: model, keyword: keyword, maximumLines: displayMode == .standard ? 0 : 1
+                model: model, keyword: keyword, displayMode: displayMode
             )
         case .none:
             return NSView()
@@ -45,9 +47,12 @@ extension FloatingCardRowView {
 
 final class FloatingTextContentView: NSView {
     private let textField = NSTextField(labelWithString: "")
+    private let fontSize: CGFloat
 
-    init(model: PasteboardModel, keyword: String, maximumLines: Int) {
+    init(model: PasteboardModel, keyword: String, displayMode: FloatingDisplayMode) {
+        fontSize = displayMode.plainTextFontSize
         super.init(frame: .zero)
+        let maximumLines = displayMode == .standard ? 0 : 1
         textField.cell = VerticallyCenteredTextFieldCell()
         textField.cell?.usesSingleLineMode = maximumLines == 1
         textField.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .regular)
@@ -67,13 +72,14 @@ final class FloatingTextContentView: NSView {
     }
 
     func update(keyword: String, model: PasteboardModel) {
-        let text = keyword.isEmpty
+        let text =
+            keyword.isEmpty
             ? model.plainTextAttributedString
             : model.highlightedNSAttributedString(keyword: keyword)
-        if textField.maximumNumberOfLines == 1, model.pasteboardType == .string {
+        if model.pasteboardType == .string {
             let preview = NSMutableAttributedString(attributedString: text)
             preview.addAttribute(
-                .font, value: NSFont.systemFont(ofSize: 12), range: NSRange(location: 0, length: preview.length)
+                .font, value: NSFont.systemFont(ofSize: fontSize), range: NSRange(location: 0, length: preview.length)
             )
             textField.attributedStringValue = preview
         } else {

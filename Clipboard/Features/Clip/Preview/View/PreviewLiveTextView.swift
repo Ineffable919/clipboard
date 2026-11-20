@@ -2,7 +2,9 @@
 //  PreviewLiveTextView.swift
 //  Clipboard
 //
-//  图片实况文本分析与交互覆盖层。
+//  Created by crown on 2026/8/26
+//
+//  图片实况文本分析与交互覆盖层
 //
 
 import AppKit
@@ -22,6 +24,7 @@ final class PreviewLiveTextView: NSView, ImageAnalysisOverlayViewDelegate, Previ
 
     private let overlayView = ImageAnalysisOverlayView()
     private var analysisTask: Task<Void, Never>?
+    private var loadTask: Task<Void, Never>?
 
     private static let analysisDelay: Duration = .milliseconds(400)
 
@@ -30,10 +33,19 @@ final class PreviewLiveTextView: NSView, ImageAnalysisOverlayViewDelegate, Previ
         return ImageAnalyzer()
     }()
 
-    init(imageData: Data) {
+    /// maxPixelSize 按显示尺寸降采样，解码结果走缩略图缓存，连续开关预览不再重复解码原图
+    init(model: PasteboardModel, maxPixelSize: Int) {
         super.init(frame: .zero)
         setupViews()
-        loadImage(from: imageData)
+        let id = model.uniqueId
+        let data = model.data
+        loadTask = Task { @MainActor [weak self] in
+            let image = await ImageThumbnailCache.shared.image(
+                for: id, data: data, maxPixelSize: maxPixelSize
+            )
+            guard let self, !Task.isCancelled else { return }
+            showImage(image)
+        }
     }
 
     @available(*, unavailable)
@@ -42,6 +54,7 @@ final class PreviewLiveTextView: NSView, ImageAnalysisOverlayViewDelegate, Previ
     }
 
     deinit {
+        loadTask?.cancel()
         analysisTask?.cancel()
     }
 
@@ -55,6 +68,8 @@ final class PreviewLiveTextView: NSView, ImageAnalysisOverlayViewDelegate, Previ
     }
 
     func resetPreview() {
+        loadTask?.cancel()
+        loadTask = nil
         cancelAnalysis()
         overlayView.analysis = nil
         overlayView.trackingImageView = nil
@@ -69,7 +84,7 @@ final class PreviewLiveTextView: NSView, ImageAnalysisOverlayViewDelegate, Previ
 
     func contentsRect(for _: ImageAnalysisOverlayView) -> CGRect {
         guard let image = imageView.image,
-              bounds.width > 0, bounds.height > 0
+            bounds.width > 0, bounds.height > 0
         else { return CGRect(x: 0, y: 0, width: 1, height: 1) }
 
         let imageSize = image.size
@@ -110,9 +125,10 @@ final class PreviewLiveTextView: NSView, ImageAnalysisOverlayViewDelegate, Previ
         overlayView.snp.makeConstraints { $0.edges.equalToSuperview() }
     }
 
-    private func loadImage(from data: Data) {
-        if let image = NSImage(data: data) {
-            imageView.image = image
+    private func showImage(_ cgImage: CGImage?) {
+        if let cgImage {
+            imageView.image = NSImage(cgImage: cgImage, size: .zero)
+            overlayView.setContentsRectNeedsUpdate()
             scheduleAnalysisIfNeeded()
         } else {
             let configuration = NSImage.SymbolConfiguration(pointSize: 64, weight: .regular)
@@ -132,9 +148,9 @@ final class PreviewLiveTextView: NSView, ImageAnalysisOverlayViewDelegate, Previ
 
     private func scheduleAnalysisIfNeeded() {
         guard window != nil,
-              imageView.image != nil,
-              overlayView.analysis == nil,
-              Self.sharedAnalyzer != nil
+            imageView.image != nil,
+            overlayView.analysis == nil,
+            Self.sharedAnalyzer != nil
         else { return }
 
         analysisTask?.cancel()
@@ -146,15 +162,19 @@ final class PreviewLiveTextView: NSView, ImageAnalysisOverlayViewDelegate, Previ
             }
 
             guard let self,
-                  !Task.isCancelled,
-                  window != nil,
-                  let image = imageView.image
+                !Task.isCancelled,
+                window != nil,
+                let image = imageView.image
             else { return }
 
-            Self.activeAnalysisTask?.cancel()
+            let previous = Self.activeAnalysisTask
+            previous?.cancel()
             Self.activeAnalysisGeneration += 1
             let generation = Self.activeAnalysisGeneration
             Self.activeAnalysisTask = analysisTask
+            // 取消不一定能撤回 VisionKit 已排队的请求，等上一个请求结束再提交，队列里最多一个
+            await previous?.value
+            guard !Task.isCancelled, window != nil else { return }
             await analyzeImage(image)
             if Self.activeAnalysisGeneration == generation {
                 Self.activeAnalysisTask = nil
@@ -164,8 +184,8 @@ final class PreviewLiveTextView: NSView, ImageAnalysisOverlayViewDelegate, Previ
 
     private func analyzeImage(_ image: NSImage) async {
         guard let analyzer = Self.sharedAnalyzer,
-              let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil),
-              !Task.isCancelled
+            let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil),
+            !Task.isCancelled
         else { return }
 
         let configuration = ImageAnalyzer.Configuration([.text, .machineReadableCode])

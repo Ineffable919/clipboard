@@ -2,8 +2,10 @@
 //  MarkdownAttributedRenderer.swift
 //  Clipboard
 //
-//  基于 apple/swift-markdown 解析，将 markdown 渲染为 NSAttributedString。
-//  样式全部使用动态系统颜色，自动适配深浅色。
+//  Created by crown on 2026/7/1
+//
+//  基于 apple/swift-markdown 解析，将 markdown 渲染为 NSAttributedString
+//  样式全部使用动态系统颜色，自动适配深浅色
 //
 
 import AppKit
@@ -88,21 +90,24 @@ struct MarkdownAttributedRenderer: MarkupVisitor {
     }
 
     mutating func visitInlineCode(_ inlineCode: InlineCode) -> NSAttributedString {
-        NSAttributedString(string: inlineCode.code, attributes: [
-            .font: codeFont,
-            .foregroundColor: NSColor.labelColor,
-            .backgroundColor: NSColor.quaternaryLabelColor
-        ])
+        NSAttributedString(
+            string: inlineCode.code,
+            attributes: [
+                .font: codeFont,
+                .foregroundColor: NSColor.labelColor,
+                .backgroundColor: NSColor.quaternaryLabelColor
+            ])
     }
 
     mutating func visitLink(_ link: Link) -> NSAttributedString {
         let result = inlineChildren(of: link)
         if let destination = link.destination, let url = URL(string: destination) {
-            result.addAttributes([
-                .link: url,
-                .foregroundColor: NSColor.linkColor,
-                .underlineStyle: NSUnderlineStyle.single.rawValue
-            ], range: NSRange(location: 0, length: result.length))
+            result.addAttributes(
+                [
+                    .link: url,
+                    .foregroundColor: NSColor.linkColor,
+                    .underlineStyle: NSUnderlineStyle.single.rawValue
+                ], range: NSRange(location: 0, length: result.length))
         }
         return result
     }
@@ -110,7 +115,8 @@ struct MarkdownAttributedRenderer: MarkupVisitor {
     mutating func visitImage(_ image: Image) -> NSAttributedString {
         let alt = image.plainText.isEmpty ? (image.source ?? "image") : image.plainText
         let config = NSImage.SymbolConfiguration(pointSize: baseFontSize * 2.5, weight: .regular)
-        let placeholder = NSImage(systemSymbolName: "photo.badge.arrow.down.fill", accessibilityDescription: alt)?
+        let placeholder =
+            NSImage(systemSymbolName: "photo.badge.arrow.down.fill", accessibilityDescription: alt)?
             .withSymbolConfiguration(config) ?? NSImage()
         let attachment = NSTextAttachment()
         attachment.image = placeholder
@@ -162,12 +168,14 @@ struct MarkdownAttributedRenderer: MarkupVisitor {
         style.firstLineHeadIndent = Const.space8
         style.headIndent = Const.space8
 
-        let result = NSMutableAttributedString(string: code, attributes: [
-            .font: codeFont,
-            .foregroundColor: NSColor.labelColor,
-            .backgroundColor: NSColor.quaternaryLabelColor,
-            .paragraphStyle: style
-        ])
+        let result = NSMutableAttributedString(
+            string: code,
+            attributes: [
+                .font: codeFont,
+                .foregroundColor: NSColor.labelColor,
+                .backgroundColor: NSColor.quaternaryLabelColor,
+                .paragraphStyle: style
+            ])
         result.append(blockTerminator())
         return result
     }
@@ -297,7 +305,8 @@ struct MarkdownAttributedRenderer: MarkupVisitor {
 
     private func trimTrailingNewline(_ string: NSMutableAttributedString) {
         while string.length > 0,
-              (string.string as NSString).substring(from: string.length - 1) == "\n" {
+            (string.string as NSString).substring(from: string.length - 1) == "\n"
+        {
             string.deleteCharacters(in: NSRange(location: string.length - 1, length: 1))
         }
     }

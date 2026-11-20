@@ -2,6 +2,8 @@
 //  WelcomeShortcutPageView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/8/19
+//
 
 import AppKit
 import SwiftUI
@@ -30,7 +32,7 @@ struct WelcomeShortcutPageView: View {
         let defaultShortcut = KeyboardShortcut(
             modifiersRawValue: NSEvent.ModifierFlags([.command, .shift])
                 .rawValue,
-            keyCode: KeyCode.v,
+            keyCode: KeyCode.keyV,
             displayKey: "V"
         )
 

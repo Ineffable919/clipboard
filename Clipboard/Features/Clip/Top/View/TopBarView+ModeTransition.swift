@@ -2,6 +2,8 @@
 //  TopBarView+ModeTransition.swift
 //  Clipboard
 //
+//  Created by crown on 2026/9/14
+//
 
 import AppKit
 
@@ -22,13 +24,15 @@ extension TopBarView {
 
     func applyMode(animated: Bool = false) {
         modeAnimationGeneration += 1
-        searchField.setModeFocusRingSuppressed(!isSearching)
+        let wasSearching = modeShowsSearch
+        modeShowsSearch = isSearching
         guard animated, window?.isVisible == true,
-              !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else {
+            !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        else {
             finishModeTransition()
             return
         }
-        animateModeTransition()
+        animateModeTransition(wasHidden: !wasSearching)
     }
 
     private func finishModeTransition() {
@@ -38,8 +42,10 @@ extension TopBarView {
         dotChipScrollView.alphaValue = 1
         addChipBtn.alphaValue = 1
         for item in modeChipLayers {
-            for layer in [item.layer, (item.view as? ChipButton)?.modeBackground,
-                          (item.view as? ChipButton)?.modeLabel].compactMap({ $0 }) {
+            for layer in [
+                item.layer, (item.view as? ChipButton)?.modeBackground,
+                (item.view as? ChipButton)?.modeLabel
+            ].compactMap({ $0 }) {
                 for key in ["modeOffset", "modeWidth", "modePosition", "modeOpacity"] {
                     layer.removeAnimation(forKey: key)
                 }
@@ -53,7 +59,6 @@ extension TopBarView {
         modeClips = []
         for view in modeHiddenViews { view.isHidden = false }
         modeHiddenViews = []
-        searchField.layer?.masksToBounds = false
         for view in [searchField, searchIconBtn, searchField.modeIconView] + searchField.modeTrailingViews {
             for key in ["modeOpacity", "modeOffset", "modeWidth", "modePosition", "modeIconOpacity"] {
                 view.layer?.removeAnimation(forKey: key)
@@ -61,12 +66,11 @@ extension TopBarView {
         }
     }
 
-    private func animateModeTransition() {
-        let wasHidden = searchRow.isHidden
+    private func animateModeTransition(wasHidden: Bool) {
         defaultRow.isHidden = false
         searchRow.isHidden = false
         layoutSubtreeIfNeeded()
-        guard let fieldLayer = searchField.layer else {
+        guard searchField.layer != nil else {
             finishModeTransition()
             return
         }
@@ -77,8 +81,9 @@ extension TopBarView {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         CATransaction.setCompletionBlock { [weak self] in
-            Task { @MainActor [weak self] in
-                guard let self, modeAnimationGeneration == generation else { return }
+            guard let self else { return }
+            MainActor.assumeIsolated {
+                guard modeAnimationGeneration == generation else { return }
                 finishModeTransition()
             }
         }
@@ -86,27 +91,31 @@ extension TopBarView {
         animateModeField(buttonFrame: buttonFrame, fieldFrame: fieldFrame, wasHidden: wasHidden)
         animateModeIcon(buttonFrame: buttonFrame, wasHidden: wasHidden)
         for item in modeChipLayers { animateModeChip(item, wasHidden: wasHidden) }
-        fieldLayer.masksToBounds = true
         CATransaction.commit()
     }
 
     private func animateModeField(buttonFrame: CGRect, fieldFrame: CGRect, wasHidden: Bool) {
         guard let fieldLayer = searchField.layer else { return }
-        let collapsedX = fieldLayer.position.x + buttonFrame.minX - fieldFrame.minX
+        let collapsedX =
+            fieldLayer.position.x + buttonFrame.minX - fieldFrame.minX
             + fieldLayer.anchorPoint.x * (buttonFrame.width - fieldFrame.width)
-        animateModeLayer(fieldLayer, keyPath: "bounds.size.width",
-                         from: wasHidden ? buttonFrame.width : fieldFrame.width,
-                         to: isSearching ? fieldFrame.width : buttonFrame.width, key: "modeWidth")
-        animateModeLayer(fieldLayer, keyPath: "position.x",
-                         from: wasHidden ? collapsedX : fieldLayer.position.x,
-                         to: isSearching ? fieldLayer.position.x : collapsedX, key: "modePosition")
-        animateModeLayer(fieldLayer, keyPath: "opacity", from: wasHidden ? 0 : 1,
-                         to: isSearching ? 1 : 0, key: "modeOpacity")
+        animateModeLayer(
+            fieldLayer, keyPath: "bounds.size.width",
+            from: wasHidden ? buttonFrame.width : fieldFrame.width,
+            to: isSearching ? fieldFrame.width : buttonFrame.width, key: "modeWidth")
+        animateModeLayer(
+            fieldLayer, keyPath: "position.x",
+            from: wasHidden ? collapsedX : fieldLayer.position.x,
+            to: isSearching ? fieldLayer.position.x : collapsedX, key: "modePosition")
+        animateModeLayer(
+            fieldLayer, keyPath: "opacity", from: wasHidden ? 0 : 1,
+            to: isSearching ? 1 : 0, key: "modeOpacity")
         for view in searchField.modeTrailingViews {
             guard let layer = view.layer else { continue }
             let offset = buttonFrame.width - fieldFrame.width
-            animateModeLayer(layer, keyPath: "transform.translation.x", from: wasHidden ? offset : 0,
-                             to: isSearching ? 0 : offset, key: "modeOffset")
+            animateModeLayer(
+                layer, keyPath: "transform.translation.x", from: wasHidden ? offset : 0,
+                to: isSearching ? 0 : offset, key: "modeOffset")
         }
     }
 
@@ -115,13 +124,15 @@ extension TopBarView {
         let searchFrame = icon.convert(icon.bounds, to: self)
         if let buttonLayer = searchIconBtn.layer {
             let offset = searchFrame.midX - buttonFrame.midX
-            animateModeLayer(buttonLayer, keyPath: "transform.translation.x", from: wasHidden ? 0 : offset,
-                             to: isSearching ? offset : 0, key: "modeOffset")
+            animateModeLayer(
+                buttonLayer, keyPath: "transform.translation.x", from: wasHidden ? 0 : offset,
+                to: isSearching ? offset : 0, key: "modeOffset")
         }
         for (view, showsInSearch) in [(searchIconBtn as NSView, false), (icon as NSView, true)] {
             guard let layer = view.layer else { continue }
             let initial: Float = showsInSearch == !wasHidden ? 1 : 0
-            let start = layer.animation(forKey: "modeIconOpacity") == nil
+            let start =
+                layer.animation(forKey: "modeIconOpacity") == nil
                 ? initial : (layer.presentation()?.opacity ?? initial)
             let animation = CAKeyframeAnimation(keyPath: "opacity")
             animation.values = [start, 0, showsInSearch == isSearching ? 1 : 0]
@@ -139,7 +150,8 @@ extension TopBarView {
             guard let dot = dots[id], !button.visibleRect.isEmpty, !dot.visibleRect.isEmpty else { continue }
             let frame = button.convert(button.bounds, to: self)
             let dotFrame = dot.convert(dot.bounds, to: self)
-            let offset = dot.convert(dot.modeIconOrigin, to: self).x
+            let offset =
+                dot.convert(dot.modeIconOrigin, to: self).x
                 - button.convert(button.modeIconOrigin, to: self).x
             var collapsed = dotFrame.offsetBy(dx: -offset, dy: 0)
             collapsed.origin.y = frame.minY
@@ -164,17 +176,21 @@ extension TopBarView {
         _ view: NSView, defaultFrame: CGRect, searchFrame: CGRect, showsInSearch: Bool
     ) {
         guard let layer = view.layer else { return }
-        modeChipLayers.append(ModeChipLayer(
-            view: view, layer: layer, defaultFrame: defaultFrame, searchFrame: searchFrame, showsInSearch: showsInSearch
-        ))
+        modeChipLayers.append(
+            ModeChipLayer(
+                view: view, layer: layer, defaultFrame: defaultFrame, searchFrame: searchFrame,
+                showsInSearch: showsInSearch
+            ))
     }
 
     private func unclipModeAncestors(of view: NSView) {
         var ancestor = view.superview
         while let parent = ancestor, parent !== self {
             if !modeClips.contains(where: { $0.view === parent }) {
-                modeClips.append(ModeClip(view: parent, clips: parent.clipsToBounds,
-                                          masks: parent.layer?.masksToBounds ?? false))
+                modeClips.append(
+                    ModeClip(
+                        view: parent, clips: parent.clipsToBounds,
+                        masks: parent.layer?.masksToBounds ?? false))
                 parent.clipsToBounds = false
                 parent.layer?.masksToBounds = false
             }
@@ -186,24 +202,29 @@ extension TopBarView {
         let source = wasHidden ? item.defaultFrame : item.searchFrame
         let target = isSearching ? item.searchFrame : item.defaultFrame
         let base = item.showsInSearch ? item.searchFrame : item.defaultFrame
-        animateModeLayer(item.layer, keyPath: "transform.translation.x", from: source.minX - base.minX,
-                         to: target.minX - base.minX, key: "modeOffset")
-        animateModeLayer(item.layer, keyPath: "opacity",
-                         from: item.showsInSearch == !wasHidden ? 1 : 0,
-                         to: item.showsInSearch == isSearching ? 1 : 0, key: "modeOpacity")
+        animateModeLayer(
+            item.layer, keyPath: "transform.translation.x", from: source.minX - base.minX,
+            to: target.minX - base.minX, key: "modeOffset")
+        animateModeLayer(
+            item.layer, keyPath: "opacity",
+            from: item.showsInSearch == !wasHidden ? 1 : 0,
+            to: item.showsInSearch == isSearching ? 1 : 0, key: "modeOpacity")
         guard let button = item.view as? ChipButton, !item.showsInSearch else { return }
         let background = button.modeBackground
         let sourceWidth = max(0, background.bounds.width + source.width - base.width)
         let targetWidth = max(0, background.bounds.width + target.width - base.width)
-        animateModeLayer(background, keyPath: "bounds.size.width", from: sourceWidth,
-                         to: targetWidth, key: "modeWidth")
+        animateModeLayer(
+            background, keyPath: "bounds.size.width", from: sourceWidth,
+            to: targetWidth, key: "modeWidth")
         let origin = background.frame.minX
-        animateModeLayer(background, keyPath: "position.x",
-                         from: origin + sourceWidth * background.anchorPoint.x,
-                         to: origin + targetWidth * background.anchorPoint.x, key: "modePosition")
+        animateModeLayer(
+            background, keyPath: "position.x",
+            from: origin + sourceWidth * background.anchorPoint.x,
+            to: origin + targetWidth * background.anchorPoint.x, key: "modePosition")
         if let label = button.modeLabel {
-            animateModeLayer(label, keyPath: "opacity", from: wasHidden ? 1 : 0,
-                             to: isSearching ? 0 : 1, key: "modeOpacity")
+            animateModeLayer(
+                label, keyPath: "opacity", from: wasHidden ? 1 : 0,
+                to: isSearching ? 0 : 1, key: "modeOpacity")
         }
     }
 

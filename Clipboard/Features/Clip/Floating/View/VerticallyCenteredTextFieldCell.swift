@@ -1,3 +1,10 @@
+//
+//  VerticallyCenteredTextFieldCell.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/9
+//
+
 import AppKit
 
 final class VerticallyCenteredTextFieldCell: NSTextFieldCell {
@@ -15,7 +22,8 @@ final class VerticallyCenteredTextFieldCell: NSTextFieldCell {
             ) { value, range, _ in
                 let style = value as? NSParagraphStyle ?? .default
                 guard style.lineBreakMode != .byTruncatingTail,
-                      let updated = style.mutableCopy() as? NSMutableParagraphStyle else { return }
+                    let updated = style.mutableCopy() as? NSMutableParagraphStyle
+                else { return }
                 updated.lineBreakMode = .byTruncatingTail
                 paragraphUpdates.append((range, updated))
             }
@@ -23,7 +31,7 @@ final class VerticallyCenteredTextFieldCell: NSTextFieldCell {
                 super.attributedStringValue = newValue
                 return
             }
-            // 仅转换单行预览，保留原始内容及其文字样式。
+            // 仅转换单行预览，保留原始内容及其文字样式
             let preview = NSMutableAttributedString(attributedString: newValue)
             for (range, style) in paragraphUpdates {
                 preview.addAttribute(.paragraphStyle, value: style, range: range)

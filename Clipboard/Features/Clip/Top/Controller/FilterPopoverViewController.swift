@@ -2,6 +2,8 @@
 //  FilterPopoverViewController.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/18
+//
 //  Popover 视图控制器：管理筛选内容视图的生命周期与数据加载
 //
 
@@ -58,12 +60,13 @@ final class FilterPopoverViewController: NSViewController {
     override func viewDidAppear() {
         super.viewDidAppear()
         isViewVisible = true
-        contentView.appSection.prepareRemainingApps()
     }
 
     override func viewDidDisappear() {
         super.viewDidDisappear()
         isViewVisible = false
+        loadingTask?.cancel()
+        loadingTask = nil
     }
 
     // MARK: - Public API
@@ -95,6 +98,11 @@ extension FilterPopoverViewController {
         // 类型筛选回调
         contentView.typeSection.onTypeToggle = { [weak self] type in
             self?.viewModel?.toggleType(type)
+            self?.updateContentViewState()
+        }
+
+        contentView.typeSection.onTextToggle = { [weak self] in
+            self?.viewModel?.toggleTextType()
             self?.updateContentViewState()
         }
 
@@ -132,37 +140,33 @@ extension FilterPopoverViewController {
 
     private func loadData() {
         loadingTask?.cancel()
+        loadingTask = nil
+        guard viewModel != nil else { return }
 
-        loadingTask = Task { @MainActor [weak self] in
-            guard let self, viewModel != nil else { return }
+        let rawAppInfo = SourceAppCache.shared.orderedApps
+        var missingIcons: [SourceApp] = []
+        let appInfo = rawAppInfo.map { info in
+            let icon = AppIconCache.shared.getCachedIcon(forAppID: info.id)
+            if icon == nil { missingIcons.append(info) }
+            return FilterAppInfo(
+                id: info.id,
+                name: info.name,
+                path: info.path,
+                icon: icon
+            )
+        }
 
-            let rawAppInfo = SourceAppCache.shared.orderedApps
-            guard !Task.isCancelled else { return }
+        contentView.appSection.setAvailableApps(appInfo)
 
-            let appInfo = rawAppInfo.map { info in
-                let icon = AppIconCache.shared.getCachedIcon(forAppID: info.id)
-                return FilterAppInfo(
-                    id: info.id,
-                    name: info.name,
-                    path: info.path,
-                    icon: icon
-                )
-            }
+        let userChips = CategoryChipStore.shared.chips.filter { !$0.isSystem }
+        contentView.tagSection.setAvailableGroups(userChips)
 
-            contentView.typeSection.setAvailableTypes([
-                .color, .file, .image, .link, .string
-            ])
-            contentView.appSection.setAvailableApps(appInfo)
-            if isViewVisible {
-                contentView.appSection.prepareRemainingApps()
-            }
+        updateContentViewState()
 
-            let userChips = CategoryChipStore.shared.chips.filter { !$0.isSystem }
-            contentView.tagSection.setAvailableGroups(userChips)
-
-            updateContentViewState()
-
-            await loadMissingIcons(for: rawAppInfo)
+        // 只有补全图标需要异步
+        guard !missingIcons.isEmpty else { return }
+        loadingTask = Task { [weak self] in
+            await self?.loadMissingIcons(for: missingIcons)
         }
     }
 
@@ -177,7 +181,10 @@ extension FilterPopoverViewController {
                 }
             }
             while let (id, icon) = await group.next() {
-                guard !Task.isCancelled else { group.cancelAll(); return }
+                guard !Task.isCancelled else {
+                    group.cancelAll()
+                    return
+                }
                 contentView.appSection.updateIcon(icon, forAppID: id)
                 if let app = pending.next() {
                     group.addTask {

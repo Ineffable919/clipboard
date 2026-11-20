@@ -1,10 +1,14 @@
-// ClipboardSchema.swift
-// Shared between App and clipmcp targets.
+//
+//  ClipboardSchema.swift
+//  Clipboard
+//
+//  Created by crown on 2026/6/2
+//
 
 import Foundation
 import SQLite
 
-// MARK: - Column definitions (source of truth for both targets)
+// MARK: - Column definitions
 
 struct Col {
     nonisolated static let id = Expression<Int64>("id")
@@ -18,7 +22,7 @@ struct Col {
         literal: "(SELECT COALESCE(MAX(sort_order), 0) + 1 FROM Clip)"
     )
     nonisolated static let appID = Expression<Int64>("app_id")
-    // 仅供旧备份导入使用。
+    // 仅供旧备份导入使用
     nonisolated static let appPath = Expression<String>("app_path")
     nonisolated static let appName = Expression<String>("app_name")
     nonisolated static let searchText = Expression<String>("search_text")
@@ -32,7 +36,7 @@ struct Col {
 
 // MARK: - Shared paths
 
-enum ClipboardPaths {
+nonisolated enum ClipboardPaths {
     static let appBundleId = "com.crown.clipboard"
 
     private static var appSupportDir: URL {
@@ -46,59 +50,39 @@ enum ClipboardPaths {
         appSupportDir.appending(path: "Clip.sqlite3").path
     }
 
-    /// Presence of this file = MCP enabled. App toggle creates/removes it.
+    /// Presence of this file = MCP enabled. App toggle creates/removes it
     static var mcpEnableFlag: String {
         appSupportDir.appending(path: "mcp_enabled").path
     }
-
-    /// JSON array of disabled tool names.
-    static var mcpDisabledTools: String {
-        appSupportDir.appending(path: "mcp_disabled_tools").path
-    }
 }
 
-// MARK: - MCP tool registry (shared between App and clipmcp targets)
+// MARK: - MCP tool registry
 
-struct MCPToolDefinition {
+nonisolated struct MCPToolDefinition {
+    /// 工具对数据的影响，用于生成 annotations
+    enum Effect {
+        /// 不修改任何数据
+        case readOnly
+        /// 修改数据，重复调用结果相同
+        case idempotent
+        /// 修改数据，重复调用会产生新的结果
+        case additive
+        /// 不可恢复地删除数据
+        case destructive
+    }
+
     let name: String
     let description: String
-    let icon: String
-    let colorHex: String
+    let effect: Effect
 
-    static let all: [MCPToolDefinition] = [
-        .init(
-            name: "search_clipboard",
-            description: "Search clipboard history by keyword, content type, or user category",
-            icon: "magnifyingglass",
-            colorHex: "#007AFF"
-        ),
-        .init(
-            name: "write_clipboard",
-            description: "Write plain text to the system clipboard",
-            icon: "bolt.fill",
-            colorHex: "#34C759"
-        ),
-        .init(
-            name: "list_tags",
-            description: "List available content types and user-defined tags for clipboard search",
-            icon: "tag.fill",
-            colorHex: "#FF9500"
-        )
-    ]
-}
-
-// MARK: - Per-tool enable flag (shared between App and clipmcp targets)
-
-enum MCPDisabledTools {
-    static func load() -> Set<String> {
-        guard let data = FileManager.default.contents(atPath: ClipboardPaths.mcpDisabledTools),
-              let names = try? JSONDecoder().decode([String].self, from: data)
-        else { return [] }
-        return Set(names)
+    var annotations: [String: Bool] {
+        [
+            "readOnlyHint": effect == .readOnly,
+            "destructiveHint": effect == .destructive,
+            "idempotentHint": effect == .readOnly || effect == .idempotent,
+            "openWorldHint": false
+        ]
     }
 
-    static func save(_ disabled: Set<String>) {
-        guard let data = try? JSONEncoder().encode(Array(disabled)) else { return }
-        FileManager.default.createFile(atPath: ClipboardPaths.mcpDisabledTools, contents: data)
-    }
+    static let all: [MCPToolDefinition] = MCPToolDefinition.readTools + MCPToolDefinition.writeTools
 }

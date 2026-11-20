@@ -2,6 +2,8 @@
 //  PreviewPillButton.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/25
+//
 //  预览区域通用胶囊按钮
 //
 
@@ -30,14 +32,15 @@ final class PreviewPillButton: NSView {
     // MARK: - Private
 
     private let style: Style
+    private let interactiveGlass: Bool
 
     private let label: NSTextField = {
-        let f = NSTextField(labelWithString: "")
-        f.font = .systemFont(ofSize: NSFont.systemFontSize)
-        f.textColor = .controlTextColor
-        f.lineBreakMode = .byTruncatingTail
-        f.cell?.truncatesLastVisibleLine = true
-        return f
+        let field = NSTextField(labelWithString: "")
+        field.font = .systemFont(ofSize: NSFont.systemFontSize)
+        field.textColor = .controlTextColor
+        field.lineBreakMode = .byTruncatingTail
+        field.cell?.truncatesLastVisibleLine = true
+        return field
     }()
 
     private let backgroundLayer = CALayer()
@@ -46,8 +49,9 @@ final class PreviewPillButton: NSView {
 
     // MARK: - Init
 
-    init(title: String = "", style: Style = .secondary) {
+    init(title: String = "", style: Style = .secondary, interactiveGlass: Bool = false) {
         self.style = style
+        self.interactiveGlass = interactiveGlass
         super.init(frame: .zero)
         label.stringValue = title
         label.textColor = style == .primary ? .white : .controlTextColor
@@ -71,7 +75,22 @@ final class PreviewPillButton: NSView {
         layer?.borderWidth = style == .secondary ? 0.5 : 0
         layer?.insertSublayer(backgroundLayer, at: 0)
 
-        addSubview(label)
+        let contentView: NSView
+        if #available(macOS 27.0, *), interactiveGlass {
+            let glass = NSGlassEffectView()
+            glass.cornerRadius = Const.btnRadius
+            glass.effectIsInteractive = true
+            if style == .primary {
+                glass.tintColor = .controlAccentColor
+            }
+            contentView = NSView()
+            glass.contentView = contentView
+            addSubview(glass)
+            glass.snp.makeConstraints { $0.edges.equalToSuperview() }
+        } else {
+            contentView = self
+        }
+        contentView.addSubview(label)
         label.snp.makeConstraints { make in
             make.centerY.equalToSuperview()
             make.leading.trailing.equalToSuperview().inset(Const.space10)
@@ -105,18 +124,23 @@ final class PreviewPillButton: NSView {
         let bgColor: NSColor
         switch style {
         case .secondary:
-            bgColor = isHovering
+            bgColor =
+                isHovering
                 ? (isDark ? .white.withAlphaComponent(0.08) : .black.withAlphaComponent(0.06))
                 : .clear
-            let borderColor: NSColor = isDark
+            let borderColor: NSColor =
+                isDark
                 ? .white.withAlphaComponent(0.2)
                 : .separatorColor
             layer?.borderColor = borderColor.cgColor
         case .primary:
-            bgColor = isHovering
+            bgColor =
+                isHovering
                 ? .controlAccentColor.blended(withFraction: 0.12, of: .black) ?? .controlAccentColor
                 : .controlAccentColor
         }
+
+        if #available(macOS 27.0, *), interactiveGlass { return }
 
         if animated {
             NSAnimationContext.runAnimationGroup { ctx in
@@ -169,15 +193,18 @@ final class PreviewPillButton: NSView {
     // MARK: - Click
 
     override func mouseDown(with event: NSEvent) {
-        let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        let pressedColor: NSColor = switch style {
-        case .secondary:
-            isDark
-                ? .white.withAlphaComponent(0.14)
-                : .black.withAlphaComponent(0.10)
-        case .primary:
-            .controlAccentColor.blended(withFraction: 0.2, of: .black) ?? .controlAccentColor
+        if #available(macOS 27.0, *), interactiveGlass {
+            super.mouseDown(with: event)
+            return
         }
+        let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        let pressedColor: NSColor =
+            switch style {
+            case .secondary:
+                if isDark { .white.withAlphaComponent(0.14) } else { .black.withAlphaComponent(0.10) }
+            case .primary:
+                .controlAccentColor.blended(withFraction: 0.2, of: .black) ?? .controlAccentColor
+            }
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         backgroundLayer.backgroundColor = pressedColor.cgColor

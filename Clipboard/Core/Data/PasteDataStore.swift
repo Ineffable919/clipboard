@@ -2,7 +2,7 @@
 //  PasteDataStore.swift
 //  Clipboard
 //
-//  Created by crown on 2025/9/15.
+//  Created by crown on 2025/9/15
 //
 
 import AppKit
@@ -167,7 +167,7 @@ extension PasteDataStore {
         }
     }
 
-    /// 数据库提交成功后再发布顺序，失败时维持当前列表。
+    /// 数据库提交成功后再发布顺序，失败时维持当前列表
     func reorderItems(_ ids: [Int64], before: Int64?, after: Int64?) async -> Bool {
         guard !isReordering else { return false }
         isReordering = true
@@ -183,7 +183,7 @@ extension PasteDataStore {
         if revision == listRevision {
             applyOrder(order)
         } else {
-            // await 期间有新内容或切换筛选时，按最新数据库顺序同步，保留当前列表成员。
+            // await 期间有新内容或切换筛选时，按最新数据库顺序同步，保留当前列表成员
             await refreshOrder()
         }
         return true
@@ -200,9 +200,10 @@ extension PasteDataStore {
     }
 
     private func applyOrder(_ ids: [Int64]) {
-        let models = Dictionary(dataList.value.compactMap { model in
-            model.id.map { ($0, model) }
-        }, uniquingKeysWith: { first, _ in first })
+        let models = Dictionary(
+            dataList.value.compactMap { model in
+                model.id.map { ($0, model) }
+            }, uniquingKeysWith: { first, _ in first })
         updateData(with: ids.compactMap { models[$0] }, changeType: .reorder)
     }
 
@@ -244,9 +245,10 @@ extension PasteDataStore {
     @discardableResult
     func addNewItem(_ item: NSPasteboard, sourceApp: NSRunningApplication? = nil, chipId: Int = -1) -> Bool {
         if let first = item.pasteboardItems?.first,
-           first.availableType(from: PasteboardType.supportTypes) == .string,
-           PasteboardModel.extractFilePaths(from: item, item: first) == nil,
-           let data = first.data(forType: .string), data.count > 1_048_576 {
+            first.availableType(from: PasteboardType.supportTypes) == .string,
+            PasteboardModel.extractFilePaths(from: item, item: first) == nil,
+            let data = first.data(forType: .string), data.count > 1_048_576
+        {
             ingestionTask = ingestText(data, sourceApp: sourceApp, chipId: chipId, after: ingestionTask)
             return true
         }
@@ -262,22 +264,17 @@ extension PasteDataStore {
         ingestionTask = Task {
             await previous?.value
             await insertModel(model)
-            await runOCRIfNeeded(model)
+            // 识别不放进入库队列：Vision 首次加载模型可能耗时十几秒，不能阻塞后续条目入库
+            Task(priority: .utility) { await self.runOCRIfNeeded(model) }
         }
         return true
     }
 
     func runOCRIfNeeded(_ model: PasteboardModel) async {
         guard model.type == .image, let id = model.id else { return }
-
-        let rawText = await OCRViewService.shared.recognizeText(
-            from: model.data
-        )
-
+        let rawText = await OCRViewService.shared.recognizeText(from: model.data)
         guard !rawText.isEmpty else { return }
-
-        let searchText = PasteboardModel.normalizeSearchText(rawText)
-        model.updateSearchText(val: searchText)
+        model.updateSearchText(val: PasteboardModel.normalizeSearchText(rawText))
         await sqlManager.update(id: id, item: model)
     }
 
@@ -301,6 +298,7 @@ extension PasteDataStore {
 
     func insertModel(_ model: PasteboardModel) async {
         guard await prepareApp(for: model) else { return }
+        let sourceAppID = model.appID
         let result = await sqlManager.insert(
             item: model,
             timestamp: model.timestamp,
@@ -309,19 +307,18 @@ extension PasteDataStore {
         guard result.id >= 0 else { return }
         model.appID = result.appID
         await sqlManager.refreshAppCache()
+        SourceAppCache.shared.refreshIconIfNeeded(for: sourceAppID)
         AppColorService.shared.updateColor(for: model)
         let count = await sqlManager.getTotalCount()
-
         model.id = result.id
         if let group = result.group {
             model.updateGroup(val: group)
         }
         totalCount = count
-
         if isInFilterMode, let filter = currentFilter {
             filteredCount = await sqlManager.getCount(filter: filter)
             guard let id = model.id,
-                  await sqlManager.getCount(filter: filter && Col.id == id) > 0
+                await sqlManager.getCount(filter: filter && Col.id == id) > 0
             else { return }
         } else {
             filteredCount = count
@@ -364,20 +361,19 @@ extension PasteDataStore {
         loadPageTask?.cancel()
         isLoadingPage = false
 
-        guard await sqlManager.updateItemContent(
-            id: id,
-            content: content,
-            searchText: searchText
-        ) else {
+        guard
+            await sqlManager.updateItemContent(
+                id: id,
+                content: content,
+                searchText: searchText
+            )
+        else {
             return false
         }
 
         let list: [PasteboardModel]
         if isInFilterMode, let currentFilter {
-            let rows = await sqlManager.search(
-                filter: currentFilter,
-                limit: loadedLimit
-            )
+            let rows = await sqlManager.search(filter: currentFilter, limit: loadedLimit)
             list = await mapRows(rows)
         } else {
             list = await getItems(limit: loadedLimit)
@@ -396,5 +392,4 @@ extension PasteDataStore {
         updateData(with: list, changeType: .moveToFirst)
         return true
     }
-
 }

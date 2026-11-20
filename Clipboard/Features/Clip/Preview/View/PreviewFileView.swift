@@ -2,7 +2,9 @@
 //  PreviewFileView.swift
 //  Clipboard
 //
-//  单文件或多文件预览入口。
+//  Created by crown on 2026/8/26
+//
+//  单文件或多文件预览入口
 //
 
 import AppKit

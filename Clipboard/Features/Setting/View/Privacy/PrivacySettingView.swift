@@ -2,7 +2,7 @@
 //  PrivacySettingView.swift
 //  Clipboard
 //
-//  Created by crown on 2025/10/28.
+//  Created by crown on 2025/10/28
 //
 
 import SwiftUI
@@ -28,7 +28,7 @@ struct PrivacySettingView: View {
     @AppStorage(PrefKey.delConfirm.rawValue)
     private var delConfirm = false
 
-    @State private var selectedApp: String? = nil
+    @State private var selectedApp: String?
     @State private var ignoredApps: [IgnoredAppInfo] = {
         var list = PasteUserDefaults.ignoredApps
         if #unavailable(macOS 15.0) {
@@ -40,7 +40,7 @@ struct PrivacySettingView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             ScrollView {
-                VStack(spacing: Const.space16) {
+                VStack(spacing: Const.space20) {
                     VStack(spacing: 0) {
                         PrivacyToggleRow(
                             title: String(localized: .privacyShowScreenShare),
@@ -72,87 +72,90 @@ struct PrivacySettingView: View {
                             isOn: $delConfirm
                         )
                     }
-                    .padding(.horizontal, Const.space16)
+                    .padding(.horizontal, Const.space10)
                     .settingsStyle()
 
-                    VStack(alignment: .leading, spacing: Const.space4) {
-                        Text(.privacyIgnoredAppsTitle)
-                            .font(.headline)
-                            .bold()
-                        Text(.privacyIgnoredAppsDesc)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    VStack(alignment: .leading, spacing: Const.space12) {
+                        VStack(alignment: .leading, spacing: Const.space4) {
+                            Text(.privacyIgnoredAppsTitle)
+                                .font(.headline)
+                                .fontWeight(.semibold)
 
-                    VStack(alignment: .leading, spacing: 0) {
-                        VStack(spacing: 0) {
-                            ForEach(ignoredApps) { app in
-                                IgnoredAppRow(
-                                    appInfo: app,
-                                    isSelected: selectedApp == app.id,
-                                    onSelect: {
-                                        if selectedApp == app.id {
-                                            selectedApp = nil
-                                        } else {
-                                            selectedApp = app.id
+                            Text(.privacyIgnoredAppsDesc)
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.leading, Const.space10)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                        VStack(alignment: .leading, spacing: 0) {
+                            VStack(spacing: 0) {
+                                ForEach(ignoredApps) { app in
+                                    IgnoredAppRow(
+                                        appInfo: app,
+                                        isSelected: selectedApp == app.id,
+                                        onSelect: {
+                                            if selectedApp == app.id {
+                                                selectedApp = nil
+                                            } else {
+                                                selectedApp = app.id
+                                            }
                                         }
-                                    }
-                                )
+                                    )
+                                }
                             }
+                            .background(
+                                Const.headShape
+                                    .fill(
+                                        colorScheme == .light
+                                            ? Const.lightBackground
+                                            : Const.darkBackground
+                                    )
+                            )
+                            .overlay(
+                                Const.headShape
+                                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                            )
+                            .clipShape(Const.headShape)
+
+                            HStack(spacing: 6) {
+                                Button(action: addApp) {
+                                    Image(systemName: "plus")
+                                        .font(.system(size: 14))
+                                        .frame(width: 20, height: 20)
+                                }
+                                .buttonStyle(.borderless)
+
+                                Divider()
+
+                                Button(action: removeSelectedApp) {
+                                    Image(systemName: "minus")
+                                        .font(.system(size: 14))
+                                        .frame(width: 20, height: 20)
+                                }
+                                .buttonStyle(.borderless)
+                                .disabled(selectedApp == nil)
+
+                                Spacer()
+                            }
+                            .padding(Const.space4)
+                            .background(
+                                Const.contentShape
+                                    .fill(
+                                        colorScheme == .light
+                                            ? Const.lightToolColor
+                                            : Const.darkToolColor
+                                    )
+                            )
+                            .overlay(
+                                Const.contentShape
+                                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                            )
+                            .clipShape(Const.contentShape)
                         }
-                        .background(
-                            Const.headShape
-                                .fill(
-                                    colorScheme == .light
-                                        ? Const.lightBackground
-                                        : Const.darkBackground
-                                )
-                        )
-                        .overlay(
-                            Const.headShape
-                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                        )
-                        .clipShape(Const.headShape)
-
-                        HStack(spacing: 6) {
-                            Button(action: addApp) {
-                                Image(systemName: "plus")
-                                    .font(.system(size: 14))
-                                    .frame(width: 20, height: 20)
-                            }
-                            .buttonStyle(.borderless)
-
-                            Divider()
-
-                            Button(action: removeSelectedApp) {
-                                Image(systemName: "minus")
-                                    .font(.system(size: 14))
-                                    .frame(width: 20, height: 20)
-                            }
-                            .buttonStyle(.borderless)
-                            .disabled(selectedApp == nil)
-
-                            Spacer()
-                        }
-                        .padding(Const.space4)
-                        .background(
-                            Const.contentShape
-                                .fill(
-                                    colorScheme == .light
-                                        ? Const.lightToolColor
-                                        : Const.darkToolColor
-                                )
-                        )
-                        .overlay(
-                            Const.contentShape
-                                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                        )
-                        .clipShape(Const.contentShape)
                     }
-                    .padding(.horizontal, Const.space4)
                 }
-                .padding([.horizontal, .bottom], Const.space24)
+                .padding([.horizontal, .bottom], Const.space20)
             }
             .scrollIndicators(.hidden)
         }
@@ -176,7 +179,7 @@ struct PrivacySettingView: View {
             let appName = url.deletingPathExtension().lastPathComponent
             let appPath = url.path
 
-            var bundleIdentifier: String? = nil
+            var bundleIdentifier: String?
             if let bundle = Bundle(url: url) {
                 bundleIdentifier = bundle.bundleIdentifier
             }
@@ -250,13 +253,11 @@ struct IgnoredAppRow: View {
         HStack(spacing: 10) {
             if let icon = cachedIcon {
                 Image(nsImage: icon)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
+                    .resizable().scaledToFit()
                     .frame(width: 32, height: 32)
             } else {
                 Image(systemName: getFallbackIcon(for: appInfo.name))
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
+                    .resizable().scaledToFit()
                     .frame(width: 28, height: 28)
                     .foregroundStyle(.secondary)
             }
@@ -267,7 +268,7 @@ struct IgnoredAppRow: View {
             Spacer()
         }
         .padding(.vertical, 6)
-        .padding(.horizontal, 8)
+        .padding(.horizontal, Const.space10)
         .background(isSelected ? Color.accentColor.opacity(0.2) : Color.clear)
         .contentShape(Rectangle())
         .onTapGesture {
@@ -289,9 +290,9 @@ struct IgnoredAppRow: View {
         }
 
         if let bundleId = appInfo.bundleIdentifier,
-           let appURL = NSWorkspace.shared.urlForApplication(
-               withBundleIdentifier: bundleId
-           )
+            let appURL = NSWorkspace.shared.urlForApplication(
+                withBundleIdentifier: bundleId
+            )
         {
             return NSWorkspace.shared.icon(forFile: appURL.path)
         }

@@ -2,6 +2,8 @@
 //  GeneralPreferencesCard.swift
 //  Clipboard
 //
+//  Created by crown on 2026/9/2
+//
 
 import AppKit
 import Foundation
@@ -42,7 +44,7 @@ struct GeneralPreferencesCard: View {
                 isOn: $soundEnabled
             )
         }
-        .padding(.horizontal, Const.space16)
+        .padding(.horizontal, Const.space10)
         .settingsStyle()
         .onAppear {
             refreshLaunchAtLoginStatus()

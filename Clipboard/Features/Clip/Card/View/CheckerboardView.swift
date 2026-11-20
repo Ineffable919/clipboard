@@ -2,6 +2,8 @@
 //  CheckerboardView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/10/2
+//
 
 import AppKit
 
@@ -13,7 +15,7 @@ final class CheckerboardView: NSView {
     private var lightColor: NSColor = Const.lightImageShallowColor
     private var darkColor: NSColor = Const.lightImageDeepColor
 
-    private static let tileSize: CGFloat = 16 // 2×2 格，每格 8pt
+    private static let tileSize: CGFloat = 16  // 2×2 格，每格 8pt
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -36,7 +38,15 @@ final class CheckerboardView: NSView {
         while top < dirtyRect.maxY {
             var left = origin.x
             while left < dirtyRect.maxX {
-                ctx.draw(tile, in: CGRect(x: left, y: top, width: tileSize, height: tileSize))
+                ctx.draw(
+                    tile,
+                    in: CGRect(
+                        x: left,
+                        y: top,
+                        width: tileSize,
+                        height: tileSize
+                    )
+                )
                 left += tileSize
             }
             top += tileSize
@@ -54,15 +64,18 @@ final class CheckerboardView: NSView {
     // MARK: Private
 
     private func currentTile() -> CGImage? {
-        let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        let isDark =
+            effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
         let name: NSAppearance.Name = isDark ? .darkAqua : .aqua
         if cachedAppearanceName == name, let tile = cachedTile {
             return tile
         }
 
         cachedAppearanceName = name
-        lightColor = isDark ? Const.darkImageShallowColor : Const.lightImageShallowColor
-        darkColor = isDark ? Const.darkImageDeepColor : Const.lightImageDeepColor
+        lightColor =
+            isDark ? Const.darkImageShallowColor : Const.lightImageShallowColor
+        darkColor =
+            isDark ? Const.darkImageDeepColor : Const.lightImageDeepColor
         cachedTile = renderTile()
         return cachedTile
     }
@@ -71,22 +84,29 @@ final class CheckerboardView: NSView {
         let size = Int(Self.tileSize)
         let half = size / 2
         let colorSpace = CGColorSpaceCreateDeviceRGB()
-        guard let ctx = CGContext(
-            data: nil,
-            width: size, height: size,
-            bitsPerComponent: 8,
-            bytesPerRow: 0,
-            space: colorSpace,
-            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-        ) else { return nil }
+        guard
+            let ctx = CGContext(
+                data: nil,
+                width: size,
+                height: size,
+                bitsPerComponent: 8,
+                bytesPerRow: 0,
+                space: colorSpace,
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            )
+        else { return nil }
 
         ctx.setFillColor(lightColor.cgColor)
-        ctx.fill([CGRect(x: 0, y: 0, width: half, height: half),
-                  CGRect(x: half, y: half, width: half, height: half)])
+        ctx.fill([
+            CGRect(x: 0, y: 0, width: half, height: half),
+            CGRect(x: half, y: half, width: half, height: half)
+        ])
 
         ctx.setFillColor(darkColor.cgColor)
-        ctx.fill([CGRect(x: half, y: 0, width: half, height: half),
-                  CGRect(x: 0, y: half, width: half, height: half)])
+        ctx.fill([
+            CGRect(x: half, y: 0, width: half, height: half),
+            CGRect(x: 0, y: half, width: half, height: half)
+        ])
 
         return ctx.makeImage()
     }

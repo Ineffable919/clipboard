@@ -2,6 +2,8 @@
 //  AppFilterButton.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/27
+//
 //  应用筛选按钮：带应用图标的 FilterButton 子类
 //
 
@@ -30,9 +32,6 @@ final class AppFilterButton: FilterButton {
 
     private func setupAppIcon() {
         appIconView.imageScaling = .scaleProportionallyDown
-        appIconView.snp.makeConstraints { make in
-            make.width.height.equalTo(20)
-        }
-        stack.insertArrangedSubview(appIconView, at: 0)
+        setLeadingView(appIconView)
     }
 }

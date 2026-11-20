@@ -2,6 +2,8 @@
 //  SearchSuggestionWindow.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/29
+//
 //  联想列表窗口
 //
 
@@ -24,14 +26,14 @@ final class SearchSuggestionWindow: NSPanel {
     // MARK: - Views
 
     private let effectView: NSVisualEffectView = {
-        let ev = NSVisualEffectView()
-        ev.material = .popover
-        ev.state = .active
-        ev.blendingMode = .behindWindow
-        ev.wantsLayer = true
-        ev.layer?.cornerRadius = Metrics.cornerRadius
-        ev.layer?.masksToBounds = true
-        return ev
+        let effect = NSVisualEffectView()
+        effect.material = .popover
+        effect.state = .active
+        effect.blendingMode = .behindWindow
+        effect.wantsLayer = true
+        effect.layer?.cornerRadius = Metrics.cornerRadius
+        effect.layer?.masksToBounds = true
+        return effect
     }()
 
     // MARK: - Init
@@ -134,7 +136,8 @@ final class SearchSuggestionWindow: NSPanel {
     // MARK: - Private
 
     private func calculateWidth(for items: [SearchSuggestionItem], query: String) -> CGFloat {
-        let contentWidth = items
+        let contentWidth =
+            items
             .map { SearchSuggestionCellView.preferredWidth(for: $0.title, query: query) }
             .max() ?? Metrics.minWidth
         return max(ceil(contentWidth) + Metrics.widthBuffer, Metrics.minWidth)

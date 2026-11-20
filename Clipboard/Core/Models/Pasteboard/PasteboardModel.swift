@@ -2,7 +2,7 @@
 //  PasteboardModel.swift
 //  Clipboard
 //
-//  Created by crown on 2025/9/13.
+//  Created by crown on 2025/9/13
 //
 
 import AppKit
@@ -27,14 +27,16 @@ final class PasteboardModel: Identifiable, Codable {
     private(set) lazy var attributeString: NSAttributedString =
         .init(with: showData, type: pasteboardType) ?? NSAttributedString()
 
-    private(set) lazy var writeItem = PasteboardWritingItem(
-        data: data,
-        type: pasteboardType,
-        plainText: plainText,
-        appName: appName,
-        timestamp: timestamp,
-        model: self
-    )
+    var writeItem: PasteboardWritingItem {
+        PasteboardWritingItem(
+            data: data,
+            type: pasteboardType,
+            plainText: plainText,
+            appName: appName,
+            timestamp: timestamp,
+            model: self
+        )
+    }
     private(set) lazy var type = PasteModelType(
         with: pasteboardType,
         model: self
@@ -87,10 +89,12 @@ final class PasteboardModel: Identifiable, Codable {
         self.tag = tag
         self.hidden = hidden
 
-        self.uniqueId = uniqueId ?? Self.generateUniqueId(
-            for: pasteboardType,
-            data: data
-        )
+        self.uniqueId =
+            uniqueId
+            ?? Self.generateUniqueId(
+                for: pasteboardType,
+                data: data
+            )
 
         if pasteboardType == .fileURL {
             if let urlString = String(data: data, encoding: .utf8) {
@@ -103,10 +107,10 @@ final class PasteboardModel: Identifiable, Codable {
             cachedImageSize = Self.computeImageSize(from: data)
         }
 
-        let (bg, fg, hasBg) = computeColors()
-        cachedBackgroundColor = bg
-        cachedForegroundColor = fg
-        cachedHasBackgroundColor = hasBg
+        let colors = computeColors()
+        cachedBackgroundColor = colors.background
+        cachedForegroundColor = colors.foreground
+        cachedHasBackgroundColor = colors.hasBackground
         if type == .rich, hasBgColor, safeBgColor == nil {
             cachedRichForegrounds = Self.richForegrounds(in: attributeString)
         }
@@ -132,12 +136,13 @@ final class PasteboardModel: Identifiable, Codable {
             guard let scalar = character.unicodeScalars.first else { continue }
             switch scalar.properties.generalCategory {
             case .uppercaseLetter, .lowercaseLetter, .titlecaseLetter, .modifierLetter, .otherLetter,
-                 .decimalNumber, .letterNumber, .otherNumber,
-                 .mathSymbol, .currencySymbol, .modifierSymbol, .otherSymbol:
+                .decimalNumber, .letterNumber, .otherNumber,
+                .mathSymbol, .currencySymbol, .modifierSymbol, .otherSymbol:
                 output.append(character)
             default:
-                if (scalar.value == 0x23 || scalar.value == 0x2A),
-                   character.unicodeScalars.contains(where: { $0.value == 0x20E3 }) {
+                if scalar.value == 0x23 || scalar.value == 0x2A,
+                    character.unicodeScalars.contains(where: { $0.value == 0x20E3 })
+                {
                     output.append(character)
                 }
             }
@@ -185,33 +190,15 @@ final class PasteboardModel: Identifiable, Codable {
         cachedImageSize
     }
 
-    func thumbnail() -> NSImage? {
-        cachedThumbnail
-    }
-
     func loadThumbnail() async -> NSImage? {
-        if let cachedThumbnail {
-            return cachedThumbnail
-        }
-
-        if let existingTask = thumbnailLoadTask {
-            return await existingTask.value
-        }
-
-        let task = Task<NSImage?, Never> { @MainActor in
-            let imageData = data
-
-            let image = await Task.detached(priority: .userInitiated) {
-                NSImage(data: imageData)
-            }.value
-
-            cachedThumbnail = image
-            thumbnailLoadTask = nil
-            return image
-        }
-
-        thumbnailLoadTask = task
-        return await task.value
+        let scale = NSScreen.screens.map(\.backingScaleFactor).max() ?? 2
+        let pixels = Int((max(Const.cardSize, Const.cntSize) * scale).rounded(.up))
+        guard
+            let image = await ImageThumbnailCache.shared.image(
+                for: uniqueId, data: data, maxPixelSize: pixels
+            ), !Task.isCancelled
+        else { return nil }
+        return NSImage(cgImage: image, size: .zero)
     }
 
     // MARK: - 状态更新

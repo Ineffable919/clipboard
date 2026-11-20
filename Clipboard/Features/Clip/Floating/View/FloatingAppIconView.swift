@@ -2,8 +2,11 @@
 //  FloatingAppIconView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/10/2
+//
 
 import AppKit
+import Combine
 import SnapKit
 
 // MARK: - FloatingAppIconView
@@ -11,6 +14,7 @@ import SnapKit
 final class FloatingAppIconView: NSView {
     private let imageView = NSImageView()
     private var loadTask: Task<Void, Never>?
+    private var iconSubscription: AnyCancellable?
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -28,6 +32,11 @@ final class FloatingAppIconView: NSView {
 
     func configure(appID: Int64?, appPath: String) {
         loadTask?.cancel()
+        iconSubscription = AppIconCache.shared.changes.sink { [weak self] id in
+            guard let self, id == appID else { return }
+            loadTask?.cancel()
+            imageView.image = AppIconCache.shared.getCachedIcon(forAppID: id)
+        }
         imageView.image = nil
         loadTask = Task { @MainActor [weak self] in
             let icon = await AppIconCache.shared.loadIcon(forAppID: appID, path: appPath)

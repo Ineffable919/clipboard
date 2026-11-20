@@ -1,11 +1,38 @@
+//
+//  SourceAppIcon.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/23
+//
+
 import AppKit
 
-/// 80pt 卡片在 Retina 屏上需要至少 160px，使用 256px 覆盖各处显示尺寸。
+/// 80pt 卡片在 Retina 屏上需要至少 160px，使用 256px 覆盖各处显示尺寸
 nonisolated enum SourceAppIcon {
     static let pixelSize = 256
     static let cacheCost = pixelSize * pixelSize * 4
 
-    /// 在后台按需读取；旧图仅在原应用仍可用时更新，不放大低清数据冒充高清图。
+    struct FileState: Sendable, Equatable {
+        let modified: Date
+        let id: UInt64
+    }
+
+    static func fileState(path: String) -> [FileState]? {
+        guard !path.isEmpty else { return nil }
+        let url = URL(fileURLWithPath: path)
+        let urls = [url, url.appending(path: "Contents/Info.plist"), url.appending(path: "Contents/Resources")]
+        var states: [FileState] = []
+        for url in urls {
+            guard let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
+                let modified = attributes[.modificationDate] as? Date,
+                let id = attributes[.systemFileNumber] as? UInt64
+            else { return nil }
+            states.append(FileState(modified: modified, id: id))
+        }
+        return states
+    }
+
+    /// 在后台按需读取；旧图仅在原应用仍可用时更新，不放大低清数据冒充高清图
     static func read(data: Data?, path: String) -> (image: NSImage?, data: Data?) {
         let stored = data.flatMap { NSBitmapImageRep(data: $0) }?.cgImage
         if let stored, stored.width >= pixelSize, stored.height >= pixelSize {
@@ -16,15 +43,16 @@ nonisolated enum SourceAppIcon {
         }
         let icon = NSWorkspace.shared.icon(forFile: path)
         let size = NSSize(width: pixelSize, height: pixelSize)
-        // 明确请求大尺寸表示，避免先取得默认 32px 图像再放大。
+        // 明确请求大尺寸表示，避免先取得默认 32px 图像再放大
         icon.size = size
         var rect = NSRect(origin: .zero, size: size)
         let bitmapInfo = CGBitmapInfo.byteOrder32Big.rawValue | CGImageAlphaInfo.premultipliedLast.rawValue
         guard let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
-              let source = icon.cgImage(forProposedRect: &rect, context: nil, hints: nil),
-              let context = CGContext(data: nil, width: pixelSize, height: pixelSize, bitsPerComponent: 8,
-                                      bytesPerRow: pixelSize * 4, space: colorSpace,
-                                      bitmapInfo: bitmapInfo)
+            let source = icon.cgImage(forProposedRect: &rect, context: nil, hints: nil),
+            let context = CGContext(
+                data: nil, width: pixelSize, height: pixelSize, bitsPerComponent: 8,
+                bytesPerRow: pixelSize * 4, space: colorSpace,
+                bitmapInfo: bitmapInfo)
         else { return (stored.map { image(from: $0) } ?? icon, nil) }
         context.interpolationQuality = .high
         context.draw(source, in: CGRect(origin: .zero, size: size))

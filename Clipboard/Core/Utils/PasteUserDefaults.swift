@@ -2,7 +2,7 @@
 //  PasteUserDefaults.swift
 //  Clipboard
 //
-//  Created by crown on 2025/9/16.
+//  Created by crown on 2025/9/16
 //
 
 import AppKit
@@ -11,7 +11,7 @@ import Foundation
 // MARK: - 应用信息模型
 
 struct IgnoredAppInfo: Codable, Hashable, Identifiable {
-    let id: String // 使用 bundleIdentifier 或 path 作为 id
+    let id: String  // 使用 bundleIdentifier 或 path 作为 id
     let name: String
     let bundleIdentifier: String?
     let path: String
@@ -39,10 +39,10 @@ enum PasteUserDefaults {
                 key: "app_launch",
                 shortcut: KeyboardShortcut(
                     modifiersRawValue: NSEvent.ModifierFlags([
-                        .command, .shift,
+                        .command, .shift
                     ])
                     .rawValue,
-                    keyCode: KeyCode.v,
+                    keyCode: KeyCode.keyV,
                     displayKey: "V"
                 ),
                 isEnabled: true,
@@ -67,7 +67,7 @@ enum PasteUserDefaults {
                 ),
                 isEnabled: true,
                 isGlobal: false
-            ),
+            )
         ]
     )
     static var globalHotKeys
@@ -98,7 +98,7 @@ enum PasteUserDefaults {
                     name: String(localized: .keychain),
                     bundleIdentifier: "com.apple.keychainaccess",
                     path: "/System/Applications/Utilities/Keychain Access.app"
-                ),
+                )
             ]
             if #available(macOS 15.0, *) {
                 apps.insert(
@@ -155,6 +155,9 @@ enum PasteUserDefaults {
     /// 已完成首次启动欢迎页
     @UserDefaultsWrapper(.welcomeDone, defaultValue: false)
     static var welcomeDone
+    /// MCP 本地服务端口
+    @UserDefaultsWrapper(.mcpPort, defaultValue: MCPServer.defaultPort)
+    static var mcpPort
 }
 
 @propertyWrapper

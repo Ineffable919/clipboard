@@ -2,7 +2,9 @@
 //  PreviewMultiFileView.swift
 //  Clipboard
 //
-//  多文件图标堆叠预览。
+//  Created by crown on 2026/8/26
+//
+//  多文件图标堆叠预览
 //
 
 import AppKit

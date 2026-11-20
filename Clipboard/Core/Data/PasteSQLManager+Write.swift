@@ -1,3 +1,10 @@
+//
+//  PasteSQLManager+Write.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/5
+//
+
 import AppKit
 import Foundation
 import SQLite
@@ -25,7 +32,8 @@ extension PasteSQLManager {
         ).first
 
         if let row = existing,
-           let existingId = try? row.get(Col.id) {
+            let existingId = try? row.get(Col.id)
+        {
             let existingGroup = (try? row.get(Col.group)) ?? -1
             let query = table.filter(Col.id == existingId)
             do {
@@ -90,13 +98,9 @@ extension PasteSQLManager {
         }
     }
 
-    /// 无挂起点，清空和空间整理期间同一 actor 上的数据库操作排队执行。
     func clearHistory() throws -> Bool {
         guard let connection else { throw CocoaError(.fileWriteUnknown) }
-        try connection.transaction(.immediate) {
-            try connection.run(table.delete())
-            try connection.run("DELETE FROM App")
-        }
+        try Self.deleteHistory(on: connection)
         apps.removeAll()
         appIdentities.removeAll()
         do {
@@ -109,6 +113,13 @@ extension PasteSQLManager {
         } catch {
             log.error("历史已清空，空间回收失败：\(error)")
             return false
+        }
+    }
+
+    private nonisolated static func deleteHistory(on database: Connection) throws {
+        try database.transaction(.immediate) {
+            try database.run(Table("Clip").delete())
+            try database.run("DELETE FROM App")
         }
     }
 
@@ -193,11 +204,13 @@ extension PasteSQLManager {
         let timestamp = Int64(Date().timeIntervalSince1970)
 
         do {
-            guard let currentRow = try connection.pluck(
-                table
-                    .select(Col.group)
-                    .filter(Col.id == id)
-            ) else {
+            guard
+                let currentRow = try connection.pluck(
+                    table
+                        .select(Col.group)
+                        .filter(Col.id == id)
+                )
+            else {
                 log.error("更新文本内容失败：记录不存在，id：\(id)")
                 return false
             }

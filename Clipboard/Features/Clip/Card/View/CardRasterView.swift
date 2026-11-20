@@ -1,0 +1,108 @@
+//
+//  CardRasterView.swift
+//  Clipboard
+//
+//  Created by crown on 2026/10/26
+//
+
+import AppKit
+import QuartzCore
+
+/// 静态卡片内容只在数据、尺寸或显示环境变化时绘制，滚动复用完整位图
+class CardRasterView: NSView {
+    private let imageLayer = CALayer()
+    private var contentsDirty = true
+    private var renderedSize = NSSize.zero
+    private var renderedScale: CGFloat = 0
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        layer = CALayer()
+        wantsLayer = true
+        layerContentsRedrawPolicy = .never
+        layer?.addSublayer(imageLayer)
+    }
+
+    @available(*, unavailable)
+    required init?(coder _: NSCoder) {
+        fatalError()
+    }
+
+    override var isFlipped: Bool { true }
+
+    override func hitTest(_: NSPoint) -> NSView? { nil }
+
+    func invalidateContents() {
+        contentsDirty = true
+        needsLayout = true
+    }
+
+    func drawContents(in _: NSRect) {}
+
+    override func layout() {
+        super.layout()
+        let scale = window?.backingScaleFactor ?? 2
+        guard bounds.width > 0, bounds.height > 0,
+            contentsDirty || renderedSize != bounds.size
+                || renderedScale != scale
+        else { return }
+
+        let width = Int(ceil(bounds.width * scale))
+        let height = Int(ceil(bounds.height * scale))
+        guard
+            let context = CGContext(
+                data: nil,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: 0,
+                space: CGColorSpace(name: CGColorSpace.sRGB)
+                    ?? CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            )
+        else { return }
+
+        context.translateBy(x: 0, y: CGFloat(height))
+        context.scaleBy(x: scale, y: -scale)
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(
+            cgContext: context,
+            flipped: true
+        )
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            drawContents(in: NSRect(origin: .zero, size: bounds.size))
+        }
+        NSGraphicsContext.restoreGraphicsState()
+
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        imageLayer.frame = NSRect(origin: .zero, size: bounds.size)
+        imageLayer.contentsScale = scale
+        imageLayer.contents = context.makeImage()
+        CATransaction.commit()
+        renderedSize = bounds.size
+        renderedScale = scale
+        contentsDirty = false
+    }
+
+    override func setFrameSize(_ newSize: NSSize) {
+        let changed = frame.size != newSize
+        super.setFrameSize(newSize)
+        if changed { invalidateContents() }
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        invalidateContents()
+    }
+
+    override func viewDidChangeBackingProperties() {
+        super.viewDidChangeBackingProperties()
+        invalidateContents()
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        invalidateContents()
+    }
+}

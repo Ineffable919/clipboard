@@ -2,7 +2,7 @@
 //  CollectionViewItem.swift
 //  Clipboard
 //
-//  Created by crown on 2026/4/10.
+//  Created by crown on 2026/4/10
 //
 
 import AppKit
@@ -55,27 +55,18 @@ final class CollectionViewItem: NSCollectionViewItem {
 
     // MARK: - Selection border
 
-    private var contentEdges: Constraint?
-    private var contentInset = CollectionViewItem.cardInset(for: 2)
-
-    static func cardInset(for scale: CGFloat) -> CGFloat {
-        Const.selectionBorderWidth - 1 / scale
-    }
-
     private lazy var selectionBorderView: AppearanceObservingView = {
         let view = AppearanceObservingView()
         view.wantsLayer = true
         view.layer?.masksToBounds = false
-        view.layer?.backgroundColor = .clear
+        view.layer?.backgroundColor = nil
+        view.layer?.borderWidth = Const.selectionBorderWidth + 0.5
+        view.layer?.borderColor = NSColor.clear.cgColor
         view.layer?.cornerRadius = Const.radius + Const.selectionBorderWidth
         view.layer?.cornerCurve = .continuous
-        view.layer?.borderWidth = 0
         view.onAppearanceChange = { [weak self] in
             self?.updateSelectionBorder()
             self?.updateInfoIconAppearance()
-        }
-        view.onBackingChange = { [weak self] in
-            self?.updateContentInset()
         }
         return view
     }()
@@ -101,11 +92,24 @@ final class CollectionViewItem: NSCollectionViewItem {
         }
     }
 
+    private lazy var badgeEffectView: NSVisualEffectView = {
+        let view = NSVisualEffectView()
+        view.material = .menu
+        view.blendingMode = .withinWindow
+        view.state = .active
+        view.isHidden = true
+        return view
+    }()
+
     private lazy var badgeBgView: BadgeBackgroundView = {
         let view = BadgeBackgroundView()
         view.wantsLayer = true
-        view.layer?.cornerRadius = 4.0
-        view.layer?.cornerCurve = .continuous
+        view.layer?.cornerRadius = 9
+        view.isCapsule = true
+        view.layer?.cornerCurve = .circular
+        view.layer?.masksToBounds = true
+        view.addSubview(badgeEffectView)
+        badgeEffectView.snp.makeConstraints { $0.edges.equalToSuperview() }
         view.isHidden = true
         return view
     }()
@@ -113,30 +117,41 @@ final class CollectionViewItem: NSCollectionViewItem {
     private lazy var badgeStackView: NSStackView = {
         let stack = NSStackView()
         stack.orientation = .horizontal
-        stack.spacing = 0
+        stack.spacing = Const.space4
         stack.distribution = .fill
         return stack
     }()
 
     private lazy var infoIconView: NSImageView = {
         let icon = NSImageView()
-        icon.image = NSImage(systemSymbolName: "text.justify.leading", accessibilityDescription: nil)
-        icon.symbolConfiguration = NSImage.SymbolConfiguration(textStyle: .callout)
+        icon.image = NSImage(
+            systemSymbolName: "text.justify.leading",
+            accessibilityDescription: nil
+        )
+        icon.symbolConfiguration = NSImage.SymbolConfiguration(
+            textStyle: .footnote
+        )
         icon.imageScaling = .scaleProportionallyUpOrDown
         icon.isHidden = true
         icon.setContentHuggingPriority(.required, for: .horizontal)
-        icon.setContentCompressionResistancePriority(.required, for: .horizontal)
+        icon.setContentCompressionResistancePriority(
+            .required,
+            for: .horizontal
+        )
         return icon
     }()
 
-    private lazy var quickPasteLabel: NSTextField = {
-        let label = NSTextField(labelWithString: "")
-        label.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .regular)
+    private lazy var quickPasteLabel: CardLabelView = {
+        let label = CardLabelView()
+        label.font = .preferredFont(forTextStyle: .callout)
         label.textColor = .labelColor
         label.alignment = .center
         label.isHidden = true
         label.setContentHuggingPriority(.required, for: .horizontal)
-        label.setContentCompressionResistancePriority(.required, for: .horizontal)
+        label.setContentCompressionResistancePriority(
+            .required,
+            for: .horizontal
+        )
         return label
     }()
 
@@ -163,23 +178,23 @@ final class CollectionViewItem: NSCollectionViewItem {
     private func updateInfoIconAppearance() {
         view.effectiveAppearance.performAsCurrentDrawingAppearance {
             guard let model = item else { return }
-            let backgroundColor: NSColor
-            let backgroundAlpha: CGFloat
             let tintColor: NSColor
 
-            if model.type == .image {
-                backgroundColor = .unemphasizedSelectedContentBackgroundColor
-                backgroundAlpha = 0.8
-                tintColor = .secondaryLabelColor
+            if model.type == .image || model.type == .string {
+                badgeBgView.dynamicBackgroundColor = .clear
+                badgeBgView.backgroundAlpha = 0
+                badgeEffectView.isHidden = false
+                tintColor =
+                    model.type == .image
+                    ? .secondaryLabelColor : model.colors().1
             } else {
                 let (base, textColor) = model.colors()
-                backgroundColor = base
-                backgroundAlpha = 1.0
+                badgeBgView.dynamicBackgroundColor = base
+                badgeBgView.backgroundAlpha = 1
+                badgeEffectView.isHidden = true
                 tintColor = textColor
             }
 
-            badgeBgView.dynamicBackgroundColor = backgroundColor
-            badgeBgView.backgroundAlpha = backgroundAlpha
             infoIconView.contentTintColor = tintColor
             quickPasteLabel.textColor = tintColor
         }
@@ -196,7 +211,18 @@ final class CollectionViewItem: NSCollectionViewItem {
     }
 
     private func updateBadgeVisibility() {
-        badgeBgView.isHidden = infoIconView.isHidden && quickPasteLabel.isHidden
+        let hasIcon = !infoIconView.isHidden
+        let hasLabel = !quickPasteLabel.isHidden
+        badgeBgView.isHidden = !hasIcon && !hasLabel
+
+        // 数字标签自带左右各约 2pt 留白:挨着数字的一侧少留 2pt,使纯数字为正圆
+        badgeStackView.spacing = Const.space2
+        badgeStackView.edgeInsets = NSEdgeInsets(
+            top: 0,
+            left: hasIcon ? Const.space6 : Const.space4,
+            bottom: 0,
+            right: hasLabel ? Const.space4 : Const.space6
+        )
     }
 }
 
@@ -206,15 +232,13 @@ extension CollectionViewItem {
     override func viewDidLoad() {
         super.viewDidLoad()
         initSubView()
-        let doubleClick = CollectionClickGestureRecognizer(target: self, action: #selector(handleDoubleClick))
+        let doubleClick = CollectionClickGestureRecognizer(
+            target: self,
+            action: #selector(handleDoubleClick)
+        )
         doubleClick.numberOfClicksRequired = 2
         doubleClick.delaysPrimaryMouseButtonEvents = false
         view.addGestureRecognizer(doubleClick)
-    }
-
-    override func viewDidLayout() {
-        super.viewDidLayout()
-        updateContentInset()
     }
 
     override var isSelected: Bool {
@@ -240,36 +264,31 @@ extension CollectionViewItem {
 
     private func updateSelectionBorder() {
         guard isSelected else {
-            selectionBorderView.layer?.borderWidth = 0
+            selectionBorderView.layer?.borderColor = NSColor.clear.cgColor
             updateShadow()
             return
         }
-        let color: NSColor = isFocused
+        let color: NSColor =
+            isFocused
             ? .controlAccentColor
             : .gray.withAlphaComponent(0.5)
-        selectionBorderView.layer?.borderColor = color.cgColor
-        selectionBorderView.layer?.borderWidth = Const.selectionBorderWidth
+        selectionBorderView.effectiveAppearance
+            .performAsCurrentDrawingAppearance {
+                selectionBorderView.layer?.borderColor = color.cgColor
+            }
         updateShadow()
     }
 
     private func updateShadow() {
         if isSelected {
-            selectionBorderView.shadow = nil
+            view.shadow = nil
         } else {
             let shadow = NSShadow()
             shadow.shadowColor = NSColor.shadowColor.withAlphaComponent(0.1)
             shadow.shadowBlurRadius = 2
             shadow.shadowOffset = CGSize(width: 0, height: -1)
-            selectionBorderView.shadow = shadow
+            view.shadow = shadow
         }
-    }
-
-    private func updateContentInset() {
-        guard let scale = selectionBorderView.window?.backingScaleFactor, scale > 0 else { return }
-        let inset = Self.cardInset(for: scale)
-        guard inset != contentInset else { return }
-        contentInset = inset
-        contentEdges?.update(inset: inset)
     }
 }
 
@@ -278,6 +297,8 @@ extension CollectionViewItem {
 extension CollectionViewItem {
     func initSubView() {
         view.wantsLayer = true
+        view.clipsToBounds = false
+        view.layer?.masksToBounds = false
         view.layer?.backgroundColor = .clear
 
         let contextMenu = NSMenu()
@@ -285,7 +306,7 @@ extension CollectionViewItem {
         view.menu = contextMenu
 
         view.addSubview(selectionBorderView)
-        selectionBorderView.addSubview(contentView)
+        view.addSubview(contentView)
         contentView.addSubview(headView)
         contentView.addSubview(cardContentView)
         contentView.addSubview(cardBottomView)
@@ -295,11 +316,11 @@ extension CollectionViewItem {
         contentView.addSubview(badgeBgView)
 
         selectionBorderView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+            make.edges.equalToSuperview().inset(-Const.selectionBorderWidth)
         }
 
         contentView.snp.makeConstraints { make in
-            contentEdges = make.edges.equalToSuperview().inset(contentInset).constraint
+            make.edges.equalToSuperview()
         }
 
         headView.snp.makeConstraints { make in
@@ -321,11 +342,12 @@ extension CollectionViewItem {
             make.trailing.equalToSuperview().inset(Const.space8)
             make.bottom.equalTo(cardBottomView.snp.bottom).inset(Const.space8)
             make.height.equalTo(18)
+            make.width.greaterThanOrEqualTo(18)
         }
 
         badgeStackView.snp.makeConstraints { make in
             make.centerY.equalToSuperview()
-            make.leading.trailing.equalToSuperview().inset(Const.space2)
+            make.leading.trailing.equalToSuperview()
         }
 
         updateShadow()
@@ -338,15 +360,9 @@ extension CollectionViewItem: UserInterfaceItemIdentifier {}
 
 private final class AppearanceObservingView: NSView {
     var onAppearanceChange: (() -> Void)?
-    var onBackingChange: (() -> Void)?
 
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
         onAppearanceChange?()
-    }
-
-    override func viewDidChangeBackingProperties() {
-        super.viewDidChangeBackingProperties()
-        onBackingChange?()
     }
 }

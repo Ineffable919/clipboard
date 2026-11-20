@@ -1,3 +1,10 @@
+//
+//  PasteboardTextPreparation.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/30
+//
+
 import AppKit
 
 enum PasteboardTextPreparation {
@@ -24,7 +31,8 @@ enum PasteboardTextPreparation {
     nonisolated static func prepare(_ data: Data) -> Content? {
         autoreleasepool {
             guard let text = String(data: data, encoding: .utf8),
-                  !text.allSatisfy(\.isWhitespace) else { return nil }
+                !text.allSatisfy(\.isWhitespace)
+            else { return nil }
             let preview = NSAttributedString(string: String(text.prefix(300)))
             let showText = preview.attributedSubstring(from: NSRange(location: 0, length: min(300, preview.length)))
             return Content(

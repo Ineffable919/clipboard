@@ -2,6 +2,8 @@
 //  WelcomeIntroductionCopyView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/8/22
+//
 
 import SwiftUI
 

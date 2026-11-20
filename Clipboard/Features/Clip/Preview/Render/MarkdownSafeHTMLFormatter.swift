@@ -2,7 +2,9 @@
 //  MarkdownSafeHTMLFormatter.swift
 //  Clipboard
 //
-//  转义 Markdown 生成的文本和属性；原始 HTML 交由 DOMPurify 清理。
+//  Created by crown on 2026/8/26
+//
+//  转义 Markdown 生成的文本和属性；原始 HTML 交由 DOMPurify 清理
 //
 
 import Foundation
@@ -34,13 +36,15 @@ nonisolated struct MarkdownSafeHTMLFormatter: MarkupVisitor {
 
     mutating func visitCodeBlock(_ codeBlock: CodeBlock) -> String {
         let info = CodeFenceInfo(rawInfoString: codeBlock.language)
-        let detectedLanguage = info.language.isEmpty
+        let detectedLanguage =
+            info.language.isEmpty
             ? CodeFenceLanguageDetector.detect(codeBlock.code)
             : nil
         let language = info.language.isEmpty ? detectedLanguage : info.highlightLanguage
-        let languageAttribute = language.map {
-            " class=\"language-\(escapeAttribute($0))\""
-        } ?? ""
+        let languageAttribute =
+            language.map {
+                " class=\"language-\(escapeAttribute($0))\""
+            } ?? ""
         return "<pre><code\(languageAttribute)>\(escapeText(codeBlock.code))</code></pre>\n"
     }
 
@@ -108,9 +112,9 @@ nonisolated struct MarkdownSafeHTMLFormatter: MarkupVisitor {
 
     mutating func visitTableCell(_ tableCell: Markdown.Table.Cell) -> String {
         guard let alignments = tableColumnAlignments,
-              currentTableColumn < alignments.count,
-              tableCell.rowspan > 0,
-              tableCell.colspan > 0
+            currentTableColumn < alignments.count,
+            tableCell.rowspan > 0,
+            tableCell.colspan > 0
         else {
             return ""
         }
@@ -208,13 +212,14 @@ nonisolated struct MarkdownSafeHTMLFormatter: MarkupVisitor {
 }
 
 nonisolated extension MarkdownSafeHTMLFormatter {
-    // SVG paths and the single-pass alert parser are clearer kept together.
+    // SVG paths and the single-pass alert parser are clearer kept together
     private mutating func renderAlert(_ blockQuote: BlockQuote) -> String? {
         let blocks = Array(blockQuote.children)
         guard let firstParagraph = blocks.first as? Paragraph else { return nil }
         let inlines = Array(firstParagraph.children)
         guard let firstText = inlines.first as? Text,
-              let (kind, prefixLength) = Self.matchAlertTag(firstText.string) else {
+            let (kind, prefixLength) = Self.matchAlertTag(firstText.string)
+        else {
             return nil
         }
 
@@ -225,7 +230,8 @@ nonisolated extension MarkdownSafeHTMLFormatter {
 
         let (titleInlines, bodyInlines) = Self.splitAlertInlines(inlines.dropFirst())
 
-        let hasCustomTitle = !firstTextRest.trimmingCharacters(in: .whitespaces).isEmpty
+        let hasCustomTitle =
+            !firstTextRest.trimmingCharacters(in: .whitespaces).isEmpty
             || !titleInlines.isEmpty
         var html = "<div class=\"markdown-alert markdown-alert-\(kind.rawValue)\">\n"
         html += "<p class=\"markdown-alert-title\">\(kind.iconSVG) "

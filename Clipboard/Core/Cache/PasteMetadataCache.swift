@@ -2,6 +2,8 @@
 //  PasteMetadataCache.swift
 //  Clipboard
 //
+//  Created by crown on 2026/3/25
+//
 //  应用信息和标签类型的缓存管理
 //
 
@@ -95,7 +97,7 @@ final class PasteMetadataCache {
     }
 
     private static let order: [PasteModelType] = [
-        .color, .file, .image, .link, .string,
+        .color, .file, .image, .link, .string
     ]
 
     private static func typeOrder(

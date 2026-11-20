@@ -2,7 +2,9 @@
 //  PreviewEmptyView.swift
 //  Clipboard
 //
-//  无可用内容时的预览占位。
+//  Created by crown on 2026/8/26
+//
+//  无可用内容时的预览占位
 //
 
 import AppKit

@@ -2,6 +2,8 @@
 //  SearchSuggestionRowView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/29
+//
 //  联想列表单行视图：icon + 高亮匹配文字
 //
 
@@ -23,17 +25,17 @@ final class SearchSuggestionCellView: NSView {
     // MARK: - Subviews
 
     private let iconView: NSImageView = {
-        let iv = NSImageView()
-        iv.imageScaling = .scaleProportionallyUpOrDown
-        return iv
+        let image = NSImageView()
+        image.imageScaling = .scaleProportionallyUpOrDown
+        return image
     }()
 
     private let labelField: NSTextField = {
-        let tf = NSTextField(labelWithString: "")
-        tf.lineBreakMode = .byTruncatingTail
-        tf.maximumNumberOfLines = 1
-        tf.cell?.truncatesLastVisibleLine = true
-        return tf
+        let field = NSTextField(labelWithString: "")
+        field.lineBreakMode = .byTruncatingTail
+        field.maximumNumberOfLines = 1
+        field.cell?.truncatesLastVisibleLine = true
+        return field
     }()
 
     // MARK: - State
@@ -92,7 +94,7 @@ final class SearchSuggestionCellView: NSView {
     func configure(item: SearchSuggestionItem, query: String) {
         iconLoadTask?.cancel()
         iconView.image = item.icon
-        if item.icon == nil, case let .toggleApp(id) = item.action {
+        if item.icon == nil, case .toggleApp(let id) = item.action {
             iconLoadTask = Task { [weak self] in
                 let icon = await AppIconCache.shared.loadIcon(forAppID: id)
                 guard !Task.isCancelled else { return }
@@ -132,20 +134,17 @@ final class SearchSuggestionCellView: NSView {
 
     private static func fuzzyMatchRanges(_ title: String, query: String) -> [Range<String.Index>] {
         let queryLower = query.lowercased()
-        let titleLower = title.lowercased()
         var queryIndex = queryLower.startIndex
-        var titleIndex = titleLower.startIndex
+        var titleIndex = title.startIndex
         var ranges: [Range<String.Index>] = []
 
-        while queryIndex < queryLower.endIndex, titleIndex < titleLower.endIndex {
-            if titleLower[titleIndex] == queryLower[queryIndex] {
-                let end = title.index(after: titleIndex)
-                ranges.append(titleIndex ..< end)
-                titleIndex = end
+        while queryIndex < queryLower.endIndex, titleIndex < title.endIndex {
+            let end = title.index(after: titleIndex)
+            if title[titleIndex].lowercased() == String(queryLower[queryIndex]) {
+                ranges.append(titleIndex..<end)
                 queryIndex = queryLower.index(after: queryIndex)
-            } else {
-                titleIndex = titleLower.index(after: titleIndex)
             }
+            titleIndex = end
         }
 
         return ranges
@@ -164,7 +163,7 @@ final class SearchSuggestionCellView: NSView {
             string: title,
             attributes: [
                 .font: baseFont,
-                .foregroundColor: dimColor,
+                .foregroundColor: dimColor
             ]
         )
 

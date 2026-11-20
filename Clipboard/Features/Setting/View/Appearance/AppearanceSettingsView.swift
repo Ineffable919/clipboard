@@ -2,7 +2,7 @@
 //  AppearanceSettingsView.swift
 //  Clipboard
 //
-//  Created by crown on 2025/12/05.
+//  Created by crown on 2025/12/05
 //
 
 import AppKit
@@ -40,7 +40,7 @@ struct AppearanceSettingsView: View {
                         title: .generalMenuBarIcon,
                         isOn: $showMenuBarIcon
                     )
-                    .padding(.horizontal, Const.space16)
+                    .padding(.horizontal, Const.space10)
                     .onChange(of: showMenuBarIcon) { _, newValue in
                         NotificationCenter.default.post(
                             name: .menuBarIconVisibilityChanged,
@@ -49,24 +49,24 @@ struct AppearanceSettingsView: View {
                     }
 
                     Divider()
-                        .padding(.horizontal, Const.space16)
+                        .padding(.horizontal, Const.space10)
 
                     SettingToggleRow(
                         title: .generalDockIcon,
                         isOn: $showDockIcon
                     )
-                    .padding(.horizontal, Const.space16)
+                    .padding(.horizontal, Const.space10)
                     .onChange(of: showDockIcon) { _, newValue in
                         scheduleDockIconUpdate(visible: newValue)
                     }
 
                     Divider()
-                        .padding(.horizontal, Const.space16)
+                        .padding(.horizontal, Const.space10)
 
                     AppearanceSettingsRow()
 
                     Divider()
-                        .padding(.horizontal, Const.space16)
+                        .padding(.horizontal, Const.space10)
 
                     DisplayModeRow(
                         displayMode: Binding(
@@ -77,7 +77,7 @@ struct AppearanceSettingsView: View {
 
                     if displayMode == .floating {
                         Divider()
-                            .padding(.horizontal, Const.space16)
+                            .padding(.horizontal, Const.space10)
 
                         WindowPositionRow(
                             windowPosition: Binding(
@@ -89,7 +89,7 @@ struct AppearanceSettingsView: View {
                 }
                 .settingsStyle()
             }
-            .padding([.horizontal, .bottom], Const.space24)
+            .padding([.horizontal, .bottom], Const.space20)
         }
         .scrollIndicators(.hidden)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -162,10 +162,10 @@ struct AppearanceSettingsRow: View {
                 .buttonStyle(.borderless)
             }
             .padding(.vertical, Const.space8)
-            .padding(.horizontal, Const.space16)
+            .padding(.horizontal, Const.space10)
 
             Divider()
-                .padding(.horizontal, Const.space16)
+                .padding(.horizontal, Const.space10)
 
             // 外观
             HStack {
@@ -193,7 +193,7 @@ struct AppearanceSettingsRow: View {
                 .buttonStyle(.borderless)
             }
             .padding(.vertical, Const.space8)
-            .padding(.horizontal, Const.space16)
+            .padding(.horizontal, Const.space10)
         }
         .onAppear {
             applyAppearance(selectedAppearance)
@@ -263,7 +263,7 @@ struct DisplayModeRow: View {
             }
         }
         .padding(.vertical, Const.space8)
-        .padding(.horizontal, Const.space16)
+        .padding(.horizontal, Const.space10)
     }
 }
 
@@ -288,7 +288,7 @@ struct WindowPositionRow: View {
             .buttonStyle(.borderless)
         }
         .padding(.vertical, Const.space8)
-        .padding(.horizontal, Const.space16)
+        .padding(.horizontal, Const.space10)
     }
 }
 

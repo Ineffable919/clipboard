@@ -1,3 +1,10 @@
+//
+//  DropIllustrationView.swift
+//  Clipboard
+//
+//  Created by crown on 2026/6/1
+//
+
 import AppKit
 import SnapKit
 
@@ -27,7 +34,8 @@ final class DropIllustrationView: NSView {
 
     func updateColors() {
         effectiveAppearance.performAsCurrentDrawingAppearance {
-            glowView.layer?.backgroundColor = NSColor.controlAccentColor
+            glowView.layer?.backgroundColor =
+                NSColor.controlAccentColor
                 .withAlphaComponent(0.14)
                 .cgColor
             glowView.layer?.shadowColor = NSColor.controlAccentColor.cgColor
@@ -229,12 +237,14 @@ private final class FloatingBadgeView: NSView {
     override func updateLayer() {
         let backgroundAlpha: CGFloat = prominence == .soft ? 0.08 : 0.13
         effectiveAppearance.performAsCurrentDrawingAppearance {
-            layer?.backgroundColor = NSColor.controlAccentColor
+            layer?.backgroundColor =
+                NSColor.controlAccentColor
                 .withAlphaComponent(backgroundAlpha)
                 .cgColor
         }
         guard bounds.size != .zero else { return }
-        let midX = bounds.midX, midY = bounds.midY
+        let midX = bounds.midX
+        let midY = bounds.midY
         let angle = rotation * .pi / 180
         var transform = CATransform3DTranslate(CATransform3DIdentity, midX, midY, 0)
         transform = CATransform3DRotate(transform, angle, 0, 0, 1)

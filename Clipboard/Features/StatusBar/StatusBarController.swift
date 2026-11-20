@@ -2,10 +2,11 @@
 //  StatusBarController.swift
 //  clipboard
 //
-//  Created by crown on 2026/2/27.
+//  Created by crown on 2026/2/27
 //
 
 import AppKit
+import Combine
 import QuartzCore
 
 @MainActor
@@ -14,9 +15,11 @@ final class StatusBarController: NSObject {
 
     private var menuBarItem: NSStatusItem?
     private var menuBarIconObserver: NSObjectProtocol?
+    private var pauseObserver: AnyCancellable?
 
     private var onCheckUpdateClick: (() -> Void)?
     private var menu: NSMenu?
+    private var menuController: StatusBarMenuController?
 
     override private init() {
         super.init()
@@ -38,9 +41,13 @@ final class StatusBarController: NSObject {
 
         initializeStatusItem()
         observeMenuBarIconVisibility()
+        observePauseState()
     }
 
     func cleanup() {
+        pauseObserver = nil
+        menuController?.cleanup()
+        menuController = nil
         if let observer = menuBarIconObserver {
             NotificationCenter.default.removeObserver(observer)
             menuBarIconObserver = nil
@@ -84,10 +91,11 @@ final class StatusBarController: NSObject {
             withLength: NSStatusItem.squareLength
         )
 
-        guard menuBarItem != nil else { return }
+        guard let menuBarItem, let menu else { return }
+        menuController = StatusBarMenuController(item: menuBarItem, menu: menu)
 
         let shouldShow = PasteUserDefaults.showMenuBarIcon
-        menuBarItem?.isVisible = shouldShow
+        menuBarItem.isVisible = shouldShow
 
         configureMenuBarButton()
     }
@@ -95,27 +103,23 @@ final class StatusBarController: NSObject {
     private func configureMenuBarButton() {
         guard let button = menuBarItem?.button else { return }
 
-        let config = NSImage.SymbolConfiguration(
-            pointSize: 15,
-            weight: .semibold
-        )
-
-        let symbolName =
-            if #available(macOS 15.0, *) {
-                "heart.text.clipboard.fill"
-            } else {
-                "list.clipboard.fill"
-            }
-        let icon = NSImage(
-            systemSymbolName: symbolName,
-            accessibilityDescription: nil
-        )?.withSymbolConfiguration(config)
-
-        icon?.isTemplate = true
-        button.image = icon
         button.target = self
         button.action = #selector(statusBarClick)
-        button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+        updateIcon(paused: PasteBoard.main.isPaused)
+    }
+
+    private func updateIcon(paused: Bool) {
+        let icon = NSImage(named: paused ? "StatusPaused" : "Status")
+        icon?.isTemplate = true
+        menuBarItem?.button?.image = icon
+    }
+
+    private func observePauseState() {
+        pauseObserver = PasteBoard.main.$isPaused
+            .removeDuplicates()
+            .sink { [weak self] paused in
+                self?.updateIcon(paused: paused)
+            }
     }
 
     private func observeMenuBarIconVisibility() {
@@ -131,29 +135,8 @@ final class StatusBarController: NSObject {
         }
     }
 
-    @objc
-    private func statusBarClick(sender: NSStatusBarButton) {
-        guard let event = NSApplication.shared.currentEvent else { return }
-
-        switch event.type {
-        case .leftMouseUp:
-            WindowManager.shared.toggleWindow(
-                frame: sender.window?.screen?.frame
-            )
-
-        case .rightMouseUp:
-            guard let menu else { return }
-
-            menuBarItem?.menu = menu
-            defer {
-                menuBarItem?.menu = nil
-            }
-
-            sender.performClick(nil)
-
-        default:
-            break
-        }
+    @objc private func statusBarClick(sender: NSStatusBarButton) {
+        WindowManager.shared.toggleWindow(frame: sender.window?.screen?.frame)
     }
 
     @objc private func settingsAction() {
@@ -244,7 +227,7 @@ extension StatusBarController {
 
         let newTextItem = makeItem(
             title: String(localized: .newText), action: #selector(newTextItemAction),
-            symbol: "square.and.pencil", key: "t"
+            symbol: "square.and.pencil", key: "n"
         )
         newTextItem.keyEquivalentModifierMask = .command
         menu.addItem(newTextItem)
@@ -301,7 +284,7 @@ extension StatusBarController {
             let resumeItem = NSMenuItem(
                 title: String(localized: .resume),
                 action: #selector(resumePasteboard),
-                keyEquivalent: ""
+                keyEquivalent: "t"
             )
             setMenuItemImage(resumeItem, symbolName: "play.circle")
             resumeItem.target = self
@@ -311,7 +294,7 @@ extension StatusBarController {
             let pauseIndefinite = NSMenuItem(
                 title: String(localized: .pause),
                 action: #selector(pauseIndefinitely),
-                keyEquivalent: ""
+                keyEquivalent: "t"
             )
             setMenuItemImage(pauseIndefinite, symbolName: "pause.circle")
             pauseIndefinite.target = self
@@ -319,6 +302,7 @@ extension StatusBarController {
 
             submenu.addItem(NSMenuItem.separator())
         }
+        submenu.items.first?.keyEquivalentModifierMask = .command
 
         let pause15 = makeItem(
             title: String(localized: .pauseFifteen), action: #selector(pause15Minutes),
@@ -371,6 +355,14 @@ extension StatusBarController {
 // MARK: - NSMenuDelegate
 
 extension StatusBarController: NSMenuDelegate {
+    func menuWillOpen(_: NSMenu) {
+        menuController?.menuWillOpen()
+    }
+
+    func menuDidClose(_: NSMenu) {
+        menuController?.menuDidClose()
+    }
+
     func menuNeedsUpdate(_ menu: NSMenu) {
         if let pauseItem = menu.items.first(where: {
             $0.tag == Self.pauseMenuTag

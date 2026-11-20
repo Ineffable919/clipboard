@@ -2,7 +2,7 @@
 //  TopBarChipController.swift
 //  Clipboard
 //
-//  Created by crown on 2026/4/27.
+//  Created by crown on 2026/4/27
 //
 
 import AppKit
@@ -107,6 +107,7 @@ final class TopBarChipController {
             chip: placeholder,
             isSelected: true,
             dotMode: false,
+            style: .mainPanel,
             isEditing: true,
             editingName: topVM.newChipName,
             editingColorIndex: topVM.newChipColorIndex,
@@ -232,10 +233,12 @@ final class TopBarChipController {
                 return
             }
 
-            guard NSAlert.runConfirm(
-                title: String(localized: .deleteChipTitle(chip.name)),
-                message: String(localized: .deleteChipMessage(chip.name))
-            ) else { return }
+            guard
+                NSAlert.runConfirm(
+                    title: String(localized: .deleteChipTitle(chip.name)),
+                    message: String(localized: .deleteChipMessage(chip.name))
+                )
+            else { return }
             topVM?.removeChip(chip)
             onReloadNeeded?()
         }
@@ -260,6 +263,7 @@ final class TopBarChipController {
             chip: chip,
             isSelected: isSelected,
             dotMode: dotMode,
+            style: .mainPanel,
             isEditing: isEditing,
             editingName: isEditing
                 ? (topVM?.editingChipName ?? chip.name) : chip.name,

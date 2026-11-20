@@ -2,6 +2,8 @@
 //  TokenTextView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/23
+//
 //  支持 Token 的文本视图，处理 Token 插入、删除和光标控制
 //
 
@@ -9,11 +11,7 @@ import AppKit
 
 final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
     private enum Metrics {
-        static let height: CGFloat = 28
-        static let horizontalInset: CGFloat = 6
-        /// 垂直内边距：使行高在容器中垂直居中
-        /// (scrollView height - lineHeight) / 2 = (28 - 20) / 2 = 4
-        static let verticalInset: CGFloat = 4
+        static let height: CGFloat = TokenAttachment.lineHeight
     }
 
     // MARK: - Factory
@@ -22,8 +20,9 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         let storage = NSTextStorage()
         let layout = NSLayoutManager()
         let container = NSTextContainer(
-            size: NSSize(width: CGFloat.greatestFiniteMagnitude,
-                         height: Metrics.height)
+            size: NSSize(
+                width: CGFloat.greatestFiniteMagnitude,
+                height: Metrics.height)
         )
         container.widthTracksTextView = false
         container.heightTracksTextView = true
@@ -49,10 +48,7 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
 
         textView.restorePlainTextInputState()
         textView.defaultParagraphStyle = Self.fixedParagraphStyle
-        textView.textContainerInset = NSSize(
-            width: Metrics.horizontalInset,
-            height: Metrics.verticalInset
-        )
+        textView.textContainerInset = .zero
         textView.minSize = NSSize(width: 0, height: Metrics.height)
         textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: Metrics.height)
         textView.isVerticallyResizable = false
@@ -67,7 +63,6 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
     var containerCornerRadius: CGFloat = Const.radius
     var placeholderString: String?
 
-    var onTokenDeleted: ((InputTag) -> Void)?
     var onTextChanged: ((String) -> Void)?
     var onBecomeFirstResponder: (() -> Void)?
     var onResignFirstResponder: (() -> Void)?
@@ -148,8 +143,9 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         }
 
         if range.length == 0,
-           range.location > 0,
-           deleteTokenBeforeCursor(at: range.location - 1) {
+            range.location > 0,
+            deleteTokenBeforeCursor(at: range.location - 1)
+        {
             return
         }
 
@@ -176,8 +172,9 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         }
 
         if range.length == 0,
-           range.location < (textStorage?.length ?? 0),
-           deleteSelectedTokens(in: NSRange(location: range.location, length: 1)) {
+            range.location < (textStorage?.length ?? 0),
+            deleteSelectedTokens(in: NSRange(location: range.location, length: 1))
+        {
             return
         }
 
@@ -200,7 +197,8 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         )
 
         if index < (textStorage?.length ?? 0),
-           textStorage?.attribute(.attachment, at: index, effectiveRange: nil) != nil {
+            textStorage?.attribute(.attachment, at: index, effectiveRange: nil) != nil
+        {
             setSelectedRange(NSRange(location: index, length: 1))
             return
         }
@@ -219,6 +217,12 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
 
         super.insertText(string, replacementRange: NSRange(location: NSNotFound, length: 0))
         notifyTextChanged()
+    }
+
+    override func unmarkText() {
+        super.unmarkText()
+        // 等输入法完成本次编辑，再应用等待中的标签更新
+        Task { @MainActor [weak self] in self?.notifyTextChanged() }
     }
 
     private func isInTokenArea(_ location: Int) -> Bool {
@@ -257,7 +261,7 @@ final class TokenTextView: NSTextView, NSLayoutManagerDelegate {
         super.draw(dirtyRect)
 
         guard let placeholder = placeholderString,
-              (textStorage?.length ?? 0) == 0
+            (textStorage?.length ?? 0) == 0
         else { return }
 
         let font = Self.baselineFont

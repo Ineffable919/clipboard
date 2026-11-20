@@ -2,7 +2,7 @@
 //  ClipMainWindowController.swift
 //  clip
 //
-//  Created by crown on 2025/7/23.
+//  Created by crown on 2025/7/23
 //
 
 import AppKit
@@ -30,7 +30,9 @@ final class ClipMainWindowController: NSWindowController {
                 width: initialWidth,
                 height: Const.defaultHeight
             ),
-            styleMask: [.borderless, .nonactivatingPanel, .fullSizeContentView],
+            styleMask: [
+                .borderless, .nonactivatingPanel
+            ],
             backing: .buffered,
             defer: false
         )
@@ -99,10 +101,13 @@ extension ClipMainWindowController {
 
         if initiallyHidden {
             let screenFrame = frame ?? NSScreen.main?.frame ?? .zero
-            AppEnvironment.shared.previousApp = NSWorkspace.shared.frontmostApplication
+            AppEnvironment.shared.previousApp =
+                NSWorkspace.shared.frontmostApplication
             let visibleFrame = NSRect(
-                x: screenFrame.minX, y: screenFrame.minY,
-                width: screenFrame.width, height: Const.defaultHeight
+                x: screenFrame.minX,
+                y: screenFrame.minY,
+                width: screenFrame.width,
+                height: Const.defaultHeight
             )
             window.contentViewController?.view.setFrameOrigin(.zero)
             window.setFrame(visibleFrame, display: false)
@@ -124,27 +129,37 @@ extension ClipMainWindowController {
         initiallyHidden: Bool = false,
         completion: @escaping @MainActor () -> Void
     ) {
-        guard let view = window?.contentViewController?.view, let layer = view.layer else { return }
+        guard let view = window?.contentViewController?.view,
+            let layer = view.layer
+        else {
+            // 无法动画时仍要完成收尾，避免窗口状态与 targetVisible 不一致
+            completion()
+            return
+        }
         suppressSearchFocusRing(true)
         slideAnimationGeneration += 1
         let generation = slideAnimationGeneration
         let key = "drawerSlide"
-        let startY = initiallyHidden ? -view.bounds.height : (layer.presentation()?.transform.m42 ?? 0)
+        let startY =
+            initiallyHidden
+            ? -view.bounds.height : (layer.presentation()?.transform.m42 ?? 0)
 
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         layer.removeAnimation(forKey: key)
         CATransaction.setCompletionBlock { [weak self] in
             Task { @MainActor in
-                guard let self, generation == self.slideAnimationGeneration else { return }
+                guard let self, generation == self.slideAnimationGeneration
+                else { return }
                 if visible {
-                    self.window?.contentViewController?.view.layer?.removeAnimation(forKey: key)
+                    self.window?.contentViewController?.view.layer?
+                        .removeAnimation(forKey: key)
                 }
                 completion()
             }
         }
 
-        // 仅动画呈现位置，避免文字因实际坐标移出窗口而被裁剪。
+        // 仅动画呈现位置，避免文字因实际坐标移出窗口而被裁剪
         let animation = CABasicAnimation(keyPath: "transform.translation.y")
         animation.fromValue = startY
         animation.toValue = visible ? 0 : -view.bounds.height

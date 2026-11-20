@@ -1,3 +1,10 @@
+//
+//  JSONViewportEditor+Editing.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/30
+//
+
 import AppKit
 
 // MARK: - Original text coordinates and undo
@@ -23,9 +30,13 @@ extension JSONViewportEditor {
         }
         guard !folds.collapsed.isEmpty else { return range }
         let anchor = scrollAnchor()
-        let target = range.location == NSNotFound ? selection : folds.sourceRange(for: NSRange(
-            location: page.location + range.location, length: range.length
-        ))
+        let target =
+            range.location == NSNotFound
+            ? selection
+            : folds.sourceRange(
+                for: NSRange(
+                    location: page.location + range.location, length: range.length
+                ))
         folds.reset(nodes: folds.nodes)
         rebuildProjection()
         selection = target
@@ -83,6 +94,7 @@ extension JSONViewportEditor {
     }
 
     func updateFoldIndex() {
+        guard richContent == nil else { return }
         indexTask?.cancel()
         let text = currentText
         let revision = revision
@@ -90,7 +102,11 @@ extension JSONViewportEditor {
             try? await Task.sleep(for: .milliseconds(300))
             guard !Task.isCancelled else { return }
             let worker = Task.detached(priority: .utility) { JSONFoldIndex.build(for: text) }
-            let nodes = await withTaskCancellationHandler { await worker.value } onCancel: { worker.cancel() }
+            let nodes = await withTaskCancellationHandler {
+                await worker.value
+            } onCancel: {
+                worker.cancel()
+            }
             guard let self, !Task.isCancelled, revision == self.revision else { return }
             folds.reset(nodes: nodes)
             ruler.refreshVisibleLines()
@@ -108,7 +124,8 @@ extension JSONViewportEditor {
         let previous = source.substring(with: range)
         let replacementLength = (text as NSString).length
         if range.location < anchor.location {
-            anchor.location = anchor.location <= NSMaxRange(range)
+            anchor.location =
+                anchor.location <= NSMaxRange(range)
                 ? range.location + replacementLength : anchor.location + replacementLength - range.length
         }
         if registeringUndo {
@@ -148,13 +165,15 @@ extension JSONViewportEditor: NSTextViewDelegate {
 
     func textViewDidChangeSelection(_ notification: Notification) {
         guard !suppressChanges, !textView.isHandlingInput, !textView.hasMarkedText() else { return }
-        selection = folds.sourceRange(for: NSRange(
-            location: page.location + textView.selectedRange().location, length: textView.selectedRange().length
-        ))
+        selection = folds.sourceRange(
+            for: NSRange(
+                location: page.location + textView.selectedRange().location, length: textView.selectedRange().length
+            ))
         updateCursor()
     }
 
     func textView(_ textView: NSTextView, doCommandBy selector: Selector) -> Bool {
+        guard richContent == nil else { return false }
         switch selector {
         case #selector(NSResponder.insertTab(_:)):
             textView.insertText(

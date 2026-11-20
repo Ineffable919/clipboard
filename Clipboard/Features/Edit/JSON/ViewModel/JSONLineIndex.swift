@@ -2,6 +2,8 @@
 //  JSONLineIndex.swift
 //  Clipboard
 //
+//  Created by crown on 2026/7/21
+//
 
 import Foundation
 
@@ -31,7 +33,8 @@ final class JSONLineIndex {
         }
 
         let removedCount = removalEndIndex - insertionIndex
-        let preservesLineBreaks = removedCount == inserted.count
+        let preservesLineBreaks =
+            removedCount == inserted.count
             && inserted.enumerated().allSatisfy { offset, newStart in
                 newStart == start(at: insertionIndex + offset) + delta
             }
@@ -42,11 +45,11 @@ final class JSONLineIndex {
 
         materializeDeferredShift()
         if insertionIndex < removalEndIndex {
-            starts.removeSubrange(insertionIndex ..< removalEndIndex)
+            starts.removeSubrange(insertionIndex..<removalEndIndex)
         }
 
         if delta != 0, insertionIndex < starts.count {
-            for index in insertionIndex ..< starts.count {
+            for index in insertionIndex..<starts.count {
                 starts[index] += delta
             }
         }
@@ -108,7 +111,7 @@ final class JSONLineIndex {
 
     private func start(at index: Int) -> Int {
         guard let deferredShiftStartIndex,
-              index >= deferredShiftStartIndex
+            index >= deferredShiftStartIndex
         else { return starts[index] }
 
         return starts[index] + deferredShiftDelta
@@ -132,14 +135,14 @@ final class JSONLineIndex {
 
     private func materializeDeferredShift() {
         guard let deferredShiftStartIndex,
-              deferredShiftDelta != 0
+            deferredShiftDelta != 0
         else {
             deferredShiftStartIndex = nil
             deferredShiftDelta = 0
             return
         }
 
-        for index in deferredShiftStartIndex ..< starts.count {
+        for index in deferredShiftStartIndex..<starts.count {
             starts[index] += deferredShiftDelta
         }
         self.deferredShiftStartIndex = nil
@@ -154,7 +157,7 @@ final class JSONLineIndex {
 
         for codeUnit in text.utf16 {
             if offset.isMultiple(of: 16384),
-               withUnsafeCurrentTask(body: { $0?.isCancelled ?? false })
+                withUnsafeCurrentTask(body: { $0?.isCancelled ?? false })
             {
                 return [0]
             }

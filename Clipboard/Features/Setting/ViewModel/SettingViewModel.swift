@@ -2,7 +2,7 @@
 //  SettingViewModel.swift
 //  Clipboard
 //
-//  Created by crown on 2026/4/18.
+//  Created by crown on 2026/4/18
 //
 
 import AppKit
@@ -23,9 +23,11 @@ import SwiftUI
     }
 
     func openAccessibilitySettings() {
-        guard let url = URL(
-            string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
-        ) else { return }
+        guard
+            let url = URL(
+                string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
+            )
+        else { return }
 
         NSWorkspace.shared.open(url)
     }

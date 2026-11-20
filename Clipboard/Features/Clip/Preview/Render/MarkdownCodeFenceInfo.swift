@@ -1,33 +1,35 @@
 //
-//  CodeFenceInfo.swift
+//  MarkdownCodeFenceInfo.swift
 //  Clipboard
-
-//  Adapted from Markdown Preview (MIT License).
+//
+//  Created by crown on 2026/8/26
+//
+//  Adapted from Markdown Preview (MIT License)
 //
 
 import Foundation
 
-/// Parsed components of a CommonMark fenced code block info string.
+/// Parsed components of a CommonMark fenced code block info string
 ///
 /// CommonMark trims the info string of surrounding whitespace; by convention
 /// its first whitespace-separated token is the language identifier and
 /// anything after is implementation-defined metadata (e.g. a mermaid diagram
-/// name, GFM `title="foo.ts"`).
+/// name, GFM `title="foo.ts"`)
 nonisolated struct CodeFenceInfo: Equatable {
-    /// First whitespace-separated token of the info string, lowercased.
-    /// Empty when the info string is missing or whitespace-only.
+    /// First whitespace-separated token of the info string, lowercased
+    /// Empty when the info string is missing or whitespace-only
     let language: String
 
     /// Remainder of the info string after the language word, with surrounding
-    /// whitespace trimmed. Empty when there is no metadata.
+    /// whitespace trimmed. Empty when there is no metadata
     let metadata: String
 
-    /// Language identifier passed to the read-mode highlighter.
+    /// Language identifier passed to the read-mode highlighter
     ///
     /// CodeMirror treats these common shell fence names as one shell grammar,
     /// while highlight.js reserves `shell` and `console` for transcript-style
     /// input. Normalize them so read and edit mode parse the same source as
-    /// shell code.
+    /// shell code
     var highlightLanguage: String {
         switch language {
         case "shell", "sh", "zsh", "console":
@@ -55,9 +57,9 @@ nonisolated struct CodeFenceInfo: Equatable {
     }
 }
 
-// Regex patterns are kept intact so their language signatures stay auditable.
+// Regex patterns are kept intact so their language signatures stay auditable
 /// Conservative content-based detection used only when a fence has no info
-/// string. Explicit fence languages always remain the source of truth.
+/// string. Explicit fence languages always remain the source of truth
 nonisolated enum CodeFenceLanguageDetector {
     static func detect(_ source: String) -> String? {
         let text = source.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -74,8 +76,9 @@ nonisolated enum CodeFenceLanguageDetector {
         }
         if (text.hasPrefix("{") && text.hasSuffix("}"))
             || (text.hasPrefix("[") && text.hasSuffix("]")),
-           let data = text.data(using: .utf8),
-           (try? JSONSerialization.jsonObject(with: data)) != nil {
+            let data = text.data(using: .utf8),
+            (try? JSONSerialization.jsonObject(with: data)) != nil
+        {
             return "json"
         }
         if matches(htmlPattern, in: text) {
@@ -111,11 +114,13 @@ nonisolated enum CodeFenceLanguageDetector {
             return "css"
         }
         if matches(javaScriptVariablePattern, in: text)
-            || matches(javaScriptFunctionPattern, in: text) {
+            || matches(javaScriptFunctionPattern, in: text)
+        {
             return "javascript"
         }
         if matches(yamlPattern, in: text)
-            && !text.contains("{") && !text.contains(";") {
+            && !text.contains("{") && !text.contains(";")
+        {
             return "yaml"
         }
         if matches(shellCommandPattern, in: text) {

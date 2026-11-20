@@ -2,7 +2,7 @@
 //  Int64+Extension.swift
 //  Clipboard
 //
-//  Created by crown on 2025/9/23.
+//  Created by crown on 2025/9/23
 //
 
 import AppKit

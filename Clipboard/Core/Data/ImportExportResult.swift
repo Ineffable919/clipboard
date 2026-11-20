@@ -1,3 +1,10 @@
+//
+//  ImportExportResult.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/5
+//
+
 import Foundation
 
 extension PasteSQLManager {

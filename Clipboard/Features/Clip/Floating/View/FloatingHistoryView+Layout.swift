@@ -1,3 +1,10 @@
+//
+//  FloatingHistoryView+Layout.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/5
+//
+
 import AppKit
 import SnapKit
 
@@ -85,7 +92,7 @@ extension FloatingHistoryView {
             guard let self else { return }
             let lower = min(selectedIndex, clickedPath.item)
             let upper = max(selectedIndex, clickedPath.item)
-            collectionView.selectionIndexPaths = Set((lower ... upper).map { IndexPath(item: $0, section: 0) })
+            collectionView.selectionIndexPaths = Set((lower...upper).map { IndexPath(item: $0, section: 0) })
             scrollTo(index: clickedPath.item)
         }
         collectionView.onClick = { [weak self] indexPath in
@@ -99,29 +106,47 @@ extension FloatingHistoryView {
             collectionView: collectionView
         ) { [weak self] collectionView, indexPath, model in
             guard let self else { return nil }
-            guard let item = collectionView.makeItem(
-                withIdentifier: FloatingCollectionItem.id,
-                for: indexPath
-            ) as? FloatingCollectionItem else { return nil }
+            guard
+                let item = collectionView.makeItem(
+                    withIdentifier: FloatingCollectionItem.id,
+                    for: indexPath
+                ) as? FloatingCollectionItem
+            else { return nil }
             let row = indexPath.item
             item.configure(
                 with: model,
-                keyword: topVM?.query ?? "",
+                keyword: PasteDataStore.main.searchWord,
                 isFocused: env.focusRegion == .collection,
                 quickPasteIndex: quickPasteDisplayIndex(for: row),
                 displayMode: displayMode
             )
             item.setShowPlainTextIndicator(isPlainTextModifierPressed)
-            item.onPaste = { [weak self] in self?.pasteItem(at: row) }
-            item.onPastePlainText = { [weak self] in
-                self?.pasteItem(at: row, isAttribute: false)
+            item.onPaste = { [weak self] in
+                guard let self, let row = dataSource.indexPath(for: model)?.item else { return }
+                pasteItem(at: row)
             }
-            item.onCopy = { [weak self] in self?.copyItem(at: row) }
-            item.onEdit = { [weak self] in self?.openEditWindow(at: row) }
-            item.onDelete = { [weak self] in self?.requestDelete(at: row) }
-            item.onTogglePreview = { [weak self] in self?.onTogglePreview?(row) }
+            item.onPastePlainText = { [weak self] in
+                guard let self, let row = dataSource.indexPath(for: model)?.item else { return }
+                pasteItem(at: row, isAttribute: false)
+            }
+            item.onCopy = { [weak self] in
+                guard let self, let row = dataSource.indexPath(for: model)?.item else { return }
+                copyItem(at: row)
+            }
+            item.onEdit = { [weak self] in
+                guard let self, let row = dataSource.indexPath(for: model)?.item else { return }
+                openEditWindow(at: row)
+            }
+            item.onDelete = { [weak self] in
+                guard let self, let row = dataSource.indexPath(for: model)?.item else { return }
+                requestDelete(at: row)
+            }
+            item.onTogglePreview = { [weak self] in
+                guard let self, let row = dataSource.indexPath(for: model)?.item else { return }
+                onTogglePreview?(row)
+            }
             item.onAssignToChip = { [weak self] chipId in
-                guard let self, row < dataList.count else { return }
+                guard let self, let row = dataSource.indexPath(for: model)?.item else { return }
                 _ = topVM?.assignModelToChip(model: dataList[row], chipId: chipId)
             }
             item.onCreateChip = { [weak self] model in
@@ -133,17 +158,17 @@ extension FloatingHistoryView {
 
     // MARK: - Data
 
-    func applySnapshot(animating: Bool = false) {
+    func applySnapshot(animating: Bool = false, completion: (() -> Void)? = nil) {
         var snapshot = NSDiffableDataSourceSnapshot<Int, PasteboardModel>()
         snapshot.appendSections([0])
         snapshot.appendItems(dataList, toSection: 0)
-        dataSource.apply(snapshot, animatingDifferences: animating)
+        dataSource.apply(snapshot, animatingDifferences: animating, completion: completion)
     }
 
     func resetToFirst() {
         guard !dataList.isEmpty else { return }
         selectRow(0)
-        collectionView.scroll(.zero)
+        scrollView.scroll(to: .zero, animated: false)
     }
 
     func adjustSelectionAfterDelete() {
@@ -173,21 +198,22 @@ extension FloatingHistoryView {
 
     // MARK: - Scroll
 
-    private func event_isARepeat() -> Bool {
-        guard let event = NSApp.currentEvent else { return false }
-        return event.type == .keyDown && event.isARepeat
-    }
-
-    func scrollTo(index: Int) {
+    func scrollTo(index: Int, animated: Bool = true) {
         guard index >= 0,
-              collectionView.numberOfSections > 0,
-              index < collectionView.numberOfItems(inSection: 0)
-        else { return }
+            collectionView.numberOfSections > 0,
+            index < collectionView.numberOfItems(inSection: 0)
+        else {
+            scrollView.stopScrolling()
+            return
+        }
 
         let indexPath = IndexPath(item: index, section: 0)
         guard let attrs = collectionView.layoutAttributesForItem(at: indexPath),
-              let clipView = collectionView.enclosingScrollView?.contentView
-        else { return }
+            let clipView = collectionView.enclosingScrollView?.contentView
+        else {
+            scrollView.stopScrolling()
+            return
+        }
 
         let visibleRect = clipView.documentVisibleRect
         let topCover = scrollInsets.top - Const.selectionBorderWidth
@@ -203,8 +229,6 @@ extension FloatingHistoryView {
         } else if attrs.frame.maxY > effectiveMaxY {
             newOriginY =
                 attrs.frame.maxY + bottomCover + peek - visibleRect.height
-        } else {
-            return
         }
 
         let maxScrollY = max(
@@ -213,21 +237,15 @@ extension FloatingHistoryView {
         )
         newOriginY = min(max(0, newOriginY), maxScrollY)
 
-        let scrollView = clipView.enclosingScrollView
-        if event_isARepeat() {
-            clipView.setBoundsOrigin(NSPoint(x: 0, y: newOriginY))
-            scrollView?.reflectScrolledClipView(clipView)
-        } else {
-            clipView.animator().setBoundsOrigin(NSPoint(x: 0, y: newOriginY))
-            scrollView?.reflectScrolledClipView(clipView)
-        }
+        scrollView.scroll(to: NSPoint(x: 0, y: newOriginY), animated: animated)
     }
 
     // MARK: - Quick Paste Display
 
     func updateQuickPasteDisplay() {
         for case let item as FloatingCollectionItem
-        in collectionView.visibleItems() {
+            in collectionView.visibleItems()
+        {
             guard let indexPath = collectionView.indexPath(for: item) else {
                 continue
             }

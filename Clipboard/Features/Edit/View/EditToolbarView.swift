@@ -2,6 +2,8 @@
 //  EditToolbarView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/6/24
+//
 //  编辑窗口顶部工具栏：取消 + 格式化 + 保存
 //
 
@@ -22,12 +24,14 @@ final class EditToolbarView: NSView {
 
     private let cancelButton = PreviewPillButton(
         title: String(localized: .commonCancel),
-        style: .secondary
+        style: .secondary,
+        interactiveGlass: true
     )
 
     private let saveButton = PreviewPillButton(
         title: String(localized: .save),
-        style: .primary
+        style: .primary,
+        interactiveGlass: true
     )
 
     private lazy var modeButton: JSONToolbarButton = {
@@ -44,7 +48,7 @@ final class EditToolbarView: NSView {
             makeFormatButton(symbol: "bold", action: .bold),
             makeFormatButton(symbol: "italic", action: .italic),
             makeFormatButton(symbol: "underline", action: .underline),
-            makeFormatButton(symbol: "strikethrough", action: .strikethrough),
+            makeFormatButton(symbol: "strikethrough", action: .strikethrough)
         ])
         stack.orientation = .horizontal
         stack.spacing = Const.space8
@@ -110,7 +114,8 @@ final class EditToolbarView: NSView {
         self.mode = mode
         let isJSON = mode == .json
         installModeToolbar(isJSON ? jsonToolbar : formatStack)
-        let modeTooltip = isJSON
+        let modeTooltip =
+            isJSON
             ? String(localized: .textModeTooltip)
             : String(localized: .jsonModeTooltip)
         modeButton.toolTip = modeTooltip
@@ -133,6 +138,10 @@ final class EditToolbarView: NSView {
 
     func setIndentation(_ indentation: JSONIndentation) {
         jsonToolbar.setIndentation(indentation)
+    }
+
+    func refreshHover() {
+        modeButton.refreshHover()
     }
 
     private func installModeToolbar(_ toolbar: NSView) {

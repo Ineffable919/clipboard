@@ -2,7 +2,7 @@
 //  StorageSettingView.swift
 //  Clipboard
 //
-//  Created by crown on 2026/1/9.
+//  Created by crown on 2026/1/9
 //
 
 import SwiftUI
@@ -14,81 +14,84 @@ struct StorageSettingView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     @State private var totalCount: Int = 0
+    @State private var databaseSize: Int64 = 0
     @State private var isExporting = false
     @State private var isImporting = false
     @State private var showAlert = false
     @State private var alertTitle = ""
     @State private var alertMessage = ""
 
-    private let db = PasteDataStore.main
+    private let store = PasteDataStore.main
 
     var body: some View {
         ScrollView(.vertical) {
-            VStack(alignment: .leading, spacing: Const.space16) {
+            VStack(alignment: .leading, spacing: Const.space20) {
                 VStack(alignment: .leading, spacing: 0) {
                     DataStatRow(
                         title: String(localized: .storageItemCount),
-                        value: String.localizedStringWithFormat(
-                            String(
-                                localized: "storageItemCountValue",
-                                defaultValue: "%lld items",
-                                table: "Localizable"
-                            ),
-                            totalCount
+                        value: String(
+                            localized: .storageItemCountSizeValue(
+                                totalCount,
+                                databaseSize.formatted(.byteCount(style: .file))
+                            )
                         )
                     )
                 }
-                .padding(.horizontal, Const.space16)
+                .padding(.horizontal, Const.space10)
                 .settingsStyle()
 
-                Text(.storageBackupTitle)
-                    .font(.headline)
-                    .bold()
+                VStack(alignment: .leading, spacing: Const.space12) {
+                    Text(.storageBackupTitle)
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .padding(.leading, Const.space10)
 
-                VStack(alignment: .leading, spacing: 0) {
-                    DataActionRow(
-                        title: String(localized: .storageExportTitle),
-                        subtitle: String(localized: .storageExportDesc),
-                        buttonTitle: String(localized: .storageExportButton),
-                        isLoading: isExporting
-                    ) {
-                        exportDatabase()
+                    VStack(alignment: .leading, spacing: 0) {
+                        DataActionRow(
+                            title: String(localized: .storageExportTitle),
+                            subtitle: String(localized: .storageExportDesc),
+                            buttonTitle: String(localized: .storageExportButton),
+                            isLoading: isExporting
+                        ) {
+                            exportDatabase()
+                        }
+
+                        Divider()
+
+                        DataActionRow(
+                            title: String(localized: .storageImportTitle),
+                            subtitle: String(localized: .storageImportDesc),
+                            buttonTitle: String(localized: .storageImportButton),
+                            isLoading: isImporting
+                        ) {
+                            importDatabase()
+                        }
                     }
+                    .padding(.horizontal, Const.space10)
+                    .settingsStyle()
 
-                    Divider()
+                    VStack(alignment: .leading, spacing: Const.space4) {
+                        Text(.storageNotesTitle)
+                            .font(.caption)
 
-                    DataActionRow(
-                        title: String(localized: .storageImportTitle),
-                        subtitle: String(localized: .storageImportDesc),
-                        buttonTitle: String(localized: .storageImportButton),
-                        isLoading: isImporting
-                    ) {
-                        importDatabase()
+                        VStack(alignment: .leading, spacing: Const.space4) {
+                            Text(.storageNoteDeduplicate)
+                            Text(.storageNotePreserveExistingData)
+                            Text(.storageNoteBackupRegularly)
+                        }
+                        .font(.caption2)
                     }
-                }
-                .padding(.horizontal, Const.space16)
-                .settingsStyle()
-
-                Text(.storageNotesTitle)
-                    .font(.caption)
                     .foregroundStyle(.secondary)
-
-                VStack(alignment: .leading, spacing: Const.space4) {
-                    Text(.storageNoteDeduplicate)
-                    Text(.storageNotePreserveExistingData)
-                    Text(.storageNoteBackupRegularly)
+                    .padding(.leading, Const.space10)
                 }
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-
-                Spacer(minLength: 20)
             }
-            .padding([.horizontal, .bottom], Const.space24)
+            .padding([.horizontal, .bottom], Const.space20)
         }
         .scrollIndicators(.hidden)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .task {
             totalCount = await PasteSQLManager.manager.getTotalCount()
+            databaseSize = Self.databaseFileSize()
         }
         .alert(alertTitle, isPresented: $showAlert) {
             Button(.commonConfirm, role: .cancel) {}
@@ -123,6 +126,7 @@ struct StorageSettingView: View {
                 if result.success {
                     log.info("数据库导出成功: \(url.lastPathComponent)")
                     alertTitle = result.message
+                    alertMessage = ""
                 } else {
                     log.error("数据库导出失败: \(result.message)")
                     alertTitle = String(localized: .storageExportFailureTitle)
@@ -168,22 +172,33 @@ struct StorageSettingView: View {
                     Task {
                         await PasteDataStore.main.resetDefaultList()
                         let count = await PasteSQLManager.manager.getTotalCount()
-                        db.totalCount = count
+                        store.totalCount = count
                         totalCount = count
+                        databaseSize = Self.databaseFileSize()
                         PasteMetadataCache.shared.invalidateTagTypesCache()
-                        db.notifyCategoryChipsChanged()
+                        store.notifyCategoryChipsChanged()
                     }
                 } else {
                     log.error("数据库导入失败: \(result.message)")
                     alertTitle = String(localized: .storageImportFailureTitle)
-                    alertMessage = result.message.contains(
-                        String(localized: .importCancelled)
-                    )
+                    alertMessage =
+                        result.message.contains(
+                            String(localized: .importCancelled)
+                        )
                         ? String(localized: .storageImportCancelled)
                         : result.message
                 }
                 showAlert = true
             }
+        }
+    }
+
+    /// 数据库占用大小（含 WAL / SHM 文件）
+    private static func databaseFileSize() -> Int64 {
+        let path = ClipboardPaths.database
+        return ["", "-wal", "-shm"].reduce(into: 0) { total, suffix in
+            let attrs = try? FileManager.default.attributesOfItem(atPath: path + suffix)
+            total += (attrs?[.size] as? NSNumber)?.int64Value ?? 0
         }
     }
 

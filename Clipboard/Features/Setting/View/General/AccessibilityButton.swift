@@ -2,26 +2,25 @@
 //  AccessibilityButton.swift
 //  Clipboard
 //
+//  Created by crown on 2026/8/14
+//
 
 import SwiftUI
 
 struct AccessibilityButton: View {
     let action: () -> Void
 
+    private var permissionTitle: LocalizedStringResource {
+        DirectPastePermissionText.current.button
+    }
+
     var body: some View {
         Button(action: action) {
             HStack(spacing: Const.space6) {
-                ZStack {
-                    Circle()
-                        .fill(Color(nsColor: .systemRed))
-                    Image(systemName: "exclamationmark")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(.white)
-                }
-                .frame(width: Const.iconSize16, height: Const.iconSize16)
-                .accessibilityHidden(true)
+                AccessibilityWarningBadge(diameter: Const.iconSize16)
+                    .accessibilityHidden(true)
 
-                Text(.generalEnableAccess)
+                Text(permissionTitle)
                     .font(.callout)
                     .foregroundStyle(.primary)
                     .lineLimit(1)
@@ -41,5 +40,6 @@ struct AccessibilityButton: View {
             )
         }
         .buttonStyle(.plain)
+        .help(Text(permissionTitle))
     }
 }

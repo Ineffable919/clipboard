@@ -2,7 +2,7 @@
 //  CategoryChipStore.swift
 //  Clipboard
 //
-//  Created by crown on 2026/1/16.
+//  Created by crown on 2026/1/16
 //
 
 import Combine
@@ -18,7 +18,7 @@ final class CategoryChipStore {
 
     let chipsContentDidChange = PassthroughSubject<Void, Never>()
 
-    private let db = PasteDataStore.main
+    private let store = PasteDataStore.main
     private var reservedImportIDs: Set<Int> = []
 
     // MARK: - Initialization
@@ -71,7 +71,7 @@ final class CategoryChipStore {
         colorIndex: Int? = nil
     ) {
         guard !chip.isSystem,
-              let index = chips.firstIndex(where: { $0.id == chip.id })
+            let index = chips.firstIndex(where: { $0.id == chip.id })
         else {
             return
         }
@@ -95,7 +95,7 @@ final class CategoryChipStore {
         }
 
         saveUserCategories()
-        db.deleteItemsByGroup(chip.id)
+        store.deleteItemsByGroup(chip.id)
     }
 
     func clearUserCategories() {
@@ -128,7 +128,7 @@ final class CategoryChipStore {
 
     func mergeImportedChips(from data: Data?) {
         guard let data,
-              let importedChips = try? JSONDecoder().decode([CategoryChip].self, from: data)
+            let importedChips = try? JSONDecoder().decode([CategoryChip].self, from: data)
         else { return }
         let existingIds = Set(PasteUserDefaults.userCategoryChip.map(\.id))
         let newChips = importedChips.filter { !existingIds.contains($0.id) }
@@ -142,7 +142,7 @@ final class CategoryChipStore {
 
     private func saveUserCategories() {
         PasteUserDefaults.userCategoryChip = chips.filter { !$0.isSystem }
-        db.notifyCategoryChipsChanged()
+        store.notifyCategoryChipsChanged()
         chipsContentDidChange.send()
     }
 }

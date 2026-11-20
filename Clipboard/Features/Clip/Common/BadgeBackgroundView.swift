@@ -2,10 +2,14 @@
 //  BadgeBackgroundView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/5/29
+//
 
 import AppKit
 
 final class BadgeBackgroundView: NSView {
+    var isCapsule = false
+
     var dynamicBackgroundColor: NSColor = .clear {
         didSet { needsDisplay = true }
     }
@@ -18,9 +22,17 @@ final class BadgeBackgroundView: NSView {
         true
     }
 
+    override func layout() {
+        super.layout()
+        if isCapsule {
+            layer?.cornerRadius = bounds.height / 2
+        }
+    }
+
     override func updateLayer() {
         effectiveAppearance.performAsCurrentDrawingAppearance {
-            layer?.backgroundColor = dynamicBackgroundColor
+            layer?.backgroundColor =
+                dynamicBackgroundColor
                 .withAlphaComponent(backgroundAlpha).cgColor
         }
     }

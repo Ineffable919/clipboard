@@ -2,21 +2,19 @@
 //  FilterButton.swift
 //  Clipboard
 //
-//  Created by crown on 2026/4/9.
+//  Created by crown on 2026/4/9
 //
 
 import AppKit
-import SnapKit
-import SwiftUI
 
-class FilterButton: NSView {
+/// 筛选按钮：继承 NSButton 以获得标准的按钮无障碍角色与按压语义，外观自绘
+class FilterButton: NSButton {
     // MARK: - Properties
 
     private let backgroundLayer = CALayer()
-    let stack = NSStackView()
     private let iconImageView = NSImageView()
     private let label = NSTextField()
-    private var hasIcon = false
+    private var leadingView: NSView?
 
     var isSelected: Bool = false {
         didSet {
@@ -25,7 +23,7 @@ class FilterButton: NSView {
         }
     }
 
-    var action: (() -> Void)?
+    var onTap: (() -> Void)?
 
     // MARK: - Init
 
@@ -41,31 +39,21 @@ class FilterButton: NSView {
 
     // MARK: - Setup
 
-    private func setup(icon: String?, title: String) {
+    private func setup(icon: String?, title labelText: String) {
         wantsLayer = true
+        isBordered = false
+        title = ""
+        // 保持原有焦点行为：弹窗内不接管第一响应者
+        refusesFirstResponder = true
+        target = self
+        action = #selector(handleClick)
+        setAccessibilityLabel(labelText)
 
         backgroundLayer.cornerRadius = Const.radius
         backgroundLayer.masksToBounds = true
         layer?.addSublayer(backgroundLayer)
 
-        stack.orientation = .horizontal
-        stack.alignment = .centerY
-        stack.spacing = Const.space8
-        addSubview(stack)
-
-        stack.snp.makeConstraints { make in
-            make.edges.equalToSuperview().inset(
-                NSEdgeInsets(
-                    top: Const.space4,
-                    left: Const.space8,
-                    bottom: Const.space4,
-                    right: Const.space8
-                )
-            )
-        }
-
         if let icon {
-            hasIcon = true
             let symConfig = NSImage.SymbolConfiguration(
                 pointSize: 16,
                 weight: .regular
@@ -75,12 +63,15 @@ class FilterButton: NSView {
                 accessibilityDescription: nil
             )?.withSymbolConfiguration(symConfig)
             iconImageView.imageScaling = .scaleProportionallyDown
-            iconImageView.snp.makeConstraints { make in
-                make.width.height.equalTo(20)
-            }
-            stack.addArrangedSubview(iconImageView)
+            setLeadingView(iconImageView)
         }
 
+        setupLabel(labelText)
+
+        updateAppearance(animated: false)
+    }
+
+    private func setupLabel(_ title: String) {
         label.stringValue = title
         label.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .regular)
         label.isBordered = false
@@ -90,28 +81,15 @@ class FilterButton: NSView {
         label.maximumNumberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
         label.cell?.usesSingleLineMode = true
-        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        stack.addArrangedSubview(label)
+        label.setAccessibilityElement(false)
+        addSubview(label)
+    }
 
-        let spacer = NSView()
-        spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        stack.addArrangedSubview(spacer)
-
-        let area = NSTrackingArea(
-            rect: .zero,
-            options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
-            owner: self,
-            userInfo: nil
-        )
-        addTrackingArea(area)
-
-        let click = NSClickGestureRecognizer(
-            target: self,
-            action: #selector(handleClick)
-        )
-        addGestureRecognizer(click)
-
-        updateAppearance(animated: false)
+    func setLeadingView(_ view: NSView) {
+        leadingView = view
+        view.setAccessibilityElement(false)
+        addSubview(view)
+        needsLayout = true
     }
 
     // MARK: - Appearance
@@ -122,25 +100,25 @@ class FilterButton: NSView {
             label.textColor = .white
             iconImageView.contentTintColor = .white
         } else {
-            label.textColor = .secondaryLabelColor
+            label.textColor = .labelColor
             iconImageView.contentTintColor = .secondaryLabelColor
         }
 
         // 背景颜色
-        let bgColor: NSColor = if isSelected {
-            .controlAccentColor
-        } else if effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua {
-            .white.withAlphaComponent(0.08)
-        } else {
-            NSColor.secondaryLabelColor.withAlphaComponent(0.05)
-        }
+        let bgColor: NSColor =
+            if isSelected {
+                .controlAccentColor
+            } else if effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua {
+                .white.withAlphaComponent(0.08)
+            } else {
+                NSColor.secondaryLabelColor.withAlphaComponent(0.05)
+            }
 
         if animated {
-            NSAnimationContext.runAnimationGroup { ctx in
-                ctx.duration = 0.12
-                ctx.allowsImplicitAnimation = true
-                backgroundLayer.backgroundColor = bgColor.cgColor
-            }
+            CATransaction.begin()
+            CATransaction.setAnimationDuration(0.12)
+            backgroundLayer.backgroundColor = bgColor.cgColor
+            CATransaction.commit()
         } else {
             CATransaction.begin()
             CATransaction.setDisableActions(true)
@@ -151,17 +129,37 @@ class FilterButton: NSView {
 
     // MARK: - Layout
 
-    override var intrinsicContentSize: NSSize {
-        let fitting = stack.fittingSize
-        return NSSize(
-            width: fitting.width + Const.space10 * 2,
-            height: fitting.height + Const.space6 * 2
-        )
-    }
-
     override func layout() {
         super.layout()
         backgroundLayer.frame = bounds
+
+        // 尚未分配尺寸（如隐藏的按钮）时 insetBy 会返回 null 矩形，origin 为无穷大
+        guard bounds.width > Const.space8 * 2, bounds.height > Const.space4 * 2 else { return }
+        let contentRect = bounds.insetBy(dx: Const.space8, dy: Const.space4)
+        var textX = contentRect.minX
+        if let leadingView {
+            leadingView.frame = NSRect(
+                x: contentRect.minX,
+                y: contentRect.midY - 10,
+                width: 20,
+                height: 20
+            )
+            textX += 20 + Const.space8
+        }
+
+        let textSize = label.intrinsicContentSize
+        // 保留原尾部 spacer 前的间距，避免改变文案截断位置
+        let textWidth = max(0, contentRect.maxX - textX - Const.space8)
+        label.frame = NSRect(
+            x: textX,
+            y: contentRect.midY - textSize.height / 2,
+            width: textWidth,
+            height: textSize.height
+        )
+
+        // 文本被截断时悬停显示完整文案
+        let tip = textSize.width > textWidth ? label.stringValue : nil
+        if toolTip != tip { toolTip = tip }
     }
 
     override func viewDidChangeEffectiveAppearance() {
@@ -169,27 +167,28 @@ class FilterButton: NSView {
         updateAppearance(animated: false)
     }
 
-    // MARK: - Mouse
-
-    override func mouseEntered(with _: NSEvent) {
-        NSCursor.pointingHand.push()
+    /// 用光标矩形代替 push/pop，视图被移除时不会遗留光标栈
+    override func resetCursorRects() {
+        addCursorRect(bounds, cursor: .pointingHand)
     }
 
-    override func mouseExited(with _: NSEvent) {
-        NSCursor.pop()
+    // MARK: - Hit Testing
+
+    /// 子视图（文案、图标）不单独响应点击，整个按钮区域统一由自身处理
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        let local = convert(point, from: superview)
+        return bounds.contains(local) ? self : nil
     }
 
     // MARK: - Action
 
     @objc private func handleClick() {
-        action?()
+        onTap?()
     }
 
-    override var acceptsFirstResponder: Bool {
-        false
-    }
+    // MARK: - Accessibility
 
-    override func becomeFirstResponder() -> Bool {
-        false
+    override func isAccessibilitySelected() -> Bool {
+        isSelected
     }
 }

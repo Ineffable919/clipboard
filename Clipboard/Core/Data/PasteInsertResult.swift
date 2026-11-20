@@ -1,3 +1,10 @@
+//
+//  PasteInsertResult.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/23
+//
+
 nonisolated struct PasteInsertResult: Sendable {
     let id: Int64
     let group: Int?

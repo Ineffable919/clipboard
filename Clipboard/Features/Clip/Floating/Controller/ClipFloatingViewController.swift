@@ -2,7 +2,7 @@
 //  ClipFloatingViewController.swift
 //  Clipboard
 //
-//  Created by crown on 2025/1/14.
+//  Created by crown on 2025/1/14
 //
 
 import AppKit
@@ -18,6 +18,7 @@ final class ClipFloatingViewController: NSViewController {
     // MARK: - Preview
 
     var previewPopover: ClipPreviewPopover?
+    let previewPool = ClipPreviewPopoverPool()
 
     // MARK: - Focus
 
@@ -68,14 +69,11 @@ final class ClipFloatingViewController: NSViewController {
         floatingContentView.historyView.setPreviewHooks(
             isShown: { [weak self] in self?.previewPopover?.isShown == true },
             close: { [weak self] in self?.closePreview() },
-            reopen: { [weak self] in
+            retarget: { [weak self] in
                 guard let self else { return }
-                if let existing = previewPopover, existing.isShown {
-                    existing.refreshHeader()
-                } else {
-                    openPreview(at: floatingContentView.historyView.selectedIndex)
-                }
-            }
+                retargetPreview(at: floatingContentView.historyView.selectedIndex)
+            },
+            refreshHeader: { [weak self] in self?.previewPopover?.refreshHeader() }
         )
 
         floatingContentView.headerView.onChipSelected = { [weak self] in
@@ -118,6 +116,7 @@ final class ClipFloatingViewController: NSViewController {
 
     override func viewDidDisappear() {
         super.viewDidDisappear()
+        floatingContentView.historyView.scrollView.stopScrolling()
         if let token = monitorToken {
             NSEvent.removeMonitor(token)
             monitorToken = nil

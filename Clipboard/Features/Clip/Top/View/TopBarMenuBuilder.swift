@@ -2,7 +2,7 @@
 //  TopBarMenuBuilder.swift
 //  Clipboard
 //
-//  Created by crown on 2026/4/27.
+//  Created by crown on 2026/4/27
 //
 
 import AppKit
@@ -14,7 +14,7 @@ struct TopBarMenuBuilder {
 
     private static let appName: String =
         Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
-            ?? "Clipboard"
+        ?? "Clipboard"
 
     // MARK: - Public
 
@@ -33,7 +33,7 @@ struct TopBarMenuBuilder {
 
         let newTextItem = makeItem(
             title: String(localized: .newText), action: #selector(TopBarMenuActions.openNewTextItemAction),
-            symbol: "square.and.pencil", key: "t"
+            symbol: "square.and.pencil", key: "n"
         )
         newTextItem.keyEquivalentModifierMask = .command
         menu.addItem(newTextItem)
@@ -105,10 +105,11 @@ struct TopBarMenuBuilder {
             )
             newVersionItem.target = target
             if #available(macOS 26.0, *),
-               let image = NSImage(
-                   systemSymbolName: "arrow.up.circle.dotted",
-                   accessibilityDescription: nil
-               ) {
+                let image = NSImage(
+                    systemSymbolName: "arrow.up.circle.dotted",
+                    accessibilityDescription: nil
+                )
+            {
                 let config = NSImage.SymbolConfiguration(
                     pointSize: 16.0,
                     weight: .semibold
@@ -121,6 +122,14 @@ struct TopBarMenuBuilder {
         }
     }
 
+    func buildPauseMenu() -> NSMenu {
+        let menu = buildPauseSubmenu()
+        for item in menu.items {
+            item.image = nil
+        }
+        return menu
+    }
+
     // MARK: - Private
 
     private func buildPauseSubmenu() -> NSMenu {
@@ -131,7 +140,7 @@ struct TopBarMenuBuilder {
             let resumeItem = NSMenuItem(
                 title: String(localized: .resume),
                 action: #selector(TopBarMenuActions.resumePasteboardAction),
-                keyEquivalent: ""
+                keyEquivalent: "t"
             )
             resumeItem.target = target
             setMenuItemImage(resumeItem, symbolName: "play.circle")
@@ -141,13 +150,14 @@ struct TopBarMenuBuilder {
             let pauseIndefiniteItem = NSMenuItem(
                 title: String(localized: .pause),
                 action: #selector(TopBarMenuActions.pauseIndefinitelyAction),
-                keyEquivalent: ""
+                keyEquivalent: "t"
             )
             pauseIndefiniteItem.target = target
             setMenuItemImage(pauseIndefiniteItem, symbolName: "pause.circle")
             submenu.addItem(pauseIndefiniteItem)
             submenu.addItem(.separator())
         }
+        submenu.items.first?.keyEquivalentModifierMask = .command
 
         let items = [
             makeItem(

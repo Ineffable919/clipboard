@@ -2,6 +2,8 @@
 //  FilterPopoverContentView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/27
+//
 //  Popover 内容视图：组装类型、应用和日期三个筛选区域
 //
 
@@ -17,6 +19,8 @@ private final class FlippedView: NSView {
 }
 
 final class FilterPopoverContentView: NSView {
+    override var acceptsFirstResponder: Bool { true }
+
     // MARK: - Sections
 
     let typeSection = FilterTypeSectionView()
@@ -46,6 +50,7 @@ final class FilterPopoverContentView: NSView {
 
     private func setup() {
         wantsLayer = true
+        focusRingType = .none
 
         contentView.translatesAutoresizingMaskIntoConstraints = false
         contentView.wantsLayer = true
@@ -77,7 +82,6 @@ final class FilterPopoverContentView: NSView {
             make.leading.trailing.bottom.equalToSuperview().inset(Const.space16)
         }
 
-        typeSection.isHidden = true
         appSection.isHidden = true
         tagSection.isHidden = true
 
@@ -85,5 +89,12 @@ final class FilterPopoverContentView: NSView {
         mainStack.addArrangedSubview(appSection)
         mainStack.addArrangedSubview(tagSection)
         mainStack.addArrangedSubview(dateSection)
+
+        // 各区域撑满内容宽度，按钮宽度由网格按此推导
+        for section in [typeSection, appSection, tagSection, dateSection] {
+            section.snp.makeConstraints { make in
+                make.width.equalTo(mainStack)
+            }
+        }
     }
 }

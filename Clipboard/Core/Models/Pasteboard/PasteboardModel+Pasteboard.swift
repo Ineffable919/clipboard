@@ -2,7 +2,7 @@
 //  PasteboardModel+Pasteboard.swift
 //  Clipboard
 //
-//  Created by crown on 2026/3/11.
+//  Created by crown on 2026/3/11
 //
 
 import AppKit
@@ -15,7 +15,8 @@ extension PasteboardModel {
 
         let type: PasteboardType
         if let paths = Self.extractFilePaths(from: pasteboard, item: item),
-           !paths.isEmpty {
+            !paths.isEmpty
+        {
             type = .fileURL
         } else if let matched = item.availableType(from: PasteboardType.supportTypes) {
             type = matched
@@ -29,7 +30,7 @@ extension PasteboardModel {
 
         if type.isFile() {
             guard let paths = Self.extractFilePaths(from: pasteboard, item: item),
-                  !paths.isEmpty
+                !paths.isEmpty
             else { return nil }
 
             searchText = Self.normalizeSearchText(paths.joined(separator: " "))
@@ -73,7 +74,8 @@ extension PasteboardModel {
     ) -> (source: NSAttributedString, showData: Data?)? {
         let text = NSAttributedString(with: content, type: type) ?? NSAttributedString()
         guard !text.string.allSatisfy(\.isWhitespace) else { return nil }
-        let preview = text.length > 300
+        let preview =
+            text.length > 300
             ? text.attributedSubstring(from: NSRange(location: 0, length: 300)) : text
         return (text, preview.toData(with: type))
     }
@@ -147,7 +149,8 @@ extension PasteboardModel {
         }
 
         let stripped = trimmed.replacing("file:", with: "")
-        let path = stripped.hasPrefix("//")
+        let path =
+            stripped.hasPrefix("//")
             ? String(stripped.dropFirst(2))
             : stripped
         return path.hasPrefix("/") ? path : nil

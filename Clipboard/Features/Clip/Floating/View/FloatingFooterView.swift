@@ -2,6 +2,8 @@
 //  FloatingFooterView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/5/5
+//
 //  浮动窗口底部：条目数量 + 暂停指示器
 //
 
@@ -176,9 +178,10 @@ final class FloatingFooterView: NSView {
             symbolName = "line.3.horizontal"
         }
         modeButton.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?
-            .withSymbolConfiguration(NSImage.SymbolConfiguration(
-                pointSize: displayMode == .standard ? 15 : 12, weight: .regular
-            ))
+            .withSymbolConfiguration(
+                NSImage.SymbolConfiguration(
+                    pointSize: displayMode == .standard ? 15 : 12, weight: .regular
+                ))
     }
 
     // MARK: - Background
@@ -211,7 +214,8 @@ final class FloatingFooterView: NSView {
     private func updateBackground() {
         guard #available(macOS 26.0, *) else { return }
         let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        backgroundView.layer?.backgroundColor = NSColor(WelcomeStyle.background(for: isDark ? .dark : .light))
+        backgroundView.layer?.backgroundColor =
+            NSColor(WelcomeStyle.background(for: isDark ? .dark : .light))
             .withAlphaComponent(0.35).cgColor
     }
 
@@ -221,12 +225,12 @@ final class FloatingFooterView: NSView {
             glassView.cornerRadius = 0
             return glassView
         }
-        let ve = NSVisualEffectView()
-        ve.wantsLayer = true
-        ve.state = .active
-        ve.blendingMode = .withinWindow
-        ve.material = .popover
-        return ve
+        let effect = NSVisualEffectView()
+        effect.wantsLayer = true
+        effect.state = .active
+        effect.blendingMode = .withinWindow
+        effect.material = .popover
+        return effect
     }
 
     private func updatePauseState() {
@@ -253,7 +257,8 @@ final class FloatingFooterView: NSView {
 
     private func updatePauseBackground() {
         effectiveAppearance.performAsCurrentDrawingAppearance {
-            pauseStack.layer?.backgroundColor = NSColor.controlAccentColor
+            pauseStack.layer?.backgroundColor =
+                NSColor.controlAccentColor
                 .withAlphaComponent(0.1).cgColor
         }
     }

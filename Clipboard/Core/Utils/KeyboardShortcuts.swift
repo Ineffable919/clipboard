@@ -2,7 +2,7 @@
 //  KeyboardShortcuts.swift
 //  Clip
 //
-//  Created by crown on 2025/09/12.
+//  Created by crown on 2025/09/12
 //
 
 import AppKit

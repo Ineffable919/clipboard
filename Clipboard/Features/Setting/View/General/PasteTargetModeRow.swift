@@ -2,6 +2,8 @@
 //  PasteTargetModeRow.swift
 //  Clipboard
 //
+//  Created by crown on 2026/3/21
+//
 
 import SwiftUI
 
@@ -34,8 +36,8 @@ struct PasteTargetModeRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: Const.space12) {
-            Image(systemName: isSelected ? "record.circle.fill" : "circle")
-                .foregroundColor(isSelected ? .accentColor : .secondary)
+            Image(systemName: isSelected ? "record.circle.fill" : "circle.fill")
+                .foregroundStyle(isSelected ? Color.accentColor : Color.primary.opacity(0.08))
                 .font(.system(size: Const.space16))
                 .onTapGesture {
                     onSelect()
@@ -51,7 +53,7 @@ struct PasteTargetModeRow: View {
 
             Spacer()
         }
-        .padding(Const.space4)
+        .padding(.vertical, Const.space4)
         .contentShape(Rectangle())
         .onTapGesture {
             onSelect()

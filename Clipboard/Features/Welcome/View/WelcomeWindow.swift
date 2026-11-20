@@ -1,3 +1,10 @@
+//
+//  WelcomeWindow.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/29
+//
+
 import AppKit
 
 final class WelcomeWindow: NSWindow {

@@ -2,6 +2,8 @@
 //  WelcomeWindowController.swift
 //  Clipboard
 //
+//  Created by crown on 2026/8/19
+//
 
 import AppKit
 import SnapKit
@@ -66,9 +68,9 @@ final class WelcomeWindowController: NSWindowController {
     }
 
     func showIfNeeded() {
-        #if !DEBUG
-            guard !PasteUserDefaults.welcomeDone else { return }
-        #endif
+        // #if !DEBUG
+        guard !PasteUserDefaults.welcomeDone else { return }
+        // #endif
 
         NSApp.activate(ignoringOtherApps: true)
         window?.center()

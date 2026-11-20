@@ -2,7 +2,7 @@
 //  ClipMainViewController+KeyEvent.swift
 //  Clipboard
 //
-//  Created by crown on 2025/9/13.
+//  Created by crown on 2025/9/13
 //
 
 import AppKit
@@ -17,7 +17,7 @@ extension ClipMainViewController: NSGestureRecognizerDelegate {
     ) -> Bool {
         guard
             let hitView = view.window?.contentView?
-            .hitTest(event.locationInWindow)
+                .hitTest(event.locationInWindow)
         else {
             return true
         }
@@ -39,12 +39,6 @@ extension ClipMainViewController: NSGestureRecognizerDelegate {
 
 extension ClipMainViewController {
     func keyDownEvent(_ event: NSEvent) -> NSEvent? {
-        log.debug(
-            """
-            keyDown keyCode=\(event.keyCode) modifiers=\(event.modifierFlags.rawValue) \
-            focusRegion=\(focusRegion) firstResponder=\(String(describing: view.window?.firstResponder))
-            """
-        )
         if focusRegion == .popover || focusRegion == .chipEditing {
             return handleFocusedKeyEvent(event)
         }
@@ -55,13 +49,13 @@ extension ClipMainViewController {
         }
 
         if KeyCode.shouldTriggerSearch(for: event),
-           !topBarView.searchField.isFirstResponder,
-           focusRegion == .collection {
+            !topBarView.searchField.isFirstResponder,
+            focusRegion == .collection
+        {
             if let characters = event.characters, !characters.isEmpty {
                 topBarView.activateSearch(with: characters)
             }
             setFocusRegion(.search)
-            view.window?.makeFirstResponder(topBarView.searchField)
             return nil
         }
 
@@ -118,9 +112,12 @@ extension ClipMainViewController {
 
     private func arrowKeyDown(_ event: NSEvent) -> NSEvent? {
         guard focusRegion == .collection,
-              event.modifierFlags.isDisjoint(with: [.command, .option, .control, .shift])
+            event.modifierFlags.isDisjoint(with: [.command, .option, .control, .shift])
         else { return event }
         guard displayedItemCount > 0 else { return nil }
+
+        // 从首次按下开始暂缓预览，不能等重复事件出现后才暂停
+        scrollView.beginKeyboardScroll(keyCode: event.keyCode)
 
         let movesRight = event.keyCode == KeyCode.rightArrow
         let selected = collectionView.selectionIndexPaths
@@ -129,19 +126,31 @@ extension ClipMainViewController {
         if next == anchor.item {
             NSSound.beep()
         }
-        // 离屏选中项也按数据顺序导航，避免原生布局导航跳到可见边界或末项
-        resetSelectIndex(IndexPath(item: next, section: 0))
+
+        let followsSelection = previewPopover?.isShown == true
+        // 预览跟随时先把目标卡片滚入视野，再移动预览锚点
+        resetSelectIndex(
+            IndexPath(item: next, section: 0),
+            animated: !followsSelection
+        )
+        if followsSelection, next != anchor.item {
+            retargetPreviewToSelection()
+        }
         return nil
     }
 
     private func escapeKeyDown(_: NSEvent) -> NSEvent? {
+        if previewPopover?.isShown == true {
+            closePreviewPopover()
+            return nil
+        }
         let field = topBarView.searchField
-        if topBarView.dismissFilterPopoverIfVisible() {
+        if topBarView.dismissFilterPopover() {
             return nil
         }
         if field.isFirstResponder {
             if field.suggestionWindow.isVisible {
-                field.suggestionWindow.hide()
+                field.hideSuggestions()
                 return nil
             }
             if topVM.hasInput {
@@ -173,7 +182,7 @@ extension ClipMainViewController {
             guard confirmDelete() else { return nil }
             let minIndex =
                 collectionView.selectionIndexPaths.map(\.item).min()
-                    ?? selectIndexPath.item
+                ?? selectIndexPath.item
             let countAfterDelete = displayedItemCount - items.count
             if countAfterDelete > 0 {
                 let newItem = min(minIndex, countAfterDelete - 1)
@@ -209,24 +218,38 @@ extension ClipMainViewController {
     }
 
     private func handleCommandKeyEvent(_ event: NSEvent) -> NSEvent? {
-        guard focusRegion == .collection else { return event }
-
-        guard event.modifierFlags.isDisjoint(with: [
-            .option, .control, .shift
-        ]) else {
+        guard
+            event.modifierFlags.isDisjoint(with: [
+                .option, .control, .shift
+            ])
+        else {
             return event
         }
 
+        if event.keyCode == KeyCode.keyF,
+            let window = event.window,
+            window === view.window || window === topBarView.filterPopover?.contentViewController?.view.window
+        {
+            if topBarView.isSearching {
+                topBarView.togglePopover()
+            } else {
+                topBarView.activateSearch()
+            }
+            return nil
+        }
+
+        guard focusRegion == .collection else { return event }
+
         switch event.keyCode {
-        case KeyCode.a:
+        case KeyCode.keyA:
             collectionView.selectAll(nil)
             updateSelectedItemBorder()
             return nil
 
-        case KeyCode.c:
+        case KeyCode.keyC:
             return handleCopy()
 
-        case KeyCode.e:
+        case KeyCode.keyE:
             return handleEdit()
 
         default:
@@ -261,18 +284,20 @@ extension ClipMainViewController {
         let eventModifiers = event.modifierFlags.intersection(relevantModifiers)
 
         if let previousTabInfo = HotKeyManager.shared.getHotKey(key: "previous_tab"),
-           previousTabInfo.isEnabled,
-           event.keyCode == previousTabInfo.shortcut.keyCode,
-           eventModifiers == previousTabInfo.shortcut.modifiers.intersection(relevantModifiers) {
+            previousTabInfo.isEnabled,
+            event.keyCode == previousTabInfo.shortcut.keyCode,
+            eventModifiers == previousTabInfo.shortcut.modifiers.intersection(relevantModifiers)
+        {
             topVM.selectPreviousChip()
             topBarView.updateChipSelection()
             return true
         }
 
         if let nextTabInfo = HotKeyManager.shared.getHotKey(key: "next_tab"),
-           nextTabInfo.isEnabled,
-           event.keyCode == nextTabInfo.shortcut.keyCode,
-           eventModifiers == nextTabInfo.shortcut.modifiers.intersection(relevantModifiers) {
+            nextTabInfo.isEnabled,
+            event.keyCode == nextTabInfo.shortcut.keyCode,
+            eventModifiers == nextTabInfo.shortcut.modifiers.intersection(relevantModifiers)
+        {
             topVM.selectNextChip()
             topBarView.updateChipSelection()
             return true

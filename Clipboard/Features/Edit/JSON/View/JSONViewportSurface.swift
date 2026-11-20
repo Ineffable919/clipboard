@@ -1,3 +1,10 @@
+//
+//  JSONViewportSurface.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/30
+//
+
 import AppKit
 
 /// 滚动高度与文本控件分离，文本控件只承载当前分页

@@ -2,7 +2,9 @@
 //  PreviewQuickLookView.swift
 //  Clipboard
 //
-//  Quick Look 文件预览。
+//  Created by crown on 2026/8/26
+//
+//  Quick Look 文件预览
 //
 
 import AppKit

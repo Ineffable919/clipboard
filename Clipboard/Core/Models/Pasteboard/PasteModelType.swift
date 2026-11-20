@@ -2,6 +2,8 @@
 //  PasteModelType.swift
 //  Clipboard
 //
+//  Created by crown on 2026/3/11
+//
 //  剪贴板内容的语义类型枚举
 //
 

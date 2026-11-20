@@ -1,3 +1,10 @@
+//
+//  JSONDocument.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/30
+//
+
 import AppKit
 
 /// 后台生成的文档、索引和首屏排版结果
@@ -7,11 +14,12 @@ nonisolated struct JSONDocument: Sendable {
     let index: JSONFoldIndex.Document?
     let preparedText: JSONPreparedText?
 
-    private init(_ text: String, isValid: Bool, prepare: Bool, width: CGFloat) {
+    private init(_ text: String, isValid: Bool, prepare: Bool, width: CGFloat, paging: Bool = false) {
         self.text = text
         self.isValid = isValid
         index = prepare && !Task.isCancelled ? JSONFoldIndex.document(for: text) : nil
-        preparedText = prepare && !Task.isCancelled && text.utf8.count >= 1_048_576
+        preparedText =
+            (prepare || paging) && !Task.isCancelled && text.utf8.count >= 1_048_576
             ? JSONPreparedText(text, width: width, lineStarts: index?.lineStarts) : nil
     }
 
@@ -25,7 +33,7 @@ nonisolated struct JSONDocument: Sendable {
             return (text, isValid)
         }
         await onValidation(isValid)
-        return autoreleasepool { Self(text, isValid: isValid, prepare: isValid, width: width) }
+        return autoreleasepool { Self(text, isValid: isValid, prepare: isValid, width: width, paging: true) }
     }
 
     static func prepare(_ text: String, knownValidity: Bool? = nil, width: CGFloat) -> Self {
@@ -46,11 +54,12 @@ nonisolated struct JSONDocument: Sendable {
             if !changed, let knownValidity {
                 isValid = knownValidity
             } else {
-                isValid = switch action {
-                case .format, .compact, .sortKeys, .renameKeys: true
-                case .encodeUnicode: knownValidity ?? JSONTransformer.isValid(text)
-                default: JSONTransformer.isValid(text)
-                }
+                isValid =
+                    switch action {
+                    case .format, .compact, .sortKeys, .renameKeys: true
+                    case .encodeUnicode: knownValidity ?? JSONTransformer.isValid(text)
+                    default: JSONTransformer.isValid(text)
+                    }
             }
             return (
                 Self(text, isValid: isValid, prepare: changed && entireDocument, width: width),

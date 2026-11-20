@@ -1,3 +1,10 @@
+//
+//  ClipMainViewController+List.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/5
+//
+
 import AppKit
 import Combine
 
@@ -16,7 +23,7 @@ extension ClipMainViewController {
                 return item
             }
             cItem.delegate = self
-            cItem.configure(with: model, keyword: topVM.query)
+            cItem.configure(with: model, keyword: PasteDataStore.main.searchWord)
             cItem.quickPasteIndex = quickPasteIndex(for: indexPath.item)
             return cItem
         }
@@ -59,11 +66,11 @@ extension ClipMainViewController {
             self?.setFocusRegion(.search)
         }
 
-        let clickGesture = NSClickGestureRecognizer(
+        // 按下即离开搜索，与搜索框展开收起的响应保持同步
+        let clickGesture = PressDownGestureRecognizer(
             target: self,
             action: #selector(handleContentViewClick(_:))
         )
-        clickGesture.buttonMask = 0x1 // 左键点击
         clickGesture.delegate = self
         contentView.addGestureRecognizer(clickGesture)
     }
@@ -92,8 +99,10 @@ extension ClipMainViewController {
         }
     }
 
-    @objc func handleContentViewClick(_: NSClickGestureRecognizer) {
+    @objc func handleContentViewClick(_: NSGestureRecognizer) {
         setFocusRegion(.collection)
+        // 立即移交焦点，搜索框随按下同步收起
+        view.window?.makeFirstResponder(collectionView)
     }
 }
 
@@ -109,7 +118,8 @@ extension ClipMainViewController {
             guard let self else { return }
             var snapshot = diffableDataSource.snapshot()
             let existing = Set(snapshot.itemIdentifiers.map(\.uniqueId))
-            let appended = newItems
+            let appended =
+                newItems
                 .filter { !existing.contains($0.uniqueId) }
             guard !appended.isEmpty else { return }
             snapshot.appendItems(appended, toSection: .main)
@@ -121,12 +131,14 @@ extension ClipMainViewController {
             self?.diffableDataSource.snapshot().itemIdentifiers ?? []
         }
         presenter.resetSelection = { [weak self] in
+            // 快照重置时立即回到起点，避免关窗中断滚动动画
+            self?.scrollView.scroll(to: .zero, animated: false)
             self?.resetSelectIndex()
             self?.restoreSelection()
         }
         presenter.restoreSelection = { [weak self] in self?.restoreSelection() }
         presenter.adjustAfterDelete = { [weak self] in self?.adjustSelectionAfterDelete() }
-        // 抽屉的空状态在快照完成后更新，避免与删除动画重叠。
+        // 抽屉的空状态在快照完成后更新，避免与删除动画重叠
         presenter.reconfigureItems = { [weak self] items in
             guard let self else { return }
             let identifiers = diffableDataSource.snapshot().itemIdentifiers
@@ -134,13 +146,14 @@ extension ClipMainViewController {
             for item in items {
                 guard let idx = indexMap[item.uniqueId] else { continue }
                 (collectionView.item(at: IndexPath(item: idx, section: 0)) as? CollectionViewItem)?
-                    .configure(with: item, keyword: topVM.query)
+                    .configure(with: item, keyword: PasteDataStore.main.searchWord)
             }
         }
 
         presenter.previewIsShown = { [weak self] in self?.previewPopover?.isShown == true }
         presenter.closePreview = { [weak self] in self?.closePreviewPopover() }
-        presenter.reopenPreview = { [weak self] in self?.updatePreviewForSelectedItem() }
+        presenter.retargetPreview = { [weak self] in self?.retargetPreviewToSelection() }
+        presenter.refreshPreviewHeader = { [weak self] in self?.previewPopover?.refreshHeader() }
 
         presenter.isVerticalScroll = false
         presenter.loadMoreThreshold = (Const.cardSize + Const.cardSpace) * 2
@@ -153,7 +166,8 @@ extension ClipMainViewController {
 
 extension ClipMainViewController {
     func initObserve() {
-        topBarView.searchField.$text
+        topBarView.searchField.$query
+            .map(\.text)
             .removeDuplicates()
             .dropFirst()
             .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
@@ -180,39 +194,6 @@ extension ClipMainViewController {
                 topVM.performSearch()
             }
             .store(in: &cancellables)
-
-        PasteBoard.main.$isPaused
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in self?.updatePauseState() }
-            .store(in: &cancellables)
-
-        appearanceObservation = view.observe(\.effectiveAppearance) { [weak self] _, _ in
-            Task { @MainActor [weak self] in
-                guard let self, !pauseStack.isHidden else { return }
-                view.effectiveAppearance.performAsCurrentDrawingAppearance {
-                    pauseStack.layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.1).cgColor
-                }
-            }
-        }
-    }
-
-    private func updatePauseState() {
-        let isPaused = PasteBoard.main.isPaused
-        pauseStack.isHidden = !isPaused
-        pauseButton.isHidden = !isPaused
-        if isPaused {
-            pauseTimeLabel.stringValue = topVM.formattedRemainingTime
-            pauseTimerCancellable = Timer.publish(every: 1, on: .main, in: .common)
-                .autoconnect()
-                .sink { [weak self] _ in
-                    self?.pauseTimeLabel.stringValue = self?.topVM.formattedRemainingTime ?? ""
-                }
-        } else {
-            pauseTimerCancellable = nil
-        }
-        view.effectiveAppearance.performAsCurrentDrawingAppearance {
-            pauseStack.layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.1).cgColor
-        }
     }
 
     private func adjustSelectionAfterDelete() {

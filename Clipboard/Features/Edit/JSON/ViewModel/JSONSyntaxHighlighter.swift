@@ -2,6 +2,8 @@
 //  JSONSyntaxHighlighter.swift
 //  Clipboard
 //
+//  Created by crown on 2026/7/21
+//
 
 import Foundation
 
@@ -35,38 +37,8 @@ enum JSONSyntaxHighlighter {
             let character = source.character(at: index)
 
             if character == CharacterCode.quote {
-                let start = index
-                index += 1
-                var escaped = false
-                while index < source.length {
-                    if shouldCancel(at: index) {
-                        return []
-                    }
-                    let current = source.character(at: index)
-                    index += 1
-                    if escaped {
-                        escaped = false
-                    } else if current == CharacterCode.backslash {
-                        escaped = true
-                    } else if current == CharacterCode.quote {
-                        break
-                    }
-                }
-
-                var lookahead = index
-                while lookahead < source.length,
-                      isWhitespace(source.character(at: lookahead))
-                {
-                    lookahead += 1
-                }
-                let kind: Kind = lookahead < source.length
-                    && source.character(at: lookahead) == CharacterCode.colon
-                    ? .key
-                    : .string
-                result.append(Span(
-                    range: NSRange(location: offset + start, length: index - start),
-                    kind: kind
-                ))
+                guard let span = stringSpan(source, index: &index, offset: offset) else { return [] }
+                result.append(span)
                 continue
             }
 
@@ -74,41 +46,70 @@ enum JSONSyntaxHighlighter {
                 let start = index
                 index += 1
                 while index < source.length,
-                      isNumberCharacter(source.character(at: index))
+                    isNumberCharacter(source.character(at: index))
                 {
                     index += 1
                 }
-                result.append(Span(
-                    range: NSRange(location: offset + start, length: index - start),
-                    kind: .number
-                ))
+                result.append(
+                    Span(
+                        range: NSRange(location: offset + start, length: index - start),
+                        kind: .number
+                    ))
                 continue
             }
 
             if isLiteralStart(character) {
                 let start = index
                 while index < source.length,
-                      isASCIILetter(source.character(at: index))
+                    isASCIILetter(source.character(at: index))
                 {
                     index += 1
                 }
-                result.append(Span(
-                    range: NSRange(location: offset + start, length: index - start),
-                    kind: .literal
-                ))
+                result.append(
+                    Span(
+                        range: NSRange(location: offset + start, length: index - start),
+                        kind: .literal
+                    ))
                 continue
             }
 
             if isPunctuation(character) {
-                result.append(Span(
-                    range: NSRange(location: offset + index, length: 1),
-                    kind: .punctuation
-                ))
+                result.append(
+                    Span(
+                        range: NSRange(location: offset + index, length: 1),
+                        kind: .punctuation
+                    ))
             }
             index += 1
         }
 
         return result
+    }
+
+    private nonisolated static func stringSpan(_ source: NSString, index: inout Int, offset: Int) -> Span? {
+        let start = index
+        index += 1
+        var escaped = false
+        while index < source.length {
+            if shouldCancel(at: index) { return nil }
+            let current = source.character(at: index)
+            index += 1
+            if escaped {
+                escaped = false
+            } else if current == CharacterCode.backslash {
+                escaped = true
+            } else if current == CharacterCode.quote {
+                break
+            }
+        }
+        var lookahead = index
+        while lookahead < source.length, isWhitespace(source.character(at: lookahead)) {
+            lookahead += 1
+        }
+        let kind: Kind =
+            lookahead < source.length && source.character(at: lookahead) == CharacterCode.colon
+            ? .key : .string
+        return Span(range: NSRange(location: offset + start, length: index - start), kind: kind)
     }
 
     private nonisolated static func shouldCancel(at index: Int) -> Bool {
@@ -124,7 +125,7 @@ enum JSONSyntaxHighlighter {
     }
 
     private nonisolated static func isDigit(_ value: unichar) -> Bool {
-        (CharacterCode.zero ... CharacterCode.nine).contains(value)
+        (CharacterCode.zero...CharacterCode.nine).contains(value)
     }
 
     private nonisolated static func isNumberCharacter(_ value: unichar) -> Bool {
@@ -143,8 +144,8 @@ enum JSONSyntaxHighlighter {
     }
 
     private nonisolated static func isASCIILetter(_ value: unichar) -> Bool {
-        (CharacterCode.lowercaseA ... CharacterCode.lowercaseZ).contains(value)
-            || (CharacterCode.uppercaseA ... CharacterCode.uppercaseZ).contains(value)
+        (CharacterCode.lowercaseA...CharacterCode.lowercaseZ).contains(value)
+            || (CharacterCode.uppercaseA...CharacterCode.uppercaseZ).contains(value)
     }
 
     private nonisolated static func isPunctuation(_ value: unichar) -> Bool {

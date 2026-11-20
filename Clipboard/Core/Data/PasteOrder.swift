@@ -1,7 +1,14 @@
+//
+//  PasteOrder.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/5
+//
+
 import Foundation
 import SQLite
 
-/// 显示顺序独立于时间戳；只读取 ID 和序号，不加载剪贴板内容。
+/// 显示顺序独立于时间戳；只读取 ID 和序号，不加载剪贴板内容
 enum PasteOrder {
     nonisolated static func setup(on database: Connection) throws {
         try database.transaction(.immediate) {
@@ -9,7 +16,8 @@ enum PasteOrder {
                 .compactMap { $0[1] as? String }
             if !columns.contains("sort_order") {
                 try database.run("ALTER TABLE Clip ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0")
-                try database.run("""
+                try database.run(
+                    """
                     WITH ranks AS (
                         SELECT id, ROW_NUMBER() OVER (ORDER BY timestamp, id) AS rank
                         FROM Clip
@@ -37,7 +45,7 @@ enum PasteOrder {
         }
     }
 
-    /// before 优先；结果末尾使用 after，避免误移到尚未加载的历史记录之后。
+    /// before 优先；结果末尾使用 after，避免误移到尚未加载的历史记录之后
     nonisolated static func move(
         _ ids: [Int64],
         before: Int64?,
@@ -47,13 +55,15 @@ enum PasteOrder {
         var result: [Int64] = []
         try database.transaction(.immediate) {
             let table = Table("Clip")
-            let rows = try Array(database.prepare(
-                table.select(Col.id, Col.sortOrder).order(Col.sortOrder.desc, Col.id.desc)
-            ))
+            let rows = try Array(
+                database.prepare(
+                    table.select(Col.id, Col.sortOrder).order(Col.sortOrder.desc, Col.id.desc)
+                ))
             let previous = rows.map { $0[Col.id] }
             let moved = Set(ids)
             guard !ids.isEmpty, moved.count == ids.count,
-                  moved.isSubset(of: Set(previous)) else { throw PasteOrderError.missingItem }
+                moved.isSubset(of: Set(previous))
+            else { throw PasteOrderError.missingItem }
             var reordered = previous.filter { !moved.contains($0) }
             let destination: Int
             if let before, let index = reordered.firstIndex(of: before) {
@@ -65,11 +75,12 @@ enum PasteOrder {
             }
             reordered.insert(contentsOf: ids, at: destination)
 
-            // 将原有序号分配给新顺序；区间外的记录不产生 UPDATE。
+            // 将原有序号分配给新顺序；区间外的记录不产生 UPDATE
             for index in reordered.indices where reordered[index] != previous[index] {
-                try database.run(table.filter(Col.id == reordered[index]).update(
-                    Col.sortOrder <- rows[index][Col.sortOrder]
-                ))
+                try database.run(
+                    table.filter(Col.id == reordered[index]).update(
+                        Col.sortOrder <- rows[index][Col.sortOrder]
+                    ))
             }
             result = reordered
         }

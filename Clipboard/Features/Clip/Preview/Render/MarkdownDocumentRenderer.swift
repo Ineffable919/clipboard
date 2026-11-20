@@ -2,7 +2,9 @@
 //  MarkdownDocumentRenderer.swift
 //  Clipboard
 //
-//  组织 Frontmatter、脚注和正文的 Markdown 渲染流程。
+//  Created by crown on 2026/8/26
+//
+//  组织 Frontmatter、脚注和正文的 Markdown 渲染流程
 //
 
 import Foundation
@@ -12,7 +14,8 @@ nonisolated enum MarkdownDocumentRenderer {
         let frontmatter = MarkdownFrontmatter.split(markdown)
         let footnotes = MarkdownFootnotes.extract(from: frontmatter.body)
         let content = MarkdownSafeHTMLFormatter.format(footnotes.markdown)
-        let body = MarkdownFootnotes.renderReferences(in: content, extraction: footnotes)
+        let body =
+            MarkdownFootnotes.renderReferences(in: content, extraction: footnotes)
             + MarkdownFootnotes.renderDefinitions(footnotes)
         let rendered = renderFrontmatter(frontmatter.raw, format: frontmatter.format) + body
 
@@ -43,13 +46,13 @@ nonisolated enum MarkdownDocumentRenderer {
         }.joined(separator: "\n")
 
         return """
-        <section class="md-frontmatter">
-        <table><tbody>
-        \(rows)
-        </tbody></table>
-        </section>
+            <section class="md-frontmatter">
+            <table><tbody>
+            \(rows)
+            </tbody></table>
+            </section>
 
-        """
+            """
     }
 
     private static func escape(_ string: String) -> String {

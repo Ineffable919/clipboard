@@ -2,32 +2,12 @@
 //  CardContentView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/12
+//
 
 import AppKit
 import Combine
 import SnapKit
-
-// MARK: - NSTextView factory
-
-private func makeCardTextView() -> PassthroughTextView {
-    let view = PassthroughTextView(usingTextLayoutManager: false)
-    view.isEditable = false
-    view.isSelectable = false
-    view.drawsBackground = false
-    view.isHorizontallyResizable = false
-    view.isVerticallyResizable = true
-    view.textContainer?.widthTracksTextView = false
-    view.textContainer?.heightTracksTextView = false
-    view.textContainer?.lineFragmentPadding = 0
-    view.textContainer?.lineBreakMode = .byWordWrapping
-    view.textContainer?.containerSize = CGSize(
-        width: Const.cardSize - Const.space10 * 2,
-        height: .greatestFiniteMagnitude
-    )
-    view.textContainerInset = NSSize(width: Const.space10, height: Const.space8)
-    view.layoutManager?.allowsNonContiguousLayout = false
-    return view
-}
 
 // MARK: - CardContentView
 
@@ -70,7 +50,7 @@ final class CardContentView: NSView, PassthroughMouseEvents {
     }
 
     func resetContent() {
-        cancelCurrentLoad()
+        cancelCurrentLoad(reason: "卡片复用或重置")
         currentContentView?.removeFromSuperview()
         currentContentView = nil
         currentModel = nil
@@ -82,7 +62,8 @@ final class CardContentView: NSView, PassthroughMouseEvents {
 
     override func updateLayer() {
         effectiveAppearance.performAsCurrentDrawingAppearance {
-            let color: NSColor = currentModel == nil || currentModel?.type == .color
+            let color: NSColor =
+                currentModel == nil || currentModel?.type == .color
                 ? .clear : .textBackgroundColor
             layer?.backgroundColor = color.cgColor
         }
@@ -99,18 +80,19 @@ final class CardContentView: NSView, PassthroughMouseEvents {
         linkPreviewCancellable = UserDefaults.standard
             .publisher(for: \.enableLinkPreview)
             .removeDuplicates()
+            .dropFirst()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self,
-                      let model = currentModel,
-                      model.type == .link
+                    let model = currentModel,
+                    model.type == .link
                 else { return }
                 replaceContentView(for: model, keyword: currentKeyword)
             }
     }
 
     private func replaceContentView(for model: PasteboardModel, keyword: String) {
-        cancelCurrentLoad()
+        cancelCurrentLoad(reason: "卡片内容替换")
         currentContentView?.removeFromSuperview()
         currentContentView = nil
 
@@ -136,10 +118,12 @@ final class CardContentView: NSView, PassthroughMouseEvents {
         }
     }
 
-    private func cancelCurrentLoad() {
+    private func cancelCurrentLoad(reason: String) {
         if let imageView = currentContentView as? CardImageContentView {
-            imageView.cancelLoad()
-        } else if let linkView = currentContentView as? CardLinkPreviewContentView {
+            imageView.cancelLoad(reason: reason)
+        } else if let linkView = currentContentView
+            as? CardLinkPreviewContentView
+        {
             linkView.cancelLoad()
         } else if let fileView = currentContentView as? CardFileContentView {
             fileView.cancelLoad()
@@ -162,7 +146,10 @@ final class CardContentView: NSView, PassthroughMouseEvents {
             }
         case .link:
             if PasteUserDefaults.enableLinkPreview {
-                return CardLinkPreviewContentView(model: model, keyword: keyword)
+                return CardLinkPreviewContentView(
+                    model: model,
+                    keyword: keyword
+                )
             }
             return CardStringContentView(model: model, keyword: keyword)
         case .string:
@@ -176,7 +163,7 @@ final class CardContentView: NSView, PassthroughMouseEvents {
 // MARK: - CardStringContentView
 
 final class CardStringContentView: NSView, PassthroughMouseEvents {
-    private lazy var textView: PassthroughTextView = makeCardTextView()
+    private let textView = CardTextView()
 
     init(model: PasteboardModel, keyword: String) {
         super.init(frame: .zero)
@@ -192,32 +179,22 @@ final class CardStringContentView: NSView, PassthroughMouseEvents {
     }
 
     func updateKeyword(_ keyword: String, model: PasteboardModel) {
-        let attributed: NSAttributedString = keyword.isEmpty
+        let attributed: NSAttributedString =
+            keyword.isEmpty
             ? model.plainTextAttributedString
             : model.highlightedNSAttributedString(keyword: keyword)
-        textView.textStorage?.setAttributedString(attributed)
-        if model.pasteboardType == .string {
-            textView.font = .preferredFont(forTextStyle: .body)
-        }
-    }
-}
-
-// MARK: - PassthroughTextView
-
-private final class PassthroughTextView: NSTextView {
-    override func hitTest(_ point: NSPoint) -> NSView? {
-        isSelectable ? super.hitTest(point) : nil
-    }
-
-    override func rightMouseDown(with event: NSEvent) {
-        nextResponder?.rightMouseDown(with: event)
+        textView.setText(
+            attributed,
+            font: model.pasteboardType == .string
+                ? .preferredFont(forTextStyle: .body) : nil
+        )
     }
 }
 
 // MARK: - CardRichContentView
 
 final class CardRichContentView: NSView, PassthroughMouseEvents {
-    private lazy var textView: PassthroughTextView = makeCardTextView()
+    private let textView = CardTextView()
     private let model: PasteboardModel
 
     init(model: PasteboardModel, keyword: String) {
@@ -226,7 +203,7 @@ final class CardRichContentView: NSView, PassthroughMouseEvents {
 
         addSubview(textView)
         textView.snp.makeConstraints { $0.edges.equalToSuperview() }
-        textView.textStorage?.setAttributedString(model.highlightedRichText(keyword: keyword))
+        textView.setText(model.highlightedRichText(keyword: keyword))
         updateBackground()
     }
 
@@ -236,7 +213,7 @@ final class CardRichContentView: NSView, PassthroughMouseEvents {
     }
 
     func updateKeyword(_ keyword: String, model: PasteboardModel) {
-        textView.textStorage?.setAttributedString(model.highlightedRichText(keyword: keyword))
+        textView.setText(model.highlightedRichText(keyword: keyword))
     }
 
     override func viewDidChangeEffectiveAppearance() {
@@ -247,8 +224,7 @@ final class CardRichContentView: NSView, PassthroughMouseEvents {
     private func updateBackground() {
         effectiveAppearance.performAsCurrentDrawingAppearance {
             let background = model.richBackground(on: .textBackgroundColor)
-            textView.drawsBackground = background != nil
-            textView.backgroundColor = background ?? .textBackgroundColor
+            textView.backgroundColor = background
         }
     }
 }
@@ -258,7 +234,10 @@ final class CardRichContentView: NSView, PassthroughMouseEvents {
 final class CardColorContentView: NSView, PassthroughMouseEvents {
     private lazy var label: NSTextField = {
         let field = NSTextField(labelWithString: "")
-        field.font = .systemFont(ofSize: NSFont.systemFontSize + 4, weight: .medium)
+        field.font = .systemFont(
+            ofSize: NSFont.systemFontSize + 4,
+            weight: .medium
+        )
         field.alignment = .center
         field.lineBreakMode = .byTruncatingTail
         return field

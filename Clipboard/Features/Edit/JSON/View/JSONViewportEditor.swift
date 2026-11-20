@@ -1,3 +1,10 @@
+//
+//  JSONViewportEditor.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/30
+//
+
 import AppKit
 import SnapKit
 
@@ -9,6 +16,7 @@ final class JSONViewportEditor: NSView {
     var isEditable = true { didSet { textView.isEditable = isEditable } }
     var currentText = ""
     var selection = NSRange(location: 0, length: 0)
+    var richContent: NSMutableAttributedString?
 
     let scrollView = NSScrollView()
     let surface = JSONViewportSurface()
@@ -73,6 +81,13 @@ final class JSONViewportEditor: NSView {
         pendingAnchor = nil
         pendingReplacement = nil
         currentText = text
+        if richContent != nil {
+            richContent = NSMutableAttributedString(
+                string: text,
+                attributes: [
+                    .font: NSFont.systemFont(ofSize: 13), .foregroundColor: NSColor.labelColor
+                ])
+        }
         source = prepared.source
         blocks = prepared.index.blocks
         lineIndex.replace(with: document?.lineStarts ?? [0])
@@ -80,6 +95,7 @@ final class JSONViewportEditor: NSView {
         selection = NSRange(location: 0, length: 0)
         pageBlocks = 0..<0
         pageWidth = max(100, scrollView.contentSize.width)
+        viewportSize = bounds.size
         rebuildProjection()
         scrollToTop()
         updateCursor()
@@ -106,6 +122,19 @@ final class JSONViewportEditor: NSView {
         indexTask?.cancel()
         highlightTask?.cancel()
         undoManager?.removeAllActions()
+    }
+
+    func enableRichText() {
+        richContent = NSMutableAttributedString()
+        textView.isRichText = true
+        textView.font = .systemFont(ofSize: 13)
+        textView.textContainerInset = NSSize(width: 8, height: 8)
+        textView.onCopyRich = { [weak self] in
+            guard let self, let richContent else { return NSAttributedString() }
+            return richContent.attributedSubstring(from: selection)
+        }
+        ruler.isHidden = true
+        scrollView.snp.remakeConstraints { $0.edges.equalToSuperview() }
     }
 
     private func setup() {

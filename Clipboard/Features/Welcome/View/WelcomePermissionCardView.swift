@@ -2,6 +2,8 @@
 //  WelcomePermissionCardView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/8/22
+//
 
 import SwiftUI
 
@@ -26,8 +28,9 @@ struct WelcomePermissionCardView: View {
                     .background(WelcomeStyle.accent, in: .rect(cornerRadius: 10))
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(.privacyAccessPermissionTitle)
+                    Text(DirectPastePermissionText.current.title)
                         .font(.headline)
+                        .fontWeight(.semibold)
                         .lineLimit(1)
                         .fixedSize(horizontal: true, vertical: false)
 
@@ -71,7 +74,8 @@ struct WelcomePermissionCardView: View {
                         viewModel.openAccessibilitySettings()
                     }
                     .buttonStyle(WelcomeControlButtonStyle())
-                    .frame(width: 104)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
                 }
             }
             .frame(height: 48)

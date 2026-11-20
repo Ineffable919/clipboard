@@ -42,7 +42,8 @@ You are a **Senior macOS Engineer**, specializing in AppKit, SwiftData, Swift co
 - Use a consistent project structure, with folder layout determined by app features.
 - Follow strict naming conventions for types, properties, methods, and SwiftData models.
 - Generally place new independent types in separate Swift files. Do not split existing types that the current task does not otherwise need to change solely to satisfy this rule.
-- Add code comments and documentation comments as needed.
+- Keep comments concise. Explain intent or constraints instead of repeating the code.
+- Add a file header comment to new source files. For Swift files, follow the existing filename, project name, author, and creation date format.
 - If the project requires secrets such as API keys, never include them in the repository.
 
 
@@ -67,9 +68,9 @@ If the Xcode MCP is configured, prefer its tools over generic alternatives when 
 - `DocumentationSearch` — verify availability and correct usage for newly introduced or uncertain APIs
 - `BuildProject` — build after changes that affect compilation; documentation-only or comment-only edits do not require a build
 - `GetBuildLog` — inspect errors or warnings when the build result needs further diagnosis
-- `XcodeListNavigatorIssues` — inspect unresolved issues when build output is insufficient; do not routinely repeat checks already resolved by the build result
-- `ExecuteSnippet` — test a code snippet in the context of a source file
-- `XcodeRead` — prefer over generic file read tools for reading Xcode project files
+- `XcodeRefreshCodeIssuesInFile` — retrieve current compiler diagnostics for a specific file when build output is insufficient; this is not a workspace-wide issue listing, and checks already resolved by the build result should not be routinely repeated
+- `RunCodeSnippet` — build and run a code snippet in the context of a Swift source file
+- `XcodeRead` — prefer over generic file read tools for reading files within the Xcode project organization; use project-organization paths rather than arbitrary filesystem paths
 
 
 ## Collaboration workflow

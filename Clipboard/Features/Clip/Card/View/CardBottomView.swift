@@ -2,7 +2,7 @@
 //  CardBottomView.swift
 //  Clipboard
 //
-//  Created by crown on 2026/4/12.
+//  Created by crown on 2026/4/12
 //
 
 import AppKit
@@ -30,7 +30,10 @@ final class CardBottomView: NSView, PassthroughMouseEvents {
     }
 
     func configure(with model: PasteboardModel, keyword: String = "") {
-        guard currentModel?.uniqueId != model.uniqueId || currentKeyword != keyword else { return }
+        guard
+            currentModel?.uniqueId != model.uniqueId
+                || currentKeyword != keyword
+        else { return }
         currentModel = model
         currentKeyword = keyword
         replaceBottomView(for: model, keyword: keyword)
@@ -49,8 +52,8 @@ final class CardBottomView: NSView, PassthroughMouseEvents {
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 guard let self,
-                      let model = currentModel,
-                      model.type == .link
+                    let model = currentModel,
+                    model.type == .link
                 else { return }
                 replaceBottomView(for: model, keyword: currentKeyword)
             }
@@ -58,7 +61,9 @@ final class CardBottomView: NSView, PassthroughMouseEvents {
 
     private func replaceBottomView(for model: PasteboardModel, keyword: String) {
         clearCurrentView()
-        guard let view = makeBottomView(for: model, keyword: keyword) else { return }
+        guard let view = makeBottomView(for: model, keyword: keyword) else {
+            return
+        }
         addSubview(view)
         view.snp.makeConstraints { $0.edges.equalToSuperview() }
         currentView = view
@@ -93,19 +98,27 @@ final class CardBottomView: NSView, PassthroughMouseEvents {
 // MARK: - CardImageBottomView
 
 private final class CardImageBottomView: NSView, PassthroughMouseEvents {
-    private lazy var labelBg: NSView = {
-        let view = NSView()
+    private lazy var labelBg: NSVisualEffectView = {
+        let view = NSVisualEffectView()
+        view.material = .menu
+        view.blendingMode = .withinWindow
+        view.state = .active
         view.wantsLayer = true
-        view.layer?.cornerRadius = 4.0
+        view.layer?.cornerRadius = 4
         view.layer?.cornerCurve = .continuous
+        view.layer?.masksToBounds = true
         return view
     }()
 
-    private lazy var label: PaddedTextField = {
-        let field = PaddedTextField(padding: NSEdgeInsets(
-            top: 2, left: Const.space6,
-            bottom: 2, right: Const.space6
-        ))
+    private lazy var label: CardLabelView = {
+        let field = CardLabelView(
+            padding: NSEdgeInsets(
+                top: 2,
+                left: Const.space6,
+                bottom: 2,
+                right: Const.space6
+            )
+        )
         field.font = .preferredFont(forTextStyle: .callout)
         field.textColor = .secondaryLabelColor
         field.lineBreakMode = .byTruncatingTail
@@ -117,7 +130,7 @@ private final class CardImageBottomView: NSView, PassthroughMouseEvents {
         label.stringValue = introString
 
         addSubview(labelBg)
-        labelBg.addSubview(label)
+        addSubview(label)
 
         labelBg.snp.makeConstraints { make in
             make.bottom.equalToSuperview().inset(Const.space8)
@@ -126,10 +139,8 @@ private final class CardImageBottomView: NSView, PassthroughMouseEvents {
             make.trailing.lessThanOrEqualToSuperview()
         }
         label.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+            make.edges.equalTo(labelBg)
         }
-
-        updateLabelBackground()
     }
 
     @available(*, unavailable)
@@ -137,15 +148,10 @@ private final class CardImageBottomView: NSView, PassthroughMouseEvents {
         fatalError()
     }
 
-    override func viewDidChangeEffectiveAppearance() {
-        super.viewDidChangeEffectiveAppearance()
-        updateLabelBackground()
-    }
-
-    private func updateLabelBackground() {
-        effectiveAppearance.performAsCurrentDrawingAppearance {
-            labelBg.layer?.backgroundColor = NSColor.unemphasizedSelectedContentBackgroundColor
-                .withAlphaComponent(0.8).cgColor
+    override func layout() {
+        super.layout()
+        if #available(macOS 26.0, *) {
+            labelBg.layer?.cornerRadius = labelBg.bounds.height / 2
         }
     }
 }
@@ -153,16 +159,16 @@ private final class CardImageBottomView: NSView, PassthroughMouseEvents {
 // MARK: - CardFileBottomView
 
 private final class CardFileBottomView: NSView, PassthroughMouseEvents {
-    private lazy var firstLineLabel: NSTextField = {
-        let field = NSTextField(labelWithString: "")
+    private lazy var firstLineLabel: CardLabelView = {
+        let field = CardLabelView()
         field.font = .preferredFont(forTextStyle: .callout)
         field.lineBreakMode = .byCharWrapping
         field.maximumNumberOfLines = 1
         return field
     }()
 
-    private lazy var secondLineLabel: NSTextField = {
-        let field = NSTextField(labelWithString: "")
+    private lazy var secondLineLabel: CardLabelView = {
+        let field = CardLabelView()
         field.font = .preferredFont(forTextStyle: .callout)
         field.lineBreakMode = .byTruncatingHead
         field.maximumNumberOfLines = 1
@@ -170,18 +176,20 @@ private final class CardFileBottomView: NSView, PassthroughMouseEvents {
     }()
 
     private lazy var stack: NSStackView = {
-        let sv = NSStackView(views: [firstLineLabel, secondLineLabel])
-        sv.orientation = .vertical
-        sv.alignment = .centerX
-        sv.spacing = 0
-        sv.distribution = .fill
-        return sv
+        let stack = NSStackView(views: [firstLineLabel, secondLineLabel])
+        stack.orientation = .vertical
+        stack.alignment = .centerX
+        stack.spacing = 0
+        stack.distribution = .fill
+        return stack
     }()
 
     init(model: PasteboardModel, keyword: String) {
         super.init(frame: .zero)
 
-        guard let filePaths = model.cachedFilePaths, !filePaths.isEmpty else { return }
+        guard let filePaths = model.cachedFilePaths, !filePaths.isEmpty else {
+            return
+        }
 
         let (_, textColor) = model.colors()
         firstLineLabel.textColor = textColor
@@ -193,16 +201,33 @@ private final class CardFileBottomView: NSView, PassthroughMouseEvents {
             secondLineLabel.isHidden = true
         } else {
             let text: String = model.introString()
-            let maxWidth = Const.cardSize - Const.selectionBorderWidth * 2 - Const.space12 * 2
-            let font = firstLineLabel.font ?? .preferredFont(forTextStyle: .callout)
-            let (line1, line2) = splitTextIntoTwoLines(text, font: font, maxWidth: maxWidth)
+            let maxWidth =
+                Const.cardSize - Const.selectionBorderWidth * 2 - Const.space12
+                * 2
+            let font =
+                firstLineLabel.font ?? .preferredFont(forTextStyle: .callout)
+            let (line1, line2) = splitTextIntoTwoLines(
+                text,
+                font: font,
+                maxWidth: maxWidth
+            )
 
             if keyword.isEmpty {
                 firstLineLabel.stringValue = line1
                 secondLineLabel.stringValue = line2
             } else {
-                firstLineLabel.attributedStringValue = highlightLine(line1, keyword: keyword, label: firstLineLabel, textColor: textColor)
-                secondLineLabel.attributedStringValue = highlightLine(line2, keyword: keyword, label: secondLineLabel, textColor: textColor)
+                firstLineLabel.attributedStringValue = highlightLine(
+                    line1,
+                    keyword: keyword,
+                    label: firstLineLabel,
+                    textColor: textColor
+                )
+                secondLineLabel.attributedStringValue = highlightLine(
+                    line2,
+                    keyword: keyword,
+                    label: secondLineLabel,
+                    textColor: textColor
+                )
             }
 
             secondLineLabel.isHidden = line2.isEmpty
@@ -211,7 +236,10 @@ private final class CardFileBottomView: NSView, PassthroughMouseEvents {
         addSubview(stack)
         stack.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview().inset(Const.space12)
-            make.bottom.equalToSuperview().inset(secondLineLabel.stringValue.isEmpty ? Const.space8 : Const.space4)
+            make.bottom.equalToSuperview().inset(
+                secondLineLabel.stringValue.isEmpty
+                    ? Const.space8 : Const.space4
+            )
         }
     }
 
@@ -220,46 +248,70 @@ private final class CardFileBottomView: NSView, PassthroughMouseEvents {
         fatalError()
     }
 
-    private func splitTextIntoTwoLines(_ text: String, font: NSFont, maxWidth: CGFloat) -> (String, String) {
+    private func splitTextIntoTwoLines(
+        _ text: String,
+        font: NSFont,
+        maxWidth: CGFloat
+    ) -> (String, String) {
         let attrs: [NSAttributedString.Key: Any] = [.font: font]
-        guard (text as NSString).size(withAttributes: attrs).width > maxWidth else {
+        guard (text as NSString).size(withAttributes: attrs).width > maxWidth
+        else {
             return (text, "")
         }
 
         let chars = Array(text)
-        var lo = 0
-        var hi = chars.count
-        while lo < hi {
-            let mid = (lo + hi + 1) / 2
+        var lower = 0
+        var upper = chars.count
+        while lower < upper {
+            let mid = (lower + upper + 1) / 2
             let sub = String(chars[..<mid])
             if (sub as NSString).size(withAttributes: attrs).width <= maxWidth {
-                lo = mid
+                lower = mid
             } else {
-                hi = mid - 1
+                upper = mid - 1
             }
         }
 
-        return (String(chars[..<lo]), String(chars[lo...]))
+        return (String(chars[..<lower]), String(chars[lower...]))
     }
 
-    private func highlightLine(_ text: String, keyword: String, label: NSTextField, textColor: NSColor) -> NSAttributedString {
+    private func highlightLine(
+        _ text: String,
+        keyword: String,
+        label: CardLabelView,
+        textColor: NSColor
+    ) -> NSAttributedString {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineBreakMode = label.lineBreakMode
         let font = label.font ?? .preferredFont(forTextStyle: .callout)
-        let mutable = NSMutableAttributedString(string: text, attributes: [
-            .font: font,
-            .foregroundColor: textColor,
-            .paragraphStyle: paragraphStyle,
-        ])
+        let mutable = NSMutableAttributedString(
+            string: text,
+            attributes: [
+                .font: font,
+                .foregroundColor: textColor,
+                .paragraphStyle: paragraphStyle
+            ]
+        )
         let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return mutable }
         let source = text as NSString
-        let options: NSString.CompareOptions = [.caseInsensitive, .diacriticInsensitive, .widthInsensitive]
+        let options: NSString.CompareOptions = [
+            .caseInsensitive, .diacriticInsensitive, .widthInsensitive
+        ]
         var searchRange = NSRange(location: 0, length: source.length)
         while searchRange.length > 0 {
-            let found = source.range(of: trimmed, options: options, range: searchRange, locale: .current)
+            let found = source.range(
+                of: trimmed,
+                options: options,
+                range: searchRange,
+                locale: .current
+            )
             guard found.location != NSNotFound else { break }
-            mutable.addAttribute(.backgroundColor, value: NSColor.systemYellow.withAlphaComponent(0.65), range: found)
+            mutable.addAttribute(
+                .backgroundColor,
+                value: NSColor.systemYellow.withAlphaComponent(0.65),
+                range: found
+            )
             let next = found.location + found.length
             guard next < source.length else { break }
             searchRange = NSRange(location: next, length: source.length - next)
@@ -273,8 +325,8 @@ private final class CardFileBottomView: NSView, PassthroughMouseEvents {
 final class CardCommonBottomView: NSView, PassthroughMouseEvents {
     private lazy var gradientLayer = CAGradientLayer()
 
-    private lazy var label: NSTextField = {
-        let field = NSTextField(labelWithString: "")
+    private lazy var label: CardLabelView = {
+        let field = CardLabelView()
         field.font = .preferredFont(forTextStyle: .callout)
         field.alignment = .center
         field.lineBreakMode = .byTruncatingTail
@@ -342,12 +394,12 @@ final class CardCommonBottomView: NSView, PassthroughMouseEvents {
             gradientLayer.colors = [
                 resolved.cgColor,
                 resolved.cgColor,
-                resolved.withAlphaComponent(0.0).cgColor,
+                resolved.withAlphaComponent(0.0).cgColor
             ]
         }
         gradientLayer.startPoint = CGPoint(x: 0.5, y: 0.0)
         gradientLayer.endPoint = CGPoint(x: 0.5, y: 1.0)
-        // Fade through the upper 24pt; only the bottom 16pt is fully opaque.
+        // Fade through the upper 24pt; only the bottom 16pt is fully opaque
         gradientLayer.locations = [0.0, 0.4, 1.0]
     }
 }

@@ -2,7 +2,7 @@
 //  Const.swift
 //  Clipboard
 //
-//  Created by crown on 2025/9/27.
+//  Created by crown on 2025/9/27
 //
 
 import SwiftUI
@@ -17,7 +17,7 @@ enum Const {
     static let hdSize: CGFloat = 50.0
     static let iconSize: CGFloat = 80.0
 
-    static let cardSpace: CGFloat = 16.0
+    static let cardSpace: CGFloat = 24.0
     static let cardLeadingSpace: CGFloat = 16.0
     static let bottomSize: CGFloat = 40.0
 
@@ -48,6 +48,9 @@ enum Const {
         } else {
             8.0
         }
+
+    /// 设置页卡片圆角
+    static let settingsCardRadius: CGFloat = 12.0
 
     static let settingsRadius: CGFloat =
         if #available(macOS 26.0, *) {
@@ -84,13 +87,15 @@ enum Const {
     static let maxPreviewHeight: CGFloat = 640.0
     static let maxContentHeight: CGFloat = 600.0
     static let minPreviewHeight: CGFloat = 300.0
+    static let previewMargin: CGFloat = 28.0
+    static let previewMinWidth: CGFloat = 240.0
     static let minPreviewWidth: CGFloat = 400.0
     static let maxTextheight: CGFloat = 480.0
     static let maxTextWidth: CGFloat = 660.0
     static let maxTextSize: Int = 2500
 
     /// 设置页面
-    static let settingWidth: CGFloat = 645.0
+    static let settingWidth: CGFloat = 640.0
     static let settingHeight: CGFloat = 595.0
 
     static let darkBackground: Color = .init(hex: "#363842")

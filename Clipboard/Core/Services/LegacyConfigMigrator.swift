@@ -2,7 +2,7 @@
 //  LegacyConfigMigrator.swift
 //  Clipboard
 //
-//  Created by crown on 2026/1/11.
+//  Created by crown on 2026/1/11
 //
 
 import AppKit
@@ -150,7 +150,8 @@ final class LegacyConfigMigrator {
 
     private func presentResultAlert(success: Bool) {
         let alert = NSAlert.appAlert()
-        alert.messageText = success
+        alert.messageText =
+            success
             ? String(localized: .importSuccess)
             : String(localized: .importFail)
         alert.addButton(withTitle: String(localized: .commonConfirm))

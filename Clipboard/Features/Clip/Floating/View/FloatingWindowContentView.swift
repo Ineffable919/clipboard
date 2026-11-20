@@ -2,6 +2,8 @@
 //  FloatingWindowContentView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/5/5
+//
 //  浮动窗口主容器：背景 + Header + HistoryView + Footer 的布局
 //
 
@@ -12,7 +14,7 @@ import SnapKit
 final class FloatingWindowContentView: NSView {
     // MARK: - Subviews
 
-    private let bg = BackgroundEffectController(cornerRadius: 0)
+    private let background = BackgroundEffectController(cornerRadius: 0)
     let headerView = FloatingHeaderView()
     let historyView = FloatingHistoryView()
     let footerView = FloatingFooterView()
@@ -75,8 +77,8 @@ final class FloatingWindowContentView: NSView {
     private func setup() {
         wantsLayer = true
 
-        bg.install(in: self)
-        let container = bg.contentContainer
+        background.install(in: self)
+        let container = background.contentContainer
 
         container.addSubview(historyView)
         container.addSubview(headerView)
@@ -133,7 +135,7 @@ final class FloatingWindowContentView: NSView {
     }
 
     private func layoutSubviews() {
-        let container = bg.contentContainer
+        let container = background.contentContainer
 
         historyView.snp.makeConstraints { $0.edges.equalTo(container) }
 

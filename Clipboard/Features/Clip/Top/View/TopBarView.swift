@@ -2,7 +2,7 @@
 //  TopBarView.swift
 //  Clipboard
 //
-//  Created by crown on 2026/4/9.
+//  Created by crown on 2026/4/9
 //
 
 import AppKit
@@ -11,19 +11,22 @@ import SnapKit
 
 final class TopBarView: NSView {
     private let chipRowHeight: CGFloat = 44
+    let pauseBtn = TopBarIconButton(symbolName: "pause.circle", pointSize: 17, style: .mainPanel)
 
     private let settingBtn = TopBarIconButton(
         symbolName: "ellipsis",
-        pointSize: 17
+        pointSize: 17,
+        style: .mainPanel
     )
 
     let defaultRow = NSStackView()
     let searchIconBtn = TopBarIconButton(
         symbolName: "magnifyingglass",
-        pointSize: 18
+        pointSize: 18,
+        style: .mainPanel
     )
     let chipScrollView = ChipScrollView()
-    let addChipBtn = TopBarIconButton(symbolName: "plus")
+    let addChipBtn = TopBarIconButton(symbolName: "plus", style: .mainPanel)
 
     // MARK: - 搜索模式行
 
@@ -34,13 +37,15 @@ final class TopBarView: NSView {
     // MARK: - Popover
 
     var filterPopover: FilterPopover?
-    enum FilterPopoverCloseDestination {
+    /// 已完全关闭、可直接复用的弹窗；内容视图常驻各自窗口，避免每次开关重建窗口与约束
+    var idlePopovers: [FilterPopover] = []
+    enum CloseTarget {
         case search
-        case collection
+        case clickedView
     }
 
-    var explicitFilterPopoverCloseDestination: FilterPopoverCloseDestination?
-    var filterPopoverMouseMonitor: Any?
+    var closeTarget: CloseTarget?
+    var popoverMouseMonitor: Any?
 
     // MARK: - Callbacks
 
@@ -51,10 +56,10 @@ final class TopBarView: NSView {
     private(set) var isSearching = false
     private(set) var topVM: TopBarViewModel?
     var cancellables = Set<AnyCancellable>()
-    var shouldSkipNextTokenSync = false
     private var searchFieldWidth = Const.searchFieldMinWidth
     private var searchFieldWidthConstraint: Constraint?
     var modeAnimationGeneration = 0
+    var modeShowsSearch = false
     var modeChipLayers: [ModeChipLayer] = []
     var modeClips: [ModeClip] = []
     var modeHiddenViews: [NSView] = []
@@ -94,14 +99,6 @@ final class TopBarView: NSView {
             searchField.showSuggestions()
         }.store(in: &cancellables)
 
-        filterPopover = FilterPopover(viewModel: topVM)
-        filterPopover?.onWillClose = { [weak self] in
-            self?.handlePopoverWillClose()
-        }
-        filterPopover?.onDidClose = { [weak self] in
-            self?.handlePopoverDidClose()
-        }
-
         chipController.updateViewModel(topVM)
         chipController.onReloadNeeded = { [weak self] in
             self?.chipController.reloadChips()
@@ -125,6 +122,7 @@ final class TopBarView: NSView {
         setupDefaultRow()
         setupSearchRow()
         setupSettingBtn()
+        setupPauseBtn()
         layoutRows()
         updateChipWidths()
         applyMode()
@@ -142,6 +140,7 @@ final class TopBarView: NSView {
         addSubview(defaultRow)
 
         searchIconBtn.action = { [weak self] in self?.activateSearch() }
+        searchIconBtn.toolTip = String(localized: .searchShortcutTooltip)
         addChipBtn.action = { [weak self] in
             self?.chipController.startCreatingChip()
         }
@@ -159,6 +158,7 @@ final class TopBarView: NSView {
 
     private func setupSearchRow() {
         searchRow.wantsLayer = true
+        searchRow.clipsToBounds = false
         searchRow.orientation = .horizontal
         searchRow.spacing = Const.space8
         searchRow.alignment = .centerY
@@ -180,17 +180,15 @@ final class TopBarView: NSView {
 
             if isSearching, !topVM.hasInput {
                 deactivateSearch()
-                onFocusRegionChange?(.collection)
             }
         }
 
-        searchField.onTextChanged = { [weak self] text in
-            guard let self else { return }
-            topVM?.setQuery(text: text)
+        searchField.onQueryChanged = { [weak self] query in
+            self?.topVM?.applyInputQuery(query)
         }
 
         searchField.onSuggestionsNeeded = { [weak self] query in
-            self?.buildSuggestions(query: query) ?? []
+            try await self?.buildSuggestions(query: query) ?? []
         }
 
         searchField.onSuggestionSelected = { [weak self] item in
@@ -199,16 +197,6 @@ final class TopBarView: NSView {
 
         searchField.onFilterButtonTapped = { [weak self] in
             self?.togglePopover()
-        }
-
-        searchField.onTokenDeleted = { [weak self] tag in
-            Task { @MainActor [weak self] in
-                self?.handleTokenDeletedFromSearchField(tag)
-            }
-        }
-
-        searchField.onClearAllFilters = { [weak self] in
-            self?.topVM?.clearAllFilters()
         }
 
         dotChipScrollView.setContentHuggingPriority(.required, for: .horizontal)
@@ -229,6 +217,7 @@ final class TopBarView: NSView {
     override func hitTest(_ point: NSPoint) -> NSView? {
         let result = super.hitTest(point)
         if result === settingBtn || result?.isDescendant(of: settingBtn) == true { return result }
+        if result === pauseBtn || result?.isDescendant(of: pauseBtn) == true { return result }
         return modeHitTest(point, fallback: result)
     }
 
@@ -257,6 +246,11 @@ final class TopBarView: NSView {
     // MARK: - Layout
 
     private func layoutRows() {
+        pauseBtn.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(Const.space16)
+            make.centerY.equalToSuperview()
+        }
+
         settingBtn.snp.makeConstraints { make in
             make.trailing.equalToSuperview().offset(-Const.space16)
             make.centerY.equalToSuperview()
@@ -264,7 +258,7 @@ final class TopBarView: NSView {
 
         defaultRow.snp.makeConstraints { make in
             make.centerX.equalToSuperview()
-            make.leading.greaterThanOrEqualToSuperview().offset(45)
+            make.leading.greaterThanOrEqualTo(pauseBtn.snp.trailing).offset(Const.space12)
             make.trailing.lessThanOrEqualTo(settingBtn.snp.leading).offset(
                 -Const.space12
             )
@@ -300,25 +294,29 @@ final class TopBarView: NSView {
 
     // MARK: - 模式切换
 
-    private func activateSearch() {
+    func activateSearch() {
         guard !isSearching else { return }
         updateSearchFieldWidth()
         isSearching = true
         applyMode(animated: true)
-        filterPopover?.prepare()
-        window?.makeFirstResponder(searchField)
+        prepareFilterPopover()
+        if !searchField.isFirstResponder {
+            window?.makeFirstResponder(searchField.tokenTextView)
+        }
         onFocusRegionChange?(.search)
     }
 
     func activateSearch(with character: String) {
         activateSearch()
+        if !searchField.isFirstResponder {
+            window?.makeFirstResponder(searchField.tokenTextView)
+        }
         searchField.appendText(character)
     }
 
     func deactivateSearch(beforeTransition: () -> Void = {}) {
         guard isSearching else { return beforeTransition() }
         isSearching = false
-        searchField.setModeFocusRingSuppressed(true)
         if searchField.isFirstResponder { window?.makeFirstResponder(nil) }
         searchField.hideSuggestions()
         searchField.clearAllContent()
@@ -332,7 +330,8 @@ final class TopBarView: NSView {
 private extension TopBarView {
     func updateChipWidths() {
         let rightInset = Const.space16 + settingBtn.fittingSize.width + Const.space12
-        let controlsWidth = searchIconBtn.fittingSize.width + addChipBtn.fittingSize.width
+        let controlsWidth =
+            searchIconBtn.fittingSize.width + addChipBtn.fittingSize.width
             + 2 * Const.space12
         chipScrollView.maximumWidth = max(0, bounds.width - 2 * rightInset - controlsWidth)
         dotChipScrollView.maximumWidth = max(

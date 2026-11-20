@@ -2,6 +2,8 @@
 //  FloatingCardRowView+Menu.swift
 //  Clipboard
 //
+//  Created by crown on 2026/10/2
+//
 
 import AppKit
 
@@ -68,12 +70,14 @@ extension FloatingCardRowView: NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
         guard let model = currentModel else { return }
-        let pasteTitle = if let appName = AppEnvironment.shared.previousApp?.localizedName,
-                            PasteUserDefaults.pasteDirect {
-            String(localized: .pasteToApp(appName))
-        } else {
-            String(localized: .paste)
-        }
+        let pasteTitle =
+            if let appName = AppEnvironment.shared.previousApp?.localizedName,
+                PasteUserDefaults.pasteDirect
+            {
+                String(localized: .pasteToApp(appName))
+            } else {
+                String(localized: .paste)
+            }
         for item in buildClipItemMenu(for: model, pasteTitle: pasteTitle).items {
             menu.addItem(item)
         }

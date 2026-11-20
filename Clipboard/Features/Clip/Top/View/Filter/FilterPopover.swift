@@ -2,6 +2,8 @@
 //  FilterPopover.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/27
+//
 //  Filter Popover
 //
 
@@ -12,17 +14,17 @@ final class FilterPopover: NSPopover {
 
     var onWillClose: (() -> Void)?
     var onDidClose: (() -> Void)?
+    private(set) var isDisplayed = false
 
-    private let filterViewController: FilterPopoverViewController
+    private let controller: FilterPopoverViewController
 
     // MARK: - Init
 
-    init(viewModel: TopBarViewModel) {
-        filterViewController = FilterPopoverViewController(viewModel: viewModel)
+    init(viewController: FilterPopoverViewController) {
+        controller = viewController
         super.init()
         behavior = .transient
-        contentViewController = filterViewController
-        delegate = self
+        contentViewController = controller
     }
 
     @available(*, unavailable)
@@ -33,28 +35,36 @@ final class FilterPopover: NSPopover {
     // MARK: - Public API
 
     func prepare() {
-        filterViewController.prepare()
+        controller.prepare()
     }
 
     func toggle(relativeTo positioningRect: NSRect, of positioningView: NSView) {
-        if isShown {
+        if isDisplayed {
             close()
             return
         }
 
+        animates = !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         show(relativeTo: positioningRect, of: positioningView, preferredEdge: .maxY)
+        animates = false
 
-        Task { @MainActor in
-            guard let window = filterViewController.view.window else { return }
-            window.makeFirstResponder(filterViewController.view)
-        }
+        guard isDisplayed, let window = controller.view.window else { return }
+        window.initialFirstResponder = controller.view
+        window.makeFirstResponder(controller.view)
     }
 }
 
 // MARK: - NSPopoverDelegate
 
 extension FilterPopover: NSPopoverDelegate {
+    func popoverWillShow(_: Notification) {
+        isDisplayed = true
+    }
+
     func popoverWillClose(_: Notification) {
+        guard isDisplayed else { return }
+        animates = !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        isDisplayed = false
         onWillClose?()
     }
 

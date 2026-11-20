@@ -42,22 +42,25 @@ enum DateFilterOption: String, CaseIterable, Equatable {
             return (Int64(startOfYesterday.timeIntervalSince1970), Int64(endOfYesterday.timeIntervalSince1970))
 
         case .thisWeek:
-            let startOfWeek = calendar.date(
-                from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now)
-            ) ?? now
+            let startOfWeek =
+                calendar.date(
+                    from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now)
+                ) ?? now
             return (Int64(startOfWeek.timeIntervalSince1970), nil)
 
         case .lastWeek:
-            let thisWeekStart = calendar.date(
-                from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now)
-            ) ?? now
+            let thisWeekStart =
+                calendar.date(
+                    from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now)
+                ) ?? now
             let lastWeekStart = calendar.date(byAdding: .weekOfYear, value: -1, to: thisWeekStart) ?? now
             return (Int64(lastWeekStart.timeIntervalSince1970), Int64(thisWeekStart.timeIntervalSince1970))
 
         case .thisMonth:
-            let startOfMonth = calendar.date(
-                from: calendar.dateComponents([.year, .month], from: now)
-            ) ?? now
+            let startOfMonth =
+                calendar.date(
+                    from: calendar.dateComponents([.year, .month], from: now)
+                ) ?? now
             return (Int64(startOfMonth.timeIntervalSince1970), nil)
         }
     }

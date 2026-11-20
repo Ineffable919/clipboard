@@ -479,36 +479,85 @@
             background: var(--accent);
             color: #fff;
         }
+
+        /* Language switch */
+        .lang-switch {
+            position: absolute;
+            top: 0;
+            right: 0;
+            font: inherit;
+            font-size: 13px;
+            color: var(--text-secondary);
+            background: var(--surface);
+            border: 1px solid var(--divider);
+            border-radius: var(--radius-sm);
+            padding: 4px 12px;
+            cursor: pointer;
+            transition: color var(--transition), border-color var(--transition);
+        }
+
+        .lang-switch:hover {
+            color: var(--accent);
+            border-color: var(--accent);
+        }
     </style>
 </head>
 
 <body>
     <header class="page-header">
+        <button class="lang-switch" id="lang-switch" type="button" hidden></button>
         <h1>Release Notes</h1>
-        <p>Clip 的每一次更新，都为了更好的体验</p>
+        <p data-en="Every update makes Clip better">Clip 的每一次更新，都为了更好的体验</p>
     </header>
 
     <article class="release">
         <div class="release-header">
             <h2 class="release-version">
-                <span class="version-number">v2.2.0</span>
+                <span class="version-number">v2.3.0</span>
                 <span class="badge-latest">Latest</span>
+            </h2>
+            <time class="release-date">2026-11-20</time>
+        </div>
+
+        <h3 class="section-title">What's new</h3>
+        <ul>
+            <li data-en="MCP has been fully upgraded: connecting is now easier, with a custom port option and support for saving, editing, deleting and tag management.">MCP 全面升级：连接更简单，新增自定义端口，并支持保存、编辑、标签管理和删除。</li>
+            <li data-en="Added the ⌘F search shortcut; press it again to toggle the filters.">新增搜索快捷键 ⌘F，重复按下可切换筛选。</li>
+            <li data-en="The status bar icon now changes to a pause icon while recording is paused.">暂停记录时，状态栏图标会变为暂停样式。</li>
+            <li data-en="Tags can now be renamed by double-clicking them.">标签支持双击重命名。</li>
+        </ul>
+        <h3 class="section-title">Improvements</h3>
+        <ul>
+            <li data-en="Improved image text recognition and search highlighting, with more accurate highlight placement.">优化图片文字识别与搜索高亮，高亮位置更准确。</li>
+            <li data-en="Improved the experience of the search bar, filters and search suggestions.">优化搜索框、筛选和搜索建议的使用体验。</li>
+            <li data-en="Improved the settings layout and unified the title styles across all pages.">优化设置界面布局，统一各页面标题样式。</li>
+            <li data-en="The preview window size now adjusts automatically to fit the available screen space.">预览窗口尺寸会根据屏幕可用空间自动适配。</li>
+            <li data-en="Link previews load faster and card scrolling is smoother.">链接预览加载更快，卡片滚动更流畅。</li>
+            <li data-en="Fixed an issue where dragging multiple files or multiple selections out of the app was incomplete.">修复多文件与多选拖出不完整的问题。</li>
+            <li data-en="Updated the app icon and alert window styles, and fixed several UI issues.">更新应用图标与提示窗口样式，修复若干界面问题。</li>
+        </ul>
+    </article>
+
+    <article class="release">
+        <div class="release-header">
+            <h2 class="release-version">
+                <span class="version-number">v2.2.0</span>
             </h2>
             <time class="release-date">2026-10-04</time>
         </div>
         <h3 class="section-title">What's new</h3>
         <ul>
-            <li>窗口模式新增简洁显示，可在窗口底部切换。</li>
-            <li>抽屉模式支持拖拽调整历史记录顺序，并同步到窗口模式。</li>
-            <li>支持同时选择多个标签筛选历史记录。</li>
-            <li>新增首次启动引导和菜单重启入口。</li>
+            <li data-en="Window mode adds a compact view, switchable at the bottom of the window.">窗口模式新增简洁显示，可在窗口底部切换。</li>
+            <li data-en="Drag to reorder history in drawer mode; the order syncs to window mode.">抽屉模式支持拖拽调整历史记录顺序，并同步到窗口模式。</li>
+            <li data-en="Filter history by multiple tags at once.">支持同时选择多个标签筛选历史记录。</li>
+            <li data-en="Added a first-launch guide and a Restart item in the menu.">新增首次启动引导和菜单重启入口。</li>
         </ul>
         <h3 class="section-title">Improvements</h3>
         <ul>
-            <li>优化大文本与 JSON 编辑性能，支持 JSON 折叠并改进输入和语法高亮。</li>
-            <li>改进 Markdown 预览、富文本背景和深色模式，优化设置布局。</li>
-            <li>修复搜索标签删除、方向键导航及卡片滚动和视图残留问题。</li>
-            <li>完善来源应用信息与备份恢复，修复导入排序和分类冲突。</li>
+            <li data-en="Better performance when editing large text and JSON, with JSON folding and improved input and syntax highlighting.">优化大文本与 JSON 编辑性能，支持 JSON 折叠并改进输入和语法高亮。</li>
+            <li data-en="Improved Markdown preview, rich text backgrounds and dark mode, plus a refined Settings layout.">改进 Markdown 预览、富文本背景和深色模式，优化设置布局。</li>
+            <li data-en="Fixed search tag deletion, arrow-key navigation, card scrolling and leftover view issues.">修复搜索标签删除、方向键导航及卡片滚动和视图残留问题。</li>
+            <li data-en="Improved source app info and backup restore; fixed import ordering and category conflicts.">完善来源应用信息与备份恢复，修复导入排序和分类冲突。</li>
         </ul>
     </article>
 
@@ -521,16 +570,16 @@
         </div>
         <h3 class="section-title">What's new</h3>
         <ul>
-            <li>新增 JSON 编辑模式，支持格式化、压缩、转义处理、Unicode 编解码、键排序和命名风格转换。</li>
-            <li>JSON 编辑器新增行号、语法高亮、格式校验和缩进设置。</li>
-            <li>新增 Markdown 内容识别与渲染预览，并支持在渲染结果和原文之间切换。</li>
+            <li data-en="New JSON edit mode: format, minify, escape handling, Unicode encode/decode, key sorting and naming-style conversion.">新增 JSON 编辑模式，支持格式化、压缩、转义处理、Unicode 编解码、键排序和命名风格转换。</li>
+            <li data-en="The JSON editor adds line numbers, syntax highlighting, validation and indentation settings.">JSON 编辑器新增行号、语法高亮、格式校验和缩进设置。</li>
+            <li data-en="Markdown content is now detected and previewed rendered, with a toggle to the source.">新增 Markdown 内容识别与渲染预览，并支持在渲染结果和原文之间切换。</li>
         </ul>
         <h3 class="section-title">Improvements</h3>
         <ul>
-            <li>优化筛选按钮、搜索框、卡片选中状态及顶部工具栏的视觉细节。</li>
-            <li>修复数据库索引。</li>
-            <li>修复搜索联想列表的鼠标事件处理问题。</li>
-            <li>修复若干卡片布局、选中边框和界面稳定性问题。</li>
+            <li data-en="Polished the filter buttons, search box, card selection state and top toolbar.">优化筛选按钮、搜索框、卡片选中状态及顶部工具栏的视觉细节。</li>
+            <li data-en="Fixed database indexes.">修复数据库索引。</li>
+            <li data-en="Fixed mouse event handling in the search suggestions list.">修复搜索联想列表的鼠标事件处理问题。</li>
+            <li data-en="Fixed several card layout, selection border and UI stability issues.">修复若干卡片布局、选中边框和界面稳定性问题。</li>
         </ul>
     </article>
 
@@ -541,23 +590,23 @@
             </h2>
             <time class="release-date">2026-06-12</time>
         </div>
-        <p class="release-description">
+        <p class="release-description" data-en="Version 1.0 had become stable on SwiftUI, but in pursuit of better performance and experience I rebuilt the whole app. 2.0 is rewritten on AppKit, with noticeably faster launch, smoother scrolling and quicker response.">
             1.0 版本在 SwiftUI 框架下已趋于稳定，为了追求更极致的性能和体验，我决定对整个应用进行彻底重构。2.0 版本采用 AppKit
             架构重写，在启动速度、流畅度和响应速度方面都有显著提升，带来更加流畅的使用体验。
         </p>
         <h3 class="section-title">What's new</h3>
         <ul>
-            <li>新增 MCP 支持（Beta）</li>
-            <li>历史记录列表完整支持多选操作 <a href="https://github.com/Ineffable919/clipboard/issues/16">#16</a></li>
-            <li>支持直接拖拽文本、文件等到剪贴板</li>
-            <li>更丰富的卡片菜单</li>
-            <li>初步适配 macOS 27</li>
+            <li data-en="Added MCP support (Beta)">新增 MCP 支持（Beta）</li>
+            <li data-en="Full multi-select support in the history list <a href='https://github.com/Ineffable919/clipboard/issues/16'>#16</a>">历史记录列表完整支持多选操作 <a href="https://github.com/Ineffable919/clipboard/issues/16">#16</a></li>
+            <li data-en="Drag text, files and more directly into the clipboard history.">支持直接拖拽文本、文件等到剪贴板</li>
+            <li data-en="Richer card menu.">更丰富的卡片菜单</li>
+            <li data-en="Initial support for macOS 27.">初步适配 macOS 27</li>
         </ul>
         <h3 class="section-title">Improvements</h3>
         <ul>
-            <li>优化识别复制的内容，比如在 IntelliJ IDEA 复制文件，现在能准确识别</li>
-            <li>最低支持版本降低为 macOS 14</li>
-            <li>修复了一些已知问题</li>
+            <li data-en="Better detection of copied content, e.g. files copied in IntelliJ IDEA are now recognized correctly.">优化识别复制的内容，比如在 IntelliJ IDEA 复制文件，现在能准确识别</li>
+            <li data-en="Minimum supported version lowered to macOS 14.">最低支持版本降低为 macOS 14</li>
+            <li data-en="Fixed some known issues.">修复了一些已知问题</li>
         </ul>
     </article>
 
@@ -569,7 +618,7 @@
             <time class="release-date">2026-05-12</time>
         </div>
 
-        <div class="warning-box">
+        <div class="warning-box" data-en="<strong>Note:</strong> This version changes the data storage location so the Documents permission prompt no longer appears on every launch. Import your old data in Settings – Storage (old location: Documents – Clip – Clip.sqlite3). You can delete the old data afterwards or keep it as a backup.">
             <strong>注意：</strong>应用启动没有数据是因为该版本修改了数据存储位置，避免每次启动都提示文稿授权弹窗，
             <span class="warning-line">只需在 设置 – 存储页面导入旧数据即可，旧数据存储位置：文稿 – Clip – Clip.sqlite3，</span>
             <span class="warning-line">后续可删除旧数据，或保留备份</span>
@@ -577,7 +626,7 @@
 
         <h3 class="section-title">Bug Fixes</h3>
         <ul>
-            <li>解决了一些已知问题</li>
+            <li data-en="Fixed some known issues.">解决了一些已知问题</li>
         </ul>
     </article>
 
@@ -590,18 +639,18 @@
         </div>
         <h3 class="section-title">What's new</h3>
         <ul>
-            <li>本地化支持</li>
-            <li>列表支持多选 <a href="https://github.com/Ineffable919/clipboard/issues/16">#16</a></li>
+            <li data-en="Localization support.">本地化支持</li>
+            <li data-en="Multi-select support in the list <a href='https://github.com/Ineffable919/clipboard/issues/16'>#16</a>">列表支持多选 <a href="https://github.com/Ineffable919/clipboard/issues/16">#16</a></li>
         </ul>
         <h3 class="section-title">Improvements</h3>
         <ul>
-            <li>支持在列表使用鼠标滚轮进行横向滚动 <a href="https://github.com/Ineffable919/clipboard/pull/18">#18</a>（感谢 <a
+            <li data-en="Use the mouse wheel to scroll the list horizontally <a href='https://github.com/Ineffable919/clipboard/pull/18'>#18</a> (thanks to <a href='https://github.com/fleyi'>fleyi</a> for the pull request)">支持在列表使用鼠标滚轮进行横向滚动 <a href="https://github.com/Ineffable919/clipboard/pull/18">#18</a>（感谢 <a
                     href="https://github.com/fleyi">fleyi</a> 提交 pull）</li>
-            <li>系统版本支持提升至 macOS 15</li>
+            <li data-en="Minimum supported version raised to macOS 15.">系统版本支持提升至 macOS 15</li>
         </ul>
         <h3 class="section-title">Bug Fixes</h3>
         <ul>
-            <li>解决了一些已知问题</li>
+            <li data-en="Fixed some known issues.">解决了一些已知问题</li>
         </ul>
     </article>
 
@@ -614,7 +663,7 @@
         </div>
         <h3 class="section-title">Bug Fixes</h3>
         <ul>
-            <li>解决了一些已知问题</li>
+            <li data-en="Fixed some known issues.">解决了一些已知问题</li>
         </ul>
     </article>
 
@@ -627,9 +676,9 @@
         </div>
         <h3 class="section-title">What's new</h3>
         <ul>
-            <li>支持窗口展示</li>
-            <li>抽屉输入支持 @ 类型过滤，例如输入 @image、@文件、@file 等等</li>
-            <li>状态栏图标支持隐藏</li>
+            <li data-en="Added window display mode.">支持窗口展示</li>
+            <li data-en="Type @ in the drawer to filter by type, e.g. @image, @文件 or @file.">抽屉输入支持 @ 类型过滤，例如输入 @image、@文件、@file 等等</li>
+            <li data-en="The menu bar icon can now be hidden.">状态栏图标支持隐藏</li>
         </ul>
     </article>
 
@@ -642,13 +691,13 @@
         </div>
         <h3 class="section-title">What's new</h3>
         <ul>
-            <li>图片内容支持搜索（仅限于新的图片历史内容），预览支持 OCR</li>
-            <li>设置页面新增存储栏目，支持数据备份、导入，日志查看</li>
+            <li data-en="Search image content (new image history only); preview supports OCR.">图片内容支持搜索（仅限于新的图片历史内容），预览支持 OCR</li>
+            <li data-en="Settings adds a Storage section with data backup, import and log viewing.">设置页面新增存储栏目，支持数据备份、导入，日志查看</li>
         </ul>
         <h3 class="section-title">Bug Fixes</h3>
         <ul>
-            <li>修复重新安装或更新后辅助权限丢失的问题（仅支持后续版本）</li>
-            <li>修复了一些已知问题</li>
+            <li data-en="Fixed Accessibility permission being lost after reinstalling or updating (future versions only).">修复重新安装或更新后辅助权限丢失的问题（仅支持后续版本）</li>
+            <li data-en="Fixed some known issues.">修复了一些已知问题</li>
         </ul>
     </article>
 
@@ -661,22 +710,22 @@
         </div>
         <h3 class="section-title">What's new</h3>
         <ul>
-            <li>提供按类型、应用或日期更丰富的过滤方式，以便于更好的查询历史记录</li>
-            <li>关键字搜索支持高亮展示</li>
-            <li>文本支持编辑并保存</li>
-            <li>支持暂停并恢复剪贴板记录</li>
+            <li data-en="Richer filtering by type, app or date for easier history lookup.">提供按类型、应用或日期更丰富的过滤方式，以便于更好的查询历史记录</li>
+            <li data-en="Keyword search now highlights matches.">关键字搜索支持高亮展示</li>
+            <li data-en="Text can be edited and saved.">文本支持编辑并保存</li>
+            <li data-en="Pause and resume clipboard recording.">支持暂停并恢复剪贴板记录</li>
         </ul>
         <h3 class="section-title">Improvements</h3>
         <ul>
-            <li>改进链接、图片卡片展示</li>
-            <li>预览窗口体验优化</li>
-            <li>设置-关于界面的图标支持直接拖拽获取权限</li>
-            <li>更好的检测应用更新</li>
-            <li>兼容 macOS Sonoma</li>
+            <li data-en="Improved link and image cards.">改进链接、图片卡片展示</li>
+            <li data-en="Improved the preview window.">预览窗口体验优化</li>
+            <li data-en="Drag the icon in Settings – About to grant permission directly.">设置-关于界面的图标支持直接拖拽获取权限</li>
+            <li data-en="Better update detection.">更好的检测应用更新</li>
+            <li data-en="Compatible with macOS Sonoma.">兼容 macOS Sonoma</li>
         </ul>
         <h3 class="section-title">Bug Fixes</h3>
         <ul>
-            <li>修复了一些已知问题</li>
+            <li data-en="Fixed some known issues.">修复了一些已知问题</li>
         </ul>
     </article>
 
@@ -689,16 +738,16 @@
         </div>
         <h3 class="section-title">What's new</h3>
         <ul>
-            <li>增加了一些设置项</li>
+            <li data-en="Added some settings.">增加了一些设置项</li>
         </ul>
         <h3 class="section-title">Improvements</h3>
         <ul>
-            <li>优化预览相关的操作</li>
-            <li>调整样式，提升整体视觉一致性</li>
+            <li data-en="Improved preview-related actions.">优化预览相关的操作</li>
+            <li data-en="Adjusted styles for better visual consistency.">调整样式，提升整体视觉一致性</li>
         </ul>
         <h3 class="section-title">Bug Fixes</h3>
         <ul>
-            <li>修复了一些已知问题</li>
+            <li data-en="Fixed some known issues.">修复了一些已知问题</li>
         </ul>
     </article>
 
@@ -711,13 +760,13 @@
         </div>
         <h3 class="section-title">Improvements</h3>
         <ul>
-            <li>修改删除快捷键为 Del，避免其它误操作 <a href="https://github.com/Ineffable919/clipboard/issues/3">#3</a></li>
-            <li>调整样式，提升整体视觉一致性</li>
+            <li data-en="Delete shortcut changed to Del to avoid accidental actions <a href='https://github.com/Ineffable919/clipboard/issues/3'>#3</a>">修改删除快捷键为 Del，避免其它误操作 <a href="https://github.com/Ineffable919/clipboard/issues/3">#3</a></li>
+            <li data-en="Adjusted styles for better visual consistency.">调整样式，提升整体视觉一致性</li>
         </ul>
         <h3 class="section-title">Bug Fixes</h3>
         <ul>
-            <li>修复拖动卡片到访达显示问题 <a href="https://github.com/Ineffable919/clipboard/issues/1">#1</a></li>
-            <li>修复了一些已知问题</li>
+            <li data-en="Fixed display issue when dragging cards to Finder <a href='https://github.com/Ineffable919/clipboard/issues/1'>#1</a>">修复拖动卡片到访达显示问题 <a href="https://github.com/Ineffable919/clipboard/issues/1">#1</a></li>
+            <li data-en="Fixed some known issues.">修复了一些已知问题</li>
         </ul>
     </article>
 
@@ -730,12 +779,12 @@
         </div>
         <h3 class="section-title">Improvements</h3>
         <ul>
-            <li>移除了暂未生效的控制项</li>
-            <li>调整 UI 元素的间距和样式，提升整体视觉一致性</li>
+            <li data-en="Removed controls that had no effect yet.">移除了暂未生效的控制项</li>
+            <li data-en="Adjusted UI spacing and styles for better visual consistency.">调整 UI 元素的间距和样式，提升整体视觉一致性</li>
         </ul>
         <h3 class="section-title">Bug Fixes</h3>
         <ul>
-            <li>修复某些情况下应用崩溃的问题</li>
+            <li data-en="Fixed a crash in some cases.">修复某些情况下应用崩溃的问题</li>
         </ul>
     </article>
 
@@ -748,20 +797,47 @@
         </div>
         <h3 class="section-title">What's new</h3>
         <ul>
-            <li>状态栏新增“检查更新”菜单项，允许用户手动检查更新。</li>
-            <li>增加显示更新设置，确保用户能够方便地管理更新选项。</li>
-            <li>支持 Intel 架构。</li>
+            <li data-en="Added a “Check for Updates” item to the menu bar for manual checks.">状态栏新增“检查更新”菜单项，允许用户手动检查更新。</li>
+            <li data-en="Added update settings to manage update options easily.">增加显示更新设置，确保用户能够方便地管理更新选项。</li>
+            <li data-en="Added Intel support.">支持 Intel 架构。</li>
         </ul>
         <h3 class="section-title">Improvements</h3>
         <ul>
-            <li>禁用了自动更新</li>
-            <li>调整 UI 元素的间距和样式，提升整体视觉一致性</li>
+            <li data-en="Disabled automatic updates.">禁用了自动更新</li>
+            <li data-en="Adjusted UI spacing and styles for better visual consistency.">调整 UI 元素的间距和样式，提升整体视觉一致性</li>
         </ul>
         <h3 class="section-title">Bug Fixes</h3>
         <ul>
-            <li>修复在某些情况下粘贴内容后选中状态丢失的问题。</li>
+            <li data-en="Fixed selection being lost after pasting in some cases.">修复在某些情况下粘贴内容后选中状态丢失的问题。</li>
         </ul>
     </article>
+
+    <script>
+        // 默认中文；英文文本存放在各元素的 data-en 中
+        (function () {
+            var nodes = document.querySelectorAll('[data-en]');
+            nodes.forEach(function (n) { n.dataset.zh = n.innerHTML; });
+            var btn = document.getElementById('lang-switch');
+            var lang;
+            try { lang = localStorage.getItem('release-note-lang'); } catch (e) { }
+            if (lang !== 'zh' && lang !== 'en') {
+                lang = /^zh/i.test(navigator.language || '') ? 'zh' : 'en';
+            }
+            function apply(l) {
+                nodes.forEach(function (n) { n.innerHTML = l === 'en' ? n.dataset.en : n.dataset.zh; });
+                document.documentElement.lang = l === 'en' ? 'en' : 'zh-CN';
+                btn.textContent = l === 'en' ? '中文' : 'English';
+                lang = l;
+            }
+            btn.hidden = false;
+            btn.addEventListener('click', function () {
+                var next = lang === 'en' ? 'zh' : 'en';
+                apply(next);
+                try { localStorage.setItem('release-note-lang', next); } catch (e) { }
+            });
+            apply(lang);
+        })();
+    </script>
 </body>
 
 </html>

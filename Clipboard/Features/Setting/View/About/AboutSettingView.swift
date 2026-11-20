@@ -2,7 +2,7 @@
 //  AboutSettingView.swift
 //  Clipboard
 //
-//  Created by crown on 2025/11/11.
+//  Created by crown on 2025/11/11
 //
 
 import Sparkle
@@ -29,67 +29,67 @@ struct AboutSettingView: View {
     var body: some View {
         ScrollView(.vertical) {
             VStack {
-            VStack(spacing: 8) {
-                if let appIcon = NSImage(named: "AppIcon") {
-                    Image(nsImage: appIcon)
-                        .resizable()
-                        .frame(width: 96, height: 96)
-                        .shadow(
-                            color: Color.blue.opacity(0.15),
-                            radius: Const.radius,
-                            x: 0,
-                            y: 6
-                        )
-                        .draggable(Bundle.main.bundleURL)
-                        .onHover { isHovered in
-                            if isHovered {
-                                NSCursor.openHand.set()
-                            } else {
-                                NSCursor.arrow.set()
+                VStack(spacing: 8) {
+                    if let appIcon = NSImage(named: "AppIcon") {
+                        Image(nsImage: appIcon)
+                            .resizable()
+                            .frame(width: 96, height: 96)
+                            .shadow(
+                                color: Color.blue.opacity(0.15),
+                                radius: Const.radius,
+                                x: 0,
+                                y: 6
+                            )
+                            .draggable(Bundle.main.bundleURL)
+                            .onHover { isHovered in
+                                if isHovered {
+                                    NSCursor.openHand.set()
+                                } else {
+                                    NSCursor.arrow.set()
+                                }
                             }
+                    }
+                    Text(appName)
+                        .font(
+                            .system(size: 24, weight: .medium, design: .default)
+                        )
+
+                    Text("\(appVersion) (\(buildNumber))")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.top, Const.space16)
+
+                Button(
+                    action: {
+                        checkForUpdates()
+                    },
+                    label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "arrow.down.circle")
+                                .font(.system(size: 14))
+                            Text(.aboutCheckForUpdates)
+                                .font(.system(size: 14, weight: .regular))
+                                .lineLimit(1)
+                                .fixedSize(horizontal: true, vertical: false)
                         }
-                }
-                Text(appName)
-                    .font(
-                        .system(size: 24, weight: .medium, design: .default)
-                    )
-
-                Text("\(appVersion) (\(buildNumber))")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.top, Const.space16)
-
-            Button(
-                action: {
-                    checkForUpdates()
-                },
-                label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "arrow.down.circle")
-                        .font(.system(size: 14))
-                    Text(.aboutCheckForUpdates)
-                        .font(.system(size: 14, weight: .regular))
-                        .lineLimit(1)
-                        .fixedSize(horizontal: true, vertical: false)
-                }
-                .padding(.horizontal, Const.space16)
-                .padding(.vertical, 6)
-                .background(
-                    RoundedRectangle(cornerRadius: Const.radius)
-                        .fill(Color.accentColor)
+                        .padding(.horizontal, Const.space16)
+                        .padding(.vertical, 6)
+                        .background(
+                            RoundedRectangle(cornerRadius: Const.radius)
+                                .fill(Color.accentColor)
+                        )
+                        .foregroundStyle(.white)
+                    }
                 )
-                .foregroundStyle(.white)
-                }
-            )
-            .buttonStyle(.plain)
-            .shadow(
-                color: Color.accentColor.opacity(0.3),
-                radius: Const.radius,
-                x: 0,
-                y: 4
-            )
-            .padding(Const.space32)
+                .buttonStyle(.plain)
+                .shadow(
+                    color: Color.accentColor.opacity(0.3),
+                    radius: Const.radius,
+                    x: 0,
+                    y: 4
+                )
+                .padding(Const.space32)
             }
             .frame(maxWidth: .infinity)
         }

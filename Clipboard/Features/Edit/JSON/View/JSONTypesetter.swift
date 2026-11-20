@@ -1,3 +1,10 @@
+//
+//  JSONTypesetter.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/30
+//
+
 import AppKit
 
 /// 限制长行的单次排版范围，保留原文字符和选区坐标

@@ -2,7 +2,7 @@
 //  PasteFilterBuilder.swift
 //  Clipboard
 //
-//  Created by crown on 2026/3/25.
+//  Created by crown on 2026/3/25
 //
 
 import SQLite

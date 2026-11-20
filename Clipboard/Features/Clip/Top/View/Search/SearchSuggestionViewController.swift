@@ -2,6 +2,8 @@
 //  SearchSuggestionViewController.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/29
+//
 //  联想列表内容管理器：NSTableView
 //
 
@@ -37,40 +39,40 @@ final class SearchSuggestionViewController: NSViewController {
     // MARK: - Views
 
     private lazy var scrollView: NSScrollView = {
-        let sv = NSScrollView()
-        sv.hasVerticalScroller = false
-        sv.hasHorizontalScroller = false
-        sv.drawsBackground = false
-        sv.horizontalScrollElasticity = .none
-        sv.verticalScrollElasticity = .none
-        sv.contentInsets = NSEdgeInsets(
+        let scroll = NSScrollView()
+        scroll.hasVerticalScroller = false
+        scroll.hasHorizontalScroller = false
+        scroll.drawsBackground = false
+        scroll.horizontalScrollElasticity = .none
+        scroll.verticalScrollElasticity = .none
+        scroll.contentInsets = NSEdgeInsets(
             top: Metrics.verticalInset,
             left: 0,
             bottom: Metrics.verticalInset,
             right: 0
         )
-        sv.automaticallyAdjustsContentInsets = false
-        return sv
+        scroll.automaticallyAdjustsContentInsets = false
+        return scroll
     }()
 
     private lazy var tableView: NSTableView = {
-        let tv = NSTableView()
-        tv.headerView = nil
-        tv.rowHeight = Metrics.rowHeight
-        tv.intercellSpacing = .zero
-        tv.backgroundColor = .clear
-        tv.selectionHighlightStyle = .none
-        tv.style = .plain
+        let table = NSTableView()
+        table.headerView = nil
+        table.rowHeight = Metrics.rowHeight
+        table.intercellSpacing = .zero
+        table.backgroundColor = .clear
+        table.selectionHighlightStyle = .none
+        table.style = .plain
 
         let column = NSTableColumn(identifier: .init("suggestion"))
         column.isEditable = false
         column.resizingMask = .autoresizingMask
-        tv.addTableColumn(column)
+        table.addTableColumn(column)
 
-        tv.dataSource = self
-        tv.delegate = self
+        table.dataSource = self
+        table.delegate = self
 
-        return tv
+        return table
     }()
 
     private lazy var trackingArea = NSTrackingArea(
@@ -110,7 +112,12 @@ final class SearchSuggestionViewController: NSViewController {
         tableView.reloadData()
         syncLayoutToVisibleBounds()
         if !newItems.isEmpty {
-            scrollView.contentView.scroll(to: NSPoint(x: 0, y: -scrollView.contentInsets.top))
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0
+                scrollView.contentView.animator().setBoundsOrigin(
+                    NSPoint(x: 0, y: -scrollView.contentInsets.top)
+                )
+            }
             scrollView.reflectScrolledClipView(scrollView.contentView)
         }
         updateHighlight()
@@ -135,7 +142,7 @@ final class SearchSuggestionViewController: NSViewController {
         }
         highlightedIndex += 1
         updateHighlight()
-        tableView.animator().scrollRowToVisible(highlightedIndex)
+        scrollToSelection()
         return true
     }
 
@@ -147,7 +154,7 @@ final class SearchSuggestionViewController: NSViewController {
         }
         highlightedIndex -= 1
         updateHighlight()
-        tableView.animator().scrollRowToVisible(highlightedIndex)
+        scrollToSelection()
         return true
     }
 
@@ -178,8 +185,29 @@ final class SearchSuggestionViewController: NSViewController {
 
     // MARK: - Private
 
+    private func scrollToSelection() {
+        let clipView = scrollView.contentView
+        let rowFrame = tableView.rect(ofRow: highlightedIndex)
+        var targetBounds = clipView.bounds
+        let insets = clipView.contentInsets
+        let peek = Metrics.rowHeight / 5
+        if rowFrame.minY < targetBounds.minY + insets.top + peek {
+            targetBounds.origin.y = rowFrame.minY - insets.top - peek
+        } else if rowFrame.maxY > targetBounds.maxY - insets.bottom - peek {
+            targetBounds.origin.y = rowFrame.maxY + insets.bottom + peek - targetBounds.height
+        }
+        let origin = clipView.constrainBoundsRect(targetBounds).origin
+        let event = NSApp.currentEvent
+        let isRepeat = event?.type == .keyDown && event?.isARepeat == true
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = isRepeat || NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? 0 : 0.2
+            clipView.animator().setBoundsOrigin(origin)
+        }
+        scrollView.reflectScrolledClipView(clipView)
+    }
+
     private func updateHighlight() {
-        for row in 0 ..< tableView.numberOfRows {
+        for row in 0..<tableView.numberOfRows {
             let isSelected = row == highlightedIndex
 
             if let rowView = tableView.rowView(atRow: row, makeIfNecessary: false)
@@ -218,7 +246,8 @@ extension SearchSuggestionViewController: NSTableViewDataSource {
 extension SearchSuggestionViewController: NSTableViewDelegate {
     func tableView(_ tableView: NSTableView, viewFor _: NSTableColumn?, row: Int) -> NSView? {
         let id = NSUserInterfaceItemIdentifier("SuggestionCell")
-        let cellView = (tableView.makeView(withIdentifier: id, owner: nil) as? SearchSuggestionCellView)
+        let cellView =
+            (tableView.makeView(withIdentifier: id, owner: nil) as? SearchSuggestionCellView)
             ?? SearchSuggestionCellView()
         cellView.identifier = id
 
@@ -231,7 +260,8 @@ extension SearchSuggestionViewController: NSTableViewDelegate {
 
     func tableView(_ tableView: NSTableView, rowViewForRow row: Int) -> NSTableRowView? {
         let id = NSUserInterfaceItemIdentifier("SuggestionRowView")
-        let rowView = (tableView.makeView(withIdentifier: id, owner: nil) as? SearchSuggestionRowView)
+        let rowView =
+            (tableView.makeView(withIdentifier: id, owner: nil) as? SearchSuggestionRowView)
             ?? SearchSuggestionRowView()
         rowView.identifier = id
         rowView.setItemHighlighted(row == highlightedIndex)

@@ -2,6 +2,8 @@
 //  PasteboardModel+Share.swift
 //  Clipboard
 //
+//  Created by crown on 2026/5/17
+//
 //  分享内容提取
 //
 

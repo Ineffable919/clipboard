@@ -2,6 +2,8 @@
 //  WelcomeShortcutSetupView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/8/22
+//
 
 import SwiftUI
 
@@ -22,6 +24,7 @@ struct WelcomeShortcutSetupView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text(.shortcutGlobalTitle)
                     .font(.headline)
+                    .fontWeight(.semibold)
 
                 Text(.welcomeShortcutCurrent)
                     .font(.footnote)

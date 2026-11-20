@@ -2,7 +2,7 @@
 //  SettingView.swift
 //  Clipboard
 //
-//  Created on 2025/10/26.
+//  Created by crown on 2025/10/26
 //
 
 import SwiftUI
@@ -13,7 +13,7 @@ enum SettingPage: CaseIterable, Identifiable {
     case privacy
     case keyboard
     case storage
-    case ai
+    case mcp
     case about
 
     var id: Self {
@@ -27,12 +27,7 @@ enum SettingPage: CaseIterable, Identifiable {
         case .privacy: "hand.raised"
         case .keyboard: "command"
         case .storage: "externaldrive"
-        case .ai:
-            if #available(macOS 15.0, *) {
-                "apple.intelligence"
-            } else {
-                "lasso.badge.sparkles"
-            }
+        case .mcp: "sparkles"
         case .about: "info.circle"
         }
     }
@@ -44,92 +39,55 @@ enum SettingPage: CaseIterable, Identifiable {
         case .privacy: .pagePrivacy
         case .keyboard: .pageKeyboard
         case .storage: .pageStorage
-        case .ai: .pageMcp
+        case .mcp: .pageMcp
         case .about: .pageAbout
         }
     }
 }
 
-struct SettingView: View {
+struct SettingSidebarView: View {
     @Environment(SettingViewModel.self) private var viewModel
     @FocusState private var isSidebarFocused: Bool
     @AppStorage(PrefKey.pasteDirect.rawValue) private var pasteDirect = true
 
     var body: some View {
-        @Bindable var vm = viewModel
+        @Bindable var model = viewModel
 
-        NavigationSplitView {
-            VStack(spacing: 0) {
-                List(selection: $vm.selectedPage) {
-                    ForEach(SettingPage.allCases) { page in
-                        NavigationLink(value: page) {
-                            HStack(spacing: Const.space8) {
-                                Label {
-                                    Text(page.title)
-                                } icon: {
-                                    Image(systemName: page.icon)
-                                }
+        VStack(spacing: 0) {
+            List(selection: $model.selectedPage) {
+                ForEach(SettingPage.allCases) { page in
+                    HStack(spacing: Const.space8) {
+                        Label {
+                            Text(page.title)
+                        } icon: {
+                            Image(systemName: page.icon)
+                        }
 
-                                Spacer(minLength: Const.space8)
+                        Spacer(minLength: Const.space8)
 
-                                if page == .ai {
-                                    Text(verbatim: "Beta")
-                                        .font(.caption2.weight(.medium))
-                                        .foregroundStyle(.secondary)
-                                }
-
-                                if page == .general,
-                                   pasteDirect,
-                                   !viewModel.hasAccessibilityPermission {
-                                    ZStack {
-                                        Circle()
-                                            .fill(Color(nsColor: .systemRed))
-                                        Image(systemName: "exclamationmark")
-                                            .font(.system(size: 11, weight: .bold))
-                                            .foregroundStyle(.white)
-                                    }
-                                    .frame(width: 18, height: 18)
-                                    .compositingGroup()
-                                    .accessibilityElement(children: .ignore)
-                                    .accessibilityLabel(
-                                        Text(.privacyAccessPermissionDenied)
-                                    )
-                                }
-                            }
+                        if page == .general,
+                            pasteDirect,
+                            !viewModel.hasAccessibilityPermission
+                        {
+                            AccessibilityWarningBadge(diameter: Const.iconSize18)
+                                .compositingGroup()
+                                .accessibilityElement(children: .ignore)
+                                .accessibilityLabel(
+                                    Text(.privacyAccessPermissionDenied)
+                                )
                         }
                     }
-                }
-                .listStyle(.sidebar)
-                .focused($isSidebarFocused)
-
-                Spacer()
-
-                HelpCenterButton()
-                    .padding(.bottom, Const.space12)
-                    .padding(.horizontal, Const.space8)
-            }
-            .frame(minWidth: 200)
-        } detail: {
-            Group {
-                switch vm.selectedPage {
-                case .general:
-                    GeneralSettingView()
-                case .appearance:
-                    AppearanceSettingsView()
-                case .privacy:
-                    PrivacySettingView()
-                case .keyboard:
-                    KeyboardSettingView()
-                case .storage:
-                    StorageSettingView()
-                case .ai:
-                    AISettingsView()
-                case .about:
-                    AboutSettingView()
+                    .tag(page)
                 }
             }
-            .navigationTitle(Text(vm.selectedPage.title))
-            .toolbarTitleDisplayMode(.inline)
+            .listStyle(.sidebar)
+            .focused($isSidebarFocused)
+
+            Spacer()
+
+            HelpCenterButton()
+                .padding(.bottom, Const.space12)
+                .padding(.horizontal, Const.space8)
         }
         .onAppear {
             viewModel.refreshAccessibilityPermission()
@@ -172,24 +130,24 @@ struct HelpCenterButton: View {
     private static let helpURL = URL(string: "https://github.com/Ineffable919/clipboard/blob/master/README.md")!
 
     var body: some View {
-        Button(action: {
-            NSWorkspace.shared.open(Self.helpURL)
-        }) {
-            HStack {
-                Image(systemName: "questionmark.circle")
-                Text(.help)
+        Button(
+            action: {
+                NSWorkspace.shared.open(Self.helpURL)
+            },
+            label: {
+                HStack {
+                    Image(systemName: "questionmark.circle")
+                    Text(.help)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, Const.space8)
+                .padding(.vertical, Const.space6)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, Const.space8)
-            .padding(.vertical, Const.space6)
-        }
+        )
         .buttonStyle(.plain)
     }
 }
 
 #Preview {
-    let viewModel = SettingViewModel()
-    SettingView()
-        .frame(width: Const.settingWidth, height: Const.settingHeight)
-        .environment(viewModel)
+    SettingWindowController.makeContentController(viewModel: SettingViewModel())
 }

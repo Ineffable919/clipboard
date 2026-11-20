@@ -2,7 +2,7 @@
 //  GeneralSettingView.swift
 //  Clipboard
 //
-//  Created by crown on 2025/10/28.
+//  Created by crown on 2025/10/28
 //
 
 import SwiftUI
@@ -16,10 +16,8 @@ struct GeneralSettingView: View {
                 GeneralPreferencesCard()
                 PasteItemsSettingsSection()
                 HistorySettingsSection()
-
-                Spacer(minLength: 20)
             }
-            .padding([.horizontal, .bottom], Const.space24)
+            .padding([.horizontal, .bottom], Const.space20)
         }
         .scrollIndicators(.automatic)
         .frame(maxWidth: .infinity, maxHeight: .infinity)

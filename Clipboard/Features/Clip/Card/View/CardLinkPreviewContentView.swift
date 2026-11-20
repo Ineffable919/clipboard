@@ -2,12 +2,10 @@
 //  CardLinkPreviewContentView.swift
 //  Clipboard
 //
-//  AppKit re-implementation of the SwiftUI LinkPreviewCardView.
-//  Fetches link metadata via LPMetadataProvider and caches the result on the model.
+//  Created by crown on 2026/4/12
 //
 
 import AppKit
-@preconcurrency import LinkPresentation
 import SnapKit
 
 // MARK: - CardLinkPreviewContentView
@@ -16,66 +14,72 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
     // MARK: - Subviews
 
     private lazy var imageContainerView: DynamicBackgroundView = {
-        let v = DynamicBackgroundView()
-        v.wantsLayer = true
-        return v
+        let view = DynamicBackgroundView()
+        view.wantsLayer = true
+        return view
     }()
 
     private lazy var previewImageView: NSImageView = {
-        let iv = NSImageView()
-        iv.imageScaling = .scaleProportionallyUpOrDown
-        iv.isHidden = true
-        return iv
+        let image = NSImageView()
+        image.imageScaling = .scaleProportionallyUpOrDown
+        image.isHidden = true
+        return image
     }()
 
     private lazy var iconImageView: NSImageView = {
-        let iv = NSImageView()
-        iv.imageScaling = .scaleProportionallyUpOrDown
-        iv.isHidden = true
-        return iv
+        let image = NSImageView()
+        image.imageScaling = .scaleProportionallyUpOrDown
+        image.isHidden = true
+        return image
     }()
 
     private lazy var placeholderImageView: NSImageView = {
-        let iv = NSImageView()
-        iv.image = NSImage(systemSymbolName: "link", accessibilityDescription: nil)
-        iv.contentTintColor = .secondaryLabelColor
-        iv.imageScaling = .scaleProportionallyUpOrDown
-        return iv
+        let image = NSImageView()
+        image.image = NSImage(
+            systemSymbolName: "link",
+            accessibilityDescription: nil
+        )
+        image.contentTintColor = .secondaryLabelColor
+        image.imageScaling = .scaleProportionallyUpOrDown
+        return image
     }()
 
     private lazy var infoView: DynamicBackgroundView = {
-        let v = DynamicBackgroundView()
-        v.wantsLayer = true
-        return v
+        let view = DynamicBackgroundView()
+        view.wantsLayer = true
+        return view
     }()
 
     private lazy var titleLabel: NSTextField = {
-        let f = NSTextField(labelWithString: "")
-        f.font = .systemFont(ofSize: NSFont.systemFontSize, weight: .semibold)
-        f.textColor = .labelColor
-        f.lineBreakMode = .byTruncatingTail
-        f.maximumNumberOfLines = 1
-        return f
+        let field = NSTextField(labelWithString: "")
+        field.font = .systemFont(
+            ofSize: NSFont.systemFontSize,
+            weight: .semibold
+        )
+        field.textColor = .labelColor
+        field.lineBreakMode = .byTruncatingTail
+        field.maximumNumberOfLines = 1
+        return field
     }()
 
     private lazy var urlLabel: NSTextField = {
-        let f = NSTextField(labelWithString: "")
-        f.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
-        f.textColor = .secondaryLabelColor
-        f.lineBreakMode = .byTruncatingMiddle
-        f.maximumNumberOfLines = 1
-        f.usesSingleLineMode = true
-        f.cell?.wraps = false
-        f.cell?.truncatesLastVisibleLine = true
-        f.allowsEditingTextAttributes = false
-        return f
+        let field = NSTextField(labelWithString: "")
+        field.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        field.textColor = .secondaryLabelColor
+        field.lineBreakMode = .byTruncatingMiddle
+        field.maximumNumberOfLines = 1
+        field.usesSingleLineMode = true
+        field.cell?.wraps = false
+        field.cell?.truncatesLastVisibleLine = true
+        field.allowsEditingTextAttributes = false
+        return field
     }()
 
     // MARK: - State
 
-    private var fetchTask: Task<Void, Never>?
+    private lazy var previewRequest = LinkPreviewRequest(view: self)
 
-    private var fetchedModelId: String = ""
+    private var requestedModelID = ""
 
     // MARK: - Init
 
@@ -92,6 +96,16 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
         fatalError()
     }
 
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        previewRequest.viewDidMoveToWindow()
+    }
+
+    override func viewWillDraw() {
+        super.viewWillDraw()
+        previewRequest.updateVisibility()
+    }
+
     // MARK: - Public
 
     func configure(with model: PasteboardModel, keyword: String) {
@@ -99,52 +113,33 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
             .trimmingCharacters(in: .whitespacesAndNewlines)
         let url = urlString.asCompleteURL()
 
-        titleLabel.stringValue = Self.singleLineTitle(model.cachedLinkMetadata?.title)
-            ?? url?.host()
-            ?? urlString
-
         urlLabel.attributedStringValue = makeURLAttributedString(
             urlString: urlString,
             keyword: keyword
         )
 
-        if let meta = model.cachedLinkMetadata {
-            applyMetadata(meta)
-            return
-        }
-
+        guard requestedModelID != model.uniqueId else { return }
+        cancelLoad()
+        titleLabel.stringValue = url?.host() ?? urlString
         resetImageViews()
 
-        guard let url else {
-            fetchedModelId = ""
-            return
-        }
+        guard let url else { return }
+        requestedModelID = model.uniqueId
 
-        guard fetchedModelId != model.uniqueId else { return }
-        fetchedModelId = model.uniqueId
+        previewRequest.load { [weak self] in
+            let metadata = await LinkPreviewLoader.fetch(
+                for: url,
+                imagePolicy: .previewThenIcon
+            )
 
-        fetchTask?.cancel()
-
-        fetchTask = Task.detached(priority: .userInitiated) { [weak self, weak model] in
-            guard let self, let model else { return }
-
-            let meta = await Self.fetchMetadata(for: url)
-
-            await MainActor.run {
-                guard !Task.isCancelled else { return }
-                model.cachedLinkMetadata = meta
-                self.titleLabel.stringValue = Self.singleLineTitle(meta.title)
-                    ?? url.host()
-                    ?? url.absoluteString
-                self.applyMetadata(meta)
-            }
+            guard !Task.isCancelled, let self else { return }
+            applyMetadata(metadata, url: url)
         }
     }
 
     func cancelLoad() {
-        fetchTask?.cancel()
-        fetchTask = nil
-        fetchedModelId = ""
+        previewRequest.cancel()
+        requestedModelID = ""
     }
 
     func updateKeyword(_ keyword: String, model: PasteboardModel) {
@@ -208,8 +203,10 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
     }
 
     private func updateBackground() {
-        let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
-        let imageBg: NSColor = isDark ? NSColor(hex: "#272835") : NSColor(hex: "#f5f5f5")
+        let isDark =
+            effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        let imageBg: NSColor =
+            isDark ? NSColor(hex: "#272835") : NSColor(hex: "#f5f5f5")
         imageContainerView.dynamicBackgroundColor = imageBg
         infoView.dynamicBackgroundColor = .textBackgroundColor
     }
@@ -222,14 +219,17 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
         placeholderImageView.isHidden = false
     }
 
-    private func applyMetadata(_ meta: LinkPreviewMetadata) {
-        if let img = meta.previewImage {
-            previewImageView.image = img
+    private func applyMetadata(_ metadata: LinkPreviewMetadata, url: URL) {
+        titleLabel.stringValue =
+            Self.singleLineTitle(metadata.title) ?? url.host()
+            ?? url.absoluteString
+        if let image = metadata.previewImage {
+            previewImageView.image = image
             previewImageView.imageScaling = .scaleProportionallyUpOrDown
             previewImageView.isHidden = false
             iconImageView.isHidden = true
             placeholderImageView.isHidden = true
-        } else if let icon = meta.iconImage {
+        } else if let icon = metadata.iconImage {
             iconImageView.image = icon
             iconImageView.isHidden = false
             previewImageView.isHidden = true
@@ -243,7 +243,8 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
 
     private static func singleLineTitle(_ title: String?) -> String? {
         guard let title else { return nil }
-        let normalized = title
+        let normalized =
+            title
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .replacing(/\s+/, with: " ")
         return normalized.isEmpty || normalized == "/" ? nil : normalized
@@ -258,65 +259,42 @@ final class CardLinkPreviewContentView: NSView, PassthroughMouseEvents {
         let baseAttrs: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize),
             .foregroundColor: NSColor.secondaryLabelColor,
-            .paragraphStyle: paragraphStyle,
+            .paragraphStyle: paragraphStyle
         ]
 
-        let mutable = NSMutableAttributedString(string: urlString, attributes: baseAttrs)
+        let mutable = NSMutableAttributedString(
+            string: urlString,
+            attributes: baseAttrs
+        )
 
         guard !keyword.isEmpty else {
             return mutable
         }
 
         let plain = urlString as NSString
-        let options: NSString.CompareOptions = [.caseInsensitive, .diacriticInsensitive, .widthInsensitive]
+        let options: NSString.CompareOptions = [
+            .caseInsensitive, .diacriticInsensitive, .widthInsensitive
+        ]
         var searchRange = NSRange(location: 0, length: plain.length)
 
         while searchRange.length > 0 {
-            let found = plain.range(of: keyword, options: options, range: searchRange, locale: .current)
+            let found = plain.range(
+                of: keyword,
+                options: options,
+                range: searchRange,
+                locale: .current
+            )
             guard found.location != NSNotFound else { break }
-            mutable.addAttribute(.backgroundColor, value: NSColor.systemYellow.withAlphaComponent(0.65), range: found)
+            mutable.addAttribute(
+                .backgroundColor,
+                value: NSColor.systemYellow.withAlphaComponent(0.65),
+                range: found
+            )
             let next = found.location + found.length
             guard next < plain.length else { break }
             searchRange = NSRange(location: next, length: plain.length - next)
         }
 
         return mutable
-    }
-
-    private static func fetchMetadata(for url: URL) async -> LinkPreviewMetadata {
-        let provider = LPMetadataProvider()
-        provider.timeout = 5.0
-
-        nonisolated(unsafe) let unsafeProvider = provider
-
-        do {
-            let metadata = try await withTaskCancellationHandler {
-                try await provider.startFetchingMetadata(for: url)
-            } onCancel: {
-                unsafeProvider.cancel()
-            }
-
-            let previewImage: NSImage? = await loadImage(from: metadata.imageProvider)
-            let iconImage: NSImage? = previewImage == nil
-                ? await loadImage(from: metadata.iconProvider)
-                : nil
-
-            return LinkPreviewMetadata(
-                title: metadata.title,
-                previewImage: previewImage,
-                iconImage: iconImage
-            )
-        } catch {
-            return LinkPreviewMetadata(title: nil, previewImage: nil, iconImage: nil)
-        }
-    }
-
-    private static func loadImage(from provider: NSItemProvider?) async -> NSImage? {
-        guard let provider else { return nil }
-        return await withCheckedContinuation { continuation in
-            provider.loadObject(ofClass: NSImage.self) { image, _ in
-                continuation.resume(returning: image as? NSImage)
-            }
-        }
     }
 }

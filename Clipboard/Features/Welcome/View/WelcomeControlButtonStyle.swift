@@ -1,3 +1,10 @@
+//
+//  WelcomeControlButtonStyle.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/29
+//
+
 import SwiftUI
 
 struct WelcomeControlButtonStyle: ButtonStyle {
@@ -19,6 +26,7 @@ struct WelcomeControlButtonStyle: ButtonStyle {
 #Preview {
     Button(.permissionOpenSettings) {}
         .buttonStyle(WelcomeControlButtonStyle())
-        .frame(width: 104)
+        .lineLimit(1)
+        .fixedSize(horizontal: true, vertical: false)
         .padding(24)
 }

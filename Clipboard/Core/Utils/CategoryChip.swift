@@ -2,7 +2,7 @@
 //  CategoryChip.swift
 //  Clipboard
 //
-//  Created by crown on 2025/9/21.
+//  Created by crown on 2025/9/21
 //
 
 import SwiftUI
@@ -10,7 +10,7 @@ import SwiftUI
 struct CategoryChip: Identifiable, Equatable, Codable {
     let id: Int
     var name: String
-    var colorIndex: Int // 存储颜色在调色板中的索引
+    var colorIndex: Int  // 存储颜色在调色板中的索引
     var isSystem: Bool
 
     private static let semanticPalette: [Color] = [
@@ -20,7 +20,7 @@ struct CategoryChip: Identifiable, Equatable, Codable {
         .purple,
         .red,
         .orange,
-        .yellow,
+        .yellow
     ]
 
     static let paletteNSColors: [NSColor] = [
@@ -30,7 +30,7 @@ struct CategoryChip: Identifiable, Equatable, Codable {
         .systemPurple,
         .systemRed,
         .systemOrange,
-        .systemYellow,
+        .systemYellow
     ]
 
     static let palette = paletteNSColors.map { Color(nsColor: $0) }
@@ -52,7 +52,8 @@ struct CategoryChip: Identifiable, Equatable, Codable {
         }
         set {
             if let index = CategoryChip.semanticPalette.firstIndex(of: newValue)
-                ?? CategoryChip.palette.firstIndex(of: newValue) {
+                ?? CategoryChip.palette.firstIndex(of: newValue)
+            {
                 colorIndex = index
             } else {
                 colorIndex = 0
@@ -70,12 +71,12 @@ struct CategoryChip: Identifiable, Equatable, Codable {
             return [
                 PasteboardType.string.rawValue,
                 PasteboardType.rtf.rawValue,
-                PasteboardType.rtfd.rawValue,
+                PasteboardType.rtfd.rawValue
             ]
         case -3:
             return [
                 PasteboardType.png.rawValue,
-                PasteboardType.tiff.rawValue,
+                PasteboardType.tiff.rawValue
             ]
         case -4:
             return [PasteboardType.fileURL.rawValue]
@@ -90,7 +91,8 @@ struct CategoryChip: Identifiable, Equatable, Codable {
         self.isSystem = isSystem
 
         if let index = CategoryChip.semanticPalette.firstIndex(of: color)
-            ?? CategoryChip.palette.firstIndex(of: color) {
+            ?? CategoryChip.palette.firstIndex(of: color)
+        {
             colorIndex = index
         } else {
             colorIndex = 0
@@ -110,6 +112,6 @@ struct CategoryChip: Identifiable, Equatable, Codable {
             name: String(localized: .clipboard),
             color: .gray,
             isSystem: true
-        ),
+        )
     ]
 }

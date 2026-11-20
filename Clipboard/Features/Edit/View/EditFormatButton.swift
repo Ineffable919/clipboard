@@ -2,6 +2,8 @@
 //  EditFormatButton.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/25
+//
 //  编辑工具栏格式化图标按钮（加粗 / 斜体 / 下划线 / 删除线）
 //
 
@@ -81,7 +83,8 @@ final class EditFormatButton: NSView {
     private func updateAppearance(animated: Bool) {
         let isDark = effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
 
-        let bgColor: NSColor = isHovering
+        let bgColor: NSColor =
+            isHovering
             ? (isDark ? .white.withAlphaComponent(0.08) : .black.withAlphaComponent(0.06))
             : .clear
 

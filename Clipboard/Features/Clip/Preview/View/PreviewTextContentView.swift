@@ -2,7 +2,9 @@
 //  PreviewTextContentView.swift
 //  Clipboard
 //
-//  纯文本及富文本预览。
+//  Created by crown on 2026/8/26
+//
+//  纯文本及富文本预览
 //
 
 import AppKit
@@ -41,7 +43,8 @@ final class PreviewTextContentView: NSView {
 
     private func updateBackground() {
         effectiveAppearance.performAsCurrentDrawingAppearance {
-            let background = model.type == .rich
+            let background =
+                model.type == .rich
                 ? model.richBackground(on: .textBackgroundColor, forPreview: true)
                 : nil
             textView.backgroundColor = background ?? .textBackgroundColor
@@ -100,7 +103,8 @@ final class PreviewTextContentView: NSView {
     }
 
     private func applyRichContent(for model: PasteboardModel) {
-        let base = NSAttributedString(with: model.data, type: model.pasteboardType)
+        let base =
+            NSAttributedString(with: model.data, type: model.pasteboardType)
             ?? model.attributeString
 
         if model.hasBgColor {
@@ -122,7 +126,8 @@ final class PreviewTextContentView: NSView {
     private func applyPlainContent(for model: PasteboardModel) {
         textView.font = .systemFont(ofSize: NSFont.systemFontSize)
         textView.textColor = .labelColor
-        textView.string = String(data: model.data, encoding: .utf8)
+        textView.string =
+            String(data: model.data, encoding: .utf8)
             ?? model.attributeString.string
     }
 }

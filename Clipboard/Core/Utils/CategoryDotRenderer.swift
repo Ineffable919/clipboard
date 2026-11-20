@@ -2,6 +2,8 @@
 //  CategoryDotRenderer.swift
 //  Clipboard
 //
+//  Created by crown on 2026/9/4
+//
 
 import AppKit
 
@@ -51,10 +53,11 @@ enum CategoryDotRenderer {
     }
 
     static func draw(in rect: NSRect, color: NSColor) {
-        let path = NSBezierPath(ovalIn: rect.insetBy(
-            dx: borderWidth / 2,
-            dy: borderWidth / 2
-        ))
+        let path = NSBezierPath(
+            ovalIn: rect.insetBy(
+                dx: borderWidth / 2,
+                dy: borderWidth / 2
+            ))
         color.setFill()
         path.fill()
 

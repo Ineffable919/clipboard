@@ -1,3 +1,10 @@
+//
+//  CollectionClickGestureRecognizer.swift
+//  Clipboard
+//
+//  Created by crown on 2026/10/2
+//
+
 import AppKit
 
 final class CollectionClickGestureRecognizer: NSClickGestureRecognizer {

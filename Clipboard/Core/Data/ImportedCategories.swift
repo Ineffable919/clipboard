@@ -1,6 +1,13 @@
+//
+//  ImportedCategories.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/15
+//
+
 import Foundation
 
-/// 分类映射只计算一次，记录导入时按旧 ID 直接查找。
+/// 分类映射只计算一次，记录导入时按旧 ID 直接查找
 nonisolated struct ImportedCategories {
     let groupIDs: [Int: Int]
     let chips: [CategoryChip]
@@ -27,9 +34,10 @@ nonisolated struct ImportedCategories {
                 newID = chip.id
             }
             mapping[chip.id] = newID
-            mappedChips.append(CategoryChip(
-                id: newID, name: chip.name, colorIndex: chip.colorIndex, isSystem: false
-            ))
+            mappedChips.append(
+                CategoryChip(
+                    id: newID, name: chip.name, colorIndex: chip.colorIndex, isSystem: false
+                ))
         }
         groupIDs = mapping
         chips = mappedChips

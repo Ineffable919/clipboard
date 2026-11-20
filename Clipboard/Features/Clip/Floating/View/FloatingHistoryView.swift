@@ -2,6 +2,8 @@
 //  FloatingHistoryView.swift
 //  Clipboard
 //
+//  Created by crown on 2026/5/5
+//
 //  浮动窗口历史记录列表：NSCollectionView + DiffableDataSource
 //
 
@@ -13,8 +15,7 @@ import SnapKit
 
 final class FloatingHistoryView: NSView {
     // MARK: - Subviews
-
-    let scrollView = NSScrollView()
+    let scrollView = AnimatedScrollView()
     let collectionView = ClipCollectionView()
     let collectionLayout = NSCollectionViewFlowLayout()
     let emptyStateView = EmptyStateView(style: .floating)
@@ -30,8 +31,7 @@ final class FloatingHistoryView: NSView {
 
     // MARK: - Data Source
 
-    var dataSource:
-        NSCollectionViewDiffableDataSource<Int, PasteboardModel>!
+    var dataSource: NSCollectionViewDiffableDataSource<Int, PasteboardModel>!
 
     // MARK: - State
 
@@ -44,7 +44,7 @@ final class FloatingHistoryView: NSView {
     var selectedIndex: Int = 0
     var isQuickPastePressed: Bool = false
     var isPlainTextModifierPressed: Bool = false
-    private var dragSourceApp: NSRunningApplication?
+    var dragSourceApp: NSRunningApplication?
 
     var onActivateSearch: ((String?) -> Void)?
     var onTogglePreview: ((Int) -> Void)?
@@ -77,6 +77,7 @@ final class FloatingHistoryView: NSView {
 
     func setDisplayMode(_ mode: FloatingDisplayMode) {
         guard displayMode != mode else { return }
+        scrollView.stopScrolling()
         displayMode = mode
         collectionLayout.minimumLineSpacing = mode.cardSpacing
         collectionLayout.sectionInset = scrollInsets
@@ -99,11 +100,13 @@ final class FloatingHistoryView: NSView {
     func setPreviewHooks(
         isShown: @escaping () -> Bool,
         close: @escaping () -> Void,
-        reopen: @escaping () -> Void
+        retarget: @escaping () -> Void,
+        refreshHeader: @escaping () -> Void
     ) {
         presenter.previewIsShown = isShown
         presenter.closePreview = close
-        presenter.reopenPreview = reopen
+        presenter.retargetPreview = retarget
+        presenter.refreshPreviewHeader = refreshHeader
     }
 
     func configure(topVM: TopBarViewModel) {
@@ -113,6 +116,12 @@ final class FloatingHistoryView: NSView {
         applySnapshot()
         resetToFirst()
         configurePresenter()
+        CategoryChipStore.shared.chipsContentDidChange
+            .sink { [weak self] in
+                guard let self else { return }
+                presenter.reconfigureItems(dataList)
+            }
+            .store(in: &cancellables)
         Task { @MainActor [weak self] in
             guard let self else { return }
             window?.makeFirstResponder(collectionView)
@@ -123,15 +132,15 @@ final class FloatingHistoryView: NSView {
         presenter.applyFull = { [weak self] items, animating, completion in
             guard let self else { return }
             dataList = items
-            applySnapshot(animating: animating)
-            completion?()
+            applySnapshot(animating: animating, completion: completion)
         }
         setupReorder()
         presenter.appendItems = { [weak self] newItems in
             guard let self else { return }
             var snapshot = dataSource.snapshot()
             let existing = Set(snapshot.itemIdentifiers.map(\.uniqueId))
-            let appended = newItems
+            let appended =
+                newItems
                 .filter { !existing.contains($0.uniqueId) }
             guard !appended.isEmpty else { return }
             dataList.append(contentsOf: appended)
@@ -155,7 +164,7 @@ final class FloatingHistoryView: NSView {
                 (collectionView.item(at: IndexPath(item: idx, section: 0)) as? FloatingCollectionItem)?
                     .configure(
                         with: item,
-                        keyword: topVM?.query ?? "",
+                        keyword: PasteDataStore.main.searchWord,
                         isFocused: focused,
                         quickPasteIndex: quickPasteDisplayIndex(for: idx),
                         displayMode: displayMode
@@ -165,7 +174,6 @@ final class FloatingHistoryView: NSView {
 
         presenter.isVerticalScroll = true
         presenter.loadMoreThreshold = (FloatConst.cardHeight + FloatConst.cardSpacing) * 5
-
         presenter.startObserving(scrollView: scrollView)
     }
 
@@ -178,10 +186,7 @@ final class FloatingHistoryView: NSView {
             var snapshot = NSDiffableDataSourceSnapshot<Int, PasteboardModel>()
             snapshot.appendSections([0])
             snapshot.appendItems(items)
-            // 浮动卡片的操作闭包包含行号，重排后需重新提供 item。
-            let existing = Set(dataSource.snapshot().itemIdentifiers)
-            snapshot.reloadItems(items.filter { existing.contains($0) })
-            dataSource.apply(snapshot, animatingDifferences: false) { [weak self] in
+            dataSource.apply(snapshot, animatingDifferences: true) { [weak self] in
                 self?.restoreSelection()
                 self?.updateQuickPasteDisplay()
             }
@@ -197,7 +202,8 @@ final class FloatingHistoryView: NSView {
     func updateSelectedItemBorder() {
         let focused = env.focusRegion == .collection
         for case let item as FloatingCollectionItem
-        in collectionView.visibleItems() {
+            in collectionView.visibleItems()
+        {
             item.setFocused(focused)
         }
     }
@@ -219,9 +225,9 @@ final class FloatingHistoryView: NSView {
         updatePlainTextIndicatorDisplay()
     }
 
-    func selectAndScrollTo(index: Int) {
+    func selectAndScrollTo(index: Int, animated: Bool = true) {
         selectRow(index)
-        scrollTo(index: index)
+        scrollTo(index: index, animated: animated)
     }
 
     func anchorViewForItem(at index: Int) -> NSView {
@@ -249,10 +255,12 @@ final class FloatingHistoryView: NSView {
     func requestDelete(at index: Int) {
         let items = selectedModels
         if items.count > 1 {
-            guard NSAlert.runConfirm(
-                title: String(localized: .deleteTitle),
-                message: String(localized: .deleteMessage)
-            ) else { return }
+            guard
+                NSAlert.runConfirm(
+                    title: String(localized: .deleteTitle),
+                    message: String(localized: .deleteMessage)
+                )
+            else { return }
             let minIndex = collectionView.selectionIndexPaths.map(\.item).min() ?? index
             let countAfterDelete = dataList.count - items.count
             if countAfterDelete > 0 {
@@ -311,56 +319,10 @@ extension FloatingHistoryView: NSCollectionViewDelegate {
 
     func collectionView(
         _: NSCollectionView,
-        canDragItemsAt _: Set<IndexPath>,
-        with _: NSEvent
-    ) -> Bool {
-        true
-    }
-
-    func collectionView(
-        _: NSCollectionView,
         shouldDeselectItemsAt indexPaths: Set<IndexPath>
     ) -> Set<IndexPath> {
         collectionView.handlesShiftSelection ? [] : indexPaths
     }
-
-    func collectionView(
-        _: NSCollectionView,
-        pasteboardWriterForItemAt indexPath: IndexPath
-    ) -> (any NSPasteboardWriting)? {
-        guard indexPath.item < dataList.count else { return nil }
-        return dataList[indexPath.item].writeItem
-    }
-
-    func collectionView(
-        _: NSCollectionView,
-        validateDrop draggingInfo: any NSDraggingInfo,
-        proposedIndexPath _: AutoreleasingUnsafeMutablePointer<NSIndexPath>,
-        dropOperation _: UnsafeMutablePointer<NSCollectionView.DropOperation>
-    ) -> NSDragOperation {
-        guard !(draggingInfo.draggingSource is NSCollectionView) else { return [] }
-        let pasteboard = draggingInfo.draggingPasteboard
-        guard pasteboard.canReadItem(withDataConformingToTypes: Self.dropSupportedTypes) else { return [] }
-        dragSourceApp = NSWorkspace.shared.frontmostApplication
-        return .copy
-    }
-
-    func collectionView(
-        _: NSCollectionView,
-        acceptDrop draggingInfo: any NSDraggingInfo,
-        indexPath _: IndexPath,
-        dropOperation _: NSCollectionView.DropOperation
-    ) -> Bool {
-        let accepted = dataStore.addNewItem(
-            draggingInfo.draggingPasteboard,
-            sourceApp: dragSourceApp,
-            chipId: CategoryChipStore.shared.selectedChipId
-        )
-        dragSourceApp = nil
-        return accepted
-    }
-
-    private static let dropSupportedTypes = PasteboardType.supportTypes.map(\.rawValue)
 
     func resetSelectIndex(_ indexPath: IndexPath) {
         guard indexPath.item < dataList.count else { return }

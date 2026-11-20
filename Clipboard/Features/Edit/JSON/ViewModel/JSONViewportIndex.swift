@@ -1,3 +1,10 @@
+//
+//  JSONViewportIndex.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/30
+//
+
 import Foundation
 
 /// 分页只保存原文范围和行宽，全文不进入 TextKit
@@ -87,7 +94,10 @@ nonisolated struct JSONViewportIndex: Sendable {
         for offset in 0..<count {
             let unit = buffer[offset]
             if unit == 10 || unit == 13 {
-                if unit != 10 || !previousCR { counts[width, default: 0] += 1; width = 0 }
+                if unit != 10 || !previousCR {
+                    counts[width, default: 0] += 1
+                    width = 0
+                }
                 previousCR = unit == 13
             } else {
                 previousCR = false

@@ -2,6 +2,8 @@
 //  AppColorService.swift
 //  Clipboard
 //
+//  Created by crown on 2026/3/25
+//
 //  应用图标颜色管理：提取、缓存、查询
 //
 
@@ -70,6 +72,14 @@ final class AppColorService {
         colorDict.removeAll()
         checkedColors.removeAll()
         PasteUserDefaults.appColorData = [:]
+    }
+
+    func refreshColor(_ hex: String, name: String) {
+        checkedColors.insert(name)
+        guard colorDict[name] != hex else { return }
+        colorDict[name] = hex
+        PasteUserDefaults.appColorData = colorDict
+        changes.send(name)
     }
 
     private func needsUpdate(for name: String) -> Bool {

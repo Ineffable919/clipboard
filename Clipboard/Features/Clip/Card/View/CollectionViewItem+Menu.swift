@@ -1,10 +1,19 @@
+//
+//  CollectionViewItem+Menu.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/5
+//
+
 import AppKit
 
 // MARK: - Context Menu
 
 extension CollectionViewItem: ClipItemMenuActionable {
     private var pasteMenuTitle: String {
-        if let appName = delegate?.preApp?.localizedName, PasteUserDefaults.pasteDirect {
+        if let appName = delegate?.preApp?.localizedName,
+            PasteUserDefaults.pasteDirect
+        {
             String(localized: .pasteToApp(appName))
         } else {
             String(localized: .paste)
@@ -32,7 +41,9 @@ extension CollectionViewItem: ClipItemMenuActionable {
     }
 
     func handleClipDelete() {
-        guard let model = item, let indexPath = collectionView?.indexPath(for: self) else { return }
+        guard let model = item,
+            let indexPath = collectionView?.indexPath(for: self)
+        else { return }
         delegate?.delete(model, indexPath: indexPath)
     }
 
@@ -58,11 +69,15 @@ extension CollectionViewItem: ClipItemMenuActionable {
 
     func handleClipRevealInFinder() {
         guard let paths = item?.cachedFilePaths, !paths.isEmpty else { return }
-        NSWorkspace.shared.activateFileViewerSelecting(paths.map { URL(fileURLWithPath: $0) })
+        NSWorkspace.shared.activateFileViewerSelecting(
+            paths.map { URL(fileURLWithPath: $0) }
+        )
     }
 
     func handleClipOpenInBrowser() {
-        guard let model = item, let url = URL(string: model.plainText) else { return }
+        guard let model = item, let url = URL(string: model.plainText) else {
+            return
+        }
         NSWorkspace.shared.open(url)
     }
 
@@ -79,7 +94,9 @@ extension CollectionViewItem: NSMenuDelegate {
         menu.removeAllItems()
         guard let model = item else { return }
         delegate?.itemDidRequestSelect(self)
-        for item in buildClipItemMenu(for: model, pasteTitle: pasteMenuTitle).items {
+        for item in buildClipItemMenu(for: model, pasteTitle: pasteMenuTitle)
+            .items
+        {
             menu.addItem(item)
         }
     }

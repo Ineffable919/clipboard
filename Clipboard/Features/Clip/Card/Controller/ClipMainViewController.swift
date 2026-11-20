@@ -2,7 +2,7 @@
 //  ClipMainViewController.swift
 //  Clipboard
 //
-//  Created by crown on 2025/9/13.
+//  Created by crown on 2025/9/13
 //
 
 import AppKit
@@ -27,20 +27,14 @@ final class ClipMainViewController: NSViewController {
     var flagsMonitorToken: Any?
     var dragSourceApp: NSRunningApplication?
     var draggedIDs: [Int64] = []
+    var draggedItems: [PasteboardModel] = []
     var dragFilterRevision = 0
     var restoringSelection = false
-
-    // MARK: - Pause Indicator
-
-    let pauseStack = PauseIndicatorStackView()
-    let pauseTimeLabel = NSTextField(labelWithString: "")
-    let pauseButton = NSButton()
-    var pauseTimerCancellable: AnyCancellable?
-    var appearanceObservation: NSKeyValueObservation?
 
     // MARK: - Preview
 
     var previewPopover: ClipPreviewPopover?
+    let previewPool = ClipPreviewPopoverPool()
 
     // MARK: - Quick Paste
 
@@ -119,10 +113,10 @@ final class ClipMainViewController: NSViewController {
         flowLayout.minimumLineSpacing = Const.cardSpace
         flowLayout.scrollDirection = .horizontal
         flowLayout.sectionInset = NSEdgeInsets(
-            top: 0,
-            left: Const.space20,
-            bottom: 0,
-            right: Const.space20
+            top: Const.selectionBorderWidth,
+            left: Const.space24,
+            bottom: Const.selectionBorderWidth,
+            right: Const.space24
         )
 
         let collectionView = ClipCollectionView()
@@ -137,22 +131,21 @@ final class ClipMainViewController: NSViewController {
         collectionView.registerForDraggedTypes(PasteboardType.supportTypes)
         collectionView.setDraggingSourceOperationMask(.every, forLocal: true)
         collectionView.setDraggingSourceOperationMask(.copy, forLocal: false)
-        collectionView.onBecomeFirstResponder = { [weak self] in
+        collectionView.onInteractionFocus = { [weak self] in
             self?.setFocusRegion(.collection)
+            self?.updateSelectedItemBorder()
         }
         collectionView.onShiftClick = { [weak self] clickedPath in
             guard let self else { return }
-            setFocusRegion(.collection)
             let lower = min(selectIndexPath.item, clickedPath.item)
             let upper = max(selectIndexPath.item, clickedPath.item)
-            let paths = Set((lower ... upper).map { IndexPath(item: $0, section: 0) })
+            let paths = Set((lower...upper).map { IndexPath(item: $0, section: 0) })
             collectionView.selectionIndexPaths = paths
             scrollTo(indexPath: clickedPath)
         }
         collectionView.onClick = { [weak self] indexPath in
             guard let self else { return }
             resetSelectIndex(indexPath)
-            setFocusRegion(.collection)
         }
         collectionView.onDragMoved = { [weak self] screenPoint in
             guard let self, let window = view.window else { return }
@@ -166,9 +159,11 @@ final class ClipMainViewController: NSViewController {
             guard let self, let window = view.window else { return }
             let visibleRect = effectView.convert(effectView.bounds, to: nil)
             let screenRect = window.convertToScreen(visibleRect)
-            guard screenRect.contains(screenPoint) else { return }
+            // 拖离面板后窗口已收起，此时不能再让它抢回键盘焦点
+            guard ClipMainWindowController.shared.isVisible,
+                screenRect.contains(screenPoint)
+            else { return }
 
-            let controller = ClipMainWindowController.shared
             AppEnvironment.shared.suppressResignKey = true
             window.resignKey()
             window.makeKey()
@@ -220,21 +215,38 @@ extension ClipMainViewController {
 
     override func viewDidAppear() {
         super.viewDidAppear()
+        restoreFocus()
+        updateSelectedItemBorder()
+        installKeyMonitors()
+    }
 
+    /// 窗口显示时校正焦点
+    private func restoreFocus() {
         if topBarView.isSearching, !topVM.hasInput {
             topBarView.deactivateSearch()
+        }
+        if topBarView.isSearching {
+            guard focusRegion == .filter else { return }
+            setFocusRegion(.search)
+            view.window?.makeFirstResponder(topBarView.searchField.tokenTextView)
+        } else {
             setFocusRegion(.collection)
-        } else if focusRegion == .collection {
             view.window?.makeFirstResponder(collectionView)
         }
+    }
 
-        updateSelectedItemBorder()
-
+    private func installKeyMonitors() {
         if monitorToken == nil {
             monitorToken = NSEvent.addLocalMonitorForEvents(
-                matching: .keyDown,
-                handler: keyDownEvent(_:)
-            )
+                matching: [.keyDown, .keyUp]
+            ) { [weak self] event in
+                guard let self else { return event }
+                if event.type == .keyUp {
+                    scrollView.endKeyboardScroll(keyCode: event.keyCode)
+                    return event
+                }
+                return keyDownEvent(event)
+            }
         }
 
         if flagsMonitorToken == nil {
@@ -260,6 +272,8 @@ extension ClipMainViewController {
 
     override func viewDidDisappear() {
         super.viewDidDisappear()
+        scrollView.resetKeyboardScroll()
+        scrollView.stopScrolling()
         PasteDataStore.main.clearExpiredData()
         if let token = monitorToken {
             NSEvent.removeMonitor(token)
@@ -286,12 +300,11 @@ extension ClipMainViewController {
         contentView.addSubview(topBarView)
         contentView.addSubview(emptyStateView)
         contentView.addSubview(dropOverlayView)
-        setupPauseIndicator()
 
         scrollView.snp.makeConstraints { make in
             make.leading.trailing.equalToSuperview()
-            make.bottom.equalToSuperview().offset(-20)
-            make.top.equalTo(topBarView.snp.bottom).offset(Const.space10)
+            make.bottom.equalToSuperview().offset(-20 + Const.selectionBorderWidth)
+            make.top.equalTo(topBarView.snp.bottom).offset(Const.space10 - Const.selectionBorderWidth)
         }
 
         topBarView.snp.makeConstraints { make in
@@ -309,53 +322,6 @@ extension ClipMainViewController {
         dropOverlayView.snp.makeConstraints { make in
             make.edges.equalTo(scrollView)
         }
-    }
-
-    private func setupPauseIndicator() {
-        let pauseIcon = NSImageView()
-        let iconConfig = NSImage.SymbolConfiguration(pointSize: 12, weight: .medium)
-        pauseIcon.image = NSImage(systemSymbolName: "pause.circle.fill", accessibilityDescription: nil)?
-            .withSymbolConfiguration(iconConfig)
-        pauseIcon.contentTintColor = .controlAccentColor
-        pauseIcon.snp.makeConstraints { make in
-            make.width.height.equalTo(16)
-        }
-
-        pauseTimeLabel.font = .monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
-        pauseTimeLabel.textColor = .secondaryLabelColor
-
-        pauseStack.orientation = .horizontal
-        pauseStack.alignment = .centerY
-        pauseStack.spacing = Const.space6
-        pauseStack.edgeInsets = NSEdgeInsets(top: 0, left: Const.space8, bottom: 0, right: Const.space8)
-        pauseStack.addArrangedSubview(pauseIcon)
-        pauseStack.addArrangedSubview(pauseTimeLabel)
-        pauseStack.wantsLayer = true
-        pauseStack.layer?.cornerRadius = Const.btnRadius
-        pauseStack.layer?.cornerCurve = .continuous
-        pauseStack.isHidden = true
-
-        pauseButton.isBordered = false
-        pauseButton.title = ""
-        pauseButton.isHidden = true
-        pauseButton.setAccessibilityLabel(String(localized: .resume))
-        pauseButton.target = self
-        pauseButton.action = #selector(resumePasteboard)
-        contentView.addSubview(pauseButton)
-        contentView.addSubview(pauseStack)
-
-        pauseStack.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(Const.space12)
-            make.centerY.equalTo(topBarView)
-            make.height.equalTo(28)
-        }
-        pauseButton.snp.makeConstraints { make in
-            make.edges.equalTo(pauseStack)
-        }
-    }
-
-    @objc private func resumePasteboard() {
-        topVM.resume()
     }
 
 }

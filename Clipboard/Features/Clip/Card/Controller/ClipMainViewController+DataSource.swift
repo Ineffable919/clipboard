@@ -2,7 +2,7 @@
 //  ClipMainViewController+DataSource.swift
 //  Clipboard
 //
-//  Created by crown on 2025/9/13.
+//  Created by crown on 2025/9/13
 //
 
 import AppKit
@@ -79,12 +79,13 @@ extension ClipMainViewController: NSCollectionViewDelegate {
                 collectionView.hideDropLine()
                 return []
             }
-            // 落在卡片中央时，根据左右半区选择相邻间隙。
+            // 落在卡片中央时，根据左右半区选择相邻间隙
             let point = collectionView.convert(draggingInfo.draggingLocation, from: nil)
             var index = min(max(0, proposedIndexPath.pointee.item), displayedItemCount)
             if dropOperation.pointee == .on,
-               let frame = collectionView.layoutAttributesForItem(at: IndexPath(item: index, section: 0))?.frame,
-               point.x >= frame.midX {
+                let frame = collectionView.layoutAttributesForItem(at: IndexPath(item: index, section: 0))?.frame,
+                point.x >= frame.midX
+            {
                 index += 1
             }
             let dropPath = IndexPath(item: min(index, displayedItemCount), section: 0)
@@ -117,13 +118,20 @@ extension ClipMainViewController: NSCollectionViewDelegate {
 
     func collectionView(
         _: NSCollectionView,
-        draggingSession _: NSDraggingSession,
+        draggingSession session: NSDraggingSession,
         willBeginAt _: NSPoint,
         forItemsAt indexPaths: Set<IndexPath>
     ) {
-        draggedIDs = indexPaths.sorted().compactMap { displayedModel(at: $0)?.id }
+        for indexPath in indexPaths {
+            collectionView.item(at: indexPath)?.view.isHidden = false
+        }
+        draggedItems = indexPaths.sorted().compactMap { displayedModel(at: $0) }
+        draggedIDs = draggedItems.compactMap(\.id)
+        let extraURLs = draggedItems.flatMap(\.extraDragFileURLs)
+        if !extraURLs.isEmpty {
+            session.draggingPasteboard.writeObjects(extraURLs)
+        }
         dragFilterRevision = dataStore.filterRevision
-        // 遮罩位于列表上方；hitTest 穿透不会让已注册的拖放目标穿透。
         dropOverlayView.unregisterDraggedTypes()
         dropOverlayView.resetDragState()
     }
@@ -135,6 +143,7 @@ extension ClipMainViewController: NSCollectionViewDelegate {
         dragOperation _: NSDragOperation
     ) {
         draggedIDs = []
+        draggedItems = []
         collectionView.hideDropLine()
         dropOverlayView.registerForDraggedTypes(PasteboardType.supportTypes)
         dropOverlayView.resetDragState()
@@ -189,81 +198,39 @@ extension ClipMainViewController {
     }
 
     func resetSelectIndex(
-        _ indexPath: IndexPath = IndexPath(item: 0, section: 0)
+        _ indexPath: IndexPath = IndexPath(item: 0, section: 0),
+        animated: Bool = true
     ) {
         selectIndexPath = indexPath
         guard displayedItemCount > 0 else { return }
         setSelection(to: selectIndexPath)
-        scrollTo(indexPath: selectIndexPath)
+        scrollTo(indexPath: selectIndexPath, animated: animated)
         updateSelectedItemBorder()
     }
 
-    private func eventIsRepeat() -> Bool {
-        guard let event = NSApp.currentEvent else { return false }
-
-        switch event.type {
-        case .keyDown:
-            return event.isARepeat
-        default:
-            return false
-        }
-    }
-
     func scrollTo(indexPath: IndexPath, animated: Bool = true) {
-        guard displayedItemCount > 0 else { return }
-        guard let attrs = collectionView.layoutAttributesForItem(at: indexPath)
-        else { return }
-        let padding = Const.cardSpace + Const.cardSize / 5
-
-        guard animated, !eventIsRepeat() else {
-            guard let scrollView = collectionView.enclosingScrollView else {
-                return
-            }
-
-            let clipView = scrollView.contentView
-            let visibleRect = clipView.documentVisibleRect
-
-            let targetMinX = attrs.frame.minX - padding
-            let targetMaxX = attrs.frame.maxX + padding
-
-            var newOriginX = visibleRect.origin.x
-
-            if targetMinX < visibleRect.minX {
-                newOriginX = targetMinX
-            } else if targetMaxX > visibleRect.maxX {
-                newOriginX = targetMaxX - visibleRect.width
-            }
-
-            let maxX = max(
-                0,
-                collectionView.bounds.width - visibleRect.width
-            )
-
-            newOriginX = min(max(0, newOriginX), maxX)
-
-            if abs(newOriginX - visibleRect.origin.x) > 1 {
-                clipView.setBoundsOrigin(
-                    NSPoint(x: newOriginX, y: 0)
-                )
-
-                scrollView.reflectScrolledClipView(clipView)
-            }
+        guard displayedItemCount > 0,
+            let attrs = collectionView.layoutAttributesForItem(at: indexPath)
+        else {
+            scrollView.stopScrolling()
             return
         }
+        let padding = Const.cardSpace * 2.5
+        let visibleRect = scrollView.contentView.documentVisibleRect
+        var originX = visibleRect.minX
 
-        NSAnimationContext.runAnimationGroup { ctx in
-            ctx.duration = 0.2
-            ctx.allowsImplicitAnimation = true
-            collectionView.scrollToVisible(
-                NSRect(
-                    x: attrs.frame.origin.x - padding,
-                    y: 0,
-                    width: attrs.frame.width + padding * 2,
-                    height: attrs.frame.height
-                )
-            )
+        // 卡片内容越过可视边界后再滚动，预览空间只参与落点计算
+        if attrs.frame.maxX > visibleRect.maxX {
+            originX = attrs.frame.maxX + padding - visibleRect.width
+        } else if attrs.frame.minX < visibleRect.minX {
+            originX = attrs.frame.minX - padding
         }
+
+        let maxX = max(0, collectionView.bounds.width - visibleRect.width)
+        originX = min(max(0, originX), maxX)
+        scrollView.scroll(to: NSPoint(x: originX, y: 0), animated: animated)
     }
+
 }
 
 // MARK: - CollectionViewItemDelegate
@@ -275,7 +242,7 @@ extension ClipMainViewController: CollectionViewItemDelegate {
 
     func itemDidRequestSelect(_ item: CollectionViewItem) {
         guard let indexPath = collectionView.indexPath(for: item),
-              indexPath != selectIndexPath
+            indexPath != selectIndexPath
         else {
             if focusRegion != .collection {
                 setFocusRegion(.collection)

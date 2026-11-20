@@ -2,6 +2,8 @@
 //  ClipPreviewPopover.swift
 //  Clipboard
 //
+//  Created by crown on 2026/4/27
+//
 //  预览 Popover：NSPopover 子类，负责键盘事件拦截与尺寸计算
 //
 
@@ -15,18 +17,14 @@ final class ClipPreviewPopover: NSPopover {
     var onPinToChip: ((PasteboardModel, Int) -> Void)?
     var onUnpin: ((PasteboardModel) -> Void)?
     var onCreateChip: ((PasteboardModel) -> Void)?
+    var onDidClose: (() -> Void)?
 
     private let previewVC = ClipPreviewController()
     private nonisolated(unsafe) var keyMonitor: Any?
 
     // MARK: - Init
 
-    init(
-        model: PasteboardModel,
-        maxHeight: CGFloat = Const.maxPreviewHeight,
-        onContentInteraction: (() -> Void)? = nil
-    ) {
-        self.onContentInteraction = onContentInteraction
+    override init() {
         super.init()
         behavior = .transient
         animates = true
@@ -34,8 +32,14 @@ final class ClipPreviewPopover: NSPopover {
 
         _ = previewVC.view
 
-        configure(with: model, maxHeight: maxHeight)
         installKeyMonitor()
+        // delegate 由宿主控制器占用，关闭完成改用通知回收
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleDidClose),
+            name: NSPopover.didCloseNotification,
+            object: self
+        )
     }
 
     @available(*, unavailable)
@@ -43,7 +47,7 @@ final class ClipPreviewPopover: NSPopover {
         fatalError()
     }
 
-    deinit {
+    isolated deinit {
         let monitor = keyMonitor
         if let monitor {
             NSEvent.removeMonitor(monitor)
@@ -52,8 +56,18 @@ final class ClipPreviewPopover: NSPopover {
 
     // MARK: - Public API
 
-    func configure(with model: PasteboardModel, maxHeight: CGFloat = Const.maxPreviewHeight) {
-        let size = previewVC.configure(with: model, maxHeight: maxHeight)
+    func configure(
+        with model: PasteboardModel,
+        maxHeight: CGFloat = Const.maxPreviewHeight,
+        maxWidth: CGFloat = Const.maxPreviewWidth
+    ) {
+        let size = previewVC.configure(with: model, maxHeight: maxHeight, maxWidth: maxWidth)
+        // 弹窗关闭后复用时，新尺寸可能需要重挂载控制器才会生效
+        // 弹窗显示期间直接更新尺寸，保留当前窗口供切卡使用
+        if !isShown, contentSize != size {
+            contentViewController = nil
+            contentViewController = previewVC
+        }
         contentSize = size
 
         previewVC.onContentInteraction = { [weak self] in
@@ -73,11 +87,27 @@ final class ClipPreviewPopover: NSPopover {
         }
     }
 
+    func retarget(
+        to model: PasteboardModel,
+        relativeTo rect: NSRect,
+        of anchor: NSView,
+        preferredEdge: NSRectEdge,
+        maxHeight: CGFloat,
+        maxWidth: CGFloat = Const.maxPreviewWidth
+    ) {
+        let wasAnimated = animates
+        animates = false
+        defer { animates = wasAnimated }
+
+        configure(with: model, maxHeight: maxHeight, maxWidth: maxWidth)
+        show(relativeTo: rect, of: anchor, preferredEdge: preferredEdge)
+    }
+
     func refreshHeader() {
         previewVC.refreshHeader()
     }
 
-    func cleanup() {
+    private func cleanup() {
         previewVC.cleanup()
         previewVC.onContentInteraction = nil
         previewVC.onDismiss = nil
@@ -90,13 +120,22 @@ final class ClipPreviewPopover: NSPopover {
         onCreateChip = nil
     }
 
+    @objc private func handleDidClose(_: Notification) {
+        cleanup()
+        onDidClose?()
+    }
+
     // MARK: - Size Calculation
 
     /// header(24) + space8 + space8 + footer(24) + inset*2(12+12)
     static let chrome: CGFloat = 24 + Const.space8 + Const.space8 + 24 + Const.space12 * 2
 
-    /// 根据 model 类型计算 Popover 的最佳尺寸，maxHeight 由调用侧传入可用屏幕高度
-    static func fitSize(for model: PasteboardModel, maxHeight: CGFloat = Const.maxPreviewHeight) -> NSSize {
+    /// 根据 model 类型计算 Popover 的最佳尺寸，maxHeight/maxWidth 由调用侧传入可用屏幕空间
+    static func fitSize(
+        for model: PasteboardModel,
+        maxHeight: CGFloat = Const.maxPreviewHeight,
+        maxWidth: CGFloat = Const.maxPreviewWidth
+    ) -> NSSize {
         let cap = min(Const.maxPreviewHeight, maxHeight)
         let contentMaxH = max(cap - chrome, 0)
         let measuredText = measuredTextIfNeeded(for: model)
@@ -104,6 +143,7 @@ final class ClipPreviewPopover: NSPopover {
         let width = clampedWidth(
             for: model,
             contentMaxH: contentMaxH,
+            maxWidth: min(Const.maxPreviewWidth, maxWidth),
             measuredText: measuredText
         )
         let contentH = ClipPreviewContentView.preferredContentHeight(
@@ -122,33 +162,44 @@ final class ClipPreviewPopover: NSPopover {
     private static func clampedWidth(
         for model: PasteboardModel,
         contentMaxH: CGFloat = Const.maxTextheight,
+        maxWidth: CGFloat = Const.maxPreviewWidth,
         measuredText: NSAttributedString?
     ) -> CGFloat {
+        let minWidth = min(Const.minPreviewWidth, maxWidth)
         switch model.type {
         case .color:
-            return 400
-        case .file, .link:
-            return Const.maxPreviewWidth
+            return min(400, maxWidth)
+        case .file:
+            return ratioWidth(contentMaxH: contentMaxH, maxWidth: maxWidth)
+        case .link:
+            return PasteUserDefaults.enableLinkPreview && model.isLink
+                ? ratioWidth(contentMaxH: contentMaxH, maxWidth: maxWidth)
+                : maxWidth
         case .image:
             guard let size = model.cachedImageSize, size.width > 0 else {
-                return Const.maxPreviewWidth
+                return maxWidth
             }
             let scale = min(
-                Const.maxPreviewWidth / size.width,
+                (maxWidth - Const.space12 * 2) / size.width,
                 contentMaxH / size.height,
                 1.0
             )
             let displayW = ceil(size.width * scale) + Const.space12 * 2
-            return min(max(displayW, Const.minPreviewWidth), Const.maxPreviewWidth)
+            return min(max(displayW, minWidth), maxWidth)
         case .string, .rich:
             let textWidth = estimatedTextWidth(for: model, measuredText: measuredText)
-            return min(
-                max(textWidth, Const.minPreviewWidth),
-                Const.maxTextWidth
-            )
+            return min(max(textWidth, minWidth), Const.maxTextWidth, maxWidth)
         case .none:
-            return Const.minPreviewWidth
+            return minWidth
         }
+    }
+
+    /// 内容高度受限时，按默认内容宽高比等比收窄，避免窗口被压成扁长条
+    private static func ratioWidth(contentMaxH: CGFloat, maxWidth: CGFloat) -> CGFloat {
+        let inset = Const.space12 * 2
+        let ratio = (Const.maxPreviewWidth - inset) / Const.maxContentHeight
+        let width = ceil(min(contentMaxH, Const.maxContentHeight) * ratio) + inset
+        return min(max(width, min(Const.minPreviewWidth, maxWidth)), maxWidth)
     }
 
     private static func estimatedTextWidth(
@@ -187,17 +238,10 @@ final class ClipPreviewPopover: NSPopover {
 
     private func installKeyMonitor() {
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            guard let self, isShown else { return event }
-            switch Int(event.keyCode) {
-            case kVK_Escape:
-                close()
-                return nil
-            case kVK_LeftArrow, kVK_RightArrow:
-                close()
-                return event
-            default:
-                return event
-            }
+            // 方向键交给宿主按焦点处理，焦点在预览内时留给网页、文本等内容
+            guard let self, isShown, Int(event.keyCode) == kVK_Escape else { return event }
+            close()
+            return nil
         }
     }
 }

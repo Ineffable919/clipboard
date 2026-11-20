@@ -2,7 +2,9 @@
 //  TopBarView+Chips.swift
 //  Clipboard
 //
-//  Chip editing and selection forwarding.
+//  Created by crown on 2026/8/22
+//
+//  Chip editing and selection forwarding
 //
 
 import Foundation

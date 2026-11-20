@@ -1,3 +1,10 @@
+//
+//  FloatingDisplayMode.swift
+//  Clipboard
+//
+//  Created by crown on 2026/9/9
+//
+
 import AppKit
 
 enum FloatingDisplayMode: Int, CaseIterable {
@@ -27,4 +34,5 @@ enum FloatingDisplayMode: Int, CaseIterable {
     var cardSpacing: CGFloat { self == .standard ? 6 : 4 }
     var cardInset: CGFloat { self == .standard ? 10 : 12 }
     var cardRadius: CGFloat { self == .standard ? Const.radius : 8 }
+    var plainTextFontSize: CGFloat { self == .standard ? 12 : 11 }
 }

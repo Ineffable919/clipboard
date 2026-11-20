@@ -2,7 +2,9 @@
 //  FilterAppInfo.swift
 //  Clipboard
 //
-//  Application metadata displayed by the filter popover.
+//  Created by crown on 2026/8/22
+//
+//  Application metadata displayed by the filter popover
 //
 
 import AppKit

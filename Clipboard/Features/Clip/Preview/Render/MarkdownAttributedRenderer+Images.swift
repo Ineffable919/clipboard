@@ -2,7 +2,9 @@
 //  MarkdownAttributedRenderer+Images.swift
 //  Clipboard
 //
-//  Markdown 富文本图片加载。
+//  Created by crown on 2026/8/26
+//
+//  Markdown 富文本图片加载
 //
 
 import AppKit
@@ -44,7 +46,8 @@ extension MarkdownAttributedRenderer {
 
     static func trimTrailingNewlines(_ result: NSMutableAttributedString) {
         while result.length > 0,
-              (result.string as NSString).substring(from: result.length - 1) == "\n" {
+            (result.string as NSString).substring(from: result.length - 1) == "\n"
+        {
             result.deleteCharacters(in: NSRange(location: result.length - 1, length: 1))
         }
     }

@@ -2,7 +2,7 @@
 //  AppDelegate.swift
 //  clipboard
 //
-//  Created by crown on 2025/9/11.
+//  Created by crown on 2025/9/11
 //
 
 import AppKit
@@ -38,6 +38,10 @@ extension AppDelegate: NSApplicationDelegate {
         Task {
             await initClipboardAsync()
         }
+
+        Task.detached(priority: .utility) {
+            PasteboardWritingItem.clearDragCache()
+        }
     }
 
     func applicationSupportsSecureRestorableState(_: NSApplication) -> Bool {
@@ -52,6 +56,7 @@ extension AppDelegate: NSApplicationDelegate {
         StatusBarController.shared.cleanup()
         AppIconCache.shared.clearCache()
         HotKeyManager.shared.clear()
+        MCPServer.shared.stop()
     }
 
     func applicationShouldHandleReopen(_: NSApplication, hasVisibleWindows _: Bool) -> Bool {
@@ -65,9 +70,10 @@ extension AppDelegate: NSApplicationDelegate {
     }
 
     private func applyAppearanceSettings() {
-        let appearanceMode = AppearanceMode(
-            rawValue: PasteUserDefaults.appearance
-        ) ?? .system
+        let appearanceMode =
+            AppearanceMode(
+                rawValue: PasteUserDefaults.appearance
+            ) ?? .system
 
         switch appearanceMode {
         case .system:
@@ -101,6 +107,8 @@ extension AppDelegate {
         WelcomeWindowController.shared.showIfNeeded()
 
         syncLaunchAtLoginStatus()
+
+        MCPServer.shared.sync()
     }
 
     private func syncLaunchAtLoginStatus() {
@@ -114,8 +122,7 @@ extension AppDelegate {
 
 extension AppDelegate {
     private func initLocalEvent() {
-        monitorToken = NSEvent.addLocalMonitorForEvents(matching: .keyDown) {
-            event in
+        monitorToken = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             if event.modifierFlags.contains(.command) {
                 let modifiers = event.charactersIgnoringModifiers
                 if modifiers == "," || modifiers == "，" {
@@ -126,7 +133,19 @@ extension AppDelegate {
                     NSApplication.shared.terminate(nil)
                     return nil
                 }
-                if modifiers == "t" || modifiers == "T" {
+                if modifiers == "t" || modifiers == "T",
+                    event.modifierFlags.intersection([.command, .option, .control, .shift]) == .command
+                {
+                    if PasteBoard.main.isPaused {
+                        PasteBoard.main.resume()
+                    } else {
+                        PasteBoard.main.pause()
+                    }
+                    return nil
+                }
+                if modifiers == "n" || modifiers == "N",
+                    event.modifierFlags.intersection([.command, .option, .control, .shift]) == .command
+                {
                     EditWindowController.shared.openNewWindow()
                     return nil
                 }
@@ -182,8 +201,9 @@ extension AppDelegate: SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
         state _: SPUUserUpdateState
     ) {
         guard !willHandle else { return }
-        log.info("发现更新：\(update.displayVersionString)")
-        UpdateManager.shared.setUpdateAvailable(version: update.displayVersionString)
+        UpdateManager.shared.setUpdateAvailable(
+            version: update.displayVersionString
+        )
     }
 
     func standardUserDriverDidReceiveUserAttention(forUpdate _: SUAppcastItem) {
@@ -198,5 +218,7 @@ extension AppDelegate: SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
 // MARK: - Notification.Name
 
 extension Notification.Name {
-    static let menuBarIconVisibilityChanged = Notification.Name("menuBarIconVisibilityChanged")
+    static let menuBarIconVisibilityChanged = Notification.Name(
+        "menuBarIconVisibilityChanged"
+    )
 }

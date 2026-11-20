@@ -1,3 +1,10 @@
+//
+//  ClipActionService.swift
+//  Clipboard
+//
+//  Created by crown on 2025/12/9
+//
+
 import AppKit
 import Foundation
 
@@ -127,9 +134,10 @@ final class ClipActionService {
         isAttribute: Bool = true,
         showTip: Bool = false
     ) {
+        let permissionText = DirectPastePermissionText.current
         let alert = NSAlert.appAlert()
-        alert.messageText = String(localized: .accessTitle)
-        alert.informativeText = String(localized: .accessMessage)
+        alert.messageText = String(localized: permissionText.alertTitle)
+        alert.informativeText = String(localized: permissionText.alertMessage)
         alert.alertStyle = .informational
         alert.addButton(withTitle: String(localized: .openSettings))
         alert.addButton(withTitle: String(localized: .copyLater))
@@ -140,7 +148,7 @@ final class ClipActionService {
         case .alertFirstButtonReturn:
             if let url = URL(
                 string:
-                "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
+                    "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
             ) {
                 NSWorkspace.shared.open(url)
             }

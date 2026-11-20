@@ -2,7 +2,7 @@
 //  WindowManager.swift
 //  Clipboard
 //
-//  Created by crown on 2025/1/14.
+//  Created by crown on 2025/1/14
 //
 
 import AppKit
@@ -46,6 +46,11 @@ final class WindowManager {
             dismissDrawerIfNeeded()
             floatingController.toggleWindow(completionHandler)
         }
+    }
+
+    func dismiss() {
+        dismissDrawerIfNeeded()
+        dismissFloatingIfNeeded()
     }
 
     var isVisible: Bool {

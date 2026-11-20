@@ -2,7 +2,7 @@
 //  String+Extension.swift
 //  Clipboard
 //
-//  Created by crown on 2025/10/5.
+//  Created by crown on 2025/10/5
 //
 
 import Foundation
@@ -28,10 +28,12 @@ extension String {
     nonisolated private func validURLString() -> String? {
         let candidate = trimmingCharacters(in: .whitespacesAndNewlines)
         guard !candidate.isEmpty else { return nil }
-        guard !candidate.unicodeScalars.contains(where: {
-            CharacterSet.whitespacesAndNewlines.contains($0)
-                || CharacterSet.controlCharacters.contains($0)
-        }) else {
+        guard
+            !candidate.unicodeScalars.contains(where: {
+                CharacterSet.whitespacesAndNewlines.contains($0)
+                    || CharacterSet.controlCharacters.contains($0)
+            })
+        else {
             return nil
         }
 
@@ -57,7 +59,7 @@ extension String {
 
         let hasValidHostFormat =
             cleanHost.contains(".")
-                || cleanHost.localizedStandardContains("localhost")
+            || cleanHost.localizedStandardContains("localhost")
         guard hasValidHostFormat else {
             return nil
         }
@@ -84,7 +86,7 @@ extension String {
         )
         return matches.compactMap { match in
             guard let range = Range(match.range, in: self),
-                  let url = match.url
+                let url = match.url
             else {
                 return nil
             }
@@ -141,7 +143,8 @@ extension String {
         guard [3, 4, 6, 8].contains(hex.count) else { return false }
         guard hex.unicodeScalars.allSatisfy({ Self.hexCharacters.contains($0) }) else { return false }
         if hex.unicodeScalars.allSatisfy({ Self.hexDigitsOnly.contains($0) }),
-           !hasHash || hex.count != 6 {
+            !hasHash || hex.count != 6
+        {
             return false
         }
         return true
@@ -154,10 +157,11 @@ extension String {
         let range = NSRange(clean.startIndex..., in: clean)
         guard let match = regex.firstMatch(in: clean, range: range) else { return false }
 
-        for index in 1 ... 3 {
+        for index in 1...3 {
             guard let range = Range(match.range(at: index), in: clean),
-                  let value = Int(clean[range]),
-                  value <= 255 else { return false }
+                let value = Int(clean[range]),
+                value <= 255
+            else { return false }
         }
         return true
     }
@@ -170,13 +174,15 @@ extension String {
         guard let match = regex.firstMatch(in: clean, range: range) else { return false }
 
         guard let hueRange = Range(match.range(at: 1), in: clean),
-              let hue = Int(clean[hueRange]),
-              hue <= 360 else { return false }
+            let hue = Int(clean[hueRange]),
+            hue <= 360
+        else { return false }
 
-        for index in 2 ... 3 {
+        for index in 2...3 {
             guard let range = Range(match.range(at: index), in: clean),
-                  let value = Int(clean[range]),
-                  value <= 100 else { return false }
+                let value = Int(clean[range]),
+                value <= 100
+            else { return false }
         }
         return true
     }
@@ -192,13 +198,13 @@ extension String {
                 break
             }
         }
-        return String(self[startIndex ..< endIndex])
+        return String(self[startIndex..<endIndex])
     }
 
     var wordCount: Int {
         var count = 0
         enumerateSubstrings(
-            in: startIndex ..< endIndex,
+            in: startIndex..<endIndex,
             options: .byWords
         ) { _, _, _, _ in
             count += 1
@@ -212,7 +218,7 @@ extension String {
         let tokenizer = NLTokenizer(unit: .word)
         tokenizer.string = self
 
-        tokenizer.enumerateTokens(in: startIndex ..< endIndex) { range, _ in
+        tokenizer.enumerateTokens(in: startIndex..<endIndex) { range, _ in
             guard !withUnsafeCurrentTask(body: { $0?.isCancelled ?? false }) else { return false }
             let token = self[range]
 
@@ -232,7 +238,7 @@ extension String {
 
 extension CharacterSet {
     nonisolated static let cjkUnifiedIdeographs =
-        CharacterSet(charactersIn: "\u{4E00}" ... "\u{9FFF}")
+        CharacterSet(charactersIn: "\u{4E00}"..."\u{9FFF}")
 }
 
 // MARK: - Localized Prefix Matching

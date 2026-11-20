@@ -2,7 +2,7 @@
 //  PasteboardModel+Tool.swift
 //  Clipboard
 //
-//  Created by crown on 2026/3/11.
+//  Created by crown on 2026/3/11
 //
 
 import AppKit
@@ -18,7 +18,7 @@ extension PasteboardModel {
             return "\(prefix.sha256Hex)-\(data.count)"
         case .rtf, .rtfd:
             if let attributeString = NSAttributedString(with: data, type: type),
-               let textData = attributeString.string.data(using: .utf8)
+                let textData = attributeString.string.data(using: .utf8)
             {
                 return textData.sha256Hex
             }
@@ -29,21 +29,16 @@ extension PasteboardModel {
     }
 
     /// 加载匹配关键字的 OCR 高亮区域
-    func loadOCRHighlightRegions(keyword: String) async -> [OCRTextRegion] {
+    func loadOCRHighlightRegions(keyword: String, requestId: String = UUID().uuidString) async -> [OCRTextRegion] {
         let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return [] }
-
-        if cachedOCRKeyword == trimmed, let cachedOCRRegions {
-            return cachedOCRRegions
-        }
-
+        guard !Task.isCancelled, !trimmed.isEmpty else { return [] }
         let regions = await OCRViewService.shared.recognizeHighlightRegions(
             from: data,
-            keyword: trimmed
+            keyword: trimmed,
+            requestId: requestId
         )
-        cachedOCRKeyword = trimmed
-        cachedOCRRegions = regions
-        return regions
+        guard !Task.isCancelled else { return [] }
+        return regions ?? []
     }
 
     // MARK: - 计算图片尺寸
@@ -64,18 +59,18 @@ extension PasteboardModel {
         let width: CGFloat
         let height: CGFloat
 
-        if let w = properties[kCGImagePropertyPixelWidth] as? Int {
-            width = CGFloat(w)
-        } else if let w = properties[kCGImagePropertyPixelWidth] as? CGFloat {
-            width = w
+        if let pixelWidth = properties[kCGImagePropertyPixelWidth] as? Int {
+            width = CGFloat(pixelWidth)
+        } else if let pixelWidth = properties[kCGImagePropertyPixelWidth] as? CGFloat {
+            width = pixelWidth
         } else {
             return nil
         }
 
-        if let h = properties[kCGImagePropertyPixelHeight] as? Int {
-            height = CGFloat(h)
-        } else if let h = properties[kCGImagePropertyPixelHeight] as? CGFloat {
-            height = h
+        if let pixelHeight = properties[kCGImagePropertyPixelHeight] as? Int {
+            height = CGFloat(pixelHeight)
+        } else if let pixelHeight = properties[kCGImagePropertyPixelHeight] as? CGFloat {
+            height = pixelHeight
         } else {
             return nil
         }

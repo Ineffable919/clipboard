@@ -1,8 +1,10 @@
 //
 //  MarkdownFrontmatter.swift
 //  Clipboard
-
-//  Adapted from Markdown Preview (MIT License).
+//
+//  Created by crown on 2026/8/26
+//
+//  Adapted from Markdown Preview (MIT License)
 //
 
 import Foundation
@@ -13,7 +15,7 @@ struct FrontmatterEntry: Equatable, Identifiable {
     let value: String
     /// Non-nil when the value is a sequence (`tags: [a, b]` or `- item`
     /// lines). `value` then carries the items joined with ", " for
-    /// plain-text consumers like the Inspector.
+    /// plain-text consumers like the Inspector
     let items: [String]?
 
     nonisolated init(id: Int, key: String, value: String, items: [String]? = nil) {
@@ -27,7 +29,7 @@ struct FrontmatterEntry: Equatable, Identifiable {
 // Swift-markdown is CommonMark: it has no frontmatter notion, so delimiter
 // blocks can be rendered as document content. We split supported frontmatter
 // from the Markdown body, then surface its parsed entries in the rendered page
-// and Inspector.
+// and Inspector
 nonisolated enum MarkdownFrontmatter {
 
     struct SplitResult {
@@ -50,9 +52,11 @@ nonisolated enum MarkdownFrontmatter {
         var lines: [String] = []
         stripped.enumerateLines { line, _ in lines.append(line) }
 
-        guard let close = lines.dropFirst().firstIndex(where: {
-            delimiter.closes($0)
-        }) else { return SplitResult(raw: nil, format: nil, body: markdown) }
+        guard
+            let close = lines.dropFirst().firstIndex(where: {
+                delimiter.closes($0)
+            })
+        else { return SplitResult(raw: nil, format: nil, body: markdown) }
 
         let raw = lines[1..<close].joined(separator: "\n")
         let body = lines[(close + 1)...].joined(separator: "\n")
@@ -62,7 +66,7 @@ nonisolated enum MarkdownFrontmatter {
     // Best-effort parse: each top-level `key: value` line becomes an entry;
     // indented continuation lines append to the previous value, `- item`
     // lines and `[a, b]` flow sequences become the entry's items. We don't
-    // interpret other YAML types — scalars are shown verbatim (unquoted).
+    // interpret other YAML types — scalars are shown verbatim (unquoted)
     static func parse(_ raw: String, format: Format = .yaml) -> [FrontmatterEntry] {
         switch format {
         case .yaml:
@@ -87,7 +91,7 @@ nonisolated enum MarkdownFrontmatter {
 
             // Sequence items belong to the previous key. YAML allows them
             // at the key's own indent or deeper, so match before the
-            // continuation-line rule below.
+            // continuation-line rule below
             if trimmed == "-" || trimmed.hasPrefix("- "), !entries.isEmpty {
                 let item = unquote(String(trimmed.dropFirst()).trimmingCharacters(in: .whitespaces))
                 if !item.isEmpty { entries[entries.count - 1].items.append(item) }
@@ -112,10 +116,11 @@ nonisolated enum MarkdownFrontmatter {
 
             if blockScalarIndicators.contains(value) {
                 // `key: >-` etc. — the value is the indented block that
-                // follows; continuation lines fill it in, folded with spaces.
+                // follows; continuation lines fill it in, folded with spaces
                 value = ""
             } else if value.first != "\"", value.first != "'",
-                      let comment = value.range(of: " #") {
+                let comment = value.range(of: " #")
+            {
                 value = value[..<comment.lowerBound].trimmingCharacters(in: .whitespaces)
             }
             entries.append(ParsedEntry(key: key, value: unquote(value), items: []))
@@ -144,12 +149,13 @@ nonisolated enum MarkdownFrontmatter {
             guard !key.isEmpty else { continue }
 
             if let items = flowSequenceItems(value) {
-                entries.append(FrontmatterEntry(
-                    id: entries.count,
-                    key: key,
-                    value: items.joined(separator: ", "),
-                    items: items
-                ))
+                entries.append(
+                    FrontmatterEntry(
+                        id: entries.count,
+                        key: key,
+                        value: items.joined(separator: ", "),
+                        items: items
+                    ))
             } else {
                 entries.append(FrontmatterEntry(id: entries.count, key: key, value: unquote(value)))
             }
@@ -160,7 +166,7 @@ nonisolated enum MarkdownFrontmatter {
     private static let blockScalarIndicators: Set<String> = ["|", "|-", "|+", ">", ">-", ">+"]
 
     /// `["a", "b"]` → `["a", "b"]`. Nil unless the value is a simple flow
-    /// sequence — nested collections stay verbatim scalars.
+    /// sequence — nested collections stay verbatim scalars
     private static func flowSequenceItems(_ value: String) -> [String]? {
         guard value.hasPrefix("["), value.hasSuffix("]") else { return nil }
         let inner = String(value.dropFirst().dropLast())
@@ -184,16 +190,17 @@ nonisolated enum MarkdownFrontmatter {
             }
         }
         items.append(current)
-        return items
+        return
+            items
             .map { unquote($0.trimmingCharacters(in: .whitespaces)) }
             .filter { !$0.isEmpty }
     }
 
     private static func unquote(_ value: String) -> String {
         guard value.count >= 2,
-              let first = value.first,
-              first == value.last,
-              first == "\"" || first == "'"
+            let first = value.first,
+            first == value.last,
+            first == "\"" || first == "'"
         else { return value }
 
         return String(value.dropFirst().dropLast())

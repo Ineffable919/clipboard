@@ -1,31 +1,81 @@
+//
+//  MCPHandler.swift
+//  Clipboard
+//
+//  Created by crown on 2026/6/2
+//
+
 import Foundation
 
-struct MCPHandler {
+/// MCP JSON-RPC 请求分发；无状态，可在任意线程调用，写操作工具内部切到主线程
+nonisolated struct MCPHandler {
+    /// 按优先级从新到旧
+    static let supportedVersions = ["2025-06-18", "2025-03-26", "2024-11-05"]
+
     private let tools = MCPTools()
 
-    func handle(line: String) -> String? {
-        guard
-            let data = line.data(using: .utf8),
-            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-            let request = JSONRPCRequest(json: json)
-        else { return nil }
+    private static let appVersion =
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
 
-        // Notifications carry no id and require no response.
+    /// initialize 时告知客户端服务用途与推荐调用顺序
+    private static let instructions = """
+        Clip is a clipboard manager for macOS. Use these tools to search and read the user's \
+        clipboard history. Call search_clipboard to find items (it returns short summaries with ids), \
+        then read_item with an id for the full content. Use list_tags to discover tag names for filtering.
+        """
+
+    /// 处理一次 POST body（单个消息或批量数组）
+    /// - Returns: 响应体；仅含通知/响应时返回 nil（对应 HTTP 202）
+    func handle(body: Data) async -> Data? {
+        guard let object = try? JSONSerialization.jsonObject(with: body) else {
+            return JSONRPC.parseError()
+        }
+
+        if let batch = object as? [[String: Any]] {
+            var responses: [[String: Any]] = []
+            for message in batch {
+                if let response = await handle(message: message) { responses.append(response) }
+            }
+            guard !responses.isEmpty else { return nil }
+            return try? JSONSerialization.data(withJSONObject: responses)
+        }
+
+        guard let message = object as? [String: Any] else {
+            return JSONRPC.parseError()
+        }
+        guard let response = await handle(message: message) else { return nil }
+        return try? JSONSerialization.data(withJSONObject: response)
+    }
+
+    private func handle(message: [String: Any]) async -> [String: Any]? {
+        guard let request = JSONRPCRequest(json: message) else { return nil }
+
+        // 通知不带 id，无需响应
         guard let id = request.id else { return nil }
 
         switch request.method {
         case "initialize":
-            return JSONRPC.success(id: id, result: [
-                "protocolVersion": "2024-11-05",
-                "capabilities": ["tools": [String: Any]()],
-                "serverInfo": ["name": "clipboard", "version": "1.0.0"],
-            ])
+            let requested = request.params["protocolVersion"] as? String
+            let version =
+                requested.flatMap { Self.supportedVersions.contains($0) ? $0 : nil }
+                ?? Self.supportedVersions[0]
+            return JSONRPC.success(
+                id: id,
+                result: [
+                    "protocolVersion": version,
+                    "capabilities": ["tools": [String: Any]()],
+                    "serverInfo": ["name": "clipboard", "version": Self.appVersion],
+                    "instructions": Self.instructions
+                ])
+
+        case "ping":
+            return JSONRPC.success(id: id, result: [String: Any]())
 
         case "tools/list":
             return JSONRPC.success(id: id, result: ["tools": MCPTools.definitions])
 
         case "tools/call":
-            return JSONRPC.success(id: id, result: tools.call(params: request.params))
+            return JSONRPC.success(id: id, result: await tools.call(params: request.params))
 
         default:
             return JSONRPC.error(id: id, code: -32601, message: "Method not found: \(request.method)")

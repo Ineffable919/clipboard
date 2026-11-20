@@ -2,7 +2,7 @@
 //  Color+Extension.swift
 //  Clipboard
 //
-//  Created by crown on 2026/1/14.
+//  Created by crown on 2026/1/14
 //
 
 import SwiftUI

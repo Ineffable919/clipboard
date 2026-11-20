@@ -2,6 +2,8 @@
 //  PasteboardModel+Styling.swift
 //  Clipboard
 //
+//  Created by crown on 2026/3/11
+//
 //  颜色计算、搜索高亮、AttributedString 相关逻辑
 //
 
@@ -17,8 +19,8 @@ extension PasteboardModel {
 
     /// 富文本背景色，alpha ≤ 0.01 的视为透明返回 nil
     var safeBgColor: NSColor? {
-        guard let c = cachedBackgroundColor else { return nil }
-        let srgb = c.usingColorSpace(.sRGB) ?? c
+        guard let color = cachedBackgroundColor else { return nil }
+        let srgb = color.usingColorSpace(.sRGB) ?? color
         return srgb.alphaComponent > 0.01 ? srgb : nil
     }
 
@@ -32,7 +34,7 @@ extension PasteboardModel {
             .compactMap { $0.usingColorSpace(.sRGB) }
 
         guard !foregrounds.isEmpty,
-              let background = background.usingColorSpace(.sRGB)
+            let background = background.usingColorSpace(.sRGB)
         else { return nil }
 
         func minimumContrast(on color: NSColor) -> CGFloat {
@@ -52,7 +54,8 @@ extension PasteboardModel {
     /// 完整预览首次加载后分析；空数组也缓存，避免反复扫描无适配需求的文本
     func cachePreviewColors(_ content: NSAttributedString) {
         guard cachedPreviewForegrounds == nil else { return }
-        cachedPreviewForegrounds = hasBgColor && safeBgColor == nil
+        cachedPreviewForegrounds =
+            hasBgColor && safeBgColor == nil
             ? Self.richForegrounds(in: content) : []
     }
 
@@ -62,13 +65,16 @@ extension PasteboardModel {
         let visibleCharacters = CharacterSet.whitespacesAndNewlines.inverted
         content.enumerateAttributes(in: NSRange(location: 0, length: content.length)) { attributes, range, _ in
             if let background = attributes[.backgroundColor] as? NSColor,
-               background.alphaComponent > 0.01 { return }
+                background.alphaComponent > 0.01
+            {
+                return
+            }
             guard attributes[.attachment] == nil else { return }
             let foreground = attributes[.foregroundColor] as? NSColor ?? .textColor
             guard !colors.contains(foreground),
-                  source.rangeOfCharacter(from: visibleCharacters, options: [], range: range).location != NSNotFound
+                source.rangeOfCharacter(from: visibleCharacters, options: [], range: range).location != NSNotFound
             else { return }
-            // 保留动态颜色，使用时再按视图主题解析；相同颜色只参与一次对比度计算。
+            // 保留动态颜色，使用时再按视图主题解析；相同颜色只参与一次对比度计算
             colors.insert(foreground)
         }
         return Array(colors)
@@ -87,26 +93,32 @@ extension PasteboardModel {
         )
     }
 
-    func computeColors() -> (NSColor?, NSColor?, Bool) {
+    struct Colors {
+        var background: NSColor?
+        var foreground: NSColor?
+        var hasBackground = false
+    }
+
+    func computeColors() -> Colors {
         guard pasteboardType.isText() else {
-            return (nil, nil, false)
+            return Colors()
         }
 
         if type == .color {
-            let bg = NSColor(hex: attributeString.string)
-            return (bg, contrastingNSColor(for: bg), true)
+            let background = NSColor(hex: attributeString.string)
+            return Colors(background: background, foreground: contrastingNSColor(for: background), hasBackground: true)
         }
 
         if pasteboardType == .string || type == .link {
-            return (nil, nil, false)
+            return Colors()
         }
 
         if attributeString.length > 0,
-           let bg = attributeString.attribute(.backgroundColor, at: 0, effectiveRange: nil) as? NSColor
+            let background = attributeString.attribute(.backgroundColor, at: 0, effectiveRange: nil) as? NSColor
         {
-            return (bg, contrastingNSColor(for: bg), true)
+            return Colors(background: background, foreground: contrastingNSColor(for: background), hasBackground: true)
         }
-        return (nil, nil, false)
+        return Colors()
     }
 
     // MARK: - 高亮
@@ -180,7 +192,7 @@ extension PasteboardModel {
         keyword: String
     ) {
         let options: NSString.CompareOptions = [
-            .caseInsensitive, .diacriticInsensitive, .widthInsensitive,
+            .caseInsensitive, .diacriticInsensitive, .widthInsensitive
         ]
         var searchRange = NSRange(location: 0, length: source.length)
         while searchRange.length > 0 {
@@ -219,10 +231,13 @@ private func textContrast(_ foreground: NSColor, on background: NSColor) -> CGFl
 }
 
 func contrastingNSColor(for color: NSColor) -> NSColor {
-    let c = color.usingColorSpace(.sRGB) ?? color
-    var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
-    c.getRed(&r, green: &g, blue: &b, alpha: &a)
-    let brightness = 0.299 * r + 0.587 * g + 0.114 * b
+    let color = color.usingColorSpace(.sRGB) ?? color
+    var red: CGFloat = 0
+    var green: CGFloat = 0
+    var blue: CGFloat = 0
+    var alpha: CGFloat = 0
+    color.getRed(&red, green: &green, blue: &blue, alpha: &alpha)
+    let brightness = 0.299 * red + 0.587 * green + 0.114 * blue
     return brightness > 0.5
         ? NSColor.black.withAlphaComponent(0.8)
         : NSColor.white.withAlphaComponent(0.8)
