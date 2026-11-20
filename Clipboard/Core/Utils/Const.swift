@@ -87,6 +87,8 @@ enum Const {
     static let maxPreviewHeight: CGFloat = 640.0
     static let maxContentHeight: CGFloat = 600.0
     static let minPreviewHeight: CGFloat = 300.0
+    static let previewMargin: CGFloat = 28.0
+    static let previewMinWidth: CGFloat = 240.0
     static let minPreviewWidth: CGFloat = 400.0
     static let maxTextheight: CGFloat = 480.0
     static let maxTextWidth: CGFloat = 660.0

@@ -23,14 +23,14 @@ extension ClipFloatingViewController {
         let collection = historyView.collectionView
         let anchorView = historyView.anchorViewForItem(at: index)
         let rect = collection.convert(anchorView.bounds, from: anchorView)
-        let (edge, height) = previewPlacement(for: rect)
+        let (edge, size) = previewPlacement(for: rect)
 
         closePreview()
         let popover = previewPool.dequeue()
         popover.onContentInteraction = { [weak self] in
             self?.focusRegion = .popover
         }
-        popover.configure(with: model, maxHeight: height)
+        popover.configure(with: model, maxHeight: size.height, maxWidth: size.width)
         popover.onPinToChip = { [weak self] model, chipId in
             _ = self?.floatingContentView.topVM.assignModelToChip(model: model, chipId: chipId)
         }
@@ -54,25 +54,29 @@ extension ClipFloatingViewController {
             let rect = collection.layoutAttributesForItem(at: IndexPath(item: index, section: 0))?.frame
         else { return }
 
-        let (edge, height) = previewPlacement(for: rect)
+        let (edge, size) = previewPlacement(for: rect)
         popover.retarget(
             to: historyView.dataList[index], relativeTo: rect, of: collection,
-            preferredEdge: edge, maxHeight: height
+            preferredEdge: edge, maxHeight: size.height, maxWidth: size.width
         )
         if focusRegion == .popover {
             focusCollection()
         }
     }
 
-    private func previewPlacement(for rect: NSRect) -> (NSRectEdge, CGFloat) {
+    /// 只放左右两侧：取空间大的一侧，并把预览限制在该侧剩余空间内，避免被翻转遮住窗口
+    private func previewPlacement(for rect: NSRect) -> (NSRectEdge, NSSize) {
         let collection = floatingContentView.historyView.collectionView
         guard let window = collection.window, let screen = window.screen
-        else { return (.maxX, Const.maxPreviewHeight) }
+        else { return (.maxX, NSSize(width: Const.maxPreviewWidth, height: Const.maxPreviewHeight)) }
 
         let anchorOnScreen = window.convertToScreen(collection.convert(rect, to: nil))
         let spaceRight = screen.visibleFrame.maxX - anchorOnScreen.maxX
         let spaceLeft = anchorOnScreen.minX - screen.visibleFrame.minX
-        return (spaceRight >= spaceLeft ? .maxX : .minX, screen.visibleFrame.height)
+        let useRight = spaceRight >= spaceLeft
+        let width = max((useRight ? spaceRight : spaceLeft) - Const.previewMargin, Const.previewMinWidth)
+        let height = max(screen.visibleFrame.height - Const.previewMargin, 0)
+        return (useRight ? .maxX : .minX, NSSize(width: width, height: height))
     }
 
     func closePreview() {

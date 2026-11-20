@@ -58,7 +58,11 @@ final class ClipPreviewController: NSViewController {
     // MARK: - Public API
 
     @discardableResult
-    func configure(with model: PasteboardModel, maxHeight: CGFloat = Const.maxPreviewHeight) -> NSSize {
+    func configure(
+        with model: PasteboardModel,
+        maxHeight: CGFloat = Const.maxPreviewHeight,
+        maxWidth: CGFloat = Const.maxPreviewWidth
+    ) -> NSSize {
         metadataTask?.cancel()
         metadataTask = nil
 
@@ -70,8 +74,14 @@ final class ClipPreviewController: NSViewController {
         let cappedH = min(Const.maxPreviewHeight, maxHeight)
         let maxContentH = max(cappedH - ClipPreviewPopover.chrome, 0)
 
+        let size = ClipPreviewPopover.fitSize(for: model, maxHeight: maxHeight, maxWidth: maxWidth)
+
         headerView.configure(model: model)
-        contentView.configure(with: model, maxContentH: maxContentH)
+        contentView.configure(
+            with: model,
+            maxContentH: maxContentH,
+            maxContentW: size.width - Const.space12 * 2
+        )
         headerView.updateMarkdownToggle(visible: model.usesMarkdownPreview, isRendered: true)
         footerView.configure(
             model: model,
@@ -81,7 +91,6 @@ final class ClipPreviewController: NSViewController {
         )
         updateFooterHeight()
 
-        let size = ClipPreviewPopover.fitSize(for: model, maxHeight: maxHeight)
         view.setFrameSize(size)
         view.layoutSubtreeIfNeeded()
 

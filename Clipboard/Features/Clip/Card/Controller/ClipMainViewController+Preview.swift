@@ -56,7 +56,7 @@ extension ClipMainViewController {
         else { return Const.maxPreviewHeight }
 
         let anchorOnScreen = window.convertToScreen(collectionView.convert(rect, to: nil))
-        return screen.visibleFrame.maxY - anchorOnScreen.maxY
+        return max(screen.visibleFrame.maxY - anchorOnScreen.maxY - Const.previewMargin, 0)
     }
 
     func closePreviewPopover() {

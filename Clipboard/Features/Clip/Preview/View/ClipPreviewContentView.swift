@@ -45,10 +45,14 @@ final class ClipPreviewContentView: NSView {
         }
     }
 
-    func configure(with model: PasteboardModel, maxContentH: CGFloat = Const.maxTextheight) {
+    func configure(
+        with model: PasteboardModel,
+        maxContentH: CGFloat = Const.maxTextheight,
+        maxContentW: CGFloat = Const.maxPreviewWidth - Const.space12 * 2
+    ) {
         reset()
 
-        let contentView = makeContentView(for: model, maxContentH: maxContentH)
+        let contentView = makeContentView(for: model, maxContentH: maxContentH, maxContentW: maxContentW)
         addSubview(contentView)
         contentView.snp.makeConstraints { $0.edges.equalToSuperview() }
         currentContentView = contentView
@@ -78,7 +82,7 @@ final class ClipPreviewContentView: NSView {
             }
             return textContentHeight(for: model, width: width, measuredText: measuredText)
         case .image:
-            return imageContentHeight(for: model, maxH: maxImageH)
+            return imageContentHeight(for: model, maxW: width - Const.space12 * 2, maxH: maxImageH)
         case .string, .rich:
             return textContentHeight(for: model, width: width, measuredText: measuredText)
         case .none:
@@ -131,21 +135,24 @@ final class ClipPreviewContentView: NSView {
         return min(max(measured, 240.0), Const.maxTextheight)
     }
 
-    private static func imageContentHeight(for model: PasteboardModel, maxH: CGFloat) -> CGFloat {
+    private static func imageContentHeight(for model: PasteboardModel, maxW: CGFloat, maxH: CGFloat) -> CGFloat {
         guard let size = model.cachedImageSize, size.width > 0, size.height > 0 else {
             return 270.0
         }
-        let availableW = Const.maxPreviewWidth - Const.space12 * 2
-        let scale = min(availableW / size.width, maxH / size.height, 1.0)
+        let scale = min(maxW / size.width, maxH / size.height, 1.0)
         return ceil(size.height * scale)
     }
 
-    private func makeContentView(for model: PasteboardModel, maxContentH: CGFloat) -> NSView {
+    private func makeContentView(
+        for model: PasteboardModel,
+        maxContentH: CGFloat,
+        maxContentW: CGFloat
+    ) -> NSView {
         switch model.type {
         case .color:
             PreviewColorView(model: model)
         case .image:
-            PreviewImageView(model: model, maxContentH: maxContentH)
+            PreviewImageView(model: model, maxContentW: maxContentW, maxContentH: maxContentH)
         case .file:
             PreviewFileView(model: model)
         case .link:
