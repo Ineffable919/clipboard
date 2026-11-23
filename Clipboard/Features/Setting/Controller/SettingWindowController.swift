@@ -30,11 +30,17 @@ class SettingWindowController: NSWindowController {
         window.level = .normal
         window.isReleasedWhenClosed = false
         window.titleVisibility = .hidden
-        window.titlebarAppearsTransparent = true
         window.titlebarSeparatorStyle = .none
         window.contentViewController = Self.makeContentController(viewModel: viewModel)
         window.setContentSize(NSSize(width: Const.settingWidth, height: Const.settingHeight))
         window.center()
+        if #available(macOS 26.0, *) {
+            // 需带工具栏布局，侧边栏才会顶到窗口顶部；透明标题栏须在布局之后再设
+            window.toolbar = NSToolbar()
+            window.toolbarStyle = .unified
+            window.layoutIfNeeded()
+        }
+        window.titlebarAppearsTransparent = true
 
         super.init(window: window)
         updateWindowTitle()
