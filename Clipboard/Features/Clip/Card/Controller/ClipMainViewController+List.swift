@@ -123,7 +123,7 @@ extension ClipMainViewController {
                 .filter { !existing.contains($0.uniqueId) }
             guard !appended.isEmpty else { return }
             snapshot.appendItems(appended, toSection: .main)
-            diffableDataSource.apply(snapshot, animatingDifferences: false) { [weak self] in
+            diffableDataSource.applyIncrementally(snapshot) { [weak self] in
                 self?.updateEmptyState()
             }
         }

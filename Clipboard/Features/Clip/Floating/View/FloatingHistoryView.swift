@@ -145,7 +145,7 @@ final class FloatingHistoryView: NSView {
             guard !appended.isEmpty else { return }
             dataList.append(contentsOf: appended)
             snapshot.appendItems(appended, toSection: 0)
-            dataSource.apply(snapshot, animatingDifferences: false)
+            dataSource.applyIncrementally(snapshot)
         }
         presenter.currentSnapshotItems = { [weak self] in self?.dataList ?? [] }
         presenter.resetSelection = { [weak self] in self?.resetToFirst() }

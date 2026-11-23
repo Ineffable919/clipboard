@@ -21,6 +21,10 @@ class AnimatedScrollView: NSScrollView {
     private var targetOrigin = NSPoint.zero
     /// 直接跳格前保留的帧数：选中框先在边缘卡片上稳定显示，再整体位移，形成均匀的交替节奏
     private static let jumpDelayFrames: CFTimeInterval = 1.9
+    private static var jumpThreshold: CFTimeInterval {
+        min(max(0.1, NSEvent.keyRepeatInterval * 1.5), maxDuration)
+    }
+    private static let maxDuration: CFTimeInterval = 0.25
 
     func beginKeyboardScroll(keyCode: UInt16) {
         scrollKeys.insert(keyCode)
@@ -53,10 +57,14 @@ class AnimatedScrollView: NSScrollView {
         guard origin != current else { return }
 
         let now = CACurrentMediaTime()
-        let interval = min(lastScrollTime.map { now - $0 } ?? 0.25, 0.25)
-        lastScrollTime = now
+        // 用按键硬件时间计间隔，避免主线程延迟把长按误判成单击
+        let eventTime = NSApp.currentEvent.flatMap {
+            $0.type == .keyDown && now - $0.timestamp < 0.25 ? $0.timestamp : nil
+        } ?? now
+        let interval = lastScrollTime.map { eventTime - $0 } ?? .infinity
+        lastScrollTime = eventTime
         // 时长只看距上次滚动的间隔：长按首次到达边缘时仍有动画，之后快速重复直接跳格
-        let newDuration = interval > 0.1 ? interval : 0
+        let newDuration = interval > Self.jumpThreshold ? min(interval, Self.maxDuration) : 0
         targetOrigin = origin
         // 跳格尚未执行时只更新目标，避免按键过快把跳格一直往后推
         if newDuration == 0, duration == 0, scrollLink != nil {
