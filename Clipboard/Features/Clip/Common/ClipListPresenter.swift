@@ -16,6 +16,7 @@ final class ClipListPresenter {
     private let dataStore = PasteDataStore.main
     private var cancellables = Set<AnyCancellable>()
     private var wasEmpty = true
+    private var hasSnapshot = false
 
     // MARK: - Snapshot
 
@@ -77,7 +78,10 @@ final class ClipListPresenter {
 
     // MARK: - Private
 
-    private func handleDataChange(_ changeType: PasteDataStore.DataChangeType, items: [PasteboardModel]) {
+    private func handleDataChange(_ change: PasteDataStore.DataChangeType, items: [PasteboardModel]) {
+        // 订阅时重放的当前值可能带着增量类型，首帧必须全量建立快照
+        let changeType = hasSnapshot ? change : .reset
+        hasSnapshot = true
         let prevWasEmpty = wasEmpty
         wasEmpty = items.isEmpty
 
