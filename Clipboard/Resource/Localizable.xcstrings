@@ -572,7 +572,29 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lld items%2$@"
+            "value" : "%#@items@%2$@"
+          },
+          "substitutions" : {
+            "items" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg item"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg items"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "zh-Hans" : {
@@ -1317,9 +1339,21 @@
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld files"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld file"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld files"
+                }
+              }
+            }
           }
         },
         "zh-Hans" : {
@@ -2102,7 +2136,29 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Imported %1$lld items%2$@"
+            "value" : "Imported %#@items@%2$@"
+          },
+          "substitutions" : {
+            "items" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg item"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg items"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "zh-Hans" : {
@@ -2118,9 +2174,21 @@
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : ", skipped %lld duplicate items"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : ", skipped %lld duplicate item"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : ", skipped %lld duplicate items"
+                }
+              }
+            }
           }
         },
         "zh-Hans" : {
@@ -2478,9 +2546,21 @@
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld items"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld item"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld items"
+                }
+              }
+            }
           }
         },
         "zh-Hans" : {
@@ -5873,7 +5953,29 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lld items (%2$@)"
+            "value" : "%#@items@ (%2$@)"
+          },
+          "substitutions" : {
+            "items" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg item"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg items"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "zh-Hans" : {
@@ -5997,9 +6099,21 @@
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld chars"
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld char"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld chars"
+                }
+              }
+            }
           }
         },
         "zh-Hans" : {
@@ -6035,7 +6149,69 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lld chars · %2$lld words · %3$lld lines"
+            "value" : "%#@chars@ · %#@words@ · %#@lines@"
+          },
+          "substitutions" : {
+            "chars" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg char"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg chars"
+                    }
+                  }
+                }
+              }
+            },
+            "lines" : {
+              "argNum" : 3,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg line"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg lines"
+                    }
+                  }
+                }
+              }
+            },
+            "words" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg word"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%arg words"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "zh-Hans" : {
