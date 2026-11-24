@@ -57,7 +57,10 @@ final class ClipListPresenter {
     // MARK: - Start
 
     func startObserving(scrollView: NSScrollView) {
+        // 首帧同步全量建快照：重放值可能带增量类型，异步投递前视图也没有 section
+        handleDataChange(.reset, items: dataStore.dataList.value)
         dataStore.dataList
+            .dropFirst()
             .map { [weak self] items in (items, self?.dataStore.lastDataChangeType ?? .reset) }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] items, change in

@@ -28,6 +28,7 @@ extension AppDelegate: NSApplicationDelegate {
         Self.shared = self
 
         _ = updaterController
+        probeUpdate()
 
         setupStatusBar()
 
@@ -62,6 +63,17 @@ extension AppDelegate: NSApplicationDelegate {
     func applicationShouldHandleReopen(_: NSApplication, hasVisibleWindows _: Bool) -> Bool {
         WindowManager.shared.toggleWindow(frame: NSScreen.main?.frame)
         return true
+    }
+
+    private func probeUpdate() {
+        let updater = updaterController.updater
+        guard updater.automaticallyChecksForUpdates else { return }
+        Task {
+            // Probe is ignored while Sparkle is still scheduling at launch
+            try? await Task.sleep(for: .seconds(5))
+            guard !updater.sessionInProgress else { return }
+            updater.checkForUpdateInformation()
+        }
     }
 
     private func applyDockIconPolicy() {
@@ -160,8 +172,9 @@ extension AppDelegate {
 extension AppDelegate: SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
     nonisolated func updater(_: SPUUpdater, didFindValidUpdate item: SUAppcastItem) {
         let version = item.displayVersionString
+        let build = item.versionString
         Task { @MainActor in
-            UpdateManager.shared.setUpdateAvailable(version: version)
+            UpdateManager.shared.setUpdateAvailable(version: version, build: build)
         }
     }
 
@@ -202,16 +215,12 @@ extension AppDelegate: SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
     ) {
         guard !willHandle else { return }
         UpdateManager.shared.setUpdateAvailable(
-            version: update.displayVersionString
+            version: update.displayVersionString, build: update.versionString
         )
     }
 
     func standardUserDriverDidReceiveUserAttention(forUpdate _: SUAppcastItem) {
         updaterController.checkForUpdates(nil)
-    }
-
-    func standardUserDriverWillFinishUpdateSession() {
-        UpdateManager.shared.clearUpdate()
     }
 }
 

@@ -247,11 +247,18 @@ struct IgnoredAppRow: View {
     let appInfo: IgnoredAppInfo
     let isSelected: Bool
     let onSelect: () -> Void
-    @State private var cachedIcon: NSImage?
+    @State private var icon: NSImage?
+
+    init(appInfo: IgnoredAppInfo, isSelected: Bool, onSelect: @escaping () -> Void) {
+        self.appInfo = appInfo
+        self.isSelected = isSelected
+        self.onSelect = onSelect
+        _icon = State(initialValue: Self.appIcon(for: appInfo))
+    }
 
     var body: some View {
         HStack(spacing: 10) {
-            if let icon = cachedIcon {
+            if let icon {
                 Image(nsImage: icon)
                     .resizable().scaledToFit()
                     .frame(width: 32, height: 32)
@@ -260,6 +267,7 @@ struct IgnoredAppRow: View {
                     .resizable().scaledToFit()
                     .frame(width: 28, height: 28)
                     .foregroundStyle(.secondary)
+                    .frame(width: 32, height: 32)
             }
 
             Text(appInfo.name)
@@ -274,14 +282,11 @@ struct IgnoredAppRow: View {
         .onTapGesture {
             onSelect()
         }
-        .task(id: appInfo.id) {
-            cachedIcon = getAppIcon(for: appInfo)
-        }
     }
 
     // MARK: - 获取应用图标
 
-    private func getAppIcon(for appInfo: IgnoredAppInfo) -> NSImage? {
+    private static func appIcon(for appInfo: IgnoredAppInfo) -> NSImage? {
         if FileManager.default.fileExists(atPath: appInfo.path) {
             let icon = NSWorkspace.shared.icon(forFile: appInfo.path)
             if icon.size.width > 0 {
