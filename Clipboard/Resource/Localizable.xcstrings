@@ -6355,13 +6355,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "New version available: %@"
+            "value" : "New Version Available: %@…"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "检测到新版本 %@"
+            "value" : "发现新版本 %@…"
           }
         }
       }
