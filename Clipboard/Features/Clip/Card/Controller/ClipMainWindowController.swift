@@ -19,6 +19,10 @@ final class ClipMainWindowController: NSWindowController {
         targetVisible
     }
 
+    static var activatesOnShow: Bool {
+        if #available(macOS 15.0, *) { false } else { true }
+    }
+
     private let dataStore = PasteDataStore.main
 
     init() {
@@ -119,7 +123,7 @@ extension ClipMainWindowController {
             self?.suppressSearchFocusRing(false)
         }
         window.makeKeyAndOrderFront(nil)
-        if #unavailable(macOS 15.0) {
+        if Self.activatesOnShow {
             NSApp.activate(ignoringOtherApps: true)
         }
     }

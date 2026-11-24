@@ -58,11 +58,10 @@ extension FloatingHistoryView {
     }
 
     func collectionView(
-        _ collectionView: NSCollectionView,
+        _: NSCollectionView,
         draggingSession session: NSDraggingSession, willBeginAt _: NSPoint,
         forItemsAt indexPaths: Set<IndexPath>
     ) {
-        for indexPath in indexPaths { collectionView.item(at: indexPath)?.view.isHidden = false }
         let extraURLs = indexPaths.sorted()
             .filter { $0.item < dataList.count }
             .flatMap { dataList[$0.item].extraDragFileURLs }

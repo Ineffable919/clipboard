@@ -164,6 +164,11 @@ final class ClipMainViewController: NSViewController {
                 screenRect.contains(screenPoint)
             else { return }
 
+            // 未激活应用时拖拽后 WindowServer 焦点与 AppKit 失步，才需重新取得 key
+            guard !ClipMainWindowController.activatesOnShow else {
+                window.makeFirstResponder(collectionView)
+                return
+            }
             AppEnvironment.shared.suppressResignKey = true
             window.resignKey()
             window.makeKey()

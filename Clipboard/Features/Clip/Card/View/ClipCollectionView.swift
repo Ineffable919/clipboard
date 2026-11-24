@@ -106,6 +106,18 @@ final class ClipCollectionView: NSCollectionView {
         true
     }
 
+    override func beginDraggingSession(
+        with items: [NSDraggingItem],
+        event: NSEvent,
+        source: any NSDraggingSource
+    ) -> NSDraggingSession {
+        // AppKit 在开始拖拽前隐藏源卡片，同一事务内恢复，避免渲染出空帧
+        for item in visibleItems() where item.view.isHidden {
+            item.view.isHidden = false
+        }
+        return super.beginDraggingSession(with: items, event: event, source: source)
+    }
+
     override func draggingSession(
         _ session: NSDraggingSession,
         willBeginAt screenPoint: NSPoint

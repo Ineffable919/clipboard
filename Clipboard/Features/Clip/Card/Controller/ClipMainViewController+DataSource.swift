@@ -122,9 +122,6 @@ extension ClipMainViewController: NSCollectionViewDelegate {
         willBeginAt _: NSPoint,
         forItemsAt indexPaths: Set<IndexPath>
     ) {
-        for indexPath in indexPaths {
-            collectionView.item(at: indexPath)?.view.isHidden = false
-        }
         draggedItems = indexPaths.sorted().compactMap { displayedModel(at: $0) }
         draggedIDs = draggedItems.compactMap(\.id)
         let extraURLs = draggedItems.flatMap(\.extraDragFileURLs)
