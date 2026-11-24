@@ -9,61 +9,74 @@
 
 ## Download
 
-Download the latest version [releases](https://github.com/Ineffable919/clipboard/releases/latest)
+Download the latest version from [Releases](https://github.com/Ineffable919/clipboard/releases/latest)
 
 
 ## Features
 
-- **Real-time Clipboard Monitoring**: Automatically captures and saves text, images, and files you copy
-- **Smart Categorization**: Automatically organizes content by text, images, and file types
-- **History Records**: Saves your clipboard history for easy access anytime
-- **Customizable Settings**: Supports custom categories and configurable history retention periods
-- **Quick Search**: Quickly find history records using keywords
-- **Intuitive Interface**: Modern card-based UI design with simple and intuitive operations, supports both light and dark modes
-- **Quick Operations**:
-  - Double-click to paste directly
-  - Shift + mouse scroll
-  - Spacebar to preview content
-  - Keyboard navigation support
-  - Right-click menu for more options
-- **Safe Deletion**: Confirmation required to avoid accidental deletions
-- **Drag & Drop Support**: Drag content to other applications
+- **Real-time Clipboard Monitoring**: Automatically captures the text, rich text, images, files, links, and colors you copy
+- **Two Display Modes**: Drawer mode at the bottom of the screen, or Window mode with an optional Compact layout that opens at the center of the screen, at the mouse position, or at its last position
+- **Tags & Filters**: Custom tags (double-click to rename), multi-tag filtering, and filters by type, source app, or date
+- **Quick Search**: Keyword search with highlighting, including text recognized in images (OCR); in Drawer mode, type `@image`, `@file`, etc. to filter by type
+- **Preview & Edit**: Press `Space` to preview, with Markdown rendering; edit text in place, or use the JSON editor (formatting, minifying, escaping, Unicode encoding/decoding, key sorting, naming style conversion, folding, and syntax highlighting)
+- **Multi-select**: Select multiple items to paste, copy, drag, or delete them together
+- **Drag & Drop**: Drag items out to other apps, drag content in to save it, and reorder items by dragging in Drawer mode
+- **Privacy**: Pause recording (the menu bar icon changes while paused), ignore specific apps, skip sensitive/transient content, and hide the window during screen sharing
+- **History Management**: Configurable retention period, plus backup and import
+- **MCP Server**: Built-in local MCP server so AI clients can search, read, save, edit, tag, and delete clipboard history (custom port supported)
+- **Modern Interface**: Card-based UI built with AppKit, with light and dark appearances; the language follows the system by default
 
 ## System Requirements
 
-- macOS 14.0 or later (Compatible with macOS 26，27)
+- macOS 14.0 or later (compatible with macOS 26 and 27)
 - Supports Apple Silicon (arm64) and Intel (x86_64) architectures
 
 ## How to Use
 
-1. Copy any content normally (text, images, or files)
-2. Open the Clipboard app to view history
-3. Interact with history records using:
-   - Double-click an item to paste directly
-   - Single-click to select, then press Enter to paste
-   - Press Spacebar to preview content
-   - Use left/right arrow keys to navigate
-   - Right-click an item to open context menu for more actions
+1. Copy any content normally (text, images, files, etc.)
+2. Press `⌘ + ⇧ + V` (customizable) to open Clipboard
+3. Work with your history:
+   - Double-click an item, or select it and press `↩`, to paste directly
+   - Press `Space` to preview an item
+   - Use arrow keys to navigate (`← →` in Drawer mode, `↑ ↓` in Window mode)
+   - In Drawer mode, scroll the mouse wheel to scroll horizontally
+   - Start typing to search
+   - Right-click an item for more actions
 
 ## Keyboard Shortcuts
 
-- `ESC`: Close the app window
-- `← →`: Navigate between history records
-- `Space`: Preview selected item
-- `↩`: Paste selected item
-- `Shift + ⏎`: Paste as plain text
-- `⌘ + C`: Copy selected item to clipboard
-- `Delete`: Delete selected item
+| Shortcut | Action |
+| --- | --- |
+| `⌘ + ⇧ + V` | Open / close Clipboard (global, customizable) |
+| `Esc` | Close the preview or search, or close the window |
+| `← →` / `↑ ↓` | Move between items |
+| `⌘ + ← →` | Switch to previous / next tag (customizable) |
+| `Space` | Preview the selected item |
+| `↩` | Paste the selected item(s) |
+| `⇧ + ↩` | Paste as plain text (modifier customizable) |
+| `⌘ + 1…9` | Quick paste the first 9 items (modifier customizable) |
+| `⌘ + F` | Search; press again to toggle filters (Drawer mode) |
+| `⌘ + C` | Copy the selected item(s) to the clipboard |
+| `⌘ + E` | Edit the selected item |
+| `⌘ + A` | Select all |
+| `Delete` | Delete the selected item(s) |
+
+## MCP
+
+Enable the MCP server in Settings → AI. It runs locally at `http://127.0.0.1:38417/mcp` (Streamable HTTP, loopback only; the port can be changed), and the settings page provides setup guides for Claude Desktop, Claude Code, VS Code, Codex, and Cursor.
+
+Available tools: `search_clipboard`, `read_item`, `copy_item`, `write_clipboard`, `save_item`, `update_item`, `delete_items`, `list_tags`, `create_tag`, `rename_tag`, `delete_tag`, `set_item_tag`.
 
 ## FAQ
 
 ### App won't open?
 
-1. Check System Settings -> Privacy & Security -> Allow applications from the following sources.
-2. Try the following commands:
-``` sh
-sudo xattr -r -d com.apple.quarantine /Applications/Clipboard.app 
-sudo codesign --force --deep --sign - /Applications/Clipboard.app
+macOS may block the app on first launch because it is not notarized by Apple.
+
+1. Try to open Clip once, then go to System Settings → Privacy & Security and click "Open Anyway".
+2. If it still won't open, remove the quarantine attribute:
+```sh
+sudo xattr -r -d com.apple.quarantine /Applications/Clipboard.app
 ```
 
 ## License
@@ -71,4 +84,4 @@ sudo codesign --force --deep --sign - /Applications/Clipboard.app
 This project is licensed under the [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0). See the [LICENSE](LICENSE) file for details.
 
 - Commercial use is **not** allowed.
-- Forks, modifications and redistributions must keep the `Required Notice:` line in [LICENSE](LICENSE) (copyright and original repository: https://github.com/Ineffable919/clipboard) and include a copy of the license or its URL.
+- Forks, modifications, and redistributions must keep the `Required Notice:` line in [LICENSE](LICENSE) (copyright and original repository: https://github.com/Ineffable919/clipboard) and include a copy of the license or its URL.

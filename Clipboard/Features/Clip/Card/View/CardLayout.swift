@@ -22,7 +22,7 @@ final class CardLayout: NSCollectionViewFlowLayout {
     }
 
     override func layoutAttributesForInterItemGap(before indexPath: IndexPath) -> NSCollectionViewLayoutAttributes? {
-        guard let collectionView, indexPath.section == 0 else { return nil }
+        guard let collectionView, indexPath.section == 0, collectionView.numberOfSections > 0 else { return nil }
         let count = collectionView.numberOfItems(inSection: 0)
         guard count > 0, (0...count).contains(indexPath.item) else {
             return nil

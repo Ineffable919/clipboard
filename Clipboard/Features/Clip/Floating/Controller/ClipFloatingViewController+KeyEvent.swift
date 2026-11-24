@@ -115,7 +115,9 @@ extension ClipFloatingViewController {
         else { return event }
 
         let historyView = floatingContentView.historyView
-        let count = historyView.collectionView.numberOfItems(inSection: 0)
+        let collectionView = historyView.collectionView
+        guard collectionView.numberOfSections > 0 else { return nil }
+        let count = collectionView.numberOfItems(inSection: 0)
         guard count > 0 else { return nil }
 
         let movesDown = event.keyCode == KeyCode.downArrow

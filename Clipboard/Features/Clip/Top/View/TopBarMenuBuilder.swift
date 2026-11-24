@@ -91,35 +91,11 @@ struct TopBarMenuBuilder {
 
     @MainActor
     private func addUpdateNotice(to menu: NSMenu) {
-        let updateManager = UpdateManager.shared
-
-        if updateManager.hasUpdate {
-            let newVersionItem = NSMenuItem(
-                title: String(
-                    localized: .updateAvailable(
-                        updateManager.availableVersion ?? ""
-                    )
-                ),
-                action: #selector(TopBarMenuActions.checkForUpdatesAction),
-                keyEquivalent: ""
-            )
-            newVersionItem.target = target
-            if #available(macOS 26.0, *),
-                let image = NSImage(
-                    systemSymbolName: "arrow.up.circle.dotted",
-                    accessibilityDescription: nil
-                )
-            {
-                let config = NSImage.SymbolConfiguration(
-                    pointSize: 16.0,
-                    weight: .semibold
-                )
-                image.isTemplate = true
-                newVersionItem.image = image.withSymbolConfiguration(config)
-            }
-            menu.addItem(newVersionItem)
-            menu.addItem(.separator())
-        }
+        guard let item = UpdateManager.shared.makeMenuItem(
+            target: target, action: #selector(TopBarMenuActions.checkForUpdatesAction)
+        ) else { return }
+        menu.addItem(item)
+        menu.addItem(.separator())
     }
 
     func buildPauseMenu() -> NSMenu {

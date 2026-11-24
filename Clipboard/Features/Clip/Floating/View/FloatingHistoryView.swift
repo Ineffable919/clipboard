@@ -111,10 +111,7 @@ final class FloatingHistoryView: NSView {
 
     func configure(topVM: TopBarViewModel) {
         self.topVM = topVM
-        dataList = dataStore.dataList.value
         env.focusRegion = .collection
-        applySnapshot()
-        resetToFirst()
         configurePresenter()
         CategoryChipStore.shared.chipsContentDidChange
             .sink { [weak self] in
@@ -145,7 +142,7 @@ final class FloatingHistoryView: NSView {
             guard !appended.isEmpty else { return }
             dataList.append(contentsOf: appended)
             snapshot.appendItems(appended, toSection: 0)
-            dataSource.apply(snapshot, animatingDifferences: false)
+            dataSource.applyIncrementally(snapshot)
         }
         presenter.currentSnapshotItems = { [weak self] in self?.dataList ?? [] }
         presenter.resetSelection = { [weak self] in self?.resetToFirst() }

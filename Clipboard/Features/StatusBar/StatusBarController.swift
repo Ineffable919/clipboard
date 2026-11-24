@@ -26,6 +26,7 @@ final class StatusBarController: NSObject {
     }
 
     private static let pauseMenuTag = 919
+    private static let updateMenuTag = 920
 
     private func pauseTimeString(from date: Date) -> String {
         date.formatted(
@@ -337,6 +338,20 @@ extension StatusBarController {
         return submenu
     }
 
+    private func refreshUpdateNotice(in menu: NSMenu) {
+        while let item = menu.items.first(where: { $0.tag == Self.updateMenuTag }) {
+            menu.removeItem(item)
+        }
+        guard let item = UpdateManager.shared.makeMenuItem(
+            target: self, action: #selector(checkUpdateAction)
+        ) else { return }
+        let separator = NSMenuItem.separator()
+        item.tag = Self.updateMenuTag
+        separator.tag = Self.updateMenuTag
+        menu.insertItem(item, at: 0)
+        menu.insertItem(separator, at: 1)
+    }
+
     private func pauseMenuTitle() -> String {
         guard PasteBoard.main.isPaused else {
             return String(localized: .pause)
@@ -364,6 +379,7 @@ extension StatusBarController: NSMenuDelegate {
     }
 
     func menuNeedsUpdate(_ menu: NSMenu) {
+        refreshUpdateNotice(in: menu)
         if let pauseItem = menu.items.first(where: {
             $0.tag == Self.pauseMenuTag
         }) {
