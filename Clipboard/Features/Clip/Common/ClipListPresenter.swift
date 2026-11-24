@@ -16,7 +16,6 @@ final class ClipListPresenter {
     private let dataStore = PasteDataStore.main
     private var cancellables = Set<AnyCancellable>()
     private var wasEmpty = true
-    private var hasSnapshot = false
 
     // MARK: - Snapshot
 
@@ -58,7 +57,10 @@ final class ClipListPresenter {
     // MARK: - Start
 
     func startObserving(scrollView: NSScrollView) {
+        // 首帧同步全量建快照：重放值可能带增量类型，异步投递前视图也没有 section
+        handleDataChange(.reset, items: dataStore.dataList.value)
         dataStore.dataList
+            .dropFirst()
             .map { [weak self] items in (items, self?.dataStore.lastDataChangeType ?? .reset) }
             .receive(on: DispatchQueue.main)
             .sink { [weak self] items, change in
@@ -78,10 +80,7 @@ final class ClipListPresenter {
 
     // MARK: - Private
 
-    private func handleDataChange(_ change: PasteDataStore.DataChangeType, items: [PasteboardModel]) {
-        // 订阅时重放的当前值可能带着增量类型，首帧必须全量建立快照
-        let changeType = hasSnapshot ? change : .reset
-        hasSnapshot = true
+    private func handleDataChange(_ changeType: PasteDataStore.DataChangeType, items: [PasteboardModel]) {
         let prevWasEmpty = wasEmpty
         wasEmpty = items.isEmpty
 

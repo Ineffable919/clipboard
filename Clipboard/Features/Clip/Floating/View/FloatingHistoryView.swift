@@ -111,10 +111,7 @@ final class FloatingHistoryView: NSView {
 
     func configure(topVM: TopBarViewModel) {
         self.topVM = topVM
-        dataList = dataStore.dataList.value
         env.focusRegion = .collection
-        applySnapshot()
-        resetToFirst()
         configurePresenter()
         CategoryChipStore.shared.chipsContentDidChange
             .sink { [weak self] in

@@ -44,7 +44,7 @@ extension ClipMainViewController {
     }
 
     var displayedItemCount: Int {
-        collectionView.numberOfItems(inSection: 0)
+        collectionView.numberOfSections > 0 ? collectionView.numberOfItems(inSection: 0) : 0
     }
 
     func restoreSelection() {
