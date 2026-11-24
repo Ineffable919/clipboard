@@ -27,6 +27,8 @@
 - 链接预览加载更快，卡片滚动更流畅。
 - 修复多文件与多选拖出不完整的问题。
 - 更新应用图标与提示窗口样式，修复若干界面问题。
+- 新版本提示会显示在菜单中，更容易留意到更新。
+- 提升了部分场景下的稳定性。
 ]]>
             </description>
             <description xml:lang="en" sparkle:format="markdown">
@@ -48,21 +50,23 @@
 - Link previews load faster and card scrolling is smoother.
 - Fixed an issue where dragging multiple files or multiple selections out of the app was incomplete.
 - Updated the app icon and alert window styles, and fixed several UI issues.
+- New version notices now appear in the menus, making updates easier to notice.
+- Improved stability in certain situations.
 ]]>
             </description>
             <sparkle:fullReleaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
             </sparkle:fullReleaseNotesLink>
-            <pubDate>Fri, 20 Nov 2026 17:52:54 +0800</pubDate>
-            <sparkle:version>144</sparkle:version>
+            <pubDate>Tue, 24 Nov 2026 11:12:40 +0800</pubDate>
+            <sparkle:version>145</sparkle:version>
             <sparkle:shortVersionString>2.3.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
             <sparkle:hardwareRequirements>arm64</sparkle:hardwareRequirements>
             <enclosure
                 url="https://github.com/Ineffable919/clipboard/releases/download/2.3.0/Clipboard-2.3.0-arm64.zip"
                 sparkle:arch="arm64"
-                sparkle:edSignature="RBCABSntVbGNQ0qjf+t8JigOpWpxvCWAk0L08bWDQr7eZ+N+teDagCnSwZi1C/BddpgONhY5BNpmvfyW/hX8Bw=="
-                length="5003495"
+                sparkle:edSignature="9JIlmVXGQTC7Pk4pz1q2prUIs19NpgfXS12xUB0v1iltdx0RpxyUAFfDDlCljo7rNyRB8YAeaawdDZ64fQ4kAQ=="
+                length="5004092"
                 type="application/octet-stream" />
         </item>
         <item>
@@ -86,6 +90,8 @@
 - 链接预览加载更快，卡片滚动更流畅。
 - 修复多文件与多选拖出不完整的问题。
 - 更新应用图标与提示窗口样式，修复若干界面问题。
+- 新版本提示会显示在菜单中，更容易留意到更新。
+- 提升了部分场景下的稳定性。
 ]]>
             </description>
             <description xml:lang="en" sparkle:format="markdown">
@@ -107,20 +113,22 @@
 - Link previews load faster and card scrolling is smoother.
 - Fixed an issue where dragging multiple files or multiple selections out of the app was incomplete.
 - Updated the app icon and alert window styles, and fixed several UI issues.
+- New version notices now appear in the menus, making updates easier to notice.
+- Improved stability in certain situations.
 ]]>
             </description>
             <sparkle:fullReleaseNotesLink>
                 https://ineffable919.github.io/clipboard/scripts/release-note.html
             </sparkle:fullReleaseNotesLink>
-            <pubDate>Fri, 20 Nov 2026 17:52:54 +0800</pubDate>
-            <sparkle:version>144</sparkle:version>
+            <pubDate>Tue, 24 Nov 2026 11:12:40 +0800</pubDate>
+            <sparkle:version>145</sparkle:version>
             <sparkle:shortVersionString>2.3.0</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
             <enclosure
                 url="https://github.com/Ineffable919/clipboard/releases/download/2.3.0/Clipboard-2.3.0-x86_64.zip"
                 sparkle:arch="x86_64"
-                sparkle:edSignature="YXzYZHRIIe2vo4w+c4h5gwWxASFdwiruZXN8+mh67FNtkTJoTVCyAGb/AeyRq5WCxsuaHJxrUEKxuee+3CbTAg=="
-                length="5292873"
+                sparkle:edSignature="3dVddAW9OP0+rAN8LZk5uNRHaqbY/W8vB5E+oqzRcpr4DF4o7Tm60G9t8jYY2YB8jgRrrhhT3tzMcBehSkmAAg=="
+                length="5293931"
                 type="application/octet-stream" />
         </item>
 
