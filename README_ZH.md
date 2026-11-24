@@ -71,11 +71,12 @@
 
 ### 应用打不开？
 
-1. 检查系统设置 → 隐私与安全性 →“允许以下来源的应用程序”。
-2. 试试以下命令：
+应用未经 Apple 公证，首次打开时可能会被 macOS 拦截。
+
+1. 先尝试打开一次 Clip，然后前往“系统设置 → 隐私与安全性”，点击“仍要打开”。
+2. 如果仍然打不开，移除隔离属性：
 ```sh
 sudo xattr -r -d com.apple.quarantine /Applications/Clipboard.app
-sudo codesign --force --deep --sign - /Applications/Clipboard.app
 ```
 
 ## 许可证

@@ -71,11 +71,12 @@ Available tools: `search_clipboard`, `read_item`, `copy_item`, `write_clipboard`
 
 ### App won't open?
 
-1. In System Settings → Privacy & Security, check the "Allow applications from" setting.
-2. Try the following commands:
+macOS may block the app on first launch because it is not notarized by Apple.
+
+1. Try to open Clip once, then go to System Settings → Privacy & Security and click "Open Anyway".
+2. If it still won't open, remove the quarantine attribute:
 ```sh
 sudo xattr -r -d com.apple.quarantine /Applications/Clipboard.app
-sudo codesign --force --deep --sign - /Applications/Clipboard.app
 ```
 
 ## License
