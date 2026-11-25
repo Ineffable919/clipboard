@@ -186,7 +186,7 @@ final class PreviewMarkdownView: NSView, WKNavigationDelegate, WKUIDelegate {
             ?? model.attributeString
 
         if model.hasBgColor {
-            sourceTextView.textStorage?.setAttributedString(base)
+            sourceTextView.textStorage?.setAttributedString(model.displayRichText(base))
         } else {
             let mutable = NSMutableAttributedString(attributedString: base)
             mutable.addAttribute(

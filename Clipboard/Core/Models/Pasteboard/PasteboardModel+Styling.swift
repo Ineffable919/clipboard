@@ -24,26 +24,52 @@ extension PasteboardModel {
         return srgb.alphaComponent > 0.01 ? srgb : nil
     }
 
+    private var translucentBgColor: NSColor? {
+        safeBgColor.flatMap { $0.alphaComponent < 1 ? $0 : nil }
+    }
+
+    var needsContrastCheck: Bool {
+        hasBgColor && (safeBgColor?.alphaComponent ?? 0) < 1
+    }
+
+    /// 移除已混入整块底色的同色文字背景，避免重复叠加
+    func displayRichText(_ content: NSAttributedString) -> NSAttributedString {
+        guard let base = cachedBackgroundColor, translucentBgColor != nil else { return content }
+        let mutable = NSMutableAttributedString(attributedString: content)
+        content.enumerateAttribute(
+            .backgroundColor, in: NSRange(location: 0, length: content.length)
+        ) { value, range, _ in
+            if let color = value as? NSColor, color == base {
+                mutable.removeAttribute(.backgroundColor, range: range)
+            }
+        }
+        return mutable
+    }
+
     /// 统一显示底色，并为没有有效背景的文字补底色，不修改富文本本身
     func richBackground(on background: NSColor, forPreview: Bool = false) -> NSColor? {
         guard hasBgColor else { return nil }
-        // 使用不透明底色，避免同色的半透明文字背景重复叠加产生色差
-        if let safeBgColor { return safeBgColor.withAlphaComponent(1) }
+        if let safeBgColor, safeBgColor.alphaComponent >= 1 { return safeBgColor }
 
         let foregrounds = (forPreview ? cachedPreviewForegrounds ?? [] : cachedRichForegrounds)
             .compactMap { $0.usingColorSpace(.sRGB) }
-
-        guard !foregrounds.isEmpty,
-            let background = background.usingColorSpace(.sRGB)
-        else { return nil }
+        let background = background.usingColorSpace(.sRGB)
 
         func minimumContrast(on color: NSColor) -> CGFloat {
             foregrounds.reduce(CGFloat(21)) { min($0, textContrast($1, on: color)) }
         }
 
-        guard minimumContrast(on: background) < 4.5 else { return nil }
         let light = NSColor(srgbRed: 1, green: 1, blue: 1, alpha: 1)
         let dark = NSColor(srgbRed: 0, green: 0, blue: 0, alpha: 1)
+
+        if let tint = translucentBgColor {
+            let blended = composite(tint, on: background ?? light)
+            guard minimumContrast(on: blended) < 4.5 else { return blended }
+            let candidates = [blended, composite(tint, on: light), composite(tint, on: dark)]
+            return candidates.max { minimumContrast(on: $0) < minimumContrast(on: $1) }
+        }
+
+        guard !foregrounds.isEmpty, let background, minimumContrast(on: background) < 4.5 else { return nil }
         let lightContrast = minimumContrast(on: light)
         let darkContrast = minimumContrast(on: dark)
         let candidate = lightContrast >= darkContrast ? light : dark
@@ -54,9 +80,7 @@ extension PasteboardModel {
     /// 完整预览首次加载后分析；空数组也缓存，避免反复扫描无适配需求的文本
     func cachePreviewColors(_ content: NSAttributedString) {
         guard cachedPreviewForegrounds == nil else { return }
-        cachedPreviewForegrounds =
-            hasBgColor && safeBgColor == nil
-            ? Self.richForegrounds(in: content) : []
+        cachedPreviewForegrounds = needsContrastCheck ? Self.richForegrounds(in: content) : []
     }
 
     static func richForegrounds(in content: NSAttributedString) -> [NSColor] {
@@ -157,9 +181,10 @@ extension PasteboardModel {
 
     func highlightedRichText(keyword: String) -> NSAttributedString {
         let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return attributeString }
+        let content = displayRichText(attributeString)
+        guard !trimmed.isEmpty else { return content }
 
-        let mutable = NSMutableAttributedString(attributedString: attributeString)
+        let mutable = NSMutableAttributedString(attributedString: content)
         applyHighlight(to: mutable, source: mutable.string as NSString, keyword: trimmed)
         return mutable
     }
@@ -211,6 +236,19 @@ extension PasteboardModel {
 }
 
 // MARK: - NSColor helpers
+
+private func composite(_ color: NSColor, on base: NSColor) -> NSColor {
+    let alpha = color.alphaComponent
+    func mix(_ top: CGFloat, _ bottom: CGFloat) -> CGFloat {
+        top * alpha + bottom * (1 - alpha)
+    }
+    return NSColor(
+        srgbRed: mix(color.redComponent, base.redComponent),
+        green: mix(color.greenComponent, base.greenComponent),
+        blue: mix(color.blueComponent, base.blueComponent),
+        alpha: 1
+    )
+}
 
 private func textContrast(_ foreground: NSColor, on background: NSColor) -> CGFloat {
     func luminance(_ red: CGFloat, _ green: CGFloat, _ blue: CGFloat) -> CGFloat {

@@ -111,8 +111,8 @@ final class PasteboardModel: Identifiable, Codable {
         cachedBackgroundColor = colors.background
         cachedForegroundColor = colors.foreground
         cachedHasBackgroundColor = colors.hasBackground
-        if type == .rich, hasBgColor, safeBgColor == nil {
-            cachedRichForegrounds = Self.richForegrounds(in: attributeString)
+        if type == .rich, needsContrastCheck {
+            cachedRichForegrounds = Self.richForegrounds(in: displayRichText(attributeString))
         }
     }
 

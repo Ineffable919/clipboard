@@ -108,7 +108,7 @@ final class PreviewTextContentView: NSView {
             ?? model.attributeString
 
         if model.hasBgColor {
-            textView.textStorage?.setAttributedString(base)
+            textView.textStorage?.setAttributedString(model.displayRichText(base))
         } else {
             let mutable = NSMutableAttributedString(attributedString: base)
             mutable.addAttribute(
