@@ -229,6 +229,10 @@ final class CollectionViewItem: NSCollectionViewItem {
 // MARK: - 生命周期
 
 extension CollectionViewItem {
+    override func loadView() {
+        view = CardItemView()
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         initSubView()
@@ -355,6 +359,30 @@ extension CollectionViewItem {
 }
 
 extension CollectionViewItem: UserInterfaceItemIdentifier {}
+
+// MARK: - CardItemView
+
+/// 拖拽期间忽略隐藏，使源卡片留在原位
+final class CardItemView: NSView {
+    override var isHidden: Bool {
+        get { super.isHidden }
+        set {
+            if newValue, collectionView?.keepsItemsVisible == true {
+                return
+            }
+            super.isHidden = newValue
+        }
+    }
+
+    private var collectionView: ClipCollectionView? {
+        var view = superview
+        while let current = view {
+            if let collection = current as? ClipCollectionView { return collection }
+            view = current.superview
+        }
+        return nil
+    }
+}
 
 // MARK: - AppearanceObservingView
 

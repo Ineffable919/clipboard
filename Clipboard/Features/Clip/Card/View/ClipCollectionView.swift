@@ -111,12 +111,28 @@ final class ClipCollectionView: NSCollectionView {
         event: NSEvent,
         source: any NSDraggingSource
     ) -> NSDraggingSession {
-        // AppKit 在开始拖拽前隐藏源卡片，同一事务内恢复，避免渲染出空帧
+        // AppKit 会隐藏源卡片，拖拽期间保持可见
+        keepsItemsVisible = true
         for item in visibleItems() where item.view.isHidden {
             item.view.isHidden = false
         }
         return super.beginDraggingSession(with: items, event: event, source: source)
     }
+
+    override func mouseDown(with event: NSEvent) {
+        keepsItemsVisible = true
+        super.mouseDown(with: event)
+        if NSEvent.pressedMouseButtons & 1 == 0 {
+            keepsItemsVisible = false
+        }
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        super.mouseUp(with: event)
+        keepsItemsVisible = false
+    }
+
+    private(set) var keepsItemsVisible = false
 
     override func draggingSession(
         _ session: NSDraggingSession,
@@ -145,6 +161,7 @@ final class ClipCollectionView: NSCollectionView {
             endedAt: screenPoint,
             operation: operation
         )
+        keepsItemsVisible = false
 
         if #unavailable(macOS 26.0) {
             onDragEnded?(screenPoint)
