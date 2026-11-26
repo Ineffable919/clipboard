@@ -199,6 +199,7 @@ extension ClipMainViewController {
 
     private func returnKeyDown(_ event: NSEvent) -> NSEvent? {
         guard focusRegion == .collection else { return event }
+        guard !event.isARepeat, WindowManager.shared.isVisible else { return nil }
         let items = selectedModels
         guard !items.isEmpty else { return nil }
         ClipActionService.shared.pasteMultiple(
