@@ -34,8 +34,6 @@ extension ClipMainViewController: NSCollectionViewDelegate {
         _: NSCollectionView,
         didSelectItemsAt indexPaths: Set<IndexPath>
     ) {
-        log.debug("didSelectItemsAt \(indexPaths.count)")
-
         if indexPaths.count > 1 {
             updateSelectedItemBorder()
             return
